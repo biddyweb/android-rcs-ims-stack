@@ -1,0 +1,130 @@
+package com.orangelabs.rcs.core.ims.service.presence.xdm;
+
+import com.orangelabs.rcs.core.CoreException;
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.security.HttpDigestMd5Authentication;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+/**
+ * HTTP Digest MD5 authentication agent
+ * 
+ * @author JM. Auffret
+ */
+public class HttpAuthenticationAgent {
+
+	/**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+	/**
+	 * HTTP Digest MD5 agent
+	 */
+	private HttpDigestMd5Authentication digest = new HttpDigestMd5Authentication();
+
+	/**
+	 * Constructor
+	 */
+	public HttpAuthenticationAgent() {
+	}
+
+	/**
+	 * Generate the authorization header
+	 * 
+	 * @param method Method used
+	 * @param requestUri Request Uri
+	 * @param body Entity body
+	 * @return authorizationHeader Authorization header
+	 * @throws CoreException
+	 */
+	public String generateAuthorizationHeader(String method, String requestUri, String body) throws CoreException {
+		try {
+	   		// Update nonce parameters
+			digest.updateNonceParameters();
+			
+			// Calculate response
+			String user = ImsModule.IMS_USER_PROFILE.getXdmServerLogin();
+			String password = ImsModule.IMS_USER_PROFILE.getXdmServerPassword();
+	   		String response = digest.calculateResponse(user, password,
+	   				method,
+	   				requestUri,
+					digest.buildNonceCounter(),
+					body);				
+
+	   		// Build the Authorization header
+			String auth = "Authorization: Digest username=\"" + ImsModule.IMS_USER_PROFILE.getXdmServerLogin() + "\"" +
+					",realm=\"" + digest.getRealm() + "\"" +
+					",nonce=\"" + digest.getNonce() + "\"" +
+					",uri=\"" + requestUri + "\"";
+			String qop = digest.getQop();
+			if ((qop != null) && qop.startsWith("auth")) {	
+				auth += ",qop=\"" + qop + "\"" +
+						",nc=" + digest.buildNonceCounter() +						
+						",cnonce=\"" + digest.getCnonce() + "\""+
+						",response=\"" + response + "\"";
+			}
+			return auth;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create the authorization header", e);
+			}
+			throw new CoreException("Can't create the authorization header");
+		}
+    }
+
+	/**
+	 * Read the WWW-Authenticate header
+	 * 
+	 * @param header WWW-Authenticate header
+	 */
+	public void readWwwAuthenticateHeader(String header) {		
+		if (header != null) {
+	   		// Get domain name
+			int realmBegin = header.toLowerCase().indexOf("realm=\"")+7;
+			int realmEnd = -1;
+			if (realmBegin != -1){
+				realmEnd = header.substring(realmBegin).indexOf("\"");
+			}			
+			String realm = null;
+			if (realmEnd != -1){
+				realmEnd += realmBegin;
+				realm = header.substring(realmBegin, realmEnd);
+			}
+			digest.setRealm(realm);
+
+	   		// Get qop
+			int qopBegin = header.toLowerCase().indexOf("qop=\"")+5;
+			int qopEnd = -1;
+			if (qopBegin != -1){
+				qopEnd = header.substring(qopBegin).indexOf("\"");
+			}
+			// Check also for an end with "," as qop may be on the form qop="auth,auth-int"
+			// In this case, we keep first param
+			if (qopBegin != - 1){
+				int firstParamQopEnd = header.substring(qopBegin).indexOf(",");
+				if ((firstParamQopEnd!=-1) && (firstParamQopEnd<qopEnd)){
+					qopEnd = firstParamQopEnd;
+				}
+			}
+			String qop = null;
+			if (qopEnd != -1){
+				qopEnd += qopBegin;
+				qop = header.substring(qopBegin, qopEnd);
+			}	   	
+			digest.setQop(qop);
+			
+	   		// Get nonce to be used
+			int nextnonceBegin = header.toLowerCase().indexOf("nonce=\"")+7;
+			int nextnonceEnd = -1;
+			if (nextnonceBegin != -1){
+				nextnonceEnd = header.substring(nextnonceBegin).indexOf("\"");
+			}
+			String nextnonce = null;
+			if (nextnonceEnd != -1){
+				nextnonceEnd += nextnonceBegin;
+				nextnonce = header.substring(nextnonceBegin, nextnonceEnd);
+			}
+			digest.setNextnonce(nextnonce);
+		}
+	}
+}
