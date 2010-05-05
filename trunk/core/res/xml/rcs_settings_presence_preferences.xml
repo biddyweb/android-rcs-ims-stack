@@ -1,0 +1,46 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<PreferenceCategory android:title="@string/title_presence_settings">
+		<CheckBoxPreference
+			android:key="presence_invitation_vibration"
+			android:showDefault="true"
+			android:title="@string/label_vibrate"
+			android:summary="@string/summary_presence_vibrate"
+		/>
+
+		<com.orangelabs.rcs.settings.PresenceInvitationRingtone
+			android:key="presence_invitation_ringtone"
+			android:title="@string/label_ringtone"
+			android:showDefault="true"
+			android:showSilent="true"
+			android:summary="@string/summary_presence_ringtone"
+		/>
+	</PreferenceCategory>
+
+	<PreferenceCategory android:title="@string/label_freetext">
+		<EditTextPreference
+            android:key="edit_freetext1"
+            android:summary="@string/summary_edit_freetext"
+            android:dialogTitle="@string/title_edit_freetext"
+	    	android:maxLength="25"/>
+                	
+		<EditTextPreference
+            android:key="edit_freetext2"
+            android:summary="@string/summary_edit_freetext"
+            android:dialogTitle="@string/title_edit_freetext" 
+    	    android:maxLength="25"/>
+
+		<EditTextPreference
+            android:key="edit_freetext3"
+            android:summary="@string/summary_edit_freetext"
+            android:dialogTitle="@string/title_edit_freetext" 
+    	    android:maxLength="25"/>
+
+		<EditTextPreference
+            android:key="edit_freetext4"
+            android:summary="@string/summary_edit_freetext"
+            android:dialogTitle="@string/title_edit_freetext" 
+    	    android:maxLength="25"/>
+	</PreferenceCategory>
+
+</PreferenceScreen>

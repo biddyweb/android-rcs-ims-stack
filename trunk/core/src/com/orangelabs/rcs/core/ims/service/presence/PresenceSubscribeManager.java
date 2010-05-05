@@ -1,0 +1,163 @@
+package com.orangelabs.rcs.core.ims.service.presence;
+
+import java.io.ByteArrayInputStream;
+import java.util.Vector;
+
+import org.xml.sax.InputSource;
+
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
+import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfParser;
+import com.orangelabs.rcs.core.ims.service.presence.rlmi.ResourceInstance;
+import com.orangelabs.rcs.core.ims.service.presence.rlmi.RlmiDocument;
+import com.orangelabs.rcs.core.ims.service.presence.rlmi.RlmiParser;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+/**
+ * Subscribe manager for presence event
+ * 
+ * @author jexa7410
+ */
+public class PresenceSubscribeManager extends SubscribeManager {
+	/**
+     * The log4j logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    /**
+     * Constructor
+     * 
+     * @param parent IMS module
+     * @param presentity Presentity
+     * @param defaultExpirePeriod Default expiration period in seconds
+     */
+    public PresenceSubscribeManager(ImsModule parent, String presentity, int defaultExpirePeriod) {
+    	super(parent, presentity, defaultExpirePeriod);
+    }
+    	
+    /**
+     * Create a SUBSCRIBE request
+     * 
+	 * @param dialog SIP dialog path
+	 * @param expirePeriod Expiration period
+	 * @param accessInfo Access info
+	 * @return SIP request
+	 * @throws SipException
+     */
+    public SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod, String accessInfo) throws SipException {
+    	// Create SUBSCRIBE message
+    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialog, expirePeriod, accessInfo);
+
+    	// Set the Event header
+    	subscribe.addHeader("Event: presence");
+
+    	// Set the Accept header
+    	subscribe.addHeader("Accept: application/pidf+xml,application/rlmi+xml,multipart/related");
+
+    	// Set the Accept header
+    	subscribe.addHeader("Supported: eventlist");
+
+    	return subscribe;
+    }
+
+    /**
+     * Receive a notification
+     * 
+     * @param notify Received notify
+     */
+    public void receiveNotification(SipRequest notify) {
+    	// Check notification
+    	if (!isNotifyForThisSubscriber(notify)) {
+    		return;
+    	}    	
+    	
+		if (logger.isActivated()) {
+			logger.debug("New presence notification received");
+		}    	
+
+		// Parse XML part
+	    String content = notify.getContent();
+		if (content != null) {
+	    	try {
+				// Extract parts from multipart
+	    		String boundary = "--" + SipUtils.extractBoundary(notify.getContentType());
+	    		int index  = 0;
+	    		while(index != -1) {
+	    			int begin = content.indexOf(boundary, index);
+	    			int end = content.indexOf(boundary, begin+boundary.length());
+	    			if ((begin != -1) && (end != -1)) {
+	    				String part = content.substring(begin+boundary.length(), end);
+	    				String contentPart = part.substring(part.indexOf("<?xml"));
+	    				
+	    				if (part.indexOf("application/rlmi+xml") != -1) {
+	    	    			// Parse RLMI part
+	    					try {
+		    					InputSource rlmiInput = new InputSource(new ByteArrayInputStream(contentPart.getBytes()));
+		    					RlmiParser rlmiParser = new RlmiParser(rlmiInput);
+		    					RlmiDocument rlmiInfo = rlmiParser.getResourceInfo();
+		    					Vector<ResourceInstance> list = rlmiInfo.getResourceList();
+		    					for(int i=0; i < list.size(); i++) {
+		    						ResourceInstance res = (ResourceInstance)list.elementAt(i);
+		    						String contact = res.getUri();
+		    						String state = res.getState();
+		    						String reason = res.getReason();
+		    						
+		    						if ((contact != null) && (state != null) && (reason != null)) {
+		    							if (state.equalsIgnoreCase("terminated") && 
+		    									reason.equalsIgnoreCase("rejected")) {
+		    								// It's a "terminated" event with status "rejected" the contact
+		    								// should be removed from the "rcs" list
+		    								getImsModule().getPresenceService().getXdmManager().removeContactFromGrantedList(contact);
+		    							}				
+		    							
+		    							// Notify listener
+		    					    	getImsModule().getCore().getListener().handlePresenceSharingNotification(contact, state, reason);
+		    						}
+		    					}
+	    			    	} catch(Exception e) {
+	    			    		if (logger.isActivated()) {
+	    			    			logger.error("Can't parse RLMI notification", e);
+	    			    		}
+	    			    	}
+	    				} else
+	    				if (part.indexOf("application/pidf+xml") != -1) {
+	    					try {
+		    	    			// Parse PIDF part
+		    					InputSource pidfInput = new InputSource(new ByteArrayInputStream(contentPart.getBytes()));
+		    					PidfParser pidfParser = new PidfParser(pidfInput);
+		    					PidfDocument presenceInfo = pidfParser.getPresence();
+		    					
+		    					// Notify listener
+		    			    	getImsModule().getCore().getListener().handlePresenceInfoNotification(
+		    			    			presenceInfo.getEntity(), presenceInfo);
+	    			    	} catch(Exception e) {
+	    			    		if (logger.isActivated()) {
+	    			    			logger.error("Can't parse PIDF notification", e);
+	    			    		}
+	    			    	}
+	    				}
+	    			}
+	    			index = end; 
+	    		}
+	    	} catch(Exception e) {
+	    		if (logger.isActivated()) {
+	    			logger.error("Can't parse presence notification", e);
+	    		}
+	    	}
+	    	
+			// Check subscription state
+			String state = notify.getHeader("Subscription-State");
+			if ((state != null) && (state.indexOf("terminated") != -1)) {
+				if (logger.isActivated()) {
+					logger.info("Presence subscription has been terminated by server");
+				}
+				terminatedByServer();
+			}
+		}
+    }   
+}

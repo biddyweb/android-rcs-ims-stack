@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	
+	<voip>
+		<parameter description="Audio codec"
+			 name="AudioCodec"
+			 value="pcmu"/>
+	</voip>
+	
+</configuration>
