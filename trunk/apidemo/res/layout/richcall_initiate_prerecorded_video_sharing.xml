@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="horizontal">
+	<LinearLayout
+		android:layout_gravity="center_horizontal"
+		android:layout_width="wrap_content"
+		android:layout_height="fill_parent"
+		android:orientation="vertical"
+		android:paddingTop="10dip"
+		android:gravity="center"
+		android:layout_marginLeft="5dip">		
+		<Button android:text="@string/label_dial"
+		 android:id="@+id/dial"
+		 android:layout_width="100dip"
+		 android:layout_height="wrap_content"/>	
+		<Button android:text="@string/label_select_video"
+		 android:id="@+id/select"
+		 android:layout_width="100dip"
+		 android:layout_height="wrap_content"/>
+		<Button android:text="@string/label_initiate_sharing"
+		 android:id="@+id/invite"
+		 android:layout_width="100dip"
+		 android:layout_height="wrap_content"/>		
+	</LinearLayout>
+	<LinearLayout
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:orientation="vertical">
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="3dip"
+			android:layout_marginRight="3dip">
+	        <Spinner android:id="@+id/contact"
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content"/>
+		</LinearLayout>
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal">
+	        <TextView android:text="@string/label_selected"
+			 	android:layout_width="75dip"
+	        	android:layout_height="wrap_content"
+	        	android:gravity="center"
+	        	android:layout_marginRight="3dip"
+	        	android:layout_marginLeft="3dip"/>
+	        <TextView 
+	        	android:id="@+id/filename"
+	        	android:layout_width="fill_parent"
+	        	android:layout_height="wrap_content"/>	
+		</LinearLayout>
+		<LinearLayout
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:orientation="horizontal"
+			android:layout_marginTop="3dip"
+			android:layout_marginBottom="3dip"
+			android:layout_marginRight="3dip">
+	        <TextView android:text="@string/label_display"
+	        	android:layout_width="75dip"
+	        	android:layout_height="wrap_content"
+	        	android:gravity="center"
+	        	android:layout_marginRight="3dip"
+	        	android:layout_marginLeft="3dip"/>
+			<com.orangelabs.rcs.samples.sharing.VideoSurfaceView 
+				android:id="@+id/video_prerecorded_preview" 
+				android:layout_width="fill_parent" 
+				android:layout_height="fill_parent"/>
+		</LinearLayout>
+	</LinearLayout>
+	
+</LinearLayout>
