@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -18,6 +18,7 @@
  ******************************************************************************/
 package com.orangelabs.rcs.provider.eab;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Calendar;
 
@@ -30,6 +31,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.Contacts;
+import android.provider.ContactsContract;
+import android.provider.Contacts.People;
+import android.provider.Contacts.Phones;
 
 import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
 import com.orangelabs.rcs.core.ims.service.presence.FavoriteLink;
@@ -156,15 +160,36 @@ public class RichAddressBook {
 		int id = -1;
 		try {
 			number = PhoneUtils.extractNumberFromUri(number);
-	    	Cursor c = cr.query(Contacts.Phones.CONTENT_URI, new String[]{Contacts.Phones.PERSON_ID, Contacts.Phones.NUMBER}, null, null, null);
-	    	while(c.moveToNext()) {
-	    		String databaseNumber = PhoneUtils.extractNumberFromUri(c.getString(1));
+			// Query 1.5 Contacts API
+	    	Cursor c1_5 = cr.query(Contacts.Phones.CONTENT_URI,
+	    			new String[]{Contacts.Phones.PERSON_ID, Contacts.Phones.NUMBER}, 
+	    			null, 
+	    			null, 
+	    			null);
+	    	while(c1_5.moveToNext()) {
+	    		String databaseNumber = PhoneUtils.extractNumberFromUri(c1_5.getString(1));
 	    		if (databaseNumber.equals(number)) {
-	    			id = c.getInt(0);
+	    			id = c1_5.getInt(0);
 	    			break;
 	    		}
 	       	}
-	       	c.close();
+	    	c1_5.close();
+	       	// Id may not have been found if the contact is not of default account type
+	       	// So we also have to query via the 2.0 Phone API
+	        Cursor c2_0 = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+	        		new String[]{ContactsContract.CommonDataKinds.Phone.CONTACT_ID,  ContactsContract.CommonDataKinds.Phone.NUMBER},
+	        		null, 
+	     		    null, 
+	     		    null);
+	        while(c2_0.moveToNext()){
+	    		String databaseNumber = PhoneUtils.extractNumberFromUri(c2_0.getString(1));
+	    		if (databaseNumber.equals(number)) {
+	    			id = c2_0.getInt(0);
+	    			break;
+	    		}
+	        }
+	        c2_0.close();
+	       	
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -303,6 +328,41 @@ public class RichAddressBook {
 			setMyPhotoIcon(photo);
 		} else {
 			removeMyPhotoIcon();
+		}
+	}
+	
+	/**
+	 * Set my poke in the EAB
+	 * 
+	 * @param pokeStatus Poke
+	 * @throws RichAddressBookException
+	 */
+	public void setMyPokeInfo(boolean pokeStatus) throws RichAddressBookException {
+		if (logger.isActivated()) {
+			logger.info("Set my poke info");
+		}
+
+		try {
+			ContentValues values = new ContentValues();
+
+			// Set the hyper-availability status
+			if (pokeStatus) {
+				values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.TRUE_VALUE);
+			} else {
+				values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.FALSE_VALUE);
+			}
+			
+			// Update the database
+			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			cr.update(databaseUri, values, where, null);
+			if (logger.isActivated()) {
+				logger.debug("My poke info has been updated");
+			}
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Internal exception", e);
+			}
+			throw new RichAddressBookException(e.getMessage());
 		}
 	}
 
@@ -457,8 +517,13 @@ public class RichAddressBook {
 				if (isPhotoExist) {
 					Uri photoUri = getMyPhotoUri();
 					String etag = c.getString(RichAddressBookData.COLUMN_PHOTO_ETAG);
-					android.graphics.Bitmap bmp = BitmapFactory.decodeStream(cr.openInputStream(photoUri));
-					photoIcon = new PhotoIcon(bmp, etag);
+					InputStream stream = cr.openInputStream(photoUri);
+					byte[] content = new byte[stream.available()];
+					stream.read(content, 0, content.length);
+					Bitmap bmp = BitmapFactory.decodeByteArray(content, 0, content.length);
+					if (bmp != null) {
+						photoIcon = new PhotoIcon(content, bmp.getWidth(), bmp.getHeight(), etag);
+					}
 				}
 				presenceInfo.setPhotoIcon(photoIcon);
 				if (logger.isActivated()) {
@@ -572,7 +637,8 @@ public class RichAddressBook {
 				
 				// Update the database
 				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				cr.update(databaseUri, values, where, null);				
+				cr.update(databaseUri, values, where, null);			
+				
 				if (logger.isActivated()) {
 					logger.debug("Presence info has been updated for " + contact);
 				}
@@ -726,8 +792,13 @@ public class RichAddressBook {
 						int rowId = c.getInt(RichAddressBookData.COLUMN_KEY_ID);
 						Uri photoUri = getContactPhotoUri(rowId);
 						String etag = c.getString(RichAddressBookData.COLUMN_PHOTO_ETAG);
-						Bitmap bmp = BitmapFactory.decodeStream(cr.openInputStream(photoUri));
-						photoIcon = new PhotoIcon(bmp, etag);
+						InputStream stream = cr.openInputStream(photoUri);
+						byte[] content = new byte[stream.available()];
+						stream.read(content, 0, content.length);
+						Bitmap bmp = BitmapFactory.decodeByteArray(content, 0, content.length);
+						if (bmp != null) {
+							photoIcon = new PhotoIcon(content, bmp.getWidth(), bmp.getHeight(), etag);
+						}
 					}
 					presenceInfo.setPhotoIcon(photoIcon);
 					c.close();
@@ -760,6 +831,7 @@ public class RichAddressBook {
 		if (logger.isActivated()) {
 			logger.info("Set sharing status for contact " + contact);
 		}
+		contact= PhoneUtils.extractNumberFromUri(contact);
 
 		try {
 			// Get the contact id
@@ -826,6 +898,32 @@ public class RichAddressBook {
 					}
 				}
 			}
+			
+			// Update the rcs numbers table
+			ContentValues values = new ContentValues();
+			values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
+			if (status.equalsIgnoreCase("active") || status.equalsIgnoreCase("pending_out")){
+				// Put an entry in the table or update the existing one
+				Cursor cursor = cr.query(RichAddressBookData.RCSNUMBERS_CONTENT_URI, 
+						null, 
+						RichAddressBookData.KEY_CONTACT_NUMBER + "=" + "\"" + contact +"\"" , 
+						null, 
+						null);
+				if (cursor.getCount()==0){
+					// No entry for this contact, insert it
+					cr.insert(RichAddressBookData.RCSNUMBERS_CONTENT_URI, values);
+				}else{
+					// Already have an entry, nothing to change
+				}
+				cursor.close();
+			}else if (status.equalsIgnoreCase("terminated") && (reason!=null && reason.equalsIgnoreCase("rejected"))){
+				// We remove the entry
+				cr.delete(RichAddressBookData.RCSNUMBERS_CONTENT_URI,
+						RichAddressBookData.KEY_CONTACT_NUMBER + "=" + "\"" + contact + "\"",
+						null);
+			}
+			
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -1052,30 +1150,32 @@ public class RichAddressBook {
 			// Get the contact id
 			int contactId = getContactId(contact);
 			if (contactId != -1) {
-				// Update the blacklist
+				// Update the blacklist : delete entry
 				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId + " AND " +
-					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + RichAddressBookData.BLOCKED_VALUE;
+					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + "\""+ RichAddressBookData.BLOCKED_VALUE + "\"";
+				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
+				if (logger.isActivated()) {
+					logger.debug("Contact " + contact + " has been deleted from blacklist");
+				}
+			} else {
+				// Update the blacklist : delete entry
+				String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +
+					"\"" +PhoneUtils.extractNumberFromUri(contact) + "\"" + " AND " +
+					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + "\"" + RichAddressBookData.BLOCKED_VALUE + "\"";
 				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
 				if (logger.isActivated()) {
 					logger.debug("Contact " + contact + " has been deleted from blacklist");
 				}
 				
 				// Update EAB
-				ContentValues values = new ContentValues();
-				values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, "active");
-				cr.update(databaseUri, values, RichAddressBookData.KEY_CONTACT_ID + " = " + contactId, null);
+				where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +
+				"\"" +PhoneUtils.extractNumberFromUri(contact) + "\"" + " AND " +
+				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + " = " + "\"" + "pending" + "\"";
+				
+				cr.delete(databaseUri, where, null);
 				if (logger.isActivated()) {
-					logger.debug("Update sharing status to active for contact " + contact);
-				}
-			} else {
-				// Update the blacklist
-				String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +
-					PhoneUtils.extractNumberFromUri(contact) + " AND " +
-					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + RichAddressBookData.BLOCKED_VALUE;
-				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been deleted from blacklist");
-				}
+					logger.debug("Deleted pending contact " + contact);
+				}				
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -1094,17 +1194,28 @@ public class RichAddressBook {
 	public String getContactDisplayName(String contact) {
 		String result = null;
 		try {
-			String number = PhoneUtils.extractNumberFromUri(contact);
-			Cursor c = cr.query(Contacts.Phones.CONTENT_URI,
-					new String[] { Contacts.Phones.DISPLAY_NAME, Contacts.Phones.NUMBER }, null, null, null);
-			while(c.moveToNext()) {
-				String databaseNumber = PhoneUtils.extractNumberFromUri(c.getString(1));
-				if (databaseNumber.equals(number)) {
-					result = c.getString(0);
-					break;
-				}
+			long contactId = getContactId(contact);
+			
+			Cursor c1_5 = cr.query(People.CONTENT_URI,
+					new String[] { People.DISPLAY_NAME},
+					People.DISPLAY_NAME + "=" + contactId, 
+					null, 
+					null);
+			while(c1_5.moveToNext()) {
+				result = c1_5.getString(0);
 			}
-			c.close();
+			c1_5.close();
+
+			Cursor c2_0 = cr.query(ContactsContract.Contacts.CONTENT_URI,
+					new String[] { ContactsContract.Contacts.DISPLAY_NAME},
+					ContactsContract.Contacts._ID + "=" + contactId, 
+					null, 
+					null);
+			while(c2_0.moveToNext()) {
+				result = c2_0.getString(0);
+			}
+			c2_0.close();
+			
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -1142,44 +1253,24 @@ public class RichAddressBook {
 	}
 
 	/**
-	 * Create a new contact in the address book
-	 * 
-	 * @param contact Contact
-	 * @throws RichAddressBookException
+	 * Flush all data contained in the database
 	 */
-	public void createContact(String contact) throws RichAddressBookException {
-		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId == -1) {
-				// Contact does not exist in the address book
-				if (logger.isActivated()) {
-					logger.info("Create contact " + contact + " in the address book");
-				}
-				
-				// Add a new contact in the address book
-				ContentValues values = new ContentValues();
-				String number = PhoneUtils.extractNumberFromUri(contact);
-				values.put(Contacts.People.NAME, number);
-				// TODO: deprecated method
-				Uri newPersonUri = Contacts.People.createPersonInMyContactsGroup(cr, values);
-				
-				// Add a primary mobile phone number to the new created contact
-				ContentValues phoneValues = new ContentValues();
-				Uri phoneUri = Uri.withAppendedPath(newPersonUri, Contacts.People.Phones.CONTENT_DIRECTORY);
-				phoneValues.put(Contacts.Phones.NUMBER, number);
-				phoneValues.put(Contacts.Phones.ISPRIMARY, 1);
-				phoneValues.put(Contacts.Phones.TYPE, Contacts.Phones.TYPE_MOBILE);
-				cr.insert(phoneUri, phoneValues);
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been created in the address book");
-				}
-			}
-		} catch (Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Internal exception", e);
-			}
-			throw new RichAddressBookException(e.getMessage());
-		}
+	public void flushAllData(){
+		// Delete all entries except "My Profile"
+		String where = RichAddressBookData.KEY_CONTACT_ID + ">" + 0;
+		cr.delete(databaseUri, where, null);
+		cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, null, null);
+		
+		// Update the "My Profile" item, with empty values
+		ContentValues values = new ContentValues();
+    	values.put(RichAddressBookData.KEY_CONTACT_ID, RichAddressBookData.END_USER_ROW_CONTACT_ID);
+    	values.put(RichAddressBookData.KEY_TIMESTAMP, System.currentTimeMillis());
+    	values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.FALSE_VALUE);
+    	values.put(RichAddressBookData.KEY_FREE_TEXT, "");
+
+    	// Update the end user row id
+		where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+		cr.update(databaseUri, values, where, null);
 	}
+	
 }

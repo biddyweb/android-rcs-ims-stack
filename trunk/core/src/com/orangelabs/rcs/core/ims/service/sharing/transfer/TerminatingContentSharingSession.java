@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -134,7 +134,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
     		int remotePort = desc.port;
 			
             // Extract the "setup" parameter
-            String remoteSetup = "active";
+            String remoteSetup = "passive";
 			MediaAttribute attr4 = desc.getMediaAttribute("setup");
 			if (attr4 != null) {
 				remoteSetup = attr4.getValue();
@@ -143,21 +143,18 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 				logger.debug("Remote setup attribute is " + remoteSetup);
 			}
             
-    		// Create the MSRP session
+    		// Set setup mode
             String localSetup = "passive";
             if (remoteSetup.equals("active")) {
             	// Passive mode: the terminal should wait a media connection
-    			msrpMgr.createMsrpServerSession(remotePath, this);
     			localSetup = "passive";
             } else 
             if (remoteSetup.equals("passive")) {
             	// Active mode: the terminal should initiate a media connection
-    			msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
     			localSetup = "active";
             } else {
-            	// The terminal decide to be in passive mode by default
-    			msrpMgr.createMsrpServerSession(remotePath, this);
-    			localSetup = "passive";
+            	// The terminal is active by default
+    			localSetup = "active";
             }
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
@@ -200,7 +197,13 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalSdp(sdp);
 
-	        // Send a 200 OK response
+    		// Create the MSRP server session
+            if (localSetup.equals("passive")) {
+            	// Passive mode: client wait a connection
+            	msrpMgr.createMsrpServerSession(remotePath, this);
+            }
+            
+            // Send a 200 OK response
         	if (logger.isActivated()) {
         		logger.info("Send 200 OK");
         	}
@@ -229,6 +232,12 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
     	        // The session is established
     	        getDialogPath().sessionEstablished();
 
+    	        // Create the MSRP client session
+                if (localSetup.equals("active")) {
+                	// Active mode: client should connect
+                	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                }
+    			
     	        // Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();
@@ -403,9 +412,6 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
     		logger.info("Data received");
     	}
 	
-    	// Close the MSRP session
-    	closeMsrpSession();
-
 	   	try {
 	    	// Update the content with the received data 
 	    	getContent().setData(data);

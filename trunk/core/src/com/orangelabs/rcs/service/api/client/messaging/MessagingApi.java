@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -102,12 +102,13 @@ public class MessagingApi extends ClientApi {
 	 * 
      * @param contact Contact
      * @param txt Text message
+     * @return Boolean result
 	 * @throws ClientApiException
 	 */
-	public void sendShortIM(String contact, String txt) throws ClientApiException {
+	public boolean sendShortIM(String contact, String txt) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	coreApi.sendShortIM(contact, txt);
+		    	return coreApi.sendShortIM(contact, txt);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -234,4 +235,23 @@ public class MessagingApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}	
+	
+	/**
+	 * Get the chat session with given contact or returns null if no session is in progress
+	 * 
+	 * @param contact Contact
+	 * @return Session
+	 * @throws ClientApiException
+	 */
+	public IChatSession getChatSessionWithContact(String contact) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.getChatSessionWithContact(contact);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
 }

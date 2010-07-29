@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core.ims.service.im.session;
+package com.orangelabs.rcs.core.ims.service.im;
 
 import java.util.Date;
 
@@ -39,6 +39,14 @@ public interface InstantMessageSessionListener extends ImsSessionListener {
 	 * @param message Message
 	 */
     public void handleReceiveMessage(InstantMessage message);
+
+    /**
+     * Is composing event
+     * 
+     * @param contact Contact
+     * @param status Status
+     */
+    public void handleContactIsComposing(String contact, boolean status);
     
     /**
      * New picture received

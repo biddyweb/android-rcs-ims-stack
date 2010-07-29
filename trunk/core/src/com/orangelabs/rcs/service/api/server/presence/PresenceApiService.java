@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -20,21 +20,12 @@ package com.orangelabs.rcs.service.api.server.presence;
 
 import java.util.List;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.text.TextUtils;
 
-import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceInfo;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.eab.RichAddressBook;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.RcsCoreService;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.presence.IPresenceApi;
 import com.orangelabs.rcs.service.api.client.presence.PresenceApiIntents;
@@ -48,11 +39,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class PresenceApiService extends IPresenceApi.Stub {
-	/**
-	 * Notification ID
-	 */
-	private final static int PRESENCE_INVITATION_NOTIFICATION = 1002;
-
     /**
 	 * The logger
 	 */
@@ -71,53 +57,7 @@ public class PresenceApiService extends IPresenceApi.Stub {
 	 * Close API
 	 */
 	public void close() {
-		// Remove notification
-		PresenceApiService.removeSharingInvitationNotification();
 	}
-	
-    /**
-     * Add presence sharing invitation notification
-     * 
-     * @param contact Contact
-     */
-    public static void addSharingInvitationNotification(String contact) {
-		// Create notification
-		Intent intent = new Intent(PresenceApiIntents.PRESENCE_INVITATION);
-		intent.putExtra("contact", contact);
-        PendingIntent contentIntent = PendingIntent.getActivity(RcsCoreService.CONTEXT, 0, intent, 0);
-        Notification notif = new Notification(R.drawable.rcs_core_notif_presence_icon,
-        		RcsCoreService.CONTEXT.getString(R.string.title_presence_invitation_notification),
-        		System.currentTimeMillis());
-        notif.flags = Notification.FLAG_AUTO_CANCEL;
-        notif.setLatestEventInfo(RcsCoreService.CONTEXT,
-        		RcsCoreService.CONTEXT.getString(R.string.title_presence_invitation_notification),
-        		RcsCoreService.CONTEXT.getString(R.string.label_presence_notification),
-        		contentIntent);
-
-        // Set ringtone
-        String ringtone = RcsSettings.getInstance().getPresenceInvitationRingtone();
-        if (!TextUtils.isEmpty(ringtone)) {
-			notif.sound = Uri.parse(ringtone);
-        }
-        
-        // Set vibration
-        if (RcsSettings.getInstance().isPhoneVibrateForPresenceInvitation()) {
-        	notif.defaults |= Notification.DEFAULT_VIBRATE;
-        }
-        
-        // Send notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(PRESENCE_INVITATION_NOTIFICATION, notif);
-    }
-
-    /**
-     * Remove presence sharing invitation notification
-     */
-    public static void removeSharingInvitationNotification() {
-		// Remove the notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PRESENCE_INVITATION_NOTIFICATION);
-    }
     
     /**
 	 * Set my presence info
@@ -241,14 +181,8 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			// Update presence server
 			boolean result = Core.getInstance().getPresenceService().acceptPresenceSharingInvitation(contact);
 			if (result){
-				// Create contact in address book if needed
-				RichAddressBook.getInstance().createContact(contact);
-				
 				// Set this contact presence status to "active"
 				RichAddressBook.getInstance().setContactSharingStatus(contact, "active", "");
-				
-				// Remove the notification
-				PresenceApiService.removeSharingInvitationNotification();
 			}
 			return result;
 		} catch(Exception e) {
@@ -275,9 +209,6 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			// Update presence server
 			boolean result = Core.getInstance().getPresenceService().blockPresenceSharingInvitation(contact);
 			if (result){
-				// Remove the notification
-				PresenceApiService.removeSharingInvitationNotification();
-
 				// Put contact in blocked contacts list of EAB content provider
 				RichAddressBook.getInstance().blockContact(contact);
 			}
@@ -299,15 +230,8 @@ public class PresenceApiService extends IPresenceApi.Stub {
 		}
 
 		try {
-			//TODO see what behaviour is awaited
-			// Create contact in address book if needed
-			RichAddressBook.getInstance().createContact(contact);
-	
 			// Set this contact presence status to "pending"
 			RichAddressBook.getInstance().setContactSharingStatus(contact, "pending", "");
-	
-			// Remove the notification
-			PresenceApiService.removeSharingInvitationNotification();
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}

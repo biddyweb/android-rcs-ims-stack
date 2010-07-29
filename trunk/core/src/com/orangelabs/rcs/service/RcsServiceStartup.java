@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -18,6 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.service;
 
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +33,15 @@ public class RcsServiceStartup extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// Start RCS core
-		context.startService(new Intent("com.orangelabs.rcs.SERVICE"));
+		
+
+        if (RcsSettings.getInstance()==null){
+    		// Instanciate the settings manager if needed
+        	RcsSettings.createInstance(context);
+        }
+		if (RcsSettings.getInstance().isServiceActivated()){
+			// We do not start the service if it is deactivated in settings (check needed for autoboot at device startup)
+			context.startService(new Intent("com.orangelabs.rcs.SERVICE"));
+		}
 	}
 }

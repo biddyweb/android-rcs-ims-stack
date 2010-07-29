@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -21,6 +21,8 @@ package com.orangelabs.rcs.settings;
 import java.util.List;
 
 import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -53,9 +55,26 @@ public class SettingsDisplay extends PreferenceActivity {
         addPreferencesFromResource(R.xml.rcs_settings_preferences);
         setTitle(R.string.title_settings);
 
+        int baseNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
+        
         // Set default value
     	rcsCheckbox = (CheckBoxPreference)getPreferenceScreen().findPreference("rcs_activation");
-    	rcsCheckbox.setChecked(isRcsServiceStarted());        
+    	rcsCheckbox.setChecked(isRcsServiceStarted());
+    	
+    	//Dynamic discovery for apps that listen to com.orangelabs.rcs.EXT_SETTINGS
+    	Intent intent = new Intent(ClientApiUtils.RCS_SETTINGS);
+    	addPreferencesFromIntent(intent);
+    	
+    	// Modify the intents so the activities can be launched even if not defined in this application
+    	int totalNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
+    	for (int i=baseNumberOfPreferences;i<totalNumberOfPreferences;i++){
+    		// We have to change the intents for all preferences discovered via the addPreferencesFromIntent method
+        	Preference dynamicPref = getPreferenceScreen().getPreference(i);
+        	Intent dynamicPrefIntent = dynamicPref.getIntent();
+        	dynamicPrefIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        	dynamicPref.setIntent(dynamicPrefIntent);
+    	}
+    	
     }
 
     @Override
@@ -112,6 +131,7 @@ public class SettingsDisplay extends PreferenceActivity {
 	    	// Start RCS service
 	    	startService(new Intent("com.orangelabs.rcs.SERVICE"));
         	rcsCheckbox.setChecked(true);
+        	RcsSettings.getInstance().setServiceActivated(true);
 	    }
 	};
 
@@ -120,6 +140,7 @@ public class SettingsDisplay extends PreferenceActivity {
 	    	// Stop RCS service
             stopService(new Intent("com.orangelabs.rcs.SERVICE"));
         	rcsCheckbox.setChecked(false);
+        	RcsSettings.getInstance().setServiceActivated(false);
 	    }
 	};
 

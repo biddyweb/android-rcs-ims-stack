@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -35,12 +35,15 @@ public class RcsSettingsData {
 	public static final String KEY_VALUE = "value";
 
 	// Data
+	public static final String SERVICE_ACTIVATED = "ServiceActivated";
+	
 	public static final String PRESENCE_INVITATION_RINGTONE = "PresenceInvitationRingtone";
 	public static final String PRESENCE_INVITATION_VIBRATE = "PresenceInvitationVibrate";
 	
 	public static final String CSH_INVITATION_RINGTONE = "CShInvitationRingtone";
 	public static final String CSH_INVITATION_VIBRATE = "CShInvitationVibrate";
-
+	public static final String CSH_AVAILABLE_BEEP = "CShAvailableBeep";
+	
 	public static final String FILETRANSFER_INVITATION_RINGTONE = "FileTransferInvitationRingtone";
 	public static final String FILETRANSFER_INVITATION_VIBRATE = "FileTransferInvitationVibrate";
 
@@ -52,6 +55,7 @@ public class RcsSettingsData {
 	public static final String USERPROFILE_USERNAME = "Username";
 	public static final String USERPROFILE_DISPLAY_NAME = "DisplayName";
 	public static final String USERPROFILE_PRIVATE_ID = "PrivateId";
+	public static final String LAST_USERPROFILE_PRIVATE_ID = "Last_PrivateId";
 	public static final String USERPROFILE_PASSWORD = "Password";
 	public static final String USERPROFILE_HOME_DOMAIN = "HomeDomain";
 	public static final String USERPROFILE_SIP_PROXY = "OutboundProxyAddr";

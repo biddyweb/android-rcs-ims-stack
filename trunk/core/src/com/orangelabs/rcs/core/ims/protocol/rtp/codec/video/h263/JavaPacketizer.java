@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -51,16 +51,11 @@ public class JavaPacketizer extends VideoCodec {
 			h263header[1]= 0x00;
 			
 			byte[] bufferData = (byte[])input.getData();
-			byte data[] = new byte[bufferData.length];
+			byte data[] = new byte[bufferData.length+h263header.length];
 			// write h263 payload
-			for (int i=0;i<bufferData.length;i++){
-					data[i]=bufferData[i];
-			}
-			// Trick : we overwrite the first two bytes of payload (null bytes) by h263 header 
-			// Write h263 header
-			for (int i=0;i<h263header.length;i++){
-					data[i]=h263header[i];
-			}
+			System.arraycopy(h263header, 0, data, 0, h263header.length);
+			// Write data
+			System.arraycopy(bufferData, 0, data, h263header.length, bufferData.length);
 						
 			if (data.length > 0){
 				// Copy to buffer

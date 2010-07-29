@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -146,7 +146,7 @@ public class PresenceSubscribeManager extends SubscribeManager {
 	    				if (part.indexOf("application/pidf+xml") != -1) {
 	    					try {
 		    	    			// Parse PIDF part
-		    					InputSource pidfInput = new InputSource(new ByteArrayInputStream(contentPart.getBytes()));
+	    						InputSource pidfInput = new InputSource(new ByteArrayInputStream(contentPart.getBytes()));
 		    					PidfParser pidfParser = new PidfParser(pidfInput);
 		    					PidfDocument presenceInfo = pidfParser.getPresence();
 		    					

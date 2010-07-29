@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -42,14 +42,19 @@ public class InstantMessageError extends Error {
 	public final static int SESSION_INITIATION_FAILED = 0x03;
 
 	/**
-	 * IM session has been terminated by the remote (e.g. incoming BYE)
+	 * Session initiation has been declines (e.g. 603 Decline)
 	 */
-	public final static int SESSION_TERMINATED_BY_REMOTE = 0x04;
+	public final static int SESSION_INITIATION_DECLINED = 0x04;	
 
+	/**
+	 * Session initiation has been cancelled (e.g. 487 Session terminated)
+	 */
+	public final static int SESSION_INITIATION_CANCELLED = 0x05;	
+	
 	/**
 	 * Message transfer has failed (e.g. MSRP failure)
 	 */
-	public final static int MSG_TRANSFER_FAILED = 0x05;
+	public final static int MSG_TRANSFER_FAILED = 0x06;
 
 	/**
 	 * Error code

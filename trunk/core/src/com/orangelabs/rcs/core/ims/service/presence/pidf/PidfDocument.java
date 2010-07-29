@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.presence.pidf;
 
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.geoloc.Geopriv;
 
 /**
@@ -48,35 +47,14 @@ public class PidfDocument {
 	
 	public void setPerson(Person newPerson) {
 		if (person == null) {
-			this.person = newPerson;
+			person = newPerson;
 		} else {
-			mergePersonItems(newPerson);
-		}
-	}
-	
-	private void mergePersonItems(Person newPerson) {
-		if (PresenceService.permanentState) {
-			// Permanent state procedure: there is one item person for hyper-availability and one item
-			// person for permanent presence info (freetext, link, photo-icon)
-			OverridingWillingness overriding = newPerson.getOverridingWillingness();
-			if (overriding != null) {
-				// It's the hyper-availability item
-				person.setOverridingWillingness(newPerson.getOverridingWillingness());
-			} else {
-				// It's the permanent state item: get only the last updated person item
-				if (newPerson.getTimestamp() >= person.getTimestamp()) {
-					newPerson.setOverridingWillingness(person.getOverridingWillingness());
-					person = newPerson;
-				}
-			}
-		} else {
-			// SIP procedure: get only the last updated person item
-			if (newPerson.getTimestamp() >= person.getTimestamp()) {	
+			if ((newPerson.getTimestamp()/1000) > (person.getTimestamp()/1000)) {
 				person = newPerson;
 			}
 		}
 	}
-
+	
 	public void addTuple(Tuple tuple) {
 		tuplesList.addElement(tuple);
 	}

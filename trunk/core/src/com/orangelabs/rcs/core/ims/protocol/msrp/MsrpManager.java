@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -47,6 +47,11 @@ public class MsrpManager {
      * MSRP session
      */
     private MsrpSession msrpSession = null;
+    
+    /**
+     * Session Id
+     */
+    private long sessionId;
    
     /**
      * The logger
@@ -62,6 +67,7 @@ public class MsrpManager {
     public MsrpManager(String localMsrpAddress, int localMsrpPort) {
     	this.localMsrpAddress = localMsrpAddress;
     	this.localMsrpPort = localMsrpPort;
+    	this.sessionId = System.currentTimeMillis();
     }
 
 	/**
@@ -79,7 +85,7 @@ public class MsrpManager {
      * @return MSRP path
      */
     public String getLocalMsrpPath() {
-    	return "msrp://" + localMsrpAddress + ":" + localMsrpPort + "/terminal;tcp";
+    	return "msrp://" + localMsrpAddress + ":" + localMsrpPort + "/" + sessionId + ";tcp";
     }
     
 	/**
@@ -98,24 +104,22 @@ public class MsrpManager {
 	 * @param remotePort Remote port
      * @param remoteMsrpPath Remote MSRP path
      * @param listener Event listener
+     * @return Created session
 	 * @throws MsrpException
 	 */
-	public void createMsrpClientSession(String remoteHost, int remotePort, String remoteMsrpPath, MsrpEventListener listener) throws MsrpException {
+	public MsrpSession createMsrpClientSession(String remoteHost, int remotePort, String remoteMsrpPath, MsrpEventListener listener) throws MsrpException {
         try {
 	        if (logger.isActivated()) {
-				logger.info("Create MSRP client end point at " + getLocalMsrpPath() +
-						" to " + remoteMsrpPath);
+				logger.info("Create MSRP client end point at " + remoteHost + ":" + remotePort);
 			}
 	
 			// Create a new MSRP session
 			msrpSession = new MsrpSession();
-			msrpSession.setFailureReportOption(false);
-			msrpSession.setSuccessReportOption(true);
 			msrpSession.setFrom(getLocalMsrpPath());
 			msrpSession.setTo(remoteMsrpPath);
 
 			// Create a MSRP client connection
-			MsrpConnection connection = new MsrpClientConnection(msrpSession, remoteHost, remotePort);
+			final MsrpConnection connection = new MsrpClientConnection(msrpSession, remoteHost, remotePort);
 
 			// Associate the connection to the session
 			msrpSession.setConnection(connection);
@@ -124,7 +128,10 @@ public class MsrpManager {
 			msrpSession.addMsrpEventListener(listener);
 			
 			// Open the connection
-        	connection.open();
+	    	connection.open();
+        	
+        	// Return the created session
+        	return msrpSession;
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create the MSRP client session", e);
@@ -138,11 +145,12 @@ public class MsrpManager {
 	 *
      * @param remoteMsrpPath Remote MSRP path
      * @param listener Event listener
+     * @return Created session
 	 * @throws MsrpException
 	 */
-	public void createMsrpServerSession(String remoteMsrpPath, MsrpEventListener listener) throws MsrpException {
-        if (logger.isActivated()) {
-			logger.info("Create MSRP server end point at " + getLocalMsrpPath());
+	public MsrpSession createMsrpServerSession(String remoteMsrpPath, MsrpEventListener listener) throws MsrpException {
+		if (logger.isActivated()) {
+			logger.info("Create MSRP server end point at " + localMsrpPort);
 		}
 
 		// Create a MSRP session
@@ -159,7 +167,7 @@ public class MsrpManager {
 		// Add event listener
 		msrpSession.addMsrpEventListener(listener);
 
-		// Open the connection from a thread context
+		// Open the connection in background
 		Thread thread = new Thread() {
 			public void run() {
 		        try {
@@ -172,6 +180,9 @@ public class MsrpManager {
 			}
 		};
 		thread.start();
+		
+    	// Return the created session
+    	return msrpSession;
 	}
 
 	/**

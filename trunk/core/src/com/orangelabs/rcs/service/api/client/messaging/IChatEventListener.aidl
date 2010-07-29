@@ -20,4 +20,10 @@ interface IChatEventListener {
 
 	// New text message received
 	void handleReceiveMessage(in InstantMessage msg);
+	
+	// Is composing event
+	void handleIsComposingEvent(in String contact, in boolean status);
+	
+	// Chat error
+	void handleImError(in int error);
 }

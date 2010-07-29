@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -42,6 +43,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -50,7 +52,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class OriginationFileTransferSession extends ContentSharingTransferSession implements MsrpEventListener {
+public class OriginatingFileTransferSession extends ContentSharingTransferSession implements MsrpEventListener {
 	/**
 	 * MSRP manager
 	 */
@@ -68,7 +70,7 @@ public class OriginationFileTransferSession extends ContentSharingTransferSessio
 	 * @param content Content to be shared
 	 * @param contact Remote contact
 	 */
-	public OriginationFileTransferSession(ImsService parent, MmContent content, String contact) {
+	public OriginatingFileTransferSession(ImsService parent, MmContent content, String contact) {
 		super(parent, content, contact);
 		
 		// Create dialog path
@@ -251,8 +253,10 @@ public class OriginationFileTransferSession extends ContentSharingTransferSessio
         	// The session is established
 	        getDialogPath().sessionEstablished();
 
-        	// Create the MSRP session
-	        msrpMgr.createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+        	// Create the MSRP client session
+	        MsrpSession session = msrpMgr.createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			session.setFailureReportOption(false);
+			session.setSuccessReportOption(true);
 	        
 	        // Notify listener
 	        if (getListener() != null) {
@@ -269,7 +273,7 @@ public class OriginationFileTransferSession extends ContentSharingTransferSessio
 				// Load data from memory
 				stream = new ByteArrayInputStream(data);
 			}
-	        msrpMgr.sendChunks(stream, getContent().getEncoding(), getContent().getSize());
+			msrpMgr.sendChunks(stream, getContent().getEncoding(), getContent().getSize());
 			
 		} catch(Exception e) {
         	if (logger.isActivated()) {
@@ -378,8 +382,8 @@ public class OriginationFileTransferSession extends ContentSharingTransferSessio
     		logger.info("Data transfered");
     	}
 
-    	// Close MSRP session
-		closeMsrpSession();
+    	// Close the MSRP session
+    	closeMsrpSession();
 		
 		// Terminate session
 		terminateSession();
@@ -388,7 +392,7 @@ public class OriginationFileTransferSession extends ContentSharingTransferSessio
     	getImsService().removeSession(this);
 
     	// Update messaging provider
-    	// TODO
+    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), "finished");
     	
     	// Notify listener
         if (getListener() != null) {

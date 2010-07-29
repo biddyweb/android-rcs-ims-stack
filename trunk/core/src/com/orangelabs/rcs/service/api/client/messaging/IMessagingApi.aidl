@@ -10,7 +10,7 @@ import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 interface IMessagingApi {
 
 	// Send an instant message in short mode
-	void sendShortIM(in String contact, in String txt);
+	boolean sendShortIM(in String contact, in String txt);
 
 	// Send an instant message in large mode
 	IInstantMessageSession sendLargeIM(in String contact, in String txt);
@@ -29,4 +29,7 @@ interface IMessagingApi {
 
 	// Get a chat session from its session ID
 	IChatSession getChatSession(in String id);
+	
+	// Get the chat session involving this contact, if any exists
+	IChatSession getChatSessionWithContact(in String contact);
 }

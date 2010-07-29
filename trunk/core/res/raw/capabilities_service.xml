@@ -20,7 +20,7 @@
 
 		<parameter description="IM session support"
 			 name="ImSession"
-			 value="false"/>
+			 value="true"/>
 
 		<parameter description="Other supported capabilities (names are separated by a space)"
 			 name="OtherCapabilities"

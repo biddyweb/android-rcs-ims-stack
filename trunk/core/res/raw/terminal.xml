@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<terminal>
+		<parameter description="Is Tel-URI format supported"
+			 name="TelUriFormatSupported"
+			 value="true"/>
+
 		<parameter description="Classname of the user profile interface"
 			 name="UserProfileInterface"
 			 value="com.orangelabs.rcs.core.ims.userprofile.SettingsUserProfileInterface"/>

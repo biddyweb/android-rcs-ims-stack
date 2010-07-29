@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -114,6 +114,9 @@ public class MediaCaptureStream implements ProcessorInputStream {
     public Buffer read() throws Exception {
     	// Read a new sample from the media player
     	MediaSample sample = player.readSample();
+    	if (sample == null) {
+    		return null;
+    	}
     	
     	// Create a buffer
 	    buffer.setData(sample.getData());   	

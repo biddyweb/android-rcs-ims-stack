@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.T140Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.RedFormat;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
@@ -38,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.media.MediaListener;
 import com.orangelabs.rcs.core.media.MediaPlayer;
 import com.orangelabs.rcs.core.media.MediaRenderer;
+import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -50,7 +52,8 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
 	/**
 	 * Text format
 	 */
-	private T140Format textFormat = null;
+	private T140Format 	textFormat = null;
+	private RedFormat  	redFormat  = null;
 		
     /**
      * The logger
@@ -71,8 +74,9 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
 		// Create dialog path
 		createOriginatingDialogPath();
 
-		// Set default codec
+		// Set default codecs
 		textFormat = new T140Format();
+		redFormat  = new RedFormat();
 		
 		// Set media player 
 		setMediaPlayer(player);
@@ -95,10 +99,12 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
 	    	// Create the RTP manager
 			int localRtpPort = NetworkRessourceManager.generateLocalUdpPort();
             setRtpReceiver(new MediaRtpReceiver(localRtpPort));
-    		setRtpSender(new MediaRtpSender(textFormat));
 	    	
 	    	// Build SDP part
-			int payload = textFormat.getPayload();
+            Config config = getImsService().getConfig();
+			int payload_text = textFormat.getPayload();
+			int payload_red  = redFormat.getPayload();
+			String clockRate = config.getString("TextClockRate");
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 			String sdp =
 	    		"v=0" + SipUtils.CRLF +
@@ -108,9 +114,10 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +
-	            "m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF + 
-	            "a=rtpmap:" + payload + " " + textFormat.getCodec() + SipUtils.CRLF +
-	            // TODO: a=rtpmap:100 red
+	            "m=text " + localRtpPort + " RTP/AVP " + payload_red + " "+ payload_text + SipUtils.CRLF + 
+	            "a=rtpmap:" + payload_red + " " + redFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
+	            "a=rtpmap:" + payload_text + " " + textFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
+	            "a=fmtp:" + payload_red + " " + textFormat.getPayload()+ "/" + textFormat.getPayload()+ "/" + textFormat.getPayload() + SipUtils.CRLF +
 	            "a=sendrecv";
 			
 			// Set the local SDP part in the dialog path
@@ -221,9 +228,26 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
             MediaDescription text = parser.getMediaDescription("text");
             int remotePort = text.port;
 	        
+            // Extract the payload type
+            String rtpmap = text.getMediaAttribute("rtpmap").getValue();
+
+            // Extract the text encoding
+            String encoding = rtpmap.substring(rtpmap.indexOf(text.payload)+text.payload.length()+1);
+            String codec = encoding.toLowerCase().trim();
+            int index = encoding.indexOf("/");
+			if (index != -1) {
+				codec = encoding.substring(0, index);
+			}
+            
             // Prepare the RTP sessions
-    		getRtpReceiver().prepareSession(getMediaRenderer(), textFormat);
-    		getRtpSender().prepareSession(getMediaPlayer(), remoteHost, remotePort);
+			if ((codec.equalsIgnoreCase(RedFormat.ENCODING))){				
+				setRtpSender(new MediaRtpSender(redFormat));
+	    		getRtpReceiver().prepareSession(getMediaRenderer(), redFormat);	
+			} else {
+				setRtpSender(new MediaRtpSender(textFormat));
+	    		getRtpReceiver().prepareSession(getMediaRenderer(), textFormat);
+			}
+            getRtpSender().prepareSession(getMediaPlayer(), remoteHost, remotePort);
 	        
 	        // Send ACK message
 	        if (logger.isActivated()) {

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -70,7 +70,12 @@ public class CallManager {
      */
     private String remoteParty = null;
     
-	/**
+    /**
+     * Incoming call
+     */
+    private boolean incomingCall = false;
+
+    /**
 	 * Telephony manager 
 	 */
 	private TelephonyManager tm;
@@ -137,6 +142,7 @@ public class CallManager {
 				case TelephonyManager.CALL_STATE_RINGING:
 					remoteParty = phoneNumber;
 					callState = CallManager.RINGING;
+					incomingCall = true;
 					if (logger.isActivated()) {
 						logger.debug("Call state: state=ringing, remote=" + remoteParty);
 					}
@@ -145,6 +151,7 @@ public class CallManager {
 				case TelephonyManager.CALL_STATE_IDLE:
 					remoteParty = null;
 					callState = CallManager.DISCONNECTED;
+					incomingCall = false;
 					if (logger.isActivated()) {
 						logger.debug("Call state: state=idle, remote=null");
 					}
@@ -170,13 +177,17 @@ public class CallManager {
 					if (logger.isActivated()) {
 						logger.debug("Call state: state=connected, remote=" + remoteParty);
 					}
-					
+
 					// If terminal connected to IMS then request capabilities
 					if (core.getImsModule().getCurrentNetworkInterface().isRegistered()) {
 						if (logger.isActivated()) {
 							logger.debug("Request capabilities to " + remoteParty);
 						}
-						if (remoteParty != null) {
+						// Due to to missing "ringing" state under Android for an outgoing call,
+						// the capabilities are only requested for an incoming call. Then the remote
+						// side will request also the capalities on receiving the OPTIONS request.
+						// TODO: hide the workaround when Google correct the bug
+						if (incomingCall && (remoteParty != null)) {
 							core.getCapabilityService().requestCapability(remoteParty);
 						}
 					}
@@ -224,13 +235,12 @@ public class CallManager {
 	 */
 	private BroadcastReceiver outgoingCallReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
-	        String phoneNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
+			String phoneNumber = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER);
 			if ((phoneNumber != null) && (phoneNumber.length() > 0)) {
-	        	remoteParty = phoneNumber;
+				remoteParty = phoneNumber;
 	        }
 		}
-	};	
-	
+	};
 	
 	/**
 	 * Returns the calling remote party
@@ -250,5 +260,23 @@ public class CallManager {
 	public boolean isConnected(String remote) {
 		// TODO: check also the remote MSISDN
 		return (callState == CONNECTED);
+	}
+	
+	/**
+	 * Handle receive capabilities request
+	 * 
+	 * @param contact Remote contact
+	 */
+	public void handleReceiveCapabilities(final String contact) {
+		// In case of an incoming 
+		if (!incomingCall) {
+			// Request capabilities to remote in background
+			Thread t = new Thread() {
+				public void run() {
+					core.getImsModule().getCapabilityService().requestCapability(contact);
+				}
+			};
+			t.start();
+		}
 	}
 }

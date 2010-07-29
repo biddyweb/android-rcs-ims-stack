@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -22,9 +22,8 @@ import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
-import com.orangelabs.rcs.core.ims.service.im.session.TerminatingAdhocGroupChatSession;
-import com.orangelabs.rcs.core.ims.service.im.session.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceError;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
@@ -149,18 +148,6 @@ public interface CoreListener {
 	 * @param session File transfer session
 	 */
 	public void handleFileTransferInvitation(ContentSharingTransferSession session);
-
-	/**
-     * IM has been sent with success 
-     */
-	public void handleSendInstantMessageSuccessful();
-	
-	/**
-	 * Outgoing IM has failed
-	 * 
-	 * @param error Error
-	 */
-	public void handleSendInstantMessageFailed(InstantMessageError error);
 
 	/**
 	 * A new IM has been received

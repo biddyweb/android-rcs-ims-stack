@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -178,8 +178,12 @@ public class PresenceService extends ImsService {
 	 */
 	public void stop() {
     	// Publish last presence info before to quit
-		String xml = buildAllPresenceInfo(presenceInfo);
-    	publisher.publish(xml);
+		if ((getImsModule().getImsConnectionManager().getCurrentNetworkInterface() != null) &&
+			getImsModule().getImsConnectionManager().getCurrentNetworkInterface().isRegistered() &&
+			publisher.isPublished()) {
+			String xml = buildAllPresenceInfo(presenceInfo);
+	    	publisher.publish(xml);
+		}
     	
     	// Stop publish
     	publisher.terminate();
@@ -408,14 +412,14 @@ public class PresenceService extends ImsService {
     }
   
     /**
-     * Build presence document
+     * Build presence info
      * 
      * @param freetext Freetext
      * @param favoriteLink FavoriteLink
      * @param photoIcon Photo-icon
      * @return Document
      */
-    private String buildPresence(String freetext, FavoriteLink favoriteLink, PhotoIcon photoIcon) {
+    private String buildPresenceInfo(String freetext, FavoriteLink favoriteLink, PhotoIcon photoIcon) {
     	String document = "";
     	if ((favoriteLink != null) && (favoriteLink.getLink() != null)) {
     		document += "  <ci:homepage>" + favoriteLink.getLink() + "</ci:homepage>" + SipUtils.CRLF;
@@ -426,10 +430,10 @@ public class PresenceService extends ImsService {
     			"\" opd:fsize=\"" + photoIcon.getSize() +
     			"\" opd:contenttype=\"" + photoIcon.getType() +
     			"\" opd:resolution=\"" + photoIcon.getResolution() + "\">http://" + xdm.getEndUserPhotoIconUrl() +
-    			"  </rpid:status-icon>" + SipUtils.CRLF;
+    			"</rpid:status-icon>" + SipUtils.CRLF;
     	}
     	if (freetext != null){
-    		document += "  <pdm:note>" + StringUtils.forXML(freetext) + "</pdm:note>" + SipUtils.CRLF;
+    		document += "  <pdm:note>" + StringUtils.encodeUTF8(freetext) + "</pdm:note>" + SipUtils.CRLF;
     	}
     	return document;
     }
@@ -516,7 +520,7 @@ public class PresenceService extends ImsService {
     	// Build person info (freetext, favorite link, photo-icon and poke status)
     	document += "<pdm:person id=\"p1\">" + SipUtils.CRLF +
 					buildHyperavailability(info.isHyperavailable()) +
-					buildPresence(info.getFreetext(), info.getFavoriteLink(), info.getPhotoIcon()) +
+					buildPresenceInfo(info.getFreetext(), info.getFavoriteLink(), info.getPhotoIcon()) +
     				"  <pdm:timestamp>" + timestamp + "</pdm:timestamp>" + SipUtils.CRLF +
 				    "</pdm:person>" + SipUtils.CRLF +
 				    "</presence>" + SipUtils.CRLF;
@@ -530,7 +534,7 @@ public class PresenceService extends ImsService {
      * @param info Presence info
      * @return Document
      */
-    private String buildPartialPresenceInfo(PresenceInfo info) {    	
+    private String buildPartialPresenceDocument(PresenceInfo info) {    	
     	String document= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
     		"<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" +
     		" xmlns:op=\"urn:oma:xml:prs:pidf:oma-pres\"" +
@@ -567,7 +571,7 @@ public class PresenceService extends ImsService {
      * @param info Presence info
      * @return Document
      */
-    private String buildPermanentPresenceInfo(PresenceInfo info) {    	
+    private String buildPermanentPresenceDocument(PresenceInfo info) {    	
     	String document= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
     		"<presence xmlns=\"urn:ietf:params:xml:ns:pidf\"" +
     		" xmlns:opd=\"urn:oma:xml:pde:pidf:ext\"" +
@@ -581,7 +585,7 @@ public class PresenceService extends ImsService {
     	
     	// Build person info (freetext, favorite link and photo-icon)
     	document += "<pdm:person id=\"p1\">" + SipUtils.CRLF +
-					buildPresence(info.getFreetext(), info.getFavoriteLink(), info.getPhotoIcon()) +
+					buildPresenceInfo(info.getFreetext(), info.getFavoriteLink(), info.getPhotoIcon()) +
     				"  <pdm:timestamp>" + timestamp + "</pdm:timestamp>" + SipUtils.CRLF +
 				    "</pdm:person>" + SipUtils.CRLF +
 				    "</presence>" + SipUtils.CRLF;
@@ -643,7 +647,7 @@ public class PresenceService extends ImsService {
 		// Publish presence info
     	if (PresenceService.permanentState) {
         	// Build permanent presence info
-    		String xml = buildPermanentPresenceInfo(info);
+    		String xml = buildPermanentPresenceDocument(info);
 
     		// Permanent state procedure: publish the new presence info via XCAP
     		if (logger.isActivated()) {
@@ -652,6 +656,8 @@ public class PresenceService extends ImsService {
     		HttpResponse response = xdm.setPresenceInfo(xml);
     		if ((response != null) && response.isSuccessfullResponse()) { 
     			result = true;
+    		} else {
+    			result = false;
     		}
     	} else {
         	// Build presence info
@@ -669,7 +675,7 @@ public class PresenceService extends ImsService {
     		presenceInfo = info;
 		}
     	
-		return result;
+    	return result;
     }
     
     /**
@@ -679,9 +685,11 @@ public class PresenceService extends ImsService {
 	 * @returns Returns true if poke has been publish with success, else returns false
      */
     public boolean publishPoke(boolean status) {
-    	// Reset timestamp
-    	presenceInfo.resetTimestamp();
-
+    	if (!PresenceService.permanentState) {    	
+	    	// Reset timestamp
+	    	presenceInfo.resetTimestamp();
+    	}
+    	
     	// Update presence info
     	boolean currentStatus = presenceInfo.isHyperavailable();
     	presenceInfo.setHyperavailabilityStatus(status);
@@ -689,7 +697,7 @@ public class PresenceService extends ImsService {
     	// Build presence info
 		String xml;
 		if (PresenceService.permanentState) {
-			xml = buildPartialPresenceInfo(presenceInfo);
+			xml = buildPartialPresenceDocument(presenceInfo);
 		} else {
 			xml = buildAllPresenceInfo(presenceInfo);
 		}
@@ -776,7 +784,7 @@ public class PresenceService extends ImsService {
      */
     public boolean inviteContactToSharePresence(String contact) {
 		// Remove contact from the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		xdm.removeContactFromBlockedList(contactUri);
 
 		// Remove contact from the revoked contacts list
@@ -799,12 +807,12 @@ public class PresenceService extends ImsService {
      */
     public boolean revokeSharedContact(String contact){
 		// Add contact in the revoked contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		HttpResponse response = xdm.addContactToRevokedList(contactUri);
 		if ((response == null) || (!response.isSuccessfullResponse())) {
 			return false;
 		}
-		
+
 		// Remove contact from the granted contacts list
 		response = xdm.removeContactFromGrantedList(contactUri);
 		if ((response != null) && (response.isSuccessfullResponse() || response.isNotFoundResponse())) { 
@@ -822,7 +830,7 @@ public class PresenceService extends ImsService {
 	 */
 	public boolean acceptPresenceSharingInvitation(String contact) {
 		// Add contact in the granted contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		HttpResponse response = xdm.addContactToGrantedList(contactUri);
 		if ((response != null) && response.isSuccessfullResponse()) { 
 			return true;
@@ -839,7 +847,7 @@ public class PresenceService extends ImsService {
 	 */
 	public boolean blockPresenceSharingInvitation(String contact){
 		// Add contact in the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		HttpResponse response = xdm.addContactToBlockedList(contactUri);
 		if ((response != null) && response.isSuccessfullResponse()) { 
 			return true;
@@ -856,7 +864,7 @@ public class PresenceService extends ImsService {
      */
 	public boolean removeRevokedContact(String contact) {
 		// Remove contact from the revoked contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		HttpResponse response = xdm.removeContactFromRevokedList(contactUri);
 		if ((response != null) && (response.isSuccessfullResponse() || response.isNotFoundResponse())) { 
 			return true;
@@ -873,7 +881,7 @@ public class PresenceService extends ImsService {
      */
 	public boolean removeBlockedContact(String contact) {
 		// Remove contact from the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
 		HttpResponse response = xdm.removeContactFromBlockedList(contactUri);
 		if ((response != null) && (response.isSuccessfullResponse() || response.isNotFoundResponse())) { 
 			return true;

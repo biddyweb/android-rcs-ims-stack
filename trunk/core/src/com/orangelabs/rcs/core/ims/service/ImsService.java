@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -24,6 +24,7 @@ import java.util.Hashtable;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.utils.Config;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -147,6 +148,27 @@ public abstract class ImsService {
 		return (ImsServiceSession)sessions.get(id);
 	}	
 
+	/**
+	 * Returns a session involving given contact
+	 * 
+	 * @param contact Contact involved into the session 
+	 * @return Session
+	 */
+	public ImsServiceSession getSessionWithContact(String contact) {
+		// Search all the sessions
+		Enumeration<ImsServiceSession> sessions = getSessions();
+		while(sessions.hasMoreElements()){
+			ImsServiceSession session = sessions.nextElement();
+			if (PhoneUtils.formatNumberToInternational(PhoneUtils.extractNumberFromUri(session.getRemoteContact())).equalsIgnoreCase(PhoneUtils.formatNumberToInternational(contact))){
+				// If this sessions is involving the searched contact, return it
+				return session;
+			}
+		}
+		
+		// No session with given contact has been found
+		return null;
+	}	
+	
 	/**
 	 * Returns the list of sessions
 	 * 

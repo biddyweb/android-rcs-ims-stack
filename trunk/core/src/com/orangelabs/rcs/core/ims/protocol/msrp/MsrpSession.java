@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -36,7 +36,7 @@ public class MsrpSession {
 	/**
 	 * Failure report option
 	 */
-	private boolean failureReportOption = true;
+	private boolean failureReportOption = false;
 
 	/**
 	 * Success report option
@@ -303,8 +303,6 @@ public class MsrpSession {
 						reportSemaphore.wait();
 					} catch (InterruptedException e) {}
 				}
-				
-				// TODO : test the status of the received report
 			}
 			
 			// Notify event listener
@@ -510,10 +508,29 @@ public class MsrpSession {
 		connection.sendChunk(buffer.toByteArray());
 		buffer.close();
 		
-		// Wait a little before closing the connection 
+		// Wait response
+		synchronized(respSemaphore) {
+			try {
+				respSemaphore.wait(MsrpManager.TIMEOUT * 1000);
+			} catch (InterruptedException e) {}
+		}
+	}
+	
+	/**
+	 * Receive MSRP REPORT response
+	 * 
+	 * @param txId Transaction ID
+	 * @param headers Request headers
+	 * @throws IOException
+	 */
+	public void sendMsrpReportResponse(String txId, Hashtable<String, String> headers) {
 		try {
-			Thread.sleep(1000);
-		} catch(Exception e) {}
+			sendMsrpResponse(MsrpConstants.RESPONSE_OK + " " + MsrpConstants.COMMENT_OK, txId, headers);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send MSRP REPORT error", e);
+			}
+		}
 	}
 	
 	/**
@@ -565,16 +582,16 @@ public class MsrpSession {
 			byte[] dataContent = receivedChunks.getReceivedData();
 			receivedChunks.resetCache();
 			
+			// Read content type
+			String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
+
+			// Notify event listener
+			msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
+
 			// Send MSRP report if requested
 			if (successReportNeeded) {
 				sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
 			}
-			
-			// Read content type
-			String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
-			
-			// Notify event listener
-			msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
 		} else
 		if (flag == MsrpConstants.FLAG_ABORT) {
 			// Transfer aborted
@@ -630,6 +647,9 @@ public class MsrpSession {
 		if (logger.isActivated()) {
 			logger.info("REPORT request received (transaction=" + txId + ")");
 		}
+		
+		// Send MSRP report response
+		sendMsrpReportResponse(txId, headers);
 		
 		// Unblock wait report
 		synchronized(reportSemaphore) {

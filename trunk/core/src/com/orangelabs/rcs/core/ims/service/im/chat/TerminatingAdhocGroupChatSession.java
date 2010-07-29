@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core.ims.service.im.session;
+package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.Vector;
 
@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -117,7 +118,7 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
     		int remotePort = desc.port;
 			
             // Extract the "setup" parameter
-            String remoteSetup = "active";
+            String remoteSetup = "passive";
 			MediaAttribute attr4 = desc.getMediaAttribute("setup");
 			if (attr4 != null) {
 				remoteSetup = attr4.getValue();
@@ -126,21 +127,18 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
 				logger.debug("Remote setup attribute is " + remoteSetup);
 			}
             
-    		// Create the MSRP session
+    		// Set setup mode
             String localSetup = "passive";
             if (remoteSetup.equals("active")) {
             	// Passive mode: the terminal should wait a media connection
-            	getMsrpMgr().createMsrpServerSession(remotePath, this);
     			localSetup = "passive";
             } else 
             if (remoteSetup.equals("passive")) {
             	// Active mode: the terminal should initiate a media connection
-            	getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
     			localSetup = "active";
             } else {
-            	// The terminal decide to be in passive mode by default
-            	getMsrpMgr().createMsrpServerSession(remotePath, this);
-    			localSetup = "passive";
+            	// The terminal is active by default
+    			localSetup = "active";
             }
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
@@ -174,7 +172,13 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
 				return;
 			}
 	        
-	        // Send a 200 OK response
+    		// Create the MSRP server session
+            if (localSetup.equals("passive")) {
+            	// Passive mode: client wait a connection
+            	getMsrpMgr().createMsrpServerSession(remotePath, this);
+            }
+            
+            // Send a 200 OK response
         	if (logger.isActivated()) {
         		logger.info("Send 200 OK");
         	}
@@ -200,10 +204,16 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
     				logger.info("ACK request received");
     			}
 
-    	        // The session is established
+                // The session is established
     	        getDialogPath().sessionEstablished();
 
-    	        // Notify listener
+        		// Create the MSRP client session
+                if (localSetup.equals("active")) {
+                	// Active mode: client should connect
+                	getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                }
+
+                // Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();
     	        }

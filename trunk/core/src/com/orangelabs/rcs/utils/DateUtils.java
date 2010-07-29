@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -35,7 +35,8 @@ public class DateUtils {
 	 */
 	public static String encodeDate(long date) {
 		// Format: 2009-03-19T14:03:54Z
-		Calendar calendar = Calendar.getInstance();
+		// Timezone of published date must be in UTC, ie GMT+0
+		Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT-0"));
 		calendar.setTimeInMillis(date); 
 
 		StringBuffer buff = new StringBuffer();

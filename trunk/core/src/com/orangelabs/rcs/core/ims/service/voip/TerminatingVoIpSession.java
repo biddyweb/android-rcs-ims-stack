@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -163,7 +163,7 @@ public class TerminatingVoIpSession extends VoIpSession implements MediaListener
 
 			// Prepare the RTP sessions
 			getRtpReceiver().prepareSession(getMediaRenderer(), audioFormat);
-			getRtpSender().prepareSession(getMediaPlayer(), remoteHost, localRtpPort);
+			getRtpSender().prepareSession(getMediaPlayer(), remoteHost, desc.port);
 
 			// Build SDP part
 			String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());

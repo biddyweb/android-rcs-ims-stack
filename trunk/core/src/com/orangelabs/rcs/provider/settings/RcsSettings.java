@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -108,7 +108,31 @@ public class RcsSettings {
         String where = RcsSettingsData.KEY_KEY + "='" + key + "'";
         cr.update(databaseUri, values, where, null);
 	}
-
+	
+	/**
+	 * Is the RCS service activated
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isServiceActivated() {
+		boolean result = false;
+		if (instance != null) {
+			return Boolean.parseBoolean(readParameter(RcsSettingsData.SERVICE_ACTIVATED));
+		}
+		return result;
+	}	
+	
+	/**
+	 * Set phone vibrate for presence invitation
+	 * 
+	 * @param activated Activated state
+	 */
+	public void setServiceActivated(boolean activated) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.SERVICE_ACTIVATED, Boolean.toString(activated));
+		}
+	}	
+	
 	/**
 	 * Get the ringtone for presence invitation
 	 * 
@@ -205,6 +229,30 @@ public class RcsSettings {
 		}
 	}	
 
+	/**
+	 * Is phone beep if the CSh available
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isPhoneBeepIfCShAvailable() {
+		boolean result = false;
+		if (instance != null) {
+			return Boolean.parseBoolean(readParameter(RcsSettingsData.CSH_AVAILABLE_BEEP));
+		}
+		return result;
+	}	
+	
+	/**
+	 * Set phone beep if CSh available
+	 * 
+	 * @param beep Beep state
+	 */
+	public void setPhoneBeepIfCShAvailable(boolean beep) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.CSH_AVAILABLE_BEEP, Boolean.toString(beep));
+		}
+	}	
+	
 	/**
 	 * Get the ringtone for file transfer invitation
 	 * 
@@ -417,6 +465,19 @@ public class RcsSettings {
 	}	
 
 	/**
+	 * Returns last user profile private Id
+	 * 
+	 * @return String value
+	 */
+	public String getLastUserProfilePrivateId() {
+		String result = null;
+		if (instance != null) {
+			return readParameter(RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID);
+		}
+		return result;
+	}	
+	
+	/**
 	 * Set user profile private Id
 	 * 
 	 * @param value Value
@@ -427,6 +488,17 @@ public class RcsSettings {
 		}
 	}	
 
+	/**
+	 * Set last user profile private Id
+	 * 
+	 * @param value Value
+	 */
+	public void setLastUserProfilePrivateId(String value) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID, value);
+		}
+	}	
+	
 	/**
 	 * Returns user profile password
 	 * 

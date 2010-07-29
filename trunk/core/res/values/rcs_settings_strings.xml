@@ -1,10 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="title_settings">RCS settings</string>
+    <string name="title_settings">Settings</string>
 	<string name="title_about">About RCS</string>
 	<string name="title_presence_settings">Presence settings</string>		
+	<string name="title_presence_invitation">Presence invitation settings</string>		
+    <string name="title_freetexts">Predefined freetexts</string>
 	<string name="title_messaging_settings">Messaging settings</string>
-	<string name="title_filetransfer_settings">File transfer settings</string>
+	<string name="title_filetransfer_invitation">File transfer invitation settings</string>
     <string name="title_edit_freetext">Type your free text</string>
     <string name="title_edit_username">User name</string>
     <string name="title_edit_display_name">Display name</string>
@@ -21,6 +23,8 @@
     <string name="title_ims_settings">IMS settings</string>
     <string name="title_xdm_settings">XDMS settings</string>
 	<string name="title_csh_settings">Content sharing settings</string>		
+	<string name="title_csh_invitation">Content sharing invitation settings</string>
+	<string name="title_csh_available">Content sharing available</string>
 			
 	<string name="menu_help">User guide</string>
 	<string name="menu_about">About</string>
@@ -43,15 +47,16 @@
 	<string name="summary_rcs_service_on">Select to turn off the RCS service</string>
 	<string name="summary_rcs_service_off">Select to turn on the RCS service</string>
     <string name="summary_edit_freetext">Edit your predefined free text</string>
+	<string name="summary_csh_available">Beep when a content sharing may be initiated during the voice call</string>
 
+	<string name="label_beep">Phone beep</string>
     <string name="label_vibrate">Phone vibrate</string>
     <string name="label_ringtone">Phone ringtone</string>
     <string name="label_toast">Popup alert</string>
     <string name="label_rcs_service">RCS service activation</string>
 	<string name="label_confirm">Confirmation</string>
 	<string name="label_rcs_service_startup">RCS service will be started</string>
-	<string name="label_rcs_service_shutdown">RSC service will be terminated</string>
-    <string name="label_freetext">Predefined freetext</string>
+	<string name="label_rcs_service_shutdown">RCS service will be terminated</string>
 	<string name="label_about">Rich Communication Suite software application</string>
 	<string name="label_copyrights">Copyright © Orange labs\nSoftware certificat IDDN FR.001.020013.000.S.P.2009.000.30810</string>
 	<string name="label_welcome">Welcome to the Rich Communication Suite</string>
@@ -66,7 +71,6 @@
 	<string name="label_get_msisdn">Enter your phone number in international format</string>
 	<string name="label_ok">OK</string>
 	<string name="label_cancel">Cancel</string>
-	<string name="label_hint_msisdn">+33</string>
 	<string name="label_warning">You should restart the service to take into account your modifications</string>
 	<string name="label_hint_menu">Press Menu for RCS options.</string>
 </resources>

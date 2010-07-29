@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -20,33 +20,21 @@ package com.orangelabs.rcs.service.api.server.messaging;
 
 import java.util.List;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.text.TextUtils;
-
-import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
-import com.orangelabs.rcs.core.ims.service.im.session.InstantMessageSession;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.RcsCoreService;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IInstantMessageSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
-import com.orangelabs.rcs.service.api.client.messaging.MessagingApiIntents;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -57,16 +45,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class MessagingApiService extends IMessagingApi.Stub {
-	/**
-	 * Notification ID
-	 */
-	private final static int FILETRANSFER_INVITATION_NOTIFICATION = 1003;
-	
-	/**
-	 * Notification ID
-	 */
-	private final static int CHAT_INVITATION_NOTIFICATION = 1004;
-
 	/**
 	 * The logger
 	 */
@@ -85,102 +63,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * Close API
 	 */
 	public void close() {
-		// Remove notification
-		MessagingApiService.removeFileTransferInvitationNotification();
 	}
-
-	/**
-     * Add file transfer invitation notification
-     * 
-     * @param contact Contact
-     * @param sessionId Session ID
-     */
-    public static void addFileTransferInvitationNotification(String contact, String sessionId) {
-		// Create notification
-		Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
-		intent.putExtra("contact", contact);
-		intent.putExtra("sessionId", sessionId);
-        PendingIntent contentIntent = PendingIntent.getActivity(RcsCoreService.CONTEXT, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification notif = new Notification(R.drawable.rcs_core_notif_filetransfer_icon,
-        		RcsCoreService.CONTEXT.getString(R.string.title_filetransfer_notification),
-        		System.currentTimeMillis());
-        notif.flags = Notification.FLAG_AUTO_CANCEL;
-        notif.setLatestEventInfo(RcsCoreService.CONTEXT,
-        		RcsCoreService.CONTEXT.getString(R.string.title_filetransfer_notification),
-        		RcsCoreService.CONTEXT.getString(R.string.label_filetransfer_notification),
-        		contentIntent);
-        
-        // Set ringtone
-        String ringtone = RcsSettings.getInstance().getFileTransferInvitationRingtone();        	
-        if (!TextUtils.isEmpty(ringtone)) {
-			notif.sound = Uri.parse(ringtone);
-        }
-
-        // Set vibration
-        if (RcsSettings.getInstance().isPhoneVibrateForFileTransferInvitation()) {
-        	notif.defaults |= Notification.DEFAULT_VIBRATE;
-        }
-        
-        // Send notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(FILETRANSFER_INVITATION_NOTIFICATION, notif);		
-    }
-
-    /**
-     * Remove file transfer invitation notification
-     */
-    public static void removeFileTransferInvitationNotification() {
-		// Remove the notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FILETRANSFER_INVITATION_NOTIFICATION);
-    }
-
-	/**
-     * Add chat invitation notification
-     * 
-     * @param contact Contact
-     * @param sessionId Session ID
-     */
-    public static void addChatInvitationNotification(String contact, String sessionId) {
-		// Create notification
-		Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
-		intent.putExtra("contact", contact);
-    	// TODO: add suject
-		intent.putExtra("sessionId", sessionId);
-        PendingIntent contentIntent = PendingIntent.getActivity(RcsCoreService.CONTEXT, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification notif = new Notification(R.drawable.rcs_core_notif_chat_icon,
-        		RcsCoreService.CONTEXT.getString(R.string.title_chat_notification),
-        		System.currentTimeMillis());
-        notif.flags = Notification.FLAG_AUTO_CANCEL;
-        notif.setLatestEventInfo(RcsCoreService.CONTEXT,
-        		RcsCoreService.CONTEXT.getString(R.string.title_chat_notification),
-        		RcsCoreService.CONTEXT.getString(R.string.label_chat_notification),
-        		contentIntent);
-        
-/* TODO       // Set ringtone
-        String ringtone = RcsSettings.getInstance().getFileTransferInvitationRingtone();        	
-        if (!TextUtils.isEmpty(ringtone)) {
-			notif.sound = Uri.parse(ringtone);
-        }
-
-        // Set vibration
-        if (RcsSettings.getInstance().isPhoneVibrateForFileTransferInvitation()) {
-        	notif.defaults |= Notification.DEFAULT_VIBRATE;
-        }*/
-        
-        // Send notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(CHAT_INVITATION_NOTIFICATION, notif);		
-    }
-
-    /**
-     * Remove chat invitation notification
-     */
-    public static void removeChatInvitationNotification() {
-		// Remove the notification
-		NotificationManager notificationManager = (NotificationManager)RcsCoreService.CONTEXT.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(CHAT_INVITATION_NOTIFICATION);
-    }
 
     /**
      * Transfer a file
@@ -239,9 +122,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * 
      * @param contact Contact
      * @param txt Text message
+     * @return Boolean result
      * @throws ServerApiException
 	 */
-	public void sendShortIM(String contact, String txt) throws ServerApiException {
+	public boolean sendShortIM(String contact, String txt) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Send IM in short mode to " + contact);
 		}
@@ -251,7 +135,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		try {
 			InstantMessage msg = new InstantMessage(contact, txt); 
-			Core.getInstance().getImService().sendInstantMessage(msg);
+			return Core.getInstance().getImService().sendPagerInstantMessage(msg);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
@@ -344,6 +228,29 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		
 		try {
 			ImsServiceSession session = Core.getInstance().getImService().getSession(id);
+			if ((session != null) && (session instanceof InstantMessageSession)) {
+				return new ChatSession((InstantMessageSession)session);
+			} else {
+				return null;
+			}
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
+	}
+	
+	/**
+	 * Get the chat session with given contact or returns null if no session is in progress
+	 * 
+	 * @param contact Contact
+	 * @return Session
+	 * @throws ServerApiException
+	 */
+	public IChatSession getChatSessionWithContact(String contact) throws ServerApiException {
+		// Test core availability
+		ServerApiUtils.testCore();
+		
+		try {
+			ImsServiceSession session = Core.getInstance().getImService().getSessionWithContact(contact);
 			if ((session != null) && (session instanceof InstantMessageSession)) {
 				return new ChatSession((InstantMessageSession)session);
 			} else {

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -124,27 +124,15 @@ public class JavaDepacketizer extends VideoCodec {
         		
         		  // Copy packet data to reassembledData
         		  reassembledData = new byte[currentRtpPacketData.length-headerSize];
-        		  for (int j=0;j<currentRtpPacketData.length-headerSize;j++){
-    				reassembledData[j] = currentRtpPacketData[j+headerSize];
-        		  }
+        		  System.arraycopy(currentRtpPacketData, headerSize, reassembledData, 0, currentRtpPacketData.length-headerSize);
         	  } else {
     			// Concatenete new data to reassembledData
         		byte[] data = new byte[reassembledData.length+buffer.getLength()];
-       			int i=0;
-       			for (;i<reassembledData.length;i++){
-       				// Copy begin of buffer
-       				data[i]=reassembledData[i];
-       			}
-       			for (int j=0;j<buffer.getLength()-headerSize;j++){
-       				// Copy end of buffer with new data
-       				data[i+j]=currentRtpPacketData[j+headerSize];
-       			}
+       			System.arraycopy(reassembledData, 0, data, 0, reassembledData.length);
+       			System.arraycopy(currentRtpPacketData, headerSize, data, reassembledData.length, buffer.getLength());
     			// Copy data to reassembledData
     			reassembledData = new byte[data.length];
-    			int j=0;
-    			for (;j<data.length;j++){
-    				reassembledData[j] = data[j];
-    			}
+    			System.arraycopy(data, 0, reassembledData, 0, data.length);
       		}        	  
 		}
 		

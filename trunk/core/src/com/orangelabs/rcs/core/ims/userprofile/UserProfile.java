@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -75,6 +75,7 @@ public class UserProfile {
 	 * 
 	 * @param username Username
 	 * @param displayName Display name
+	 * @param publicUri Public uri
 	 * @param privateID Private id
 	 * @param password Password
 	 * @param homeDomain Home domain
@@ -137,7 +138,7 @@ public class UserProfile {
 	 * @return Public SIP URI with display name
 	 */
 	public String getNameAddress() {
-		String uri = "\""+ displayName + "\"" + " <" +"sip:" + username + "@" + homeDomain+ ">";			
+		String uri = "\""+ displayName + "\"" + " <" +getPublicUri()+ ">";			
 		return uri;
 	}	
 	

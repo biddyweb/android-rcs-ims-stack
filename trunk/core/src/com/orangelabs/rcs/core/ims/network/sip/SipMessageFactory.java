@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -576,13 +576,6 @@ public class SipMessageFactory {
 			Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader("Supported", "timer");
 			invite.addHeader(supportedHeader);
 	
-	        // Set the Session-Expires header
-			if (expirePeriod != -1) {
-				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader("Session-Expires",
-							expirePeriod + ";refresher=uac");
-				invite.addHeader(sessionExpiresHeader);
-			}
-			
 	        // Set the message content
 	        invite.setContent(content, contentType);
 
@@ -626,13 +619,6 @@ public class SipMessageFactory {
 			// Set the Require header
 	    	Header requireHeader = SipUtils.HEADER_FACTORY.createHeader("Require", "timer");
 			response.addHeader(requireHeader);			
-			
-			// Set the Session-Expires header
-			int expirePeriod = SipUtils.extractSessionTimerPeriod(dialog.getInvite());
-			if (expirePeriod != -1) {
-				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader("Session-Expires", expirePeriod + ";refresher=uac");
-				response.addHeader(sessionExpiresHeader);
-			}
 			
 	        // Set the message content
 			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "sdp");

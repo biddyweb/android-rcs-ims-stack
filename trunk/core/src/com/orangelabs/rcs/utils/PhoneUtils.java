@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -18,6 +18,11 @@
  ******************************************************************************/
 package com.orangelabs.rcs.utils;
 
+import android.content.Context;
+import android.telephony.TelephonyManager;
+
+import com.orangelabs.rcs.core.ims.ImsModule;
+
 /**
  * Phone utility functions
  * 
@@ -25,9 +30,41 @@ package com.orangelabs.rcs.utils;
  */
 public class PhoneUtils {
 	/**
-	 * International prefix
+	 * Tel-URI format supported by the platform
 	 */
-	public final static String INTERNATIONAL_PREFIX = "+33";
+	public static boolean TEL_URI_SUPPORTED = false;
+	
+	/**
+	 * Country code
+	 */
+	public static String COUNTRY_CODE = "+33";
+
+	/**
+	 * Set the country code
+	 * 
+	 * @param context Context 
+	 */
+	public static void setCountryCode(Context context) {
+		if (context == null) {
+			return;
+		}
+
+		TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+		String cc = tm.getSimCountryIso();
+		if (cc.startsWith("+")) {
+			COUNTRY_CODE = cc; 
+		} else {
+			if (cc.equalsIgnoreCase("fr")) {
+				COUNTRY_CODE = "+33"; 
+			} else
+			if (cc.equalsIgnoreCase("cn")) {
+				COUNTRY_CODE = "+86"; 
+			} else {
+				COUNTRY_CODE = ""; 
+			}
+			// TODO: how to generalize the mapping table
+		}
+	}
 
 	/**
 	 * Format a phone number to international format
@@ -36,6 +73,10 @@ public class PhoneUtils {
 	 * @return International number
 	 */
 	public static String formatNumberToInternational(String number) {
+		if (number == null) {
+			return null;
+		}
+
 		String formattedNumber = "";
 		for(int i=0; i < number.length(); i++) {
 			char c = number.charAt(i);
@@ -43,29 +84,40 @@ public class PhoneUtils {
 				formattedNumber += c;
 			}
 		}
-		if (!formattedNumber.startsWith("+")) {
-			formattedNumber = INTERNATIONAL_PREFIX + formattedNumber.substring(1);
+
+		// TODO: see RFC to format into international number
+		if (formattedNumber.startsWith("0")) {
+			formattedNumber = COUNTRY_CODE + formattedNumber.substring(1);
 		} else
-		if (formattedNumber.startsWith("00")) {
-			formattedNumber = INTERNATIONAL_PREFIX + formattedNumber.substring(2);
+		if (!formattedNumber.startsWith("+")) {
+			formattedNumber = COUNTRY_CODE + formattedNumber;
 		}
 		return formattedNumber;
 	}
 	
 	/**
-	 * Format a phone number to international Tel-URI
+	 * Format a phone number to a SIP address (SIP-URI or Tel-URI)
 	 * 
 	 * @param number Phone number
 	 * @return Tel-URI
 	 */
-	public static String formatNumberToTelUri(String number) {
+	public static String formatNumberToSipAddress(String number) {
+		if (number == null) {
+			return null;
+		}
+
 		if (number.startsWith("tel:")) {
 			number = number.substring(4);
 		} else		
 		if (number.startsWith("sip:")) {
 			number = number.substring(4, number.indexOf("@"));
 		}
-		return "tel:" + formatNumberToInternational(number);
+		
+		if (TEL_URI_SUPPORTED) {
+			return "tel:" + formatNumberToInternational(number);
+		} else {
+			return "sip:" + formatNumberToInternational(number) + "@" + ImsModule.IMS_USER_PROFILE.getHomeDomain() + ";user=phone";
+		}
 	}
 
 	/**
@@ -75,12 +127,25 @@ public class PhoneUtils {
 	 * @return Number
 	 */
 	public static String extractNumberFromUri(String uri) {
-		if (uri.startsWith("tel:")) {
-			uri = uri.substring(4);
-		} else		
-		if (uri.startsWith("sip:")) {
-			uri = uri.substring(4, uri.indexOf("@"));
+		if (uri == null) {
+			return null;
 		}
-		return formatNumberToInternational(uri);
+
+		try {
+			int index1 = uri.indexOf("tel:");
+			if (index1 != -1) {
+				uri = uri.substring(index1+4);
+			}
+			
+			index1 = uri.indexOf("sip:");
+			if (index1 != -1) {
+				int index2 = uri.indexOf("@", index1);
+				uri = uri.substring(index1+4, index2);
+			}
+			
+			return formatNumberToInternational(uri);
+		} catch(Exception e) {
+			return null;
+		}
 	}
 }

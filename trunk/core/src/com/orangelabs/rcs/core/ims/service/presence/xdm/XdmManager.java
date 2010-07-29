@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -30,7 +30,6 @@ import org.xml.sax.InputSource;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.TerminalInfo;
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.presence.PhotoIcon;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.platform.network.SocketConnection;
@@ -76,7 +75,12 @@ public class XdmManager {
 		int index1 = addr.indexOf(":");
 		int index2 = addr.indexOf("/", index1);
 		xdmServerHost = addr.substring(0, index1);
-		xdmServerPort = Integer.parseInt(addr.substring(index1+1, index2));
+		// TODO: use a better parser
+		if (index2 != -1) {
+			xdmServerPort = Integer.parseInt(addr.substring(index1+1, index2));
+		} else {
+			xdmServerPort = Integer.parseInt(addr.substring(index1+1));
+		}
 		xdmServerAddr = addr;
 		
 		if (logger.isActivated()) {
@@ -159,6 +163,8 @@ public class XdmManager {
 			// Set the cookie header
 			httpRequest += "Cookie: " + cookie + HttpUtils.CRLF;
 		}
+
+		httpRequest += "X-3GPP-Intended-Identity: " + ImsModule.IMS_USER_PROFILE.getPublicUri() + HttpUtils.CRLF;
 
 		if (request.getContent() != null) {
 			// Set the content type
@@ -1010,7 +1016,7 @@ public class XdmManager {
 			}
 	
 			// Content
-			String data = Base64.encodeToString(photo.getContent());
+			String data = Base64.encodeBase64ToString(photo.getContent());
 			String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + HttpUtils.CRLF +
 				"<content xmlns=\"urn:oma:xml:prs:pres-content\">" + HttpUtils.CRLF +
 				"<mime-type>" + photo.getType() + "</mime-type>" + HttpUtils.CRLF + 
@@ -1114,7 +1120,7 @@ public class XdmManager {
 					if (logger.isActivated()){
 						logger.debug("Received photo: encoding=" + parser.getEncoding() + ", mime=" + parser.getMime() + ", encoded size=" + data.length);
 					}
-					return Base64.decode(data);
+					return Base64.decodeBase64(data);
 				} else {
 					if (logger.isActivated()){
 						logger.warn("Can't download the photo: photo is null");
@@ -1150,12 +1156,7 @@ public class XdmManager {
 			// URL
 			String url = xdmServerAddr + "/pidf-manipulation/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) +
-					"/perm-presence?xmlns(urn:ietf:params:xml:ns:pidf)" +
-					"xmlns(pdm=urn:ietf:params:xml:ns:pidf:data-model)" +
-			   		"xmlns(ci=urn:ietf:params:xml:ns:pidf:cipid\"" + SipUtils.CRLF +
-		    		"xmlns(opd=urn:oma:xml:pde:pidf:ext\"" +
-		    		"xmlns(rpid=urn:ietf:params:xml:ns:pidf:rpid\"" + SipUtils.CRLF +
-					"xmlns(ci=urn:ietf:params:xml:ns:pidf:cipid)";
+					"/perm-presence";
 			
 			// Create the request
 			HttpPutRequest request = new HttpPutRequest(url, info, "application/pidf+xml");

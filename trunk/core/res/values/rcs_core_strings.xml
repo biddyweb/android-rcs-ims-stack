@@ -2,9 +2,6 @@
 <resources>
     <string name="title_application">RCS service</string>	
 	<string name="title_rcs_notification">Rich Communication Suite</string>	
-	<string name="title_presence_invitation_notification">New profile sharing invitation</string>	
-	<string name="title_filetransfer_notification">New File transfer invitation</string>
-	<string name="title_chat_notification">New chat invitation</string>
 
     <string name="rcs_images_directory">/My RCS pictures/</string>	
     <string name="rcs_videos_directory">/My RCS videos/</string>	
@@ -22,9 +19,5 @@
 	<string name="label_connected_to_rcs">Connected to RCS platform</string>
 	<string name="label_rcs_connection_failed">Can\'t connect to RCS platform</string>
 	<string name="label_disconnected_from_rcs">Disconnected from RCS platform</string>
-	<string name="label_csh_notification">Click to Accept or Reject the invitation</string>
-	<string name="label_presence_notification">Click to Accept, Block or Ignore the invitation</string>
-	<string name="label_filetransfer_notification">Click to Accept or Reject the invitation</string>
-	<string name="label_chat_notification">Click to Accept or Reject the invitation</string>
 	<string name="label_contact_hyperavailable">is now hyper-available</string>
 </resources>

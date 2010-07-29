@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -119,7 +119,7 @@ public class ContentSharingService extends ImsService {
 		OriginatingContentSharingSession session = new OriginatingContentSharingSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToTelUri(contact));
+				PhoneUtils.formatNumberToSipAddress(contact));
 		
 		// Start the session
 		session.startSession();
@@ -144,7 +144,7 @@ public class ContentSharingService extends ImsService {
 				this,
 				player,
 				content,
-				PhoneUtils.formatNumberToTelUri(contact));
+				PhoneUtils.formatNumberToSipAddress(contact));
 		
 		// Start the session
 		session.startSession();
@@ -172,7 +172,7 @@ public class ContentSharingService extends ImsService {
 				this,
 				player,
 				content,
-				PhoneUtils.formatNumberToTelUri(contact));
+				PhoneUtils.formatNumberToSipAddress(contact));
 		
 		// Start the session
 		session.startSession();

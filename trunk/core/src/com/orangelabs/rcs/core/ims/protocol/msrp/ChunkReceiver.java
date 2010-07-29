@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -280,6 +280,9 @@ public class ChunkReceiver extends Thread {
 				if (logger.isActivated()) {
 					logger.error("Chunk receiver has failed", e);
 				}
+				
+				// Notify the msrp session listener that an error has occured
+				connection.getSession().getMsrpEventListener().msrpTransferError("Chunk receiver has failed : " +e);
 			}
 		}
 	}

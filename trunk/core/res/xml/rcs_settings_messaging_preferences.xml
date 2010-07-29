@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<PreferenceCategory android:title="@string/title_filetransfer_settings">
+	<PreferenceCategory android:title="@string/title_filetransfer_invitation">
 		<CheckBoxPreference
 			android:key="filetransfer_invitation_vibration"
 			android:showDefault="true"

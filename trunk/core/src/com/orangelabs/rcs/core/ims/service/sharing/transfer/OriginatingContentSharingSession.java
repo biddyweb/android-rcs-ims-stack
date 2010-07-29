@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -105,6 +106,7 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	    		"a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
+	    		"a=file-disposition:render" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
 	    	
 	    	// Set X-Type attribute
@@ -261,7 +263,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	        getDialogPath().sessionEstablished();
 
         	// Create the MSRP session
-	        msrpMgr.createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+	        MsrpSession session = msrpMgr.createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			session.setFailureReportOption(false);
+			session.setSuccessReportOption(true);
 	        
 	        // Notify listener
 	        if (getListener() != null) {

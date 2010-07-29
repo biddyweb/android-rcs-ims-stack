@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -16,12 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core.ims.service.im.session;
+package com.orangelabs.rcs.core.ims.service.im;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
+
+import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.FileContent;
@@ -57,6 +59,11 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	 */
 	private MsrpManager msrpMgr = null;
 
+	/**
+	 * Is composing manager
+	 */
+	private IsComposingManager isComposingMgr = new IsComposingManager(this);
+	
     /**
 	 * IM event listener
 	 */
@@ -77,6 +84,8 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	public InstantMessageSession(ImsService parent, String contact, String subject) {
 		super(parent, contact);
 
+		this.subject = subject;
+		
 		// Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalTcpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
@@ -324,14 +333,21 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
     		Date date = Calendar.getInstance().getTime();
     		long random = (date.getTime()%1000);
     		String ext = MimeManager.getMimeExtension(mimeType);
+    		if (mimeType.equalsIgnoreCase(IsComposingInfo.MIME_TYPE)){
+			    // Is composing event
+			    isComposingMgr.receiveIsComposingEvent(getRemoteContact(), data);
+    		} else
     		if (MimeManager.isTextType(mimeType)){
 		    	// Create message content 
 		    	String txtMessage = new String(data);
 		    	InstantMessage message = new InstantMessage(getRemoteContact(), txtMessage);
 		    	
-		    	// Notify listener
-	    		listener.handleReceiveMessage(message);
-	    	}else
+	    		// Is composing event is reset
+			    isComposingMgr.receiveIsComposingEvent(getRemoteContact(), false);
+
+			    // Notify listener
+	    		listener.handleReceiveMessage(message);			    
+    		} else
 	    	if (MimeManager.isPictureType(mimeType)){
 	    		// Create image content
 	    		String path = FileFactory.getFactory().getPhotoRootDirectory() + "photo" + random + "." + ext;
@@ -401,14 +417,34 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
     }
 	
 	/**
-	 * Send a message to the remote contact
+	 * Send a plain text message
 	 * 
 	 * @param msg Message
 	 */
 	public void sendMessage(String msg) {
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBytes()); 
-			msrpMgr.sendChunks(stream, "text/plain", msg.length());
+			msrpMgr.sendChunks(stream, "text/plain", msg.getBytes().length);
+		} catch(Exception e) {
+	   		if (logger.isActivated()) {
+	   			logger.error("Problem while sending data", e);
+	   		}
+	   		
+	    	// Notify listener
+	   		// TODO
+		}
+	}
+	
+	/**
+	 * Send a message with the specified mime type to the remote contact
+	 * 
+	 * @param msg Message
+	 * @param contentType mime type of content
+	 */
+	public void sendMessage(String msg, String contentType) {
+		try {
+			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBytes()); 
+			msrpMgr.sendChunks(stream, contentType, msg.getBytes().length);
 		} catch(Exception e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Problem while sending data", e);
@@ -436,5 +472,16 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	   		
 	    	// Notify listener
 	   		// TODO
-		}	}
+		}	
+	}
+	
+	/**
+	 * Set the is composing status
+	 * 
+	 * @param status Status
+	 */
+	public void setIsComposingStatus(boolean status) throws RemoteException {
+		String msg = IsComposingInfo.buildIsComposingInfo(status);
+		sendMessage(msg, IsComposingInfo.MIME_TYPE);
+	}
 }

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -35,15 +35,14 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginationFileTransferSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileTransferSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileTransferSession;
-import com.orangelabs.rcs.core.ims.service.im.session.InstantMessageSession;
-import com.orangelabs.rcs.core.ims.service.im.session.OriginatingAdhocGroupChatSession;
-import com.orangelabs.rcs.core.ims.service.im.session.OriginatingLargeInstantMessageSession;
-import com.orangelabs.rcs.core.ims.service.im.session.OriginatingOne2OneChatSession;
-import com.orangelabs.rcs.core.ims.service.im.session.TerminatingAdhocGroupChatSession;
-import com.orangelabs.rcs.core.ims.service.im.session.TerminatingLargeInstantMessageSession;
-import com.orangelabs.rcs.core.ims.service.im.session.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.large.OriginatingLargeInstantMessageSession;
+import com.orangelabs.rcs.core.ims.service.im.large.TerminatingLargeInstantMessageSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -54,11 +53,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class InstantMessagingService extends ImsService {
-	/**
-	 * Max size of an IM pager message
-	 */
-	private int maxImPagerSize;
-	
 	/**
 	 * Conference factory URI for ad-hoc session
 	 */
@@ -84,7 +78,6 @@ public class InstantMessagingService extends ImsService {
 	public InstantMessagingService(ImsModule parent, boolean activated) throws CoreException {
 		super(parent, "im_service.xml", activated);
 		
-		this.maxImPagerSize = getConfig().getInteger("MaxImPagerSize");
 		this.conferenceFactoryUri = getConfig().getString("ConferenceFactoryUri");
 	}
 
@@ -119,10 +112,10 @@ public class InstantMessagingService extends ImsService {
 		}
 			
 		// Create a new session
-		OriginationFileTransferSession session = new OriginationFileTransferSession(
+		OriginatingFileTransferSession session = new OriginatingFileTransferSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToTelUri(contact));
+				PhoneUtils.formatNumberToSipAddress(contact));
 
 		// Start the session
 		session.startSession();
@@ -152,36 +145,21 @@ public class InstantMessagingService extends ImsService {
 	}
 	
     /**
-     * Send an instant message
-     * 
-     * @param message Message to be sent
-     * @return IM session or null if no session (pager mode)
-     */
-    public ImsServiceSession sendInstantMessage(InstantMessage message) {
-    	ImsServiceSession session = null;
-    	if (message.getTextMessage().length() > maxImPagerSize) {
-    		// Large mode
-    		session = sendLargeInstantMessage(message);
-    	} else {
-    		// Pager mode
-    		sendPagerInstantMessage(message);
-    	}
-    	return session;
-    }
-    	
-    /**
      * Send a pager instant message
      * 
      * @param message Message to be sent
+     * @return Boolean result
      */
-    public void sendPagerInstantMessage(InstantMessage message) {
+    public boolean sendPagerInstantMessage(InstantMessage message) {
     	if (logger.isActivated()) {
     		logger.info("Send an instant message to " + message.getRemote());                
     	}
+    	
+    	boolean result = false;
 		
         try {
 	        // Create a dialog path
-        	String contactUri = PhoneUtils.formatNumberToTelUri(message.getRemote());
+        	String contactUri = PhoneUtils.formatNumberToSipAddress(message.getRemote());
         	SipDialogPath dialogPath = new SipDialogPath(
         					getImsModule().getSipManager().getSipStack(),
         					getImsModule().getSipManager().generateCallId(),
@@ -243,54 +221,36 @@ public class InstantMessagingService extends ImsService {
                 	if (logger.isActivated()) {
                 		logger.info("200 OK response received");
                 	}
-
-                	// Update messaging provider
-                	// TODO
-
-    	            // Notify listener
-                	getImsModule().getCore().getListener().handleSendInstantMessageSuccessful();
+                	result = true;
                 } else {
                     // Error
                 	if (logger.isActivated()) {
                 		logger.info("Instant message has failed: " + ctx.getStatusCode()
     	                    + " response received");
                 	}
-                    
-    	            // Notify listener
-                	getImsModule().getCore().getListener().handleSendInstantMessageFailed(
-                			new InstantMessageError(InstantMessageError.IM_PAGER_FAILED, ctx.getReasonPhrase()));
+                	result = false;
                 }
             } else if (ctx.getStatusCode() == 200) {
 	            // 200 OK received
             	if (logger.isActivated()) {
             		logger.info("200 OK response received");
             	}
-	
-            	// Update messaging provider
-            	// TODO
-            	
-	            // Notify listener
-            	getImsModule().getCore().getListener().handleSendInstantMessageSuccessful();
+            	result = true;
 	        } else {
 	            // Error responses
             	if (logger.isActivated()) {
             		logger.info("Instant message has failed: " + ctx.getStatusCode()
 	                    + " response received");
             	}
-            	
-	            // Notify listener
-            	getImsModule().getCore().getListener().handleSendInstantMessageFailed(
-            			new InstantMessageError(InstantMessageError.IM_PAGER_FAILED, ctx.getReasonPhrase()));
+            	result = false;
 	        }
         } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Instant message has failed", e);
         	}
-
-            // Notify listener
-        	getImsModule().getCore().getListener().handleSendInstantMessageFailed(
-        			new InstantMessageError(InstantMessageError.UNEXPECTED_EXCEPTION, e.getMessage()));
+        	result = false;
         }        
+        return result;
     }
     
     /**
@@ -333,7 +293,7 @@ public class InstantMessagingService extends ImsService {
      * Send a large instant message 
      * 
      * @param message Message to be sent
-     * @return session Created session
+     * @return IM session
      */
     public ImsServiceSession sendLargeInstantMessage(InstantMessage message) {
 		if (logger.isActivated()) {
@@ -343,7 +303,7 @@ public class InstantMessagingService extends ImsService {
 		// Create a new session
 		OriginatingLargeInstantMessageSession session = new OriginatingLargeInstantMessageSession(this,
 				message,
-	        	PhoneUtils.formatNumberToTelUri(message.getRemote()));		
+	        	PhoneUtils.formatNumberToSipAddress(message.getRemote()));		
 		
 		// Start the session
 		session.startSession();
@@ -382,7 +342,7 @@ public class InstantMessagingService extends ImsService {
 		// Create a new session
 		OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
 				this,
-	        	PhoneUtils.formatNumberToTelUri(contact),
+	        	PhoneUtils.formatNumberToSipAddress(contact),
 	        	subject);
 		
 		// Start the session
@@ -396,6 +356,23 @@ public class InstantMessagingService extends ImsService {
 	 * @param invite Initial invite
      */
     public void receiveOne2OneChatSession(SipRequest invite) {
+		// Test if there is already a CS session 
+		if (getNumberOfSessions() > 0) {
+			try {
+				// Send a 486 Busy response
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 486 Busy here");
+		    	}
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
+		        getImsModule().getSipManager().sendSipMessage(resp);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't send 486 Busy here", e);
+				}
+			}
+			return;
+		}
+    	
 		if (logger.isActivated()){
 			logger.info("Receive a 1-1 chat session");
 		}
@@ -442,6 +419,23 @@ public class InstantMessagingService extends ImsService {
 	 * @param invite Initial invite
      */
     public void receiveAdhocGroupChatSession(SipRequest invite) {
+		// Test if there is already a CS session 
+		if (getNumberOfSessions() > 0) {
+			try {
+				// Send a 486 Busy response
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 486 Busy here");
+		    	}
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
+		        getImsModule().getSipManager().sendSipMessage(resp);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't send 486 Busy here", e);
+				}
+			}
+			return;
+		}
+
 		if (logger.isActivated()){
 			logger.info("Receive an ad-hoc group chat session");
 		}

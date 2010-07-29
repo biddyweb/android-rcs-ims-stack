@@ -1,6 +1,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<PreferenceCategory android:title="@string/title_csh_settings">
+	<PreferenceCategory android:title="@string/title_csh_available">
+		<CheckBoxPreference
+			android:key="csh_available"
+			android:showDefault="true"
+			android:title="@string/label_beep"
+			android:summary="@string/summary_csh_available"
+		/>
+	</PreferenceCategory>
+	
+	<PreferenceCategory android:title="@string/title_csh_invitation">
 		<CheckBoxPreference
 			android:key="csh_invitation_vibration"
 			android:showDefault="true"

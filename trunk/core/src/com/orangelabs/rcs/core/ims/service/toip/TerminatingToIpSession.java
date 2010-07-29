@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -27,7 +27,9 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.RedFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.T140Format;
+import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
@@ -37,6 +39,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.media.MediaListener;
+import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -49,7 +52,8 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
 	/**
 	 * Text format
 	 */
-	private T140Format textFormat = null;
+	private T140Format textFormat = new T140Format();
+	private RedFormat  redFormat  = new RedFormat();
 	
 	/**
 	 * Local RTP port
@@ -108,40 +112,46 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
 	        // Parse the remote SDP part
 	        SdpParser parser = new SdpParser(getDialogPath().getRemoteSdp().getBytes());
             String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);    		
-        	Vector<MediaDescription> media = parser.getMediaDescriptions();
-    		MediaDescription desc = (MediaDescription)media.elementAt(0);
-
-    		// Extract the payload type
-    		int payload = desc.payload_type;
-            String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
-
-            // Extract the text encoding
-            String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
-            String codec = encoding.toLowerCase().trim();
-            int index = encoding.indexOf("/");
-			if (index != -1) {
-				codec = encoding.substring(0, index);
-			}
-			if (logger.isActivated()) {
-				logger.debug("Text codec: " + codec);
-			}
-			
-			// Check if the codec is supported
-    		if (!MediaRegistry.isCodecSupported(codec)) {
-    			if (logger.isActivated()){
-    				logger.debug("Codec " + codec + " is not supported");
+    		MediaDescription desc = parser.getMediaDescription("text");
+    		
+    		// Extract payloads
+    		String[] payloads = desc.payload.split(" ");
+    		    		
+    		// Extract proposed codecs
+    		Vector<String> codecs = new Vector<String>();
+    		String unsupportedCodec = new String("");
+    		int payloadIndex = 0;
+    		for (int i = 0; i< desc.mediaAttributes.size(); i++){
+    			MediaAttribute att = desc.mediaAttributes.elementAt(i);
+    			if (att.getName().equalsIgnoreCase("rtpmap")){
+    				String rtpmap = att.getValue();
+    				// Extract the text encoding
+    	            String encoding = rtpmap.substring(rtpmap.indexOf(payloads[payloadIndex])+payloads[payloadIndex].length()+1);
+    	            String codec = encoding.toLowerCase().trim();
+    	            int index = encoding.indexOf("/");
+    				if (index != -1) {
+    					codec = encoding.substring(0, index);
+    				}
+    				if (MediaRegistry.isCodecSupported(codec)){
+    					codecs.add(codec);
+    				} else {
+    					unsupportedCodec = unsupportedCodec + codec + " ";
+    				}
     			}
-    			
-        		// Send a 415 Unsupported media type response
+    		}
+    		
+    		// No codec proposed is supported
+    		if (codecs.size()==0){
+    			// Send a 415 Unsupported media type response
 				send415Error(getDialogPath().getInvite());
 
-				// Unsupported media type
-				handleError(new ToIpError(ToIpError.UNSUPPORTED_MEDIA_TYPE, encoding));
+				// Unsupported media type				
+				handleError(new ToIpError(ToIpError.UNSUPPORTED_MEDIA_TYPE, unsupportedCodec));
         		return;
     		}
     		
-			// Check that a media renderer has been set
-			if (getMediaRenderer() == null) {
+			// Check that a media player has been set
+			if (getMediaPlayer() == null) {
 		    	handleError(new ToIpError(ToIpError.MEDIA_PLAYER_NOT_INITIALIZED));
 				return;
 			}    		
@@ -153,17 +163,42 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
 				return;
 			}    		
             getMediaRenderer().addListener(this);
-    		           	
-	    	// Create the text format with the proposed payload type
-        	textFormat = new T140Format(codec, payload);
-        	
+    		           	        	
 			// Create the RTP sessions
-			setRtpReceiver(new MediaRtpReceiver(localRtpPort));		
-			setRtpSender(new MediaRtpSender(textFormat));		
+			setRtpReceiver(new MediaRtpReceiver(localRtpPort));
+			
+	    	// Create the text format with the first proposed payload type
+    		int payload = 0;
+    		String sdpMedia  = new String("");
+    		Config config = getImsService().getConfig();
+    		String clockRate = config.getString("TextClockRate");
+        	if (codecs.elementAt(0).equals(RedFormat.ENCODING)){
+        		if (logger.isActivated()) {
+					logger.debug("Codec choosed: "+redFormat.getCodec());
+				}
+        		payload = redFormat.getPayload();
+        		setRtpSender(new MediaRtpSender(redFormat));
+        		getRtpReceiver().prepareSession(getMediaRenderer(), redFormat);
+        		sdpMedia = sdpMedia + 
+        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
+        		"a=rtpmap:" + payload + " " + redFormat.getCodec()  + "/" + clockRate + SipUtils.CRLF +
+        		"a=fmtp:" + payload + " " + textFormat.getPayload()+ "/" + textFormat.getPayload()+ "/" + textFormat.getPayload() + SipUtils.CRLF +
+				"a=sendrecv";
+        	} else {
+        		if (logger.isActivated()) {
+					logger.debug("Codec choosed: "+textFormat.getCodec());
+				}
+        		payload = textFormat.getPayload();
+        		setRtpSender(new MediaRtpSender(textFormat));
+        		getRtpReceiver().prepareSession(getMediaRenderer(), textFormat);
+        		sdpMedia = sdpMedia + 
+        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
+        		"a=rtpmap:" + payload + " " + textFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
+        		"a=sendrecv";
+        	}			
 
-			// Prepare the RTP sessions
-			getRtpReceiver().prepareSession(getMediaRenderer(), textFormat);
-			getRtpSender().prepareSession(getMediaPlayer(), remoteHost, localRtpPort);
+			// Prepare the RTP sessions			
+			getRtpSender().prepareSession(getMediaPlayer(), remoteHost, desc.port);
 
 			// Build SDP part
 			String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
@@ -174,11 +209,9 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
 						+ getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
-	            "t=0 0" + SipUtils.CRLF +
-	            "m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF + 
-	            "a=rtpmap:" + payload + " " + textFormat.getCodec() + SipUtils.CRLF +
-	            // TODO: a=rtpmap:100 red
-				"a=sendrecv";
+	            "t=0 0" + SipUtils.CRLF + 
+	            sdpMedia;
+	            
 			
 			// Set the local SDP part in the dialog path
 			getDialogPath().setLocalSdp(sdp);

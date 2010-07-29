@@ -27,6 +27,9 @@ interface IChatSession {
 	// Send a text message
 	void sendMessage(in String text);
 
+	// Set the is composing status
+	void setIsComposingStatus(in boolean status);
+
 	// Add session listener
 	void addSessionListener(in IChatEventListener listener);
 

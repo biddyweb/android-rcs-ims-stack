@@ -10,7 +10,7 @@
 	        android:key="display_name"
 	        android:title="@string/title_edit_display_name"
 	        android:dialogTitle="@string/title_edit_display_name"/>
-	
+			
 		<EditTextPreference
 	        android:key="private_uri"
 	        android:title="@string/title_edit_private_uri"

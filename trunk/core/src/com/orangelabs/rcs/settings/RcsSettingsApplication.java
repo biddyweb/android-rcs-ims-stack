@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -20,13 +20,12 @@ package com.orangelabs.rcs.settings;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 
@@ -75,7 +74,10 @@ public class RcsSettingsApplication extends Activity {
 			return true;
 		} else
 		if (i == R.id.menu_help) {
-			Toast.makeText(this, R.string.label_not_yet_implemented, Toast.LENGTH_LONG).show();
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			intent.setData(Uri.parse("http://172.20.14.55/index.php?option=com_content&view=category&id=2&Itemid=4"));
+			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(intent);
 			return true;
 		}		
 		return super.onOptionsItemSelected(item);

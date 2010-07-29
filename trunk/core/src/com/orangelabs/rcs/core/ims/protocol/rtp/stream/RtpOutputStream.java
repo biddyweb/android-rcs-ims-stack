@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -90,11 +90,13 @@ public class RtpOutputStream implements ProcessorOutputStream {
 				rtpTransmitter.close();
 			}
 			
+			// Send a bye event
 			if (rtcpTransmitter != null) {
-				// Send a bye event
 				rtcpTransmitter.sendByePacket();
-			
-				// Close the RTCP transmitter
+			}
+
+			// Close the RTCP transmitter
+			if (rtcpTransmitter != null) {
 				rtcpTransmitter.close();
 			}
 		} catch(Exception e) {

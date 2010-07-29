@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -32,12 +32,12 @@ public class T140Constants {
 	/**
 	 * Waiting period for a missing packet in ms
 	 */
-	public static final int WAIT_FOR_MISSING_PACKET = 500; //
+	public static final int WAIT_FOR_MISSING_PACKET = 500;
 
 	/**
 	 * Waiting period for a missing packet in ms when redundancy is used
 	 */
-	public static final int WAIT_FOR_MISSING_PACKET_RED = 3000; //
+	public static final int WAIT_FOR_MISSING_PACKET_RED = 3000;
 
 	// Error codes
 
@@ -63,6 +63,7 @@ public class T140Constants {
 	 * session to ensure that the byte order is correct
 	 */
 	public static final byte[] ZERO_WIDTH_NO_BREAK_SPACE = { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+	
 	/**
 	 * Zero width no break space in character form
 	 */

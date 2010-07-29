@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -28,8 +28,8 @@ import com.orangelabs.rcs.core.content.PhotoContent;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
-import com.orangelabs.rcs.core.ims.service.im.session.InstantMessageSession;
-import com.orangelabs.rcs.core.ims.service.im.session.InstantMessageSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageSessionListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -101,9 +101,6 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 			logger.info("Accept session invitation");
 		}
 		
-		// Remove the notification
-		MessagingApiService.removeChatInvitationNotification();
-		
 		// Accept invitation
 		session.acceptSession();
 
@@ -119,9 +116,6 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 			logger.info("Reject session invitation");
 		}
 		
-		// Remove the notification
-		MessagingApiService.removeChatInvitationNotification();
-
         // Reject invitation
 		session.rejectSession();
 
@@ -151,6 +145,15 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 	 */
 	public void sendMessage(String text) {
 		session.sendMessage(text);
+	}
+
+	/**
+	 * Set the is composing status
+	 * 
+	 * @param status Status
+	 */
+	public void setIsComposingStatus(boolean status) throws RemoteException {
+		session.setIsComposingStatus(status);
 	}
 
 	/**
@@ -208,9 +211,6 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		if (logger.isActivated()) {
 			logger.info("Session aborted");
 		}
-
-		// Remove the notification
-		MessagingApiService.removeChatInvitationNotification();
 
 		// Update messaging database
  		// TODO
@@ -349,6 +349,46 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
      * @param error Error
      */
     public void handleImError(InstantMessageError error) {
-    	// TODO
+		if (logger.isActivated()) {
+			logger.info("IM error received");
+		}
+
+  		// Notify event listeners
+		final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+            	listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
+            } catch (RemoteException e) {
+            	if (logger.isActivated()) {
+            		logger.error("Can't notify listener", e);
+            	}
+            }
+        }
+        listeners.finishBroadcast();	
     }
+
+    /**
+	 * Handle "contact is composing" event
+	 * 
+	 * @param contact Contact
+	 * @param status Status
+	 */
+	public void handleContactIsComposing(String contact, boolean status) {
+		if (logger.isActivated()) {
+			logger.info(contact + " is composing status set to " + status);
+		}
+
+  		// Notify event listeners
+		final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+            	listeners.getBroadcastItem(i).handleIsComposingEvent(contact, status);
+            } catch (RemoteException e) {
+            	if (logger.isActivated()) {
+            		logger.error("Can't notify listener", e);
+            	}
+            }
+        }
+        listeners.finishBroadcast();
+	}
 }

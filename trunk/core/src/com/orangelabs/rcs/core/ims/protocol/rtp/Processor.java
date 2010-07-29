@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -98,8 +98,8 @@ public class Processor extends Thread {
 		interrupted = true;
 
 		// Close streams
-		inputStream.close();
 		outputStream.close();
+		inputStream.close();
 	}
 
 	/**

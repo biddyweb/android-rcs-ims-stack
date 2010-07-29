@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -34,6 +34,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.GeolocFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
+import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
@@ -177,7 +178,7 @@ public class CapabilityService extends ImsService {
     	
         try {
         	// Create a dialog path
-        	String contactUri = PhoneUtils.formatNumberToTelUri(contact);
+        	String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
         	SipDialogPath dialog = new SipDialogPath(
         					getImsModule().getSipManager().getSipStack(),
         					getImsModule().getSipManager().generateCallId(),
@@ -278,18 +279,11 @@ public class CapabilityService extends ImsService {
     	if (logger.isActivated()) {
     		logger.info("Receive an OPTIONS request");
     	}
-        
-	    try {
-	    	// Check if the OPTIONS is really destinated to me
-	    	String to = options.getToUri();
-	    	String me = ImsModule.IMS_USER_PROFILE.getUsername();
-	    	if (to.indexOf(me) == -1) {
-	        	if (logger.isActivated()) {
-	        		logger.debug("This OPTIONS is not for me: by-pass it");
-	        	}
-	        	return;
-	    	}
-	    	
+
+		// Notify the call manager
+		getImsModule().getCore().getCallManager().handleReceiveCapabilities(options.getFromUri());		
+
+		try {
 	    	// Build the local SDP document
 	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
@@ -338,6 +332,7 @@ public class CapabilityService extends ImsService {
 	        
 	    	// Send 200 OK
 	        getImsModule().getSipManager().sendSipMessage(resp);
+	        
 	    } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Can't send 200 OK for OPTIONS: " + e.getMessage());
@@ -369,10 +364,17 @@ public class CapabilityService extends ImsService {
 					imageSharingSupported = true;
 				} else
 				if (desc.name.equals("application")) {
-		            String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
-		            String[] encoding = rtpmap.split(" ");
-		            String[] value = encoding[1].split("/"); 
-					others.add(value[0]);
+					MediaAttribute mediaAttr = desc.getMediaAttribute("rtpmap");
+					if (mediaAttr != null) {
+						String rtpmap = mediaAttr.getValue();
+						if (rtpmap != null) {
+							String[] encoding = rtpmap.split(" ");
+							if ((encoding != null) && (encoding.length > 1)) {
+								String[] value = encoding[1].split("/"); 
+								others.add(value[0]);
+							}
+						}
+					}
 				}
 			}
 		}

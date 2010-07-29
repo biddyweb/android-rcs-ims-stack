@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -28,6 +28,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.GeolocFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.PcmuAudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.T140Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.text.RedFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 
@@ -47,6 +48,7 @@ public class MediaRegistry {
 		SUPPORTED_CODECS.put(GeolocFormat.ENCODING.toLowerCase(), new GeolocFormat());
 		SUPPORTED_CODECS.put(PcmuAudioFormat.ENCODING.toLowerCase(), new PcmuAudioFormat());
 		SUPPORTED_CODECS.put(T140Format.ENCODING.toLowerCase(), new T140Format());
+		SUPPORTED_CODECS.put(RedFormat.ENCODING.toLowerCase(), new RedFormat());
 	}
 	
 	/**
@@ -119,7 +121,14 @@ public class MediaRegistry {
     	if (encoding.toLowerCase().equalsIgnoreCase(T140Format.ENCODING)) {
     		// Java text encoder
     		Codec[] chain = {
-    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaEncoder()
+    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaEncoder(0)
+    		};
+    		return chain;
+		} else 
+		if (encoding.toLowerCase().equalsIgnoreCase(RedFormat.ENCODING)){
+			// Java red text encoder
+    		Codec[] chain = {
+    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaEncoder(2)
     		};
     		return chain;
 		} else { 
@@ -145,7 +154,14 @@ public class MediaRegistry {
     	if (encoding.toLowerCase().equalsIgnoreCase(T140Format.ENCODING)) {
     		// Java text decoder
     		Codec[] chain = {
-    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaDecoder()
+    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaDecoder(false)
+    		};
+    		return chain;
+		} else 
+		if (encoding.toLowerCase().equalsIgnoreCase(RedFormat.ENCODING)) {
+    		// Java text decoder
+    		Codec[] chain = {
+    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.text.t140.JavaDecoder(true)
     		};
     		return chain;
 		} else { 

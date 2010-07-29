@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -18,9 +18,6 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.presence;
 
-import java.io.ByteArrayOutputStream;
-
-import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -38,7 +35,7 @@ public class PhotoIcon implements Parcelable {
 	/**
 	 * Image type
 	 */
-	private String type = null;
+	private String type = "image/jpeg";
 	
 	/**
 	 * Width
@@ -58,53 +55,29 @@ public class PhotoIcon implements Parcelable {
 	/**
 	 * Constructor
 	 * 
-	 * @param bmp Bitmap
+	 * @param content Photo content
+	 * @param width Width
+	 * @param height Height
+	 * @param etag Etag value
 	 */
-	public PhotoIcon(Bitmap bmp) {
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		bmp.compress(Bitmap.CompressFormat.JPEG, 75, stream);
-		
-		this.content = stream.toByteArray();
-		this.width = bmp.getWidth();
-		this.height = bmp.getHeight();
-		this.type = "image/jpeg";
-		this.etag = null;
-	}
-		
-	/**
-	 * Constructor
-	 * 
-	 * @param bmp Bitmap bmp
-	 * @param etag Etag
-	 */
-	public PhotoIcon(Bitmap bmp, String etag) {
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		bmp.compress(Bitmap.CompressFormat.JPEG, 75, stream);
-		
-		this.content = stream.toByteArray();
-		this.width = bmp.getWidth();
-		this.height = bmp.getHeight();
-		this.type = "image/jpeg";
+	public PhotoIcon(byte[] content, int width, int height, String etag) {
+		this.content = content;
+		this.width = width;
+		this.height = height;
 		this.etag = etag;
 	}
-	
+
 	/**
 	 * Constructor
 	 * 
 	 * @param content Photo content
 	 * @param width Width
 	 * @param height Height
-	 * @param type Image type
-	 * @param etag Etag value
 	 */
-	public PhotoIcon(byte[] content, int width, int height, String type, String etag) {
-		this.content = content;
-		this.width = width;
-		this.height = height;
-		this.type = type;
-		this.etag = etag;
+	public PhotoIcon(byte[] content, int width, int height) {
+		this(content, width, height, null);
 	}
-
+	
 	/**
 	 * Constructor
 	 * 

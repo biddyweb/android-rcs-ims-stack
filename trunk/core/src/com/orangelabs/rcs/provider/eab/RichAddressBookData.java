@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -29,6 +29,7 @@ public class RichAddressBookData {
 	// Database URI
 	public static final Uri CONTENT_URI = Uri.parse("content://com.orangelabs.rcs.eab/eab");
 	public static final Uri BLACKLIST_CONTENT_URI = Uri.parse("content://com.orangelabs.rcs.eab/blacklisted");
+	public static final Uri RCSNUMBERS_CONTENT_URI = Uri.parse("content://com.orangelabs.rcs.eab/rcsnumbers");
 	
 	// Common column names for EAB and blacklist table
 	// -------------------------------------------------------------

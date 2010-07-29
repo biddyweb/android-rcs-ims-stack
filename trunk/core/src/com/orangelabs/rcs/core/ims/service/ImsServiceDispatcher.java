@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -146,7 +146,7 @@ public class ImsServiceDispatcher extends Thread {
 	    	}
 	    	return;
 	    }
-		
+    	
 		// Initial requests
 		// ----------------
 		if (request.getMethod().equals("MESSAGE")) {
@@ -174,7 +174,7 @@ public class ImsServiceDispatcher extends Thread {
     		// Extract the SDP part
 	    	String sdp = request.getContent().toLowerCase();
 
-    		// New incoming session invitation
+	    	// New incoming session invitation
 	    	if (isTagPresent(sdp, "rtp") && isFeatureTagPresent(request, "3gpp.cs-voice")) {
 	    		// Test if call established
 	    		if (!imsModule.getCore().getCallManager().isConnected(request.getFrom())) {
@@ -211,15 +211,6 @@ public class ImsServiceDispatcher extends Thread {
 	    			imsModule.getContentSharingService().receiveImageSharingInvitation(request);
 	    		}
 	    	} else
-	    	if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im.large-message")) {
-		        // IM large mode
-	    		if (logger.isActivated()) {
-	    			logger.debug("IM large mode invitation");
-	    		}
-	    		if (imsModule.isInstantMessagingServiceActivated()) {
-	    			imsModule.getInstantMessagingService().receiveLargeInstantMessage(request);
-	    		}
-	    	} else
 	    	if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im") &&
 	    			isTagPresent(sdp, "file-selector")) {
 		        // File transfer
@@ -228,6 +219,15 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    		if (imsModule.isInstantMessagingServiceActivated()) {
 	    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
+	    		}
+	    	} else
+	    	if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im.large-message")) {
+		        // IM large mode
+	    		if (logger.isActivated()) {
+	    			logger.debug("IM large mode invitation");
+	    		}
+	    		if (imsModule.isInstantMessagingServiceActivated()) {
+	    			imsModule.getInstantMessagingService().receiveLargeInstantMessage(request);
 	    		}
 	    	} else
     		if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im")) {
@@ -280,10 +280,8 @@ public class ImsServiceDispatcher extends Thread {
 	    	}
 		}
 
-		// Broadcast the request or unknown request to external activity via intent
-    	if (intentMgr.broadcastRequest(request)) {
-    		intentMgr.broadcastRequest(request);
-    	}
+		// Broadcast the request to external activity via intent
+		intentMgr.broadcastRequest(request);
     }
 
     /**

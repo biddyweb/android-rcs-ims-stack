@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<PreferenceCategory android:title="@string/title_presence_settings">
+	<PreferenceCategory android:title="@string/title_presence_invitation">
 		<CheckBoxPreference
 			android:key="presence_invitation_vibration"
 			android:showDefault="true"
@@ -17,30 +17,30 @@
 		/>
 	</PreferenceCategory>
 
-	<PreferenceCategory android:title="@string/label_freetext">
+	<PreferenceCategory android:title="@string/title_freetexts">
 		<EditTextPreference
             android:key="edit_freetext1"
             android:summary="@string/summary_edit_freetext"
             android:dialogTitle="@string/title_edit_freetext"
-	    	android:maxLength="25"/>
+	    	android:maxLength="100"/>
                 	
 		<EditTextPreference
             android:key="edit_freetext2"
             android:summary="@string/summary_edit_freetext"
             android:dialogTitle="@string/title_edit_freetext" 
-    	    android:maxLength="25"/>
+    	    android:maxLength="100"/>
 
 		<EditTextPreference
             android:key="edit_freetext3"
             android:summary="@string/summary_edit_freetext"
             android:dialogTitle="@string/title_edit_freetext" 
-    	    android:maxLength="25"/>
+    	    android:maxLength="100"/>
 
 		<EditTextPreference
             android:key="edit_freetext4"
             android:summary="@string/summary_edit_freetext"
             android:dialogTitle="@string/title_edit_freetext" 
-    	    android:maxLength="25"/>
+    	    android:maxLength="100"/>
 	</PreferenceCategory>
 
 </PreferenceScreen>

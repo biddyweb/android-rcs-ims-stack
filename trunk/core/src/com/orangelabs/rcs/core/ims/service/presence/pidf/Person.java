@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -17,8 +17,6 @@
  * limitations under the License.
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.presence.pidf;
-
-import com.orangelabs.rcs.utils.DateUtils;
 
 public class Person {
 	private String id = null;
@@ -76,7 +74,7 @@ public class Person {
 		return timestamp;
 	}
 
-	public void setTimestamp(String ts) {
-		this.timestamp = DateUtils.decodeDate(ts);
+	public void setTimestamp(long ts) {
+		this.timestamp = ts;
 	}
 }

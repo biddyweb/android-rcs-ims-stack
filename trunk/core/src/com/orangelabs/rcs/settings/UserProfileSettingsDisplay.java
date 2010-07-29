@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -35,6 +35,7 @@ import android.widget.Toast;
 
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * User profile settings display
@@ -65,6 +66,9 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
         // Instanciate the settings manager
         RcsSettings.createInstance(getApplicationContext());
 
+        // Get the country code
+		PhoneUtils.setCountryCode(getApplicationContext());
+        
         // Display current settings
         username = (EditTextPreference)findPreference("username");
         username.setPersistent(false);
@@ -87,7 +91,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 		} else {
 			displayName.setSummary(getString(R.string.label_empty_displayname));
 		}
-        
+       
         privateId = (EditTextPreference)findPreference("private_uri");
         privateId.setPersistent(false);
         privateId.setOnPreferenceChangeListener(this);
@@ -246,7 +250,11 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
         switch (id) {
 	        case DIALOG_GET_MSISDN:
 				LayoutInflater factory = LayoutInflater.from(this);
+		    	final String countryCode = PhoneUtils.COUNTRY_CODE;
 	            final View textEntryView = factory.inflate(R.layout.rcs_settings_set_msisdn_layout, null);
+				EditText textEdit = (EditText)textEntryView.findViewById(R.id.msisdn);
+	            textEdit.setText(countryCode);
+	            
 	            return new AlertDialog.Builder(this)
 	                .setTitle(R.string.label_get_msisdn)
 	                .setView(textEntryView)
@@ -255,13 +263,48 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	            	        // Generate default settings
 	            			EditText textEdit = (EditText)textEntryView.findViewById(R.id.msisdn);
 	            			String number = textEdit.getText().toString();
-	                    	String pId = number + "@sip.ofr.com";
-	            			String pwd = "nsnims2008";
-	            			String home = "sip.ofr.com";
-	            			String proxy = "80.12.197.66:5060";
-	            			String xdms = "10.194.117.38:8080/services";
-	            			String login = "sip:"+ number + "@sip.ofr.com";
-	                    	
+	            			
+	            			String pId;
+	            			String pwd;
+	            			String home;
+	            			String proxy;
+	            			String xdms;
+	            			String login;
+	            			if (countryCode.equals("+33")) {
+		                    	// IOT Orange
+	            				pId = number + "@sip.ofr.com";
+		            			pwd = "nsnims2008";
+		            			home = "sip.ofr.com";
+		            			proxy = "80.12.197.66:5060";
+		            			xdms = "10.194.117.38:8080/services";
+		            			login = "sip:"+ number + "@sip.ofr.com";
+	            			} else 
+	            			if (countryCode.equals("+86")) {
+		            			// IOT China Unicom
+/*		                    	pId = number + "@imslive.com";
+		            			pwd = "111111";
+		            			home = "imslive.com";
+		            			proxy = "58.60.106.11:5060";
+		            			xdms = "58.60.106.11:8090/services";
+		            			login = "sip:"+ number + "@imslive.com";*/
+		            			
+		                    	pId = number + "@hw.beijing.ims.chinaunicom.cn";
+		            			pwd = "111111";
+		            			home = "hw.beijing.ims.chinaunicom.cn";
+		            			proxy = "114.251.55.9:5060";
+		            			xdms = "114.251.55.9:8090";
+		            			login = "sip:"+ number + "@hw.beijing.ims.chinaunicom.cn";	            			
+		            			
+	            			} else {
+	            				// Unknown country
+	            				pId = number + "@domain.com";
+		            			pwd = "";
+		            			home = "domain.com";
+		            			proxy = "127.0.0.1:5060";
+		            			xdms = "127.0.0.1:8080/services";
+		            			login = "sip:"+ number + "@domain.com";
+	            			}
+	            			
 	            			// Update UI & save date
 	                    	RcsSettings.getInstance().setUserProfileUserName(number);
 	                    	username.setSummary(number);
@@ -269,7 +312,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	                    	RcsSettings.getInstance().setUserProfileDisplayName(number);
 	            			displayName.setSummary(number);
 	            			displayName.setText(number);
-	                    	RcsSettings.getInstance().setUserProfilePrivateId(pId);
+	            			RcsSettings.getInstance().setUserProfilePrivateId(pId);
 	            			privateId.setSummary(pId);
 	            			privateId.setText(pId);
 	                    	RcsSettings.getInstance().setUserProfilePassword(pwd);

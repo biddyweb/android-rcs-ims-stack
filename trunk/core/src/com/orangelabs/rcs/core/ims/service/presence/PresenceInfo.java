@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -19,15 +19,11 @@
 package com.orangelabs.rcs.core.ims.service.presence;
 
 import java.util.Calendar;
-import java.util.Vector;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
-import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
-import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
-import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
 
 /**
  * Presence info
@@ -91,63 +87,6 @@ public class PresenceInfo implements Parcelable {
 	public PresenceInfo() {
 	}
 
-	/**
-	 * Constructor
-	 * 
-	 * @param info PIDF document
-	 */
-	public PresenceInfo(PidfDocument presence) {
-		try {
-			OverridingWillingness willingness = presence.getPerson().getOverridingWillingness();
-			if ((willingness != null) &&
-				(willingness.getUntilTimestamp() != -1) &&
-					willingness.getBasic().getValue().equals(PresenceInfo.ONLINE)) {
-				hyperavailabilityStatus = true;
-			} else {
-				hyperavailabilityStatus = false;
-			}
-		} catch(Exception e) {
-		}
-
-		try {
-			timestamp = presence.getPerson().getTimestamp();
-			freetext = presence.getPerson().getNote().getValue();
-			favoriteLink = new FavoriteLink(presence.getPerson().getHomePage());
-		} catch(Exception e) {
-		}
-
-		try {
-			capabilities =  new Capabilities(); 
-			Vector<Tuple> tuples = presence.getTuplesList();
-			for(int i=0; i < tuples.size(); i++) {
-				Tuple tuple = (Tuple)tuples.elementAt(i);
-				
-				boolean state = false; 
-				if (tuple.getStatus().getBasic().getValue().equals("open")) {
-					state = true;
-				}
-					
-				String id = tuple.getService().getId();
-				if (id.equals(Capabilities.VIDEO_SHARING_CAPABILITY)) {
-					capabilities.setVideoSharingSupport(state);
-				} else
-				if (id.equals(Capabilities.IMAGE_SHARING_CAPABILITY)) {
-					capabilities.setImageSharingSupport(state);
-				} else
-				if (id.equals(Capabilities.FILE_SHARING_CAPABILITY)) {
-					capabilities.setFileTransferSupport(state);
-				} else
-				if (id.equals(Capabilities.CS_VIDEO_CAPABILITY)) {
-					capabilities.setCsVideoSupport(state);
-				} else
-				if (id.equals(Capabilities.IM_SESSION_CAPABILITY)) {
-					capabilities.setImSessionSupport(state);
-				}
-			}
-		} catch(Exception e) {
-		}
-	}
-	
 	/**
 	 * Constructor
 	 * 
@@ -462,21 +401,21 @@ public class PresenceInfo implements Parcelable {
 	 * @return String
 	 */
 	public String toString() {
-		String result =  "timestamp: " + timestamp + "\n" +
-			"status: " + status + "\n" +
-			"freetext: " + freetext + "\n" +
-			"hyper-availability: " + hyperavailabilityStatus + "\n";
+		String result =  "Timestamp: " + timestamp + "\n" +
+			"Status: " + status + "\n" +
+			"Freetext: " + freetext + "\n" +
+			"Hyper-availability: " + hyperavailabilityStatus + "\n";
 		if (favoriteLink != null) {
 			result += "favorite link: " + favoriteLink.toString() + "\n";
 		}
 		if (photo != null) {
-			result += "photo-icon: " + photo.toString() + "\n";
+			result += "Photo-icon: " + photo.toString() + "\n";
 		}
 		if (capabilities != null) {
-			result += "capabilities: " + capabilities.toString() + "\n";
+			result += "Capabilities: " + capabilities.toString() + "\n";
 		}
 		if (geoloc != null) {
-			result += "geoloc: " + geoloc.toString() + "\n";
+			result += "Geoloc: " + geoloc.toString() + "\n";
 		}
 		return result;
 	}

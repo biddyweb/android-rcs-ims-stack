@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -27,7 +27,9 @@ import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.core.ims.service.voip.VoIpService;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.Config;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -122,6 +124,18 @@ public class Core {
 		// Create the terminal configuration file manager
         config = new Config("terminal.xml");
 
+        // Set the URI format
+		PhoneUtils.TEL_URI_SUPPORTED = config.getBoolean("TelUriFormatSupported", true);
+		if (logger.isActivated()) {
+			logger.debug("Tel-URI support: " + PhoneUtils.TEL_URI_SUPPORTED);
+		}
+		
+		// Set the country code
+		PhoneUtils.setCountryCode(AndroidFactory.getApplicationContext());
+		if (logger.isActivated()) {
+			logger.debug("Country code: " + PhoneUtils.COUNTRY_CODE);
+		}
+        
     	// Create the call manager
     	callManager = new CallManager(this);
     	

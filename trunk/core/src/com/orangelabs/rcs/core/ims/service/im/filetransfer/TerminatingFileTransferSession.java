@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -38,6 +38,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -135,7 +136,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     		int remotePort = desc.port;
 			
             // Extract the "setup" parameter
-            String remoteSetup = "active";
+            String remoteSetup = "passive";
 			MediaAttribute attr4 = desc.getMediaAttribute("setup");
 			if (attr4 != null) {
 				remoteSetup = attr4.getValue();
@@ -144,21 +145,18 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 				logger.debug("Remote setup attribute is " + remoteSetup);
 			}
             
-    		// Create the MSRP session
+    		// Set setup mode
             String localSetup = "passive";
             if (remoteSetup.equals("active")) {
             	// Passive mode: the terminal should wait a media connection
-    			msrpMgr.createMsrpServerSession(remotePath, this);
     			localSetup = "passive";
             } else 
             if (remoteSetup.equals("passive")) {
             	// Active mode: the terminal should initiate a media connection
-    			msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
     			localSetup = "active";
             } else {
-            	// The terminal decide to be in passive mode by default
-    			msrpMgr.createMsrpServerSession(remotePath, this);
-    			localSetup = "passive";
+            	// The terminal is active by default
+    			localSetup = "active";
             }
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
@@ -201,7 +199,13 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalSdp(sdp);
 
-	        // Send a 200 OK response
+    		// Create the MSRP server session
+            if (localSetup.equals("passive")) {
+            	// Passive mode: client wait a connection
+            	msrpMgr.createMsrpServerSession(remotePath, this);
+            }
+
+            // Send a 200 OK response
         	if (logger.isActivated()) {
         		logger.info("Send 200 OK");
         	}
@@ -211,7 +215,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	        String[] tags = {SipUtils.FEATURE_OMA_IM};
 	        SipUtils.setFeatureTags(resp, tags);
             
-	        // Send the response
+            // Send the response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
     		
 	        // The signalisation is established
@@ -227,7 +231,13 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     				logger.info("ACK request received");
     			}
 
-    	        // The session is established
+        		// Create the MSRP client session
+                if (localSetup.equals("active")) {
+                	// Active mode: client should connect
+                	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                }
+
+                // The session is established
     	        getDialogPath().sessionEstablished();
 
     	        // Notify listener
@@ -403,8 +413,6 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     	}
 	
     	try {
-	    	// Close the MSRP session
-	    	closeMsrpSession();
 					
 	    	// Update the content with the received data 
 	    	getContent().setData(data);
@@ -413,7 +421,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	    	ContentManager.saveContent(getContent());
 	    	
         	// Update messaging provider
-        	// TODO
+	    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), "finished");
 
 	    	// Notify listener
 	        if (getListener() != null) {

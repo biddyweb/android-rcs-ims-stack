@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -16,8 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core.ims.service.im.session;
+package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.util.List;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -35,14 +36,20 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Originating one-to-one chat session
+ * Originating ad-hoc group chat session
  * 
  * @author jexa7410
  */
-public class OriginatingOne2OneChatSession extends InstantMessageSession {	
+public class OriginatingAdhocGroupChatSession extends InstantMessageSession {
+	/**
+	 * List of contacts
+	 */
+	private List<String> contacts;
+	
     /**
      * The logger
      */
@@ -52,14 +59,18 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	 * Constructor
 	 * 
 	 * @param parent IMS service
-	 * @param contact Remote contact
+	 * @param contact Conference id
 	 * @param subject Subject of the conference
+	 * @param contacts List of contacts
 	 */
-	public OriginatingOne2OneChatSession(ImsService parent, String contact, String subject) {
+	public OriginatingAdhocGroupChatSession(ImsService parent, String contact, String subject, List<String> contacts) {
 		super(parent, contact, subject);
-		
+
 		// Create dialog path
 		createOriginatingDialogPath();
+
+		// Set the list of contacts
+		this.contacts = contacts;
 	}
 	
 	/**
@@ -68,12 +79,15 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new 1-1 chat session as originating");
+	    		logger.info("Initiate a new ad-hoc group chat session as originating");
 	    	}
 	    	
 	        // Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
+	    		"--boundary1" + SipUtils.CRLF +
+	    		"Content-Type: application/sdp" + SipUtils.CRLF +
+	    		"" + SipUtils.CRLF +
 	    		"v=0" + SipUtils.CRLF +
 	            "o=" + ImsModule.IMS_USER_PROFILE.getUsername() + " "
 						+ ntpTime + " " + ntpTime + " IN IP4 "
@@ -85,28 +99,48 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=connexion:new" + SipUtils.CRLF +
 	            "a=setup:active" + SipUtils.CRLF +
-	    		"a=accept-types:text/plain" + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF;
+	    		"a=accept-types:message/cpim" + SipUtils.CRLF +
+	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
+
+	    	String uriList = "";
+	    	for(int i=0; i < contacts.size(); i++) {
+	    		String contact = contacts.get(i);
+	    		uriList += " <entry uri=\"" + contact + "\" cp:copyControl=\"to\"/>" + SipUtils.CRLF;
+	    	}
+
+	    	String xml =
+	    		"--boundary1" + SipUtils.CRLF +
+	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
+	    		"Content-Disposition: recipient-list" + SipUtils.CRLF +
+	    		"" + SipUtils.CRLF +
+	    		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
+	    		"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\" xmlns:cp=\"urn:ietf:params:xml:ns:copyControl\">" +
+	    		"<list>" + SipUtils.CRLF +
+	    		uriList +
+	    		"</list></resource-lists>" + SipUtils.CRLF +
+	    		"--boundary1--";
 	    	
+	    	String multipart = sdp + xml;
+
 			// Set the local SDP part in the dialog path
-	    	getDialogPath().setLocalSdp(sdp);
+	    	getDialogPath().setLocalSdp(multipart);
 
 	        // Send an INVITE
 	        if (logger.isActivated()) {
 	        	logger.info("Send INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(), -1, sdp);
+	        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), -1, multipart, "boundary1");
 	        
 	        // Add a subject header
 	        String subject = getSubject();
 	        if (subject != null) {
 	        	invite.addHeader("Subject: " + subject);
 	        }
-	        
+
 	        // Set feature tags
 	        String[] tags = {SipUtils.FEATURE_OMA_IM};
 	        SipUtils.setFeatureTags(invite, tags);
-
+	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
@@ -151,8 +185,17 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
             	sendAck(getDialogPath());
             	
             	// Error response
-    			handleError(new InstantMessageError(InstantMessageError.SESSION_INITIATION_FAILED,
-    					ctx.getReasonPhrase()));
+                if (ctx.getStatusCode() == 603) {
+                	handleError(new InstantMessageError(InstantMessageError.SESSION_INITIATION_DECLINED,
+        					ctx.getReasonPhrase()));
+                } else
+                if (ctx.getStatusCode() == 487) {
+                	handleError(new InstantMessageError(InstantMessageError.SESSION_INITIATION_CANCELLED,
+        					ctx.getReasonPhrase()));
+                } else {
+	    			handleError(new InstantMessageError(InstantMessageError.SESSION_INITIATION_FAILED,
+	    					ctx.getReasonPhrase()));
+                }
             }
         } else {
     		if (logger.isActivated()) {
@@ -201,7 +244,7 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
     		String remoteMsrpPath = attr.getValue();
     		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
     		int remotePort = desc.port;
-    		
+
 	        // Send ACK message
 	        if (logger.isActivated()) {
 	        	logger.info("Send ACK");
@@ -222,15 +265,12 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	        
         	// Create the MSRP session
 			getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
-	        
+			
 			// Notify listener
 	        if (getListener() != null) {
 	        	getListener().handleSessionStarted();
 	        }
 	        
-	    	// Update messaging provider
-	    	// TODO
-			
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);
@@ -274,11 +314,18 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	        if (logger.isActivated()) {
 	        	logger.info("Send second INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(
+	        SipRequest invite = SipMessageFactory.createMultipartInvite(
 	        		getDialogPath(),
 					-1,
-					getDialogPath().getLocalSdp());
+					getDialogPath().getLocalSdp(),
+					"boundary1");
 	               
+	        // Add a subject header
+	        String subject = getSubject();
+	        if (subject != null) {
+	        	invite.addHeader("Subject: " + subject);
+	        }
+
 	        // Set feature tags
 	        String[] tags = {SipUtils.FEATURE_OMA_IM};
 	        SipUtils.setFeatureTags(invite, tags);

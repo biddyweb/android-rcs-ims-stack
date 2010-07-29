@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -17,6 +17,8 @@
  * limitations under the License.
  ******************************************************************************/
 package com.orangelabs.rcs.provider.settings;
+
+import java.util.ArrayList;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -63,7 +65,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 1;
+        private static final int DATABASE_VERSION = 3;
 
         private Context ctx;
         
@@ -82,11 +84,13 @@ public class RcsSettingsProvider extends ContentProvider {
 
             // insert default alarms
             String insertMe = "INSERT INTO " + TABLE + " (key, value) VALUES ";
-            db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_INVITATION_VIBRATE + "', '" + RcsSettingsData.FALSE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.SERVICE_ACTIVATED + "', '" + RcsSettingsData.TRUE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_INVITATION_RINGTONE + "', '');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.CSH_INVITATION_VIBRATE + "', '" + RcsSettingsData.FALSE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.CSH_AVAILABLE_BEEP + "', '" + RcsSettingsData.TRUE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.CSH_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.CSH_INVITATION_RINGTONE + "', '');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE + "', '" + RcsSettingsData.FALSE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.FILETRANSFER_INVITATION_RINGTONE + "', '');");
             db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT1 + "', '" + ctx.getString(R.string.default_freetext_1)+ "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT2 + "', '" + ctx.getString(R.string.default_freetext_2)+ "');");
@@ -102,12 +106,52 @@ public class RcsSettingsProvider extends ContentProvider {
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_XDM_SERVER + "', '');");
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_XDM_LOGIN + "', '');");
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_XDM_PASSWORD + "', '');");
+            
+            db.execSQL(insertMe + "('" + RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID + "', '');");
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int currentVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE);
-            onCreate(db);
+        	// Get old data before deleting the table
+        	Cursor oldDataCursor = db.query(TABLE, null, null, null, null, null, null);
+    	
+        	// Get all the pairs key/value of the old table to insert them back after update      	
+        	ArrayList<ContentValues> valuesList = new ArrayList<ContentValues>();
+        	while(oldDataCursor.moveToNext()){
+        		String key = null;
+        		String value = null;
+        		int index = oldDataCursor.getColumnIndex(RcsSettingsData.KEY_KEY);
+        		if (index!=-1){
+        			key = oldDataCursor.getString(index);
+        		}
+        		index = oldDataCursor.getColumnIndex(RcsSettingsData.KEY_VALUE);
+        		if (index!=-1){
+        			value = oldDataCursor.getString(index);
+        		}
+        		if (key!=null && value!=null){
+	        		ContentValues values = new ContentValues();
+	        		values.put(RcsSettingsData.KEY_KEY, key);
+	        		values.put(RcsSettingsData.KEY_VALUE, value);
+	        		valuesList.add(values);
+        		}
+        	}
+            oldDataCursor.close();
+        	
+        	// Delete old table
+        	db.execSQL("DROP TABLE IF EXISTS " + TABLE);
+        	
+            // Recreate table
+        	onCreate(db);
+        	
+        	// Put the old values back when possible
+        	for (int i=0; i<valuesList.size();i++){
+        		ContentValues values = valuesList.get(i);
+        		String whereClause = RcsSettingsData.KEY_KEY + "=" + "\""+ values.getAsString(RcsSettingsData.KEY_KEY) + "\"";
+        		// Update the value with this key in the newly created database
+	    		// If key is not present in the new version, this won't do anything
+	   			db.update(TABLE, values, whereClause, null);
+        	}
+
         }
     }
 

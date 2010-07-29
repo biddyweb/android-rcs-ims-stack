@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -96,6 +96,7 @@ public class HttpAuthenticationAgent {
 	 * @param header WWW-Authenticate header
 	 */
 	public void readWwwAuthenticateHeader(String header) {		
+		// TODO: use the SIP parser here
 		if (header != null) {
 	   		// Get domain name
 			int realmBegin = header.toLowerCase().indexOf("realm=\"")+7;
@@ -110,28 +111,20 @@ public class HttpAuthenticationAgent {
 			}
 			digest.setRealm(realm);
 
-	   		// Get qop
-			int qopBegin = header.toLowerCase().indexOf("qop=\"")+5;
-			int qopEnd = -1;
-			if (qopBegin != -1){
-				qopEnd = header.substring(qopBegin).indexOf("\"");
-			}
-			// Check also for an end with "," as qop may be on the form qop="auth,auth-int"
-			// In this case, we keep first param
-			if (qopBegin != - 1){
-				int firstParamQopEnd = header.substring(qopBegin).indexOf(",");
-				if ((firstParamQopEnd!=-1) && (firstParamQopEnd<qopEnd)){
-					qopEnd = firstParamQopEnd;
+			// Get qop
+			int qopBegin = header.toLowerCase().indexOf("qop=\"");
+			if (qopBegin != -1) {
+				qopBegin += 5;
+				int qopEnd = header.indexOf("\"", qopBegin);
+				String qop = header.substring(qopBegin, qopEnd);
+				int index = qop.indexOf(",");
+				if (index != -1) {
+					qop = qop.substring(0, index);
 				}
+				digest.setQop(qop);
 			}
-			String qop = null;
-			if (qopEnd != -1){
-				qopEnd += qopBegin;
-				qop = header.substring(qopBegin, qopEnd);
-			}	   	
-			digest.setQop(qop);
-			
-	   		// Get nonce to be used
+
+			// Get nonce to be used
 			int nextnonceBegin = header.toLowerCase().indexOf("nonce=\"")+7;
 			int nextnonceEnd = -1;
 			if (nextnonceBegin != -1){

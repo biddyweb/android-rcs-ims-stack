@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -78,9 +78,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 			logger.info("Accept session invitation");
 		}
 		
-		// Remove the notification
-		MessagingApiService.removeFileTransferInvitationNotification();
-		
 		// Accept invitation
 		session.acceptSession();
 
@@ -96,9 +93,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 			logger.info("Reject session invitation");
 		}
 		
-		// Remove the notification
-		MessagingApiService.removeFileTransferInvitationNotification();
-
         // Reject invitation
 		session.rejectSession();
 
@@ -176,9 +170,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		if (logger.isActivated()) {
 			logger.info("Session aborted");
 		}
-
-		// Remove the notification
-		MessagingApiService.removeFileTransferInvitationNotification();
 
 		// Update messaging database
  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "aborted");

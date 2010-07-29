@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -145,7 +145,8 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
         	Vector<MediaDescription> media = parser.getMediaDescriptions();
     		MediaDescription desc = media.elementAt(0);
 			Config config = getImsService().getConfig();
-
+			int remotePort = desc.port;
+			
     		// Extract the payload type
     		int payload = desc.payload_type;
             String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
@@ -258,7 +259,7 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 
 			// Prepare the RTP sessions
 			rtpReceiver.prepareSession(getMediaRenderer(), videoFormat);
-			rtpDummySender.prepareSession(remoteHost, localRtpPort);
+			rtpDummySender.prepareSession(remoteHost, remotePort);
 
 			// Build SDP part
 			String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -28,6 +28,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.orangelabs.rcs.core.ims.service.presence.pidf.geoloc.Geopriv;
+import com.orangelabs.rcs.utils.DateUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -161,6 +163,7 @@ public class PidfParser extends DefaultHandler {
 				contact.setPriority(priority.trim());
 			}
 			String contactType = attr.getValue("contactType");
+
 			if (contactType != null) {
 				contact.setContactType(contactType.trim());
 			}
@@ -213,7 +216,8 @@ public class PidfParser extends DefaultHandler {
 		} else
 		if (localName.equals("note")) {
 			if ((note != null) && (person != null)) {
-				note.setValue(accumulator.toString().trim());
+				String value = StringUtils.decodeUTF8(accumulator.toString().trim());
+				note.setValue(value);
 				person.setNote(note);
 				note = null;
 			}			
@@ -258,7 +262,8 @@ public class PidfParser extends DefaultHandler {
 		if (localName.equals("timestamp")) {
 			String timestamp = accumulator.toString();
 			if ((timestamp != null) && (person != null)) {
-				person.setTimestamp(timestamp.trim());
+				long ts = DateUtils.decodeDate(timestamp.trim());
+				person.setTimestamp(ts);
 			}
 		} else
 		if (localName.equals("service-description")) {

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -32,6 +32,8 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * @author jexa7410
  */
 public class CShSettingsDisplay extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
+	private CheckBoxPreference beep;
+
 	private CheckBoxPreference vibrate;
 
 	@Override
@@ -39,7 +41,13 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_csh_preferences);
+        setTitle(R.string.title_settings);
         
+        beep = (CheckBoxPreference)findPreference("csh_available");
+        beep.setPersistent(false);
+        beep.setOnPreferenceChangeListener(this);
+        beep.setChecked(RcsSettings.getInstance().isPhoneBeepIfCShAvailable());
+
         vibrate = (CheckBoxPreference)findPreference("csh_invitation_vibration");
         vibrate.setPersistent(false);
         vibrate.setOnPreferenceChangeListener(this);
@@ -47,6 +55,10 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
 	}
 
     public boolean onPreferenceChange(Preference preference, Object objValue) {
+        if (preference.getKey().equals("csh_available")) {
+        	Boolean state = (Boolean)objValue;
+        	RcsSettings.getInstance().setPhoneBeepIfCShAvailable(state.booleanValue());
+        } else
         if (preference.getKey().equals("csh_invitation_vibration")) {
         	Boolean state = (Boolean)objValue;
         	RcsSettings.getInstance().setPhoneVibrateForCShInvitation(state.booleanValue());

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -45,12 +45,15 @@ public class RichAddressBookProvider extends ContentProvider {
 	// Database table
 	public static final String TABLE = "eab_contacts";
 	public static final String BLACKLIST_TABLE = "blacklisted_contacts";
+	public static final String RCSNUMBER_TABLE = "rcsnumbers";
 	
 	// Create the constants used to differentiate between the different URI requests
 	private static final int CONTACTS = 1;
 	private static final int CONTACT_ID = 2;
 	private static final int BLACKLISTEDS = 3;
 	private static final int BLACKLISTED_ID = 4;
+	private static final int RCSNUMBERS = 5;
+	private static final int RCSNUMBERS_ID = 6;
 	
 	// Allocate the UriMatcher object, where a URI ending in 'contacts'
 	// will correspond to a request for all contacts, and 'contacts'
@@ -62,6 +65,8 @@ public class RichAddressBookProvider extends ContentProvider {
 		uriMatcher.addURI("com.orangelabs.rcs.eab", "eab/#", CONTACT_ID);
 		uriMatcher.addURI("com.orangelabs.rcs.eab", "blacklisted", BLACKLISTEDS);
 		uriMatcher.addURI("com.orangelabs.rcs.eab", "blacklisted/#", BLACKLISTED_ID);
+		uriMatcher.addURI("com.orangelabs.rcs.eab", "rcsnumbers", RCSNUMBERS);
+		uriMatcher.addURI("com.orangelabs.rcs.eab", "rcsnumbers/#", RCSNUMBERS_ID);
 	}
 
     /**
@@ -79,7 +84,7 @@ public class RichAddressBookProvider extends ContentProvider {
      */
 	private static class DatabaseHelper extends SQLiteOpenHelper{
 		private static final String DATABASE_NAME = "eab.db";
-		private static final int DATABASE_VERSION = 2;
+		private static final int DATABASE_VERSION = 3;
 
         public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -117,12 +122,21 @@ public class RichAddressBookProvider extends ContentProvider {
 		            + RichAddressBookData.KEY_CONTACT_ID + " integer, "
 		            + RichAddressBookData.KEY_CONTACT_NUMBER + " TEXT, "
 		            + RichAddressBookData.KEY_BLACKLIST_STATUS + " integer);");
+			
+			// Create rcs contact number table
+			// Numbers in this table are either active or pending_out
+			db.execSQL("create table " + RCSNUMBER_TABLE + " ("
+					+ RichAddressBookData.KEY_ID + " integer primary key autoincrement, "
+		            + RichAddressBookData.KEY_CONTACT_ID + " integer, "
+		            + RichAddressBookData.KEY_CONTACT_NUMBER + " TEXT);");
+			
 		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			db.execSQL("DROP TABLE IF EXISTS " + TABLE);
 			db.execSQL("DROP TABLE IF EXISTS " + BLACKLIST_TABLE);
+			db.execSQL("DROP TABLE IF EXISTS " + RCSNUMBER_TABLE);
 			onCreate(db);
 		}
 	}
@@ -160,6 +174,10 @@ public class RichAddressBookProvider extends ContentProvider {
 			case BLACKLISTEDS:
 				count = db.delete(BLACKLIST_TABLE, where, whereArgs);
 				break;
+				
+			case RCSNUMBERS:
+				count = db.delete(RCSNUMBER_TABLE, where, whereArgs);
+				break;
 
 			case CONTACT_ID:
 				String segment = uri.getPathSegments().get(1);
@@ -173,6 +191,15 @@ public class RichAddressBookProvider extends ContentProvider {
 			case BLACKLISTED_ID:
 				String revsegment = uri.getPathSegments().get(1);
 				count = db.delete(BLACKLIST_TABLE, RichAddressBookData.KEY_ID + "="
+						+ revsegment
+						+ (!TextUtils.isEmpty(where) ? " AND ("	+ where + ')' : ""),
+						whereArgs);
+				
+				break;
+				
+			case RCSNUMBERS_ID:
+				revsegment = uri.getPathSegments().get(1);
+				count = db.delete(RCSNUMBER_TABLE, RichAddressBookData.KEY_ID + "="
 						+ revsegment
 						+ (!TextUtils.isEmpty(where) ? " AND ("	+ where + ')' : ""),
 						whereArgs);
@@ -197,6 +224,10 @@ public class RichAddressBookProvider extends ContentProvider {
 			case BLACKLISTEDS:
 				return "vnd.android.cursor.item/com.orangelabs.rcs.eab";
 			case BLACKLISTED_ID:
+				return "vnd.android.cursor.item/com.orangelabs.rcs.eab";
+			case RCSNUMBERS:
+				return "vnd.android.cursor.item/com.orangelabs.rcs.eab";
+			case RCSNUMBERS_ID:
 				return "vnd.android.cursor.item/com.orangelabs.rcs.eab";
 			default:
 				throw new IllegalArgumentException("Unsupported URI " + uri);
@@ -246,6 +277,17 @@ public class RichAddressBookProvider extends ContentProvider {
 	    			return newUri;
 	    		}
 	        	break;
+	        case RCSNUMBERS:
+	        case RCSNUMBERS_ID:
+	            // Insert the new row, will return the row number if successful
+	    		rowID = db.insert(RCSNUMBER_TABLE, null, initialValues);
+	    		// Return a URI to the newly inserted row on success
+	    		if (rowID > 0) {
+	    			Uri newUri = ContentUris.withAppendedId(RichAddressBookData.RCSNUMBERS_CONTENT_URI, rowID);
+	    			getContext().getContentResolver().notifyChange(newUri, null);
+	    			return newUri;
+	    		}
+	        	break;	        	
         }
         
 		
@@ -271,6 +313,13 @@ public class RichAddressBookProvider extends ContentProvider {
         		break;
 	        case BLACKLISTED_ID:
 	        	qb.setTables(BLACKLIST_TABLE);
+				qb.appendWhere(RichAddressBookData.KEY_ID + "=" + uri.getPathSegments().get(1));
+	            break;
+        	case RCSNUMBERS:
+        		qb.setTables(RCSNUMBER_TABLE);
+        		break;
+	        case RCSNUMBERS_ID:
+	        	qb.setTables(RCSNUMBER_TABLE);
 				qb.appendWhere(RichAddressBookData.KEY_ID + "=" + uri.getPathSegments().get(1));
 	            break;
 	        default:
@@ -326,6 +375,16 @@ public class RichAddressBookProvider extends ContentProvider {
 			case BLACKLISTED_ID:
 				String revsegment = uri.getPathSegments().get(1);
 				count = db.update(BLACKLIST_TABLE, values, RichAddressBookData.KEY_ID + "="
+						+ revsegment
+						+ (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""),
+						whereArgs);
+				break;
+			case RCSNUMBERS:
+				count = db.update(RCSNUMBER_TABLE, values, where, whereArgs);
+				break;
+			case RCSNUMBERS_ID:
+				revsegment = uri.getPathSegments().get(1);
+				count = db.update(RCSNUMBER_TABLE, values, RichAddressBookData.KEY_ID + "="
 						+ revsegment
 						+ (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""),
 						whereArgs);

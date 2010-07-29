@@ -2,10 +2,6 @@
 <configuration>
 	
 	<instant-messaging>
-		<parameter description="Max size of an IM pager message"
-			 name="MaxImPagerSize"
-			 value="1300"/>			 
-
 		<parameter description="Conference factory URI"
 			 name="ConferenceFactoryUri"
 			 value="sip:conf-fact@sip.pfdev.fr"/>

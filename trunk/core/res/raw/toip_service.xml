@@ -2,6 +2,9 @@
 <configuration>
 	
 	<toip>
+	<parameter description="Text clockrate"
+			 name="TextClockRate"
+			 value="1000"/>
 	</toip>
 	
 </configuration>

@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
- * Version : 2.0.0
+ * Version : 2.0
  * 
  * Copyright © 2010 France Telecom S.A.
  * 
@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
@@ -27,7 +26,7 @@ import android.telephony.TelephonyManager;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -45,11 +44,6 @@ public class ImsConnectionManager implements Runnable {
      * IMS network interface
      */
     private ImsNetworkInterface currentNetworkInterface;
-    
-    /**
-     * Connectivity manager
-     */
-    private ConnectivityManager connectivityManager;
     
 	/**
 	 * Telephony manager 
@@ -88,9 +82,6 @@ public class ImsConnectionManager implements Runnable {
 		// Set the current network interface
 		currentNetworkInterface = imsModule.getDefaultNetworkInterface();
 		
-		// Get connectivity manager instance
-		connectivityManager = (ConnectivityManager)AndroidFactory.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-	
 		// Listen to data connectivity events
 		telephonyManager = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 		telephonyManager.listen(dataActivityListener,
@@ -254,22 +245,16 @@ public class ImsConnectionManager implements Runnable {
 					logger.debug("Data connection state: CONNECTED");
 				}
 				
-				// Test if the SIP outbound proxy is reachable
-				String outboundProxy = ImsModule.IMS_USER_PROFILE.getOutboundProxyAddr();
-				int index = outboundProxy.indexOf(":");
-				outboundProxy = outboundProxy.substring(0, index);
-				int host = NetworkRessourceManager.ipToInt(outboundProxy);
-				boolean routed = connectivityManager.requestRouteToHost(ConnectivityManager.TYPE_MOBILE, host); 
-				if (routed) {
+				if (RcsSettings.getInstance().isServiceActivated()){				
 					// Get the local IP address
 					String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress();
-					
+	
 					// Connected to the network access
 					if (logger.isActivated()) {
 						logger.debug("Connected to network access at address " + localIpAddr);
 					}
 					currentNetworkInterface.getNetworkAccess().connect(localIpAddr);
-					
+	
 					// Start the IMS connection
 					startImsConnection();
 				}
