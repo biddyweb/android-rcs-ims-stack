@@ -35,8 +35,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class RlmiParser extends DefaultHandler {
 	/* RLMI SAMPLE:
 		<?xml version="1.0" encoding="UTF-8"?>
-		<list xmlns="urn:ietf:params:xml:ns:rlmi" uri="sip:+33960810101@sip.ofr.com;pres-list=rcs" version="1" fullState="true"><name>rcs</name>
-		  <resource uri="sip:+33960810100@sip.ofr.com">
+		<list xmlns="urn:ietf:params:xml:ns:rlmi" uri="sip:+33960810101@domain.com;pres-list=rcs" version="1" fullState="true"><name>rcs</name>
+		  <resource uri="sip:+33960810100@domain.com">
 		    <instance id="001" state="pending" reason="subscribe"/>
 		  </resource>
 		</list>

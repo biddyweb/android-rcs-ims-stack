@@ -38,7 +38,7 @@ public class WatcherInfoParser extends DefaultHandler {
 	/* Watcher-Info SAMPLE:
 		<?xml version="1.0" encoding="UTF-8" ?>
 		<watcherinfo xmlns="urn:ietf:params:xml:ns:watcherinfo" version="0" state="full">
-		  <watcher-list resource="sip:+33960810100@sip.ofr.com" package="presence">
+		  <watcher-list resource="sip:+33960810100@domain.com" package="presence">
 		  <watcher status="active" id="-838173480" duration-subscribed="3" event="subscribe">tel:+33960810100</watcher>
 		  </watcher-list>
 	    </watcherinfo>

@@ -41,7 +41,7 @@ public class PidfParser extends DefaultHandler {
 	
 	/* PIDF SAMPLE:
 	<?xml version="1.0" encoding="UTF-8"?>
-	<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:op="urn:oma:xml:prs:pidf:oma-pres" xmlns:rt="urn:ietf:params:xml:ns:pidf:rpid" xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:rs="urn:ietf:params:xml:ns:pidf:status:rpid-status" entity="sip:+33960810101@sip.ofr.com" version="1">
+	<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:op="urn:oma:xml:prs:pidf:oma-pres" xmlns:rt="urn:ietf:params:xml:ns:pidf:rpid" xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:rs="urn:ietf:params:xml:ns:pidf:status:rpid-status" entity="sip:+33960810101@domain.com" version="1">
 	 <ep:tuple xmlns:ep="urn:ietf:params:xml:ns:pidf" id="id5">
 	   <ep:status>
 	   <ep:basic>closed</ep:basic>
@@ -61,7 +61,7 @@ public class PidfParser extends DefaultHandler {
 	     <op:service-id>org.gsma.videoshare</op:service-id>
 	     <op:version>1.0</op:version>
 	   </op:service-description>
-	   <ep:contact>sip:+33960810101@sip.ofr.com</ep:contact>
+	   <ep:contact>sip:+33960810101@domain.com</ep:contact>
 	   <ep:timestamp>2009-04-24T16:58:32Z</ep:timestamp>
 	 </ep:tuple>
 	 <tuple id="geolocid">

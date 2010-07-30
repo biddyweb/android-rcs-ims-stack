@@ -263,47 +263,12 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	            	        // Generate default settings
 	            			EditText textEdit = (EditText)textEntryView.findViewById(R.id.msisdn);
 	            			String number = textEdit.getText().toString();
-	            			
-	            			String pId;
-	            			String pwd;
-	            			String home;
-	            			String proxy;
-	            			String xdms;
-	            			String login;
-	            			if (countryCode.equals("+33")) {
-		                    	// IOT Orange
-	            				pId = number + "@sip.ofr.com";
-		            			pwd = "nsnims2008";
-		            			home = "sip.ofr.com";
-		            			proxy = "80.12.197.66:5060";
-		            			xdms = "10.194.117.38:8080/services";
-		            			login = "sip:"+ number + "@sip.ofr.com";
-	            			} else 
-	            			if (countryCode.equals("+86")) {
-		            			// IOT China Unicom
-/*		                    	pId = number + "@imslive.com";
-		            			pwd = "111111";
-		            			home = "imslive.com";
-		            			proxy = "58.60.106.11:5060";
-		            			xdms = "58.60.106.11:8090/services";
-		            			login = "sip:"+ number + "@imslive.com";*/
-		            			
-		                    	pId = number + "@hw.beijing.ims.chinaunicom.cn";
-		            			pwd = "111111";
-		            			home = "hw.beijing.ims.chinaunicom.cn";
-		            			proxy = "114.251.55.9:5060";
-		            			xdms = "114.251.55.9:8090";
-		            			login = "sip:"+ number + "@hw.beijing.ims.chinaunicom.cn";	            			
-		            			
-	            			} else {
-	            				// Unknown country
-	            				pId = number + "@domain.com";
-		            			pwd = "";
-		            			home = "domain.com";
-		            			proxy = "127.0.0.1:5060";
-		            			xdms = "127.0.0.1:8080/services";
-		            			login = "sip:"+ number + "@domain.com";
-	            			}
+	            			String pId = number + "@domain.com";
+		            		String pwd = "";
+		            		String home = "domain.com";
+		            		String proxy = "127.0.0.1:5060";
+		            		String xdms = "127.0.0.1:8080/services";
+		            		String login = "sip:"+ number + "@domain.com";
 	            			
 	            			// Update UI & save date
 	                    	RcsSettings.getInstance().setUserProfileUserName(number);
