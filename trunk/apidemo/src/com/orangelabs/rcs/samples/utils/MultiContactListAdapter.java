@@ -25,14 +25,14 @@ import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckedTextView;
 import android.widget.CursorAdapter;
 import android.widget.Filterable;
-import android.widget.TextView;
 
 /**
- * Contact list adapter 
+ * Contact check adapter 
  */
-public class ContactListAdapter extends CursorAdapter implements Filterable {
+public class MultiContactListAdapter extends CursorAdapter implements Filterable {
 	
 	/**
 	 * Constructor
@@ -40,22 +40,25 @@ public class ContactListAdapter extends CursorAdapter implements Filterable {
 	 * @param context Context
 	 * @param c Cursor
 	 */
-	public ContactListAdapter(Context context, Cursor c) {
+	public MultiContactListAdapter(Context context, Cursor c) {
         super(context, c);
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         LayoutInflater inflater = LayoutInflater.from(context);
-        TextView view = (TextView) inflater.inflate(
-                android.R.layout.simple_dropdown_item_1line, parent, false);
+        CheckedTextView view = (CheckedTextView)inflater.inflate(
+                android.R.layout.simple_list_item_multiple_choice, parent, false);
         view.setText(formatText(context, cursor));
+        view.setSelected(true);
         return view;
     }
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-         ((TextView)view).setText(formatText(context, cursor));
+         ((CheckedTextView)view).setText(formatText(context, cursor));
+         // Put the number in tag so it can be retrieved easily
+         view.setTag(cursor.getString(1));
     }
     
     /**
@@ -94,4 +97,5 @@ public class ContactListAdapter extends CursorAdapter implements Filterable {
     		return name + " (" + label + " )";
     	}
     }
+    
 }

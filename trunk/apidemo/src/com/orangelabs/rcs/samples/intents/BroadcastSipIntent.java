@@ -104,7 +104,7 @@ public class BroadcastSipIntent extends Activity {
 	    		// Send intent to activities
 	    		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	    		getApplicationContext().startActivity(intent);
-		    } catch( ActivityNotFoundException e) {
+		    } catch(ActivityNotFoundException e) {
 		    	// Nothing to do
 		    } catch(Exception e) {
 		    	Utils.showError(BroadcastSipIntent.this, getString(R.string.label_intent_failed));

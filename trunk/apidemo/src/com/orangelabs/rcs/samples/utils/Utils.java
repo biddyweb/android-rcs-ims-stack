@@ -19,14 +19,13 @@
 package com.orangelabs.rcs.samples.utils;
 
 import com.orangelabs.rcs.samples.R;
-import com.orangelabs.rcs.samples.R.string;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.provider.Contacts.Phones;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 
 /**
  * Utility functions
@@ -42,14 +41,36 @@ public class Utils {
 	 */
 	public static ContactListAdapter createContactListAdapter(Activity activity) {
 	    String[] PROJECTION = new String[] {
-	    		Phones._ID,
-	    		Phones.NUMBER,
-	    		Phones.NAME
+	    		Phone._ID,
+	    		Phone.NUMBER,
+	    		Phone.LABEL,
+	    		Phone.TYPE,
+	    		Phone.CONTACT_ID
 		    };
         ContentResolver content = activity.getContentResolver();
-		Cursor cursor = content.query(Phones.CONTENT_URI, PROJECTION, Phones.NUMBER + "!='null'", null, null);
+		Cursor cursor = content.query(Phone.CONTENT_URI, PROJECTION, Phone.NUMBER + "!='null'", null, null);
         activity.startManagingCursor(cursor);
 		return new ContactListAdapter(activity, cursor);
+	}
+	
+	/**
+	 * Create a multi contacts selector based on the native address book
+	 * 
+	 * @param activity Activity
+	 * @return List adapter
+	 */
+	public static MultiContactListAdapter createMultiContactListAdapter(Activity activity) {
+	    String[] PROJECTION = new String[] {
+	    		Phone._ID,
+	    		Phone.NUMBER,
+	    		Phone.LABEL,
+	    		Phone.TYPE,
+	    		Phone.CONTACT_ID
+		    };
+        ContentResolver content = activity.getContentResolver();
+		Cursor cursor = content.query(Phone.CONTENT_URI, PROJECTION, Phone.NUMBER + "!='null'", null, null);
+        activity.startManagingCursor(cursor);
+		return new MultiContactListAdapter(activity, cursor);
 	}
 	
 	/**
@@ -57,21 +78,23 @@ public class Utils {
 	 * 
 	 * @param activity Activity
 	 * @param msg Message to be displayed
-	 * @return Dialog to be displayed
 	 */
-    public static AlertDialog showError(final Activity activity, String msg) {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-    	builder.setMessage(msg);
-    	builder.setTitle(R.string.title_error);
-    	builder.setCancelable(false);
-    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog, int id) {
-    			activity.finish();
-    		}
-    	});
-    	AlertDialog alert = builder.create();
-    	alert.show();
-    	return alert;
+    public static void showError(final Activity activity, String msg) {
+    	try {
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+	    	builder.setMessage(msg);
+	    	builder.setTitle(R.string.title_error);
+	    	builder.setCancelable(false);
+	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int id) {
+	    			activity.finish();
+	    		}
+	    	});
+	    	AlertDialog alert = builder.create();
+	    	alert.show();
+		} catch(Exception e) {
+			// Unexpected UI error
+		}
     }
 
 	/**
@@ -79,21 +102,23 @@ public class Utils {
 	 * 
 	 * @param activity Activity
 	 * @param msg Message to be displayed
-	 * @return Dialog to be displayed
 	 */
-    public static AlertDialog showInfo(final Activity activity, String msg) {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-    	builder.setMessage(msg);
-    	builder.setTitle(R.string.title_info);
-    	builder.setCancelable(false);
-    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog, int id) {
-    			activity.finish();
-    		}
-    	});
-    	AlertDialog alert = builder.create();
-    	alert.show();
-    	return alert;
+    public static void showInfo(final Activity activity, String msg) {
+    	try {
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+	    	builder.setMessage(msg);
+	    	builder.setTitle(R.string.title_info);
+	    	builder.setCancelable(false);
+	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int id) {
+	    			activity.finish();
+	    		}
+	    	});
+	    	AlertDialog alert = builder.create();
+	    	alert.show();
+    	} catch(Exception e) {
+    		// Unexpected UI error
+    	}
     }
 
 	/**
@@ -102,20 +127,22 @@ public class Utils {
 	 * @param activity Activity
 	 * @param title Title of the dialog
 	 * @param msg Message to be displayed
-	 * @return Dialog to be displayed
 	 */
-    public static AlertDialog showInfo(final Activity activity, String title, String msg) {
-    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-    	builder.setMessage(msg);
-    	builder.setTitle(title);
-    	builder.setCancelable(false);
-    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog, int id) {
-    			activity.finish();
-    		}
-    	});
-    	AlertDialog alert = builder.create();
-    	alert.show();
-    	return alert;
+    public static void showInfo(final Activity activity, String title, String msg) {
+    	try {
+	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+	    	builder.setMessage(msg);
+	    	builder.setTitle(title);
+	    	builder.setCancelable(false);
+	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int id) {
+	    			activity.finish();
+	    		}
+	    	});
+	    	AlertDialog alert = builder.create();
+	    	alert.show();
+		} catch(Exception e) {
+			// Unexpected UI error
+		}
     }
 }

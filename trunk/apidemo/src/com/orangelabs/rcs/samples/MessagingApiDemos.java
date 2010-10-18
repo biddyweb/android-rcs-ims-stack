@@ -24,9 +24,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.orangelabs.rcs.samples.im.InitiateChat;
+import com.orangelabs.rcs.samples.im.InitiateChatGroup;
 import com.orangelabs.rcs.samples.im.InitiateFileTransfer;
 import com.orangelabs.rcs.samples.im.SendLargeIm;
 import com.orangelabs.rcs.samples.im.SendShortIm;
@@ -67,7 +67,7 @@ public class MessagingApiDemos extends ListActivity {
             	startActivity(new Intent(this, InitiateChat.class));
 	            break;
 	        case 4:
-				Toast.makeText(this, R.string.not_implemented, Toast.LENGTH_SHORT).show();
+            	startActivity(new Intent(this, InitiateChatGroup.class));
 	            break;
         }
     }

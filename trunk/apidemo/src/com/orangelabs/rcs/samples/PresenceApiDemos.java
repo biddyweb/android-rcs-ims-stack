@@ -28,6 +28,7 @@ import android.widget.ListView;
 import com.orangelabs.rcs.samples.presence.BlockedContactList;
 import com.orangelabs.rcs.samples.presence.GrantedContactList;
 import com.orangelabs.rcs.samples.presence.PublishPresenceInfo;
+import com.orangelabs.rcs.samples.presence.RequestPresenceCapabilities;
 import com.orangelabs.rcs.samples.presence.RevokedContactList;
 import com.orangelabs.rcs.samples.presence.ManageContactList;
 import com.orangelabs.rcs.samples.presence.ShowEab;
@@ -50,7 +51,8 @@ public class PresenceApiDemos extends ListActivity {
         		getString(R.string.menu_mgt_contact_list),
         		getString(R.string.menu_granted_contacts),
         		getString(R.string.menu_blocked_contacts),
-        		getString(R.string.menu_revoked_contacts)        		
+        		getString(R.string.menu_revoked_contacts),        		
+        		getString(R.string.menu_anonymous_fetch)        		
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -78,6 +80,9 @@ public class PresenceApiDemos extends ListActivity {
 	            break;
 	        case 6:
             	startActivity(new Intent(this, RevokedContactList.class));
+	            break;
+	        case 7:
+            	startActivity(new Intent(this, RequestPresenceCapabilities.class));
 	            break;
         }
     }

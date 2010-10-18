@@ -19,6 +19,8 @@
 package com.orangelabs.rcs.samples.im;
 
 import android.app.Activity;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -46,5 +48,13 @@ public class ReceiveIm extends Activity {
         // display the received message
     	TextView msg = (TextView)findViewById(R.id.message);
         msg.setText(getIntent().getStringExtra("message"));
+        
+		// Play a tone
+		try {
+			ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_RING,100);
+			toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2);
+		} catch (Exception e){
+			e.printStackTrace();
+		}
     }
 }

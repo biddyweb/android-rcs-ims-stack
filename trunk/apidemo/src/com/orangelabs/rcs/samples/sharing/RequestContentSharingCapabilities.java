@@ -69,7 +69,7 @@ public class RequestContentSharingCapabilities extends Activity {
         Button btn = (Button)findViewById(R.id.request);
         btn.setOnClickListener(btnRequestListener);
                
-    	// Register to receive the query result
+    	// Register intent reciver to receive the query result
         IntentFilter filter = new IntentFilter(RichCallApiIntents.SHARING_CAPABILITIES);
 		registerReceiver(capabilitiesIntentReceiver, filter, null, handler);
 

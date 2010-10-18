@@ -17,6 +17,7 @@
 <string name="menu_granted_contacts">Show the granted contacts list</string>
 <string name="menu_blocked_contacts">Show the blocked contacts list</string>
 <string name="menu_revoked_contacts">Show the revoked contacts list</string>
+<string name="menu_request_capabilities">Request capabilities</string>
 <string name="menu_show_eab">Show contacts database</string>
 <string name="label_freetext">Freetext:</string>
 <string name="label_favoritelink">Favorite link:</string>
@@ -46,6 +47,9 @@
 <string name="label_read_list_ko">Can\'t read XDM server list</string>
 <string name="label_list_empty">No item in the list</string>
 <string name="label_read_eab_ko">Can\'t read the EAB</string>
+<string name="label_request_ok">Request initiated with success</string>
+<string name="label_request_ko">Request has failed</string>
+<string name="label_supported_capabilities">Supported capabilities for</string>
 
 <!--  Messaging API -->
 <string name="menu_messaging">Messaging API</string>
@@ -73,7 +77,7 @@
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
 <string name="menu_initiate_livevideo_sharing">Initiate livevideo sharing</string>
 <string name="menu_initiate_prerecorded_video_sharing">Initiate prerecorded video sharing</string>
-<string name="menu_request_capabilities">Request contact capabilities</string>
+<string name="menu_anonymous_fetch">Anonymous fetch capabilities</string>
 <string name="label_uri">Uri:</string>
 <string name="label_progress_status">Status:</string>
 <string name="label_progress_bar">Progress:</string>
