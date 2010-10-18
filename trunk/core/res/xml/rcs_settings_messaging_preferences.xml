@@ -1,19 +1,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<PreferenceCategory android:title="@string/title_filetransfer_invitation">
+	<PreferenceCategory android:title="@string/rcs_settings_title_filetransfer_invitation">
 		<CheckBoxPreference
 			android:key="filetransfer_invitation_vibration"
 			android:showDefault="true"
-			android:title="@string/label_vibrate"
-			android:summary="@string/summary_filetransfer_vibrate"
+			android:title="@string/rcs_settings_label_vibrate"
+			android:summary="@string/rcs_settings_summary_filetransfer_vibrate"
 		/>
 
 		<com.orangelabs.rcs.settings.FileTransferInvitationRingtone
 			android:key="filetransfer_invitation_ringtone"
-			android:title="@string/label_ringtone"
+			android:title="@string/rcs_settings_label_ringtone"
 			android:showDefault="true"
 			android:showSilent="true"
-			android:summary="@string/summary_filetransfer_ringtone"
+			android:summary="@string/rcs_settings_summary_filetransfer_ringtone"
 		/>
 		
 	</PreferenceCategory>

@@ -5,14 +5,6 @@
 			 name="TelUriFormatSupported"
 			 value="true"/>
 
-		<parameter description="Classname of the user profile interface"
-			 name="UserProfileInterface"
-			 value="com.orangelabs.rcs.core.ims.userprofile.SettingsUserProfileInterface"/>
-
-		<parameter description="Classname of the registraion procedure (GIBA or HTTP Digest)"
-			 name="RegistrationProcedure"
-			 value="com.orangelabs.rcs.core.ims.network.registration.HttpDigestRegistrationProcedure"/>
-
 		<parameter description="Expire period for registration (in seconds)"
 			 name="RegisterExpirePeriod"
 			 value="3600"/>
@@ -21,10 +13,28 @@
 			 name="ImsConnectionPollingPeriod"
 			 value="30"/>
 			 
+		<parameter description="IMS service polling period (in seconds)"
+			 name="ImsServicePollingPeriod"
+			 value="300"/>
+
 		<parameter description="Ringing period (in seconds)"
 			 name="RingingPeriod"
 			 value="60"/>
 	</terminal>
+
+	<access>
+		<parameter description="Network access [MOBILE|WIFI|null], null means any access may be used)"
+			 name="NetworkAccess"
+			 value=""/>
+
+		<parameter description="Mobile operator (null means any operator may be used)"
+			 name="Operator"
+			 value=""/>
+
+		<parameter description="Mobile APN (null means any APN may be used)"
+			 name="APN"
+			 value=""/>
+	</access>
 
 	<sipstack>
 		<parameter description="Listen port number"

@@ -1,45 +1,62 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<PreferenceCategory android:title="@string/title_presence_invitation">
+	<PreferenceCategory android:title="@string/rcs_settings_title_presence_invitation">
 		<CheckBoxPreference
 			android:key="presence_invitation_vibration"
 			android:showDefault="true"
-			android:title="@string/label_vibrate"
-			android:summary="@string/summary_presence_vibrate"
+			android:title="@string/rcs_settings_label_vibrate"
+			android:summary="@string/rcs_settings_summary_presence_vibrate"
 		/>
 
 		<com.orangelabs.rcs.settings.PresenceInvitationRingtone
 			android:key="presence_invitation_ringtone"
-			android:title="@string/label_ringtone"
+			android:title="@string/rcs_settings_label_ringtone"
 			android:showDefault="true"
 			android:showSilent="true"
-			android:summary="@string/summary_presence_ringtone"
+			android:summary="@string/rcs_settings_summary_presence_ringtone"
 		/>
 	</PreferenceCategory>
+	
+	<PreferenceCategory android:title="@string/rcs_settings_title_presence_hyperavailability">
+		<CheckBoxPreference
+			android:key="presence_hyperavailability_vibration"
+			android:showDefault="true"
+			android:title="@string/rcs_settings_label_vibrate"
+			android:summary="@string/rcs_settings_summary_presence_hyperavailability_vibrate"
+		/>
 
-	<PreferenceCategory android:title="@string/title_freetexts">
+		<CheckBoxPreference
+			android:key="presence_hyperavailability_beep"
+			android:showDefault="true"
+			android:title="@string/rcs_settings_label_beep"
+			android:summary="@string/rcs_settings_summary_presence_hyperavailability_beep"
+		/>
+
+	</PreferenceCategory>
+
+	<PreferenceCategory android:title="@string/rcs_settings_title_freetexts">
 		<EditTextPreference
             android:key="edit_freetext1"
-            android:summary="@string/summary_edit_freetext"
-            android:dialogTitle="@string/title_edit_freetext"
+            android:summary="@string/rcs_settings_summary_edit_freetext"
+            android:dialogTitle="@string/rcs_settings_title_edit_freetext"
 	    	android:maxLength="100"/>
                 	
 		<EditTextPreference
             android:key="edit_freetext2"
-            android:summary="@string/summary_edit_freetext"
-            android:dialogTitle="@string/title_edit_freetext" 
+            android:summary="@string/rcs_settings_summary_edit_freetext"
+            android:dialogTitle="@string/rcs_settings_title_edit_freetext" 
     	    android:maxLength="100"/>
 
 		<EditTextPreference
             android:key="edit_freetext3"
-            android:summary="@string/summary_edit_freetext"
-            android:dialogTitle="@string/title_edit_freetext" 
+            android:summary="@string/rcs_settings_summary_edit_freetext"
+            android:dialogTitle="@string/rcs_settings_title_edit_freetext" 
     	    android:maxLength="100"/>
 
 		<EditTextPreference
             android:key="edit_freetext4"
-            android:summary="@string/summary_edit_freetext"
-            android:dialogTitle="@string/title_edit_freetext" 
+            android:summary="@string/rcs_settings_summary_edit_freetext"
+            android:dialogTitle="@string/rcs_settings_title_edit_freetext" 
     	    android:maxLength="100"/>
 	</PreferenceCategory>
 

@@ -4,7 +4,7 @@
     android:versionName="1.0.0"
 	package="com.orangelabs.rcs">
       
-	<uses-sdk android:minSdkVersion="2" />
+	<uses-sdk android:minSdkVersion="5" />
 
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
@@ -20,9 +20,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.MODIFY_PHONE_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>  
-    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS"/>  
 	 
-	<application android:label="@string/title_application"
+	<application android:label="@string/rcs_core_application_title"
 		android:icon="@drawable/rcs_icon">  
 		
 		<!-- RCS service -->	
@@ -43,7 +42,7 @@
 		<!-- RCS settings application -->
 	
 		<activity android:name="com.orangelabs.rcs.settings.RcsSettingsApplication"
-			android:label="@string/title_settings"
+			android:label="@string/rcs_settings_title_settings"
 			android:icon="@drawable/rcs_icon"
 			android:clearTaskOnLaunch="true"
             android:launchMode="singleTop">

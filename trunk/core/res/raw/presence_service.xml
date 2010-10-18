@@ -17,10 +17,6 @@
 		<parameter description="Expire period for hyper-availability (in seconds)"
 			 name="HyperAvailabilityPeriod"
 			 value="300"/>
-			 
-		<parameter description="Publish geoloc info"
-			 name="PublishGeoloc"
-			 value="false"/>
 	</presence>
 
 </configuration>

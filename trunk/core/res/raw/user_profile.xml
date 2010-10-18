@@ -1,11 +1,12 @@
 <user>
+
 	<parameter description="User name"
 		 name="Username"
 		 value=""/>
 
 	<parameter description="User display name"
 		 name="DisplayName"
-		 value="0681694561"/>
+		 value=""/>
 
 	<parameter description="Private user identity"
 		 name="PrivateId"
@@ -13,19 +14,19 @@
 
 	<parameter description="User password"
 		 name="Password"
-		 value=""/>
+		 value="xxxxxxxxxxxx"/>
 
 	<parameter description="User home domain"
 		 name="HomeDomain"
-		 value=""/>
+		 value="domain.com"/>
 
 	<parameter description="Outbound proxy address (SBC or P-CSCF address)"
 		 name="OutboundProxyAddr"
-		 value="80.12.197.168:5060"/>
+		 value="127.0.0.1:5060"/>
 		 
 	<parameter description="XDM server address"
 		 name="XdmServerAddr"
-		 value="10.194.117.38:8080/services"/>		 
+		 value="127.0.0.1:8080/services"/>		 
 
 	<parameter description="XDM server login"
 		 name="XdmServerLogin"
@@ -33,5 +34,10 @@
 		 
 	<parameter description="XDM server password"
 		 name="XdmServerPassword"
-		 value=""/>
+		 value="xxxxxxxxx"/>
+		 
+	<parameter description="IM conference factory URI"
+		 name="ImConferenceUri"
+		 value="sip:conference-factory@domain.com"/>
+		
 </user>

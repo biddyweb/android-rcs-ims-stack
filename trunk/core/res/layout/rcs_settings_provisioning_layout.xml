@@ -23,7 +23,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-		android:text="@string/label_welcome_setup"
+		android:text="@string/rcs_settings_label_welcome_setup"
 		android:layout_marginBottom="20px"
 		android:textStyle="bold"
         android:textSize="20sp">
@@ -32,7 +32,7 @@
 		<TextView
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-		android:text="@string/label_provisionning"
+		android:text="@string/rcs_settings_label_provisionning"
 		android:layout_marginBottom="15px"
         android:textSize="16sp">
 		</TextView>	
@@ -47,8 +47,8 @@
 			android:layout_height="wrap_content"
 	        android:textAppearance="?android:attr/textAppearanceSmall"
 	    	android:background="@drawable/rcs_bt_generic"
-	        android:textColor="@color/black"
-			android:text="@string/label_exit" />
+	        android:textColor="@color/rcs_settings_black"
+			android:text="@string/rcs_settings_label_exit" />
 
 			<View android:layout_weight="1.0"
 			android:layout_width="wrap_content"
@@ -60,8 +60,8 @@
 	        android:layout_gravity="right|center_vertical"
 	        android:textAppearance="?android:attr/textAppearanceSmall"
 	    	android:background="@drawable/rcs_bt_generic"
-	        android:textColor="@color/black"
-			android:text="@string/label_continue" />
+	        android:textColor="@color/rcs_settings_black"
+			android:text="@string/rcs_settings_label_continue" />
 		</LinearLayout>
     </LinearLayout>
 	
