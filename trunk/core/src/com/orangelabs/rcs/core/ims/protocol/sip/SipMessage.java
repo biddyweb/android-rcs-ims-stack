@@ -27,6 +27,7 @@ import gov.nist.core.sip.header.ViaHeader;
 import gov.nist.core.sip.header.ViaList;
 import gov.nist.core.sip.message.Message;
 
+import java.util.Enumeration;
 import java.util.Vector;
 
 
@@ -70,6 +71,26 @@ public abstract class SipMessage {
 		Header header = message.getHeader(name);
 		if (header != null) {
 			return header.getHeaderValue();
+		} else {
+			return null;
+		}			
+	}
+
+	/**
+	 * Return values of an header
+	 * 
+	 * @param name Header name
+	 * @return List of header value
+	 */
+	public Vector<String> getHeaders(String name) {
+		Enumeration<Header> headers = message.getHeaders(name);
+		if (headers != null) {
+			Vector<String> result = new Vector<String>();
+			for(Enumeration<Header> e = headers; e.hasMoreElements(); ) {
+				Header h = e.nextElement();
+				result.addElement(h.getHeaderValue());
+			}
+			return result;
 		} else {
 			return null;
 		}			

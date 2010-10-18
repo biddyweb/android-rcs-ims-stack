@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.network.registration;
 
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
@@ -30,6 +29,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -39,6 +39,11 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */
 public class RegistrationManager extends PeriodicRefresher {
+	/**
+	 * GIBA procedure 
+	 */
+	public final static boolean GIBA_PROCEDURE = false;
+	
     /**
      * Expire period
      */
@@ -54,7 +59,7 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private RegistrationProcedure registrationProcedure;
     
-    /**
+    /**&
      * Dialog path
      */
     private SipDialogPath dialogPath = null;
@@ -63,48 +68,38 @@ public class RegistrationManager extends PeriodicRefresher {
      * Registration flag
      */
     private boolean registered = false;
-
+   
     /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
+    
     /**
      * Constructor
      * 
      * @param networkInterface IMS network interface
-     * @param procedure Classname of the registration procedure to be used
      * @param defaultExpirePeriod Default expiration period in seconds
-     * @throws CoreException
      */
-    public RegistrationManager(ImsNetworkInterface networkInterface, String procedure, int defaultExpirePeriod) throws CoreException {
-        this.networkInterface = networkInterface;
-        this.expirePeriod = defaultExpirePeriod;
-        this.registrationProcedure = loadRegistrationProcedure(procedure);
-        
+    public RegistrationManager(ImsNetworkInterface networkInterface, int defaultExpirePeriod) {
+    	this.networkInterface = networkInterface;
+        this.expirePeriod = (int)RegistryFactory.getFactory().readLong("RegisterExpirePeriod", defaultExpirePeriod);
+        this.registrationProcedure = loadRegistrationProcedure();
+               
         if (logger.isActivated()) {
-        	logger.info("Registration manager started with procedure " + procedure);
+        	logger.info("Registration manager started (GIBA=" + GIBA_PROCEDURE + ")");
         }
     }
 
     /**
      * Load the registration procedure
      * 
-     * @param classname Classname to be loaded
      * @return Registration procedure instance
-     * @throws CoreException
      */
-    private RegistrationProcedure loadRegistrationProcedure(String classname) throws CoreException {
-    	try {
-        	if (logger.isActivated()) {
-        		logger.debug("Load the registration procedure " + classname);
-        	}
-        	return (RegistrationProcedure)Class.forName(classname).newInstance();
-    	} catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't load the registration procedure " + classname, e);
-        	}
-			throw new CoreException("Can't load the registration procedure");
+    private RegistrationProcedure loadRegistrationProcedure() {
+		if (GIBA_PROCEDURE) {
+			return new GibaRegistrationProcedure();
+		} else {
+			return new HttpDigestRegistrationProcedure();
 		}
     }
 
@@ -115,36 +110,6 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     public boolean isRegistered() {
         return registered;
-    }
-
-    /**
-     * Terminate manager
-     */
-    public void terminate() {
-    	if (logger.isActivated()) {
-    		logger.info("Terminate the registration manager");
-    	}
-    	
-    	// Unregister
-    	if (logger.isActivated()) {
-    		logger.info("Execute unregisration");
-    	}
-        unRegistration();
-        
-        if (logger.isActivated()) {
-        	logger.info("Registration manager has been terminated");
-        }
-    }
-
-	/**
-     * Registration processing
-     */
-    public void periodicProcessing() {
-        // Make a registration
-    	if (logger.isActivated()) {
-    		logger.info("Execute re-registration");
-    	}
-        registration();
     }
 
     /**
@@ -334,7 +299,19 @@ public class RegistrationManager extends PeriodicRefresher {
         if (to != null) {
         	dialogPath.setRemoteTag(SipUtils.extractTag(to));
         }
-
+        
+        // Get the P-Associated-URI
+		Vector<String> associatedUri = resp.getHeaders("P-Associated-URI");
+		if (associatedUri != null) {
+			for (int i=0; i < associatedUri.size(); i++) {
+				String uri = associatedUri.elementAt(i);
+		    	if (logger.isActivated()) {
+		    		logger.debug("P-Associated-URI: " + uri);
+		    	}
+			}
+			// TODO : use the PAI as the IMPU
+		}
+		
         // Read the security header
     	registrationProcedure.readSecurityHeader(resp);
 
@@ -422,6 +399,9 @@ public class RegistrationManager extends PeriodicRefresher {
         	return;
         }
         
+        // Save the min expire value in the terminal registry
+        RegistryFactory.getFactory().writeLong("RegisterExpirePeriod", minExpire);
+        
         // Set the expire value
     	expirePeriod = minExpire;
         
@@ -480,5 +460,16 @@ public class RegistrationManager extends PeriodicRefresher {
     		// Set expire period
             expirePeriod = expires;            
         }
+    }
+
+	/**
+     * Registration processing
+     */
+    public void periodicProcessing() {
+        // Make a registration
+    	if (logger.isActivated()) {
+    		logger.info("Execute re-registration");
+    	}
+        registration();
     }
 }

@@ -177,7 +177,7 @@ public class TerminatingVoIpSession extends VoIpSession implements MediaListener
 	            "t=0 0" + SipUtils.CRLF +
 	            "m=audio " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF + 
 	            "a=rtpmap:" + payload + " " + audioFormat.getCodec() + SipUtils.CRLF +
-				"a=sendrecv";
+				"a=sendrecv" + SipUtils.CRLF;
 			
 			// Set the local SDP part in the dialog path
 			getDialogPath().setLocalSdp(sdp);

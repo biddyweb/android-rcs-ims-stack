@@ -101,7 +101,7 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:active" + SipUtils.CRLF +
 	    		"a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +

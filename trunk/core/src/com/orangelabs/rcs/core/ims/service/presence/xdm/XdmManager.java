@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import org.xml.sax.InputSource;
@@ -31,6 +32,8 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.TerminalInfo;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.presence.PhotoIcon;
+import com.orangelabs.rcs.core.ims.service.presence.directory.Folder;
+import com.orangelabs.rcs.core.ims.service.presence.directory.XcapDirectoryParser;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.platform.network.SocketConnection;
 import com.orangelabs.rcs.utils.Base64;
@@ -53,10 +56,20 @@ public class XdmManager {
 	private int xdmServerPort;
 
 	/**
+	 * XDM service root
+	 */
+	private String xdmServiceRoot;
+	
+	/**
 	 * XDM server address
 	 */
 	private String xdmServerAddr;
 
+	/**
+	 * Managed documents
+	 */
+	private Hashtable<String, Folder> documents = new Hashtable<String, Folder>();
+	
 	/**
 	 * The log4j logger
 	 */
@@ -71,23 +84,20 @@ public class XdmManager {
 		xdmServerAddr = ImsModule.IMS_USER_PROFILE.getXdmServerAddr();
 
 		// Extract host & port
-		String addr = xdmServerAddr;
-		int index1 = addr.indexOf(":");
-		int index2 = addr.indexOf("/", index1);
-		xdmServerHost = addr.substring(0, index1);
-		// TODO: use a better parser
-		if (index2 != -1) {
-			xdmServerPort = Integer.parseInt(addr.substring(index1+1, index2));
+		String[] parts = xdmServerAddr.split(":|/");
+		xdmServerHost = parts[0];		
+		xdmServerPort = Integer.parseInt(parts[1]);
+		if (parts.length > 2) {
+			xdmServiceRoot = "/" + parts[2];
 		} else {
-			xdmServerPort = Integer.parseInt(addr.substring(index1+1));
+			xdmServiceRoot = "";
 		}
-		xdmServerAddr = addr;
-		
+
 		if (logger.isActivated()) {
-			logger.info("XDM manager started at " + xdmServerAddr);
+			logger.info("XDM manager connected to host=" + xdmServerHost + ", port=" + xdmServerPort + ", service root=" + xdmServiceRoot);
 		}
 	}
-
+	
 	/**
 	 * Send HTTP PUT request
 	 * 
@@ -96,9 +106,23 @@ public class XdmManager {
 	 * @throws CoreException
 	 */
 	private HttpResponse sendRequestToXDMS(HttpRequest request) throws CoreException {
+		return sendRequestToXDMS(request, false);
+	}
+	
+	/**
+	 * Send HTTP PUT request
+	 * 
+	 * @param request HTTP request
+	 * @param authenticate Authentication needed
+	 * @return HTTP response
+	 * @throws CoreException
+	 */
+	private HttpResponse sendRequestToXDMS(HttpRequest request, boolean authenticate) throws CoreException {
 		try {
 			// Send first request
-			HttpResponse response = sendHttpRequest(request, false);
+			HttpResponse response = sendHttpRequest(request, authenticate);
+			
+			// Analyze the response
 			if (response.getResponseCode() == 401) {
 				// 401 response received
 				if (logger.isActivated()) {
@@ -113,7 +137,19 @@ public class XdmManager {
 				request.setCookie(cookie);
 				
 				// Send second request with authentification header
-				response = sendHttpRequest(request, true);
+				response = sendRequestToXDMS(request, true);
+			} else
+			if (response.getResponseCode() == 412) {
+				// 412 response received
+				if (logger.isActivated()) {
+					logger.debug("412 Precondition failed");
+				}
+	
+				// Reset the etag
+				documents.remove(request.getAUID());
+				
+				// Send second request with authentification header
+				response = sendRequestToXDMS(request);
 			} else {		
 				// Other response received
 				if (logger.isActivated()) {
@@ -145,8 +181,7 @@ public class XdmManager {
 		OutputStream os = conn.getOutputStream();
 
 		// Create the HTTP request
-		String url = request.getUrl();
-		String requestUri = url.substring(url.indexOf("/"));
+		String requestUri = xdmServiceRoot + request.getUrl();
 		String httpRequest = request.getMethod() + " " + requestUri + " HTTP/1.1" + HttpUtils.CRLF +
 				"Host: " + xdmServerHost + ":" + xdmServerPort + HttpUtils.CRLF +
 				"User-Agent: " + TerminalInfo.PRODUCT_NAME + " " + TerminalInfo.PRODUCT_VERSION + HttpUtils.CRLF;
@@ -166,6 +201,12 @@ public class XdmManager {
 
 		httpRequest += "X-3GPP-Intended-Identity: " + ImsModule.IMS_USER_PROFILE.getPublicUri() + HttpUtils.CRLF;
 
+		// Set the If-match header
+		Folder folder = (Folder)documents.get(request.getAUID());
+		if ((folder != null) && (folder.getEntry() != null) && (folder.getEntry().getEtag() != null)) {
+			httpRequest += "If-match: " + folder.getEntry().getEtag() + HttpUtils.CRLF;
+		}
+		
 		if (request.getContent() != null) {
 			// Set the content type
 			httpRequest += "Content-type: " + request.getContentType() + HttpUtils.CRLF;
@@ -266,10 +307,131 @@ public class XdmManager {
 		is.close();
 		os.close();
 		conn.close();
+
+		// Save the Etag from the received response
+		String etag = response.getHeader("etag");
+		if ((etag != null) && (folder != null) && (folder.getEntry() != null)) {
+			folder.getEntry().setEtag(etag);
+		}
 		
 		return response;
 	}	
 	
+	/**
+	 * Initialize the XDM interface
+	 */
+	public void initialize() {
+    	// Get the existing XCAP documents on the XDM server
+		try {
+			HttpResponse response = getXcapDocuments();
+			if ((response != null) && response.isSuccessfullResponse()) {
+				// Analyze the XCAP directory
+				InputSource input = new InputSource(new ByteArrayInputStream(response.getContent()));
+				XcapDirectoryParser parser = new XcapDirectoryParser(input);
+				documents = parser.getDocuments();
+
+				// Check RCS list document
+				Folder folder = (Folder)documents.get("rls-services");
+				if ((folder == null) || (folder.getEntry() == null)) {
+					if (logger.isActivated()){
+						logger.debug("The rls-services document does not exist");
+					}
+
+					// Set RCS list document
+			    	setRcsList();
+				} else {
+					if (logger.isActivated()){
+						logger.debug("The rls-services document already exists");
+					}
+				}
+
+				// Check resource list document
+				folder = (Folder)documents.get("resource-lists");
+				if ((folder == null) || (folder.getEntry() == null)) {
+					if (logger.isActivated()){
+						logger.debug("The resource-lists document does not exist");
+					}
+
+					// Set resource list document
+			    	setResourcesList(); 
+				} else {
+					if (logger.isActivated()){
+						logger.debug("The resource-lists document already exists");
+					}
+				}
+			
+				// Check presence rules document
+				folder = (Folder)documents.get("org.openmobilealliance.pres-rules");
+				if ((folder == null) || (folder.getEntry() == null)) {
+					if (logger.isActivated()){
+						logger.debug("The org.openmobilealliance.pres-rules document does not exist");
+					}
+
+					// Set presence rules document
+			    	setPresenceRules();
+				} else {
+					if (logger.isActivated()){
+						logger.debug("The org.openmobilealliance.pres-rules document already exists");
+					}
+				}
+			}
+		} catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Can't parse the XCAP directory document", e);
+        	}	    				
+		}
+
+    	// Read XDMS list content
+		List<String> grantedContacts = getGrantedContacts();
+		String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
+		if (!grantedContacts.contains(me)) {
+        	if (logger.isActivated()) {
+        		logger.debug("The enduser is not in the RCS list himself: add it now");
+        	}	    				
+
+        	// Add himself on the granted list
+			addContactToGrantedList(me);
+		}
+	}
+
+	/**
+	 * Get XCAP managed documents
+	 * 
+	 * @return Response
+	 */
+	public HttpResponse getXcapDocuments() {
+		try {
+			if (logger.isActivated()){
+				logger.info("Get XCAP documents");
+			}
+	
+			// URL
+			String url = "/org.openmobilealliance.xcap-directory/users/" +
+				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/directory.xml";
+		
+			// Create the request
+			HttpGetRequest request = new HttpGetRequest(url);
+
+			// Send the request
+			HttpResponse response = sendRequestToXDMS(request);
+			if (response.isSuccessfullResponse()) {
+				if (logger.isActivated()){
+					logger.info("XCAP documents has been read with success");
+				}
+			} else {
+				if (logger.isActivated()){
+					logger.info("Can't read XCAP documents: " + response.getResponseCode() + " error");
+				}
+			}
+			return response;
+		} catch(CoreException e) {
+			if (logger.isActivated()) {
+				logger.error("Can't read XCAP documents: unexpected exception", e);
+			}
+			return null;
+		}
+	}
+
 	/**
 	 * Get RCS list
 	 * 
@@ -282,7 +444,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/rls-services/users/" +
+			String url = "/rls-services/users/" +
 				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
 		
 			// Create the request
@@ -320,14 +482,14 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/rls-services/users/" + 
+			String url = "/rls-services/users/" + 
 				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
 		
 			// Content
 			String user = ImsModule.IMS_USER_PROFILE.getPublicUri();
 			String resList = "http://" + xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(user) + "/index/~~/resource-lists/list%5B@name=%22rcs%22%5D";
 			String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + HttpUtils.CRLF +
-				"<rls-services xmlns=\"urn:ietf:params:xml:ns:rls-services\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + HttpUtils.CRLF +
+				"<rls-services xmlns=\"urn:ietf:params:xml:ns:rls-services\" xmlns:rl=\"urn:ietf:params:xml:ns:resource-lists\">" + HttpUtils.CRLF +
 				"<service uri=\"" + user + ";pres-list=rcs\">" + HttpUtils.CRLF +
 				
 				"<resource-list>" + resList + "</resource-list>" + HttpUtils.CRLF +
@@ -373,7 +535,8 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
+			String url = "/resource-lists/users/" +
+				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
 		
 			// Create the request
 			HttpGetRequest request = new HttpGetRequest(url);
@@ -410,7 +573,8 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
+			String url = "/resource-lists/users/" +
+				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/index";
 		
 			// Content
 			String user = ImsModule.IMS_USER_PROFILE.getPublicUri();
@@ -480,7 +644,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/org.openmobilealliance.pres-rules/users/" +
+			String url = "/org.openmobilealliance.pres-rules/users/" +
 				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/pres-rules";
 		
 			// Create the request
@@ -518,7 +682,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/org.openmobilealliance.pres-rules/users/" +
+			String url = "/org.openmobilealliance.pres-rules/users/" +
 				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + "/pres-rules";
 		
 			// Content
@@ -616,7 +780,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -660,7 +824,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -701,13 +865,13 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs%22%5D";
 			
 			// Create the request
 			HttpGetRequest request = new HttpGetRequest(url);
-
+			
 			// Send the request
 			HttpResponse response = sendRequestToXDMS(request);
 			if (response.isSuccessfullResponse()) {
@@ -745,7 +909,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_blockedcontacts%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -789,7 +953,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_blockedcontacts%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -830,7 +994,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_blockedcontacts%22%5D";
 			
@@ -875,7 +1039,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_revokedcontacts%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -919,7 +1083,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_revokedcontacts%22%5D/entry%5B@uri=%22" +
 					HttpUtils.encodeURL(contact) + "%22%5D";
@@ -960,7 +1124,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/resource-lists/users/" +
+			String url = "/resource-lists/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 					"/index/~~/resource-lists/list%5B@name=%22rcs_revokedcontacts%22%5D";
 			
@@ -998,7 +1162,7 @@ public class XdmManager {
 	 * @return URL
 	 */
 	public String getEndUserPhotoIconUrl() {
-		return xdmServerAddr + "/org.openmobilealliance.pres-content/users/" +
+		return "http://" + xdmServerAddr + "/org.openmobilealliance.pres-content/users/" +
 			HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 			"/oma_status-icon/rcs_status_icon";
 	}
@@ -1024,8 +1188,13 @@ public class XdmManager {
 				"<data>" + data + "</data>" + HttpUtils.CRLF +
 				"</content>";
 			
+			// URL
+			String url = "/org.openmobilealliance.pres-content/users/" +
+				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
+				"/oma_status-icon/rcs_status_icon";
+
 			// Create the request
-			HttpPutRequest request = new HttpPutRequest(getEndUserPhotoIconUrl(), content, "application/vnd.oma.pres-content+xml");
+			HttpPutRequest request = new HttpPutRequest(url, content, "application/vnd.oma.pres-content+xml");
 
 			// Send the request
 			HttpResponse response = sendRequestToXDMS(request);
@@ -1059,8 +1228,13 @@ public class XdmManager {
 				logger.info("Delete the end user photo");
 			}
 	
+			// URL
+			String url = "/org.openmobilealliance.pres-content/users/" +
+				HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
+				"/oma_status-icon/rcs_status_icon";
+
 			// Create the request
-			HttpDeleteRequest request = new HttpDeleteRequest(getEndUserPhotoIconUrl());
+			HttpDeleteRequest request = new HttpDeleteRequest(url);
 
 			// Send the request
 			HttpResponse response = sendRequestToXDMS(request);
@@ -1093,11 +1267,9 @@ public class XdmManager {
 			if (logger.isActivated()){
 				logger.info("Download the photo at " + url);
 			}
-		
-			// Remove [http://host:port/services]
-			url = url.substring(7);
-			int index = url.indexOf("/");
-			url = url.substring(index);
+			
+			// Remove the beginning of the URL
+			url = url.substring(url.indexOf("/org.openmobilealliance.pres-content"));						
 			
 			// Create the request
 			HttpGetRequest request = new HttpGetRequest(url);
@@ -1154,7 +1326,7 @@ public class XdmManager {
 			}
 	
 			// URL
-			String url = xdmServerAddr + "/pidf-manipulation/users/" +
+			String url = "/pidf-manipulation/users/" +
 					HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) +
 					"/perm-presence";
 			

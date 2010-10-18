@@ -180,10 +180,10 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
         		setRtpSender(new MediaRtpSender(redFormat));
         		getRtpReceiver().prepareSession(getMediaRenderer(), redFormat);
         		sdpMedia = sdpMedia + 
-        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
-        		"a=rtpmap:" + payload + " " + redFormat.getCodec()  + "/" + clockRate + SipUtils.CRLF +
-        		"a=fmtp:" + payload + " " + textFormat.getPayload()+ "/" + textFormat.getPayload()+ "/" + textFormat.getPayload() + SipUtils.CRLF +
-				"a=sendrecv";
+	        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
+	        		"a=rtpmap:" + payload + " " + redFormat.getCodec()  + "/" + clockRate + SipUtils.CRLF +
+	        		"a=fmtp:" + payload + " " + textFormat.getPayload()+ "/" + textFormat.getPayload()+ "/" + textFormat.getPayload() + SipUtils.CRLF +
+					"a=sendrecv" + SipUtils.CRLF;
         	} else {
         		if (logger.isActivated()) {
 					logger.debug("Codec choosed: "+textFormat.getCodec());
@@ -192,9 +192,9 @@ public class TerminatingToIpSession extends ToIpSession implements MediaListener
         		setRtpSender(new MediaRtpSender(textFormat));
         		getRtpReceiver().prepareSession(getMediaRenderer(), textFormat);
         		sdpMedia = sdpMedia + 
-        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
-        		"a=rtpmap:" + payload + " " + textFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
-        		"a=sendrecv";
+	        		"m=text " + localRtpPort + " RTP/AVP " + payload + SipUtils.CRLF +
+	        		"a=rtpmap:" + payload + " " + textFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
+	        		"a=sendrecv" + SipUtils.CRLF;
         	}			
 
 			// Prepare the RTP sessions			

@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -38,7 +39,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class SubscribeManager extends PeriodicRefresher {
-    /**
+	/**
      * Presentity
      */
     private String presentity;
@@ -81,10 +82,10 @@ public abstract class SubscribeManager extends PeriodicRefresher {
      * @param defaultExpirePeriod Default expiration period in seconds
      */
     public SubscribeManager(ImsModule parent, String presentity, int defaultExpirePeriod) {
-        this.imsModule = parent;
+    	this.imsModule = parent;
         this.presentity = presentity;
-        this.expirePeriod = defaultExpirePeriod;
-
+        this.expirePeriod = (int)RegistryFactory.getFactory().readLong("SubscribeExpirePeriod", defaultExpirePeriod);
+        
         if (logger.isActivated()) {
         	logger.info("Subscribe manager started for " + presentity);
         }
@@ -144,7 +145,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
     	
     	// Stop periodic subscription
     	stopTimer();
-        
+
     	// Reset dialog path attributes
         resetDialogPath();
 
@@ -160,8 +161,14 @@ public abstract class SubscribeManager extends PeriodicRefresher {
     		logger.info("Terminate the subscribe manager for " + presentity);
     	}
     	
-    	// Unsubscribe
-    	unSubscribe();
+    	// Stop periodic subscription
+    	stopTimer();
+
+    	// Unsubscribe before to quit
+		if ((imsModule.getCurrentNetworkInterface() != null) &&
+				imsModule.getCurrentNetworkInterface().isRegistered()) {
+				unSubscribe();
+    	}
         
         if (logger.isActivated()) {
         	logger.info("Subscribe manager is terminated for " + presentity);
@@ -245,7 +252,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
 	        
         } catch (Exception e) {
         	if (logger.isActivated()) {
-        		logger.error("Publish has failed", e);
+        		logger.error("Subscribe has failed", e);
         	}
         	handleError(new PresenceError(PresenceError.UNEXPECTED_EXCEPTION, e.getMessage()));
         }        
@@ -474,6 +481,9 @@ public abstract class SubscribeManager extends PeriodicRefresher {
         	return;
         }
         
+        // Save the min expire value in the terminal registry
+        RegistryFactory.getFactory().writeLong("SubscribeExpirePeriod", minExpire);
+
         // Set the default expire value
     	expirePeriod = minExpire;
     	

@@ -21,8 +21,9 @@ package com.orangelabs.rcs.core.ims;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.CoreListener;
+import com.orangelabs.rcs.core.ims.network.ImsConnectionManager;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
-import com.orangelabs.rcs.core.ims.network.MobileNetworkInterface;
+import com.orangelabs.rcs.core.ims.network.registration.RegistrationManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpSource;
@@ -37,6 +38,8 @@ import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.core.ims.service.voip.VoIpService;
+import com.orangelabs.rcs.core.ims.userprofile.GibaUserProfileInterface;
+import com.orangelabs.rcs.core.ims.userprofile.SettingsUserProfileInterface;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfileInterface;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -47,7 +50,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */ 
 public class ImsModule implements SipListener {
-
     /**
      * Core
      */
@@ -62,11 +64,6 @@ public class ImsModule implements SipListener {
      * IMS connection manager
      */
     private ImsConnectionManager connectionManager;
-
-    /**
-     * Default network interface
-     */
-    private MobileNetworkInterface defaultNetworkInterface = null;
 
     /**
      * IMS services
@@ -102,20 +99,9 @@ public class ImsModule implements SipListener {
     		logger.info("IMS user profile: " + ImsModule.IMS_USER_PROFILE.toString());
     	}
         
-        // Instanciates the IMS network interfaces
-        try {
-            defaultNetworkInterface = new MobileNetworkInterface(this);
-        } catch (Exception e) {
-        	if (logger.isActivated()) {
-        		logger.fatal("IMS network interface initialization has failed", e);
-        	}
-            throw new CoreException("Can't create the IMS network interface");
-        }        
-
 		// Create the IMS connection manager
         try {
-			connectionManager = new ImsConnectionManager(this,
-					core.getConfig().getInteger("ImsConnectionPollingPeriod"));
+			connectionManager = new ImsConnectionManager(this);
         } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("IMS connection manager initialization has failed", e);
@@ -156,7 +142,25 @@ public class ImsModule implements SipListener {
     	return getCurrentNetworkInterface().getSipManager();
     }
          
-    /**
+	/**
+     * Returns the current network interface
+     * 
+     * @return Network interface
+     */
+	public ImsNetworkInterface getCurrentNetworkInterface() {
+		return connectionManager.getCurrentNetworkInterface();
+	}
+	
+	/**
+	 * Returns the ImsConnectionManager
+	 * 
+	 * @return ImsConnectionManager
+	 */
+	public ImsConnectionManager getImsConnectionManager(){
+		return connectionManager;
+	}
+
+	/**
      * Start the IMS module
      */
     public void start() {
@@ -180,12 +184,9 @@ public class ImsModule implements SipListener {
     		logger.info("Stop the IMS module");
     	}
          
-    	// Terminate the SIP dispatcher
+    	// Terminate the SIP dispatcher to block incoming SIP events
     	sipDispatcher.terminate();
-
-    	// Stop IMS services
-    	stopImsServices();
-    	
+   	
     	// Terminate the connection manager
     	connectionManager.terminate();
 
@@ -377,19 +378,13 @@ public class ImsModule implements SipListener {
      * @throws CoreException
      */
     private UserProfile loadUserProfile() throws CoreException {
-    	String classname = core.getConfig().getString("UserProfileInterface"); 
-    	try {
-        	if (logger.isActivated()) {
-        		logger.debug("Load the user profile " + classname);
-        	}
-    		UserProfileInterface intf = (UserProfileInterface)Class.forName(classname).newInstance();
-    		return intf.read();
-    	} catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't load the user profile " + classname, e);
-        	}
-			throw new CoreException("Can't load the user profile");
-		}
+		UserProfileInterface intf = null;
+    	if (RegistrationManager.GIBA_PROCEDURE) {
+    		intf = new GibaUserProfileInterface();
+    	} else {
+    		intf = new SettingsUserProfileInterface();  
+    	}
+    	return intf.read();
     }
 
     /**
@@ -409,33 +404,6 @@ public class ImsModule implements SipListener {
     public CoreListener getCoreListener() {
     	return core.getListener();
     }
-
-	/**
-     * Returns the default network interface
-     * 
-     * @return Default network interface
-     */
-	public MobileNetworkInterface getDefaultNetworkInterface() {
-		return defaultNetworkInterface;
-	}
-
-	/**
-     * Returns the current network interface
-     * 
-     * @return Network interface
-     */
-	public ImsNetworkInterface getCurrentNetworkInterface() {
-		return connectionManager.getCurrentNetworkInterface();
-	}
-	
-	/**
-	 * Returns the ImsConnectionManager
-	 * 
-	 * @return ImsConnectionManager
-	 */
-	public ImsConnectionManager getImsConnectionManager(){
-		return connectionManager;
-	}
 	
 	/**
 	 * Receive SIP request

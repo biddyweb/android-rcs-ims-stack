@@ -46,13 +46,9 @@ public class PidfDocument {
 	}
 	
 	public void setPerson(Person newPerson) {
-		if (person == null) {
+		if ((person == null) || (newPerson.getTimestamp() >= person.getTimestamp())) {
 			person = newPerson;
-		} else {
-			if ((newPerson.getTimestamp()/1000) > (person.getTimestamp()/1000)) {
-				person = newPerson;
-			}
-		}
+		}		
 	}
 	
 	public void addTuple(Tuple tuple) {

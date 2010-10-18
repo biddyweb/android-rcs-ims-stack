@@ -18,27 +18,31 @@
  ******************************************************************************/
 package com.orangelabs.rcs.utils;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Periodic refresher.
+ * Periodic refresher
  *
  * @author JM. Auffret
  */
 public abstract class PeriodicRefresher {
+	/**
+     * Keep alive manager
+     */
+    private KeepAlive alarmReceiver = new KeepAlive(); 
 
     /**
-     * Timer
+     * Alarm intent
      */
-    private static Timer timer = new Timer();
-    
-    /**
-     * Timer task
-     */
-    private RefresherTimerTask timerTask = null;
+    private PendingIntent alarmIntent;
 
     /**
      * The logger
@@ -46,18 +50,25 @@ public abstract class PeriodicRefresher {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
+     * Constructor
+     */
+    public PeriodicRefresher() {
+    	// Create a unique pending intent
+    	String action = this.toString(); // Unique action ID 
+    	this.alarmIntent = PendingIntent.getBroadcast(
+    			AndroidFactory.getApplicationContext(),
+    			0,
+    			new Intent(action),
+    			0);
+ 
+        // Register the alarm receiver
+    	AndroidFactory.getApplicationContext().registerReceiver(alarmReceiver, new IntentFilter(action));		
+    }
+    
+    /**
      * Periodic processing
      */
     public abstract void periodicProcessing();
-    
-    /**
-     * Is timer started
-     * 
-     * @return Boolean
-     */
-    public boolean isTimerStarted() {
-    	return (timerTask != null);
-    }
     
     /**
      * Start the timer
@@ -66,60 +77,36 @@ public abstract class PeriodicRefresher {
      * @param delta Delta to apply on the expire period in percentage
      */
     public void startTimer(int expirePeriod, double delta) {
-    	// Remove old timer
-		if (timerTask != null) {
-			timerTask.cancel();
-			timerTask = null;
-		}
-
 		// Calculate the effective refresh period
     	int period = (int)(expirePeriod * delta);
-
-    	// Start timer
     	if (logger.isActivated()) {
-    		logger.debug("Start timer at period=" + period +  "s, expire at " + expirePeriod + "s");
+    		logger.debug("Start timer at period=" + period +  "s (expiration=" + expirePeriod + "s)");
     	}
-    	timerTask = new RefresherTimerTask(this);
-    	timer.scheduleAtFixedRate(timerTask, period * 1000, period * 1000);
+
+    	// Start alarm from now to the expire value
+        AlarmManager am = (AlarmManager)AndroidFactory.getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+period*1000, alarmIntent);
     }
 
     /**
      * Stop the timer
      */
     public void stopTimer() {
-    	// Stop timer
     	if (logger.isActivated()) {
     		logger.debug("Stop timer");
     	}
-		if (timerTask != null) {
-			timerTask.cancel();
-			timerTask = null;
-		}
-    }
-    
-    /**
-	 * Internal timer task
-	 */
-    private class RefresherTimerTask extends TimerTask {
-    	/**
-    	 * Parent
-    	 */
-		private PeriodicRefresher parent;
 
-		/**
-		 * Constructor
-		 * 
-		 * @param parent Parent
-		 */
-		RefresherTimerTask(PeriodicRefresher parent) {
-			this.parent = parent;
-		}
-	
-	    /**
-	     * Periodic processing
-	     */
-		public final void run() {
-	        parent.periodicProcessing();
-		}
+    	// Cancel alarm
+        AlarmManager am = (AlarmManager)AndroidFactory.getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        am.cancel(alarmIntent);
+    }
+
+    /**
+     * Keep alive manager
+     */
+    private class KeepAlive extends BroadcastReceiver {
+    	public void onReceive(Context context, Intent intent) {
+    		periodicProcessing();
+    	}
     }    
 }

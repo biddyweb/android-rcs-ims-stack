@@ -201,6 +201,19 @@ public class MsrpManager {
         msrpSession.sendChunks(inputStream, contentType, contentSize);
     }
 
+	/**
+     * Send an empty packet
+     * 
+     * @throws MsrpException
+     */
+    public void sendEmptyPacket() throws MsrpException {
+        if (msrpSession == null) {
+        	throw new MsrpException("MSRP session is null");
+        }
+
+		msrpSession.sendEmptyChunk();
+    }
+    
     /**
      * Close the MSRP session
      */

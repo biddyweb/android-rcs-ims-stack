@@ -180,14 +180,14 @@ public class CallManager {
 
 					// If terminal connected to IMS then request capabilities
 					if (core.getImsModule().getCurrentNetworkInterface().isRegistered()) {
-						if (logger.isActivated()) {
-							logger.debug("Request capabilities to " + remoteParty);
-						}
 						// Due to to missing "ringing" state under Android for an outgoing call,
 						// the capabilities are only requested for an incoming call. Then the remote
 						// side will request also the capalities on receiving the OPTIONS request.
 						// TODO: hide the workaround when Google correct the bug
 						if (incomingCall && (remoteParty != null)) {
+							if (logger.isActivated()) {
+								logger.debug("Request capabilities to " + remoteParty);
+							}
 							core.getCapabilityService().requestCapability(remoteParty);
 						}
 					}
@@ -268,8 +268,8 @@ public class CallManager {
 	 * @param contact Remote contact
 	 */
 	public void handleReceiveCapabilities(final String contact) {
-		// In case of an incoming 
-		if (!incomingCall) {
+		// In case of an incoming connected
+		if (!incomingCall && isConnected(contact)) {
 			// Request capabilities to remote in background
 			Thread t = new Thread() {
 				public void run() {

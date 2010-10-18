@@ -38,7 +38,7 @@ public class UserProfileProvisionning extends Activity {
         super.onCreate(savedInstanceState);
 
         // Set title
-        setTitle(R.string.title_provisionning);
+        setTitle(R.string.rcs_settings_title_provisionning);
         
         // Set layout
         setContentView(R.layout.rcs_settings_provisioning_layout);

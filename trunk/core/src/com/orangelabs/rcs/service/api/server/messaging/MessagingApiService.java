@@ -86,8 +86,21 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
 			ContentSharingTransferSession session = Core.getInstance().getImService().transferFile(contact, content);
 
-			String sessionId = session.getSessionID();
-			RichMessaging.getInstance().addFileTransfer(sessionId, contact, file, RichMessagingData.OUTGOING, session.getContent().getEncoding(), session.getContent().getName(), session.getContent().getSize());
+			String ftSessionId = session.getSessionID();
+			String imSessionId = null;
+			
+			try {
+				// Check if there is a chat session in progress
+				IChatSession chatSession = this.getChatSessionWithContact(contact);
+				imSessionId = (chatSession!=null)?chatSession.getSessionID():ftSessionId;
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+					logger.error("GetChatSession",e);
+				}
+				imSessionId = ftSessionId;
+			}			
+			
+			RichMessaging.getInstance().addMessage(RichMessagingData.FILETRANSFER, imSessionId, ftSessionId, contact, file, RichMessagingData.OUTGOING, session.getContent().getEncoding(), session.getContent().getName(), session.getContent().getSize(), null, RichMessagingData.INVITING);
 			return new FileTransferSession(session);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
@@ -184,6 +197,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		try {
 			InstantMessageSession session = Core.getInstance().getImService().initiateOne2OneChatSession(contact, subject);
+			
+			RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, contact, subject, RichMessagingData.OUTGOING, "text/plain", null, subject.length(), null, RichMessagingData.INVITING);
+			
 			return new ChatSession(session);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
@@ -209,6 +225,12 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		try {
 			// TODO: use subject
 			InstantMessageSession session = Core.getInstance().getImService().initiateAdhocGroupChatSession(subject, participants);
+			String contacts = "";
+			for(String contact : participants){
+				contacts += contact+";";
+			}
+			RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, contacts, subject, RichMessagingData.OUTGOING, "text/plain", null, subject.length(), null, RichMessagingData.INVITING);
+			
 			return new ChatSession(session);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());

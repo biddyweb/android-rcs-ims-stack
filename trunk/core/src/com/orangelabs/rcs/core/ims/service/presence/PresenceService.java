@@ -76,6 +76,11 @@ public class PresenceService extends ImsService {
 	private SubscribeManager presenceSubscriber;
 
 	/**
+	 * Anonymous fetch manager
+	 */
+	private AnonymousFetchManager anonymousFetchManager;
+
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -101,8 +106,7 @@ public class PresenceService extends ImsService {
     	
     	// Instanciate the publish manager
         publisher = new PublishManager(parent,
-        		getConfig().getInteger("PublishExpirePeriod"),
-        		getConfig().getBoolean("PublishGeoloc"));
+        		getConfig().getInteger("PublishExpirePeriod"));
     	
     	// Instanciate the subscribe manager for watcher info
     	watcherInfoSubscriber = new WatcherInfoSubscribeManager(parent,
@@ -112,44 +116,19 @@ public class PresenceService extends ImsService {
     	// Instanciate the subscribe manager for presence
     	presenceSubscriber = new PresenceSubscribeManager(parent,
     			ImsModule.IMS_USER_PROFILE.getPublicUri()+";pres-list=rcs",
-    			getConfig().getInteger("SubscribeExpirePeriod"));    	
+    			getConfig().getInteger("SubscribeExpirePeriod"));  
+    	
+    	// Instanciate the anonymous fetch manager
+    	anonymousFetchManager = new AnonymousFetchManager(parent);
 	}
 
 	/**
 	 * Start the IMS service
 	 */
 	public void start() {	
-    	// Initialize XDMS lists if they don't exist
-		HttpResponse response = xdm.getRcsList();
-		if ((response != null) && response.isNotFoundResponse()) {
-	    	// Set RCS list
-	    	xdm.setRcsList();
-		}
-
-		response = xdm.getResourcesList();
-		if ((response != null) && response.isNotFoundResponse()) {
-	    	// Set resource list
-	    	xdm.setResourcesList(); 
-		}	
-
-		response = xdm.getPresenceRules();
-		if ((response != null) && response.isNotFoundResponse()) {
-	    	// Set presence rules
-	    	xdm.setPresenceRules();
-    	}
-
-    	// Publish initial presence info
-		String xml = buildAllPresenceInfo(presenceInfo);
-    	if (publisher.publish(xml)) {
-        	if (logger.isActivated()) {
-        		logger.debug("Publish manager is started with success");
-        	}
-		} else {
-        	if (logger.isActivated()) {
-        		logger.debug("Publish manager can't be started");
-        	}
-		}
-
+		// Initialize the XDM interface
+		xdm.initialize();
+		
 		// Subscribe to watcher-info events 
     	if (watcherInfoSubscriber.subscribe()) {
         	if (logger.isActivated()) {
@@ -171,15 +150,27 @@ public class PresenceService extends ImsService {
         		logger.debug("Subscribe manager can't be started for presence");
         	}
 		}
+
+    	// Publish initial presence info
+		String xml = buildAllPresenceInfo(presenceInfo);
+    	if (publisher.publish(xml)) {
+        	if (logger.isActivated()) {
+        		logger.debug("Publish manager is started with success");
+        	}
+		} else {
+        	if (logger.isActivated()) {
+        		logger.debug("Publish manager can't be started");
+        	}
+		}	
 	}
 
 	/**
 	 * Stop the IMS service 
 	 */
 	public void stop() {
-    	// Publish last presence info before to quit
-		if ((getImsModule().getImsConnectionManager().getCurrentNetworkInterface() != null) &&
-			getImsModule().getImsConnectionManager().getCurrentNetworkInterface().isRegistered() &&
+    	// Publish a last presence info before to quit
+		if ((getImsModule().getCurrentNetworkInterface() != null) &&
+				getImsModule().getCurrentNetworkInterface().isRegistered() &&
 			publisher.isPublished()) {
 			String xml = buildAllPresenceInfo(presenceInfo);
 	    	publisher.publish(xml);
@@ -191,6 +182,7 @@ public class PresenceService extends ImsService {
     	// Stop subscriptions
     	watcherInfoSubscriber.terminate();
     	presenceSubscriber.terminate();
+    	anonymousFetchManager.terminate();
 	}
 	
 	/**
@@ -305,40 +297,50 @@ public class PresenceService extends ImsService {
      * @param notify Received notify
      */
     public void receiveNotification(SipRequest notify) {
-    	if (logger.isActivated()) {
-    		logger.info("Receive a new notification");
+    	try {
+	    	if (logger.isActivated()) {
+	    		logger.info("Receive a new notification");
+	    	}
+	    	
+	    	// Send 200 OK
+		    try {
+		        SipResponse resp = SipMessageFactory.createResponse(notify, 200);
+		        getImsModule().getSipManager().sendSipMessage(resp);
+		    } catch(SipException e) {
+	        	if (logger.isActivated()) {
+	        		logger.error("Can't send 200 OK for NOTIFY: " + e.getMessage());
+	        	}
+		    }
+	    	
+		    // Check the content type
+		    String event = notify.getHeader("Event");
+		    if (event == null) {
+	        	if (logger.isActivated()) {
+	        		logger.debug("Unknown notification event type");
+	        	}
+		    	return;
+		    }
+		    
+		    // Dispatch the notification to the corresponding event package
+		    if (event.indexOf("presence.winfo") != -1) {
+		    	watcherInfoSubscriber.receiveNotification(notify);
+		    } else
+		    if (event.indexOf("presence") != -1) {
+		    	if (notify.getTo().indexOf("anonymous") == -1) {
+			    	presenceSubscriber.receiveNotification(notify);
+		    	} else {
+		    		anonymousFetchManager.receiveNotification(notify);
+		    	}	    	
+		    } else {
+	        	if (logger.isActivated()) {
+	        		logger.debug("Unsupported notification content type");
+	        	}
+		    }
+    	} catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Unexpected error on NOTIFY", e);
+        	}
     	}
-        
-    	// Send 200 OK
-	    try {
-	        SipResponse resp = SipMessageFactory.createResponse(notify, 200);
-	        getImsModule().getSipManager().sendSipMessage(resp);
-	    } catch(SipException e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't send 200 OK for NOTIFY: " + e.getMessage());
-        	}
-	    }
-    	
-	    // Check the content type
-	    String event = notify.getHeader("Event");
-	    if (event == null) {
-        	if (logger.isActivated()) {
-        		logger.debug("Unknown notification event type");
-        	}
-	    	return;
-	    }
-	    
-	    // Dispatch the notification to the corresponding event package
-	    if (event.indexOf("presence.winfo") != -1) {
-	    	watcherInfoSubscriber.receiveNotification(notify);
-	    } else
-	    if (event.indexOf("presence") != -1) {
-	    	presenceSubscriber.receiveNotification(notify);
-	    } else {
-        	if (logger.isActivated()) {
-        		logger.debug("Unsupported notification content type");
-        	}
-	    }
     }
 
 	/**
@@ -422,14 +424,14 @@ public class PresenceService extends ImsService {
     private String buildPresenceInfo(String freetext, FavoriteLink favoriteLink, PhotoIcon photoIcon) {
     	String document = "";
     	if ((favoriteLink != null) && (favoriteLink.getLink() != null)) {
-    		document += "  <ci:homepage>" + favoriteLink.getLink() + "</ci:homepage>" + SipUtils.CRLF;
+    		document += "  <ci:homepage>" + StringUtils.encodeUTF8(favoriteLink.getLink()) + "</ci:homepage>" + SipUtils.CRLF;
     	}
     	if ((photoIcon != null) && (photoIcon.getEtag() != null)) {
     		document +=
     			"  <rpid:status-icon opd:etag=\"" + photoIcon.getEtag() +
     			"\" opd:fsize=\"" + photoIcon.getSize() +
     			"\" opd:contenttype=\"" + photoIcon.getType() +
-    			"\" opd:resolution=\"" + photoIcon.getResolution() + "\">http://" + xdm.getEndUserPhotoIconUrl() +
+    			"\" opd:resolution=\"" + photoIcon.getResolution() + "\">" + xdm.getEndUserPhotoIconUrl() +
     			"</rpid:status-icon>" + SipUtils.CRLF;
     	}
     	if (freetext != null){
@@ -889,4 +891,13 @@ public class PresenceService extends ImsService {
 			return false;
 		}
 	}
+	
+	/**
+	 * Request capabilities for a given contact (i.e anonymous fetch)
+	 * 
+	 * @param contact Contact
+	 */
+	public void requestCapabilities(String contact) {
+		anonymousFetchManager.requestCapabilities(contact);
+	}	
 }

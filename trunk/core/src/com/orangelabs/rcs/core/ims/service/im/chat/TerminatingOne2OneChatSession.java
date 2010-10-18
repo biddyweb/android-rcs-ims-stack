@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -156,7 +157,7 @@ public class TerminatingOne2OneChatSession extends InstantMessageSession impleme
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=accept-types:text/plain" + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
@@ -175,7 +176,9 @@ public class TerminatingOne2OneChatSession extends InstantMessageSession impleme
     		// Create the MSRP server session
             if (localSetup.equals("passive")) {
             	// Passive mode: client wait a connection
-            	getMsrpMgr().createMsrpServerSession(remotePath, this);
+            	MsrpSession session = getMsrpMgr().createMsrpServerSession(remotePath, this);
+    			session.setFailureReportOption(false);
+    			session.setSuccessReportOption(false);
             }
             
             // Send a 200 OK response
@@ -210,7 +213,9 @@ public class TerminatingOne2OneChatSession extends InstantMessageSession impleme
         		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
-                	getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+        			session.setFailureReportOption(false);
+        			session.setSuccessReportOption(false);
                 }
 
                 // Notify listener

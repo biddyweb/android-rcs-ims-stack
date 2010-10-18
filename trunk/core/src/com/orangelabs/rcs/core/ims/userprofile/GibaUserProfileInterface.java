@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.userprofile;
 
 import com.orangelabs.rcs.core.CoreException;
+import com.orangelabs.rcs.utils.Config;
 
 /**
  * User profile derived from IMSI
@@ -40,24 +41,25 @@ public class GibaUserProfileInterface extends UserProfileInterface {
 	 * @throws CoreException
 	 */
 	public UserProfile read() throws CoreException {
+		Config config = new Config("user_profile.xml");
+
+		// Derived from GIBA procedure
 		String username = null; 
 		String displayName = null;
 		String privateID = null;
-		String password = null;
 		String homeDomain = null;
-		
-		// IMS proxy is hardcoded
-		// TODO: to be retrieved via DHCP
-		String proxyAddr = "80.12.197.168:5060";
-
-		// XDMS is hardcoded
-		String xdmServer = "10.194.117.38:8080/services";
 		String xdmLogin = null;
-		String xdmPassword = "nsnims2008";
-		
-		return new UserProfile(username, displayName,
-				privateID, password,
+
+		// Hardcoded values
+		String proxyAddr = config.getString("OutboundProxyAddr");
+		String xdmServer = config.getString("XdmServerAddr");
+		String xdmPassword = config.getString("XdmServerPassword");		
+		String imConfUri = config.getString("ImConferenceUri");
+
+		return new UserProfile(username, displayName, privateID,
+				null, // No password
 				homeDomain, proxyAddr,
-				xdmServer, xdmLogin, xdmPassword);
+				xdmServer, xdmLogin, xdmPassword,
+				imConfUri);
 	}
 }

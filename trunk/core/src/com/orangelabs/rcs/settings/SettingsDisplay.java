@@ -18,16 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.settings;
 
-import java.util.List;
-
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.ClientApiUtils;
-
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -35,6 +27,11 @@ import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.core.ims.network.registration.RegistrationManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 
 /**
  * Settings display
@@ -53,38 +50,37 @@ public class SettingsDisplay extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_preferences);
-        setTitle(R.string.title_settings);
+        setTitle(R.string.rcs_settings_title_settings);
 
-        int baseNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
-        
-        // Set default value
+        // Set default value for rcs activation
     	rcsCheckbox = (CheckBoxPreference)getPreferenceScreen().findPreference("rcs_activation");
-    	rcsCheckbox.setChecked(isRcsServiceStarted());
+    	rcsCheckbox.setChecked(RcsSettings.getInstance().isServiceActivated());
     	
-    	//Dynamic discovery for apps that listen to com.orangelabs.rcs.EXT_SETTINGS
+    	// Hide user profile folder if GIBA activated
+    	if (RegistrationManager.GIBA_PROCEDURE) {
+	    	Preference userProfilePref = (Preference)getPreferenceScreen().findPreference("user_profile");
+	    	getPreferenceScreen().removePreference(userProfilePref);
+    	}
+    	 
+    	// Dynamic discovery for apps that listen to com.orangelabs.rcs.EXT_SETTINGS
     	Intent intent = new Intent(ClientApiUtils.RCS_SETTINGS);
     	addPreferencesFromIntent(intent);
     	
     	// Modify the intents so the activities can be launched even if not defined in this application
     	int totalNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
-    	for (int i=baseNumberOfPreferences;i<totalNumberOfPreferences;i++){
+    	for (int i=1;i<totalNumberOfPreferences;i++){
+    		// We start at one, the first preference is the rcsCheckbox that does not define any class name
     		// We have to change the intents for all preferences discovered via the addPreferencesFromIntent method
         	Preference dynamicPref = getPreferenceScreen().getPreference(i);
         	Intent dynamicPrefIntent = dynamicPref.getIntent();
+        	String className = dynamicPrefIntent.getComponent().getClassName();
+        	String packageName = getApplicationContext().getPackageName();
+        	dynamicPrefIntent.setClassName(packageName, className);
         	dynamicPrefIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         	dynamicPref.setIntent(dynamicPrefIntent);
     	}
     	
     }
-
-    @Override
-    protected void onResume() {
-    	super.onResume();
-    	
-    	// Restore service state
-		rcsCheckbox.setChecked(isRcsServiceStarted());
-    }
-
     
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
         if (preference == rcsCheckbox) {
@@ -107,19 +103,19 @@ public class SettingsDisplay extends PreferenceActivity {
             case SERVICE_ACTIVATION_CONFIRMATION_DIALOG:
                 return new AlertDialog.Builder(this)
 		        		.setIcon(android.R.drawable.ic_dialog_info)
-		        		.setTitle(R.string.label_confirm)
-                        .setMessage(R.string.label_rcs_service_startup)
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setPositiveButton(android.R.string.ok, startupDialogListener)
+		        		.setTitle(R.string.rcs_settings_label_confirm)
+                        .setMessage(R.string.rcs_settings_label_rcs_service_startup)
+                        .setNegativeButton(R.string.rcs_settings_label_cancel, null)
+                        .setPositiveButton(R.string.rcs_settings_label_ok, startupDialogListener)
                         .setCancelable(false)
                         .create();
             case SERVICE_DEACTIVATION_CONFIRMATION_DIALOG:
                 return new AlertDialog.Builder(this)
                 		.setIcon(android.R.drawable.ic_dialog_info)
-                		.setTitle(R.string.label_confirm)
-                        .setMessage(R.string.label_rcs_service_shutdown)
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setPositiveButton(android.R.string.ok, shutdownDialogListener)
+                		.setTitle(R.string.rcs_settings_label_confirm)
+                        .setMessage(R.string.rcs_settings_label_rcs_service_shutdown)
+                        .setNegativeButton(R.string.rcs_settings_label_cancel, null)
+                        .setPositiveButton(R.string.rcs_settings_label_ok, shutdownDialogListener)
                         .setCancelable(false)
                         .create();
         }
@@ -130,7 +126,7 @@ public class SettingsDisplay extends PreferenceActivity {
 	    public void onClick(DialogInterface dialog, int button) {
 	    	// Start RCS service
 	    	startService(new Intent("com.orangelabs.rcs.SERVICE"));
-        	rcsCheckbox.setChecked(true);
+	    	rcsCheckbox.setChecked(true);
         	RcsSettings.getInstance().setServiceActivated(true);
 	    }
 	};
@@ -143,21 +139,4 @@ public class SettingsDisplay extends PreferenceActivity {
         	RcsSettings.getInstance().setServiceActivated(false);
 	    }
 	};
-
-	private boolean isRcsServiceStarted() {
-		ActivityManager activityManager = (ActivityManager)getSystemService(ACTIVITY_SERVICE);
-		List<ActivityManager.RunningServiceInfo> serviceList = activityManager.getRunningServices(Integer.MAX_VALUE);
-		 for(int i = 0; i < serviceList.size(); i++) {
-			 ActivityManager.RunningServiceInfo serviceInfo = serviceList.get(i);
-			 ComponentName serviceName = serviceInfo.service;
-			 if (serviceName.getClassName().equals("com.orangelabs.rcs.service.RcsCoreService")) {
-				 if (serviceInfo.pid != 0) {
-					 return true;
-				 } else {
-					 return false;
-				 }
-			 }
-		 }
-		 return false;
-	}
 }

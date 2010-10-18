@@ -104,7 +104,7 @@ public class DateUtils {
 		int day = Integer.parseInt(d[2]);
 		cal.set(Calendar.DAY_OF_MONTH, day);
 		
-		String[] t = parts[1].split("[:Z]");
+		String[] t = parts[1].split("[:.Z]");
 		int hour = Integer.parseInt(t[0]);
 		cal.set(Calendar.HOUR_OF_DAY, hour);
 		int minute = Integer.parseInt(t[1]);

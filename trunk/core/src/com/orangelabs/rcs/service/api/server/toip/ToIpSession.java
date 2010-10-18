@@ -200,9 +200,6 @@ public class ToIpSession extends IToIpSession.Stub implements ToIpSessionListene
 			logger.info("Session aborted");
 		}
 
-		// Remove the notification
-		// TODO
-
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {

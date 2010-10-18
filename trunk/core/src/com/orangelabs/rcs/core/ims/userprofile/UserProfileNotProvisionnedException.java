@@ -16,34 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.settings;
+package com.orangelabs.rcs.core.ims.userprofile;
 
-import com.orangelabs.rcs.R;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.widget.TextView;
-
+import com.orangelabs.rcs.core.CoreException;
 
 /**
- * About the application display
+ * User profile not provisionned exception
  * 
- * @author jexa7410
+ * @author JM. Auffret
  */
-public class AboutDisplay extends Activity {
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-		// Set title
-        setTitle(R.string.rcs_settings_title_about);
-        setContentView(R.layout.rcs_settings_about_layout);
-        
-        // Set the release number
-        TextView releaseView = (TextView)findViewById(R.id.settings_label_release);
-        String relLabel = getString(R.string.rcs_settings_label_release);
-        String relNumber = getString(R.string.rcs_core_release_number);
-        releaseView.setText(relLabel + " " + relNumber);
-    }
+public class UserProfileNotProvisionnedException extends CoreException {
+	static final long serialVersionUID = 1L;
+	
+	/**
+	 * Constructor
+	 *
+	 * @param error Error message
+	 */
+	public UserProfileNotProvisionnedException(String error) {
+		super(error);
+	}
 }

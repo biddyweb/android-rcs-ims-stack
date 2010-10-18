@@ -18,6 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.network;
 
+import android.net.ConnectivityManager;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.access.WifiNetworkAccess;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -41,7 +43,7 @@ public class WifiNetworkInterface extends ImsNetworkInterface {
      * @throws CoreException
      */
     public WifiNetworkInterface(ImsModule imsModule) throws CoreException {
-    	super(imsModule, new WifiNetworkAccess());    	
+    	super(imsModule, ConnectivityManager.TYPE_WIFI, new WifiNetworkAccess());    	
 
     	if (logger.isActivated()) {
     		logger.info("Wi-fi network interface has been loaded");

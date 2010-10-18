@@ -36,6 +36,11 @@ public abstract class ImsNetworkInterface {
 	 */
 	private ImsModule imsModule;
 	
+	/**
+	 * Network interface type
+	 */
+	private int type;
+	
     /**
 	 * Network access
 	 */
@@ -60,22 +65,22 @@ public abstract class ImsNetworkInterface {
 	 * Constructor
 	 * 
 	 * @param imsModule IMS module
+	 * @param type Network interface type
 	 * @param access Network access
-	 * @throws CoreException
 	 */
-	public ImsNetworkInterface(ImsModule imsModule, NetworkAccess access) throws CoreException {
+	public ImsNetworkInterface(ImsModule imsModule, int type, NetworkAccess access) {
 		this.imsModule = imsModule;
+		this.type = type;
 		this.access = access;
 		
         // Instanciates the SIP manager
         sip = new SipManager(this,
         		ImsModule.IMS_USER_PROFILE.getOutboundProxyAddr(),
-        		imsModule.getCore().getConfig().getInteger("SipListeningPort"));
+        		imsModule.getCore().getConfig().getInteger("SipListeningPort", 5060));
          
         // Instanciates the registration manager
         registration = new RegistrationManager(this,
-        		imsModule.getCore().getConfig().getString("RegistrationProcedure"),
-        		imsModule.getCore().getConfig().getInteger("RegisterExpirePeriod"));
+        		imsModule.getCore().getConfig().getInteger("RegisterExpirePeriod", 3600));
 	}
 	
 	/**
@@ -87,6 +92,15 @@ public abstract class ImsNetworkInterface {
 		return imsModule;
 	}
 
+	/**
+	 * Returns the network interface type
+	 * 
+	 * @return Type (see ConnectivityManager class)
+	 */
+	public int getType() {
+		return type;
+	}
+	
 	/**
      * Returns the network access
      * 

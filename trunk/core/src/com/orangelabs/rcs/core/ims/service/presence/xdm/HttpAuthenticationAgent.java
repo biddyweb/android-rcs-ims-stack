@@ -96,7 +96,6 @@ public class HttpAuthenticationAgent {
 	 * @param header WWW-Authenticate header
 	 */
 	public void readWwwAuthenticateHeader(String header) {		
-		// TODO: use the SIP parser here
 		if (header != null) {
 	   		// Get domain name
 			int realmBegin = header.toLowerCase().indexOf("realm=\"")+7;

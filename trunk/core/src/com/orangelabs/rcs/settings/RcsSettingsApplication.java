@@ -41,13 +41,13 @@ public class RcsSettingsApplication extends Activity {
 		super.onCreate(savedInstanceState);
         
 		// Set title
-        setTitle(R.string.title_settings);
+        setTitle(R.string.rcs_settings_title_settings);
         setContentView(R.layout.rcs_settings_layout);
         
         // Set the release number
         TextView releaseView = (TextView)findViewById(R.id.settings_label_release);
-        String relLabel = getString(R.string.label_release);
-        String relNumber = getString(R.string.release_number);
+        String relLabel = getString(R.string.rcs_settings_label_release);
+        String relNumber = getString(R.string.rcs_core_release_number);
         releaseView.setText(relLabel + " " + relNumber);
         
         // Instanciate the settings manager

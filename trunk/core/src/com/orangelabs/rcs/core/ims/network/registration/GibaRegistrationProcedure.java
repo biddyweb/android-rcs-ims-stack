@@ -98,15 +98,16 @@ public class GibaRegistrationProcedure extends RegistrationProcedure {
 	public void readSecurityHeader(SipResponse response) {
 		// Read the associated-URI from the 200 OK response
 		String addr = response.getHeader("P-Associated-URI");
-
+		// TODO : to be tested with a Tel-URI
+		
 		// Parse the SIP-URI
 		String domain = SipUtils.extractDomainFromAddress(addr);
 		String username = SipUtils.extractUsernameFromAddress(addr);		
 		
 		// Update the user profile
-		ImsModule.IMS_USER_PROFILE.setHomeDomain(domain);
 		ImsModule.IMS_USER_PROFILE.setUsername(username);
 		ImsModule.IMS_USER_PROFILE.setDisplayName(username);
+		ImsModule.IMS_USER_PROFILE.setHomeDomain(domain);
 		ImsModule.IMS_USER_PROFILE.setXdmServerLogin("sip:"+ username + "@" + domain);
 	}
 }

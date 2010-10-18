@@ -30,7 +30,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.R;
@@ -43,7 +45,7 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  * @author jexa7410
  */
 public class UserProfileSettingsDisplay extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
-	private static final int DIALOG_GET_MSISDN = 1;
+	private static final int DIALOG_GENERATE_VALUE = 1;
 	
 	private EditTextPreference username;
 	private EditTextPreference displayName;
@@ -54,14 +56,16 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	private EditTextPreference xdmAddr;
 	private EditTextPreference xdmLogin;
 	private EditTextPreference xdmPassword;
+	private EditTextPreference imConferenceUri;
 	private boolean modified = false;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+    	
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_provisioning_preferences);
-        setTitle(R.string.title_settings);
+        setTitle(R.string.rcs_settings_title_settings);
         
         // Instanciate the settings manager
         RcsSettings.createInstance(getApplicationContext());
@@ -78,7 +82,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 			username.setSummary(user);
 			username.setText(user);
 		} else {
-			username.setSummary(getString(R.string.label_mandatory_value));
+			username.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 
         displayName = (EditTextPreference)findPreference("display_name");
@@ -89,7 +93,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 			displayName.setSummary(name);
 			displayName.setText(name);
 		} else {
-			displayName.setSummary(getString(R.string.label_empty_displayname));
+			displayName.setSummary(getString(R.string.rcs_settings_label_empty_displayname));
 		}
        
         privateId = (EditTextPreference)findPreference("private_uri");
@@ -100,7 +104,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 			privateId.setSummary(privateName);
 			privateId.setText(privateName);
 		} else {
-			privateId.setSummary(getString(R.string.label_mandatory_value));
+			privateId.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 
         userPassword = (EditTextPreference)findPreference("user_password");
@@ -111,7 +115,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        userPassword.setSummary(pwd);
 	        userPassword.setText(pwd);
 		} else {
-			userPassword.setSummary(getString(R.string.label_mandatory_value));
+			userPassword.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 		
         domain = (EditTextPreference)findPreference("domain");
@@ -122,7 +126,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        domain.setSummary(home);
 	        domain.setText(home);
 		} else {
-			domain.setSummary(getString(R.string.label_mandatory_value));
+			domain.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 		
         proxyAddr = (EditTextPreference)findPreference("sip_proxy_addr");
@@ -133,7 +137,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        proxyAddr.setSummary(proxy);
 	        proxyAddr.setText(proxy);
 		} else {
-			proxyAddr.setSummary(getString(R.string.label_mandatory_value));
+			proxyAddr.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 		
         xdmAddr = (EditTextPreference)findPreference("xdm_server_addr");
@@ -144,7 +148,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        xdmAddr.setSummary(server);
 	        xdmAddr.setText(server);
 		} else {
-			xdmAddr.setSummary(getString(R.string.label_mandatory_value));
+			xdmAddr.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 		
         xdmLogin = (EditTextPreference)findPreference("xdm_login");
@@ -155,7 +159,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        xdmLogin.setSummary(login);
 	        xdmLogin.setText(login);
 		} else {
-			xdmLogin.setSummary(getString(R.string.label_mandatory_value));
+			xdmLogin.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
 		
         xdmPassword = (EditTextPreference)findPreference("xdm_password");
@@ -166,7 +170,18 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	        xdmPassword.setSummary(serverPwd);
 	        xdmPassword.setText(serverPwd);
 		} else {
-			xdmPassword.setSummary(getString(R.string.label_mandatory_value));
+			xdmPassword.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
+		}
+
+		imConferenceUri = (EditTextPreference)findPreference("im_conference_uri");
+		imConferenceUri.setPersistent(false);
+		imConferenceUri.setOnPreferenceChangeListener(this);
+		String imConfUri = RcsSettings.getInstance().getUserProfileImConferenceUri();
+		if ((imConfUri != null) && (imConfUri.length() > 0)) {
+			imConferenceUri.setSummary(imConfUri);
+			imConferenceUri.setText(imConfUri);
+		} else {
+			imConferenceUri.setSummary(getString(R.string.rcs_settings_label_mandatory_value));
 		}
     }
 
@@ -175,7 +190,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
         super.onDestroy();
         
         if (modified) {
-    		Toast.makeText(UserProfileSettingsDisplay.this, getString(R.string.label_warning), Toast.LENGTH_LONG).show();
+    		Toast.makeText(UserProfileSettingsDisplay.this, getString(R.string.rcs_settings_label_warning), Toast.LENGTH_LONG).show();
     	}
     }
     
@@ -225,6 +240,11 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
         	RcsSettings.getInstance().setUserProfileXdmPassword(value);
 	        xdmPassword.setSummary(value);
 	        modified = true;
+    	} else
+        if (preference.getKey().equals("im_conference_uri")) {
+        	RcsSettings.getInstance().setUserProfileImConferenceUri(value);
+        	imConferenceUri.setSummary(value);
+	        modified = true;
         }
         return true;
     }
@@ -239,7 +259,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int i = item.getItemId();
 		if (i == R.id.menu_default_profile) {
-			showDialog(DIALOG_GET_MSISDN);			
+			showDialog(DIALOG_GENERATE_VALUE);			
 			return true;
 		}		
 		return super.onOptionsItemSelected(item);
@@ -247,29 +267,74 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	
     @Override
     protected Dialog onCreateDialog(int id) {
-        switch (id) {
-	        case DIALOG_GET_MSISDN:
+        switch(id) {
+	        case DIALOG_GENERATE_VALUE:
 				LayoutInflater factory = LayoutInflater.from(this);
 		    	final String countryCode = PhoneUtils.COUNTRY_CODE;
-	            final View textEntryView = factory.inflate(R.layout.rcs_settings_set_msisdn_layout, null);
-				EditText textEdit = (EditText)textEntryView.findViewById(R.id.msisdn);
+	            final View view = factory.inflate(R.layout.rcs_settings_generate_profile_layout, null);
+				EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
 	            textEdit.setText(countryCode);
 	            
+	            final String[] platforms = {
+	                "Config 1", "Config 2"
+	            };
+	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
+	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+	                    android.R.layout.simple_spinner_item, platforms);
+	            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+	            spinner.setAdapter(adapter);
+	            
 	            return new AlertDialog.Builder(this)
-	                .setTitle(R.string.label_get_msisdn)
-	                .setView(textEntryView)
-	                .setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
+	                .setTitle(R.string.rcs_settings_title_generate_profile)
+	                .setView(view)
+	                .setPositiveButton(R.string.rcs_settings_label_ok, new DialogInterface.OnClickListener() {
 	                    public void onClick(DialogInterface dialog, int whichButton) {
 	            	        // Generate default settings
-	            			EditText textEdit = (EditText)textEntryView.findViewById(R.id.msisdn);
+	            			EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
 	            			String number = textEdit.getText().toString();
-	            			String pId = number + "@domain.com";
-		            		String pwd = "";
-		            		String home = "domain.com";
-		            		String proxy = "127.0.0.1:5060";
-		            		String xdms = "127.0.0.1:8080/services";
-		            		String login = "sip:"+ number + "@domain.com";
+	        	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
+	        	            int index = spinner.getSelectedItemPosition();
 	            			
+	            			String pId;
+	            			String pwd;
+	            			String home;
+	            			String proxy;
+	            			String xdms;
+	            			String xdmsPwd;
+	            			String login;
+	            			String confUri;
+	                        switch(index) {
+	                        	case 0: // Config 1
+		            				pId = number + "@domain.com";
+			            			pwd = "";
+			            			home = "domain.com";
+			            			proxy = "127.0.0.1:5060";
+			            			xdms = "127.0.0.1:8080/services";
+			            			xdmsPwd = "";
+			            			login = "sip:"+ number + "@" + home;
+			            			confUri  = "sip:conference-factory@" + home;
+			            			break;
+	                        	case 1: // Config 2
+		            				pId = number + "@domain.com";
+			            			pwd = "";
+			            			home = "domain.com";
+			            			proxy = "127.0.0.1:5060";
+			            			xdms = "127.0.0.1:8080/services";
+			            			xdmsPwd = "";
+			            			login = "sip:"+ number + "@" + home;
+			            			confUri  = "sip:conference-factory@" + home;
+			            			break;
+			            		default:
+		            				pId = number + "@domain.com";
+			            			pwd = "";
+			            			home = "domain.com";
+			            			proxy = "127.0.0.1:5060";
+			            			xdms = "127.0.0.1:8080/services";
+			            			xdmsPwd = "";
+			            			login = "sip:"+ number + "@" + home;
+			            			confUri  = "sip:conference-factory@" + home;
+	            			}
+	                        
 	            			// Update UI & save date
 	                    	RcsSettings.getInstance().setUserProfileUserName(number);
 	                    	username.setSummary(number);
@@ -295,13 +360,16 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	                    	RcsSettings.getInstance().setUserProfileXdmLogin(login);
 	            	        xdmLogin.setSummary(login);
 	            	        xdmLogin.setText(login);
-	                    	RcsSettings.getInstance().setUserProfileXdmPassword(pwd);
-	            	        xdmPassword.setSummary(pwd);
-	            	        xdmPassword.setText(pwd);
+	                    	RcsSettings.getInstance().setUserProfileXdmPassword(xdmsPwd);
+	            	        xdmPassword.setSummary(xdmsPwd);
+	            	        xdmPassword.setText(xdmsPwd);
+	                    	RcsSettings.getInstance().setUserProfileImConferenceUri(confUri);
+	            	        imConferenceUri.setSummary(confUri);
+	            	        imConferenceUri.setText(confUri);
 	            	        modified = true;
             	        }
 	                })
-	                .setNegativeButton(R.string.label_cancel, null)
+	                .setNegativeButton(R.string.rcs_settings_label_cancel, null)
 	                .create();
         }
         return null;

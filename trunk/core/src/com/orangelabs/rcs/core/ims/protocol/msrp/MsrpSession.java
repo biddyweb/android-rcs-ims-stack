@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
 
@@ -254,12 +253,6 @@ public class MsrpSession {
 			throw new MsrpException("No connection set");
 		}
 		
-		// Set common MSRP headers
-		Hashtable<String, String> headers = new Hashtable<String, String>();
-		headers.put(MsrpConstants.HEADER_FROM_PATH, from);
-		headers.put(MsrpConstants.HEADER_TO_PATH, to);
-		headers.put(MsrpConstants.HEADER_MESSAGE_ID, generateId());
-
 		// Reset cancel transfer flag 
 		cancelTransfer = false;
 		
@@ -275,7 +268,7 @@ public class MsrpSession {
 				lastByte += i;
 
 				// Send a chunk
-				sendMsrpSendRequest(generateId(), headers, contentType, i, data, firstByte, lastByte, totalSize);
+				sendMsrpSendRequest(generateId(), to, from, generateId(), contentType, i, data, firstByte, lastByte, totalSize);
 
 				// Update lower byte range
 				firstByte += i;
@@ -313,6 +306,36 @@ public class MsrpSession {
 	}
 
 	/**
+	 * Send empty chunk
+	 * 
+	 * @throws MsrpException
+	 */
+	public void sendEmptyChunk() throws MsrpException {
+		if (logger.isActivated()) {
+			logger.info("Send an empty chunk");
+		}
+		
+		if (from == null) {
+			throw new MsrpException("From not set");
+		}
+		
+		if (to == null) {
+			throw new MsrpException("To not set");
+		}
+		
+		if (connection == null) {
+			throw new MsrpException("No connection set");
+		}
+		
+		// Send an empty chunk
+		try {
+			sendMsrpSendRequest(generateId(), to, from, generateId(), null, 0, null, 1, 0, 0);
+		} catch(Exception e) {
+			throw new MsrpException(e.getMessage());
+		}
+	}
+
+	/**
 	 * Generate a unique ID
 	 * 
 	 * @return ID
@@ -327,7 +350,9 @@ public class MsrpSession {
 	 * Send MSRP SEND request
 	 * 
 	 * @param transactionId Transaction ID
-	 * @param headers MSRP headers
+	 * @param to To header
+	 * @param from From header
+	 * @param msgId Message ID header
 	 * @param contentType Content type 
 	 * @param dataSize Data chunk size
 	 * @param data Data chunk
@@ -336,7 +361,7 @@ public class MsrpSession {
 	 * @param totalSize Total size
 	 * @throws IOException
 	 */
-	private void sendMsrpSendRequest(String txId, Hashtable<String, String> headers, String contentType,
+	private void sendMsrpSendRequest(String txId, String to, String from, String msgId, String contentType,
 			int dataSize, byte data[], long firstByte, long lastByte, long totalSize) throws IOException {
 
 		boolean isLastChunk = (lastByte == totalSize);
@@ -349,20 +374,23 @@ public class MsrpSession {
 		buffer.write(txId.getBytes());
 		buffer.write((" " + MsrpConstants.METHOD_SEND).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		for (Enumeration<String> elt = headers.keys(); elt.hasMoreElements(); buffer.write(MsrpConstants.NEW_LINE.getBytes())) {
-			String key = elt.nextElement();
-			String value = headers.get(key);
-			String header = key + ": " + value;
-			buffer.write(header.getBytes());
-		}
+
+		String toHeader = MsrpConstants.HEADER_TO_PATH + ": " + to + MsrpConstants.NEW_LINE;
+		buffer.write(toHeader.getBytes());
+		String fromHeader = MsrpConstants.HEADER_FROM_PATH + ": " + from + MsrpConstants.NEW_LINE;
+		buffer.write(fromHeader.getBytes());
+		String msgIdHeader = MsrpConstants.HEADER_MESSAGE_ID + ": " + msgId + MsrpConstants.NEW_LINE;
+		buffer.write(msgIdHeader.getBytes());
 		
 		// Write byte range
 		String byteRange = MsrpConstants.HEADER_BYTE_RANGE + ": " + firstByte + "-" + lastByte + "/" + totalSize + MsrpConstants.NEW_LINE;
 		buffer.write(byteRange.getBytes());
 		
 		// Write content type
-		String content = MsrpConstants.HEADER_CONTENT_TYPE + ": " + contentType + MsrpConstants.NEW_LINE; 
-		buffer.write(content.getBytes());
+		if (contentType != null) {
+			String content = MsrpConstants.HEADER_CONTENT_TYPE + ": " + contentType + MsrpConstants.NEW_LINE; 
+			buffer.write(content.getBytes());
+		}
 		
 		// Write optional MSRP headers
 		if (!failureReportOption) {
@@ -375,9 +403,13 @@ public class MsrpSession {
 		}
 
 		// Write data
-		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		buffer.write(data, 0, dataSize);
-		buffer.write(MsrpConstants.NEW_LINE.getBytes());
+		if (data != null) {
+			buffer.write(MsrpConstants.NEW_LINE.getBytes());
+			buffer.write(data, 0, dataSize);
+			buffer.write(MsrpConstants.NEW_LINE.getBytes());
+		}
+		
+		// Write end of request
 		buffer.write(MsrpConstants.END_MSRP_MSG.getBytes());
 		buffer.write(txId.getBytes());
 		if (isLastChunk) {
@@ -388,7 +420,7 @@ public class MsrpSession {
 			buffer.write(MsrpConstants.FLAG_MORE_CHUNK);
 		}
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-
+		
 		// Send chunk
 		connection.sendChunk(buffer.toByteArray());
 		
@@ -423,18 +455,18 @@ public class MsrpSession {
 		buffer.write(code.getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
-		buffer.write(MsrpConstants.HEADER_FROM_PATH.getBytes());
-		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
-		buffer.write(MsrpConstants.CHAR_SP);
-		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
-		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		
 		buffer.write(MsrpConstants.HEADER_TO_PATH.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write((headers.get(MsrpConstants.HEADER_FROM_PATH)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		
+
+		buffer.write(MsrpConstants.HEADER_FROM_PATH.getBytes());
+		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
+		buffer.write(MsrpConstants.CHAR_SP);
+		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
+		buffer.write(MsrpConstants.NEW_LINE.getBytes());
+			
 		buffer.write(MsrpConstants.HEADER_BYTE_RANGE.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);
@@ -473,18 +505,18 @@ public class MsrpSession {
 		buffer.write((headers.get(MsrpConstants.HEADER_MESSAGE_ID)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
-		buffer.write(MsrpConstants.HEADER_FROM_PATH.getBytes());
-		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
-		buffer.write(MsrpConstants.CHAR_SP);
-		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
-		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		
 		buffer.write(MsrpConstants.HEADER_TO_PATH.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write((headers.get(MsrpConstants.HEADER_FROM_PATH)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 
+		buffer.write(MsrpConstants.HEADER_FROM_PATH.getBytes());
+		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
+		buffer.write(MsrpConstants.CHAR_SP);
+		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
+		buffer.write(MsrpConstants.NEW_LINE.getBytes());
+		
 		buffer.write(MsrpConstants.HEADER_BYTE_RANGE.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);

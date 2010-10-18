@@ -38,14 +38,16 @@ public class PresenceSettingsDisplay extends PreferenceActivity implements Prefe
 	private EditTextPreference freetextEdit2;
 	private EditTextPreference freetextEdit3;
 	private EditTextPreference freetextEdit4;
-	private CheckBoxPreference vibrate;
+	private CheckBoxPreference vibrateInvitation;
+	private CheckBoxPreference beepHyperAvailability;
+	private CheckBoxPreference vibrateHyperAvailability;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_presence_preferences);
-        setTitle(R.string.title_settings);
+        setTitle(R.string.rcs_settings_title_settings);
 
         freetextEdit1 = (EditTextPreference)findPreference("edit_freetext1");
         freetextEdit1.setPersistent(false);
@@ -75,10 +77,20 @@ public class PresenceSettingsDisplay extends PreferenceActivity implements Prefe
     	freetextEdit4.setText(txt4);
     	freetextEdit4.setTitle(txt4);
         
-        vibrate = (CheckBoxPreference)findPreference("presence_invitation_vibration");
-        vibrate.setPersistent(false);
-        vibrate.setOnPreferenceChangeListener(this);
-        vibrate.setChecked(RcsSettings.getInstance().isPhoneVibrateForPresenceInvitation());
+    	vibrateInvitation = (CheckBoxPreference)findPreference("presence_invitation_vibration");
+    	vibrateInvitation.setPersistent(false);
+    	vibrateInvitation.setOnPreferenceChangeListener(this);
+    	vibrateInvitation.setChecked(RcsSettings.getInstance().isPhoneVibrateForPresenceInvitation());
+        
+    	vibrateHyperAvailability = (CheckBoxPreference)findPreference("presence_hyperavailability_vibration");
+    	vibrateHyperAvailability.setPersistent(false);
+    	vibrateHyperAvailability.setOnPreferenceChangeListener(this);
+    	vibrateHyperAvailability.setChecked(RcsSettings.getInstance().isPhoneVibrateForHyperAvailability());
+    	
+    	beepHyperAvailability = (CheckBoxPreference)findPreference("presence_hyperavailability_beep");
+    	beepHyperAvailability.setPersistent(false);
+    	beepHyperAvailability.setOnPreferenceChangeListener(this);
+    	beepHyperAvailability.setChecked(RcsSettings.getInstance().isPhoneBeepForHyperAvailability());
     }
 
     public boolean onPreferenceChange(Preference preference, Object objValue) {
@@ -105,6 +117,14 @@ public class PresenceSettingsDisplay extends PreferenceActivity implements Prefe
         if (preference.getKey().equals("presence_invitation_vibration")) {
         	Boolean state = (Boolean)objValue;
         	RcsSettings.getInstance().setPhoneVibrateForPresenceInvitation(state.booleanValue());
+        } else
+        if (preference.getKey().equals("presence_hyperavailability_vibration")) {
+        	Boolean state = (Boolean)objValue;
+        	RcsSettings.getInstance().setPhoneVibrateForHyperAvailability(state.booleanValue());
+        } else
+        if (preference.getKey().equals("presence_hyperavailability_beep")) {
+        	Boolean state = (Boolean)objValue;
+        	RcsSettings.getInstance().setPhoneBeepForHyperAvailability(state.booleanValue());
         }
         return true;
     }    

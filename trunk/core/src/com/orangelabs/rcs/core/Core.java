@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core;
 
 import com.orangelabs.rcs.core.gsm.CallManager;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.registration.RegistrationManager;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
@@ -27,7 +28,9 @@ import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.core.ims.service.voip.VoIpService;
+import com.orangelabs.rcs.core.ims.userprofile.UserProfileNotProvisionnedException;
 import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -68,6 +71,11 @@ public class Core {
 	 */
 	private CallManager callManager;
 
+	/**
+	 * SIM manager
+	 */
+	private SimManager simManager;
+	
 	/**
      * The logger
      */
@@ -136,7 +144,27 @@ public class Core {
 			logger.debug("Country code: " + PhoneUtils.COUNTRY_CODE);
 		}
         
-    	// Create the call manager
+		// Test if user profile provisionning has been done or not
+		if (!RegistrationManager.GIBA_PROCEDURE) {
+			// HTTP Digest authent based on user settings
+            String values[] = new String[6];
+    		values[0] = RcsSettings.getInstance().getUserProfileUserName();
+    		values[1] = RcsSettings.getInstance().getUserProfilePrivateId();
+    		values[2] = RcsSettings.getInstance().getUserProfileDomain();
+    		values[3] = RcsSettings.getInstance().getUserProfileProxy();
+    		values[4] = RcsSettings.getInstance().getUserProfileXdmServer();
+    		values[5] = RcsSettings.getInstance().getUserProfileXdmLogin();
+    		for(int i=0; i < values.length; i++) {
+    			if ((values[i] == null) || (values[i].length() == 0)) {
+    				throw new UserProfileNotProvisionnedException("User profile attribute " + i + " is not initialized");
+    			}        
+    		}
+		}		
+
+    	// Create the SIM manager
+        simManager = new SimManager();
+
+        // Create the call manager
     	callManager = new CallManager(this);
     	
     	// Create the IMS module
@@ -174,6 +202,15 @@ public class Core {
 		return imsModule;
 	}
 
+	/**
+	 * Returns the SIM manager
+	 * 
+	 * @return SIM manager
+	 */
+	public SimManager getSimManager() {
+		return simManager;
+	}
+	
 	/**
 	 * Returns the call manager
 	 * 

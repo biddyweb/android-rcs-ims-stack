@@ -71,6 +71,11 @@ public class UserProfile {
 	private String xdmServerPassword;
 
 	/**
+	 * IM conference URI
+	 */
+	private String imConferenceUri;
+
+	/**
 	 * Constructor
 	 * 
 	 * @param username Username
@@ -83,6 +88,7 @@ public class UserProfile {
 	 * @param xdmServerAddr XDM server address
 	 * @param xdmServerLogin Outbound proxy address
 	 * @param xdmServerPassword Outbound proxy address
+	 * @param imConferenceUri IM conference factory URI
 	 */
 	public UserProfile(String username,
 			String displayName,
@@ -92,7 +98,8 @@ public class UserProfile {
 			String outboundProxyAddr,
 			String xdmServerAddr,
 			String xdmServerLogin,
-			String xdmServerPassword) {
+			String xdmServerPassword,
+			String imConferenceUri) {
 		this.username = username;
 		this.displayName = displayName;
 		this.privateID = privateID;
@@ -102,6 +109,7 @@ public class UserProfile {
 		this.xdmServerAddr = xdmServerAddr;
 		this.xdmServerLogin = xdmServerLogin;
 		this.xdmServerPassword = xdmServerPassword;
+		this.imConferenceUri = imConferenceUri;
 	}
 
 	/**
@@ -128,8 +136,7 @@ public class UserProfile {
 	 * @return Public SIP URI
 	 */
 	public String getPublicUri() {
-		String uri = "sip:" + username + "@" + homeDomain;			
-		return uri;
+		return "sip:" + username + "@" + homeDomain;
 	}
 	
 	/**
@@ -260,6 +267,24 @@ public class UserProfile {
 	}
 	
 	/**
+	 * Set the IM conference URI
+	 * 
+	 * @param uri URI
+	 */
+	public void setImConferenceUri(String uri) {
+		this.imConferenceUri = uri;
+	}
+
+	/**
+	 * Returns the IM conference URI
+	 * 
+	 * @return URI
+	 */
+	public String getImConferenceUri() {
+		return imConferenceUri;
+	}
+
+	/**
      * Returns the profile value as string
      * 
      * @return String
@@ -273,7 +298,8 @@ public class UserProfile {
 			+ "IMS outbound proxy=" + outboundProxyAddr + ", "
 			+ "XDM server=" + xdmServerAddr + ", "
 			+ "XDM login=" + xdmServerLogin + ", "
-			+ "XDM password=" + xdmServerPassword;
+			+ "XDM password=" + xdmServerPassword + ", " 
+			+ "IM Conference URI=" + imConferenceUri;
 		return result;
 	}	
 }

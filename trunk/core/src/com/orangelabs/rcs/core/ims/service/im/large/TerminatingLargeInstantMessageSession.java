@@ -137,7 +137,7 @@ public class TerminatingLargeInstantMessageSession extends ImsServiceSession imp
 	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=accept-types:text/plain" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
 

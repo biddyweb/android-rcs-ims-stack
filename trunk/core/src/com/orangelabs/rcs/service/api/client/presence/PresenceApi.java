@@ -354,5 +354,24 @@ public class PresenceApi extends ClientApi {
 		} else {
 			throw new CoreServiceNotAvailableException();
 		}
-	}	
+	}
+	
+	/**
+	 * Request capabilities for a given contact (i.e. anonymous fetch)
+	 * 
+	 * @param contact Contact
+	 * @throws ClientApiException
+	 */
+	public void requestCapabilities(String contact) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+				// Request capabilities
+				coreApi.requestCapabilities(contact);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
 }

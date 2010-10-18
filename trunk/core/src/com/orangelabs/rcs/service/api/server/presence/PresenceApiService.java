@@ -24,8 +24,10 @@ import android.content.Intent;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceInfo;
+import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.eab.RichAddressBook;
+import com.orangelabs.rcs.provider.eab.RichAddressBookData;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.presence.IPresenceApi;
 import com.orangelabs.rcs.service.api.client.presence.PresenceApiIntents;
@@ -71,9 +73,14 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Set my presence info");
 		}
 
-		// Test IMS connection 
-		ServerApiUtils.testIms();
-
+    	if (PresenceService.permanentState) {
+    		// Test core availability
+    		ServerApiUtils.testCore();
+    	} else {
+			// Test IMS connection 
+			ServerApiUtils.testIms();
+    	}
+    	
 		try {
 			// Publish presence info
 			boolean result = Core.getInstance().getPresenceService().publishPresenceInfo(info);
@@ -103,8 +110,8 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Set my hyper-availability status to " + status);
 		}
 		
-		// Test core availability
-		ServerApiUtils.testCore();
+		// Test IMS connection 
+		ServerApiUtils.testIms();
 
 		try {
 			return Core.getInstance().getImsModule().getPresenceService().publishPoke(status);
@@ -154,7 +161,7 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			boolean result = Core.getInstance().getPresenceService().inviteContactToSharePresence(contact);
 			if (result){
 				// Put "pending_out" as presence status for contact in EAB content provider
-				RichAddressBook.getInstance().setContactSharingStatus(contact, "pending_out", "");
+				RichAddressBook.getInstance().setContactSharingStatus(contact, RichAddressBookData.STATUS_INVITED, "");
 			}
 			return result;
 		} catch(Exception e) {
@@ -182,7 +189,7 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			boolean result = Core.getInstance().getPresenceService().acceptPresenceSharingInvitation(contact);
 			if (result){
 				// Set this contact presence status to "active"
-				RichAddressBook.getInstance().setContactSharingStatus(contact, "active", "");
+				RichAddressBook.getInstance().setContactSharingStatus(contact, RichAddressBookData.STATUS_ACTIVE, "");
 			}
 			return result;
 		} catch(Exception e) {
@@ -209,8 +216,8 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			// Update presence server
 			boolean result = Core.getInstance().getPresenceService().blockPresenceSharingInvitation(contact);
 			if (result){
-				// Put contact in blocked contacts list of EAB content provider
-				RichAddressBook.getInstance().blockContact(contact);
+				// Set this contact presence status to "blocked"
+				RichAddressBook.getInstance().setContactSharingStatus(contact, RichAddressBookData.STATUS_BLOCKED, "");
 			}
 			return result;
 		} catch(Exception e) {
@@ -231,7 +238,7 @@ public class PresenceApiService extends IPresenceApi.Stub {
 
 		try {
 			// Set this contact presence status to "pending"
-			RichAddressBook.getInstance().setContactSharingStatus(contact, "pending", "");
+			RichAddressBook.getInstance().setContactSharingStatus(contact, RichAddressBookData.STATUS_WILLING, "");
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
@@ -257,7 +264,7 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			boolean result = Core.getInstance().getPresenceService().revokeSharedContact(contact);
 			if (result){
 				// Put contact in revoked contacts list of EAB content provider
-				RichAddressBook.getInstance().revokeContact(contact);
+				RichAddressBook.getInstance().setContactSharingStatus(contact, RichAddressBookData.STATUS_REVOKED, "");
 				
 				// The contact should be automatically unrevoked after a given timeout. Here the
 				// timeout period is 0, so the contact can receive invitations again now
@@ -383,6 +390,27 @@ public class PresenceApiService extends IPresenceApi.Stub {
 
 		try {
 			return Core.getInstance().getPresenceService().getXdmManager().getBlockedContacts();
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
+	}
+
+	/**
+	 * Request capabilities for a given contact (i.e anonymous fetch)
+	 * 
+	 * @param contact Contact
+	 * @throws ServerApiException
+	 */
+	public void requestCapabilities(String contact) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Request capabilities for contact " + contact);
+		}
+
+		// Test core availability
+		ServerApiUtils.testCore();
+
+		try {
+			Core.getInstance().getPresenceService().requestCapabilities(contact);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}

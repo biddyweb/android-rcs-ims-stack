@@ -16,21 +16,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core.ims.protocol.rtp.core;
+package com.orangelabs.rcs.core.ims.service.presence.directory;
 
-/**
- * RTP stack configuration
- * 
- * @author jexa7410
- */
-public class RtpConfig {
-	/**
-	 * Symetric RTP flag
-	 */
-	public static boolean SYMETRIC_RTP = false;
+public class Folder {
+	private String auid;
+	private Entry entry;
 	
-	/**
-	 * Max datagram packet size
-	 */
-	public static int DEFAULT_DATAGRAM_SIZE = 4096;	
+	public Folder(String auid) {
+		this.auid = auid;
+	}
+
+	public String getAuid() {
+		return auid;
+	}
+
+	public Entry getEntry() {
+		return entry;
+	}
+
+	public void setEntry(Entry entry) {
+		this.entry = entry;
+	}
 }

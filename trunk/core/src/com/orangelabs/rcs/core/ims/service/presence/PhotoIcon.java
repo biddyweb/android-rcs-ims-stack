@@ -222,6 +222,6 @@ public class PhotoIcon implements Parcelable {
 	 * @return String
 	 */
 	public String toString() {
-		return "width=" + width + ", height=" + height + ", size=" + getSize();
+		return "width=" + width + ", height=" + height + ", size=" + getSize() + ", etag=" + etag;
 	}
 }

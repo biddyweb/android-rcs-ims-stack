@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -97,7 +98,7 @@ public class OriginatingAdhocGroupChatSession extends InstantMessageSession {
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:active" + SipUtils.CRLF +
 	    		"a=accept-types:message/cpim" + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
@@ -105,9 +106,8 @@ public class OriginatingAdhocGroupChatSession extends InstantMessageSession {
 	    	String uriList = "";
 	    	for(int i=0; i < contacts.size(); i++) {
 	    		String contact = contacts.get(i);
-	    		uriList += " <entry uri=\"" + contact + "\" cp:copyControl=\"to\"/>" + SipUtils.CRLF;
+	    		uriList += " <entry uri=\"tel:" + contact + "\"/>" + SipUtils.CRLF;
 	    	}
-
 	    	String xml =
 	    		"--boundary1" + SipUtils.CRLF +
 	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
@@ -264,7 +264,9 @@ public class OriginatingAdhocGroupChatSession extends InstantMessageSession {
 			}
 	        
         	// Create the MSRP session
-			getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			session.setFailureReportOption(false);
+			session.setSuccessReportOption(false);
 			
 			// Notify listener
 	        if (getListener() != null) {

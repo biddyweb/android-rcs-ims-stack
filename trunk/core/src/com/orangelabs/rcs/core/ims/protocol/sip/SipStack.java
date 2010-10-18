@@ -90,9 +90,9 @@ public class SipStack {
 		this.listeningPort = listeningPort;
 		
 		try {
-			int index = outboundProxy.indexOf(":");
-			this.outboundProxyAddr = outboundProxy.substring(0, index);
-			this.outboundProxyPort = Integer.parseInt(outboundProxy.substring(index+1));
+			String[] parts = outboundProxy.split(":");
+			this.outboundProxyAddr = parts[0];
+			this.outboundProxyPort = Integer.parseInt(parts[1]);
 		} catch(Exception e) {
 			throw new SipException("Bad outbound proxy address");
 		}

@@ -30,6 +30,8 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageSessionListener;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -105,7 +107,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		session.acceptSession();
 
 		// Update messaging database
-  		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.OUTGOING, "text/plain", null, getSubject().length(), null, RichMessagingData.ACCEPTED);
 	}
 	
 	/**
@@ -120,7 +122,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		session.rejectSession();
 
 		// Update messaging database
-  		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.OUTGOING, "text/plain", null, getSubject().length(), null, RichMessagingData.REJECTED);
 	}
 
 	/**
@@ -135,7 +137,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		session.abortSession();
 
 		// Update messaging database
-  		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.OUTGOING, "text/plain", null, getSubject().length(), null, RichMessagingData.ABORTED);
 	}
 	
 	/**
@@ -213,7 +215,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		}
 
 		// Update messaging database
- 		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.INCOMING, "text/plain", null, getSubject().length(), null, RichMessagingData.ABORTED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -238,7 +240,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		}
 
 		// Update messaging database
-  		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.INCOMING, "text/plain", null, getSubject().length(), null, RichMessagingData.TERMINATED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -263,7 +265,7 @@ public class ChatSession extends IChatSession.Stub implements InstantMessageSess
 		}
 
 		// Update messaging database
-  		// TODO
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, session.getRemoteContact(), getSubject(), RichMessagingData.INCOMING, "text/plain", null, getSubject().length(), null, RichMessagingData.TERMINATED_BY_REMOTE);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();

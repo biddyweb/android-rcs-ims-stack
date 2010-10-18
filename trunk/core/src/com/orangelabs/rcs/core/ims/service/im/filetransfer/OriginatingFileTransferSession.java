@@ -44,6 +44,7 @@ import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -103,11 +104,12 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:active" + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
+	    		"a=file-disposition:attachment" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
 	    	
 	    	// Set File-selector attribute
@@ -392,7 +394,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
     	getImsService().removeSession(this);
 
     	// Update messaging provider
-    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), "finished");
+    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), RichMessagingData.FINISHED);
     	
     	// Notify listener
         if (getListener() != null) {

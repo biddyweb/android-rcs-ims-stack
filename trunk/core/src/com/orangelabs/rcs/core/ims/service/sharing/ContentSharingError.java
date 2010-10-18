@@ -65,7 +65,12 @@ public class ContentSharingError extends Error {
 	 * Unsupported media type (e.g. codec not supported)
 	 */
 	public final static int UNSUPPORTED_MEDIA_TYPE = 0x08;
-	
+
+	/**
+	 * Media saving has failed (e.g. sdcard is not correctly mounted)
+	 */
+	public final static int MEDIA_SAVING_FAILED = 0x09;
+
 	/**
 	 * Error code
 	 */

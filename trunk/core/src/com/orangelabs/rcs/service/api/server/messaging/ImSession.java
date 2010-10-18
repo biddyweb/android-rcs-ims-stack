@@ -19,6 +19,8 @@
 package com.orangelabs.rcs.service.api.server.messaging;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.service.api.client.messaging.IInstantMessageSession;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -65,9 +67,6 @@ public class ImSession extends IInstantMessageSession.Stub {
 			logger.info("Accept session invitation");
 		}
 		
-		// Remove the notification
-		// TODO
-		
 		// Accept invitation
 		session.acceptSession();
 
@@ -83,14 +82,11 @@ public class ImSession extends IInstantMessageSession.Stub {
 			logger.info("Reject session invitation");
 		}
 		
-		// Remove the notification
-		// TODO
-
         // Reject invitation
 		session.rejectSession();
 
 		// Update IM provider
-  		// TODO
+		// TODO
 	}
 
 	/**
@@ -105,6 +101,6 @@ public class ImSession extends IInstantMessageSession.Stub {
 		session.abortSession();
 
 		// Update IM provider
-  		// TODO
+		// TODO
 	}
 }

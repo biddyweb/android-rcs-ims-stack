@@ -280,7 +280,7 @@ public class PidfParser extends DefaultHandler {
 		if (localName.equals("homepage")){
 			String homepage = accumulator.toString(); 
 			if ((homepage != null) && (person != null)) {
-				person.setHomePage(homepage.trim());
+				person.setHomePage(StringUtils.decodeUTF8(homepage.trim()));
 				homepage = null;
 			}
 		} else

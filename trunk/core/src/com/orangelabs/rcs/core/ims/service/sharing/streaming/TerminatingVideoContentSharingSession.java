@@ -26,14 +26,12 @@ import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
@@ -60,11 +58,6 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 	 * RTP receiver session
 	 */
 	private MediaRtpReceiver rtpReceiver = null;	
-	
-	/**
-	 * RTP dummy packet generator
-	 */
-	private DummyPacketGenerator rtpDummySender = null;	
 
 	/**
      * The logger
@@ -141,11 +134,9 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 			
 	        // Parse the remote SDP part
 	        SdpParser parser = new SdpParser(getDialogPath().getRemoteSdp().getBytes());
-            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);    		
         	Vector<MediaDescription> media = parser.getMediaDescriptions();
     		MediaDescription desc = media.elementAt(0);
 			Config config = getImsService().getConfig();
-			int remotePort = desc.port;
 			
     		// Extract the payload type
     		int payload = desc.payload_type;
@@ -255,11 +246,9 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
     		
 			// Create the RTP sessions
 			rtpReceiver = new MediaRtpReceiver(localRtpPort);		
-			rtpDummySender = new DummyPacketGenerator();		
 
 			// Prepare the RTP sessions
 			rtpReceiver.prepareSession(getMediaRenderer(), videoFormat);
-			rtpDummySender.prepareSession(remoteHost, remotePort);
 
 			// Build SDP part
 			String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
@@ -322,7 +311,6 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 
 				// Start the RTP sessions
 				rtpReceiver.startSession();
-				rtpDummySender.startSession();
 
 				// Notify listener
 		        if (getListener() != null) {
@@ -553,9 +541,6 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 			getMediaRenderer().stop();
 		}
 		
-		if (rtpDummySender!=null){
-			rtpDummySender.stopSession();
-		}
 		if (rtpReceiver!=null){
 			rtpReceiver.stopSession();
 		}

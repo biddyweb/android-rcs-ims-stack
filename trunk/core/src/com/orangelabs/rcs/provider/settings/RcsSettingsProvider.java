@@ -65,7 +65,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 3;
+        private static final int DATABASE_VERSION = 6;
 
         private Context ctx;
         
@@ -85,17 +85,26 @@ public class RcsSettingsProvider extends ContentProvider {
             // insert default alarms
             String insertMe = "INSERT INTO " + TABLE + " (key, value) VALUES ";
             db.execSQL(insertMe + "('" + RcsSettingsData.SERVICE_ACTIVATED + "', '" + RcsSettingsData.TRUE_VALUE + "');");
+            
             db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_INVITATION_RINGTONE + "', '');");
+            
+            db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_HYPERAVAILABILITY_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.PRESENCE_HYPERAVAILABILITY_BEEP + "', '" + RcsSettingsData.TRUE_VALUE + "');");
+            
             db.execSQL(insertMe + "('" + RcsSettingsData.CSH_AVAILABLE_BEEP + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.CSH_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.CSH_INVITATION_RINGTONE + "', '');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.CSH_VIDEO_FORMAT + "', '" + ctx.getString(R.string.rcs_settings_label_default_video_format) + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.CSH_VIDEO_SIZE + "', '" + ctx.getString(R.string.rcs_settings_label_default_video_size) + "');");
+            
             db.execSQL(insertMe + "('" + RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE + "', '" + RcsSettingsData.TRUE_VALUE + "');");
             db.execSQL(insertMe + "('" + RcsSettingsData.FILETRANSFER_INVITATION_RINGTONE + "', '');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT1 + "', '" + ctx.getString(R.string.default_freetext_1)+ "');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT2 + "', '" + ctx.getString(R.string.default_freetext_2)+ "');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT3 + "', '" + ctx.getString(R.string.default_freetext_3)+ "');");
-            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT4 + "', '" + ctx.getString(R.string.default_freetext_4)+ "');");
+            
+            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT1 + "', '" + ctx.getString(R.string.rcs_settings_label_default_freetext_1) + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT2 + "', '" + ctx.getString(R.string.rcs_settings_label_default_freetext_2) + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT3 + "', '" + ctx.getString(R.string.rcs_settings_label_default_freetext_3) + "');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.FREETEXT4 + "', '" + ctx.getString(R.string.rcs_settings_label_default_freetext_4) + "');");
             
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_USERNAME + "', '');");
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_DISPLAY_NAME + "', '');");
@@ -107,7 +116,7 @@ public class RcsSettingsProvider extends ContentProvider {
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_XDM_LOGIN + "', '');");
             db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_XDM_PASSWORD + "', '');");
             
-            db.execSQL(insertMe + "('" + RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID + "', '');");
+            db.execSQL(insertMe + "('" + RcsSettingsData.USERPROFILE_IM_CONF_URI + "', '');");
         }
 
         @Override

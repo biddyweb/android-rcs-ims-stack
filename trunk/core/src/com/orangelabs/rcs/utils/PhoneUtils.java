@@ -59,8 +59,9 @@ public class PhoneUtils {
 			} else
 			if (cc.equalsIgnoreCase("cn")) {
 				COUNTRY_CODE = "+86"; 
-			} else {
-				COUNTRY_CODE = ""; 
+			} else
+			if (cc.equalsIgnoreCase("es")) {
+				COUNTRY_CODE = "+34"; 
 			}
 			// TODO: how to generalize the mapping table
 		}
@@ -76,6 +77,8 @@ public class PhoneUtils {
 		if (number == null) {
 			return null;
 		}
+		
+		number = number.trim();
 
 		String formattedNumber = "";
 		for(int i=0; i < number.length(); i++) {
@@ -106,6 +109,8 @@ public class PhoneUtils {
 			return null;
 		}
 
+		number = number.trim();
+		
 		if (number.startsWith("tel:")) {
 			number = number.substring(4);
 		} else		

@@ -55,8 +55,11 @@ public class XmlUserProfileInterface extends UserProfileInterface {
 		String xdmLogin = config.getString("XdmServerLogin");
 		String xdmPassword = config.getString("XdmServerPassword");
 		
+		String imConfUri = config.getString("ImConferenceUri");
+
 		return new UserProfile(username, displayName, privateID, password,
 				homeDomain, proxyAddr,
-				xdmServer, xdmLogin, xdmPassword);
+				xdmServer, xdmLogin, xdmPassword,
+				imConfUri);
 	}
 }

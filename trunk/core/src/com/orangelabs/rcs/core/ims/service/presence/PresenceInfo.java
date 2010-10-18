@@ -32,6 +32,11 @@ import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
  */
 public class PresenceInfo implements Parcelable {
 	/**
+	 * Presence status "unknown"
+	 */
+	public final static String UNKNOWN = "unknown";
+
+	/**
 	 * Presence status "online"
 	 */
 	public final static String ONLINE = "open";

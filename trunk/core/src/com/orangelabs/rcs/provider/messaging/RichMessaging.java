@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.provider.messaging;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -86,36 +87,42 @@ public class RichMessaging {
 	}
 	
 	/**
-	 * Add a new file transfer
+	 * Add a new message (chat message, file transfer, large IM, short IM)
 	 * 
-	 * @param sessionId Session Id
+	 * @param discriminator The type of message sent (RichData.FILETRANSFER or RichData.INSTANTMESSAGING)
+	 * @param sessionId Session Id of the chat session for a chat message, or a file transfer which occurred during a chat session.
+	 * 		  If the file transfer didn't occur during a chat session, sessionId is an auto generated Id for a unique file transfer chat session 
+	 * 		  (basically the same as the file transfer sessionId).
+	 *        It can also be a sessionId for a LargeIM session.
+	 * @param ftSessionId Session Id of the File Transfer if this is one, else null 
 	 * @param contact Contact number
-	 * @param file Filename of the file to transfer
-	 * @param destination Destination of the file transfer
+	 * @param data Content of the message (could be an Uri in FT, or a simple text in IM) obviously null if INCOMING
+	 * @param destination Destination of the file transfer (RichData.OUTGOING or RichData.INCOMING)
 	 * @param mimeType Mime type of the file transfer
-	 * @param name Name of the transfered file
+	 * @param name Name of the transfered file, or null if this is a IM message
 	 * @param size Size of the  transfered file
+	 * @param status Status of the message or the session
 	 */
-	public void addFileTransfer(String sessionId, String contact, String file, int destination, String mimeType, String name, long size) {
+	public void addMessage(int discriminator, String sessionId, String ftSessionId, String contact, String data, int destination, String mimeType, String name, long size, Date date, int status) {
+		if(logger.isActivated()){
+			logger.error("Adding message entry in provider "+status);
+		}
 		ContentValues values = new ContentValues();
-		if (destination == RichMessagingData.OUTGOING){
-			// User is initiator
-			values.put(RichMessagingData.KEY_TRANSFER_STATUS, "inviting");
-			values.put(RichMessagingData.KEY_ADDRESS, "Me");
-		}else{
-			// User is receptor
-			values.put(RichMessagingData.KEY_TRANSFER_STATUS, "invited");
-			values.put(RichMessagingData.KEY_ADDRESS, contact);
-		}		
-		values.put(RichMessagingData.KEY_TYPE_DISCRIMINATOR, "file_transfer");
+		values.put(RichMessagingData.KEY_TYPE_DISCRIMINATOR, discriminator);
 		values.put(RichMessagingData.KEY_SESSION_ID, sessionId);
+		values.put(RichMessagingData.KEY_FT_SESSION_ID, ftSessionId);
 		values.put(RichMessagingData.KEY_CONTACT_NUMBER, contact);
-		values.put(RichMessagingData.KEY_MEDIA_URI, file);
 		values.put(RichMessagingData.KEY_DESTINATION, destination);
 		values.put(RichMessagingData.KEY_MIME_TYPE, mimeType);
 		values.put(RichMessagingData.KEY_SIZE, size);
 		values.put(RichMessagingData.KEY_NAME, name);
-		values.put(RichMessagingData.KEY_TRANSFER_DATE, Calendar.getInstance().getTimeInMillis());
+		values.put(RichMessagingData.KEY_DATA, data);
+		values.put(RichMessagingData.KEY_TRANSFER_STATUS, status);
+		if(date == null) {
+			values.put(RichMessagingData.KEY_TRANSFER_DATE, Calendar.getInstance().getTimeInMillis());
+		} else {
+			values.put(RichMessagingData.KEY_TRANSFER_DATE, date.getTime());
+		}
 		cr.insert(databaseUri, values);
 	}
 
@@ -125,14 +132,27 @@ public class RichMessaging {
 	 * @param sessionId Session Id
 	 * @param status New status
 	 */
-	public void updateFileTransferStatus(String sessionId, String status) {
+	public void updateFileTransferStatus(String sessionId, int status) {
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_TRANSFER_STATUS, status);
+		cr.update(databaseUri, values, RichMessagingData.KEY_FT_SESSION_ID + " = " + sessionId, null);
+	}
+	
+	/**
+	 * Update instant message status
+	 * 
+	 * @param sessionId Session Id
+	 * @param status New status
+	 */
+	public void updateMessageStatus(String sessionId, int status) {
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_TRANSFER_STATUS, status);
 		cr.update(databaseUri, values, RichMessagingData.KEY_SESSION_ID + " = " + sessionId, null);
 	}
+	
 
 	/**
-	 * Update file transfer downloaded size
+	 * Update file transfer downloaded size, also set the transfer status to 'IN_PROGRESS'
 	 * 
 	 * @param sessionId Session Id
 	 * @param size New downloaded size
@@ -140,18 +160,33 @@ public class RichMessaging {
 	public void updateFileTransferDownloadedSize(String sessionId, long size) {
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_DOWNLOADED_SIZE, size);
-		cr.update(databaseUri, values, RichMessagingData.KEY_SESSION_ID + " = " + sessionId, null);
+		values.put(RichMessagingData.KEY_TRANSFER_STATUS, RichMessagingData.IN_PROGRESS);
+		cr.update(databaseUri, values, RichMessagingData.KEY_FT_SESSION_ID + " = " + sessionId, null);
 	}
 
 	/**
-	 * Update file transfer url
+	 * Update file transfer url, this also means that the transfer is finished.
 	 * 
 	 * @param sessionId Session Id
-	 * @param filename File url
+	 * @param data File url
 	 */
-	public void updateFileTransferUrl(String sessionId, String filename) {
+	public void updateFileTransferUrl(String sessionId, String data) {
 		ContentValues values = new ContentValues();
-		values.put(RichMessagingData.KEY_MEDIA_URI, filename);
+		values.put(RichMessagingData.KEY_DATA, data);
+		values.put(RichMessagingData.KEY_TRANSFER_STATUS, RichMessagingData.FINISHED);
+		cr.update(databaseUri, values, RichMessagingData.KEY_FT_SESSION_ID + " = " + sessionId, null);
+	}
+	
+	/**
+	 * Update instant message data, this also means that the message has been received.
+	 * 
+	 * @param sessionId Session Id
+	 * @param data IM text
+	 */
+	public void updateMessage(String sessionId, String data) {
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_DATA, data);
+		values.put(RichMessagingData.KEY_TRANSFER_STATUS, RichMessagingData.FINISHED);
 		cr.update(databaseUri, values, RichMessagingData.KEY_SESSION_ID + " = " + sessionId, null);
 	}
 	
@@ -161,6 +196,15 @@ public class RichMessaging {
 	 * @param sessionId Session Id
 	 */
 	public void deleteFileTransfer(String sessionId) {
+		cr.delete(databaseUri, RichMessagingData.KEY_FT_SESSION_ID + " = " + sessionId, null);
+	}
+	
+	/**
+	 * Delete a instant message
+	 * 
+	 * @param sessionId Session Id
+	 */
+	public void deleteMessage(String sessionId) {
 		cr.delete(databaseUri, RichMessagingData.KEY_SESSION_ID + " = " + sessionId, null);
 	}
 }

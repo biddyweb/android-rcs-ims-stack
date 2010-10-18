@@ -39,10 +39,14 @@ public class RcsSettingsData {
 	
 	public static final String PRESENCE_INVITATION_RINGTONE = "PresenceInvitationRingtone";
 	public static final String PRESENCE_INVITATION_VIBRATE = "PresenceInvitationVibrate";
+	public static final String PRESENCE_HYPERAVAILABILITY_BEEP = "PresenceHyperAvailabilityBeep";
+	public static final String PRESENCE_HYPERAVAILABILITY_VIBRATE = "PresenceHyperAvailabilityVibrate";
 	
 	public static final String CSH_INVITATION_RINGTONE = "CShInvitationRingtone";
 	public static final String CSH_INVITATION_VIBRATE = "CShInvitationVibrate";
 	public static final String CSH_AVAILABLE_BEEP = "CShAvailableBeep";
+	public static final String CSH_VIDEO_FORMAT = "CShVideoFormat";
+	public static final String CSH_VIDEO_SIZE = "CShVideoSize";
 	
 	public static final String FILETRANSFER_INVITATION_RINGTONE = "FileTransferInvitationRingtone";
 	public static final String FILETRANSFER_INVITATION_VIBRATE = "FileTransferInvitationVibrate";
@@ -55,13 +59,13 @@ public class RcsSettingsData {
 	public static final String USERPROFILE_USERNAME = "Username";
 	public static final String USERPROFILE_DISPLAY_NAME = "DisplayName";
 	public static final String USERPROFILE_PRIVATE_ID = "PrivateId";
-	public static final String LAST_USERPROFILE_PRIVATE_ID = "Last_PrivateId";
 	public static final String USERPROFILE_PASSWORD = "Password";
 	public static final String USERPROFILE_HOME_DOMAIN = "HomeDomain";
 	public static final String USERPROFILE_SIP_PROXY = "OutboundProxyAddr";
 	public static final String USERPROFILE_XDM_SERVER = "XdmServerAddr";
 	public static final String USERPROFILE_XDM_LOGIN= "XdmServerLogin";
 	public static final String USERPROFILE_XDM_PASSWORD = "XdmServerPassword";
+	public static final String USERPROFILE_IM_CONF_URI = "ImConferenceUri";
 	
 	// Boolean value
 	public static final String TRUE_VALUE = Boolean.toString(true);

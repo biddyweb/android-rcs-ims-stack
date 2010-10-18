@@ -46,7 +46,7 @@ public class Capabilities implements Parcelable {
 	/**
 	 * IM session capability
 	 */
-	public final static String IM_SESSION_CAPABILITY = "org.openmobilealliance:IM-Session";
+	public final static String IM_SESSION_CAPABILITY = "org.openmobilealliance:IM-session";
 	
 	/**
 	 * CS video telephony capability

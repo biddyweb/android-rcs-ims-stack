@@ -37,12 +37,12 @@ import android.text.TextUtils;
  */
 public class RichMessagingProvider extends ContentProvider {
 	// Database table
-	public static final String TABLE = "filetransfer";
+	public static final String TABLE = "messaging";
 	
 	// Create the constants used to differentiate between the different
 	// URI requests
-	private static final int FILETRANSFERS = 1;
-	private static final int FILETRANSFER_ID = 2;
+	private static final int MESSAGING = 1;
+	private static final int MESSAGING_ID = 2;
 	
 	// Allocate the UriMatcher object, where a URI ending in 'contacts'
 	// will correspond to a request for all contacts, and 'contacts'
@@ -50,8 +50,8 @@ public class RichMessagingProvider extends ContentProvider {
 	private static final UriMatcher uriMatcher;
 	static {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-		uriMatcher.addURI("com.orangelabs.rcs.messaging", "filetransfer", FILETRANSFERS);
-		uriMatcher.addURI("com.orangelabs.rcs.messaging", "filetransfer/#", FILETRANSFER_ID);
+		uriMatcher.addURI("com.orangelabs.rcs.messaging", "messaging", MESSAGING);
+		uriMatcher.addURI("com.orangelabs.rcs.messaging", "messaging/#", MESSAGING_ID);
 	}
 
     /**
@@ -64,7 +64,7 @@ public class RichMessagingProvider extends ContentProvider {
      */
 	private static class DatabaseHelper extends SQLiteOpenHelper{
 		private static final String DATABASE_NAME = "messaging.db";
-		private static final int DATABASE_VERSION = 1;
+		private static final int DATABASE_VERSION = 3;
 
         public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -75,29 +75,18 @@ public class RichMessagingProvider extends ContentProvider {
 			// Create eab table
 			// Some fields are not used for column consistancy when doing a cursor merge with android.providers.telephony
 			db.execSQL("create table " + TABLE + " ("
-				+ RichMessagingData.KEY_TYPE_DISCRIMINATOR + " TEXT, "
 				+ RichMessagingData.KEY_ID + " integer primary key, "
+				+ RichMessagingData.KEY_TYPE_DISCRIMINATOR + " integer, "
 				+ RichMessagingData.KEY_SESSION_ID + " TEXT, "
-				+ RichMessagingData.KEY_ADDRESS + " TEXT, "
+				+ RichMessagingData.KEY_FT_SESSION_ID + " TEXT, "
 				+ RichMessagingData.KEY_CONTACT_NUMBER + " TEXT, "
-				+ RichMessagingData.KEY_TRANSFER_DATE + " long, "
 				+ RichMessagingData.KEY_DESTINATION + " integer, "
-				+ "notUsed7" + " TEXT, "
-				+ "notUsed8" + " TEXT, "
-				+ "notUsed9" + " TEXT, "
-				+ "notUsed10" + " TEXT, "
-				+ "notUsed11" + " TEXT, "
-				+ "notUsed12" + " TEXT, "
-				+ "notUsed13" + " TEXT, "
-				+ "notUsed14" + " TEXT, "
-				+ "notUsed15" + " TEXT, "
-				+ "notUsed16" + " TEXT, "
-				+ "notUsed17" + " TEXT, "
-				+ RichMessagingData.KEY_SIZE + " integer, "
-				+ RichMessagingData.KEY_NAME + " TEXT, "				
-				+ RichMessagingData.KEY_MEDIA_URI + " TEXT, "
 				+ RichMessagingData.KEY_MIME_TYPE + " TEXT, "
-				+ RichMessagingData.KEY_TRANSFER_STATUS + " TEXT,"
+				+ RichMessagingData.KEY_NAME + " TEXT, "
+				+ RichMessagingData.KEY_SIZE + " integer, "
+				+ RichMessagingData.KEY_DATA + " TEXT, "
+				+ RichMessagingData.KEY_TRANSFER_STATUS + " integer, "
+				+ RichMessagingData.KEY_TRANSFER_DATE + " long, "
 				+ RichMessagingData.KEY_DOWNLOADED_SIZE + " long);"
 				);
 		}
@@ -118,9 +107,9 @@ public class RichMessagingProvider extends ContentProvider {
 	@Override
 	public String getType(Uri uri) {
 		switch(uriMatcher.match(uri)){
-			case FILETRANSFERS:
+			case MESSAGING:
 				return "vnd.android.cursor.dir/com.orangelabs.rcs.messaging";
-			case FILETRANSFER_ID:
+			case MESSAGING_ID:
 				return "vnd.android.cursor.item/com.orangelabs.rcs.messaging";
 			default:
 				throw new IllegalArgumentException("Unsupported URI " + uri);
@@ -135,9 +124,9 @@ public class RichMessagingProvider extends ContentProvider {
         // Generate the body of the query
         int match = uriMatcher.match(uri);
         switch(match) {
-            case FILETRANSFERS:
+            case MESSAGING:
                 break;
-            case FILETRANSFER_ID:
+            case MESSAGING_ID:
                 qb.appendWhere(RichMessagingData.KEY_ID + "=" + uri.getPathSegments().get(1));
                 break;
             default:
@@ -163,10 +152,10 @@ public class RichMessagingProvider extends ContentProvider {
 
         int match = uriMatcher.match(uri);
         switch (match) {
-	        case FILETRANSFERS:
+	        case MESSAGING:
 	            count = db.update(TABLE, values, where, null);
 	            break;
-            case FILETRANSFER_ID:
+            case MESSAGING_ID:
                 String segment = uri.getPathSegments().get(1);
                 int id = Integer.parseInt(segment);
                 count = db.update(TABLE, values, RichMessagingData.KEY_ID + "=" + id, null);
@@ -182,8 +171,8 @@ public class RichMessagingProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues initialValues) {
         SQLiteDatabase db = openHelper.getWritableDatabase();
         switch(uriMatcher.match(uri)){
-	        case FILETRANSFERS:
-	        case FILETRANSFER_ID:
+	        case MESSAGING:
+	        case MESSAGING_ID:
 	            // Insert the new row, will return the row number if successful
 	        	// Use system clock to generate id : it should not be a common int otherwise it could be the 
 	        	// same as an id present in MmsSms table (and that will create uniqueness problem when doing the tables merge) 
@@ -208,10 +197,10 @@ public class RichMessagingProvider extends ContentProvider {
         SQLiteDatabase db = openHelper.getWritableDatabase();
         int count = 0;
         switch(uriMatcher.match(uri)){
-	        case FILETRANSFERS:
+	        case MESSAGING:
 	        	count = db.delete(TABLE, where, whereArgs);
 	        	break;
-	        case FILETRANSFER_ID:
+	        case MESSAGING_ID:
 	        	String segment = uri.getPathSegments().get(1);
 				count = db.delete(TABLE, RichMessagingData.KEY_ID + "="
 						+ segment

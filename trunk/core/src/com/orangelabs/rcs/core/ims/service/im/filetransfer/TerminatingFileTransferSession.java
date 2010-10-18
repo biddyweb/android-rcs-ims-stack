@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -191,7 +192,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
@@ -421,7 +422,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	    	ContentManager.saveContent(getContent());
 	    	
         	// Update messaging provider
-	    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), "finished");
+	    	RichMessaging.getInstance().updateFileTransferStatus(getSessionID(), RichMessagingData.FINISHED);
 
 	    	// Notify listener
 	        if (getListener() != null) {

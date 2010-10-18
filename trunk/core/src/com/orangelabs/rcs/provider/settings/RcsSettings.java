@@ -182,6 +182,54 @@ public class RcsSettings {
 	}	
 	
 	/**
+	 * Is phone beep for hyper-availability activation
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isPhoneBeepForHyperAvailability() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.PRESENCE_HYPERAVAILABILITY_BEEP));
+		}
+		return result;
+	}
+	
+	/**
+	 * Set phone beep for hyper-availability activation
+	 * 
+	 * @param activate Tone activate
+	 */
+	public void setPhoneBeepForHyperAvailability(boolean activate) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.PRESENCE_HYPERAVAILABILITY_BEEP, Boolean.toString(activate));
+		}
+	}
+
+	/**
+	 * Is phone vibrate for hyper-availability activation
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isPhoneVibrateForHyperAvailability() {
+		boolean result = false;
+		if (instance != null) {
+			return Boolean.parseBoolean(readParameter(RcsSettingsData.PRESENCE_HYPERAVAILABILITY_VIBRATE));
+		}
+		return result;
+	}	
+
+	/**
+	 * Set phone vibrate for hyper-availability activation
+	 * 
+	 * @param vibrate Vibrate state
+	 */
+	public void setPhoneVibrateForHyperAvailability(boolean vibrate) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.PRESENCE_HYPERAVAILABILITY_VIBRATE, Boolean.toString(vibrate));
+		}
+	}	
+	
+	/**
 	 * Get the ringtone for CSh invitation
 	 * 
 	 * @return Ringtone URI or null if there is no ringtone
@@ -250,6 +298,54 @@ public class RcsSettings {
 	public void setPhoneBeepIfCShAvailable(boolean beep) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_AVAILABLE_BEEP, Boolean.toString(beep));
+		}
+	}	
+	
+	/**
+	 * Get the CSh video format
+	 * 
+	 * @return Video format as string
+	 */
+	public String getCShVideoFormat() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.CSH_VIDEO_FORMAT);
+		}
+		return result;
+	}
+	
+	/**
+	 * Set the CSh video format
+	 * 
+	 * @param fmt Video format
+	 */
+	public void setCShVideoFormat(String fmt) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.CSH_VIDEO_FORMAT, fmt);
+		}
+	}	
+	
+	/**
+	 * Get the CSh video size
+	 * 
+	 * @return Size (e.g. QCIF, QVGA)
+	 */
+	public String getCShVideoSize() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.CSH_VIDEO_SIZE);
+		}
+		return result;
+	}
+	
+	/**
+	 * Set the CSh video size
+	 * 
+	 * @param size Video size
+	 */
+	public void setCShVideoSize(String size) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.CSH_VIDEO_SIZE, size);
 		}
 	}	
 	
@@ -465,19 +561,6 @@ public class RcsSettings {
 	}	
 
 	/**
-	 * Returns last user profile private Id
-	 * 
-	 * @return String value
-	 */
-	public String getLastUserProfilePrivateId() {
-		String result = null;
-		if (instance != null) {
-			return readParameter(RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID);
-		}
-		return result;
-	}	
-	
-	/**
 	 * Set user profile private Id
 	 * 
 	 * @param value Value
@@ -488,17 +571,6 @@ public class RcsSettings {
 		}
 	}	
 
-	/**
-	 * Set last user profile private Id
-	 * 
-	 * @param value Value
-	 */
-	public void setLastUserProfilePrivateId(String value) {
-		if (instance != null) {
-			writeParameter(RcsSettingsData.LAST_USERPROFILE_PRIVATE_ID, value);
-		}
-	}	
-	
 	/**
 	 * Returns user profile password
 	 * 
@@ -640,6 +712,30 @@ public class RcsSettings {
 	public void setUserProfileXdmPassword(String value) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD, value);
+		}
+	}
+
+	/**
+	 * Returns user profile IM conference URI
+	 * 
+	 * @return String value
+	 */
+	public String getUserProfileImConferenceUri() {
+		String result = null;
+		if (instance != null) {
+			return readParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI);
+		}
+		return result;
+	}	
+
+	/**
+	 * Set user profile IM conference URI
+	 * 
+	 * @param value Value
+	 */
+	public void setUserProfileImConferenceUri(String value) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI, value);
 		}
 	}
 }

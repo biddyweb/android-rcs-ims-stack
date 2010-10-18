@@ -31,7 +31,8 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
+import android.os.RemoteException;
+import android.os.Vibrator;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.R;
@@ -44,6 +45,8 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.presence.FavoriteLink;
+import com.orangelabs.rcs.core.ims.service.presence.Geoloc;
+import com.orangelabs.rcs.core.ims.service.presence.PhotoIcon;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceError;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceInfo;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
@@ -54,6 +57,7 @@ import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStrea
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.core.ims.service.toip.TerminatingToIpSession;
 import com.orangelabs.rcs.core.ims.service.voip.TerminatingVoIpSession;
+import com.orangelabs.rcs.core.ims.userprofile.UserProfileNotProvisionnedException;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
@@ -63,6 +67,7 @@ import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.management.IManagementApi;
 import com.orangelabs.rcs.service.api.client.management.ManagementApiIntents;
+import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApiIntents;
 import com.orangelabs.rcs.service.api.client.presence.IPresenceApi;
@@ -73,7 +78,9 @@ import com.orangelabs.rcs.service.api.client.toip.IToIpApi;
 import com.orangelabs.rcs.service.api.client.toip.ToIpApiIntents;
 import com.orangelabs.rcs.service.api.client.voip.IVoIpApi;
 import com.orangelabs.rcs.service.api.client.voip.VoIpApiIntents;
+import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.management.ManagementApiService;
+import com.orangelabs.rcs.service.api.server.messaging.ChatSession;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
@@ -105,7 +112,12 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
     private final Handler handler = new Handler();
 
-    /**
+	/**
+	 * CPU manager
+	 */
+	private CpuManager cpuManager = new CpuManager();
+
+	/**
 	 * Presence API
 	 */
     private PresenceApiService presenceApi = new PresenceApiService(); 
@@ -140,19 +152,11 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	/**
-	 * Power manager
-	 */
-	private PowerManager.WakeLock powerManager;
-	
 	@Override
     public void onCreate() {
-		// Acquire wake lock -> Always wake up service
-		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		powerManager = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | 
-				PowerManager.ACQUIRE_CAUSES_WAKEUP, "RcsCoreService");
-		powerManager.acquire();
-		
+		// Set application context
+		CONTEXT = getApplicationContext();
+
 		// Set logger appenders
 		Appender[] appenders = new Appender[] { 
 //				new SipAppender(),
@@ -160,57 +164,10 @@ public class RcsCoreService extends Service implements CoreListener {
 				new AndroidAppender()
 			};
 		Logger.setAppenders(appenders);
+		Logger.activationFlag = Logger.TRACE_ON;
 
-		// Set application context
-		CONTEXT = getApplicationContext();
-
-		// Instanciate the settings manager
-        RcsSettings.createInstance(getApplicationContext());
-
-        // Test if user provisionning has been done or not
-        String values[] = new String[6];
-		values[0] = RcsSettings.getInstance().getUserProfileUserName();
-		values[1] = RcsSettings.getInstance().getUserProfilePrivateId();
-		values[2] = RcsSettings.getInstance().getUserProfileDomain();
-		values[3] = RcsSettings.getInstance().getUserProfileProxy();
-		values[4] = RcsSettings.getInstance().getUserProfileXdmServer();
-		values[5] = RcsSettings.getInstance().getUserProfileXdmLogin();
-		for(int i=0; i < values.length; i++) {
-			if ((values[i] == null) || (values[i].length() == 0)) {
-				// User profile provisionning should be done before starting RCS core
-				if (logger.isActivated()) {
-					logger.debug("User profile not provisionned !");
-				}
-		    	Intent intent = new Intent("com.orangelabs.rcs.PROVISIONING");
-		    	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		    	startActivity(intent);
-		    	stopSelf();
-		    	return;
-			}        
-		}
-		
-        // Instanciate the rich address book
-        RichAddressBook.createInstance(getApplicationContext());
-
-        // Instanciate the rich messaging 
-        RichMessaging.createInstance(getApplicationContext());
-
-		// Test if the last user profile private uri has changed
-		if (!values[1].equalsIgnoreCase(RcsSettings.getInstance().getLastUserProfilePrivateId())){
-			// The private uri has changed, we must wipe the rich address book data, as the user
-			// is not using the same IMS account
-			RichAddressBook.getInstance().flushAllData();
-			
-			// Set the new last used profile private uri
-			RcsSettings.getInstance().setLastUserProfilePrivateId(values[1]);
-		}
-        
 		// Start the core
 		startCore();
-
-		// Send startup intent 
-    	Intent intent = new Intent(ManagementApiIntents.SERVICE_STARTED);
-		getApplicationContext().sendBroadcast(intent);
 	}
 
     @Override
@@ -224,17 +181,6 @@ public class RcsCoreService extends Service implements CoreListener {
 		
         // Stop the core
         stopCore();
-        
-        if (logger.isActivated()) {
-			logger.info("RCS core service terminated with success");
-		}
-        
-		// Send startup intent 
-    	Intent intent = new Intent(ManagementApiIntents.SERVICE_STOPPED);
-		getApplicationContext().sendBroadcast(intent);
-
-		// Release power manager wave lock
-    	powerManager.release();
     }
 
     /**
@@ -250,7 +196,16 @@ public class RcsCoreService extends Service implements CoreListener {
 			// Instanciate platform factory
 			AndroidFactory.loadFactory(getApplicationContext());
 
-			// Create the core
+			// Instanciate the settings manager
+            RcsSettings.createInstance(getApplicationContext());
+
+            // Instanciate the rich address book
+            RichAddressBook.createInstance(getApplicationContext());
+
+            // Instanciate the rich messaging 
+            RichMessaging.createInstance(getApplicationContext());
+
+            // Create the core
 			Core core = Core.createCore(this);
 			
 			// Restore the last presence info from the address book database
@@ -268,19 +223,36 @@ public class RcsCoreService extends Service implements CoreListener {
 			createDirectory(FileFactory.getFactory().getVideoRootDirectory());
 			createDirectory(FileFactory.getFactory().getFileRootDirectory());
 			
+			// Init CPU manager
+			cpuManager.init();
+			
+			// Send startup intent 
+	    	Intent intent = new Intent(ManagementApiIntents.SERVICE_STARTED);
+			getApplicationContext().sendBroadcast(intent);
+
 	        // Show a first notification
-	    	addRcsServiceNotification(false, getString(R.string.label_rcs_loaded));
+	    	addRcsServiceNotification(false, getString(R.string.rcs_core_label_rcs_loaded));
 
 	    	if (logger.isActivated()) {
 				logger.info("RCS core service started with success");
 			}
+        } catch(UserProfileNotProvisionnedException e) {
+			// User profile not well provisionned
+			if (logger.isActivated()) {
+				logger.error("User profile not well provisionned: " + e.getMessage());
+			}
+	    	Intent intent = new Intent("com.orangelabs.rcs.PROVISIONING");
+	    	intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	    	startActivity(intent);
+	    	stopSelf();
 		} catch(Exception e) {
+			// Unexpected error
 			if (logger.isActivated()) {
 				logger.error("Can't instanciate the RCS core service", e);
 			}
 			
 			// Show error in notification bar
-	    	addRcsServiceNotification(false, getString(R.string.label_rcs_failed));
+	    	addRcsServiceNotification(false, getString(R.string.rcs_core_label_rcs_failed));
 		}
     }
     
@@ -293,7 +265,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			return;
 		}
 		
-		// Force the poke down
+		// Force the poke down, then a last publish will be sent at core shutdown
 		PresenceInfo presenceInfo = Core.getInstance().getPresenceService().getPresenceInfo();
 		presenceInfo.setHyperavailabilityStatus(false);
 		try {
@@ -303,7 +275,14 @@ public class RcsCoreService extends Service implements CoreListener {
     	// Terminate the core
 		Core.terminateCore();
 
-    	if (logger.isActivated()) {
+		// Close CPU manager
+		cpuManager.close();
+
+		// Send stopped intent 
+    	Intent intent = new Intent(ManagementApiIntents.SERVICE_STOPPED);
+		getApplicationContext().sendBroadcast(intent);
+
+		if (logger.isActivated()) {
 			logger.info("RCS core service stopped with success");
 		}
     }
@@ -392,7 +371,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
         Notification notif = new Notification(iconId, "", System.currentTimeMillis());
         notif.flags = Notification.FLAG_NO_CLEAR;
-        notif.setLatestEventInfo(RcsCoreService.CONTEXT, RcsCoreService.CONTEXT.getString(R.string.title_rcs_notification),
+        notif.setLatestEventInfo(RcsCoreService.CONTEXT, RcsCoreService.CONTEXT.getString(R.string.rcs_core_rcs_notification_title),
         		label, contentIntent);
         
         // Send notification
@@ -411,7 +390,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.label_rcs_started));
+		addRcsServiceNotification(false, getString(R.string.rcs_core_label_rcs_started));
     }
 
     /**
@@ -423,7 +402,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.label_rcs_stopped));
+		addRcsServiceNotification(false, getString(R.string.rcs_core_label_rcs_stopped));
     }
     
 	/**
@@ -437,7 +416,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Display a notification
-		addRcsServiceNotification(true, getString(R.string.label_connected_to_rcs));
+		addRcsServiceNotification(true, getString(R.string.rcs_core_label_connected_to_rcs));
 	}
 
 	/**
@@ -451,7 +430,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.label_rcs_connection_failed));
+		addRcsServiceNotification(false, getString(R.string.rcs_core_label_rcs_connection_failed));
 	}
 
 	/**
@@ -463,7 +442,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.label_disconnected_from_rcs));
+		addRcsServiceNotification(false, getString(R.string.rcs_core_label_disconnected_from_rcs));
 	}
 	
     /**
@@ -509,30 +488,21 @@ public class RcsCoreService extends Service implements CoreListener {
      * @param reason Reason
      */
     public void handlePresenceSharingNotification(String contact, String status, String reason) {
-    	// TODO: rename reason by event
 		if (logger.isActivated()) {
 			logger.debug("Handle event presence sharing notification for " + contact + " (" + status + ":" + reason + ")");
 		}
 
-		String username = PhoneUtils.extractNumberFromUri(contact);
-		if (RcsSettings.getInstance().getUserProfileUserName().equalsIgnoreCase(username)) {
-			// End user notification
-			try {
+		try {
+			// Check if its a notification for a contact or for the end user
+			String username = PhoneUtils.extractNumberFromUri(contact);
+			if (RcsSettings.getInstance().getUserProfileUserName().equalsIgnoreCase(username)) {
+				// End user notification
+				if (logger.isActivated()) {
+					logger.debug("Presence sharing notification for me: by-pass it");
+				}
+	    	} else { 
 		    	// Update EAB provider
-				// TODO
-	
-				// Broadcast intent
-				// TODO
-	    	} catch(Exception e) {
-	    		if (logger.isActivated()) {
-	    			logger.error("Internal exception", e);
-	    		}
-	    	}
-    	} else { 
-    		// Contact notification
-    		try {
-		    	// Update EAB provider
-				RichAddressBook.getInstance().setContactSharingStatus(contact, status, reason);
+				RichAddressBook.getInstance().setContactSharingStatus(username, status, reason);
 	
 				// Broadcast intent
 				Intent intent = new Intent(PresenceApiIntents.PRESENCE_SHARING_CHANGED);
@@ -540,11 +510,11 @@ public class RcsCoreService extends Service implements CoreListener {
 		    	intent.putExtra("status", status);
 		    	intent.putExtra("reason", reason);
 				AndroidFactory.getApplicationContext().sendBroadcast(intent);
-	    	} catch(Exception e) {
-	    		if (logger.isActivated()) {
-	    			logger.error("Internal exception", e);
-	    		}
 	    	}
+    	} catch(Exception e) {
+    		if (logger.isActivated()) {
+    			logger.error("Internal exception", e);
+    		}
     	}
     }
 
@@ -555,161 +525,270 @@ public class RcsCoreService extends Service implements CoreListener {
      * @param presense Presence info document
      */
     public void handlePresenceInfoNotification(String contact, PidfDocument presence) {
-		if (logger.isActivated()) {
+    	if (logger.isActivated()) {
 			logger.debug("Handle event presence info notification for " + contact);
 		}
 
 		try {
-			// Test if the contact exist in database
-			String status = RichAddressBook.getInstance().getContactSharingStatus(contact);
-			if (status == null) {
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " is not a RCS contact, by-pass its notification");
-				}
-				return;
-			}
-
 			// Test if person item is not null
 			Person person = presence.getPerson();
 			if (person == null) {
 				if (logger.isActivated()) {
-					logger.debug("Presence info is empty (no item person found) for contact " + contact);
+					logger.debug("Presence info is empty (i.e. no item person found) for contact " + contact);
 				}
 				return;
 			}
 
-			// Get the current presence info for the given contact
-    		PresenceInfo presenceInfo = RichAddressBook.getInstance().getContactPresenceInfo(contact);
-    		if (presenceInfo == null) {
-    			presenceInfo = new PresenceInfo();
+			// Check if its a notification for a contact or for me
+			String username = PhoneUtils.extractNumberFromUri(contact);
+			if (RcsSettings.getInstance().getUserProfileUserName().equalsIgnoreCase(username)) {
+				// Notification for me
+				presenceInfoNotificationForMe(presence);
+			} else {
+				// Check that the contact exist in database
+				String rcsStatus = RichAddressBook.getInstance().getContactSharingStatus(contact);
+				if (rcsStatus == null) {
+					if (logger.isActivated()) {
+						logger.debug("Contact " + contact + " is not a RCS contact, by-pass the notification");
+					}
+					return;
+				}
+
+				// Notification for a contact
+				presenceInfoNotificationForContact(contact, presence);
+			}
+    	} catch(Exception e) {
+    		if (logger.isActivated()) {
+    			logger.error("Internal exception", e);
     		}
-			boolean lastHyperavailabilityStatus = presenceInfo.isHyperavailable();
+		}
+	}
 
-			// Update the current presence info
-    		try {
-    			// Update the current capabilities
-    			Capabilities capabilities =  new Capabilities(); 
-    			Vector<Tuple> tuples = presence.getTuplesList();
-    			for(int i=0; i < tuples.size(); i++) {
-    				Tuple tuple = (Tuple)tuples.elementAt(i);
-    				
-    				boolean state = false; 
-    				if (tuple.getStatus().getBasic().getValue().equals("open")) {
-    					state = true;
-    				}
-    					
-    				String id = tuple.getService().getId();
-    				if (id.equals(Capabilities.VIDEO_SHARING_CAPABILITY)) {
-    					capabilities.setVideoSharingSupport(state);
-    				} else
-    				if (id.equals(Capabilities.IMAGE_SHARING_CAPABILITY)) {
-    					capabilities.setImageSharingSupport(state);
-    				} else
-    				if (id.equals(Capabilities.FILE_SHARING_CAPABILITY)) {
-    					capabilities.setFileTransferSupport(state);
-    				} else
-    				if (id.equals(Capabilities.CS_VIDEO_CAPABILITY)) {
-    					capabilities.setCsVideoSupport(state);
-    				} else
-    				if (id.equals(Capabilities.IM_SESSION_CAPABILITY)) {
-    					capabilities.setImSessionSupport(state);
-    				}
-    			}
-    			presenceInfo.setCapabilities(capabilities);
+    /**
+     * A new presence info notification has been received for me
+     * 
+     * @param contact Contact
+     * @param presense Presence info document
+     */
+    public void presenceInfoNotificationForMe(PidfDocument presence) {
+    	if (logger.isActivated()) {
+			logger.debug("Presence info notification for me");
+		}
 
-    			// Update presence info
-				OverridingWillingness willingness = person.getOverridingWillingness();
-				if (willingness != null) {
-					// Update poke info only
-					if (logger.isActivated()) {
-						logger.debug("Update poke info for contact " + contact);
-					}
+    	try {
+			// Get the current presence info for me
+    		PresenceInfo currentPresenceInfo = RichAddressBook.getInstance().getMyPresenceInfo();
+    		if (currentPresenceInfo == null) {
+    			currentPresenceInfo = new PresenceInfo();
+    		}
 
-					if ((willingness.getUntilTimestamp() != -1) &&
-							willingness.getBasic().getValue().equals(PresenceInfo.ONLINE)) {
-						presenceInfo.setHyperavailabilityStatus(true);
-					} else {
-						presenceInfo.setHyperavailabilityStatus(false);
-					}
-					
-					// Check poke status
-			    	if (presenceInfo.isHyperavailable()){
-			    		// New poke period?
-			    		if (!lastHyperavailabilityStatus) {    		
-							// Display a toast when the e user that a contact is now hyper-available
-							String contactName = RichAddressBook.getInstance().getContactDisplayName(contact);
-							if (contactName == null){
-								contactName = contact;
-							}
-							displayPopup(contactName + " " + getString(R.string.label_contact_hyperavailable));
-							
-							// Play a tone
-							try {
-								ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_RING,100);
-								toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2);
-							} catch (Exception e){						
-								if (logger.isActivated()){
-									logger.error("Can't start tone generator");
-								}
-							}
-			    		}
-			    	}
-				} else {
-					// Update the presence info only
-					if (logger.isActivated()) {
-						logger.debug("Update presence info for contact " + contact);
-					}
-
-					if (person.getTimestamp() != -1) {
-						presenceInfo.setTimestamp(person.getTimestamp());
-					}
-					if (person.getNote() != null) {
-						presenceInfo.setFreetext(person.getNote().getValue());
-					}
-					if (person.getHomePage() != null) {
-						presenceInfo.setFavoriteLink(new FavoriteLink(person.getHomePage()));
-					}
-					
-			    	// Get Etag associated to the local photo
-					String localEtag = RichAddressBook.getInstance().getContactPhotoEtag(contact);
-					
-					// Test if the photo has been removed
-					if ((localEtag != null) && (person.getStatusIcon() == null)) {
-						// Update EAB provider
-						RichAddressBook.getInstance().setContactPhotoIcon(contact, null, null);
-						
-						// Delete the photo
-						// TODO: update XDM server ?
-						
-						// Broadcast intent
-						Intent intent = new Intent(PresenceApiIntents.CONTACT_PHOTO_CHANGED);
-				    	intent.putExtra("contact", contact);
-						AndroidFactory.getApplicationContext().sendBroadcast(intent);
-					} else		
-			    	// Test if the photo has been changed
-			    	if ((person.getStatusIcon() != null) &&
-			    				(person.getStatusIcon().getEtag() != null)) {
-			        	String newEtag = person.getStatusIcon().getEtag();
-			    		if ((localEtag == null) || (!localEtag.equals(newEtag))) {
-				    		if (logger.isActivated()) {
-				    			logger.debug("Photo has changed for " + contact + ", download it in background");
-				    		}
-				
-				    		// Download the photo in background
-				    		downloadPhotoUrl(contact, presence.getPerson().getStatusIcon().getUrl(), newEtag);
-			    		}
-			    	}    	
+			// Update the presence info
+			Person person = presence.getPerson();
+			if (person.getTimestamp() != -1) {
+				currentPresenceInfo.setTimestamp(person.getTimestamp());
+			}
+			if (person.getNote() != null) {
+				currentPresenceInfo.setFreetext(person.getNote().getValue());
+			}
+			if (person.getHomePage() != null) {
+				currentPresenceInfo.setFavoriteLink(new FavoriteLink(person.getHomePage()));
+			}
+			
+    		// Get photo Etag values
+			String lastEtag = null;
+			String newEtag = null; 
+			if (person.getStatusIcon() != null) {
+				newEtag = person.getStatusIcon().getEtag();
+			}
+			if (currentPresenceInfo.getPhotoIcon() != null) {
+				lastEtag = currentPresenceInfo.getPhotoIcon().getEtag();
+			}
+    		
+    		// Test if the photo has been removed
+			if ((lastEtag != null) && (person.getStatusIcon() == null)) {
+	    		if (logger.isActivated()) {
+	    			logger.debug("Photo has been removed for me");
 	    		}
-    		} catch(Exception e) {
-    			if (logger.isActivated()) {
-    				logger.error("Internal exception when reading presence info", e);
-    			}
-    			return;
-    		}
-	    	
-	    	// Update EAB provider
-    		RichAddressBook.getInstance().setContactPresenceInfo(contact, presenceInfo);
+	    		
+    			// Update the presence info
+				currentPresenceInfo.setPhotoIcon(null);
 
+				// Update EAB provider
+	    		RichAddressBook.getInstance().removeMyPhotoIcon();
+			} else		
+	    	// Test if the photo has been changed
+	    	if ((person.getStatusIcon() != null) &&	(newEtag != null)) {
+	    		if ((lastEtag == null) || (!lastEtag.equals(newEtag))) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Photo has changed for me, download it in background");
+		    		}
+		
+		    		// Download the photo in background
+		    		downloadPhotoForMe(presence.getPerson().getStatusIcon().getUrl(), newEtag);
+	    		}
+	    	}
+	    	   		    		
+	    	// Update EAB provider
+    		RichAddressBook.getInstance().setMyPresenceInfo(currentPresenceInfo);
+
+    		// Broadcast intent
+	    	Intent intent = new Intent(PresenceApiIntents.MY_PRESENCE_INFO_CHANGED);
+	    	getApplicationContext().sendBroadcast(intent);
+    	} catch(Exception e) {
+    		if (logger.isActivated()) {
+    			logger.error("Internal exception", e);
+    		}
+		}
+    }
+
+    /**
+     * A new presence info notification has been received for a given contact
+     * 
+     * @param contact Contact
+     * @param presense Presence info document
+     */
+    public void presenceInfoNotificationForContact(String contact, PidfDocument presence) {
+    	if (logger.isActivated()) {
+			logger.debug("Presence info notification for contact " + contact);
+		}
+
+    	try {
+			// Get the current presence info for the given contact
+    		PresenceInfo currentPresenceInfo = RichAddressBook.getInstance().getContactPresenceInfo(contact);
+    		if (currentPresenceInfo == null) {
+    			currentPresenceInfo = new PresenceInfo();
+    		}
+			boolean lastHyperavailabilityStatus = currentPresenceInfo.isHyperavailable();
+
+			// Update the current capabilities
+			Capabilities capabilities =  new Capabilities(); 
+			Vector<Tuple> tuples = presence.getTuplesList();
+			for(int i=0; i < tuples.size(); i++) {
+				Tuple tuple = (Tuple)tuples.elementAt(i);
+				
+				boolean state = false; 
+				if (tuple.getStatus().getBasic().getValue().equals("open")) {
+					state = true;
+				}
+					
+				String id = tuple.getService().getId();
+				if (id.equalsIgnoreCase(Capabilities.VIDEO_SHARING_CAPABILITY)) {
+					capabilities.setVideoSharingSupport(state);
+				} else
+				if (id.equalsIgnoreCase(Capabilities.IMAGE_SHARING_CAPABILITY)) {
+					capabilities.setImageSharingSupport(state);
+				} else
+				if (id.equalsIgnoreCase(Capabilities.FILE_SHARING_CAPABILITY)) {
+					capabilities.setFileTransferSupport(state);
+				} else
+				if (id.equalsIgnoreCase(Capabilities.CS_VIDEO_CAPABILITY)) {
+					capabilities.setCsVideoSupport(state);
+				} else
+				if (id.equalsIgnoreCase(Capabilities.IM_SESSION_CAPABILITY)) {
+					capabilities.setImSessionSupport(state);
+				}
+			}
+			currentPresenceInfo.setCapabilities(capabilities);
+
+			// Update presence status
+			boolean poke = false;
+			String presenceStatus = PresenceInfo.UNKNOWN;
+			Person person = presence.getPerson();
+			OverridingWillingness willingness = person.getOverridingWillingness();
+			if (willingness != null) {
+				if ((willingness.getBasic() != null) && (willingness.getBasic().getValue() != null)) {
+					// Set presence status
+					presenceStatus = willingness.getBasic().getValue();
+				}
+				// TODO: test also the timestamp
+				if (presenceStatus.equals(PresenceInfo.ONLINE) && (willingness.getUntilTimestamp() != -1)) {
+					// Set poke status
+					poke = true;
+				}
+			}				
+			currentPresenceInfo.setPresenceStatus(presenceStatus);
+			currentPresenceInfo.setHyperavailabilityStatus(poke);
+
+			// Check poke status
+	    	if (currentPresenceInfo.isHyperavailable()){
+	    		// New poke period?
+	    		if (!lastHyperavailabilityStatus) {    		
+					// Display a toast when the e user that a contact is now hyper-available
+					String contactName = RichAddressBook.getInstance().getContactDisplayName(contact);
+					if (contactName == null){
+						contactName = contact;
+					}
+					displayPopup(contactName + " " + getString(R.string.rcs_core_label_contact_hyperavailable));
+					
+					// Play a tone
+					if (RcsSettings.getInstance().isPhoneBeepForHyperAvailability()) {
+						ToneGenerator toneGen = new ToneGenerator(AudioManager.STREAM_RING,100);
+						toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2);
+					}
+					
+					// Play a vibartion 
+					if (RcsSettings.getInstance().isPhoneVibrateForHyperAvailability()) {
+						Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+						vibrator.vibrate(1000);
+					}
+	    		}
+	    	}
+
+			// Update the presence info
+			if (person.getTimestamp() != -1) {
+				currentPresenceInfo.setTimestamp(person.getTimestamp());
+			}
+			if (person.getNote() != null) {
+				currentPresenceInfo.setFreetext(person.getNote().getValue());
+			}
+			if (person.getHomePage() != null) {
+				currentPresenceInfo.setFavoriteLink(new FavoriteLink(person.getHomePage()));
+			}
+			
+			// Update geoloc info
+			if (presence.getGeopriv() != null) {
+				Geoloc geoloc = new Geoloc(presence.getGeopriv().getLatitude(),
+						presence.getGeopriv().getLongitude(),
+						presence.getGeopriv().getAltitude());
+				currentPresenceInfo.setGeoloc(geoloc);
+			}
+			
+	    	// Update EAB provider
+    		RichAddressBook.getInstance().setContactPresenceInfo(contact, currentPresenceInfo);
+
+    		// Get photo Etag values
+			String lastEtag = RichAddressBook.getInstance().getContactPhotoEtag(contact);
+			String newEtag = null; 
+			if (person.getStatusIcon() != null) {
+				newEtag = person.getStatusIcon().getEtag();
+			}
+    		
+    		// Test if the photo has been removed
+			if ((lastEtag != null) && (person.getStatusIcon() == null)) {
+	    		if (logger.isActivated()) {
+	    			logger.debug("Photo has been removed for " + contact);
+	    		}
+
+	    		// Update EAB provider
+				RichAddressBook.getInstance().setContactPhotoIcon(contact, null, null);
+				
+				// Broadcast intent
+				Intent intent = new Intent(PresenceApiIntents.CONTACT_PHOTO_CHANGED);
+		    	intent.putExtra("contact", contact);
+				AndroidFactory.getApplicationContext().sendBroadcast(intent);
+			} else		
+	    	// Test if the photo has been changed
+	    	if ((person.getStatusIcon() != null) &&	(newEtag != null)) {
+	    		if ((lastEtag == null) || (!lastEtag.equals(newEtag))) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Photo has changed for " + contact + ", download it in background");
+		    		}
+		
+		    		// Download the photo in background
+		    		downloadPhotoForContact(contact, presence.getPerson().getStatusIcon().getUrl(), newEtag);
+	    		}
+	    	}    	
+	    	   		    		
     		// Broadcast intent
 	    	Intent intent = new Intent(PresenceApiIntents.CONTACT_INFO_CHANGED);
 	    	intent.putExtra("contact", contact);
@@ -719,23 +798,131 @@ public class RcsCoreService extends Service implements CoreListener {
     			logger.error("Internal exception", e);
     		}
 		}
-	}
-
+    }
+    
     /**
-     * Download photo
+     * A new anonymous-fetch notification has been received
+     * 
+     * @param contact Contact
+     * @param presense Presence info document
+     */
+    public void handleAnonymousFetchNotification(String contact, PidfDocument presence) {
+    	if (logger.isActivated()) {
+			logger.debug("Handle event anonymous fetch notification for " + contact);
+		}
+
+		try {
+			// Get the current presence info for the given contact
+    		PresenceInfo presenceInfo = RichAddressBook.getInstance().getContactPresenceInfo(contact);
+    		if (presenceInfo == null) {
+    			presenceInfo = new PresenceInfo();
+    		}
+
+			// Create intent
+	    	Intent intent = new Intent(PresenceApiIntents.CONTACT_CAPABILITIES);
+	    	intent.putExtra("contact", contact);
+
+	    	// Read the capabilities
+			if (presence != null) {
+				Capabilities capabilities =  new Capabilities(); 
+		    	Vector<Tuple> tuples = presence.getTuplesList();
+				for(int i=0; i < tuples.size(); i++) {
+					Tuple tuple = (Tuple)tuples.elementAt(i);
+					boolean state = false; 
+					if (tuple.getStatus().getBasic().getValue().equals("open")) {
+						state = true;
+					}
+					String id = tuple.getService().getId();
+					if (id.equalsIgnoreCase(Capabilities.VIDEO_SHARING_CAPABILITY)) {
+						capabilities.setVideoSharingSupport(state);
+					} else
+					if (id.equalsIgnoreCase(Capabilities.IMAGE_SHARING_CAPABILITY)) {
+						capabilities.setImageSharingSupport(state);
+					} else
+					if (id.equalsIgnoreCase(Capabilities.FILE_SHARING_CAPABILITY)) {
+						capabilities.setFileTransferSupport(state);
+					} else
+					if (id.equalsIgnoreCase(Capabilities.CS_VIDEO_CAPABILITY)) {
+						capabilities.setCsVideoSupport(state);
+					} else
+					if (id.equalsIgnoreCase(Capabilities.IM_SESSION_CAPABILITY)) {
+						capabilities.setImSessionSupport(state);
+					}
+
+					// Update intent parameter
+			    	intent.putExtra(id, state);
+				}
+				presenceInfo.setCapabilities(capabilities);
+			} else {
+		    	if (logger.isActivated()) {
+					logger.debug("No presence document received in the anonymous fetch notification for contact " + contact);
+				}
+			}
+			
+	    	// Update EAB provider
+			RichAddressBook.getInstance().setContactPresenceInfo(contact, presenceInfo);
+
+			// Broadcast intent
+	    	getApplicationContext().sendBroadcast(intent);
+    	} catch(Exception e) {
+    		if (logger.isActivated()) {
+    			logger.error("Internal exception", e);
+    		}
+		}
+    }
+    
+    /**
+     * Download photo for me
+     * 
+     * @param url Photo URL
+     * @param etag New Etag associated to the photo
+     */
+    private void downloadPhotoForMe(final String url, final String etag) {
+		Thread t = new Thread() {
+			public void run() {
+		    	try {
+		    		// Download from XDMS
+		    		byte[] data = Core.getInstance().getPresenceService().getXdmManager().downloadContactPhoto(url);    		
+		    		if (data != null) {
+		    			// Update the presence info
+		    			// TODO: remove -1 values
+		    			PhotoIcon photoIcon = new PhotoIcon(data, -1, -1, etag);
+		    			Core.getInstance().getPresenceService().getPresenceInfo().setPhotoIcon(photoIcon);
+		    			
+						// Update EAB provider
+		    			RichAddressBook.getInstance().setMyPhotoIcon(photoIcon);
+						
+			    		// Broadcast intent
+		    			// TODO : use a specific intent for the end user photo
+				    	Intent intent = new Intent(PresenceApiIntents.MY_PRESENCE_INFO_CHANGED);
+				    	getApplicationContext().sendBroadcast(intent);
+			    	}
+		    	} catch(Exception e) {
+		    		if (logger.isActivated()) {
+		    			logger.error("Internal exception", e);
+		    		}
+	    		}
+			}
+		};
+		t.start();
+    }
+    
+    /**
+     * Download photo for a given contact
      * 
      * @param contact Contact
      * @param url Photo URL 
      * @param etag New Etag associated to the photo
      */
-    private void downloadPhotoUrl(final String contact, final String url, final String etag) {
+    private void downloadPhotoForContact(final String contact, final String url, final String etag) {
 		Thread t = new Thread() {
 			public void run() {
 		    	try {
+		    		// Download from XDMS
 		    		byte[] data = Core.getInstance().getPresenceService().getXdmManager().downloadContactPhoto(url);    		
 		    		if (data != null) {
 						// Update EAB provider
-						RichAddressBook.getInstance().setContactPhotoIcon(contact, data, etag);
+		    			RichAddressBook.getInstance().setContactPhotoIcon(contact, data, etag);
 						
 			    		// Broadcast intent
 				    	Intent intent = new Intent(PresenceApiIntents.CONTACT_PHOTO_CHANGED);
@@ -751,7 +938,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		};
 		t.start();
     }
-    
+
     /**
      * Poke period is started
      * 
@@ -821,7 +1008,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			others.toArray(othersSupportedCapabilities);
 		}
 		
-        // Notify event listeners
+		// Notify event listeners
     	Intent intent = new Intent(RichCallApiIntents.SHARING_CAPABILITIES);
     	intent.putExtra("contact", contact);
     	intent.putExtra("image", image);
@@ -900,8 +1087,23 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Extract number from contact 
 		String contact = SipUtils.extractUsernameFromAddress(session.getRemoteContact());
 
+		// Load FT session Id and IM session Id if exists
+		String ftSessionId = session.getSessionID();
+		String imSessionId = null;
+		
+		try {
+			// Check if there is a chat session in progress
+			IChatSession chatSession = messagingApi.getChatSessionWithContact(contact);
+			imSessionId = (chatSession!=null)?chatSession.getSessionID():ftSessionId;
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("GetChatSession",e);
+			}
+			imSessionId = ftSessionId;
+		}
+		
 		// Update the messaging content provider
-    	RichMessaging.getInstance().addFileTransfer(session.getSessionID(), contact, null, RichMessagingData.INCOMING, session.getContent().getEncoding(), session.getContent().getName(), session.getContent().getSize());
+    	RichMessaging.getInstance().addMessage(RichMessagingData.FILETRANSFER, imSessionId, ftSessionId, contact, null, RichMessagingData.INCOMING, session.getContent().getEncoding(), session.getContent().getName(), session.getContent().getSize(), null, RichMessagingData.INVITED);
     	
         // Notify event listeners
     	Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
@@ -944,6 +1146,9 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		// Extract number from contact 
 		String contact = SipUtils.extractUsernameFromAddress(session.getRemoteContact());
+		
+		// Update the messaging content provider
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, contact, session.getSubject(), RichMessagingData.INCOMING, "text/plain", null, session.getSubject().length(), null, RichMessagingData.INVITED);
 
     	// Notify event listeners
     	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
@@ -965,6 +1170,9 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		// Extract number from contact 
 		String contact = SipUtils.extractUsernameFromAddress(session.getRemoteContact());
+		
+		// Update the messaging content provider
+		RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, session.getSessionID(), null, contact, session.getSubject(), RichMessagingData.INCOMING, "text/plain", null, session.getSubject().length(), null, RichMessagingData.INVITED);
 
     	// Notify event listeners
     	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);

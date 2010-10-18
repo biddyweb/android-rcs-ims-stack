@@ -136,6 +136,7 @@ public class CapabilityService extends ImsService {
     	// Get the image config
     	imageConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
     		"a=accept-types:" + supportedMimeTypes + SipUtils.CRLF +
+    		"a=file-selector" + SipUtils.CRLF +
     		"a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;    	
 	}
 
@@ -190,7 +191,7 @@ public class CapabilityService extends ImsService {
         	
 	        // Create the SIP request
         	if (logger.isActivated()) {
-        		logger.info("Send first OPTIONS");
+        		logger.debug("Send first OPTIONS");
         	}
 	        SipRequest options = SipMessageFactory.createOptions(dialog);
 	        
@@ -199,7 +200,7 @@ public class CapabilityService extends ImsService {
 	
 	        // Wait response
         	if (logger.isActivated()) {
-        		logger.info("Wait response");
+        		logger.debug("Wait response");
         	}
 	        ctx.waitResponse(SipManager.TIMEOUT);
 	
@@ -207,7 +208,7 @@ public class CapabilityService extends ImsService {
             if (ctx.getStatusCode() == 407) {
                 // 407 response received
             	if (logger.isActivated()) {
-            		logger.info("407 response received");
+            		logger.debug("407 response received");
             	}
 
     	        // Set the Proxy-Authorization header
@@ -230,7 +231,7 @@ public class CapabilityService extends ImsService {
 
                 // Wait response
                 if (logger.isActivated()) {
-                	logger.info("Wait response");
+                	logger.debug("Wait response");
                 }
                 ctx.waitResponse(SipManager.TIMEOUT);
 
@@ -238,7 +239,7 @@ public class CapabilityService extends ImsService {
                 if (ctx.getStatusCode() == 200) {
                     // 200 OK response
                 	if (logger.isActivated()) {
-                		logger.info("200 OK response received");
+                		logger.debug("200 OK response received");
                 	}
 
                 	// Analyze response
@@ -246,13 +247,13 @@ public class CapabilityService extends ImsService {
                 } else {
                     // Error
                     if (logger.isActivated()) {
-                    	logger.info("OPTIONS has failed");
+                    	logger.debug("OPTIONS has failed");
                     }
                 }
             } else if (ctx.getStatusCode() == 200) {
 	            // 200 OK received
             	if (logger.isActivated()) {
-            		logger.info("200 OK response received");
+            		logger.debug("200 OK response received");
             	}
             	
             	// Analyse response
@@ -260,7 +261,7 @@ public class CapabilityService extends ImsService {
 	        } else {
 	            // Error responses
             	if (logger.isActivated()) {
-            		logger.info("No response received");
+            		logger.debug("No response received");
             	}
 	        }
         } catch(Exception e) {
@@ -331,7 +332,10 @@ public class CapabilityService extends ImsService {
 	        resp.getStackMessage().addHeader(contact);
 	        
 	    	// Send 200 OK
-	        getImsModule().getSipManager().sendSipMessage(resp);
+	    	if (logger.isActivated()) {
+	    		logger.debug("Send a 200 OK response");
+	    	}
+	    	getImsModule().getSipManager().sendSipMessage(resp);
 	        
 	    } catch(Exception e) {
         	if (logger.isActivated()) {

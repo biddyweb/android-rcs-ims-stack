@@ -78,7 +78,7 @@ public class InstantMessagingService extends ImsService {
 	public InstantMessagingService(ImsModule parent, boolean activated) throws CoreException {
 		super(parent, "im_service.xml", activated);
 		
-		this.conferenceFactoryUri = getConfig().getString("ConferenceFactoryUri");
+		this.conferenceFactoryUri = ImsModule.IMS_USER_PROFILE.getImConferenceUri();
 	}
 
 	/**

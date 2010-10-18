@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -82,7 +83,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		session.acceptSession();
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "accepted");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.ACCEPTED);
 	}
 	
 	/**
@@ -97,7 +98,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		session.rejectSession();
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "rejected");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.REJECTED);
 	}
 
 	/**
@@ -112,7 +113,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		session.abortSession();
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "aborted");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.ABORTED);
 	}
 	
 	/**
@@ -172,7 +173,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update messaging database
- 		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "aborted");
+ 		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.ABORTED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -197,7 +198,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "finished");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.FINISHED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -222,7 +223,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "terminated by remote");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.TERMINATED_BY_REMOTE);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -249,7 +250,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update messaging database
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "failed");
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), RichMessagingData.FAILED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -277,8 +278,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 		
 		// Update messaging database
-		// TODO: merge into one SQL request
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "in_progress");
   		RichMessaging.getInstance().updateFileTransferDownloadedSize(session.getSessionID(), currentSize);
 		
   		// Notify event listeners
@@ -306,9 +305,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update messaging database
-		// TODO: merge into one SQL request
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), "finished");
-  		RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
+		RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
 
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();

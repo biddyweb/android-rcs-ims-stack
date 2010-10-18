@@ -39,8 +39,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */
 public class PublishManager extends PeriodicRefresher {
-
-    /**
+	/**
      * IMS module
      */
     private ImsModule imsModule;
@@ -80,15 +79,14 @@ public class PublishManager extends PeriodicRefresher {
      * 
      * @param parent IMS module
      * @param defaultExpirePeriod Default expiration period in seconds
-     * @param geoloc Geoloc option
      */
-    public PublishManager(ImsModule parent, int defaultExpirePeriod, boolean geoloc) {
-        this.imsModule = parent;
-        this.expirePeriod = defaultExpirePeriod;
+    public PublishManager(ImsModule parent, int defaultExpirePeriod) {
+    	this.imsModule = parent;
+        this.expirePeriod = (int)RegistryFactory.getFactory().readLong("PublishExpirePeriod", defaultExpirePeriod);
 
 		// Restore the last SIP-ETag from the registry
         readEntityTag();
-    	
+        
         if (logger.isActivated()) {
         	logger.info("Publish manager started");
         }
@@ -172,20 +170,6 @@ public class PublishManager extends PeriodicRefresher {
             		imsModule.getCurrentNetworkInterface().getAccessInfo(),
             		info);
 	        sendPublish(publish);
-	
-	    	// If publish is successful
-	    	if (published) {
-	        	if (logger.isActivated()) {
-	        		logger.debug("Publish successful");
-	        	}
-	
-	        	// Restart the periodic refresh
-	            startTimer(expirePeriod, 0.8);
-	    	} else {
-	        	if (logger.isActivated()) {
-	        		logger.debug("Publish has failed");
-	        	}	    		
-	    	}
         } catch (Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Publish has failed", e);
@@ -232,7 +216,7 @@ public class PublishManager extends PeriodicRefresher {
         }
     }
     
-	/**
+    /**
 	 * Send PUBLISH message
 	 * 
 	 * @param publish SIP PUBLISH
@@ -317,8 +301,11 @@ public class PublishManager extends PeriodicRefresher {
     	// Retrieve the entity tag in the response
     	saveEntityTag(resp.getHeader("SIP-ETag"));
     	
-    	// Notify listener				
-        imsModule.getCore().getListener().handlePublishPresenceSuccessful();                
+    	// Start the periodic publish
+        startTimer(expirePeriod, 0.8);
+
+        // Notify listener				
+        imsModule.getCore().getListener().handlePublishPresenceSuccessful();
 	}	
 	
 	/**
@@ -432,6 +419,9 @@ public class PublishManager extends PeriodicRefresher {
         	return;
         }
         
+        // Save the min expire value in the terminal registry
+        RegistryFactory.getFactory().writeLong("PublishExpirePeriod", minExpire);
+
         // Set the default expire value
     	expirePeriod = minExpire;
     	

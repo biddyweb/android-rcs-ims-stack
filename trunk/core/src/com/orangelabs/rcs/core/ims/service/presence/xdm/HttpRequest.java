@@ -136,4 +136,18 @@ public abstract class HttpRequest {
 	public void setCookie(String cookie) {
 		this.cookie = cookie;
 	}
+	
+	/**
+	 * Returns the AUID of the request
+	 * 
+	 * @return AUID
+	 */
+	public String getAUID() {
+		try {
+			String[] parts = url.split("/");
+			return parts[1];
+		} catch(Exception e) {
+			return  null;
+		}
+	}
 }

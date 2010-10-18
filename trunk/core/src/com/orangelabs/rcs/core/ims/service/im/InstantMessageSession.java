@@ -39,6 +39,8 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.utils.MimeManager;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -327,6 +329,14 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
     		logger.info("Data received");
     	}
 	
+    	if ((data == null) || (data.length == 0)) {
+    		// By-pass empty data
+        	if (logger.isActivated()) {
+        		logger.debug("By-pass received empty data");
+        	}
+    		return;
+    	}
+
     	try {
 		    // Notify listener
 	    	// TODO : how to get remote id in case of 1-n session ?
@@ -344,7 +354,10 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 		    	
 	    		// Is composing event is reset
 			    isComposingMgr.receiveIsComposingEvent(getRemoteContact(), false);
-
+			    
+			    // Update messaging provider
+		    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), txtMessage, RichMessagingData.INCOMING, mimeType, "file" + random + "." + ext, txtMessage.length(), date, RichMessagingData.RECEIVED);
+		    	
 			    // Notify listener
 	    		listener.handleReceiveMessage(message);			    
     		} else
@@ -356,7 +369,10 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	    		
 	    		// Save content on phone
 	    		ContentManager.saveContent(content);
-
+	    		
+	    		// Update messaging provider
+		    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), path, RichMessagingData.INCOMING, mimeType, "file" + random + "." + ext, path.length(), date, RichMessagingData.RECEIVED);
+		    	
 		    	// Notify listener
 	    		listener.handleReceivePicture(getRemoteContact(), date, content);	    		
 	    	} else
@@ -369,6 +385,9 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	    		// Save content on phone
 	    		ContentManager.saveContent(content);
 	    		
+	    		// Update messaging provider
+		    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), path, RichMessagingData.INCOMING, mimeType, "file" + random + "." + ext, path.length(), date, RichMessagingData.RECEIVED);
+		    	
 		    	// Notify listener
 	    		listener.handleReceiveVideo(getRemoteContact(), date, content);
 	    	} else {
@@ -380,6 +399,9 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	    		// Save content on phone
 	    		ContentManager.saveContent(content);
 	    		
+	    		// Update messaging provider
+		    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), path, RichMessagingData.INCOMING, mimeType, "file" + random + "." + ext, path.length(), date, RichMessagingData.RECEIVED);
+		    	
 		    	// Notify listener
 	    		listener.handleReceiveFile(getRemoteContact(), date, content);
 	    	}
@@ -425,6 +447,10 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBytes()); 
 			msrpMgr.sendChunks(stream, "text/plain", msg.getBytes().length);
+			
+			// Update messaging provider
+	    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), msg, RichMessagingData.OUTGOING, "text/plain", null, msg.length(), null, RichMessagingData.SENT);
+
 		} catch(Exception e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Problem while sending data", e);
@@ -436,6 +462,19 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	}
 	
 	/**
+	 * Send an empty packet
+	 */
+	public void sendEmptyPacket() {
+		try {
+			msrpMgr.sendEmptyPacket();
+		} catch(Exception e) {
+	   		if (logger.isActivated()) {
+	   			logger.error("Problem while sending empty packet", e);
+	   		}
+		}
+	}
+
+	/**
 	 * Send a message with the specified mime type to the remote contact
 	 * 
 	 * @param msg Message
@@ -445,6 +484,12 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(msg.getBytes()); 
 			msrpMgr.sendChunks(stream, contentType, msg.getBytes().length);
+			
+			if(!contentType.equals(IsComposingInfo.MIME_TYPE))
+				
+			// Update messaging provider
+	    	RichMessaging.getInstance().addMessage(RichMessagingData.CHAT, getSessionID(), null, getRemoteContact(), msg, RichMessagingData.OUTGOING, contentType, null, msg.length(), null, RichMessagingData.SENT);
+	   		
 		} catch(Exception e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Problem while sending data", e);

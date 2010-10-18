@@ -36,7 +36,7 @@ public abstract class UserProfileInterface {
 	 * Read the user profile
 	 * 
 	 * @return User profile
-	 * @exception ImsException
+	 * @exception CoreException
 	 */
 	public abstract UserProfile read() throws CoreException;
 }

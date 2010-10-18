@@ -189,7 +189,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
@@ -428,6 +428,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 	   		if (logger.isActivated()) {
 	   			logger.error("Can't save correctly received data", e);
 	   		}
+	   		handleError(new ContentSharingError(ContentSharingError.MEDIA_SAVING_FAILED));
 	   	}
 	}
     

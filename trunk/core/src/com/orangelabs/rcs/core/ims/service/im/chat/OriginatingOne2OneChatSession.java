@@ -24,6 +24,7 @@ import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -84,7 +85,7 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:active" + SipUtils.CRLF +
 	    		"a=accept-types:text/plain" + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
@@ -231,7 +232,9 @@ public class OriginatingOne2OneChatSession extends InstantMessageSession {
 			}
 	        	        
 	        // Create the MSRP client session
-			getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+			session.setFailureReportOption(false);
+			session.setSuccessReportOption(false);
 
 			// Notify listener
 	        if (getListener() != null) {

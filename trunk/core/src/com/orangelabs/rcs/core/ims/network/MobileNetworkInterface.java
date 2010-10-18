@@ -18,6 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.network;
 
+import android.net.ConnectivityManager;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.access.MobileNetworkAccess;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -35,6 +37,6 @@ public class MobileNetworkInterface extends ImsNetworkInterface {
      * @throws CoreException
      */
     public MobileNetworkInterface(ImsModule imsModule) throws CoreException {
-    	super(imsModule, new MobileNetworkAccess());    	
+    	super(imsModule, ConnectivityManager.TYPE_MOBILE,  new MobileNetworkAccess());    	
     }
 }

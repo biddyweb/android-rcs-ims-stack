@@ -53,4 +53,9 @@ public interface PresenceApiIntents {
      * Intent broadcasted when a presence sharing info has changed
      */
     public final static String PRESENCE_SHARING_CHANGED = "com.orangelabs.rcs.presence.PRESENCE_SHARING_CHANGED";
+    
+    /**
+     * Intent broadcasted when contact capabilities have been received (i.e. anonymous fetch)
+     */
+    public final static String CONTACT_CAPABILITIES = "com.orangelabs.rcs.presence.CONTACT_CAPABILITIES";
 }

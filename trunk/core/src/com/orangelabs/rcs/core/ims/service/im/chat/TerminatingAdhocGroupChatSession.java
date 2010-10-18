@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -107,9 +108,31 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
 		        }
 				return;
 			}
+			
+		    // Extract the SDP part
+			byte[] remoteSdp = null;
+		    String content = getDialogPath().getInvite().getContent();
+    		String boundary = "--" + SipUtils.extractBoundary(getDialogPath().getInvite().getContentType());
+    		int index  = 0;
+    		while(index != -1) {
+    			int begin = content.indexOf(boundary, index);
+    			int end = content.indexOf(boundary, begin+boundary.length());
+    			if ((begin != -1) && (end != -1)) {
+    				String part = content.substring(begin+boundary.length(), end);
+    				if (part.indexOf("application/sdp") != -1) {
+    	    			// SDP
+        				String contentPart = part.substring(part.indexOf("v=")); // TODO : to be changed
+    					remoteSdp = contentPart.getBytes();
+    				} else
+    				if (part.indexOf("application/resource-lists+xml") != -1) {
+    					// Resource list: nothing done here
+    				}
+    			}
+    			index = end; 
+    		}
 
         	// Parse the remote SDP part
-        	SdpParser parser = new SdpParser(getDialogPath().getRemoteSdp().getBytes());
+        	SdpParser parser = new SdpParser(remoteSdp);
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
 			MediaDescription desc = media.elementAt(0);
 			MediaAttribute attr1 = desc.getMediaAttribute("path");
@@ -155,7 +178,7 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
-	            "a=connexion:new" + SipUtils.CRLF +
+	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types:message/cpim" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
@@ -175,7 +198,9 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
     		// Create the MSRP server session
             if (localSetup.equals("passive")) {
             	// Passive mode: client wait a connection
-            	getMsrpMgr().createMsrpServerSession(remotePath, this);
+            	MsrpSession session = getMsrpMgr().createMsrpServerSession(remotePath, this);
+    			session.setFailureReportOption(false);
+    			session.setSuccessReportOption(false);
             }
             
             // Send a 200 OK response
@@ -210,7 +235,9 @@ public class TerminatingAdhocGroupChatSession extends InstantMessageSession impl
         		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
-                	getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+        			session.setFailureReportOption(false);
+        			session.setSuccessReportOption(false);
                 }
 
                 // Notify listener

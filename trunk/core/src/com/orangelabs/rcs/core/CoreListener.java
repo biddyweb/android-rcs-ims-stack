@@ -100,6 +100,14 @@ public interface CoreListener {
     public void handlePresenceInfoNotification(String contact, PidfDocument presence);
 
     /**
+     * A new anonymous-fetch notification has been received
+     * 
+     * @param contact Contact
+     * @param presense Presence info document
+     */
+    public void handleAnonymousFetchNotification(String contact, PidfDocument presence);
+    
+    /**
      * Poke period is started
      * 
      * @param expiration Expiration time

@@ -30,10 +30,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.provider.Contacts;
 import android.provider.ContactsContract;
-import android.provider.Contacts.People;
-import android.provider.Contacts.Phones;
 
 import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
 import com.orangelabs.rcs.core.ims.service.presence.FavoriteLink;
@@ -113,7 +110,7 @@ public class RichAddressBook {
 	private int getMyRowId() {
 		int rowId = -1;
 		try {
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			Cursor c = cr.query(databaseUri, null, where, null, null);
 			if (c.moveToFirst()) {
 				rowId = c.getInt(RichAddressBookData.COLUMN_KEY_ID);
@@ -128,15 +125,15 @@ public class RichAddressBook {
 	}
 
 	/**
-	 * Return the row id of a contact in the EAB
+	 * Return the row id of a profile number in the EAB
 	 * 
-	 * @param contactId Contact id
+	 * @param number Profile number
 	 * @return Row id
 	 */
-	private int getContactRowId(int contactId) {
+	private int getProfileRowId(String number) {
 		int rowId = -1;
 		try {
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  contactId;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + number + "\"";
 			Cursor c = cr.query(databaseUri, null, where, null, null);
 			if (c.moveToFirst()) {
 				rowId = c.getInt(RichAddressBookData.COLUMN_KEY_ID);
@@ -151,44 +148,30 @@ public class RichAddressBook {
 	}
 	
 	/**
-	 * Returns the contact id associated to a contact URI in the EAB
+	 * Returns the contact id associated to a contact number in the EAB
 	 * 
-	 * @param uri Contact URI
+	 * @param number Contact number
 	 * @return Id or -1 if the contact does not exist or in case of error
 	 */
 	public int getContactId(String number) {
 		int id = -1;
 		try {
 			number = PhoneUtils.extractNumberFromUri(number);
-			// Query 1.5 Contacts API
-	    	Cursor c1_5 = cr.query(Contacts.Phones.CONTENT_URI,
-	    			new String[]{Contacts.Phones.PERSON_ID, Contacts.Phones.NUMBER}, 
-	    			null, 
-	    			null, 
-	    			null);
-	    	while(c1_5.moveToNext()) {
-	    		String databaseNumber = PhoneUtils.extractNumberFromUri(c1_5.getString(1));
-	    		if (databaseNumber.equals(number)) {
-	    			id = c1_5.getInt(0);
-	    			break;
-	    		}
-	       	}
-	    	c1_5.close();
-	       	// Id may not have been found if the contact is not of default account type
-	       	// So we also have to query via the 2.0 Phone API
-	        Cursor c2_0 = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+
+			// Query the Phone API
+	        Cursor cursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
 	        		new String[]{ContactsContract.CommonDataKinds.Phone.CONTACT_ID,  ContactsContract.CommonDataKinds.Phone.NUMBER},
 	        		null, 
 	     		    null, 
 	     		    null);
-	        while(c2_0.moveToNext()){
-	    		String databaseNumber = PhoneUtils.extractNumberFromUri(c2_0.getString(1));
+	        while(cursor.moveToNext()){
+	    		String databaseNumber = PhoneUtils.extractNumberFromUri(cursor.getString(1));
 	    		if (databaseNumber.equals(number)) {
-	    			id = c2_0.getInt(0);
+	    			id = cursor.getInt(0);
 	    			break;
 	    		}
 	        }
-	        c2_0.close();
+	        cursor.close();
 	       	
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -199,9 +182,9 @@ public class RichAddressBook {
 	}
 
 	/**
-	 * Returns the photo URI of a contact in the EAB
+	 * Returns the photo URI of a profile in the EAB
 	 * 
-	 * @param id Contact id
+	 * @param id Profile id
 	 * @return URI
 	 */
 	private Uri getContactPhotoUri(int id) {
@@ -233,7 +216,7 @@ public class RichAddressBook {
 			ContentValues values = new ContentValues();
 
 			// Set the contact id 
-			values.put(RichAddressBookData.KEY_CONTACT_ID, RichAddressBookData.END_USER_ROW_CONTACT_ID);
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, RichAddressBookData.END_USER_ROW_CONTACT_NUMBER);
 			
 			// Set the timestamp
 			values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
@@ -310,7 +293,7 @@ public class RichAddressBook {
 			}
 			
 			// Update the database
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\""+ RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			cr.update(databaseUri, values, where, null);
 			if (logger.isActivated()) {
 				logger.debug("My presence info has been updated");
@@ -353,7 +336,7 @@ public class RichAddressBook {
 			}
 			
 			// Update the database
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\""+ RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			cr.update(databaseUri, values, where, null);
 			if (logger.isActivated()) {
 				logger.debug("My poke info has been updated");
@@ -380,9 +363,6 @@ public class RichAddressBook {
 		try {
 			ContentValues values = new ContentValues();
 			
-			// Set the contact id 
-			values.put(RichAddressBookData.KEY_CONTACT_ID, RichAddressBookData.END_USER_ROW_CONTACT_ID);
-
 			// Set the timestamp
 			values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
 			
@@ -393,7 +373,7 @@ public class RichAddressBook {
 			values.put(RichAddressBookData.KEY_PHOTO_ETAG, photo.getEtag());
 
 			// Update the database
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +  "\"" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			cr.update(databaseUri, values, where, null);
 
 			// Save the photo content
@@ -426,9 +406,6 @@ public class RichAddressBook {
 		try {
 			ContentValues values = new ContentValues();
 
-			// Set the contact id 
-			values.put(RichAddressBookData.KEY_CONTACT_ID, RichAddressBookData.END_USER_ROW_CONTACT_ID);
-
 			// Set the timestamp
 			values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
 			
@@ -439,7 +416,7 @@ public class RichAddressBook {
 			values.put(RichAddressBookData.KEY_PHOTO_ETAG, "");
 			
 			// Update the database
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +  "\"" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			cr.update(databaseUri, values, where, null);
 			if (logger.isActivated()) {
 				logger.debug("My photo icon has been removed");
@@ -465,7 +442,7 @@ public class RichAddressBook {
 		PresenceInfo presenceInfo = null;
 		try {
 			// Query the database
-			String where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 			Cursor c = cr.query(databaseUri, null, where, null, null);
 			if (c.moveToFirst()) {
 				presenceInfo = new PresenceInfo();
@@ -552,93 +529,117 @@ public class RichAddressBook {
 			logger.info("Set presence info for contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				ContentValues values = new ContentValues();
-				
-				// Set the contact id 
-				values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
+			ContentValues values = new ContentValues();
 
-				// Set the timestamp 
-				values.put(RichAddressBookData.KEY_TIMESTAMP, info.getTimestamp());
-				
-				// Set the hyper-availability
-				if (info.isHyperavailable()) {
-					values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.TRUE_VALUE);
-				} else {
-					values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.FALSE_VALUE);
-				}
-				
-				// Set the freetext
-				values.put(RichAddressBookData.KEY_FREE_TEXT, info.getFreetext());
-				
-				// Set the favorite link
-				FavoriteLink favoriteLink = info.getFavoriteLink();
-				String linkUrl = null;
-				String linkName = null;
-				if (favoriteLink != null) {
-					linkUrl = favoriteLink.getLink();
-					linkName = favoriteLink.getName();
-				}
-				values.put(RichAddressBookData.KEY_FAVORITE_LINK_URL, linkUrl);
-				values.put(RichAddressBookData.KEY_FAVORITE_LINK_NAME, linkName);
+			// Set the contact number
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
 
-				// Set the geoloc
-				Geoloc geoloc = info.getGeoloc();
-				if (geoloc != null) {
-					values.put(RichAddressBookData.KEY_GEOLOC_EXIST_FLAG, RichAddressBookData.TRUE_VALUE);
-					values.put(RichAddressBookData.KEY_GEOLOC_LATITUDE, geoloc.getLatitude());
-					values.put(RichAddressBookData.KEY_GEOLOC_LONGITUDE, geoloc.getLongitude());
-					values.put(RichAddressBookData.KEY_GEOLOC_ALTITUDE, geoloc.getAltitude());
-				} else {
-					values.put(RichAddressBookData.KEY_GEOLOC_EXIST_FLAG,	RichAddressBookData.FALSE_VALUE);
-					values.put(RichAddressBookData.KEY_GEOLOC_LATITUDE, 0);
-					values.put(RichAddressBookData.KEY_GEOLOC_LONGITUDE, 0);
-					values.put(RichAddressBookData.KEY_GEOLOC_ALTITUDE, 0);
+			// Set the timestamp 
+			values.put(RichAddressBookData.KEY_TIMESTAMP, info.getTimestamp());
+
+			// Set the hyper-availability
+			if (info.isHyperavailable()) {
+				values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.TRUE_VALUE);
+			} else {
+				values.put(RichAddressBookData.KEY_HYPER_AVAILABILITY_FLAG, RichAddressBookData.FALSE_VALUE);
+			}
+
+			// Set the freetext
+			values.put(RichAddressBookData.KEY_FREE_TEXT, info.getFreetext());
+
+			// Set the favorite link
+			FavoriteLink favoriteLink = info.getFavoriteLink();
+			String linkUrl = null;
+			String linkName = null;
+			if (favoriteLink != null) {
+				linkUrl = favoriteLink.getLink();
+				linkName = favoriteLink.getName();
+			}
+			values.put(RichAddressBookData.KEY_FAVORITE_LINK_URL, linkUrl);
+			values.put(RichAddressBookData.KEY_FAVORITE_LINK_NAME, linkName);
+
+			// Set the weblink updated flag if necessary, ie set it to false if new favorite link is different from last one
+			// Read the value in database
+			// Query the database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			Cursor c = cr.query(databaseUri, 
+					new String[]{RichAddressBookData.KEY_FAVORITE_LINK_URL, RichAddressBookData.KEY_FAVORITE_LINK_NAME}, 
+					where, 
+					null, 
+					null);
+			if (c.moveToFirst()) {
+				String lastFavoriteUrl = c.getString(0);
+				String lastFavoriteName = c.getString(1);
+				// Check if weblink has changed
+				boolean urlChanged = ((lastFavoriteUrl!=null) && !(lastFavoriteUrl.equalsIgnoreCase(linkUrl)))
+					|| (lastFavoriteUrl==null && linkUrl!=null);
+				boolean nameChanged = ((lastFavoriteName!=null) && !(lastFavoriteName.equalsIgnoreCase(linkName)))
+					|| (lastFavoriteName==null && linkName!=null);
+					
+				if (urlChanged || nameChanged){
+					values.put(RichAddressBookData.KEY_WEBLINK_UPDATED_FLAG, RichAddressBookData.TRUE_VALUE);
 				}
-				
-				// Set the capabilities
-				Capabilities capabilities = info.getCapabilities();
-				if (capabilities != null) {
-					if (capabilities.isCsVideoSupported()) {
-						values.put(RichAddressBookData.KEY_CS_VIDEO_SUPPORTED, RichAddressBookData.TRUE_VALUE);
-					} else {
-						values.put(RichAddressBookData.KEY_CS_VIDEO_SUPPORTED, RichAddressBookData.FALSE_VALUE);
-					}
-					if (capabilities.isImageSharingSupported()) {
-						values.put(RichAddressBookData.KEY_IMAGE_SHARING_SUPPORTED, RichAddressBookData.TRUE_VALUE);
-					} else {
-						values.put(RichAddressBookData.KEY_IMAGE_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
-					}
-					if (capabilities.isVideoSharingSupported()) {
-						values.put(RichAddressBookData.KEY_VIDEO_SHARING_SUPPORTED, RichAddressBookData.TRUE_VALUE);
-					} else {
-						values.put(RichAddressBookData.KEY_VIDEO_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
-					}
-					if (capabilities.isImSessionSupported()) {
-						values.put(RichAddressBookData.KEY_IM_SESSION_SUPPORTED, RichAddressBookData.TRUE_VALUE);
-					} else {
-						values.put(RichAddressBookData.KEY_IM_SESSION_SUPPORTED, RichAddressBookData.FALSE_VALUE);
-					}
-					if (capabilities.isFileTransferSupported()) {
-						values.put(RichAddressBookData.KEY_FILE_TRANSFER_SUPPORTED, RichAddressBookData.TRUE_VALUE);
-					} else {
-						values.put(RichAddressBookData.KEY_FILE_TRANSFER_SUPPORTED, RichAddressBookData.FALSE_VALUE);
-					}
+			}
+			c.close();
+			
+			// Set the geoloc
+			Geoloc geoloc = info.getGeoloc();
+			if (geoloc != null) {
+				values.put(RichAddressBookData.KEY_GEOLOC_EXIST_FLAG, RichAddressBookData.TRUE_VALUE);
+				values.put(RichAddressBookData.KEY_GEOLOC_LATITUDE, geoloc.getLatitude());
+				values.put(RichAddressBookData.KEY_GEOLOC_LONGITUDE, geoloc.getLongitude());
+				values.put(RichAddressBookData.KEY_GEOLOC_ALTITUDE, geoloc.getAltitude());
+			} else {
+				values.put(RichAddressBookData.KEY_GEOLOC_EXIST_FLAG,	RichAddressBookData.FALSE_VALUE);
+				values.put(RichAddressBookData.KEY_GEOLOC_LATITUDE, 0);
+				values.put(RichAddressBookData.KEY_GEOLOC_LONGITUDE, 0);
+				values.put(RichAddressBookData.KEY_GEOLOC_ALTITUDE, 0);
+			}
+
+			// Set the capabilities
+			Capabilities capabilities = info.getCapabilities();
+			if (capabilities != null) {
+				if (capabilities.isCsVideoSupported()) {
+					values.put(RichAddressBookData.KEY_CS_VIDEO_SUPPORTED, RichAddressBookData.TRUE_VALUE);
 				} else {
 					values.put(RichAddressBookData.KEY_CS_VIDEO_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				}
+				if (capabilities.isImageSharingSupported()) {
+					values.put(RichAddressBookData.KEY_IMAGE_SHARING_SUPPORTED, RichAddressBookData.TRUE_VALUE);
+				} else {
 					values.put(RichAddressBookData.KEY_IMAGE_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				}
+				if (capabilities.isVideoSharingSupported()) {
+					values.put(RichAddressBookData.KEY_VIDEO_SHARING_SUPPORTED, RichAddressBookData.TRUE_VALUE);
+				} else {
 					values.put(RichAddressBookData.KEY_VIDEO_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				}
+				if (capabilities.isImSessionSupported()) {
+					values.put(RichAddressBookData.KEY_IM_SESSION_SUPPORTED, RichAddressBookData.TRUE_VALUE);
+				} else {
 					values.put(RichAddressBookData.KEY_IM_SESSION_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				}
+				if (capabilities.isFileTransferSupported()) {
+					values.put(RichAddressBookData.KEY_FILE_TRANSFER_SUPPORTED, RichAddressBookData.TRUE_VALUE);
+				} else {
 					values.put(RichAddressBookData.KEY_FILE_TRANSFER_SUPPORTED, RichAddressBookData.FALSE_VALUE);
 				}
-				
-				// Update the database
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				cr.update(databaseUri, values, where, null);			
-				
+			} else {
+				values.put(RichAddressBookData.KEY_CS_VIDEO_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				values.put(RichAddressBookData.KEY_IMAGE_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				values.put(RichAddressBookData.KEY_VIDEO_SHARING_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				values.put(RichAddressBookData.KEY_IM_SESSION_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+				values.put(RichAddressBookData.KEY_FILE_TRANSFER_SUPPORTED, RichAddressBookData.FALSE_VALUE);
+			}
+
+			// Update the database
+			int updatedRow = cr.update(databaseUri, values, where, null);			
+
+			if (updatedRow>0){
 				if (logger.isActivated()) {
 					logger.debug("Presence info has been updated for " + contact);
 				}
@@ -646,7 +647,6 @@ public class RichAddressBook {
 				if (logger.isActivated()) {
 					logger.error("Contact " + contact + " not found");
 				}
-				throw new ContactNotFoundException();
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -670,35 +670,36 @@ public class RichAddressBook {
 			logger.info("Set photo-icon for contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				ContentValues values = new ContentValues();
-				
-				// Set the contact id 
-				values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
+			ContentValues values = new ContentValues();
 
-				// Set the timestamp
-				values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
-				
-				// Set the exist flag
-				if (photoData != null) {
-					values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.TRUE_VALUE);
-				} else {
-					values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.FALSE_VALUE);
-				}
-				
-				// Set the etag
-				values.put(RichAddressBookData.KEY_PHOTO_ETAG, etag);
-				
-				// Update the database
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				cr.update(databaseUri, values, where, null);
-				
+			// Set the contact id 
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
+
+			// Set the timestamp
+			values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+
+			// Set the exist flag
+			if (photoData != null) {
+				values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.TRUE_VALUE);
+			} else {
+				values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.FALSE_VALUE);
+			}
+
+			// Set the etag
+			values.put(RichAddressBookData.KEY_PHOTO_ETAG, etag);
+
+			// Update the database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" +  contact + "\"";
+			int updatedRow = cr.update(databaseUri, values, where, null);
+
+			if (updatedRow>0){
 				// Save the photo content
 				if (photoData != null) {
-					int rowId = getContactRowId(contactId);
+					int rowId = getProfileRowId(contact);
 					Uri photoUri = getContactPhotoUri(rowId);
 					OutputStream outstream = cr.openOutputStream(photoUri);
 					outstream.write(photoData);
@@ -708,11 +709,11 @@ public class RichAddressBook {
 				if (logger.isActivated()) {
 					logger.debug("Photo icon has been updated for " + contact);
 				}
+
 			} else {
 				if (logger.isActivated()) {
 					logger.error("Contact " + contact + " not found");
 				}
-				throw new ContactNotFoundException();
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -733,84 +734,79 @@ public class RichAddressBook {
 			logger.info("Get presence info for contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		PresenceInfo presenceInfo = null;
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Query the database
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				Cursor c = cr.query(databaseUri, null, where, null, null);
-				if (c.moveToFirst()) {
-					presenceInfo = new PresenceInfo();
+			// Query the database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			Cursor c = cr.query(databaseUri, null, where, null, null);
+			if (c.moveToFirst()) {
+				presenceInfo = new PresenceInfo();
 
-					// Get the timestamp
-					presenceInfo.setTimestamp(c.getLong(RichAddressBookData.COLUMN_TIMESTAMP));
+				// Get the timestamp
+				presenceInfo.setTimestamp(c.getLong(RichAddressBookData.COLUMN_TIMESTAMP));
 
-					// Get the favorite link 
-					FavoriteLink favoriteLink = null;
-					String url = c.getString(RichAddressBookData.COLUMN_FAVORITE_LINK_URL);
-					String name = c.getString(RichAddressBookData.COLUMN_FAVORITE_LINK_NAME);
-					if ((url != null) && (url.trim().length() > 0)) {
-						favoriteLink = new FavoriteLink(url);
-						if ((name != null) && (name.trim().length() > 0)) {
-							favoriteLink.setName(name);
-						}
-					}
-					presenceInfo.setFavoriteLink(favoriteLink);
-					
-					// Get the freetext
-					presenceInfo.setFreetext(c.getString(RichAddressBookData.COLUMN_FREE_TEXT));
-					
-					// Get the hyper-availability
-					presenceInfo.setHyperavailabilityStatus(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_HYPER_AVAILABILITY_FLAG)));
-					
-					// Get the geoloc
-					Geoloc geoloc = null;
-					boolean isGeolocExist = Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_GEOLOC_EXIST_FLAG));
-					if (isGeolocExist) {
-						double latitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_LATITUDE);
-						double longitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_LONGITUDE);
-						double altitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_ALTITUDE);
-						geoloc = new Geoloc(latitude, longitude, altitude);
-					}
-					presenceInfo.setGeoloc(geoloc);
-
-					// Set the capabilities
-					Capabilities capabilities = new Capabilities(); 
-					capabilities.setCsVideoSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_CS_VIDEO_SUPPORTED)));
-					capabilities.setFileTransferSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_FILE_TRANSFER_SUPPORTED)));
-					capabilities.setImageSharingSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_IMAGE_SHARING_SUPPORTED)));
-					capabilities.setImSessionSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_IM_SESSION_SUPPORTED)));
-					capabilities.setVideoSharingSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_VIDEO_SHARING_SUPPORTED)));
-					presenceInfo.setCapabilities(capabilities);
-					
-					// Get the photo-icon
-					PhotoIcon photoIcon = null;
-					boolean isPhotoExist = Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_PHOTO_EXIST_FLAG));
-					if (isPhotoExist) {
-						int rowId = c.getInt(RichAddressBookData.COLUMN_KEY_ID);
-						Uri photoUri = getContactPhotoUri(rowId);
-						String etag = c.getString(RichAddressBookData.COLUMN_PHOTO_ETAG);
-						InputStream stream = cr.openInputStream(photoUri);
-						byte[] content = new byte[stream.available()];
-						stream.read(content, 0, content.length);
-						Bitmap bmp = BitmapFactory.decodeByteArray(content, 0, content.length);
-						if (bmp != null) {
-							photoIcon = new PhotoIcon(content, bmp.getWidth(), bmp.getHeight(), etag);
-						}
-					}
-					presenceInfo.setPhotoIcon(photoIcon);
-					c.close();
-					if (logger.isActivated()) {
-						logger.debug("Presence info has been read for " + contact);
-					}
-				} else {
-					if (logger.isActivated()) {
-						logger.error("Contact " + contact + " not found");
+				// Get the favorite link 
+				FavoriteLink favoriteLink = null;
+				String url = c.getString(RichAddressBookData.COLUMN_FAVORITE_LINK_URL);
+				String name = c.getString(RichAddressBookData.COLUMN_FAVORITE_LINK_NAME);
+				if ((url != null) && (url.trim().length() > 0)) {
+					favoriteLink = new FavoriteLink(url);
+					if ((name != null) && (name.trim().length() > 0)) {
+						favoriteLink.setName(name);
 					}
 				}
+				presenceInfo.setFavoriteLink(favoriteLink);
+
+				// Get the freetext
+				presenceInfo.setFreetext(c.getString(RichAddressBookData.COLUMN_FREE_TEXT));
+
+				// Get the hyper-availability
+				presenceInfo.setHyperavailabilityStatus(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_HYPER_AVAILABILITY_FLAG)));
+
+				// Get the geoloc
+				Geoloc geoloc = null;
+				boolean isGeolocExist = Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_GEOLOC_EXIST_FLAG));
+				if (isGeolocExist) {
+					double latitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_LATITUDE);
+					double longitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_LONGITUDE);
+					double altitude = c.getDouble(RichAddressBookData.COLUMN_GEOLOC_ALTITUDE);
+					geoloc = new Geoloc(latitude, longitude, altitude);
+				}
+				presenceInfo.setGeoloc(geoloc);
+
+				// Set the capabilities
+				Capabilities capabilities = new Capabilities(); 
+				capabilities.setCsVideoSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_CS_VIDEO_SUPPORTED)));
+				capabilities.setFileTransferSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_FILE_TRANSFER_SUPPORTED)));
+				capabilities.setImageSharingSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_IMAGE_SHARING_SUPPORTED)));
+				capabilities.setImSessionSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_IM_SESSION_SUPPORTED)));
+				capabilities.setVideoSharingSupport(Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_VIDEO_SHARING_SUPPORTED)));
+				presenceInfo.setCapabilities(capabilities);
+
+				// Get the photo-icon
+				PhotoIcon photoIcon = null;
+				boolean isPhotoExist = Boolean.parseBoolean(c.getString(RichAddressBookData.COLUMN_PHOTO_EXIST_FLAG));
+				if (isPhotoExist) {
+					int rowId = c.getInt(RichAddressBookData.COLUMN_KEY_ID);
+					Uri photoUri = getContactPhotoUri(rowId);
+					String etag = c.getString(RichAddressBookData.COLUMN_PHOTO_ETAG);
+					InputStream stream = cr.openInputStream(photoUri);
+					byte[] content = new byte[stream.available()];
+					stream.read(content, 0, content.length);
+					Bitmap bmp = BitmapFactory.decodeByteArray(content, 0, content.length);
+					if (bmp != null) {
+						photoIcon = new PhotoIcon(content, bmp.getWidth(), bmp.getHeight(), etag);
+					}
+				}
+				presenceInfo.setPhotoIcon(photoIcon);
+				if (logger.isActivated()) {
+					logger.debug("Presence info has been read for " + contact);
+				}
 			}
+			c.close();
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -829,101 +825,174 @@ public class RichAddressBook {
 	 */
 	public void setContactSharingStatus(String contact, String status, String reason) throws RichAddressBookException {
 		if (logger.isActivated()) {
-			logger.info("Set sharing status for contact " + contact);
+			logger.info("Set sharing status for contact " + contact + " to "+status+ " with reason "+reason);
 		}
+
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
 		contact= PhoneUtils.extractNumberFromUri(contact);
 
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId == -1) {
-				if (logger.isActivated()){
-					logger.debug("Contact " + contact + " does not exist");
-				}
-				return;
-			}			
-				
-			// Search if the contact has an entry in EAB
-			PresenceInfo info = getContactPresenceInfo(contact);
-			if (info != null) {
-					// Contact exist in EAB, update it
-					if (!status.equalsIgnoreCase("terminated")) {
-						// Event is not "terminated"
-						String currentStatus = getContactSharingStatus(contact);
-						if (status.equalsIgnoreCase("pending") &&
-								(currentStatus != null) &&
-									currentStatus.equalsIgnoreCase("pending_out")) {
-							// Event "pending"
-							if (logger.isActivated()) {
-								logger.debug("Contact " + contact + " is already pending_out");
-							}
-							return;
-						}
-						
-						if ((currentStatus != null) && currentStatus.equalsIgnoreCase("blocked")) {
-							// Event "blocked"
-							if (logger.isActivated()) {
-								logger.debug("Contact " + contact + " is currently blocked");
-							}
-							return;
-						}
-	
-						// Update the database
-						ContentValues values = new ContentValues();
-						values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, status);
-						String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-						cr.update(databaseUri, values, where, null);
-						if (logger.isActivated()) {
-							logger.debug("Update sharing status to " + status + "/" + reason + " for contact " + contact);
-						}
-					} else
-					if (status.equalsIgnoreCase("terminated") &&
-							(reason != null) && reason.equalsIgnoreCase("rejected")) {
-						// Event "terminated/rejected" 
-						String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			ContentValues values = new ContentValues();
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
+			
+			// Get the current contact sharing status EAB database, if there is one
+			String currentStatus = getContactSharingStatus(contact);
+			if (currentStatus!=null){
+				// We already are in a given RCS state
+				/**
+				 * INVITED STATE
+				 */
+				if (currentStatus.equalsIgnoreCase(RichAddressBookData.STATUS_INVITED)){
+					// State: we have invited the remote contact
+					// We leave this state only on a "terminated/rejected" or an "active" status
+					if(status.equalsIgnoreCase("terminated") &&
+							(reason != null) && reason.equalsIgnoreCase("rejected")){
+						// We have ended our profile sharing, destroy entry in EAB
 						cr.delete(databaseUri, where, null);
 						if (logger.isActivated()) {
-							logger.debug("Delete contact " + contact);
+							logger.debug(contact + " has passed from \"pending_out\" to \"terminated/rejected\" state");
+							logger.debug("=> Remove contact entry from EAB");
 						}
+						return;
+					}else if (status.equalsIgnoreCase("active")){
+						// Contact has accepted our invitation, we are now active
+						values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+						values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_ACTIVE);
+						// Update entry in EAB
+						cr.update(databaseUri, values, where, null);
+						if (logger.isActivated()) {
+							logger.debug(contact + " has passed from \"pending_out\" to \"active\" state");
+						}
+						return;
 					}
-			} else {
-				if (!status.equalsIgnoreCase("terminated")) {
-					// Event is not "terminated"
-					ContentValues values = new ContentValues();
-					values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
-					values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, status);
+				}
+					
+				/**
+				 * WILLING STATE
+				 */
+				if (currentStatus.equalsIgnoreCase(RichAddressBookData.STATUS_WILLING)){
+					// State: we have been invited by the remote contact
+					if(status.equalsIgnoreCase("active")){
+						// We have accepted the invitation, we are now active
+						values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+						values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_ACTIVE);
+						// Update entry in EAB
+						cr.update(databaseUri, values, where, null);
+						if (logger.isActivated()) {
+							logger.debug(contact + " has passed from \"pending\" to \"active\" state");
+						}
+						return;
+					}else if (status.equalsIgnoreCase("terminated") &&
+							(reason != null) && reason.equalsIgnoreCase("giveup")){
+						// Contact has cancelled its invitation
+						// Destroy entry in EAB
+						cr.delete(databaseUri, where, null);
+						if (logger.isActivated()) {
+							logger.debug(contact + " has passed from \"pending\" to \"terminated/giveup\" state");
+							logger.debug("=> Remove contact entry from EAB");
+						}
+						return;
+					}else if (status.equalsIgnoreCase(RichAddressBookData.STATUS_BLOCKED)){
+						// We have declined the invitation
+						values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+						values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_BLOCKED);
+						cr.update(databaseUri, values, where, null);
+						if (logger.isActivated()) {
+							logger.debug(contact + " has passed from \"pending\" to \"blocked\" state");
+						}
+						return;
+					}
+				}
+				
+				/**
+				 * ACTIVE STATE
+				 */
+				if (currentStatus.equalsIgnoreCase(RichAddressBookData.STATUS_ACTIVE)){
+					// State: we have shared our profile with contact
+					// We leave this state only on a "terminated/rejected" status
+					if(status.equalsIgnoreCase("terminated") &&
+							(reason != null) && reason.equalsIgnoreCase("rejected")){
+						// We have ended our profile sharing, destroy entry in EAB
+						cr.delete(databaseUri, where, null);
+						if (logger.isActivated()) {
+							logger.debug(contact + " has passed from \"pending_out\" to \"terminated/rejected\" state");
+							logger.debug("=> Remove contact entry from EAB");
+						}
+						return;
+					}
+				}
+				
+				/**
+				 * BLOCKED STATE
+				 */
+				if (currentStatus.equalsIgnoreCase(RichAddressBookData.STATUS_BLOCKED)){
+					// State: we have blocked this contact
+					// We leave this state only when user unblocks, ie destroys the entry
+						return;
+				}
+				
+			}else{
+				// We have no entry for contact in EAB
+				/**
+				 * NO ENTRY IN EAB
+				 */
+				if (status.equalsIgnoreCase(RichAddressBookData.STATUS_INVITED)){
+					// We invite contact to share presence
+					// Contact has accepted our invitation, we are now active
+					values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+					values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_INVITED);
+					// Update entry in EAB
 					cr.insert(databaseUri, values);
 					if (logger.isActivated()) {
-						logger.debug("Insert sharing status to " + status + "/" + reason + " for contact " + contact);
+						logger.debug(contact + " has been added to the EAB with the \"pending_out\" state");
 					}
+					return;
+				}
+				
+				if (status.equalsIgnoreCase(RichAddressBookData.STATUS_ACTIVE)){
+					//TODO there may be some other stuff to do
+					// We received an active state from the contact, but we have no entry for him in EAB yet
+					// It may occur if the number was deleted from native EAB, or if there was an error when we deleted/modified it
+					// or if we logged on this RCS account on a new phone
+
+					// => We create the entry in EAB
+					values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+					values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_ACTIVE);
+					// Update entry in EAB
+					cr.insert(databaseUri, values);
+					if (logger.isActivated()) {
+						logger.debug(contact + " has been added to the EAB with the \"active\" state");
+					}
+					return;
+				}
+
+				if (status.equalsIgnoreCase(RichAddressBookData.STATUS_WILLING)){
+					// We received a "pending" notification => contact has invited us 
+					// => We create the entry in EAB
+					values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+					values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_WILLING);
+					// Update entry in EAB
+					cr.insert(databaseUri, values);
+					if (logger.isActivated()) {
+						logger.debug(contact + " has been added to the EAB with the \"pending\" state");
+					}
+					return;
+				}
+				
+				if (status.equalsIgnoreCase(RichAddressBookData.STATUS_BLOCKED)){
+					// We block the contact to prevent invitations from him
+					values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+					values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_BLOCKED);
+					// Update entry in EAB
+					cr.insert(databaseUri, values);
+					if (logger.isActivated()) {
+						logger.debug(contact + " has been added to the EAB with the \"blocked\" state");
+					}
+					return;
 				}
 			}
-			
-			// Update the rcs numbers table
-			ContentValues values = new ContentValues();
-			values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
-			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
-			if (status.equalsIgnoreCase("active") || status.equalsIgnoreCase("pending_out")){
-				// Put an entry in the table or update the existing one
-				Cursor cursor = cr.query(RichAddressBookData.RCSNUMBERS_CONTENT_URI, 
-						null, 
-						RichAddressBookData.KEY_CONTACT_NUMBER + "=" + "\"" + contact +"\"" , 
-						null, 
-						null);
-				if (cursor.getCount()==0){
-					// No entry for this contact, insert it
-					cr.insert(RichAddressBookData.RCSNUMBERS_CONTENT_URI, values);
-				}else{
-					// Already have an entry, nothing to change
-				}
-				cursor.close();
-			}else if (status.equalsIgnoreCase("terminated") && (reason!=null && reason.equalsIgnoreCase("rejected"))){
-				// We remove the entry
-				cr.delete(RichAddressBookData.RCSNUMBERS_CONTENT_URI,
-						RichAddressBookData.KEY_CONTACT_NUMBER + "=" + "\"" + contact + "\"",
-						null);
-			}
-			
+
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -942,26 +1011,21 @@ public class RichAddressBook {
 		if (logger.isActivated()) {
 			logger.info("Get sharing status for contact " + contact);
 		}
-
+		
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		String result = null;
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Query the database
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				Cursor c = cr.query(databaseUri, new String[] { RichAddressBookData.KEY_PRESENCE_SHARING_STATUS }, where, null, null);
-				if (c.moveToFirst()) {
-					result = c.getString(0);
-				}
-				c.close();
-				if (logger.isActivated()) {
-					logger.debug("Sharing status is " + result);
-				}
-			} else {
-				if (logger.isActivated()) {
-					logger.error("Contact " + contact + " not found");
-				}
+			// Query the database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			Cursor c = cr.query(databaseUri, new String[] { RichAddressBookData.KEY_PRESENCE_SHARING_STATUS }, where, null, null);
+			if (c.moveToFirst()) {
+				result = c.getString(0);
+			}
+			c.close();
+			if (logger.isActivated()) {
+				logger.debug("Sharing status is " + result);
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -971,6 +1035,60 @@ public class RichAddressBook {
 		return result;
 	}
 
+	/**
+	 * Set the weblink visited status for the given contact
+	 * 
+	 * @param contact Contact
+	 * @param updated Updated flag
+	 */
+	public void setWeblinkUpdatedFlag(String contact, boolean updated){
+		if (logger.isActivated()) {
+			logger.info("Set weblink updated flag for contact " + contact + " to "+updated);
+		}
+		
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
+		// Update the database
+		ContentValues values = new ContentValues();
+		// Set the exist flag
+		if (updated) {
+			values.put(RichAddressBookData.KEY_WEBLINK_UPDATED_FLAG, RichAddressBookData.TRUE_VALUE);
+		} else {
+			values.put(RichAddressBookData.KEY_WEBLINK_UPDATED_FLAG, RichAddressBookData.FALSE_VALUE);
+		}
+		// Set the timestamp
+		values.put(RichAddressBookData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+
+		String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+		cr.update(databaseUri, values, where, null);
+	}
+	
+	/**
+	 * Get the weblink updated status for the given contact
+	 * 
+	 * @param contact Contact
+	 * @return updated Updated flag
+	 */
+	public boolean getWeblinkUpdatedFlag(String contact){
+		if (logger.isActivated()) {
+			logger.info("Get updated flag for contact " + contact);
+		}
+		
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
+		// Query the database
+		boolean result = false;
+		String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+		Cursor c = cr.query(databaseUri, new String[]{RichAddressBookData.KEY_WEBLINK_UPDATED_FLAG}, where, null, null);
+		if (c.moveToFirst()) {
+			result = Boolean.parseBoolean(c.getString(0));
+		}
+		c.close();
+		return result;
+	}
+	
 	/**
 	 * Revoke a contact
 	 * 
@@ -983,35 +1101,21 @@ public class RichAddressBook {
 			logger.info("Revoke contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
 
-				// Update the blacklist
-				ContentValues values = new ContentValues();
-				values.put(RichAddressBookData.KEY_BLACKLIST_STATUS, RichAddressBookData.REVOKED_VALUE);
-				values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
-				Cursor cursor = cr.query(RichAddressBookData.BLACKLIST_CONTENT_URI,	new String[] { RichAddressBookData.KEY_CONTACT_ID }, where, null, null);
-				if (cursor.getCount() > 0) {
-					// Update existing entry
-					cr.update(RichAddressBookData.BLACKLIST_CONTENT_URI, values, where, null);
-				} else {
-					// Add a new entry
-					cr.insert(RichAddressBookData.BLACKLIST_CONTENT_URI, values);
-				}
-				cursor.close();
+			// Update the status
+			ContentValues values = new ContentValues();
+			values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_REVOKED);
+			int updatedRow = cr.update(RichAddressBookData.CONTENT_URI, values, where, null);
+			if (updatedRow>0){
 				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been added to blacklist");
+					logger.debug("Contact " + contact + " is now revoked");
 				}
-
-				// Delete the contact in EAB
-				cr.delete(databaseUri, where, null);
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been deleted from EAB");
-				}
-			} else {
+			}else{
 				if (logger.isActivated()) {
 					logger.error("Contact " + contact + " not found");
 				}
@@ -1037,22 +1141,21 @@ public class RichAddressBook {
 			logger.info("Unrevoke contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Update the blacklist
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId + " AND " +
-					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + RichAddressBookData.REVOKED_VALUE;
-				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
+			// Delete from the EAB database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			int deletedRow = cr.delete(RichAddressBookData.CONTENT_URI, where,	null);
+			if (deletedRow>0){
 				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been removed from blacklist");
+					logger.debug("Contact " + contact + " has been removed from rich address book database");
 				}
-			} else {
+			}else {
 				if (logger.isActivated()) {
 					logger.error("Contact " + contact + " not found");
 				}
-				throw new ContactNotFoundException();
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -1073,60 +1176,27 @@ public class RichAddressBook {
 			logger.info("Block contact " + contact);
 		}
 
-		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Contact exist in EAB
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				
-				// Update the blacklist
-				ContentValues values = new ContentValues();
-				values.put(RichAddressBookData.KEY_CONTACT_ID, contactId);
-				values.put(RichAddressBookData.KEY_BLACKLIST_STATUS, RichAddressBookData.BLOCKED_VALUE);
-				Cursor cursor = cr.query(RichAddressBookData.BLACKLIST_CONTENT_URI,	new String[] { RichAddressBookData.KEY_CONTACT_ID }, where, null, null);
-				if (cursor.getCount() > 0) {
-					// Update existing entry
-					cr.update(RichAddressBookData.BLACKLIST_CONTENT_URI, values, where, null);
-				} else {
-					// Add a new entry
-					cr.insert(RichAddressBookData.BLACKLIST_CONTENT_URI, values);
-				}
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been added to blacklist");
-				}
-				cursor.close();
-				
-				// Update EAB
-				values = new ContentValues();
-				values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, "blocked");
-				cr.update(databaseUri, values, where, null);
-				if (logger.isActivated()) {
-					logger.debug("Update sharing status to blocked for contact " + contact);
-				}
-			} else {
-				// Contact does not exist in EAB
-				String number = PhoneUtils.extractNumberFromUri(contact);
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
 
-				// Update the blacklist
-				ContentValues values = new ContentValues();
-				values.put(RichAddressBookData.KEY_CONTACT_ID, -1);
-				values.put(RichAddressBookData.KEY_BLACKLIST_STATUS, RichAddressBookData.BLOCKED_VALUE);
-				values.put(RichAddressBookData.KEY_CONTACT_NUMBER, number);
-				String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + number;
-				Cursor cursor = cr.query(RichAddressBookData.BLACKLIST_CONTENT_URI,	new String[] { RichAddressBookData.KEY_CONTACT_NUMBER }, where, null, null);
-				if (cursor.getCount() > 0) {
-					// Update existing entry
-					cr.update(RichAddressBookData.BLACKLIST_CONTENT_URI, values, where, null);
-				} else {
-					// Add a new entry
-					cr.insert(RichAddressBookData.BLACKLIST_CONTENT_URI, values);
-				}
+		try {
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			
+			// Update the status
+			ContentValues values = new ContentValues();
+			values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
+			values.put(RichAddressBookData.KEY_PRESENCE_SHARING_STATUS, RichAddressBookData.STATUS_BLOCKED);
+			int updatedRow = cr.update(RichAddressBookData.CONTENT_URI, values, where, null);
+			if (updatedRow>0){
 				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been added to blacklist");
+					logger.debug("Contact " + contact + " is now blocked");
 				}
-				cursor.close();
-			}
+			}else{
+				if (logger.isActivated()) {
+					logger.error("Contact " + contact + " not found, create an entry to mark it as blocked");
+				}
+				cr.insert(RichAddressBookData.CONTENT_URI, values);
+			}				
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -1146,37 +1216,23 @@ public class RichAddressBook {
 			logger.info("Unblock contact " + contact);
 		}
 
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Update the blacklist : delete entry
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId + " AND " +
-					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + "\""+ RichAddressBookData.BLOCKED_VALUE + "\"";
-				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
+			// Delete from the EAB database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			int deletedRow = cr.delete(RichAddressBookData.CONTENT_URI, where,	null);
+			if (deletedRow>0){
 				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been deleted from blacklist");
+					logger.debug("Contact " + contact + " has been removed from rich address book database");
 				}
-			} else {
-				// Update the blacklist : delete entry
-				String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +
-					"\"" +PhoneUtils.extractNumberFromUri(contact) + "\"" + " AND " +
-					RichAddressBookData.KEY_BLACKLIST_STATUS + " = " + "\"" + RichAddressBookData.BLOCKED_VALUE + "\"";
-				cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, where,	null);
+			}else {
 				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " has been deleted from blacklist");
+					logger.error("Contact " + contact + " not found");
 				}
-				
-				// Update EAB
-				where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +
-				"\"" +PhoneUtils.extractNumberFromUri(contact) + "\"" + " AND " +
-				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + " = " + "\"" + "pending" + "\"";
-				
-				cr.delete(databaseUri, where, null);
-				if (logger.isActivated()) {
-					logger.debug("Deleted pending contact " + contact);
-				}				
 			}
+
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -1196,25 +1252,15 @@ public class RichAddressBook {
 		try {
 			long contactId = getContactId(contact);
 			
-			Cursor c1_5 = cr.query(People.CONTENT_URI,
-					new String[] { People.DISPLAY_NAME},
-					People.DISPLAY_NAME + "=" + contactId, 
-					null, 
-					null);
-			while(c1_5.moveToNext()) {
-				result = c1_5.getString(0);
-			}
-			c1_5.close();
-
-			Cursor c2_0 = cr.query(ContactsContract.Contacts.CONTENT_URI,
+			Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI,
 					new String[] { ContactsContract.Contacts.DISPLAY_NAME},
 					ContactsContract.Contacts._ID + "=" + contactId, 
 					null, 
 					null);
-			while(c2_0.moveToNext()) {
-				result = c2_0.getString(0);
+			while(cursor.moveToNext()) {
+				result = cursor.getString(0);
 			}
-			c2_0.close();
+			cursor.close();
 			
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -1232,18 +1278,18 @@ public class RichAddressBook {
 	 */
 	public String getContactPhotoEtag(String contact) {
 		String result = null;
+		
+		// May be called from outside the core, so be sure the number format is international before doing the queries 
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		try {
-			// Get the contact id
-			int contactId = getContactId(contact);
-			if (contactId != -1) {
-				// Query the database
-				String where = RichAddressBookData.KEY_CONTACT_ID + " = " + contactId;
-				Cursor c = cr.query(databaseUri, new String[] { RichAddressBookData.KEY_PHOTO_ETAG }, where, null, null);
-				if (c.moveToFirst()) {
-					result = c.getString(0);
-				}
-				c.close();
+			// Query the database
+			String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + contact + "\"";
+			Cursor c = cr.query(databaseUri, new String[] { RichAddressBookData.KEY_PHOTO_ETAG }, where, null, null);
+			if (c.moveToFirst()) {
+				result = c.getString(0);
 			}
+			c.close();
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Internal exception", e);
@@ -1257,20 +1303,83 @@ public class RichAddressBook {
 	 */
 	public void flushAllData(){
 		// Delete all entries except "My Profile"
-		String where = RichAddressBookData.KEY_CONTACT_ID + ">" + 0;
+		String where = RichAddressBookData.KEY_CONTACT_NUMBER + "<>" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER;
 		cr.delete(databaseUri, where, null);
-		cr.delete(RichAddressBookData.BLACKLIST_CONTENT_URI, null, null);
 		
 		// Update the "My Profile" item, with empty values
 		ContentValues values = new ContentValues();
-    	values.put(RichAddressBookData.KEY_CONTACT_ID, RichAddressBookData.END_USER_ROW_CONTACT_ID);
     	values.put(RichAddressBookData.KEY_TIMESTAMP, System.currentTimeMillis());
     	values.put(RichAddressBookData.KEY_PHOTO_EXIST_FLAG, RichAddressBookData.FALSE_VALUE);
     	values.put(RichAddressBookData.KEY_FREE_TEXT, "");
+    	// TODO: geoloc
 
     	// Update the end user row id
-		where = RichAddressBookData.KEY_CONTACT_ID + " = " +  RichAddressBookData.END_USER_ROW_CONTACT_ID;
+		where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " +  "\"" + RichAddressBookData.END_USER_ROW_CONTACT_NUMBER + "\"";
 		cr.update(databaseUri, values, where, null);
+	}
+	
+	/**
+	 * Is the number in the RCS blocked list
+	 * 
+	 * @param number Number to check
+	 * @return boolean
+	 */
+	public boolean isNumberBlocked(String number) {
+		// Get this number status in address book
+		String status = getContactSharingStatus(number);
+		if (status!=null && status.equalsIgnoreCase(RichAddressBookData.STATUS_BLOCKED)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 * Is the number in the RCS buddy list
+	 * 
+	 * @param number Number to check
+	 * @return boolean
+	 */
+	public boolean isNumberShared(String number) {
+		// Get this number status in address book
+		String status = getContactSharingStatus(number);
+		if (status!=null && status.equalsIgnoreCase(RichAddressBookData.STATUS_ACTIVE)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	/**
+	 * Has the number been invited to RCS
+	 * 
+	 * @param number Number to check
+	 * @return boolean
+	 */
+	public boolean isNumberInvited(String number) {
+		// Get this number status in address book
+		String status = getContactSharingStatus(number);
+		if (status!=null && status.equalsIgnoreCase(RichAddressBookData.STATUS_INVITED)){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	/**
+	 * Has the number invited us to RCS
+	 * 
+	 * @param number Number to check
+	 * @return boolean
+	 */
+	public boolean isNumberWilling(String number) {
+		// Get this number status in address book
+		String status = getContactSharingStatus(number);
+		if (status!=null && status.equalsIgnoreCase(RichAddressBookData.STATUS_WILLING)){
+			return true;
+		}else{
+			return false;
+		}
 	}
 	
 }

@@ -230,15 +230,6 @@ public class ImsServiceDispatcher extends Thread {
 	    			imsModule.getInstantMessagingService().receiveLargeInstantMessage(request);
 	    		}
 	    	} else
-    		if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im")) {
-		        // 1-1 chat session
-	    		if (logger.isActivated()) {
-	    			logger.debug("1-1 chat session invitation");
-	    		}
-	    		if (imsModule.isInstantMessagingServiceActivated()) {
-	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
-	    		}
-	    	} else
 	    	if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im") &&
 	    			isTagPresent(sdp, "message/cpim")) {
 		        // Ad-hoc group chat session
@@ -247,6 +238,15 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    		if (imsModule.isInstantMessagingServiceActivated()) {
 	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
+	    		}
+	    	} else
+    		if (isTagPresent(sdp, "msrp") && isFeatureTagPresent(request, "g.oma.sip-im")) {
+		        // 1-1 chat session
+	    		if (logger.isActivated()) {
+	    			logger.debug("1-1 chat session invitation");
+	    		}
+	    		if (imsModule.isInstantMessagingServiceActivated()) {
+	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") && isTagPresent(sdp, "m=audio")) {
@@ -300,28 +300,30 @@ public class ImsServiceDispatcher extends Thread {
     }
     	
     /**
-     * Test a feature tag is present or not in SIP message
+     * Is a given feature tag present or not in SIP message
      * 
      * @param request Request
      * @param tag Tag to be searched
      * @return Boolean
      */
     private boolean isFeatureTagPresent(SipRequest request, String tag) {
-		String featureTag1 = request.getHeader("Contact");
-		String featureTag2 = request.getHeader("Accept-Contact");
-		if (featureTag2 == null) {
-			featureTag2 = request.getHeader("a"); 
+    	// Check Accept-Contact header firstly
+		String featureTag = request.getHeader("Accept-Contact");
+		if (featureTag == null) {
+			featureTag = request.getHeader("a"); 
+
+	    	// Check Contact header secondly		
+			if (featureTag == null) {
+				featureTag = request.getHeader("Contact");
+				if (featureTag == null) {
+					featureTag = request.getHeader("m"); 
+				}
+			}
 		}
-		
-		if ((featureTag1 != null) && (featureTag1.indexOf(tag) != -1)) {
+
+		if ((featureTag != null) && (featureTag.indexOf(tag) != -1)) {
     		if (logger.isActivated()) {
-    			logger.debug("Request " + request.getCallId() + ", feature tag " + featureTag1);
-    		}	    		
-			return true;
-		} else
-		if ((featureTag2 != null) && (featureTag2.indexOf(tag) != -1)) {
-    		if (logger.isActivated()) {
-    			logger.debug("Request " + request.getCallId() + ", feature tag " + featureTag2);
+    			logger.debug("Request " + request.getCallId() + ", feature tag " + featureTag);
     		}	    		
 			return true;
 		} else {

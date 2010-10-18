@@ -118,7 +118,7 @@ public class OriginatingToIpSession extends ToIpSession implements MediaListener
 	            "a=rtpmap:" + payload_red + " " + redFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
 	            "a=rtpmap:" + payload_text + " " + textFormat.getCodec() + "/" + clockRate + SipUtils.CRLF +
 	            "a=fmtp:" + payload_red + " " + textFormat.getPayload()+ "/" + textFormat.getPayload()+ "/" + textFormat.getPayload() + SipUtils.CRLF +
-	            "a=sendrecv";
+	            "a=sendrecv" + SipUtils.CRLF;
 			
 			// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalSdp(sdp);

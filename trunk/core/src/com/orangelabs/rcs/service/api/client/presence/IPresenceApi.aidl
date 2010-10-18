@@ -1,7 +1,6 @@
 package com.orangelabs.rcs.service.api.client.presence;
 
 import android.graphics.Bitmap;
-import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceInfo;
 import com.orangelabs.rcs.core.ims.service.presence.FavoriteLink;
 import com.orangelabs.rcs.core.ims.service.presence.Geoloc;
@@ -49,4 +48,7 @@ interface IPresenceApi {
 
     // Get the list of blocked contacts
 	List<String> getBlockedContacts();
+
+	// Request capabilities for a contact (i.e anonymous fetch)
+	void requestCapabilities(in String contact);
 }
