@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<access>
+		<parameter description="Network access [MOBILE|WIFI|null], null means any access may be used)"
+			 name="NetworkAccess"
+			 value=""/>
+
+		<parameter description="Mobile operator (null means any operator may be used)"
+			 name="Operator"
+			 value=""/>
+
+		<parameter description="Mobile APN (null means any APN may be used)"
+			 name="APN"
+			 value=""/>
+	</access>
+
+</configuration>
