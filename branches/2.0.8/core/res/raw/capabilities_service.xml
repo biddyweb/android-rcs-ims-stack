@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	
+	<capabilities>
+		<parameter description="CS video call support"
+			 name="CsVideoCall"
+			 value="false"/>
+			 
+		<parameter description="File transfer support"
+			 name="FileTransfer"
+			 value="true"/>
+
+		<parameter description="Image sharing support"
+			 name="ImageSharing"
+			 value="true"/>
+			 			 
+		<parameter description="Video sharing support"
+			 name="VideoSharing"
+			 value="true"/>
+
+		<parameter description="IM session support"
+			 name="ImSession"
+			 value="true"/>
+
+		<parameter description="Other supported capabilities (names are separated by a space)"
+			 name="OtherCapabilities"
+			 value=""/>
+	</capabilities>
+
+</configuration>

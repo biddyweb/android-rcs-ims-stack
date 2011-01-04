@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<terminal>
+		<parameter description="Is Tel-URI format supported"
+			 name="TelUriFormatSupported"
+			 value="true"/>
+
+		<parameter description="Expire period for registration (in seconds)"
+			 name="RegisterExpirePeriod"
+			 value="3600"/>
+			 
+		<parameter description="IMS connection polling period (in seconds)"
+			 name="ImsConnectionPollingPeriod"
+			 value="30"/>
+			 
+		<parameter description="IMS service polling period (in seconds)"
+			 name="ImsServicePollingPeriod"
+			 value="300"/>
+
+		<parameter description="Ringing period (in seconds)"
+			 name="RingingPeriod"
+			 value="60"/>
+	</terminal>
+
+	<access>
+		<parameter description="Network access [MOBILE|WIFI|null], null means any access may be used)"
+			 name="NetworkAccess"
+			 value=""/>
+
+		<parameter description="Mobile operator (null means any operator may be used)"
+			 name="Operator"
+			 value=""/>
+
+		<parameter description="Mobile APN (null means any APN may be used)"
+			 name="APN"
+			 value=""/>
+	</access>
+
+	<sipstack>
+		<parameter description="Listen port number"
+			 name="SipListeningPort"
+			 value="5060"/>
+
+		<parameter description="SIP transaction timeout (in seconds)"
+			 name="SipTransactionTimeout"
+			 value="30"/>
+	</sipstack>
+	
+	<media>
+		<parameter description="MRSP response timeout (in seconds)"
+			 name="MsrpTimeout"
+			 value="5"/>
+	</media>	
+
+</configuration>

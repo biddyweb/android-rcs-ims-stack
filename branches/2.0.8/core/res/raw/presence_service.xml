@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	
+	<presence>
+		<parameter description="Activate permanent presence state"
+			 name="PermanentState"
+			 value="true"/>
+
+		<parameter description="Expire period for presence publish (in seconds)"
+			 name="PublishExpirePeriod"
+			 value="172800"/>
+			 
+		<parameter description="Expire period for presence subscribe (in seconds)"
+			 name="SubscribeExpirePeriod"
+			 value="172800"/>
+
+		<parameter description="Expire period for hyper-availability (in seconds)"
+			 name="HyperAvailabilityPeriod"
+			 value="300"/>
+	</presence>
+
+</configuration>

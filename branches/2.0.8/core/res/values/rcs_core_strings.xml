@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rcs_core_application_title">RCS service</string>	
+	<string name="rcs_core_rcs_notification_title">Rich Communication Suite</string>	
+
+    <string name="rcs_images_directory">/My RCS pictures/</string>	
+    <string name="rcs_videos_directory">/My RCS videos/</string>	
+    <string name="rcs_files_directory">/My RCS files/</string>	
+
+	<string name="rcs_core_label_rcs_loaded">RCS service is loaded</string>
+	<string name="rcs_core_label_rcs_failed">RCS service has failed</string>
+	<string name="rcs_core_label_rcs_started">RCS service is started</string>
+	<string name="rcs_core_label_rcs_stopped">RCS service is stopped</string>
+	<string name="rcs_core_label_connected_to_rcs">Connected to RCS platform</string>
+	<string name="rcs_core_label_rcs_connection_failed">Can\'t connect to RCS platform</string>
+	<string name="rcs_core_label_disconnected_from_rcs">Disconnected from RCS platform</string>
+	<string name="rcs_core_label_contact_hyperavailable">is now hyper-available</string>
+</resources>

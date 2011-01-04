@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+	<TableLayout android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:stretchColumns="1"
+	    android:paddingTop="10dip">
+	
+	    <TableRow>
+	        <TextView android:text="@string/label_method"
+			 android:layout_marginLeft="5dip"
+	         android:gravity="right"/>
+			<EditText android:id="@+id/method"
+			 android:singleLine="true"
+			 android:layout_marginLeft="5dip"
+			 android:layout_marginRight="5dip"/>
+	    </TableRow>
+	
+	    <TableRow>
+	        <TextView android:text="@string/label_mime"
+			 android:layout_marginLeft="5dip"
+	         android:gravity="right"/>
+			<EditText android:id="@+id/mime"
+			 android:singleLine="true"
+			 android:layout_marginLeft="5dip"
+			 android:layout_marginRight="5dip"/>
+	    </TableRow>
+	
+	    <TableRow android:padding="10dip"></TableRow>
+	
+		<Button android:text="@string/label_query"
+		 android:layout_marginLeft="5dip"
+		 android:layout_marginRight="5dip"
+		 android:id="@+id/query"/>
+		 
+	</TableLayout>
+	
+</ScrollView>

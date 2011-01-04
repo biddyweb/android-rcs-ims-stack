@@ -1,0 +1,38 @@
+<!--**********************-->
+<!-- Android RCS terminal -->
+<!--**********************-->
+<project name="RCS core service" default="debug" basedir=".">
+
+	<property environment="env"/>
+	<property name="android.root" 		value="${env.ANDROID_SDK}"/>
+	<property name="terminal.root" 		value="."/>
+	<property name="terminal.api" 		value="${terminal.root}/lib/rcs_core_api.jar"/>
+	<property name="terminal.build"		value="${terminal.root}/build"/>
+	<property name="src.path" 		value="${terminal.root}/src"/>
+
+	<path id="j2se.lib">
+		<fileset dir="${env.JAVA_HOME}/lib/">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<property name="j2se.classpath" refid="j2se.lib"/>
+
+	<path id="terminal.classpath">
+       	<pathelement path="${j2se.classpath};${android.root}/android.jar;${terminal.build}/classes;${terminal.root}/build/classes"/>
+	</path>
+
+    <!-- Generate core API JAR -->
+    <target name="api">
+        <echo>Generate rcs_core_api.jar file to /lib</echo>
+
+	<delete file="${terminal.api}"/>
+	<jar destfile="${terminal.api}" basedir="${terminal.root}/bin" includes="com/orangelabs/rcs/utils/**,com/orangelabs/rcs/service/api/client/**,com/orangelabs/rcs/provider/eab/**,com/orangelabs/rcs/provider/messaging/**,com/orangelabs/rcs/provider/sharing/**,com/orangelabs/rcs/provider/settings/**,com/orangelabs/rcs/platform/**,com/orangelabs/rcs/R.class">
+	</jar>
+	<jar update="true" destfile="${terminal.api}" basedir="${terminal.root}/bin" includes="com/orangelabs/rcs/core/ims/service/capability/Capabilities*.class,com/orangelabs/rcs/core/ims/service/im/InstantMessage*.class,com/orangelabs/rcs/core/ims/service/presence/Geoloc*.class,com/orangelabs/rcs/core/ims/service/presence/PhotoIcon*.class,com/orangelabs/rcs/core/ims/service/presence/PresenceInfo*.class,com/orangelabs/rcs/core/ims/service/presence/FavoriteLink*.class,com/orangelabs/rcs/core/ims/service/presence/pidf/**">
+	</jar>
+	<jar update="true" destfile="${terminal.api}" basedir="${terminal.root}/bin" includes="com/orangelabs/rcs/core/ims/protocol/rtp/codec/**,com/orangelabs/rcs/core/ims/service/sharing/ContentSharingError.class">
+	</jar>
+    </target>
+
+</project>
+

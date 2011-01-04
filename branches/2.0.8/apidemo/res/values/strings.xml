@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+<string name="app_name">RCS 2.0 API demos</string><string name="not_implemented">Not yet implemented</string>
+<string name="api_failed">API method has failed</string>
+<string name="label_ok">OK</string>
+<string name="title_error">Error</string>
+<string name="title_info">Information</string>
+<string name="autocomplete_contact_hint">Typing * will show all of your contacts.</string>
+
+<!--  Presence API -->
+<string name="menu_presence">Presence API</string>
+<string name="menu_publish_presence_info">Edit my presence info</string>
+<string name="menu_publish_poke">Update my hyper-availability status</string>
+<string name="menu_mgt_contact_list">Manage my contacts list</string>
+<string name="menu_granted_contacts">Show the granted contacts list</string>
+<string name="menu_blocked_contacts">Show the blocked contacts list</string>
+<string name="menu_revoked_contacts">Show the revoked contacts list</string>
+<string name="menu_request_capabilities">Request capabilities</string>
+<string name="menu_show_eab">Show contacts database</string>
+<string name="label_freetext">Freetext:</string>
+<string name="label_favoritelink">Favorite link:</string>
+<string name="label_photo">Photo icon:</string>
+<string name="label_publish">Publish</string>
+<string name="label_select_photo">Select photo</string>
+<string name="label_delete_photo">Delete photo</string>
+<string name="label_expire_at">Expire At:</string>
+<string name="label_contact_me">Contact Me</string>
+<string name="label_invite">Invite</string>
+<string name="label_block">Block</string>
+<string name="label_revoke">Revoke</string>
+<string name="label_unblock">Unblock</string>
+<string name="label_unrevoke">Unrevoke</string>
+<string name="label_publish_ok">Publish with success</string>
+<string name="label_publish_ko">Publish has failed</string>
+<string name="label_invite_contact_ok">Contact has been invited with success</string>
+<string name="label_invite_contact_ko">Contact can\'t be invited</string>
+<string name="label_block_contact_ok">Contact has been blocked with success</string>
+<string name="label_block_contact_ko">Contact can\'t be blocked</string>
+<string name="label_revoke_contact_ok">Contact has been revoked with success</string>
+<string name="label_revoke_contact_ko">Contact can\'t be revoked</string>
+<string name="label_unblock_contact_ok">Contact has been unblocked with success</string>
+<string name="label_unblock_contact_ko">Contact can\'t be unblocked</string>
+<string name="label_unrevoke_contact_ok">Contact has been unrevoked with success</string>
+<string name="label_unrevoke_contact_ko">Contact can\'t be unrevoked</string>
+<string name="label_read_list_ko">Can\'t read XDM server list</string>
+<string name="label_list_empty">No item in the list</string>
+<string name="label_read_eab_ko">Can\'t read the EAB</string>
+<string name="label_request_ok">Request initiated with success</string>
+<string name="label_request_ko">Request has failed</string>
+<string name="label_supported_capabilities">Supported capabilities for</string>
+
+<!--  Messaging API -->
+<string name="menu_messaging">Messaging API</string>
+<string name="menu_short_im">Send IM in short mode</string>
+<string name="menu_large_im">Send IM in large mode</string>
+<string name="menu_transfer_file">Transfer a file</string>
+<string name="menu_one_to_one_chat">One-to-one chat</string>
+<string name="menu_adhoc_group_chat">Ad-hoc group chat</string>
+<string name="label_send">Send</string>
+<string name="label_msg">Message:</string>
+<string name="label_send_msg_ok">Message has been sent with success</string>
+<string name="label_send_msg_ko">Message can\'t be sent</string>
+<string name="title_recv_im">Received IM</string>
+<string name="label_new_msg">New message from</string>
+<string name="title_recv_file_transfer">New file transfer</string>
+<string name="title_recv_chat">New chat</string>
+<string name="label_subject">Subject:</string>
+<string name="title_chat_view">Chat with</string>
+<string name="label_chat_aborted">Chat session aborted</string>
+<string name="label_chat_terminated">Chat session terminated</string>
+<string name="label_chat_failed">Chat session has failed</string>
+
+<!--  Rich call API -->
+<string name="menu_richcall">Rich call API</string>
+<string name="menu_initiate_image_sharing">Initiate image sharing</string>
+<string name="menu_initiate_livevideo_sharing">Initiate livevideo sharing</string>
+<string name="menu_initiate_prerecorded_video_sharing">Initiate prerecorded video sharing</string>
+<string name="menu_anonymous_fetch">Anonymous fetch capabilities</string>
+<string name="label_uri">Uri:</string>
+<string name="label_progress_status">Status:</string>
+<string name="label_progress_bar">Progress:</string>
+<string name="label_invitation_failed">Sharing invitation has failed</string>
+<string name="label_sharing_aborted">Sharing aborted</string>
+<string name="label_invitation_declined">Sharing invitation has been declined</string>
+<string name="label_sharing_terminated_by_remote">Sharing terminated by remote</string>
+<string name="label_dial">Dial</string>
+<string name="label_select_picture">Select picture</string>
+<string name="label_select_video">Select video</string>
+<string name="label_initiate_sharing">Invite</string>
+<string name="label_display">Display:</string>
+<string name="label_selected">File:</string>
+<string name="label_sharing_terminated">Sharing terminated</string>
+<string name="label_select_file">Select file</string>
+<string name="title_recv_image_sharing">Received Image Sharing</string>
+<string name="title_recv_video_sharing">Received Video Sharing</string>
+<string name="label_request">Request</string>
+<string name="label_supported_media">Supported media</string>
+<string name="label_image_name">Name: %s</string>
+<string name="label_image_size">Size: %s%s</string>
+<string name="label_accept">Accept</string>
+<string name="label_decline">Decline</string>
+<string name="label_out_of_memory">No enough memory to display the image</string>
+
+<!--  Intents API -->
+<string name="menu_intents">Intents API</string>
+<string name="menu_match_sip_intent">Who match this SIP intent</string>
+<string name="menu_broadcast_sip_intent">Broadcast a SIP intent</string>
+<string name="title_catch_sip_message">Catch a SIP MESSAGE</string>
+<string name="label_from">From:</string>
+<string name="label_method">SIP method:</string>
+<string name="label_mime">Mime type:</string>
+<string name="label_content">Content:</string>
+<string name="label_query">Query</string>
+<string name="label_intent_not_match">Nothing match this intent !</string>
+<string name="label_intent_failed">Can\'t broadcast the intent to activities or broadcast receivers</string>
+
+</resources>
