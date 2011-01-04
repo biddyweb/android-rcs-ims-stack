@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.orangelabs.rcs.samples"
+      android:versionCode="1"
+      android:versionName="1.0">
+      
+	<uses-sdk android:minSdkVersion="5" />
+
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+	<uses-permission android:name="android.permission.CALL_PHONE"/>
+	<uses-permission android:name="android.permission.CALL_PRIVILEGED"/>
+	<uses-permission android:name="android.permission.CAMERA"/>
+	      
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+
+		<!-- Main --> 
+        <activity android:name=".RcsApiDemos">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+		<!-- Presence API samples --> 
+        <activity android:name=".PresenceApiDemos"/>
+
+        <activity android:name=".presence.PublishPresenceInfo"/>
+
+        <activity android:name=".presence.UpdatePresenceStatus"/>
+
+        <activity android:name=".presence.ManageContactList"/>
+
+        <activity android:name=".presence.GrantedContactList"/>
+        
+        <activity android:name=".presence.BlockedContactList"/>
+        
+        <activity android:name=".presence.RevokedContactList"/>
+
+        <activity android:name=".presence.ShowEab"/>
+
+        <activity android:name=".presence.RequestPresenceCapabilities"/>
+
+		<!-- Messaging API samples --> 
+        <activity android:name=".MessagingApiDemos"/>
+
+        <activity android:name=".im.SendShortIm"/>
+
+        <activity android:name=".im.SendLargeIm"/>
+
+        <activity android:name=".im.ReceiveIm" />
+
+		<receiver android:name=".im.ImReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.messaging.IM" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".im.InitiateFileTransfer"/>
+
+		<receiver android:name=".im.FileTransferInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.messaging.FILE_TRANSFER_INVITATION" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".im.ReceiveFileTransfer" />
+
+        <activity android:name=".im.InitiateChat"/>
+
+        <activity android:name=".im.InitiateChatGroup"/>
+
+		<receiver android:name=".im.ChatInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.messaging.CHAT_INVITATION" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".im.ReceiveChat" />
+
+        <activity android:name=".im.ChatView" />
+
+        <!-- Rich call API samples --> 
+        <activity android:name=".RichCallApiDemos"/>
+
+        <activity android:name=".sharing.InitiateImageSharing"/>
+
+        <activity android:name=".sharing.InitiateVideoSharing"
+        	android:screenOrientation="landscape"
+        	android:configChanges="orientation"/>
+        	
+        <activity android:name=".sharing.InitiatePrerecordedVideoSharing"
+        	android:screenOrientation="landscape"
+        	android:configChanges="orientation"/>
+
+		<receiver android:name=".sharing.ImageSharingInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.richcall.IMAGE_SHARING_INVITATION" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".sharing.ReceiveImageSharing" />
+        
+		<receiver android:name=".sharing.VideoSharingInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.richcall.VIDEO_SHARING_INVITATION" />
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".sharing.ReceiveVideoSharing"/>
+        
+        <activity android:name=".sharing.RequestContentSharingCapabilities"/>
+
+		<!-- Intents API samples --> 
+        <activity android:name=".IntentsApiDemos"/>
+
+		<activity android:name=".intents.BroadcastSipIntent"/>
+
+		<activity android:name=".intents.MatchSipIntent"/>
+
+        <service android:name=".utils.PlayTextToSpeech" />
+
+        <receiver android:name=".intents.SipMessageToTTS">
+	        <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.intent.MESSAGE" />
+                <data android:mimeType="text/plain" />
+        		<category android:name="android.intent.category.LAUNCHER" />
+        		<category android:name="android.intent.category.DEFAULT" />
+	        </intent-filter>
+        </receiver>	
+        
+	</application>
+
+</manifest> 

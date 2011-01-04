@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<file-transfer>
+		<parameter description="Maximum size of a file transfser (in kilobytes)"
+			 name="MaxFileTransferSize"
+			 value="2048"/>
+	</file-transfer>
+</configuration>
