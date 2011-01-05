@@ -75,7 +75,7 @@ public class ReceivePresenceInvitation extends Activity {
 
 		// Display 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.label_presence_invitation);
+		builder.setTitle(R.string.title_presence_invitation);
 		builder.setMessage(getString(R.string.label_from) + " " + contact);
 		builder.setCancelable(false);
 		builder.setIcon(R.drawable.ri_notif_presence_icon);
@@ -201,11 +201,11 @@ public class ReceivePresenceInvitation extends Activity {
 		intent.putExtra("contact", contact);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notif = new Notification(R.drawable.ri_notif_presence_icon,
-        		context.getString(R.string.label_presence_invitation),
+        		context.getString(R.string.title_presence_invitation),
         		System.currentTimeMillis());
         notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
-        		context.getString(R.string.label_presence_invitation),
+        		context.getString(R.string.title_presence_invitation),
         		context.getString(R.string.label_from)+" "+contact,
         		contentIntent);
 

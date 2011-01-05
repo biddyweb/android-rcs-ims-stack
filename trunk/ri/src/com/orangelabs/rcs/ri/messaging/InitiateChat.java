@@ -32,7 +32,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessageError;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
@@ -164,7 +164,7 @@ public class InitiateChat extends Activity {
 		public void handleSessionAborted() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(InitiateChat.this, getString(R.string.label_invitation_declined));
+					Utils.showError(InitiateChat.this, getString(R.string.label_invitation_declined));
 				}
 			});
 		}
@@ -177,7 +177,7 @@ public class InitiateChat extends Activity {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(InitiateChat.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showError(InitiateChat.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -194,8 +194,8 @@ public class InitiateChat extends Activity {
 		public void handleImError(final int error) {
 			handler.post(new Runnable(){
 				public void run(){
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showInfo(InitiateChat.this, getString(R.string.label_invitation_declined));
+					if (error == InstantMessageError.SESSION_INITIATION_DECLINED) {
+						Utils.showError(InitiateChat.this, getString(R.string.label_invitation_declined));
 					} else {
 						Utils.showError(InitiateChat.this, getString(R.string.label_invitation_failed));
 					}
@@ -208,16 +208,25 @@ public class InitiateChat extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-            	// Stop the session
-                if (chatSession != null) {
-                	try {
-                		chatSession.removeSessionListener(chatSessionListener);
-                		chatSession.cancelSession();
-                		chatSession = null;
-                	} catch(Exception e) {
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+	                        if (chatSession != null) {
+	                        	try {
+	                        		chatSession.removeSessionListener(chatSessionListener);
+	                        		chatSession.cancelSession();
+	                        	} catch(Exception e) {
+	                        	}
+	                    		chatSession = null;
+	                        }
+                    	} catch(Exception e) {
+                    	}
                 	}
-                }
-                finish();
+                };
+                thread.start();
+            	
+                // Exit activity
+    			finish();
                 return true;
         }
 

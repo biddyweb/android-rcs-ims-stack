@@ -205,6 +205,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         if ((text == null) || (text.length() == 0)) {
         	return;
         }
+        
         // Warn the composing manager that the message was sent
 		composingManager.messageWasSent();
         try {
@@ -235,7 +236,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showInfo(ChatView.this, getString(R.string.label_api_disabled));
+				Utils.showError(ChatView.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -251,7 +252,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 					chatSession = messagingApi.getChatSession(sessionId);    			
 					chatSession.addSessionListener(chatSessionListener);
 	    		} catch(Exception e) {
-	    			Utils.showInfo(ChatView.this, getString(R.string.label_api_failed));
+	    			Utils.showError(ChatView.this, getString(R.string.label_api_failed));
 	    		}
 			}
 		});
@@ -263,7 +264,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(ChatView.this, getString(R.string.label_api_disconnected));
+				Utils.showError(ChatView.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }  
@@ -280,7 +281,8 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleSessionAborted() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(ChatView.this, getString(R.string.label_chat_aborted));
+					// Session aborted
+					Utils.showError(ChatView.this, getString(R.string.label_chat_aborted));
 				}
 			});
 		}
@@ -289,7 +291,8 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleSessionTerminated() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(ChatView.this, getString(R.string.label_chat_terminated));
+					// Exit activity
+					finish();
 				}
 			});
 		}
@@ -298,7 +301,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(ChatView.this, getString(R.string.label_chat_terminated));
+					Utils.showError(ChatView.this, getString(R.string.label_chat_terminated));
 				}
 			});
 		}
@@ -316,11 +319,11 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleIsComposingEvent(String contact, final boolean isComposing) {
 			handler.post(new Runnable(){
 				public void run(){
-					View isCompTv = (View)findViewById(R.id.isComposingText);
+					View view = (View)findViewById(R.id.isComposingText);
 					if(isComposing){
-						isCompTv.setVisibility(View.VISIBLE);
+						view.setVisibility(View.VISIBLE);
 					} else {
-						isCompTv.setVisibility(View.GONE);
+						view.setVisibility(View.GONE);
 					}
 				}
 			});
@@ -331,41 +334,67 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleImError(int error) {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showInfo(ChatView.this, getString(R.string.label_chat_failed));
+					Utils.showError(ChatView.this, getString(R.string.label_chat_failed));
 				}
 			});
 		}		
     };
     
-    /** Smileys integration
-	 * 
-	 * @param str raw text
-	 * @return formatted message
+    /**
+     * Format text message
+     * 
+	 * @param txt Text
+	 * @return Formatted message
 	 */
-	private CharSequence formatMessage(String str) {
+	private CharSequence formatMessage(String txt) {
 		SpannableStringBuilder buf = new SpannableStringBuilder();
-		
-		if (!TextUtils.isEmpty(str)) {
+		if (!TextUtils.isEmpty(txt)) {
 			Smileys smileyResources = new Smileys(this);
-			SmileyParser smileyParser = new SmileyParser(str, smileyResources);
+			SmileyParser smileyParser = new SmileyParser(txt, smileyResources);
 			smileyParser.parse();
 			buf.append(smileyParser.getSpannableString(this));
 		}
 		return buf;
 	}
     
+	/**
+	 * Close the chat session
+	 */
+	private void closeSession() {
+    	// TODO: add a thread
+        if (chatSession != null) {
+        	try {
+        		chatSession.removeSessionListener(chatSessionListener);
+        		chatSession.cancelSession();
+        	} catch(Exception e) {
+        	}
+        	chatSession = null;
+        }
+	}
+	
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-            	// Stop the session
-                if (chatSession != null) {
-                	try {
-                		chatSession.cancelSession();
-                	} catch(Exception e) {
-                	}
-                }
-                finish();
+    			if (sessionId!=null){
+    				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    				builder.setTitle(getString(R.string.title_chat_exit));
+    				builder.setPositiveButton(getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+    					public void onClick(DialogInterface dialog, int which) {
+    		            	// Close the session
+    		            	closeSession();
+    		            	
+    		            	// Exit activity
+    		                finish();
+    					}
+    				});
+    				builder.setNegativeButton(getString(R.string.label_cancel), null);
+    				builder.setCancelable(true);
+    				builder.show();
+    			} else {
+                	// Exit activity
+    				finish();
+    			}
                 return true;
         }
 
@@ -389,28 +418,29 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 					getResources(), 
 					getString(R.string.menu_insert_smiley));
 			break;
+			
 		case R.id.menu_add_participant:
-			Toast.makeText(this, "not implemented", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, getString(R.string.label_not_implemented), Toast.LENGTH_LONG).show();
 			break;
+			
 		case R.id.menu_close_session:
 			if (sessionId!=null){
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle(getString(R.string.title_chat_exit));
 				builder.setPositiveButton(getString(R.string.label_ok), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						if (chatSession != null) {
-		                	try {
-		                		chatSession.cancelSession();
-		                	} catch(Exception e) {
-		                	}
-		                }
+		            	// Close the session
+		            	closeSession();
+		            	
+		            	// Exit activity
 		                finish();
 					}
 				});
 				builder.setNegativeButton(getString(R.string.label_cancel), null);
 				builder.setCancelable(true);
 				builder.show();
-			}else{
+			} else {
+            	// Exit activity
 				finish();
 			}
 			break;
@@ -474,55 +504,55 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			//TODO handle when several chat sessions are active
 			public void handleMessage(Message msg){
 				switch(msg.what){
-				case IS_STARTING_COMPOSING :{
-					// Send a typing status "active"
-					ChatView.this.setTypingStatus(true);
-
-					// In IDLE_TIME_OUT we will need to send a is-idle status message 
-					handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
-
-					// In ACTIVE_STATE_REFRESH we will need to send an active status message refresh
-					handler.sendEmptyMessageDelayed(ACTIVE_MESSAGE_NEEDS_REFRESH, ACTIVE_STATE_REFRESH);
-					break;
-				}    			
-				case IS_STILL_COMPOSING :{
-					// Cancel the IS_IDLE messages in queue, if there was one
-					handler.removeMessages(IS_IDLE);
-
-					// In IDLE_TIME_OUT we will need to send a is-idle status message
-					handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
-					break;
-				}
-				case MESSAGE_WAS_SENT :{
-					// We are now going to idle state
-					composingManager.hasNoActivity();
-
-					// Cancel the IS_IDLE messages in queue, if there was one
-					handler.removeMessages(IS_IDLE);
-
-					// Cancel the ACTIVE_MESSAGE_NEEDS_REFRESH messages in queue, if there was one
-					handler.removeMessages(ACTIVE_MESSAGE_NEEDS_REFRESH);
-					break;
-				}	    			
-				case ACTIVE_MESSAGE_NEEDS_REFRESH :{
-					// We have to refresh the "active" state
-					ChatView.this.setTypingStatus(true);
-
-					// In ACTIVE_STATE_REFRESH we will need to send an active status message refresh
-					handler.sendEmptyMessageDelayed(ACTIVE_MESSAGE_NEEDS_REFRESH, ACTIVE_STATE_REFRESH);
-					break;
-				}
-				case IS_IDLE :{
-					// End of typing
-					composingManager.hasNoActivity();
-
-					// Send a typing status "idle"
-					ChatView.this.setTypingStatus(false);
-
-					// Cancel the ACTIVE_MESSAGE_NEEDS_REFRESH messages in queue, if there was one
-					handler.removeMessages(ACTIVE_MESSAGE_NEEDS_REFRESH);
-					break;
-				}
+					case IS_STARTING_COMPOSING :{
+						// Send a typing status "active"
+						ChatView.this.setTypingStatus(true);
+	
+						// In IDLE_TIME_OUT we will need to send a is-idle status message 
+						handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
+	
+						// In ACTIVE_STATE_REFRESH we will need to send an active status message refresh
+						handler.sendEmptyMessageDelayed(ACTIVE_MESSAGE_NEEDS_REFRESH, ACTIVE_STATE_REFRESH);
+						break;
+					}    			
+					case IS_STILL_COMPOSING :{
+						// Cancel the IS_IDLE messages in queue, if there was one
+						handler.removeMessages(IS_IDLE);
+	
+						// In IDLE_TIME_OUT we will need to send a is-idle status message
+						handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
+						break;
+					}
+					case MESSAGE_WAS_SENT :{
+						// We are now going to idle state
+						composingManager.hasNoActivity();
+	
+						// Cancel the IS_IDLE messages in queue, if there was one
+						handler.removeMessages(IS_IDLE);
+	
+						// Cancel the ACTIVE_MESSAGE_NEEDS_REFRESH messages in queue, if there was one
+						handler.removeMessages(ACTIVE_MESSAGE_NEEDS_REFRESH);
+						break;
+					}	    			
+					case ACTIVE_MESSAGE_NEEDS_REFRESH :{
+						// We have to refresh the "active" state
+						ChatView.this.setTypingStatus(true);
+	
+						// In ACTIVE_STATE_REFRESH we will need to send an active status message refresh
+						handler.sendEmptyMessageDelayed(ACTIVE_MESSAGE_NEEDS_REFRESH, ACTIVE_STATE_REFRESH);
+						break;
+					}
+					case IS_IDLE :{
+						// End of typing
+						composingManager.hasNoActivity();
+	
+						// Send a typing status "idle"
+						ChatView.this.setTypingStatus(false);
+	
+						// Cancel the ACTIVE_MESSAGE_NEEDS_REFRESH messages in queue, if there was one
+						handler.removeMessages(ACTIVE_MESSAGE_NEEDS_REFRESH);
+						break;
+					}
 				}
 			}
 		}

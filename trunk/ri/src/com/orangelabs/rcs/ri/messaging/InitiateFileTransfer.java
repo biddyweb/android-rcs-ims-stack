@@ -104,6 +104,14 @@ public class InitiateFileTransfer extends Activity {
     public void onDestroy() {
     	super.onDestroy();
 
+        // Remove session listener
+        if (transferSession != null) {
+        	try {
+        		transferSession.removeSessionListener(cshSessionListener);
+        	} catch(Exception e) {
+        	}
+        }
+
         // Disconnect rich call API
         messagingApi.disconnectApi();
     }
@@ -208,9 +216,7 @@ public class InitiateFileTransfer extends Activity {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("aborted");
-					Utils.showInfo(InitiateFileTransfer.this, getString(R.string.label_sharing_aborted));
+					Utils.showError(InitiateFileTransfer.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -229,9 +235,7 @@ public class InitiateFileTransfer extends Activity {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("terminated");
-					Utils.showInfo(InitiateFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showError(InitiateFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -249,11 +253,8 @@ public class InitiateFileTransfer extends Activity {
 		public void handleTransferError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("error");
-					
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showInfo(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
+						Utils.showError(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
 					} else {
 						Utils.showError(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
 					}
@@ -301,15 +302,25 @@ public class InitiateFileTransfer extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-            	// Stop the session
-                if (transferSession != null) {
-                	try {
-                		transferSession.cancelSession();
-                	} catch(Exception e) {
-                		e.printStackTrace();
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+	                        if (transferSession != null) {
+	                        	try {
+	                        		transferSession.removeSessionListener(cshSessionListener);
+	                        		transferSession.cancelSession();
+	                        	} catch(Exception e) {
+	                        	}
+	                        	transferSession = null;
+	                        }
+                    	} catch(Exception e) {
+                    	}
                 	}
-                }
-                finish();
+                };
+                thread.start();
+            	
+                // Exit activity
+    			finish();
                 return true;
         }
 

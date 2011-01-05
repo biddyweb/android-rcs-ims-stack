@@ -140,11 +140,10 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     			builder.setTitle(R.string.title_recv_image_sharing);
     			builder.setMessage(
     					getString(R.string.label_from) + " " + remoteContact +"\n"+
-    					getString(R.string.label_image_name, sharingSession.getFilename())+"\n"+
-    					getString(R.string.label_image_size, " " + (sharingSession.getFilesize()/1024), " Kb")
+    					getString(R.string.label_file_size, " " + (sharingSession.getFilesize()/1024), " Kb")
     			);
     			builder.setCancelable(false);
-    			builder.setIcon(R.drawable.ri_notif_csh);
+    			builder.setIcon(R.drawable.ri_notif_csh_icon);
     			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
     			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
     			builder.show();    			
@@ -184,10 +183,8 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 
         	// Display the filename attributes to be shared
             try {
-				TextView name = (TextView)findViewById(R.id.image_name);
-		    	name.setText(getString(R.string.label_image_name, sharingSession.getFilename()));
 		    	TextView size = (TextView)findViewById(R.id.image_size);
-		    	size.setText(getString(R.string.label_image_size, " " + (sharingSession.getFilesize()/1024), " Kb"));
+		    	size.setText(getString(R.string.label_file_size, " " + (sharingSession.getFilesize()/1024), " Kb"));
             } catch(Exception e){
             	Utils.showError(ReceiveImageSharing.this, getString(R.string.label_api_failed));
             }
@@ -380,7 +377,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 		intent.putExtra("sessionId", sessionId);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_image_sharing);
-        Notification notif = new Notification(R.drawable.ri_notif_csh,
+        Notification notif = new Notification(R.drawable.ri_notif_csh_icon,
         		notifTitle,
         		System.currentTimeMillis());
         notif.flags = Notification.FLAG_NO_CLEAR;
@@ -402,7 +399,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
         
         // Send notification
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(Integer.parseInt(sessionId), notif);
+        notificationManager.notify((int)Long.parseLong(sessionId), notif);
 	}
 	
     /**
@@ -413,6 +410,6 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
      */
 	public static void removeImageSharingNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(Integer.parseInt(sessionId));
+		notificationManager.cancel((int)Long.parseLong(sessionId));
 	}
 }

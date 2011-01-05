@@ -114,7 +114,7 @@
         <activity android:name=".richcall.RequestContentSharingCapabilities"/>
 
 		<!-- EventLog RI -->
-		<activity android:name=".EventLogRI"/>
+		<activity android:name=".eventlog.EventLog"/>
 	</application>
 
 </manifest> 
