@@ -29,21 +29,19 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.content.DialogInterface.OnClickListener;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -72,12 +70,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
      * Remote Contact
      */
     private String remoteContact;
-    
+   
     /**
-     * File properties
+     * File size
      */
-    private String fileTransferName = "";
-    private long fileTransferSize = 0;
+    private long fileSize;
     
     /**
      * File transfer session
@@ -96,18 +93,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		// Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
-		
-		// Load filename properties
-    	Cursor sessionRequest = managedQuery(RichMessagingData.CONTENT_URI, 
-    			new String[]{RichMessagingData.KEY_NAME, RichMessagingData.KEY_SIZE}, 
-    			RichMessagingData.KEY_SESSION_ID + " = " + sessionId, 
-    			null, 
-    			null);
-    	if (sessionRequest.moveToFirst()){
-    		fileTransferName = sessionRequest.getString(0);
-    		fileTransferSize = sessionRequest.getLong(1);
-    	}
-    	sessionRequest.close();
+		fileSize = getIntent().getLongExtra("size", -1);
 		
         // Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
@@ -147,15 +133,18 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 			transferSession.addSessionListener(fileTransferSessionListener);
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.title_recv_chat);
-			builder.setMessage(
-					getString(R.string.label_from) + " " + remoteContact+ "\n"+
-					getString(R.string.label_image_name, fileTransferName)+"\n"+
-					getString(R.string.label_image_size, " " + (fileTransferSize/1024), " Kb")
+			builder.setTitle(R.string.title_recv_file_transfer);
 			
-			);
+			String size;
+	    	if (fileSize != -1) {
+	    		size = getString(R.string.label_file_size, " "+ (fileSize/1024), " Kb");
+	    	} else {
+	    		size = getString(R.string.label_file_size_unknown);
+	    	}
+			
+			builder.setMessage(getString(R.string.label_from) + " " + remoteContact+ "\n"+size);
 			builder.setCancelable(false);
-			builder.setIcon(R.drawable.ri_notif_chat_icon);
+			builder.setIcon(R.drawable.ri_notif_file_transfer_icon);
 			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();			
@@ -171,7 +160,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     	// Service has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
+				Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
 			}
 		});
 	}
@@ -191,11 +180,12 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     		TextView from = (TextView)findViewById(R.id.from);
 	        from.setText(getString(R.string.label_from) + " " + remoteContact);
 	        
-	    	TextView name = (TextView)findViewById(R.id.image_name);
-	    	name.setText(getString(R.string.label_image_name, fileTransferName));
-
 	    	TextView size = (TextView)findViewById(R.id.image_size);
-	    	size.setText(getString(R.string.label_image_size, " "+((fileTransferSize-1)/1024 +1), " KB"));
+	    	if (fileSize != -1) {
+	    		size.setText(getString(R.string.label_file_size, " "+ (fileSize/1024), " Kb"));
+	    	} else {
+	    		size.setText(getString(R.string.label_file_size_unknown));
+	    	}
  
 	    	Thread thread = new Thread() {
             	public void run() {
@@ -220,6 +210,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
             	public void run() {
                 	try {
                 		// Reject the invitation
+                		transferSession.removeSessionListener(fileTransferSessionListener);
             			transferSession.rejectSession();
 	            	} catch(Exception e) {
 	            		Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
@@ -227,6 +218,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
             	}
             };
             thread.start();
+
+            // Exit activity
+			finish();
         }
     };
     
@@ -248,7 +242,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
+					Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -267,9 +261,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("terminated");
-					Utils.showInfo(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -287,11 +279,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleTransferError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("error");
-					
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showInfo(ReceiveFileTransfer.this, getString(R.string.label_invitation_declined));
+						Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_declined));
 					} else {
 						Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 					}
@@ -357,14 +346,16 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
      * @param context Context
      * @param contact Contact
      * @param sessionId Session ID
+     * @param size File size
      */
-    public static void addFileTransferInvitationNotification(Context context, String contact, String sessionId) {
+    public static void addFileTransferInvitationNotification(Context context, String contact, String sessionId, long size) {
 		// Create notification
 		Intent intent = new Intent(context, ReceiveFileTransfer.class);
 		intent.putExtra("contact", contact);
 		intent.putExtra("sessionId", sessionId);
+		intent.putExtra("size", size);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification notif = new Notification(R.drawable.ri_notif_file_transfer,
+        Notification notif = new Notification(R.drawable.ri_notif_file_transfer_icon,
         		context.getString(R.string.title_recv_file_transfer),
         		System.currentTimeMillis());
         notif.flags = Notification.FLAG_NO_CLEAR;
@@ -386,7 +377,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
         
         // Send notification
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(Integer.parseInt(sessionId), notif);
+        notificationManager.notify((int)Long.parseLong(sessionId), notif);
     }
     
 	/**
@@ -397,6 +388,6 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
      */
     public static void removeFileTransferNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(Integer.parseInt(sessionId));
+		notificationManager.cancel((int)Long.parseLong(sessionId));
     }
 }

@@ -142,7 +142,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 			builder.setTitle(R.string.title_recv_video_sharing);
 			builder.setMessage(getString(R.string.label_from) + " " + remoteContact);
 			builder.setCancelable(false);
-			builder.setIcon(R.drawable.ri_notif_csh);
+			builder.setIcon(R.drawable.ri_notif_csh_icon);
 			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();   
@@ -276,7 +276,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 		intent.putExtra("sessionId", sessionId);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_video_sharing);
-        Notification notif = new Notification(R.drawable.ri_notif_csh,
+        Notification notif = new Notification(R.drawable.ri_notif_csh_icon,
         		notifTitle,
         		System.currentTimeMillis());
         notif.flags = Notification.FLAG_NO_CLEAR;
@@ -298,7 +298,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
         
         // Send notification
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(Integer.parseInt(sessionId), notif);
+        notificationManager.notify((int)Long.parseLong(sessionId), notif);
 	}
 	
     /**
@@ -309,6 +309,6 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
      */
     public static void removeVideoSharingNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(Integer.parseInt(sessionId));
+		notificationManager.cancel((int)Long.parseLong(sessionId));
 	}
 }

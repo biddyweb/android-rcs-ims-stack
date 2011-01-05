@@ -10,7 +10,6 @@ import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.provider.eventlogs.EventLogData;
-import com.orangelabs.rcs.ri.EventLogRI;
 import com.orangelabs.rcs.ri.R;
 
 /**
@@ -71,7 +70,7 @@ public class EventLogResourceCursorAdapter extends ResourceCursorAdapter{
 		numberView.setVisibility(View.VISIBLE);
 		
 		/* Set the label of the phone number */
-		labelView.setText(((EventLogRI) context).getCurrentLabel());
+		labelView.setText(((EventLog) context).getCurrentLabel());
 		labelView.setVisibility(View.VISIBLE);
 		
 		/* Set the date/time field by mixing relative and absolute times. */

@@ -23,6 +23,7 @@ import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.widget.Toast;
@@ -102,14 +103,18 @@ public class Utils {
 	 * @param msg Message to be displayed
 	 * @return Dialog
 	 */
-    public static AlertDialog showError(Activity activity, String msg) {
+    public static AlertDialog showError(final Activity activity, String msg) {
     	AlertDialog alert = null;
     	try {
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 	    	builder.setMessage(msg);
 	    	builder.setTitle(R.string.title_error);
 	    	builder.setCancelable(false);
-	    	builder.setPositiveButton(activity.getString(R.string.label_ok), null);
+	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int which) {
+	    			activity.finish();
+	    		}
+	    	});
 	    	alert = builder.create();
 	    	alert.show();
 		} catch(Exception e) {

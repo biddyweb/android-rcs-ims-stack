@@ -92,7 +92,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
 	protected void onDestroy() {
 		super.onDestroy();
 
-		// Remove the listener and disconnect from the API
+        // Remove the listener and disconnect from the API
 		messagingApi.removeApiEventListener(this);
 		messagingApi.disconnectApi();
 	}
@@ -134,7 +134,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(ReceiveChat.this, getString(R.string.label_api_disconnected));
+				Utils.showError(ReceiveChat.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }
@@ -179,11 +179,13 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
                 		// Reject the invitation
             			chatSession.rejectSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveChat.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
             thread.start();
+
+            // Exit activity
+			finish();
         }
     };
     
@@ -223,7 +225,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
         
         // Send notification
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(Integer.parseInt(sessionId), notif);
+        notificationManager.notify((int)Long.parseLong(sessionId), notif);
     }
     
     /**
@@ -234,7 +236,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
      */
     public static void removeChatNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(Integer.parseInt(sessionId));
+		notificationManager.cancel((int)Long.parseLong(sessionId));
     }
 }
 

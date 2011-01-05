@@ -35,11 +35,12 @@ public class FileTransferInvitationReceiver extends BroadcastReceiver {
 		// Get invitation info
 		String contact = intent.getStringExtra("contact");
 		String sessionId = intent.getStringExtra("sessionId");
+		long size = intent.getLongExtra("size", -1);
 
 		// Instanciate settings
         RcsSettings.createInstance(context);
 
         // Display invitation notification
-		ReceiveFileTransfer.addFileTransferInvitationNotification(context, contact, sessionId);
+		ReceiveFileTransfer.addFileTransferInvitationNotification(context, contact, sessionId, size);
     }
 }

@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
+import com.orangelabs.rcs.ri.eventlog.EventLog;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.management.ManagementApiIntents;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -92,7 +93,7 @@ public class RcsRI extends ListActivity {
             	startActivity(new Intent(this, RichCallRI.class));
 	            break;
 	        case 4:
-	        	startActivity(new Intent(this, EventLogRI.class));
+	        	startActivity(new Intent(this, EventLog.class));
 	        	break;
 	        case 5:
 	            startActivity(new Intent(ManagementApiIntents.RCS_SETTINGS));
