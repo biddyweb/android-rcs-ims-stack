@@ -18,9 +18,6 @@
  ******************************************************************************/
 package com.orangelabs.rcs.ri.richcall;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -29,23 +26,19 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.KeyEvent;
-import android.content.DialogInterface.OnClickListener;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
@@ -86,7 +79,10 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-		// Get invitation info
+    	// Set layout
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 
@@ -121,7 +117,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(ReceiveImageSharing.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -148,7 +144,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
     			builder.show();    			
     		} catch(Exception e) {
-    			Utils.showError(ReceiveImageSharing.this, getString(R.string.label_api_failed));
+    			Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
 			}
     	}
     }
@@ -159,7 +155,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(ReceiveImageSharing.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_disconnected));
 			}
 		});
 	}
@@ -171,7 +167,6 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
         public void onClick(DialogInterface dialog, int which) {
         	
         	// Set layout
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             setContentView(R.layout.richcall_receive_image_sharing);
             
             // Set title
@@ -186,7 +181,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 		    	TextView size = (TextView)findViewById(R.id.image_size);
 		    	size.setText(getString(R.string.label_file_size, " " + (sharingSession.getFilesize()/1024), " Kb"));
             } catch(Exception e){
-            	Utils.showError(ReceiveImageSharing.this, getString(R.string.label_api_failed));
+            	Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
             }
             
             Thread thread = new Thread() {
@@ -195,7 +190,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
                 		// Accept the invitation
             			sharingSession.acceptSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -212,14 +207,18 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
             	public void run() {
                 	try {
                 		// Reject the invitation
-            			sharingSession.rejectSession();
+                		sharingSession.removeSessionListener(imageSharingEventListener);
+                		sharingSession.rejectSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
             thread.start();
-        }
+            
+            // Exit activity
+			finish();
+		}
     };
     
     /**
@@ -240,9 +239,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("aborted");
-					Utils.showInfo(ReceiveImageSharing.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -261,9 +258,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("terminated");
-					Utils.showInfo(ReceiveImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -281,14 +276,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 		public void handleSharingError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("error");
-					
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showInfo(ReceiveImageSharing.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showError(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
-					}
+					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_csh_failed, error));
 				}
 			});
 		}
@@ -305,15 +293,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
 			        progressBar.setProgress(progressBar.getMax());
 					
 			        // Show the shared image
-			        try {
-			        	ImageView image = (ImageView)findViewById(R.id.image_view);
-			        	File file = new File(filename);
-			        	FileInputStream stream =  new FileInputStream(file);
-			        	Bitmap bitmap = BitmapFactory.decodeStream(stream);
-			        	image.setImageBitmap(bitmap);
-			        } catch(Exception e) {
-			        	Utils.showError(ReceiveImageSharing.this, getString(R.string.label_out_of_memory));
-			        }
+			        Utils.showPictureAndExit(ReceiveImageSharing.this, filename);			        
 				}
 			});
 		}
@@ -348,15 +328,26 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-            	// Stop the session
-                if (sharingSession != null) {
-                	try {
-                		sharingSession.cancelSession();
-                		sharingSession.removeSessionListener(imageSharingEventListener);
-                	} catch(Exception e) {
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+			            	// Stop the session
+			                if (sharingSession != null) {
+			                	try {
+			                		sharingSession.removeSessionListener(imageSharingEventListener);
+			                		sharingSession.cancelSession();
+			                	} catch(Exception e) {
+			                	}
+			                	sharingSession = null;
+			                }
+                    	} catch(Exception e) {
+                    	}
                 	}
-                }
-                finish();
+                };
+                thread.start();
+
+                // Exit activity
+    			finish();
                 return true;
         }
 

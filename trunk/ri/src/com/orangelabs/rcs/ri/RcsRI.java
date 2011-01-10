@@ -23,6 +23,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -78,9 +79,13 @@ public class RcsRI extends ListActivity {
         switch(position) {
 	        case 0:
 	        	try {
-	        		startActivity(new Intent("com.android.contacts.action.LIST_DEFAULT"));
-	        	} catch(ActivityNotFoundException e) {
-	        		Utils.showInfo(this, getString(R.string.label_ab_not_found));
+	        		startActivity(new Intent(Intent.ACTION_VIEW).setType(ContactsContract.Contacts.CONTENT_TYPE));
+	        	} catch(ActivityNotFoundException e1) {
+	        		try {
+		        		startActivity(new Intent("com.android.contacts.action.LIST_DEFAULT"));
+		        	} catch(ActivityNotFoundException e2) {
+		        		Utils.showMessage(this, getString(R.string.label_ab_not_found));
+		        	}
 	        	}
 	            break;
 	        case 1:

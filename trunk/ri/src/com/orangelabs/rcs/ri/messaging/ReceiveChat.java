@@ -63,7 +63,12 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
 	 */
 	private String remoteContact;
 	
-    /**
+	/**
+	 * Subject
+	 */
+	private String subject;
+	
+	/**
      * Chat session
      */
     private IChatSession chatSession = null;
@@ -78,6 +83,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
 		// Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
+		subject = getIntent().getStringExtra("subject");
         
 		// Remove the notification
 		ReceiveChat.removeChatNotification(this, sessionId);
@@ -103,7 +109,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(ReceiveChat.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -117,14 +123,15 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
 			chatSession = messagingApi.getChatSession(sessionId);
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.title_recv_chat);
-			builder.setMessage(getString(R.string.label_from) + " " + remoteContact);
+			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" +
+					getString(R.string.label_subject) + " " + subject);
 			builder.setCancelable(false);
 			builder.setIcon(R.drawable.ri_notif_chat_icon);
 			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();
 		} catch(Exception e) {
-			Utils.showError(ReceiveChat.this, getString(R.string.label_api_failed));
+			Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_failed));
 		}
     }
 
@@ -134,7 +141,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showError(ReceiveChat.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }
@@ -160,7 +167,7 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
         	        	// Exit activity
         	        	finish();        	        	
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveChat.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -195,12 +202,14 @@ public class ReceiveChat extends Activity implements ClientApiListener  {
      * @param context Context
      * @param contact Contact
      * @param sessionId Session ID
+     * @param subject Subject
      */
-    public static void addChatInvitationNotification(Context context, String contact, String sessionId) {
+    public static void addChatInvitationNotification(Context context, String contact, String sessionId, String subject) {
 		// Create notification
 		Intent intent = new Intent(context, ReceiveChat.class);
 		intent.putExtra("contact", contact);
 		intent.putExtra("sessionId", sessionId);
+		intent.putExtra("subject", subject);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_chat);
         Notification notif = new Notification(R.drawable.ri_notif_chat_icon,

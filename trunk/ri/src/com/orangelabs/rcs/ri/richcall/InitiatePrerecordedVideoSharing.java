@@ -172,7 +172,7 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
                 		cshSession = callApi.initiateVideoSharing(remote, filename, player);
                 		cshSession.addSessionListener(cshSessionListener);
 	            	} catch(Exception e) {
-	    		    	Utils.showError(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_failed));
+	    		    	Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -258,7 +258,7 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -267,7 +267,7 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
 		public void handleSessionTerminated() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_terminated));
+					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_terminated));
 				}
 			});
 		}
@@ -276,7 +276,7 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -286,9 +286,9 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
 			handler.post(new Runnable() { 
 				public void run() {
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-    					Utils.showInfo(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_declined));
+    					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_declined));
 					} else {
-    					Utils.showError(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_failed));
+    					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_csh_failed, error));
 					}
 				}
 			});
@@ -299,17 +299,28 @@ public class InitiatePrerecordedVideoSharing extends Activity implements Prereco
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-            	// Stop the session
-                if (cshSession != null) {
-                	try {
-                		cshSession.cancelSession();
-                		cshSession.removeSessionListener(cshSessionListener);
-                	} catch(Exception e) {}
-                }
-                finish();
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+	                        if (cshSession != null) {
+	                        	try {
+	                        		cshSession.removeSessionListener(cshSessionListener);
+	                        		cshSession.cancelSession();
+	                        	} catch(Exception e) {
+	                        	}
+	                        	cshSession = null;
+	                        }
+                    	} catch(Exception e) {
+                    	}
+                	}
+                };
+                thread.start();
+            	
+                // Exit activity
+    			finish();
                 return true;
         }
 
         return super.onKeyDown(keyCode, event);
-    }
+    }    
 }    

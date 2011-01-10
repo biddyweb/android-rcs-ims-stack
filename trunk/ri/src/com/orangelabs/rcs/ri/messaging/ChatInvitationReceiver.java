@@ -35,11 +35,12 @@ public class ChatInvitationReceiver extends BroadcastReceiver {
 		// Get invitation info
 		String contact = intent.getStringExtra("contact");
 		String sessionId = intent.getStringExtra("sessionId");
+		String subject = intent.getStringExtra("subject");
 		
 		// Instanciate settings
         RcsSettings.createInstance(context);
         
         // Display invitation notification
-		ReceiveChat.addChatInvitationNotification(context, contact, sessionId);
+		ReceiveChat.addChatInvitationNotification(context, contact, sessionId, subject);
     }
 }

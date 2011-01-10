@@ -146,15 +146,11 @@ public class InstantMessagingService extends ImsService {
 	 * @return Session
 	 */
 	public InstantMessageSession getImSession(String contact) {
-		// Format contact number
-		contact = PhoneUtils.formatNumberToInternational(contact);
-		// Search all IM sessions related to a given contact
 		Enumeration<ImsServiceSession> list = getSessions();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
 			if (session instanceof InstantMessageSession) {
-				String contactSession = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-				if (contactSession.equals(contact)){
+				if (PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
 					return (InstantMessageSession)session;
 				}
 			}
@@ -189,16 +185,11 @@ public class InstantMessagingService extends ImsService {
 	 * @return Session
 	 */
 	public ContentSharingTransferSession getFileTransferSession(String contact) {
-		// Format contact number
-		contact = PhoneUtils.formatNumberToInternational(contact);
-		
-		// Search all file transfer sessions related to a given contact
 		Enumeration<ImsServiceSession> list = getSessions();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
 			if (session instanceof ContentSharingTransferSession) {
-				String contactSession = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-				if (contactSession.equals(contact)){
+				if (PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
 					return (ContentSharingTransferSession)session;
 				}
 			}

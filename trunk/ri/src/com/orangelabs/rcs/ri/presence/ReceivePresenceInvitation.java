@@ -109,7 +109,7 @@ public class ReceivePresenceInvitation extends Activity {
 	            	} catch(Exception e) {
 	        			handler.post(new Runnable() { 
 	            			public void run() {
-	            				Utils.showError(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
+	            				Utils.showMessageAndExit(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
 	            			}
 	        			});
 	            	}
@@ -142,7 +142,7 @@ public class ReceivePresenceInvitation extends Activity {
 	            	} catch(Exception e) {
 	        			handler.post(new Runnable() { 
 	            			public void run() {
-	            				Utils.showError(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
+	            				Utils.showMessageAndExit(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
 	            			}
 	        			});
 	            	}
@@ -172,7 +172,7 @@ public class ReceivePresenceInvitation extends Activity {
 	            	} catch(Exception e) {
 	        			handler.post(new Runnable() { 
 	            			public void run() {
-	            				Utils.showError(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
+	            				Utils.showMessageAndExit(ReceivePresenceInvitation.this, getString(R.string.label_invitation_failed));
 	            			}
 	        			});
 	            	}

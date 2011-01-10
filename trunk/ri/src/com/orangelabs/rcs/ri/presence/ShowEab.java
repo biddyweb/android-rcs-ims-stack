@@ -157,7 +157,7 @@ public class ShowEab extends Activity {
 	        }
 		} catch(Exception e) {
 			e.printStackTrace();
-			Utils.showError(ShowEab.this, getString(R.string.label_read_eab_ko));
+			Utils.showMessageAndExit(ShowEab.this, getString(R.string.label_read_eab_ko));
 		}
     }
 

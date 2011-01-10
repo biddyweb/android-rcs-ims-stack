@@ -18,6 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.ri.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.Date;
 
 import android.app.Activity;
@@ -25,7 +27,12 @@ import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.ri.R;
@@ -97,45 +104,42 @@ public class Utils {
     }
     
     /**
-	 * Show an error info
+	 * Show a message and exit activity
 	 * 
 	 * @param activity Activity
 	 * @param msg Message to be displayed
-	 * @return Dialog
 	 */
-    public static AlertDialog showError(final Activity activity, String msg) {
-    	AlertDialog alert = null;
+    public static void showMessageAndExit(final Activity activity, String msg) {
     	try {
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 	    	builder.setMessage(msg);
-	    	builder.setTitle(R.string.title_error);
+	    	builder.setTitle(R.string.title_msg);
 	    	builder.setCancelable(false);
 	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
 	    		public void onClick(DialogInterface dialog, int which) {
 	    			activity.finish();
 	    		}
 	    	});
-	    	alert = builder.create();
+	    	AlertDialog alert = builder.create();
 	    	alert.show();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		return alert;
     }
 
 	/**
-	 * Show an info
+	 * Show an message
 	 * 
 	 * @param activity Activity
 	 * @param msg Message to be displayed
 	 * @return Dialog
 	 */
-    public static AlertDialog showInfo(Activity activity, String msg) {
+    public static AlertDialog showMessage(Activity activity, String msg) {
     	AlertDialog alert = null;
     	try {
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
 	    	builder.setMessage(msg);
-	    	builder.setTitle(R.string.title_info);
+	    	builder.setTitle(R.string.title_msg);
 	    	builder.setCancelable(false);
 	    	builder.setPositiveButton(activity.getString(R.string.label_ok), null);
 	    	alert = builder.create();
@@ -147,14 +151,14 @@ public class Utils {
     }
 
 	/**
-	 * Show an info with a specific title
+	 * Show a message with a specific title
 	 * 
 	 * @param activity Activity
 	 * @param title Title of the dialog
 	 * @param msg Message to be displayed
 	 * @return Dialog
 	 */
-    public static AlertDialog showInfo(Activity activity, String title, String msg) {
+    public static AlertDialog showMessage(Activity activity, String title, String msg) {
     	AlertDialog alert = null;
     	try {
 	    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
@@ -170,7 +174,38 @@ public class Utils {
 		return alert;
     }
 
-	/**
+    /**
+	 * Show a picture and exit activity
+	 * 
+	 * @param activity Activity
+	 * @param url Picture to be displayed
+	 */
+    public static void showPictureAndExit(final Activity activity, String url) {
+    	try {
+            LayoutInflater factory = LayoutInflater.from(activity);
+            final View view = factory.inflate(R.layout.show_picture, null);
+            ImageView imgView = (ImageView)view.findViewById(R.id.picture);
+	        File file = new File(url);
+	        FileInputStream stream =  new FileInputStream(file);
+	        Bitmap bitmap = BitmapFactory.decodeStream(stream);
+	        imgView.setImageBitmap(bitmap);        	
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setTitle(R.string.title_picture);
+            builder.setCancelable(false);
+            builder.setView(view);
+	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+	    		public void onClick(DialogInterface dialog, int which) {
+	    			activity.finish();
+	    		}
+	    	});
+	    	AlertDialog alert = builder.create();
+	    	alert.show();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+    }
+    
+    /**
 	 * Show an info with a specific title
 	 * 
 	 * @param activity Activity

@@ -129,7 +129,7 @@ public class InitiateChat extends Activity {
 	            	} catch(Exception e) {
 	            		handler.post(new Runnable(){
 	            			public void run(){
-	            				Utils.showError(InitiateChat.this, getString(R.string.label_invitation_failed));		
+	            				Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_failed));		
 	            			}
 	            		});
 	            	}
@@ -156,7 +156,7 @@ public class InitiateChat extends Activity {
 	        	// Exit activity
 	        	finish();
 			} catch(Exception e) {
-				Utils.showError(InitiateChat.this, getString(R.string.label_invitation_failed));		
+				Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_failed));		
 			}
 		}
 	
@@ -164,7 +164,7 @@ public class InitiateChat extends Activity {
 		public void handleSessionAborted() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(InitiateChat.this, getString(R.string.label_invitation_declined));
+					Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_declined));
 				}
 			});
 		}
@@ -177,7 +177,7 @@ public class InitiateChat extends Activity {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(InitiateChat.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -195,9 +195,9 @@ public class InitiateChat extends Activity {
 			handler.post(new Runnable(){
 				public void run(){
 					if (error == InstantMessageError.SESSION_INITIATION_DECLINED) {
-						Utils.showError(InitiateChat.this, getString(R.string.label_invitation_declined));
+						Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_declined));
 					} else {
-						Utils.showError(InitiateChat.this, getString(R.string.label_invitation_failed));
+						Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_failed));
 					}
 				}
 			});

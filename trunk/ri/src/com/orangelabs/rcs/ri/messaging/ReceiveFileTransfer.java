@@ -18,9 +18,6 @@
  ******************************************************************************/
 package com.orangelabs.rcs.ri.messaging;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -31,17 +28,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.widget.ImageView;
+import android.view.KeyEvent;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -90,7 +84,10 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-		// Get invitation info
+        // Set layout
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		fileSize = getIntent().getLongExtra("size", -1);
@@ -118,7 +115,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -149,7 +146,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();			
 		} catch(Exception e) {
-			Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
+			Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
 		}
     }
 
@@ -160,7 +157,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     	// Service has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
 			}
 		});
 	}
@@ -171,7 +168,6 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
         	// Set layout
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             setContentView(R.layout.messaging_receive_filetransfer);
             
             // Set title
@@ -193,7 +189,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
                 		// Accept the invitation
             			transferSession.acceptSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -213,7 +209,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
                 		transferSession.removeSessionListener(fileTransferSessionListener);
             			transferSession.rejectSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -242,7 +238,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -261,7 +257,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -279,11 +275,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 		public void handleTransferError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
-					}
+					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_transfer_failed, error));
 				}
 			});
 		}
@@ -300,15 +292,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
 			        progressBar.setProgress(progressBar.getMax());
 			        
 			        // Show the transfered image
-			        try {
-			        	ImageView image = (ImageView)findViewById(R.id.image_view);
-			        	File file = new File(filename);
-			        	FileInputStream stream =  new FileInputStream(file);
-			        	Bitmap bitmap = BitmapFactory.decodeStream(stream);
-			        	image.setImageBitmap(bitmap);
-			        } catch(Exception e) {
-			        	Utils.showError(ReceiveFileTransfer.this, getString(R.string.label_out_of_memory));
-			        }
+			        Utils.showPictureAndExit(ReceiveFileTransfer.this, filename);	
 				}
 			});
 		}
@@ -389,5 +373,34 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener {
     public static void removeFileTransferNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.cancel((int)Long.parseLong(sessionId));
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+	                        if (transferSession != null) {
+	                        	try {
+	                        		transferSession.removeSessionListener(fileTransferSessionListener);
+	                        		transferSession.cancelSession();
+	                        	} catch(Exception e) {
+	                        	}
+	                        	transferSession = null;
+	                        }
+                    	} catch(Exception e) {
+                    	}
+                	}
+                };
+                thread.start();
+            	
+                // Exit activity
+    			finish();
+                return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 }

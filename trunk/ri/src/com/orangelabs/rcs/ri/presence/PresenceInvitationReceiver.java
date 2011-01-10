@@ -18,6 +18,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.ri.presence;
 
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -33,7 +35,10 @@ public class PresenceInvitationReceiver extends BroadcastReceiver {
 		// Get invitation info
 		String contact = intent.getStringExtra("contact");
 
-		// Display invitation notification
+		// Instanciate settings
+        RcsSettings.createInstance(context);
+        
+        // Display invitation notification
 		ReceivePresenceInvitation.addSharingInvitationNotification(context, contact);
     }
 }

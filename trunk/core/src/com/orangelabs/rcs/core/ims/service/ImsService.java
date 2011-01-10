@@ -157,16 +157,10 @@ public abstract class ImsService {
 	 */
 	public Enumeration<ImsServiceSession> getSessions(String contact) {
 		Vector<ImsServiceSession> result = new Vector<ImsServiceSession>();
-
-		// Format contact number
-		contact = PhoneUtils.formatNumberToInternational(contact);
-		
-		// Search sessions related to a given contact
 		Enumeration<ImsServiceSession> list = sessions.elements();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
-			String contactSession = PhoneUtils.extractNumberFromUri(session.getRemoteContact()); 
-			if (contactSession.equals(contact)){
+			if (PhoneUtils.compareNumbers(session.getRemoteContact(), contact)){
 				result.add(session);
 			}
 		}

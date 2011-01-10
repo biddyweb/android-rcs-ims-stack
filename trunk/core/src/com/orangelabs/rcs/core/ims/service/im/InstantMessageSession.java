@@ -381,7 +381,7 @@ public abstract class InstantMessageSession extends ImsServiceSession implements
 	    		listener.handleReceiveVideo(getRemoteContact(), date, content);
 	    	} else {
 	    		// Create file content
-	    		String path = FileFactory.getFactory().getVideoRootDirectory() + "file" + random + "." + ext;
+	    		String path = FileFactory.getFactory().getFileRootDirectory() + "file" + random + "." + ext;
 	    		FileContent content = new FileContent(path, data.length);
 	    		content.setData(data);
 

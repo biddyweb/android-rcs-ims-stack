@@ -54,8 +54,24 @@ public class ContentManager{
 			path = FileFactory.getFactory().getFileRootDirectory();
     	}
 
-    	// Return path and received filename
-		return path + filename;		
+    	// Check that the filename will not overwrite existing file
+    	// We modify it if a file of the same name exists, by appending _1 before the extension
+    	// For example if image.jpeg exists, next file will be image_1.jpeg, then image_2.jpeg etc
+    	String extension = "";
+    	if ((filename!=null) && (filename.indexOf('.')!=-1)){
+    		// if extension is present, split it
+    		extension = "." + filename.substring(filename.lastIndexOf('.')+1);
+    		filename = filename.substring(0, filename.lastIndexOf('.'));
+    	}
+    	String destination = filename;
+    	int i = 1;
+    	while(FileFactory.getFactory().fileExists(path + destination + extension)){
+    		destination = filename + '_'+i;
+    		i++;
+    	}
+    	
+    	// Return free destination url
+		return path + destination + extension;		
 	}
 	
 	/**

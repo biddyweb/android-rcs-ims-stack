@@ -125,4 +125,12 @@ public abstract class FileFactory {
 	 * @param url New URL to be added
 	 */
 	public abstract void updateMediaStorage(String url);	
+	
+	/**
+	 * Returns whether a file exists or not
+	 * 
+	 * @param url Url of the file to check
+	 * @return File existence
+	 */
+	public abstract boolean fileExists(String url);
 }

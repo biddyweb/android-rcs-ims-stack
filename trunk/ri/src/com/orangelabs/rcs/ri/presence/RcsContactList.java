@@ -112,7 +112,7 @@ public abstract class RcsContactList extends ListActivity implements ClientApiLi
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(RcsContactList.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(RcsContactList.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -140,7 +140,7 @@ public abstract class RcsContactList extends ListActivity implements ClientApiLi
         		} catch(Exception e) {
             		handler.post(new Runnable() { 
             			public void run() {
-            				Utils.showError(RcsContactList.this, getString(R.string.label_contact_list_failed));
+            				Utils.showMessageAndExit(RcsContactList.this, getString(R.string.label_contact_list_failed));
             			}
                 	});
         		}
@@ -155,7 +155,7 @@ public abstract class RcsContactList extends ListActivity implements ClientApiLi
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(RcsContactList.this, getString(R.string.label_api_disconnected));
+				Utils.showMessage(RcsContactList.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }

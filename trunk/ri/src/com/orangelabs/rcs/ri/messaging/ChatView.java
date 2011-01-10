@@ -42,8 +42,8 @@ import android.view.View.OnKeyListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.TextView.BufferType;
 import android.widget.Toast;
+import android.widget.TextView.BufferType;
 
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.ri.R;
@@ -216,7 +216,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
             mAdapter.add(">> " + text);
             mUserText.setText(null);
         } catch(Exception e) {
-        	Utils.showInfo(ChatView.this, getString(R.string.label_send_im_failed));
+        	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
         }
     }
 
@@ -236,7 +236,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(ChatView.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -252,7 +252,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 					chatSession = messagingApi.getChatSession(sessionId);    			
 					chatSession.addSessionListener(chatSessionListener);
 	    		} catch(Exception e) {
-	    			Utils.showError(ChatView.this, getString(R.string.label_api_failed));
+	    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_failed));
 	    		}
 			}
 		});
@@ -264,7 +264,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     public void handleApiDisconnected() {
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showError(ChatView.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }  
@@ -282,7 +282,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			handler.post(new Runnable(){
 				public void run(){
 					// Session aborted
-					Utils.showError(ChatView.this, getString(R.string.label_chat_aborted));
+					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_aborted));
 				}
 			});
 		}
@@ -301,7 +301,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(ChatView.this, getString(R.string.label_chat_terminated));
+					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated));
 				}
 			});
 		}
@@ -334,7 +334,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleImError(int error) {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(ChatView.this, getString(R.string.label_chat_failed));
+					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_failed));
 				}
 			});
 		}		

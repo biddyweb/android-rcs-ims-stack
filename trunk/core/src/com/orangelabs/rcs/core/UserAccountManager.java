@@ -47,31 +47,13 @@ public class UserAccountManager {
 	 * @throws CoreException
 	 */
 	public UserAccountManager() throws CoreException {
-
 		// Read the last used end user account
 		String lastUserAccount = RegistryFactory.getFactory().readString("LastUserAccount", null);
 
 		// Current user account is either read from RCS settings (not GIBA) or IMSI related (GIBA)
 		String currentUserAccount = null;
 		
-		// If we are not using GIBA
-		if (!RegistrationManager.isGibaAuthent()) {
-			// Test if user profile provisionning has been done or not
-			// HTTP Digest authent based on user settings
-            String values[] = new String[6];
-    		values[0] = RcsSettings.getInstance().getUserProfileImsUserName();
-    		values[1] = RcsSettings.getInstance().getUserProfileImsPrivateId();
-    		values[2] = RcsSettings.getInstance().getUserProfileImsDomain();
-    		values[3] = RcsSettings.getInstance().getUserProfileImsProxy();
-    		values[4] = RcsSettings.getInstance().getUserProfileXdmServer();
-    		values[5] = RcsSettings.getInstance().getUserProfileXdmLogin();
-    		for(int i=0; i < values.length; i++) {
-    			if ((values[i] == null) || (values[i].length() == 0)) {
-    				throw new UserProfileNotProvisionnedException("User profile attribute " + i + " is not initialized");
-    			}        
-    		}
-    		currentUserAccount = values[0].substring(1); // User profile name is +33..., we need to remove the '+' to have only digits
-		}else{
+		if (RegistrationManager.isGibaAuthent()) {
 			// Read the current IMSI
 			TelephonyManager mgr = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 			String imsi = mgr.getSubscriberId();
@@ -87,6 +69,23 @@ public class UserAccountManager {
 			}
 			
 			currentUserAccount = imsi;
+		} else {
+			// Test if user profile provisionning has been done or not
+			// HTTP Digest authent based on user settings
+            String values[] = new String[6];
+    		values[0] = RcsSettings.getInstance().getUserProfileImsUserName();
+    		values[1] = RcsSettings.getInstance().getUserProfileImsPrivateId();
+    		values[2] = RcsSettings.getInstance().getUserProfileImsDomain();
+    		values[3] = RcsSettings.getInstance().getUserProfileImsProxy();
+    		values[4] = RcsSettings.getInstance().getUserProfileXdmServer();
+    		values[5] = RcsSettings.getInstance().getUserProfileXdmLogin();
+    		for(int i=0; i < values.length; i++) {
+    			if ((values[i] == null) || (values[i].length() == 0)) {
+    				throw new UserProfileNotProvisionnedException("User profile attribute " + i + " is not initialized");
+    			}        
+    		}
+    		// User profile name is +.., we need to remove the '+' to have only digits
+    		currentUserAccount = values[0].substring(1);
 		}
 		
 		// We may have to change the current user if we are using GIBA, hence using IMSI for end user profile

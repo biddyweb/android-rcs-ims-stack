@@ -115,10 +115,10 @@ public class ManageContactList extends Activity {
                 if (presenceApi.inviteContact(getSelectedContact())) {
                 	Utils.displayToast(ManageContactList.this, getString(R.string.label_invite_contact_ok));
         		} else {
-    				Utils.showError(ManageContactList.this, getString(R.string.label_invite_contact_ko));
+    				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_invite_contact_ko));
         		}
         	} catch(Exception e) {
-				Utils.showError(ManageContactList.this, getString(R.string.label_invite_contact_ko));
+				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_invite_contact_ko));
         	}
         }
     };
@@ -133,10 +133,10 @@ public class ManageContactList extends Activity {
                 if (presenceApi.revokeContact(getSelectedContact())) {
                 	Utils.displayToast(ManageContactList.this, getString(R.string.label_revoke_contact_ok));
         		} else {
-    				Utils.showError(ManageContactList.this, getString(R.string.label_revoke_contact_ko));
+    				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_revoke_contact_ko));
         		}
         	} catch(Exception e) {
-				Utils.showError(ManageContactList.this, getString(R.string.label_revoke_contact_ko));
+				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_revoke_contact_ko));
         	}
         }
     };
@@ -151,10 +151,10 @@ public class ManageContactList extends Activity {
                 if (presenceApi.rejectSharingInvitation(getSelectedContact())) {
                 	Utils.displayToast(ManageContactList.this, getString(R.string.label_block_contact_ok));
         		} else {
-    				Utils.showError(ManageContactList.this, getString(R.string.label_block_contact_ko));
+    				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_block_contact_ko));
         		}
         	} catch(Exception e) {
-				Utils.showError(ManageContactList.this, getString(R.string.label_block_contact_ko));
+				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_block_contact_ko));
         	}
         }
     };
@@ -169,10 +169,10 @@ public class ManageContactList extends Activity {
                 if (presenceApi.unblockContact(getSelectedContact())) {
                 	Utils.displayToast(ManageContactList.this, getString(R.string.label_unblock_contact_ok));
         		} else {
-    				Utils.showError(ManageContactList.this, getString(R.string.label_unblock_contact_ko));
+    				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_unblock_contact_ko));
         		}
         	} catch(Exception e) {
-				Utils.showError(ManageContactList.this, getString(R.string.label_unblock_contact_ko));
+				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_unblock_contact_ko));
         	}
         }
     };
@@ -187,10 +187,10 @@ public class ManageContactList extends Activity {
                 if (presenceApi.unrevokeContact(getSelectedContact())) {
                 	Utils.displayToast(ManageContactList.this, getString(R.string.label_unrevoke_contact_ok));
         		} else {
-    				Utils.showError(ManageContactList.this, getString(R.string.label_unrevoke_contact_ko));
+    				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_unrevoke_contact_ko));
         		}
         	} catch(Exception e) {
-				Utils.showError(ManageContactList.this, getString(R.string.label_unrevoke_contact_ko));
+				Utils.showMessageAndExit(ManageContactList.this, getString(R.string.label_unrevoke_contact_ko));
         	}
         }
     };
