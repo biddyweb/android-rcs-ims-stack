@@ -1,7 +1,13 @@
-	README v2.1.0, 	05/01/2011
+	README v2.1.1, 	10/01/2011
 
-New features:
--------------------
+Release note v2.1.1 :
+---------------------
+
+- Non regression tests.
+
+
+Release note v2.1.0:
+--------------------
 
 - Replace "API demo application" by "RI application". The RI application is a reference implementation which
  offers a basic UI to RCS features (see testcases defined by GSMA). The RI application is used during
@@ -33,6 +39,6 @@ New features:
 
 
 Defects:
-------------
+--------
 
 - Correct issues 2, 3 and 4.
