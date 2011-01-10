@@ -21,8 +21,8 @@
 <string name="label_ok">OK</string>
 <string name="label_cancel">Cancel</string>
 <string name="label_delete">Delete</string>
-<string name="title_error">Error</string>
-<string name="title_info">Information</string>
+<string name="title_msg">Message</string>
+<string name="title_picture">Received picture</string>
 <string name="label_accept">Accept</string>
 <string name="label_decline">Decline</string>
 <string name="label_ignore">Ignore</string>
@@ -117,6 +117,7 @@
 <string name="label_chat_failed">Chat session has failed</string>
 <string name="label_contacts">Contacts:</string>
 <string name="label_contact_is_composing">is composing a new message...</string>
+<string name="label_transfer_failed">Transfer has failed or is aborted (code %d)</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
@@ -144,6 +145,7 @@
 <string name="label_supported_media">Supported media</string>
 <string name="label_out_of_memory">No enough memory to display the image</string>
 <string name="label_capabilities">Capabilities of</string>
+<string name="label_csh_failed">Sharing has failed or is aborted (code %d)</string>
 
 <!-- Event Log -->
 <string name="menu_filter">Change filter</string>

@@ -111,7 +111,7 @@ public class RequestContentSharingCapabilities extends Activity {
             try {
             	callApi.requestContentSharingCapabilities(remote);
             } catch(Exception e) {
-		    	Utils.showError(RequestContentSharingCapabilities.this, getString(R.string.label_invitation_failed));            	
+		    	Utils.showMessageAndExit(RequestContentSharingCapabilities.this, getString(R.string.label_invitation_failed));            	
             }
         }
     };
@@ -130,7 +130,7 @@ public class RequestContentSharingCapabilities extends Activity {
 		    if (video) {
 		    	result += "video\n";
 		    }
-	    	Utils.showInfo(RequestContentSharingCapabilities.this, getString(R.string.label_supported_media), result);            	
+	    	Utils.showMessage(RequestContentSharingCapabilities.this, getString(R.string.label_supported_media), result);            	
 		}
 	};    
 }    

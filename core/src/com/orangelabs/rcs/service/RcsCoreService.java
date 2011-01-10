@@ -33,6 +33,7 @@ import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreListener;
 import com.orangelabs.rcs.core.ims.ImsError;
+import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.capability.Capabilities;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessage;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessageSession;
@@ -506,19 +507,16 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		try {
-			// Extract number from contact 
-			String number = PhoneUtils.extractNumberFromUri(contact);
-			String me = PhoneUtils.formatNumberToInternational(RcsSettings.getInstance().getUserProfileImsUserName());
-
 			// Check if its a notification for a contact or for the end user
-			if (me.equals(number)) {
+			String me = ImsModule.IMS_USER_PROFILE.getUsername();
+			if (PhoneUtils.compareNumbers(me, contact)) {
 				// End user notification
 				if (logger.isActivated()) {
 					logger.debug("Presence sharing notification for me: by-pass it");
 				}
 	    	} else { 
 		    	// Update EAB provider
-				RichAddressBook.getInstance().setContactSharingStatus(number, status, reason);
+				RichAddressBook.getInstance().setContactSharingStatus(contact, status, reason);
 	
 				// Broadcast intent
 				Intent intent = new Intent(PresenceApiIntents.PRESENCE_SHARING_CHANGED);
@@ -555,12 +553,9 @@ public class RcsCoreService extends Service implements CoreListener {
 				return;
 			}
 
-			// Extract number from contact 
-			String number = PhoneUtils.extractNumberFromUri(contact);
-			String me = PhoneUtils.formatNumberToInternational(RcsSettings.getInstance().getUserProfileImsUserName());
-
 			// Check if its a notification for a contact or for me
-			if (me.equals(number)) {
+			String me = ImsModule.IMS_USER_PROFILE.getUsername();
+			if (PhoneUtils.compareNumbers(me, contact)) {
 				// Notification for me
 				presenceInfoNotificationForMe(presence);
 			} else {

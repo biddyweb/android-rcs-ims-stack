@@ -151,10 +151,10 @@ public class PublishPresenceInfo extends Activity {
                 if (presenceApi.setMyPresenceInfo(presenceInfo)) {
                 	Utils.displayToast(PublishPresenceInfo.this, getString(R.string.label_publish_ok));
         		} else {
-        			Utils.showError(PublishPresenceInfo.this, getString(R.string.label_publish_ko));
+        			Utils.showMessageAndExit(PublishPresenceInfo.this, getString(R.string.label_publish_ko));
         		}
         	} catch(Exception e) {
-    			Utils.showError(PublishPresenceInfo.this, getString(R.string.label_publish_ko));
+    			Utils.showMessageAndExit(PublishPresenceInfo.this, getString(R.string.label_publish_ko));
         	}
         }
     };

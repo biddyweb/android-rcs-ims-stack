@@ -65,7 +65,7 @@ public class MessagingRI extends ListActivity {
 		            intent.setType("vnd.android-dir/mms-sms");
 		            startActivity(intent);
 		    	} catch(ActivityNotFoundException e) {
-		    		Utils.showInfo(this, getString(R.string.label_ab_not_found));
+		    		Utils.showMessage(this, getString(R.string.label_ab_not_found));
 		    	}
                 break;
 	        case 1:

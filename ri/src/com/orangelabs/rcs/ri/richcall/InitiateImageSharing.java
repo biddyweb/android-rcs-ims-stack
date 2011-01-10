@@ -157,7 +157,7 @@ public class InitiateImageSharing extends Activity {
 	            		sharingSession = callApi.initiateImageSharing(remote, uri);
 	        	        sharingSession.addSessionListener(sharingSessionListener);
 	            	} catch(Exception e) {
-	    		    	Utils.showError(InitiateImageSharing.this, getString(R.string.label_invitation_failed));
+	    		    	Utils.showMessageAndExit(InitiateImageSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -233,9 +233,7 @@ public class InitiateImageSharing extends Activity {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("aborted");
-					Utils.showInfo(InitiateImageSharing.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessage(InitiateImageSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -244,8 +242,7 @@ public class InitiateImageSharing extends Activity {
 		public void handleSessionTerminated() {
 			handler.post(new Runnable() { 
 				public void run() {
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("terminated");
+					Utils.showMessageAndExit(InitiateImageSharing.this, getString(R.string.label_sharing_terminated));
 				}
 			});
 		}
@@ -256,7 +253,7 @@ public class InitiateImageSharing extends Activity {
 				public void run() {
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("terminated");
-					Utils.showInfo(InitiateImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessage(InitiateImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -278,9 +275,9 @@ public class InitiateImageSharing extends Activity {
 					statusView.setText("error");
 					
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-    					Utils.showInfo(InitiateImageSharing.this, getString(R.string.label_invitation_declined));
+    					Utils.showMessage(InitiateImageSharing.this, getString(R.string.label_invitation_declined));
 					} else {
-    					Utils.showError(InitiateImageSharing.this, getString(R.string.label_invitation_failed));
+    					Utils.showMessageAndExit(InitiateImageSharing.this, getString(R.string.label_csh_failed, error));
 					}
 				}
 			});

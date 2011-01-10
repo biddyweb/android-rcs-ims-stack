@@ -32,6 +32,7 @@ import android.net.Uri;
 import android.os.Environment;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.utils.logger.Logger;
 import com.orangelabs.rcs.R;
 
 /**
@@ -40,6 +41,11 @@ import com.orangelabs.rcs.R;
  * @author jexa7410
  */
 public class AndroidFileFactory extends FileFactory {
+	/**
+	 * The logger
+	 */
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+	
 	/**
 	 * Open a configuration file input stream 
 	 * 
@@ -131,7 +137,18 @@ public class AndroidFileFactory extends FileFactory {
 	public String getFileRootDirectory() {	
 		String directory = AndroidFactory.getApplicationContext().getString(R.string.rcs_files_directory);
 		return Environment.getExternalStorageDirectory() + directory;
-	}	
+	}
+	
+	/**
+	 * Returns whether a file exists or not
+	 * 
+	 * @param url Url of the file to check
+	 * @return File existence
+	 */
+	public boolean fileExists(String url){
+		File file = new File(url);
+		return file.exists();
+	}
 
 	/**
 	 * Update the media storage
@@ -139,6 +156,9 @@ public class AndroidFileFactory extends FileFactory {
 	 * @param url New URL to be added
 	 */
 	public void updateMediaStorage(String url) {
+		if (logger.isActivated()) {
+			logger.info("Updating media storage with url " + url);
+		}
 		MyMediaScannerClient scanner = new MyMediaScannerClient(url); 
 		scanner.scan();
 	}
@@ -156,11 +176,17 @@ public class AndroidFileFactory extends FileFactory {
 			this.scanner = new MediaScannerConnection(AndroidFactory.getApplicationContext(), this); 
 		}
 		
-		public void onMediaScannerConnected() {                                         
+		public void onMediaScannerConnected() { 
+			if (logger.isActivated()) {
+				logger.info("Scanning file " + filename);
+			}
 			scanner.scanFile(filename, null);
 		}
 		
 		public void onScanCompleted(String path, Uri uri) {
+			if (logger.isActivated()) {
+				logger.info("Scan completed for uri " + uri + " with path " + path);
+			}
 			if (path.equals(filename)) {
 				scanner.disconnect();
 			}

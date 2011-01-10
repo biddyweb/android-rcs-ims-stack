@@ -119,7 +119,7 @@ public class AnonymousFetchPresenceCapabilities extends Activity {
                 // Display info
                 Utils.displayLongToast(AnonymousFetchPresenceCapabilities.this, getString(R.string.label_request_in_background));
         	} catch(Exception e) {
-		    	Utils.showError(AnonymousFetchPresenceCapabilities.this, getString(R.string.label_request_ko));
+		    	Utils.showMessageAndExit(AnonymousFetchPresenceCapabilities.this, getString(R.string.label_request_ko));
         	}
         }
     };
@@ -161,7 +161,7 @@ public class AnonymousFetchPresenceCapabilities extends Activity {
 					    		getString(R.string.label_capabilities) + " " + contact,
 					    		 items);
 					} else {
-					    Utils.showInfo(AnonymousFetchPresenceCapabilities.this, getString(R.string.label_no_capability));
+					    Utils.showMessage(AnonymousFetchPresenceCapabilities.this, getString(R.string.label_no_capability));
 					}
 				}
 			});

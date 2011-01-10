@@ -131,7 +131,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 	            	} catch(Exception e) {
 	            		handler.post(new Runnable(){
 	            			public void run(){
-	            				Utils.showError(InitiateChatGroup.this, getString(R.string.label_invitation_failed));		
+	            				Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_invitation_failed));		
 	            			}
 	            		});
 	            	}
@@ -158,7 +158,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 	        	// Exit activity
 	        	finish();
 			} catch(Exception e) {
-				Utils.showError(InitiateChatGroup.this, getString(R.string.label_invitation_failed));		
+				Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_invitation_failed));		
 			}
 		}
 	
@@ -166,7 +166,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 		public void handleSessionAborted() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(InitiateChatGroup.this, getString(R.string.label_invitation_declined));
+					Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_invitation_declined));
 				}
 			});
 		}
@@ -179,7 +179,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showError(InitiateChatGroup.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -197,9 +197,9 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 			handler.post(new Runnable(){
 				public void run(){
 					if (error == InstantMessageError.SESSION_INITIATION_DECLINED) {
-						Utils.showError(InitiateChatGroup.this, getString(R.string.label_invitation_declined));
+						Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_invitation_declined));
 					} else {
-						Utils.showError(InitiateChatGroup.this, getString(R.string.label_invitation_failed));
+						Utils.showMessageAndExit(InitiateChatGroup.this, getString(R.string.label_invitation_failed));
 					}
 				}
 			});

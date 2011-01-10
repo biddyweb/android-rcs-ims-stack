@@ -124,12 +124,10 @@ public class RcsSettings {
 	private String readParameter(String key) {
 		String result = null;
         Cursor c = cr.query(databaseUri, null, RcsSettingsData.KEY_KEY + "='" + key + "'", null, null);
-        if (c != null) {
-        	if (c.getCount() > 0) {
-		        if (c.moveToFirst()) {
-		        	result = c.getString(2);
-		        }
-        	}
+        if ((c != null) && (c.getCount() > 0)) {
+	        if (c.moveToFirst()) {
+	        	result = c.getString(2);
+	        }
 	        c.close();
         }
         return result;

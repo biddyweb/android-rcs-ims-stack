@@ -94,7 +94,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 11;
+        private static final int DATABASE_VERSION = 12;
 
         private Context ctx;
         
@@ -157,10 +157,10 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, 		"", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PASSWORD, 			"", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"", READWRITE, REBOOT);
-            addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY,				"80.12.197.66:5060", READWRITE, REBOOT);
-            addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services", READWRITE, REBOOT);
-            addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"", READWRITE, REBOOT);
-            addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY,				"80.12.197.74:5060", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IM_CONF_URI, 			"sip:conference-factory@sip.ofr.com", READWRITE, REBOOT);
             
             // Stack read only parameters

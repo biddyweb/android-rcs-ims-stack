@@ -26,18 +26,18 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.content.DialogInterface.OnClickListener;
+import android.view.KeyEvent;
 import android.widget.TextView;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
@@ -88,7 +88,10 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-		// Get invitation info
+    	// Set layout
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 
@@ -124,7 +127,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showError(ReceiveVideoSharing.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -147,7 +150,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();   
 		} catch(Exception e) {
-			Utils.showError(ReceiveVideoSharing.this, getString(R.string.label_api_failed));
+			Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_api_failed));
 		}
     }
 
@@ -158,7 +161,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
     	// Service has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showInfo(ReceiveVideoSharing.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_api_disconnected));
 			}
 		});
     }
@@ -169,11 +172,11 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
         	// Set layout
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             setContentView(R.layout.richcall_receive_video_sharing);
             
             // Set title
             setTitle(R.string.title_recv_video_sharing);
+            
             // Set video preview
             videoSurface = (VideoSurfaceView)findViewById(R.id.video_view);
             videoSurface.setAspectRatio(176, 144);
@@ -191,7 +194,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
             			cshSession.setMediaRenderer(renderer);
 	    				cshSession.acceptSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveVideoSharing.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -208,14 +211,18 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
             	public void run() {
                 	try {
                 		// Reject the invitation
-               			cshSession.rejectSession();
+                		cshSession.removeSessionListener(cshStreamingEventListener);
+                		cshSession.rejectSession();
 	            	} catch(Exception e) {
-	            		Utils.showError(ReceiveVideoSharing.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
             thread.start();
-        }
+            
+            // Exit activity
+			finish();
+		}
     };
     
     /**
@@ -230,7 +237,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(ReceiveVideoSharing.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -243,7 +250,7 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showInfo(ReceiveVideoSharing.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -252,15 +259,40 @@ public class ReceiveVideoSharing extends Activity implements ClientApiListener {
 		public void handleSharingError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showInfo(ReceiveVideoSharing.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showError(ReceiveVideoSharing.this, getString(R.string.label_invitation_failed));
-					}
+					Utils.showMessageAndExit(ReceiveVideoSharing.this, getString(R.string.label_csh_failed, error));
 				}
 			});
 		}
     };   
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                Thread thread = new Thread() {
+                	public void run() {
+                    	try {
+	                        if (cshSession != null) {
+	                        	try {
+	                        		cshSession.removeSessionListener(cshStreamingEventListener);
+	                        		cshSession.cancelSession();
+	                        	} catch(Exception e) {
+	                        	}
+	                        	cshSession = null;
+	                        }
+                    	} catch(Exception e) {
+                    	}
+                	}
+                };
+                thread.start();
+            	
+                // Exit activity
+    			finish();
+                return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
     
     /**
      * Add video share notification

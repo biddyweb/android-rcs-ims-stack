@@ -138,7 +138,7 @@ public class InitiateFileTransfer extends Activity {
 	            		transferSession = messagingApi.transferFile(remote, uri);
 	        	        transferSession.addSessionListener(cshSessionListener);
 	            	} catch(Exception e) {
-	            		Utils.showError(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
+	            		Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
             };
@@ -216,7 +216,7 @@ public class InitiateFileTransfer extends Activity {
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showError(InitiateFileTransfer.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -235,7 +235,7 @@ public class InitiateFileTransfer extends Activity {
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showError(InitiateFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}
@@ -254,9 +254,9 @@ public class InitiateFileTransfer extends Activity {
 			handler.post(new Runnable() { 
 				public void run() {
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showError(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
+						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
 					} else {
-						Utils.showError(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
+						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed, error));
 					}
 				}
 			});
