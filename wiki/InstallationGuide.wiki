@@ -1,5 +1,4 @@
-#labels Phase-Deploy
-RCS/IMS stack configuration guide
+#summary RCS/IMS stack configuration guide
 
 = Introduction =
 
