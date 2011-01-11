@@ -7,4 +7,4 @@ How to install/uninstall the RCS/IMS stack ? How to start the RCS/IMS stack ? Ho
 
 = Details =
 
-See the following document [http://android-rcs-ims-stack.googlecode.com/svn-history/r34/doc/userguide/RI_installation_guide_ed1.1.pdf Configuration guide]
+See the following document [http://android-rcs-ims-stack.googlecode.com/svn-history/r34/doc/userguide/RI_installation_guide_ed1.1.pdf Installation guide]
