@@ -1,4 +1,4 @@
-#summary RCS/IMS stack configuration guide
+#summary RCS/IMS stack installation & configuration guide
 
 = Introduction =
 
