@@ -132,7 +132,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 				digest.setRealm(response.getHeaderParameter("WWW-Authenticate", "realm"));
 	
 				// Get qop
-		   		digest.setQop(response.getHeaderParameter("WWW-Authenticate", "qop").split(",")[0]);
+		   		digest.setQop(response.getHeaderParameter("WWW-Authenticate", "qop"));
 		   		
 		   		// Get nonce to be used
 		   		digest.setNextnonce(response.getHeaderParameter("WWW-Authenticate", "nonce"));
