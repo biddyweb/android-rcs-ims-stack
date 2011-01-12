@@ -170,6 +170,9 @@ public class HttpDigestMd5Authentication {
 	 * @param qop Qop parameter
 	 */
 	public void setQop(String qop) {
+   		if (qop != null) { 
+   			qop = qop.split(",")[0];
+   		}
 		this.qop = qop;
 	}
 
