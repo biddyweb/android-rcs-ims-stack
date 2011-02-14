@@ -3,7 +3,7 @@
 Release note v2.2.0 :
 ---------------------
 
-- Integration into the nativae address book thanks to ContactContracts interface.
+- Integration into the native address book thanks to ContactContracts interface.
 - Integration of GSMA Test fest results (Helsinki, 01/2011).
 - New SIP stack release based on NIST.gov contribution. Now we use the same stack
   as in the Froyo release. In the past we are using only the parser/build of NIST,
