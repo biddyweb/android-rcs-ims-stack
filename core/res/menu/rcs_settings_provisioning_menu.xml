@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/menu_default_profile"
+		android:title="@string/rcs_settings_menu_default_profile"
+		android:orderInCategory="1"
+		android:icon="@drawable/rcs_settings_update_menu_icon" />
+</menu>

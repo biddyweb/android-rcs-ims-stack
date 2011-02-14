@@ -1,0 +1,60 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<PreferenceCategory android:title="@string/rcs_settings_title_user_settings">
+		<EditTextPreference
+	        android:key="username"
+	        android:title="@string/rcs_settings_title_edit_username"
+	        android:dialogTitle="@string/rcs_settings_title_edit_username"/>
+	            	
+		<EditTextPreference
+	        android:key="display_name"
+	        android:title="@string/rcs_settings_title_edit_display_name"
+	        android:dialogTitle="@string/rcs_settings_title_edit_display_name"/>
+			
+		<EditTextPreference
+	        android:key="private_uri"
+	        android:title="@string/rcs_settings_title_edit_private_uri"
+	        android:dialogTitle="@string/rcs_settings_title_edit_private_uri"/>
+	
+		<EditTextPreference
+	        android:key="user_password"
+	        android:title="@string/rcs_settings_title_edit_user_password"
+	        android:dialogTitle="@string/rcs_settings_title_edit_user_password"/>
+	</PreferenceCategory>	       
+	
+	<PreferenceCategory android:title="@string/rcs_settings_title_ims_settings">
+		<EditTextPreference
+	        android:key="domain"
+	        android:title="@string/rcs_settings_title_edit_domain"
+	        android:dialogTitle="@string/rcs_settings_title_edit_domain"/>
+	
+		<EditTextPreference
+	        android:key="sip_proxy_addr"
+	        android:title="@string/rcs_settings_title_edit_sip_proxy_addr"
+	        android:dialogTitle="@string/rcs_settings_title_edit_sip_proxy_addr"/>
+	</PreferenceCategory>	       
+
+	<PreferenceCategory android:title="@string/rcs_settings_title_xdm_settings">
+		<EditTextPreference
+	        android:key="xdm_server_addr"
+	        android:title="@string/rcs_settings_title_edit_xdm_server_addr"
+	        android:dialogTitle="@string/rcs_settings_title_edit_xdm_server_addr"/>
+	
+		<EditTextPreference
+	        android:key="xdm_login"
+	        android:title="@string/rcs_settings_title_edit_xdm_login"
+	        android:dialogTitle="@string/rcs_settings_title_edit_xdm_login"/>
+	
+		<EditTextPreference
+	        android:key="xdm_password"
+	        android:title="@string/rcs_settings_title_edit_xdm_password"
+	        android:dialogTitle="@string/rcs_settings_title_edit_xdm_password"/>
+	</PreferenceCategory>	       
+
+	<PreferenceCategory android:title="@string/rcs_settings_title_im_settings">
+		<EditTextPreference
+	        android:key="im_conference_uri"
+	        android:title="@string/rcs_settings_title_edit_im_conf_uri"
+	        android:dialogTitle="@string/rcs_settings_title_edit_im_conf_uri"/>
+	</PreferenceCategory>	       
+</PreferenceScreen>
