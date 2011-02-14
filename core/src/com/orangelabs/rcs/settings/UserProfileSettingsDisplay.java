@@ -276,7 +276,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	            textEdit.setText("+" + countryCode);
 	            
 	            final String[] platforms = {
-	                "OFR", "OSP", "Test fest"
+	                "Test fest"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -304,27 +304,7 @@ public class UserProfileSettingsDisplay extends PreferenceActivity implements Pr
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0: // OFR
-			            			homeDomain = "sip.ofr.com";
-		            				sipPublicUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsProxy = "80.12.197.74:5060";
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-	                        	case 1: // OSP
-			            			homeDomain = "sip.osp.com";
-		            				sipPublicUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsProxy = "80.12.197.168:5060";
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "password";
-			            			xdmsLogin = "tel:" + number;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-	                        	case 2: // Test fest
+	                        	case 0: // Test fest
 			            			if (number.startsWith("+")) {
 			            				number = number.substring(1);
 			            			}

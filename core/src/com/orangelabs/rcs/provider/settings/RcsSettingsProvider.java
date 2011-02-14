@@ -157,8 +157,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, 		"", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PASSWORD, 			"", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"", READWRITE, REBOOT);
-		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY,				"80.12.197.74:5060", READWRITE, REBOOT);
-		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY,				"127.0.0.1:5060", READWRITE, REBOOT);
+		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"127.0.0.1:8080/services", READWRITE, REBOOT);
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"", READWRITE, REBOOT);
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password", READWRITE, REBOOT);
             addParameter(db, RcsSettingsData.USERPROFILE_IM_CONF_URI, 			"Conference-Factory", READWRITE, REBOOT);
@@ -176,7 +176,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"600000", READONLY, REBOOT);
             addParameter(db, RcsSettingsData.ANONYMOUS_FETCH_REFRESH_TIMEOUT, 	"86400", READONLY, REBOOT);
             addParameter(db, RcsSettingsData.REVOKE_TIMEOUT, 					"300", READONLY, REBOOT);
-            addParameter(db, RcsSettingsData.IMS_AUTHENT_MODE, 					"GIBA", READONLY, REBOOT);
+            addParameter(db, RcsSettingsData.IMS_AUTHENT_MODE, 					"DIGEST", READONLY, REBOOT);
             addParameter(db, RcsSettingsData.TEL_URI_FORMAT, 					TRUE, READONLY, REBOOT);
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60", READONLY, REBOOT);
             addParameter(db, RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, 			"600000", READONLY, REBOOT);
