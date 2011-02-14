@@ -13,6 +13,10 @@ Release note v2.2.0 :
   the native address book.
 - Add new settings which may be changed via an dedicated application (see \provisioning).
 - Add a new tool which permits to get & analyse SIP traces more easily via a graphical view.
+- Add Service-Route header management.
+- Add P-Associated header management.
+- Add P-Preferred-URI header management.
+- Multi chat session management.
 
 
 Release note v2.1.1 :
