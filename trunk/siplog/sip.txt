@@ -1,0 +1,842 @@
+<!-- Use the  Trace Viewer in src/tools/tracesviewer to view this  trace  
+Here are the stack configuration properties 
+javax.sip.IP_ADDRESS= null
+javax.sip.STACK_NAME= 10.29.3.161
+javax.sip.ROUTER_PATH= null
+javax.sip.OUTBOUND_PROXY= null
+-->
+<description
+ logDescription="10.29.3.161"
+ name="10.29.3.161"
+ auxInfo="null"/>
+ 
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694085777"
+isSender="true" 
+transactionId="z9hg4bk7b3811bf87f58719cbc81e1a66ad8074333338" 
+callId="0JFmk4SpAA@10.29.3.161" 
+firstLine="REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0" 
+>
+<![CDATA[REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0
+Call-ID: 0JFmk4SpAA@10.29.3.161
+CSeq: 1 REGISTER
+From: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>;tag=4JFmk4SrAA
+To: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK7b3811bf87f58719cbc81e1a66ad8074333338
+Max-Forwards: 70
+Contact: <sip:10.29.3.161:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";+g.oma.sip-im
+Accept-Contact: *;+g.oma.sip-im;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";explicit
+Supported: path
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 3600
+User-Agent: OrangeLabs-RCS-client/2.2.0
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Allow: INVITE,ACK,BYE,NOTIFY,OPTIONS,MESSAGE
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694086284"
+isSender="true" 
+transactionId="z9hg4bk7b3811bf87f58719cbc81e1a66ad8074333338" 
+callId="0JFmk4SpAA@10.29.3.161" 
+firstLine="REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0" 
+>
+<![CDATA[REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0
+Call-ID: 0JFmk4SpAA@10.29.3.161
+CSeq: 1 REGISTER
+From: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>;tag=4JFmk4SrAA
+To: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK7b3811bf87f58719cbc81e1a66ad8074333338
+Max-Forwards: 70
+Contact: <sip:10.29.3.161:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";+g.oma.sip-im
+Accept-Contact: *;+g.oma.sip-im;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";explicit
+Supported: path
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 3600
+User-Agent: OrangeLabs-RCS-client/2.2.0
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Allow: INVITE,ACK,BYE,NOTIFY,OPTIONS,MESSAGE
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694087285"
+isSender="true" 
+transactionId="z9hg4bk7b3811bf87f58719cbc81e1a66ad8074333338" 
+callId="0JFmk4SpAA@10.29.3.161" 
+firstLine="REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0" 
+>
+<![CDATA[REGISTER sip:ims.mnc001.mcc208.3gppnetwork.org SIP/2.0
+Call-ID: 0JFmk4SpAA@10.29.3.161
+CSeq: 1 REGISTER
+From: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>;tag=4JFmk4SrAA
+To: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK7b3811bf87f58719cbc81e1a66ad8074333338
+Max-Forwards: 70
+Contact: <sip:10.29.3.161:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";+g.oma.sip-im
+Accept-Contact: *;+g.oma.sip-im;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";explicit
+Supported: path
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 3600
+User-Agent: OrangeLabs-RCS-client/2.2.0
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Allow: INVITE,ACK,BYE,NOTIFY,OPTIONS,MESSAGE
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694088209"
+isSender="false" 
+transactionId="z9hg4bk7b3811bf87f58719cbc81e1a66ad8074333338" 
+callId="0JFmk4SpAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Call-ID: 0JFmk4SpAA@10.29.3.161
+CSeq: 1 REGISTER
+From: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>;tag=4JFmk4SrAA
+To: <sip:208012900986128@ims.mnc001.mcc208.3gppnetwork.org>;tag=283366662
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK7b3811bf87f58719cbc81e1a66ad8074333338
+Contact: <sip:10.29.3.161:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";+g.oma.sip-im;expires=3600
+P-com.siemens.maximum-chat-size: 1300
+P-com.siemens.maximum-IM-size: 1300
+P-com.siemens.chat: direct
+P-Associated-URI: <sip:+33681688750@sip.ofr.com>,<tel:+33681688750>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694089050"
+isSender="true" 
+transactionId="z9hg4bk1a7220f8b3fdab9b6ee483dabfdd5f5b333338" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="SUBSCRIBE sip:+33681688750@sip.ofr.com SIP/2.0" 
+>
+<![CDATA[SUBSCRIBE sip:+33681688750@sip.ofr.com SIP/2.0
+Call-ID: 88Fmk4SsAA@10.29.3.161
+CSeq: 1 SUBSCRIBE
+From: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+To: <sip:+33681688750@sip.ofr.com>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK1a7220f8b3fdab9b6ee483dabfdd5f5b333338
+Max-Forwards: 70
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 600000
+User-Agent: OrangeLabs-RCS-client/2.2.0
+Contact: <sip:10.29.3.161:5060>
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Event: presence.winfo
+Accept: application/watcherinfo+xml
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694089354"
+isSender="false" 
+transactionId="z9hg4bk1a7220f8b3fdab9b6ee483dabfdd5f5b333338" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Allow-Events: reg,presence,presence.winfo
+CSeq: 1 SUBSCRIBE
+To: <sip:+33681688750@sip.ofr.com>;tag=118a9054b05b4-867136516-1-865-44361-4nilv
+Expires: 7200
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK1a7220f8b3fdab9b6ee483dabfdd5f5b333338
+Record-Route: <sip:80.12.197.74;routing_id=pcscf_a_side;lskpmc=P34;lr;serv_user=10.29.3.161:5060>
+From: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+Call-ID: 88Fmk4SsAA@10.29.3.161
+Contact: <sip:pcscf1gm.sip.ofr.com;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694089385"
+isSender="false" 
+transactionId="z9hg4bk_imsca0620802.000_c463da85b3bdeda02d800ec63e880c07" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="NOTIFY sip:10.29.3.161:5060 SIP/2.0" 
+>
+<![CDATA[NOTIFY sip:10.29.3.161:5060 SIP/2.0
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_c463da85b3bdeda02d800ec63e880c07;lskpmc=P34
+Record-Route: <sip:80.12.197.74;routing_id=pcscf_a_side;lskpmc=P34;lr>
+CSeq: 1001 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+Event: presence.winfo
+Max-Forwards: 68
+Content-Type: application/watcherinfo+xml
+From: <sip:+33681688750@sip.ofr.com>;tag=118a9054b05b4-867136516-1-865-44361-4nilv
+Call-ID: 88Fmk4SsAA@10.29.3.161
+Subscription-State: active;expires=7200
+Contact: <sip:10.194.117.34:5050;transport=udp>
+Content-Length: 227
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<watcherinfo xmlns="urn:ietf:params:xml:ns:watcherinfo" version="0" state="full">
+<watcher-list resource="sip:+33681688750@sip.ofr.com" package="presence">
+</watcher-list>
+</watcherinfo>
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694089470"
+isSender="true" 
+transactionId="z9hg4bk_imsca0620802.000_c463da85b3bdeda02d800ec63e880c07" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_c463da85b3bdeda02d800ec63e880c07;lskpmc=P34
+CSeq: 1001 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+From: <sip:+33681688750@sip.ofr.com>;tag=118a9054b05b4-867136516-1-865-44361-4nilv
+Call-ID: 88Fmk4SsAA@10.29.3.161
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694089490"
+isSender="true" 
+transactionId="z9hg4bkff6f5220d6524e7c5a99d524f1bf8097333338" 
+callId="mCGmk4SuAA@10.29.3.161" 
+firstLine="SUBSCRIBE sip:+33681688750@sip.ofr.com;pres-list=rcs SIP/2.0" 
+>
+<![CDATA[SUBSCRIBE sip:+33681688750@sip.ofr.com;pres-list=rcs SIP/2.0
+Call-ID: mCGmk4SuAA@10.29.3.161
+CSeq: 1 SUBSCRIBE
+From: <sip:+33681688750@sip.ofr.com>;tag=mCGmk4SvAA
+To: <sip:+33681688750@sip.ofr.com;pres-list=rcs>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bKff6f5220d6524e7c5a99d524f1bf8097333338
+Max-Forwards: 70
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 600000
+User-Agent: OrangeLabs-RCS-client/2.2.0
+Contact: <sip:10.29.3.161:5060>
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Event: presence
+Accept: application/pidf+xml,application/rlmi+xml,multipart/related
+Supported: eventlist
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694089805"
+isSender="false" 
+transactionId="z9hg4bkff6f5220d6524e7c5a99d524f1bf8097333338" 
+callId="mCGmk4SuAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Allow-Events: reg,presence,presence.winfo
+CSeq: 1 SUBSCRIBE
+To: <sip:+33681688750@sip.ofr.com;pres-list=rcs>;tag=118a9054b05b4-867136516-1-865-44362-xkgud1
+Expires: 7200
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bKff6f5220d6524e7c5a99d524f1bf8097333338
+Record-Route: <sip:80.12.197.74;routing_id=pcscf_a_side;lskpmc=P34;lr;serv_user=10.29.3.161:5060>
+From: <sip:+33681688750@sip.ofr.com>;tag=mCGmk4SvAA
+Call-ID: mCGmk4SuAA@10.29.3.161
+Require: eventlist
+Contact: <sip:pcscf1gm.sip.ofr.com;transport=tcp>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694089844"
+isSender="true" 
+transactionId="z9hg4bk79d729ad8b32cbe33a1870e856d2224b333338" 
+callId="kJGmk4SwAA@10.29.3.161" 
+firstLine="PUBLISH sip:+33681688750@sip.ofr.com SIP/2.0" 
+>
+<![CDATA[PUBLISH sip:+33681688750@sip.ofr.com SIP/2.0
+Call-ID: kJGmk4SwAA@10.29.3.161
+CSeq: 1 PUBLISH
+From: <sip:+33681688750@sip.ofr.com>;tag=kJGmk4SxAA
+To: <sip:+33681688750@sip.ofr.com>
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK79d729ad8b32cbe33a1870e856d2224b333338
+Max-Forwards: 70
+Route: <sip:80.12.197.74:5060;lr;transport=UDP>
+Expires: 600000
+SIP-If-Match: 1032847821
+User-Agent: OrangeLabs-RCS-client/2.2.0
+P-Access-Network-Info: 3GPP-UTRAN-TDD
+Event: presence
+Content-Type: application/pidf+xml
+Content-Length: 2070
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:op="urn:oma:xml:prs:pidf:oma-pres" xmlns:opd="urn:oma:xml:pde:pidf:ext" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:ci="urn:ietf:params:xml:ns:pidf:cipid" xmlns:rpid="urn:ietf:params:xml:ns:pidf:rpid" xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:gml="urn:opengis:specification:gml:schema-xsd:feature:v3.0" entity="sip:+33681688750@sip.ofr.com">
+<tuple id="t1">
+  <status><basic>closed</basic></status>
+  <op:service-description>
+    <op:service-id>org.openmobilealliance:File-Transfer</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <contact>sip:+33681688750@sip.ofr.com</contact>
+  <timestamp>2011-02-14T10:36:19Z</timestamp>
+</tuple>
+<tuple id="t2">
+  <status><basic>closed</basic></status>
+  <op:service-description>
+    <op:service-id>org.gsma.imageshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <contact>sip:+33681688750@sip.ofr.com</contact>
+  <timestamp>2011-02-14T10:36:19Z</timestamp>
+</tuple>
+<tuple id="t3">
+  <status><basic>closed</basic></status>
+  <op:service-description>
+    <op:service-id>org.gsma.videoshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <contact>sip:+33681688750@sip.ofr.com</contact>
+  <timestamp>2011-02-14T10:36:19Z</timestamp>
+</tuple>
+<tuple id="t4">
+  <status><basic>closed</basic></status>
+  <op:service-description>
+    <op:service-id>org.openmobilealliance:IM-session</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <contact>sip:+33681688750@sip.ofr.com</contact>
+  <timestamp>2011-02-14T10:36:19Z</timestamp>
+</tuple>
+<tuple id="t5">
+  <status><basic>closed</basic></status>
+  <op:service-description>
+    <op:service-id>org.3gpp.cs-videotelephony</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <contact>tel:+33681688750</contact>
+  <timestamp>2011-02-14T10:36:19Z</timestamp>
+</tuple>
+</presence>
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694090164"
+isSender="false" 
+transactionId="z9hg4bk79d729ad8b32cbe33a1870e856d2224b333338" 
+callId="kJGmk4SwAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+CSeq: 1 PUBLISH
+To: <sip:+33681688750@sip.ofr.com>;tag=18a9054b05b4-867136516-1-865-44371-1y9pis
+Expires: 600000
+Via: SIP/2.0/UDP 10.29.3.161:5060;branch=z9hG4bK79d729ad8b32cbe33a1870e856d2224b333338
+From: <sip:+33681688750@sip.ofr.com>;tag=kJGmk4SxAA
+Call-ID: kJGmk4SwAA@10.29.3.161
+SIP-ETag: 334929115
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694094362"
+isSender="false" 
+transactionId="z9hg4bk_imsca0620802.000_f659a5e995a927d6c02d9e58e00456cc" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="NOTIFY sip:10.29.3.161:5060 SIP/2.0" 
+>
+<![CDATA[NOTIFY sip:10.29.3.161:5060 SIP/2.0
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_f659a5e995a927d6c02d9e58e00456cc;lskpmc=P34
+Record-Route: <sip:80.12.197.74;routing_id=pcscf_a_side;lskpmc=P34;lr>
+CSeq: 1002 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+Event: presence.winfo
+Max-Forwards: 68
+Content-Type: application/watcherinfo+xml
+From: <sip:+33681688750@sip.ofr.com>;tag=118a9054b05b4-867136516-1-865-44361-4nilv
+Call-ID: 88Fmk4SsAA@10.29.3.161
+Subscription-State: active;expires=7195
+Contact: <sip:10.194.117.34:5050;transport=tcp>
+Content-Length: 352
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<watcherinfo xmlns="urn:ietf:params:xml:ns:watcherinfo" version="1" state="partial">
+<watcher-list resource="sip:+33681688750@sip.ofr.com" package="presence">
+<watcher status="active" id="-337754945" duration-subscribed="4" event="subscribe">sip:+33681688750@sip.ofr.com</watcher>
+</watcher-list>
+</watcherinfo>
+]]>
+</message>
+
+<message
+from="80.12.197.74:5060" 
+to="10.29.3.161:5060" 
+time="1297694094423"
+isSender="false" 
+transactionId="z9hg4bk_imsca0620802.000_bff56fb072f987995a8ca9757a19f947" 
+callId="SIHmk4SBBA@10.29.3.147" 
+firstLine="OPTIONS sip:10.29.3.161:5060 SIP/2.0" 
+>
+<![CDATA[OPTIONS sip:10.29.3.161:5060 SIP/2.0
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_bff56fb072f987995a8ca9757a19f947;lskpmc=P34
+P-Asserted-Identity: <tel:+33643933665>,<sip:+33643933665@sip.ofr.com>
+Call-ID: SIHmk4SBBA@10.29.3.147
+CSeq: 1 OPTIONS
+From: <sip:+33643933665@sip.ofr.com>;tag=TIHmk4SCBA
+To: <tel:+33681688750>
+Max-Forwards: 66
+Contact: <sip:10.29.3.147:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is"
+a: *;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";explicit
+Accept: application/sdp
+User-Agent: OrangeLabs-RCS-client/2.2.0
+Allow: INVITE,ACK,BYE,NOTIFY,OPTIONS,MESSAGE
+P-Called-Party-ID: <sip:+33681688750@sip.ofr.com;user=phone>
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694094421"
+isSender="true" 
+transactionId="z9hg4bk_imsca0620802.000_f659a5e995a927d6c02d9e58e00456cc" 
+callId="88Fmk4SsAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_f659a5e995a927d6c02d9e58e00456cc;lskpmc=P34
+CSeq: 1002 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=98Fmk4StAA
+From: <sip:+33681688750@sip.ofr.com>;tag=118a9054b05b4-867136516-1-865-44361-4nilv
+Call-ID: 88Fmk4SsAA@10.29.3.161
+Content-Length: 0
+
+]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:5060" 
+time="1297694094522"
+isSender="true" 
+transactionId="z9hg4bk_imsca0620802.000_bff56fb072f987995a8ca9757a19f947" 
+callId="SIHmk4SBBA@10.29.3.147" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Via: SIP/2.0/UDP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_bff56fb072f987995a8ca9757a19f947;lskpmc=P34
+Call-ID: SIHmk4SBBA@10.29.3.147
+CSeq: 1 OPTIONS
+From: <sip:+33643933665@sip.ofr.com>;tag=TIHmk4SCBA
+To: <tel:+33681688750>;tag=1SHmk4SyAA
+Accept-Contact: *;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is";explicit
+Server: OrangeLabs-RCS-client/2.2.0
+Content-Type: application/sdp
+Contact: <sip:10.29.3.161:5060>;+g.3gpp.cs-voice;+g.3gpp.app_ref="urn%3Aurn-xxx%3A3gpp-application.ims.iari.gsma-is"
+Content-Length: 85
+
+v=0
+o=- 3506682894 3506682894 IN IP4 10.29.3.161
+s=-
+c=IN IP4 10.29.3.161
+t=0 0
+]]>
+</message>
+
+<message
+from="80.12.197.74:38041" 
+to="10.29.3.161:5060" 
+time="1297694095647"
+isSender="false" 
+transactionId="z9hg4bk_imsca0620802.000_02adc2490630fcae373ed01aa1577133" 
+callId="mCGmk4SuAA@10.29.3.161" 
+firstLine="NOTIFY sip:10.29.3.161:5060 SIP/2.0" 
+>
+<![CDATA[NOTIFY sip:10.29.3.161:5060 SIP/2.0
+Via: SIP/2.0/TCP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_02adc2490630fcae373ed01aa1577133;lskpmc=P34;rport=38041
+Record-Route: <sip:80.12.197.74;routing_id=pcscf_a_side;lskpmc=P34;lr>
+CSeq: 1002 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=mCGmk4SvAA
+Event: presence
+Max-Forwards: 68
+Content-Type: multipart/related;type="application/rlmi+xml";boundary="nxbound1297694125316"
+From: <sip:+33681688750@sip.ofr.com;pres-list=rcs>;tag=118a9054b05b4-867136516-1-865-44362-xkgud1
+Call-ID: mCGmk4SuAA@10.29.3.161
+Require: eventlist
+Subscription-State: active;expires=7195
+Contact: <sip:10.194.117.34:5050;transport=tcp>
+Content-Length: 9745
+
+
+--nxbound1297694125316
+Content-ID:<sip33681688750@sipofrcompreslistrcs_1297694125315>
+Content-Type:application/rlmi+xml; charset=utf-8
+Content-Transfer-Encoding:binary
+
+<?xml version="1.0" encoding="UTF-8"?>
+<list xmlns="urn:ietf:params:xml:ns:rlmi" uri="sip:+33681688750@sip.ofr.com;pres-list=rcs" version="1" fullState="false"><name>rcs</name>
+<resource uri="tel:+33643933665"><instance id="001" state="active" reason="subscribe" cid="tel33643933665_1297694125314"/></resource>
+<resource uri="sip:+33681688750@sip.ofr.com"><instance id="001" state="active" reason="subscribe" cid="sip33681688750@sipofrcom_1297694125312"/></resource></list>
+
+--nxbound1297694125316
+Content-ID:<sip33681688750@sipofrcom_1297694125312>
+Content-Type:application/pidf+xml; charset=utf-8
+Content-Transfer-Encoding:binary
+
+<?xml version="1.0" encoding="UTF-8"?>
+<ep:presence xmlns:ep="urn:ietf:params:xml:ns:pidf" xmlns:op="urn:oma:xml:prs:pidf:oma-pres" xmlns:rt="urn:ietf:params:xml:ns:pidf:rpid" xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:rs="urn:ietf:params:xml:ns:pidf:status:rpid-status" entity="sip:+33681688750@sip.ofr.com">
+<ep:tuple id="t2">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.imageshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:01Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t5">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.3gpp.cs-videotelephony</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>tel:+33681688750</ep:contact>
+<ep:timestamp>2011-02-14T14:32:01Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t4">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:IM-session</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:01Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t2_0">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.imageshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T13:03:31Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t3">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.videoshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:01Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t1">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:File-Transfer</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:01Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t1_0">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:File-Transfer</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T13:03:31Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t4_0">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:IM-session</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T13:03:31Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t3_0">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.videoshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33681688750@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T13:03:31Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t5_0">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.3gpp.cs-videotelephony</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>tel:+33681688750</ep:contact>
+<ep:timestamp>2011-02-10T13:03:31Z</ep:timestamp>
+</ep:tuple>
+<pdm:person id="p1">
+  <op:overriding-willingness>
+    <op:basic>open</op:basic>
+  </op:overriding-willingness>
+  <ci:homepage xmlns:ci="urn:ietf:params:xml:ns:pidf:cipid"></ci:homepage>
+  <rt:status-icon xmlns:opd="urn:oma:xml:pde:pidf:ext" opd:etag="204" opd:fsize="4092" opd:contenttype="image/jpeg" opd:resolution="96x96">http://10.194.117.34:8080/services/org.openmobilealliance.pres-content/users/sip%3A%2B33681688750%40sip.ofr.com/oma_status-icon/rcs_status_icon</rt:status-icon>
+  <pdm:note>At Home</pdm:note>
+<pdm:timestamp>2011-02-14T10:36:19Z</pdm:timestamp>
+</pdm:person>
+</ep:presence>
+
+--nxbound1297694125316
+Content-ID:<tel33643933665_1297694125314>
+Content-Type:application/pidf+xml; charset=utf-8
+Content-Transfer-Encoding:binary
+
+<?xml version="1.0" encoding="UTF-8"?>
+<ep:presence xmlns:ep="urn:ietf:params:xml:ns:pidf" xmlns:op="urn:oma:xml:prs:pidf:oma-pres" xmlns:rt="urn:ietf:params:xml:ns:pidf:rpid" xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:rs="urn:ietf:params:xml:ns:pidf:status:rpid-status" entity="tel:+33643933665">
+<ep:tuple id="t2">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.imageshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:04Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t5">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.3gpp.cs-videotelephony</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>tel:+33643933665</ep:contact>
+<ep:timestamp>2011-02-14T14:32:04Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t4">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:IM-session</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:04Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t2_0">
+  <ep:status>
+
+
+<ep:basic>open</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.imageshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T14:35:19Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t3">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.videoshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:04Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t1">
+  <ep:status>
+
+
+<ep:basic>closed</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:File-Transfer</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-14T14:32:04Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t1_0">
+  <ep:status>
+
+
+<ep:basic>open</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:File-Transfer</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T14:35:19Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t4_0">
+  <ep:status>
+
+
+<ep:basic>open</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.openmobilealliance:IM-session</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T14:35:19Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t3_0">
+  <ep:status>
+
+
+<ep:basic>open</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.gsma.videoshare</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>sip:+33643933665@sip.ofr.com</ep:contact>
+<ep:timestamp>2011-02-10T14:35:19Z</ep:timestamp>
+</ep:tuple>
+<ep:tuple id="t5_0">
+  <ep:status>
+
+
+<ep:basic>open</ep:basic>
+</ep:status>
+<op:service-description>
+    <op:service-id>org.3gpp.cs-videotelephony</op:service-id>
+    <op:version>1.0</op:version>
+  </op:service-description>
+  <ep:contact>tel:+33643933665</ep:contact>
+<ep:timestamp>2011-02-10T14:35:19Z</ep:timestamp>
+</ep:tuple>
+<pdm:person id="p1">
+  <op:overriding-willingness>
+    <op:basic>open</op:basic>
+  </op:overriding-willingness>
+  <ci:homepage xmlns:ci="urn:ietf:params:xml:ns:pidf:cipid"></ci:homepage>
+  <rt:status-icon xmlns:opd="urn:oma:xml:pde:pidf:ext" opd:etag="144" opd:fsize="3125" opd:contenttype="image/jpeg" opd:resolution="96x96">http://10.194.117.34:8080/services/org.openmobilealliance.pres-content/users/sip%3A%2B33643933665%40sip.ofr.com/oma_status-icon/rcs_status_icon</rt:status-icon>
+  <pdm:note>At Home</pdm:note>
+<pdm:timestamp>2011-02-14T08:40:46Z</pdm:timestamp>
+</pdm:person>
+</ep:presence>
+
+--nxbound1297694125316--]]>
+</message>
+
+<message
+from="10.29.3.161:5060" 
+to="80.12.197.74:38041" 
+time="1297694095732"
+isSender="true" 
+transactionId="z9hg4bk_imsca0620802.000_02adc2490630fcae373ed01aa1577133" 
+callId="mCGmk4SuAA@10.29.3.161" 
+firstLine="SIP/2.0 200 OK" 
+>
+<![CDATA[SIP/2.0 200 OK
+Via: SIP/2.0/TCP 80.12.197.74:5060;branch=z9hG4bK_IMSCA0620802.000_02adc2490630fcae373ed01aa1577133;lskpmc=P34;rport=38041
+CSeq: 1002 NOTIFY
+To: <sip:+33681688750@sip.ofr.com>;tag=mCGmk4SvAA
+From: <sip:+33681688750@sip.ofr.com;pres-list=rcs>;tag=118a9054b05b4-867136516-1-865-44362-xkgud1
+Call-ID: mCGmk4SuAA@10.29.3.161
+Content-Length: 0
+
+]]>
+</message>
+

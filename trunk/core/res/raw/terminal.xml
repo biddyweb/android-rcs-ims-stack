@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<access>
+		<parameter description="Network access [MOBILE|WIFI|null], null means any access may be used)"
+			 name="NetworkAccess"
+			 value=""/>
+
+		<parameter description="Mobile operator (null means any operator may be used)"
+			 name="Operator"
+			 value=""/>
+
+		<parameter description="Mobile APN (null means any APN may be used)"
+			 name="APN"
+			 value=""/>
+	</access>
+
+	<sip>
+		<parameter description="SIP timer T1 (in milliseconds)"
+			 name="SipTimerT1"
+			 value="2000"/>
+
+		<parameter description="SIP timer T2 (in milliseconds)"
+			 name="SipTimerT2"
+			 value="16000"/>
+
+		<parameter description="SIP timer T4 (in milliseconds)"
+			 name="SipTimerT4"
+			 value="17000"/>
+	</sip>
+
+</configuration>
