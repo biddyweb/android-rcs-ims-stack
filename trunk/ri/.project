@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>RCS_ri</name>
+	<name>OPENSRC_ri</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -31,6 +31,11 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 	<linkedResources>
+		<link>
+			<name>OPENSRC_core_src</name>
+			<type>2</type>
+			<locationURI>_android_OPENSRC_core/src</locationURI>
+		</link>
 		<link>
 			<name>RCS_core_src</name>
 			<type>2</type>
