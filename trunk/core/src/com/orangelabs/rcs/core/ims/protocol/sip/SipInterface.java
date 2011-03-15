@@ -391,20 +391,12 @@ public class SipInterface implements SipListener {
      */
     public void setServiceRoutePath(ListIterator<Header> routes) {
     	serviceRoutePath.clear();
-    	if ((routes == null) || !routes.hasNext()) {
-    		// Use the default route path
-    		serviceRoutePath.addElement(getDefaultRoute());
-    		if (logger.isActivated()) {
-    			logger.debug("Service route path set to default route path");
-    		}
-    	} else {
-    		// Use the received service route path
+		serviceRoutePath.addElement(getDefaultRoute());
+    	if (routes != null) {
+    		// Add the received service route path
     		while(routes.hasNext()) {
     			ExtensionHeader route = (ExtensionHeader)routes.next();
     			serviceRoutePath.addElement(route.getValue());
-    		}
-    		if (logger.isActivated()) {
-    			logger.debug("Service route path has been updated");
     		}
     	}
 	}
