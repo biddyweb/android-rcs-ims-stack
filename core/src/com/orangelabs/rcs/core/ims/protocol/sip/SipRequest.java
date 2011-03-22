@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
 import javax.sip.header.ExpiresHeader;
+import javax.sip.header.SubjectHeader;
 import javax.sip.message.Request;
 
 /**
@@ -77,4 +78,18 @@ public class SipRequest extends SipMessage {
         	return -1;
         }
 	}	
+
+	/**
+	 * Return the subject
+	 * 
+	 * @return Subject or null if there is no subject
+	 */
+	public String getSubject() {
+		SubjectHeader subject = (SubjectHeader)getStackMessage().getHeader(SubjectHeader.NAME);
+    	if (subject != null) {
+    		return subject.getSubject();
+        } else {
+        	return null;
+        }
+	}
 }
