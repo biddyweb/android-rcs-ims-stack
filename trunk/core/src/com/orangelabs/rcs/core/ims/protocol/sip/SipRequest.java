@@ -82,14 +82,14 @@ public class SipRequest extends SipMessage {
 	/**
 	 * Return the subject
 	 * 
-	 * @return Subject or null if there is no subject
+	 * @return Subject or empty
 	 */
 	public String getSubject() {
 		SubjectHeader subject = (SubjectHeader)getStackMessage().getHeader(SubjectHeader.NAME);
     	if (subject != null) {
     		return subject.getSubject();
         } else {
-        	return null;
+        	return "";
         }
 	}
 }
