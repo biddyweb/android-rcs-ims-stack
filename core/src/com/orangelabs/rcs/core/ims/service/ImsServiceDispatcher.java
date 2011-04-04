@@ -216,7 +216,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") && SipUtils.isFeatureTagPresent(request, "g.oma.sip-im") &&
-	    			isTagPresent(sdp, "message/cpim")) {
+	    			isTagPresent(sdp, "resource-lists+xml") && isTagPresent(sdp, "message/cpim")) {
 		        // Ad-hoc group chat session
 	    		if (logger.isActivated()) {
 	    			logger.debug("Ad-hoc group chat session invitation");
