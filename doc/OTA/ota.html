@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<wap-provisioningdoc version="1.1">
+	<characteristic type="APPLICATION">
+		<parm name="APPID" value="RCS-e"/>
+	</characteristic>
+
+	<characteristic type=”IMS”>
+		<characteristic type=”LBO_P-CSCF_Address”>
+			<parm name=”Address” value=”80.12.197.74:5060”/>
+			<parm name=”AddressType” value=”X”/>
+		</characteristic>
+
+		<parm name=”NatUrlFmt” value=”false”/>
+		<parm name=”IntUrlFmt” value=”true”/>
+		<parm name=”Q-Value” value=”X”/>
+
+		<characteristic type=”ServCapPresentity”>
+			<parm name=”VoiceCall” value=”true”/>
+			<parm name=”Chat” value=”true”/>
+			<parm name=”SendSms” value=”X”/>
+			<parm name=”FileTranfer” value=”X”/>
+			<parm name=”VideoShare” value=”X”/>
+			<parm name=”ImageShare” value=”X”/>
+		</characteristic>
+
+		<parm name=”MaxSizeImageShare” value=”X”/>
+		<parm name=”MaxSizeImageShare” value=”X”/>
+	</characteristic>
+	
+	<characteristic type=”APPAUTH”>
+		<parm name=”AuthType” value=”X”/>
+		<parm name=”Realm” value=”X”/>
+		<parm name=”UserName” value=”X”/>
+		<parm name=”UserPwd” value=”X”/>
+	</characteristic>
+
+	<characteristic type=”PRESENCE”>
+		<parm name=”usePresence” value=”X”/>
+		<parm name=”presencePrfl” value=”X”/>
+		<parm name=”AvailabilityAuth” value=”X”/>
+
+		<characteristic type=”FAVLINK”>
+			<parm name=”AutMa” value=”X”/>
+			<characteristic type=”LINKS”>
+				<parm name=” OpFavUrl1” value=”X”/>
+				<parm name=” OpFavUrl2” value=”X”/>
+				<parm name=” OpFavUrl3” value=”X”/>
+			</characteristic>
+		</characteristic>
+
+		<parm name=”IconMaxSize” value=”X”/>
+		<parm name=”NoteMaxSize” value=”X”/>
+
+		<characteristic type=”SERVCAPWATCH”>
+			<parm name=”FetchAuth” value=”X”/>
+			<parm name=”ContactCapPresAut” value=”X”/>
+		</characteristic>
+
+		<characteristic type=”ServCapPresentity”>
+			<parm name=”WATCHERFETCHAUTH” value=”X”/>
+		</characteristic>
+
+		<parm name=”client-obj-datalimit” value=”X”/>
+		<parm name=”content-serveruri” value=”X”/>
+		<parm name=”source-throttlepublish” value=”X”/>
+		<parm name=”max-number-ofsubscriptions-inpresence-list” value=”X”/>
+		<parm name=”service-uritemplate” value=”X”/>
+	</characteristic>	 
+ 
+	<characteristic type=”XDMS”>
+		<parm name=”RevokeTimer” value=”X”/>
+		<parm name=”XCAPRootURI” value=”X”/>
+		<parm name=”XCAPAuthenticationUserName” value=”X”/>
+		<parm name=”XCAPAuthenticationSecret” value=”X”/>
+		<parm name=”XCAPAuthenticationType” value=”X”/>
+	</characteristic>
+ 
+	<characteristic type=”IM”>
+		<parm name=”imCapAlwaysON” value=”X”/>
+		<parm name=”imWarnSF” value=”X”/>
+		<parm name=”ftWarnSize” value=”X”/>
+		<parm name=”ChatAuth” value=”X”/>
+		<parm name=”SmsFallBackAuth” value=”X”/>
+		<parm name=”AutAccept” value=”X”/>
+		<parm name=”MaxSize1to1” value=”X”/>
+		<parm name=”MaxSize1toM” value=”X”/>
+		<parm name=”TimerIdle” value=”X”/>
+		<parm name=”MaxSizeFileTr” value=”X”/>
+		<parm name=”pres-srv-cap” value=”X”/>
+		<parm name=”max_adhoc_group_size” value=”X”/>
+		<parm name=”conf-fcty-uri” value=”X”/>
+		<parm name=”exploder-uri” value=”X”/>
+	</characteristic>	 
+ 
+	<characteristic type=”CAPDISCOVERY”>
+		<parm name=”pollingPeriod” value=”X”/>
+		<parm name=”capInfoExpiry” value=”X”/>
+		<parm name=”presenceDisc” value=”X”/>
+	</characteristic>	 
+		
+	<characteristic type=”APN”>
+		<parm name=”rcseOnlyAPN” value=”X”/>
+		<parm name=”enableRcseSwitch” value=”X”/>
+	</characteristic>
+	
+	<characteristic type=”OTHER”>
+		<parm name=”endUserConfReqId” value=”X”/>
+	</characteristic>		
+
+</wap-provisioningdoc>
