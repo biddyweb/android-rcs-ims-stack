@@ -2,9 +2,13 @@
 
 = Introduction =
 
+Capability API
+Contact API
 Presence API definition
 Rich call API definition
 Rich messaging API definition
+Event log API
+RCS Settings
 
 
 = Details =
