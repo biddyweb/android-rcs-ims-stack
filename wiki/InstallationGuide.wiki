@@ -1,10 +1,10 @@
-#summary RCS/IMS stack installation & configuration guide
+#summary RCS-e stack installation & configuration guide
 
 = Introduction =
 
-How to install/uninstall the RCS/IMS stack ? How to start the RCS/IMS stack ? How to configure the IMS user profile ?
+How to install/uninstall the RCS-e stack ? How to start the RCS-e stack ? How to configure the IMS user profile ?
 
 
 = Details =
 
-See the following document [http://android-rcs-ims-stack.googlecode.com/svn-history/r34/doc/userguide/RI_installation_guide_ed1.1.pdf Installation guide]
+See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/userguide/RCSe_Stack_install_guide_ed1.0.pdf]
