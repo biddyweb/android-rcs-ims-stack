@@ -4,11 +4,11 @@
 
 Capability API<br>
 Contacts API<br>
-Presence API definition<br>
-Rich call API definition<br>
-Rich messaging API definition<br>
+Presence API<br>
+Rich call API<br>
+Rich messaging API<br>
 Event log API<br>
-RCS Settings<br>
+RCS Settings API<br>
 
 
 = Details =
