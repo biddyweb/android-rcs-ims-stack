@@ -3,7 +3,7 @@
 = Introduction =
 
 Capability API<br>
-Contact API<br>
+Contacts API<br>
 Presence API definition<br>
 Rich call API definition<br>
 Rich messaging API definition<br>
