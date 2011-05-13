@@ -1,4 +1,4 @@
-#summary RCS/IMS stack API specification
+#summary RCS-e stack API specification
 
 = Introduction =
 
@@ -9,4 +9,4 @@ Rich messaging API definition
 
 = Details =
 
-See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS_API_ed1.0.pdf RCS API Specification]
+See the following document [http://http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.0.pdf]
