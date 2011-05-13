@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<video-sharing>
+		<parameter description="Video codec"
+			 name="VideoCodec"
+			 value="h263-2000"/>
+
+		<parameter description="Video clock rate"
+			 name="VideoClockRate"
+			 value="90000"/>
+
+		<parameter description="Video codec parameters"
+			 name="VideoCodecParams"
+			 value="profile=0;level=10"/>
+			 
+		<parameter description="Video frame rate"
+			 name="VideoFrameRate"
+			 value="8"/>
+
+		<parameter description="Video width"
+			 name="VideoWidth"
+			 value="176"/>
+
+		<parameter description="Video height"
+			 name="VideoHeight"
+			 value="144"/>
+	</video-sharing>
+	
+</configuration>
