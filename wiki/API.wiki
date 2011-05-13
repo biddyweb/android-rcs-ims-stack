@@ -9,4 +9,4 @@ Rich messaging API definition
 
 = Details =
 
-See the following document [http://http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.0.pdf]
+See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.0.pdf]
