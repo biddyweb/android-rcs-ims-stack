@@ -1,0 +1,280 @@
+package com.orangelabs.rcs.core.ims.service.capability;
+
+import java.util.List;
+
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipManager;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
+import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+/**
+ * Options request task
+ * 
+ * @author jexa7410
+ */
+public class OptionsRequestTask {
+    /**
+     * IMS module
+     */
+    private ImsModule imsModule;
+    
+    /**
+     * Remote contact
+     */
+    private String contact;
+    
+    /**
+     * Feature tags
+     */
+    private List<String> featureTags;
+    
+    /**
+     * Dialog path
+     */
+    private SipDialogPath dialogPath = null;
+    
+    /**
+	 * Authentication agent
+	 */
+	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+
+	/**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+    
+    /**
+	 * Constructor
+	 * 
+     * @param parent IMS module
+   	 * @param contact Remote contact
+   	 * @param featureTags Feature tags
+	 */
+	public OptionsRequestTask(ImsModule parent, String contact, List<String> featureTags) {
+        this.imsModule = parent;
+        this.contact = contact;
+        this.featureTags = featureTags;
+	}
+	
+	/**
+	 * Start task
+	 */
+	public void start() {
+    	sendOptions();
+	}
+	
+	/**
+	 * Send an OPTIONS request
+	 */
+	private void sendOptions() {
+    	if (logger.isActivated()) {
+    		logger.info("Send an OPTIONS message to " + contact);                
+    	}
+
+    	try {
+        	// Create a dialog path
+        	String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+        	dialogPath = new SipDialogPath(
+        			imsModule.getSipManager().getSipStack(),
+        			imsModule.getSipManager().getSipStack().generateCallId(),
+            				1,
+            				contactUri,
+            				ImsModule.IMS_USER_PROFILE.getPublicUri(),
+            				contactUri,
+            				imsModule.getSipManager().getSipStack().getServiceRoutePath());        	
+        	
+            // Create OPTIONS request
+        	if (logger.isActivated()) {
+        		logger.debug("Send first OPTIONS");
+        	}
+	        SipRequest options = SipMessageFactory.createOptions(dialogPath, featureTags);
+	        
+	        // Send OPTIONS request
+	    	sendOptions(options);
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("OPTIONS request has failed", e);
+        	}
+        	handleError(new CapabilityError(CapabilityError.UNEXPECTED_EXCEPTION, e.getMessage()));
+        }        
+    }
+    
+	/**
+	 * Send OPTIONS message
+	 * 
+	 * @param options SIP OPTIONS
+	 * @throws Exception
+	 */
+	private void sendOptions(SipRequest options) throws Exception {
+        if (logger.isActivated()) {
+        	logger.info("Send OPTIONS");
+        }
+
+        // Send OPTIONS request
+        SipTransactionContext ctx = imsModule.getSipManager().sendSipMessageAndWait(options);
+
+        // Wait response
+        if (logger.isActivated()) {
+        	logger.info("Wait response");
+        }
+        ctx.waitResponse(SipManager.TIMEOUT);
+        
+        // Analyze the received response 
+        if (ctx.isSipResponse()) {
+        	// A response has been received
+            if (ctx.getStatusCode() == 200) {
+            	// 200 OK
+    			handle200OK(ctx);
+            } else
+            if (ctx.getStatusCode() == 407) {
+            	// 407 Proxy Authentication Required
+            	handle407Authentication(ctx);
+            } else
+            if ((ctx.getStatusCode() == 480) || (ctx.getStatusCode() == 408)) {
+            	// User not registered
+            	handleUserNotRegistered(ctx);
+            } else
+            if (ctx.getStatusCode() == 404) {
+            	// User not found
+            	handleUserNotFound(ctx);
+            } else {
+            	// Other error response
+    			handleError(new CapabilityError(CapabilityError.OPTIONS_FAILED,
+    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));    					
+            }
+        } else {
+    		if (logger.isActivated()) {
+        		logger.debug("No response received for OPTIONS");
+        	}
+
+    		// No response received: timeout
+        	handleUserNotRegistered(ctx);
+        }
+	}       
+    
+	/**
+	 * Handle user not registered 
+	 * 
+	 * @param ctx SIP transaction context
+	 */
+	private void handleUserNotRegistered(SipTransactionContext ctx) {
+        // 408 or 480 response received
+        if (logger.isActivated()) {
+            logger.info("User " + contact + " is not registered");
+        }
+
+        ContactInfo info = ContactsManager.getInstance().getContactInfo(contact);
+        if (info == null) {
+        	// If we do not have already some info on this contact
+        	// We update the database with empty capabilities
+        	Capabilities capabilities = new Capabilities();
+        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_OFFLINE);
+    	}else{
+    		// We have some info on this contact
+    		// We update the database with its previous capabilities and set the registration state to offline
+    		ContactsManager.getInstance().setContactCapabilities(contact, info.getCapabilities(), true, ContactsManager.REGISTRATION_STATUS_OFFLINE);    		 
+    	}
+	}
+	
+	/**
+	 * Handle user not found 
+	 * 
+	 * @param ctx SIP transaction context
+	 */
+	private void handleUserNotFound(SipTransactionContext ctx) {
+        // 404 response received
+        if (logger.isActivated()) {
+            logger.info("User " + contact + " is not found");
+        }
+
+        // We update the database with empty capabilities
+        Capabilities capabilities = new Capabilities();
+        ContactsManager.getInstance().setContactCapabilities(contact, capabilities, false, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+	}
+
+	/**
+	 * Handle 200 0K response 
+	 * 
+	 * @param ctx SIP transaction context
+	 */
+	private void handle200OK(SipTransactionContext ctx) {
+        // 200 OK response received
+        if (logger.isActivated()) {
+            logger.info("200 OK response received for " + contact);
+        }
+    	
+    	// Read capabilities
+        SipResponse resp = ctx.getSipResponse();
+    	Capabilities capabilities = OptionsManager.extractCapabilities(resp);
+
+    	// Update the database capabilities
+    	// Set the contact registration state to true if it is a RCS-e contact
+    	if (capabilities.isImSessionSupported()) {
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_ONLINE);
+    	}else{
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    	}
+
+    	// Notify listener
+    	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
+	}	
+	
+	/**
+	 * Handle 407 response 
+	 * 
+	 * @param ctx SIP transaction context
+	 * @throws Exception
+	 */
+	private void handle407Authentication(SipTransactionContext ctx) throws Exception {
+        // 407 response received
+    	if (logger.isActivated()) {
+    		logger.info("407 response received");
+    	}
+
+    	SipResponse resp = ctx.getSipResponse();
+
+    	// Set the Proxy-Authorization header
+    	authenticationAgent.readProxyAuthenticateHeader(resp);
+
+        // Increment the Cseq number of the dialog path
+        dialogPath.incrementCseq();
+
+        // Create a second OPTIONS request with the right token
+        if (logger.isActivated()) {
+        	logger.info("Send second OPTIONS");
+        }
+        SipRequest options = SipMessageFactory.createOptions(dialogPath, featureTags);
+        
+        // Set the Authorization header
+        authenticationAgent.setProxyAuthorizationHeader(options);
+        
+        // Send OPTIONS request
+    	sendOptions(options);
+	}		
+	
+	/**
+	 * Handle error response 
+	 * 
+	 * @param error Error
+	 */
+	private void handleError(CapabilityError error) {
+        // Error
+    	if (logger.isActivated()) {
+    		logger.info("Options has failed for contact " + contact + ": " + error.getErrorCode() + ", reason=" + error.getMessage());
+    	}
+    	
+    	// We update the database capabilities timestamp
+    	ContactsManager.getInstance().setContactCapabilitiesTimestamp(contact, System.currentTimeMillis());
+	}	
+	
+
+}
