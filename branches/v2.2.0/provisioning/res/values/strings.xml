@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Provisioning</string>
+    
+    <string name="label_list_param">List parameters</string>
+    <string name="label_edit_param">Edit a parameter</string>
+    <string name="label_param_name">Name:</string>
+    <string name="label_param_value">Value:</string>
+    
+    <string name="label_ok">OK</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_save">Save</string>
+    
+    <string name="label_reboot_service">The RCS service should be restarted before to take into account the modifications</string>
+</resources>
