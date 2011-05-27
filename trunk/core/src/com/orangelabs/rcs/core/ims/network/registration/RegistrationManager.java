@@ -323,8 +323,10 @@ public class RegistrationManager extends PeriodicRefresher {
     	
         // Set the associated URI
 		ExtensionHeader associatedHeader = (ExtensionHeader)resp.getHeader(SipUtils.HEADER_P_ASSOCIATED_URI);
-		String associatedUri = associatedHeader.getValue();
-		ImsModule.IMS_USER_PROFILE.setPublicUri(associatedUri);
+		if (associatedHeader != null) {		
+			String associatedUri = associatedHeader.getValue();
+			ImsModule.IMS_USER_PROFILE.setPublicUri(associatedUri);
+		}
 		
         // Set the service route path
 		ListIterator<Header> routes = resp.getHeaders(SipUtils.HEADER_SERVICE_ROUTE);
@@ -473,7 +475,7 @@ public class RegistrationManager extends PeriodicRefresher {
     }
 
     /**
-     * Retrieve the expire period in the contact header or in the expire header
+     * Retrieve the expire period
      * 
      * @param response SIP response
      */
@@ -494,7 +496,6 @@ public class RegistrationManager extends PeriodicRefresher {
     		int expires = expiresHeader.getExpires();
 		    if (expires != -1) {
 	    		expirePeriod = expires;
-	    		return;
 	    	}
         }
     }
