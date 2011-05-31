@@ -50,6 +50,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -112,18 +113,18 @@ public class SipMessageFactory {
 	        	contact.setParameter("reg-id", ""+regId);
 	        }
 	        if (instanceId != null) {
-	        	contact.setParameter("+sip.instance", "<urn:uuid:" + instanceId + ">");
+	        	contact.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
 	        }
 	        register.addHeader(contact);	        
 	        
             // Set feature tags
-            SipUtils.setFeatureTags(register, SipUtils.getAllSupportedFeatureTags());
+            SipUtils.setFeatureTags(register, CapabilityUtils.getAllSupportedFeatureTags());
 
             // Set Allow header
 	        SipUtils.buildAllowHeader(register);
 
 	        // Set Supported header
-	        Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "path");
+	        SupportedHeader supportedHeader = SipUtils.HEADER_FACTORY.createSupportedHeader("path, gruu");
 	        register.addHeader(supportedHeader);
 	        
 	        // Set the Route header
@@ -281,7 +282,7 @@ public class SipMessageFactory {
 			message.addHeader(dialog.getSipStack().getContactHeader());	        
 			
             // Set feature tags
-	        String[] tags = {SipUtils.FEATURE_OMA_IM };
+	        String[] tags = {ChatUtils.FEATURE_OMA_IM };
             SipUtils.setFeatureTags(message, tags);
 	        
 	        // Set User-Agent header
@@ -877,7 +878,7 @@ public class SipMessageFactory {
 	        refer.addHeader(dialog.getSipStack().getContactHeader());	        
 	        
             // Set feature tags
-	        String[] tags = {SipUtils.FEATURE_OMA_IM};
+	        String[] tags = {ChatUtils.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
 			
 	        // Set Refer-To header
@@ -959,7 +960,7 @@ public class SipMessageFactory {
 	        refer.addHeader(dialog.getSipStack().getContactHeader());	        
 	        
             // Set feature tags
-	        String[] tags = {SipUtils.FEATURE_OMA_IM};
+	        String[] tags = {ChatUtils.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
 			
 	        // Set Require header

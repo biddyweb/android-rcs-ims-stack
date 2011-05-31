@@ -18,7 +18,6 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.List;
-
 import javax.sip.header.ExtensionHeader;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -30,6 +29,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * Chat utility functions
@@ -37,14 +37,42 @@ import com.orangelabs.rcs.utils.IdGenerator;
  * @author jexa7410
  */
 public class ChatUtils {
-    /**
+	/**
+	 * OMA IM feature tag
+	 */
+	public final static String FEATURE_OMA_IM = "+g.oma.sip-im";
+
+	/**
+	 * Get asserted identity
+	 * 
+	 * @param request SIP request
+	 * @param groupChat Is group chat
+	 * @return SIP URI
+	 */
+	public static String getAssertedIdentity(SipRequest request, boolean groupChat) {
+		if (groupChat) {
+			ExtensionHeader referredBy = (ExtensionHeader)request.getHeader(SipUtils.HEADER_REFERRED_BY);
+			if (referredBy != null) {
+				// Use the Referred-By header
+				return referredBy.getValue();
+			} else {
+				// Use the From header
+				return request.getFromUri();
+			}
+		} else {
+			// Use the P-Asserted-Identity header
+			return SipUtils.getAssertedIdentity(request);
+		}
+	}
+
+	/**
      * Is a plain text type
      * 
      * @param mime MIME type
      * @return Boolean
      */
     public static boolean isTextPlainType(String mime) {
-    	if (mime.equalsIgnoreCase(InstantMessage.MIME_TYPE)) {
+    	if ((mime != null) && mime.equalsIgnoreCase(InstantMessage.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -58,7 +86,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isApplicationIsComposingType(String mime) {
-    	if (mime.equalsIgnoreCase(IsComposingInfo.MIME_TYPE)) {
+    	if ((mime != null) && mime.equalsIgnoreCase(IsComposingInfo.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -72,7 +100,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isMessageCpimType(String mime) {
-    	if (mime.equalsIgnoreCase(CpimMessage.MIME_TYPE)) {
+    	if ((mime != null) && mime.equalsIgnoreCase(CpimMessage.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -86,7 +114,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isMessageImdnType(String mime) {
-    	if (mime.equalsIgnoreCase(ImdnDocument.MIME_TYPE)) {
+    	if ((mime != null) && mime.equalsIgnoreCase(ImdnDocument.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -112,7 +140,7 @@ public class ChatUtils {
 		String uriList = "";
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
-			uriList += " <entry uri=\"tel:" + contact + "\"/>" + SipUtils.CRLF;
+			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipAddress(contact) + "\"/>" + SipUtils.CRLF;
 		}
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
@@ -188,8 +216,8 @@ public class ChatUtils {
 		ExtensionHeader messageIdHeader = (ExtensionHeader)request.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 		if (messageIdHeader != null) {
 			return messageIdHeader.getValue();
-		}else{
-			return "";
+		} else {
+			return null;
 		}
 	}
 	

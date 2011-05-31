@@ -29,7 +29,6 @@ import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
-import javax.sip.header.ExtensionHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
 import javax.sip.header.SubjectHeader;
@@ -321,7 +320,7 @@ public abstract class SipMessage {
 	}
 	
 	/**
-	 * Return the features tags from Contact header and Accept-Contact header
+	 * Get the features tags from Contact header
 	 * 
 	 * @return Array of strings
 	 */
@@ -333,24 +332,16 @@ public abstract class SipMessage {
 		if (contactHeader != null) {
 	        for(Iterator i = contactHeader.getParameterNames(); i.hasNext();) {
 	        	String pname = (String)i.next();
-	        	tags.add(pname);
+	        	String value = contactHeader.getParameter(pname);
+        		if (value.length() == 0) {
+        			tags.add(pname);	        		
+	        	} else {
+		        	String[] values = value.split(",");
+		        	for(int j=0; j < values.length; j++) {
+	        			tags.add(values[j].trim());
+		        	}
+	        	}
 	        }
-		}
-
-		// Read Accept-Contact header
-		ExtensionHeader acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
-		if (acceptHeader == null) {
-			// Check contracted form
-			acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
-		}
-		if (acceptHeader != null) {
-			String[] pnames = acceptHeader.getValue().split(";");
-			if (pnames.length > 1) {
-				// Start at index 1 to bypass the address
-				for(int i=1; i < pnames.length; i++) {
-					tags.add(pnames[i]);
-				}
-			}
 		}
 		
 		return tags;

@@ -18,10 +18,17 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
+
+
+
+
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
-import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.utils.logger.Logger;
 import java.io.IOException;
 
@@ -41,6 +48,21 @@ public class RtpOutputStream implements ProcessorOutputStream {
      */
     private int remotePort;
 
+    /**
+     * Local port
+     */
+    private int localRtpPort = -1;
+
+    /**
+     * RTP receiver
+     */
+    private RtpPacketReceiver rtpReceiver = null;
+
+    /**
+     * RTCP receiver
+     */
+    private RtcpPacketReceiver rtcpReceiver = null;
+
 	/**
 	 * RTP transmitter
 	 */
@@ -52,8 +74,13 @@ public class RtpOutputStream implements ProcessorOutputStream {
 	private RtcpPacketTransmitter rtcpTransmitter =  null;
 
     /**
-	 * The logger
-	 */
+     * RTCP Session
+     */
+    private RtcpSession rtcpSession = null;
+
+    /**
+     * The logger
+     */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
@@ -62,9 +89,25 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * @param remoteAddress Remote address
      * @param remotePort Remote port
      */
-	public RtpOutputStream(String remoteAddress, int remotePort) {
+    public RtpOutputStream(String remoteAddress, int remotePort) {
+        this.remoteAddress = remoteAddress;
+        this.remotePort = remotePort;
+
+        rtcpSession = new RtcpSession(true, 16000);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param remoteAddress Remote address
+     * @param remotePort Remote port
+     */
+    public RtpOutputStream(String remoteAddress, int remotePort, int localRtpPort) {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
+        this.localRtpPort = localRtpPort;
+
+        rtcpSession = new RtcpSession(true, 16000);
     }
 
     /**
@@ -73,25 +116,33 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * @throws Exception
      */
     public void open() throws Exception {
-    	// Create the RTP transmitter
-		rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort);
 
-		// Create the RTCP transmitter
-		rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort+1);
-    }
+        if (localRtpPort != -1) {
+            // Create the RTP receiver
+            rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
+            // Create the RTCP receiver
+            rtcpReceiver = new RtcpPacketReceiver(localRtpPort + 1, rtcpSession);
 
-    /**
-     * Open the output stream
-     *
-     * @param connection the connection for symmetric rtp
-     * @throws Exception
-     */
-    public void open(DatagramConnection connection) throws Exception {
-        // Create the RTP transmitter
-        rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, connection);
-
-        // Create the RTCP transmitter
-        rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1);
+            if (RtpConfig.SYMETRIC_RTP) {
+                // Create the RTP transmitter
+                rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession,
+                        rtpReceiver.getConnection());
+                // Create the RTCP transmitter
+                rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1,
+                        rtcpSession, rtcpReceiver.getConnection());
+            } else {
+                // Create the RTP transmitter
+                rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);
+                // Create the RTCP transmitter
+                rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1,
+                        rtcpSession);
+            }
+        } else {
+            // Create the RTP transmitter
+            rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);
+            // Create the RTCP transmitter
+            rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1, rtcpSession);
+        }
     }
 
     /**
@@ -100,19 +151,20 @@ public class RtpOutputStream implements ProcessorOutputStream {
     public void close() {
 		try {
 			// Close the RTP transmitter
-			if (rtpTransmitter != null) {
+            if (rtpTransmitter != null)
 				rtpTransmitter.close();
-			}
 
-			// Send a bye event
-			if (rtcpTransmitter != null) {
-				rtcpTransmitter.sendByePacket();
-			}
+            // Close the RTCP transmitter
+            if (rtcpTransmitter != null)
+                rtcpTransmitter.close();
 
-			// Close the RTCP transmitter
-			if (rtcpTransmitter != null) {
-				rtcpTransmitter.close();
-			}
+            // Close the RTP receiver
+            if (rtpReceiver != null)
+                rtpReceiver.close();
+
+            // Close the RTCP receiver
+            if (rtcpReceiver != null)
+                rtcpReceiver.close();
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't close correctly RTP ressources", e);

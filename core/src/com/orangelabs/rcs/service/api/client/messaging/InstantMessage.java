@@ -54,16 +54,23 @@ public class InstantMessage implements Parcelable {
 	private String msgId;
 	
 	/**
+	 * Flag indicating that an IMDN "displayed" is requested for this message
+	 */
+	private boolean imdnDisplayedRequested = false;
+	
+	/**
      * Constructor
      * 
      * @param messageId Message Id
      * @param remote Remote user
      * @param message Text message
+     * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
      */
-	public InstantMessage(String messageId, String remote, String message) {
+	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested) {
 		this.msgId = messageId;
 		this.remote = remote;
 		this.message = message;
+		this.imdnDisplayedRequested = imdnDisplayedRequested;
 		this.date = new Date();
 	}
 
@@ -73,12 +80,11 @@ public class InstantMessage implements Parcelable {
      * @param messageId Message Id
      * @param remote Remote user
      * @param message Text message
+     * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
 	 * @param date Date of message
      */
-	public InstantMessage(String messageId, String remote, String message, Date date) {
-		this.msgId = messageId;
-		this.remote = remote;
-		this.message = message;
+	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested, Date date) {
+		this(messageId, remote, message, imdnDisplayedRequested);
 		this.date = date;
 	}
 
@@ -91,6 +97,7 @@ public class InstantMessage implements Parcelable {
 		this.remote = source.readString();
 		this.message = source.readString();
 		this.msgId = source.readString();
+		this.imdnDisplayedRequested = source.readInt() != 0;
 		this.date = new Date(source.readLong());
     }
 	
@@ -114,6 +121,7 @@ public class InstantMessage implements Parcelable {
     	dest.writeString(remote);
     	dest.writeString(message);
     	dest.writeString(msgId);
+    	dest.writeInt(imdnDisplayedRequested ? 1 : 0);
     	dest.writeLong(date.getTime());    	
     }
 
@@ -156,6 +164,15 @@ public class InstantMessage implements Parcelable {
 	 */
 	public String getRemote() {
 		return remote;
+	}
+	
+	/**
+	 * Returns true if the IMDN "displayed" has been requested 
+	 * 
+	 * @return imdnDisplayedRequested
+	 */
+	public boolean isImdnDisplayedRequested() {
+		return imdnDisplayedRequested;
 	}
 	
 	/**

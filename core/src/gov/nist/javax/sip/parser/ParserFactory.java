@@ -260,7 +260,7 @@ public class ParserFactory {
 
         // Per RFC 3892 (pmusgrave)
         parserTable.put(ReferredBy.NAME.toLowerCase(), ReferredByParser.class);
-        parserTable.put("b", ReferToParser.class);
+        parserTable.put("b", ReferredByParser.class); // Bug fix OrangeLabs, AUFFRET Jean-Marc
 
         // Per RFC4028 Session Timers (pmusgrave)
         parserTable.put(SessionExpires.NAME.toLowerCase(), SessionExpiresParser.class);

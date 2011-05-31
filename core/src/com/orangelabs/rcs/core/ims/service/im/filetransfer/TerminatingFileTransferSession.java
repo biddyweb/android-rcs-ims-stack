@@ -131,11 +131,6 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 				return;
 			}
 
-	        // Create the MSRP manager
-			int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
-			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
-			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
-
 			// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
@@ -176,6 +171,18 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 				logger.debug("Local setup attribute is " + localSetup);
 			}
 
+    		// Set local port
+	    	int localMsrpPort;
+	    	if (localSetup.equals("active")) {
+		    	localMsrpPort = 9; // See RFC4145, Page 4
+	    	} else {
+				localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
+	    	}            
+            
+	        // Create the MSRP manager
+			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
+			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+			
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
@@ -184,7 +191,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +

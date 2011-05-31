@@ -28,8 +28,6 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.VideoSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
@@ -81,11 +79,6 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
      * Video format
      */
     private VideoFormat videoFormat;
-
-    /**
-     * RTP receiver session
-     */
-    private RtpPacketReceiver rtpReceiver = null;
 
     /**
      * RTP sender session
@@ -346,7 +339,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
                             + result);
                     return;
                 }
-                
+
                 // Get video properties
                 videoDuration = NativeH263Decoder.getVideoLength();
                 videoWidth = NativeH263Decoder.getVideoWidth();
@@ -366,16 +359,10 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
         try {
             // Init the RTP layer
             releasePort();
-            rtpReceiver = new RtpPacketReceiver(localRtpPort);
-            rtpSender = new MediaRtpSender(videoFormat);
+            rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            if (RtpConfig.SYMETRIC_RTP) {
-                rtpSender.prepareSession(rtpInput, remoteHost, remotePort,
-                        rtpReceiver.getConnection());
-            } else {
-                rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
-            }
+            rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -398,7 +385,6 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
         // Close the RTP layer
         rtpInput.close();
         rtpSender.stopSession();
-        rtpReceiver.close();
 
         try {
             // Close the video file parser

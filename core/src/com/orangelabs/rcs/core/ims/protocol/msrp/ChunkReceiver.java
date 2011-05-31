@@ -189,7 +189,7 @@ public class ChunkReceiver extends Thread {
 				// Process the received MSRP message
 				if (responseCode != -1) {
 					// Process MSRP response
-					if (logger.isActivated() && MsrpConnection.MSRP_TRACE) {
+					if (logger.isActivated() && MsrpConnection.MSRP_TRACE_ENABLED) {
 						logger.debug("<<< Receive MSRP response:\n" + chunk.toString());
 					}
 					connection.getSession().receiveMsrpResponse(responseCode, txId.toString(), headers);
@@ -242,7 +242,7 @@ public class ChunkReceiver extends Thread {
 							stream.read();
 							stream.read();
 
-							if (logger.isActivated() && MsrpConnection.MSRP_TRACE) {
+							if (logger.isActivated() && MsrpConnection.MSRP_TRACE_ENABLED) {
 								logger.debug("<<< Receive MSRP SEND request:\n" + chunk.toString() + new String(data));
 							}
 						} else {
@@ -260,7 +260,7 @@ public class ChunkReceiver extends Thread {
 					} else 
 					if (method.toString().equals(MsrpConstants.METHOD_REPORT)) {
 						// Process a REPORT request
-						if (logger.isActivated() && MsrpConnection.MSRP_TRACE) {
+						if (logger.isActivated() && MsrpConnection.MSRP_TRACE_ENABLED) {
 							logger.debug("<<< Receive MSRP REPORT request:\n" + chunk.toString());
 						}
 						connection.getSession().receiveMsrpReport(txId.toString(), headers);					

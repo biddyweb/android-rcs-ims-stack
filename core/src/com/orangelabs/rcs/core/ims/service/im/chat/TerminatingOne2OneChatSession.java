@@ -59,7 +59,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, invite.getFromUri() /* TODO SipUtils.getAssertedIdentity(invite)*/, StringUtils.decodeUTF8(invite.getSubject()));
+		super(parent, ChatUtils.getAssertedIdentity(invite, false), StringUtils.decodeUTF8(invite.getSubject()));
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -150,6 +150,14 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 				logger.debug("Local setup attribute is " + localSetup);
 			}
 			
+    		// Set local port
+	    	int localMsrpPort;
+	    	if (localSetup.equals("active")) {
+		    	localMsrpPort = 9; // See RFC4145, Page 4
+	    	} else {
+	    		localMsrpPort = getMsrpMgr().getLocalMsrpPort();
+	    	}            
+            
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
@@ -158,7 +166,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=accept-types:" + InstantMessage.MIME_TYPE + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
@@ -182,12 +190,16 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
             	MsrpSession session = getMsrpMgr().createMsrpServerSession(remotePath, this);
     			session.setFailureReportOption(false);
     			session.setSuccessReportOption(false);
+    			
     			// Open the connection
     			Thread thread = new Thread(){
     				public void run(){
     					try {
 							// Open the MSRP session
 							getMsrpMgr().openMsrpSession();
+							
+			    	        // Send an empty packet
+			            	sendEmptyDataChunk();
 						} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
@@ -233,18 +245,15 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
         			
 					// Open the MSRP session
 					getMsrpMgr().openMsrpSession();
+					
+	    	        // Send an empty packet
+	            	sendEmptyDataChunk();
                 }
 
                 // Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();
     	        }
-    	        
-    	        // Send an empty packet
-            	sendEmptyDataChunk();
-    	        
-            	// Subscribe to event package
-            	getConferenceEventSubscriber().subscribe();    	        
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

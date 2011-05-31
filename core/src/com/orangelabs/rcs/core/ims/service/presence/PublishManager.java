@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.presence;
 
 import java.util.Vector;
 
-import javax.sip.header.ContactHeader;
 import javax.sip.header.ExpiresHeader;
 import javax.sip.header.SIPETagHeader;
 
@@ -477,28 +476,17 @@ public class PublishManager extends PeriodicRefresher {
 	}
 
     /**
-     * Retrieve the expire period in the contact header or in the expire header
+     * Retrieve the expire period
      * 
      * @param response SIP response
      */
     private void retrieveExpirePeriod(SipResponse response) {
-    	// Extract expire value from Contact header
-        ContactHeader contactHeader = (ContactHeader)response.getHeader(ContactHeader.NAME);
-	    if (contactHeader != null) {
-	    	int expires = contactHeader.getExpires();
-		    if (expires != -1) {
-	    		expirePeriod = expires;            
-	    	}
-		    return;
-	    }
-	    
         // Extract expire value from Expires header
         ExpiresHeader expiresHeader = (ExpiresHeader)response.getHeader(ExpiresHeader.NAME);
     	if (expiresHeader != null) {
     		int expires = expiresHeader.getExpires();
 		    if (expires != -1) {
 	    		expirePeriod = expires;
-	    		return;
 	    	}
         }
 	}

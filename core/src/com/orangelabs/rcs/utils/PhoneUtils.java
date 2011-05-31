@@ -120,7 +120,7 @@ public class PhoneUtils {
 	}
 
 	/**
-	 * Extract user part phone number from a SIP-URI or Tel-URI
+	 * Extract user part phone number from a SIP-URI or Tel-URI or SIP address
 	 * 
 	 * @param uri SIP or Tel URI
 	 * @return Number or null in case of error

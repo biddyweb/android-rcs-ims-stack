@@ -95,7 +95,41 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 				handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
         		return;
         	}
-	    	
+            
+			// Wait invitation answer
+	    	int answer = waitInvitationAnswer();
+			if (answer == ImsServiceSession.INVITATION_REJECTED) {
+				if (logger.isActivated()) {
+					logger.debug("Session has been rejected by user");
+				}
+				
+		    	// Remove the current session
+		    	getImsService().removeSession(this);
+
+		    	// Notify listener
+		        if (getListener() != null) {
+	        		getListener().handleSessionAborted();
+		        }
+				return;
+			} else
+			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+				if (logger.isActivated()) {
+					logger.debug("Session has been rejected on timeout");
+				}
+
+				// Ringing period timeout
+				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+				
+		    	// Remove the current session
+		    	getImsService().removeSession(this);
+
+		    	// Notify listener
+		        if (getListener() != null) {
+	        		getListener().handleSessionAborted();
+		        }
+				return;
+			}
+			
 	    	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
@@ -135,43 +169,16 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
-            
-			// Wait invitation answer
-	    	int answer = waitInvitationAnswer();
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected by user");
-				}
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
-		        }
-				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected on timeout");
-				}
-
-				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
-		        }
-				return;
-			}
-			
-	        // Create the MSRP manager
-			int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
+    		// Set local port
+	    	int localMsrpPort;
+	    	if (localSetup.equals("active")) {
+		    	localMsrpPort = 9; // See RFC4145, Page 4
+	    	} else {
+				localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
+	    	}
+	    	
+            // Create the MSRP manager
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
     		
@@ -183,7 +190,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +

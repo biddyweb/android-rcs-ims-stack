@@ -31,14 +31,14 @@ import android.os.IBinder;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreListener;
-import com.orangelabs.rcs.core.UserAccountException;
 import com.orangelabs.rcs.core.TerminalInfo;
+import com.orangelabs.rcs.core.UserAccountException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Person;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
@@ -152,6 +152,9 @@ public class RcsCoreService extends Service implements CoreListener {
 		
 		// Set the terminal version
 		TerminalInfo.PRODUCT_VERSION = getString(R.string.rcs_core_release_number);
+		if (logger.isActivated()) {
+			logger.info("My RCS software release is " + TerminalInfo.PRODUCT_VERSION);
+		}
 		
 		// Start the core
 		startCore();
@@ -664,29 +667,24 @@ public class RcsCoreService extends Service implements CoreListener {
 				}
 					
 				String id = tuple.getService().getId();
-				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_VIDEO_SHARE)) {
+				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_VIDEO_SHARE)) {
 					capabilities.setVideoSharingSupport(state);
 				} else
-				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_IMAGE_SHARE)) {
+				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_IMAGE_SHARE)) {
 					capabilities.setImageSharingSupport(state);
 				} else
-				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_FT)) {
+				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_FT)) {
 					capabilities.setFileTransferSupport(state);
 				} else
-				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_CS_VIDEO)) {
+				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_CS_VIDEO)) {
 					capabilities.setCsVideoSupport(state);
 				} else
-				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_CHAT)) {
+				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_CHAT)) {
 					capabilities.setImSessionSupport(state);
 				}
 			}
 			contactInfo.setCapabilities(capabilities);
 
-    		// Store & forward support
-            if (RcsSettings.getInstance().isImAlwaysOn()) {
-				capabilities.setImSessionSupport(true);
-            }		    		
-			
 			// Update presence status
 			String presenceStatus = PresenceInfo.UNKNOWN;
 			Person person = presence.getPerson();

@@ -33,6 +33,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.os.Vibrator;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -49,6 +50,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.SmileyParser;
 import com.orangelabs.rcs.ri.utils.Smileys;
@@ -126,6 +129,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	 */
 	private Smileys smileyResources;
 	
+	/**
+	 * Flag indicating that the activity is put on background
+	 */
+	private boolean isInBackground = false;
+	
+	/**
+	 * Message that were received while we were in background
+	 */
+	private List<InstantMessage> imReceivedInBackground = new ArrayList<InstantMessage>();
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -156,6 +169,13 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         mUserText.setOnClickListener(this);
         mUserText.setOnKeyListener(this);
         mUserText.addTextChangedListener(mUserTextWatcher);
+        // Set the message composer max length
+		RcsSettings.createInstance(getApplicationContext());
+		int maxLength = RcsSettings.getInstance().getMaxChatMessageLength();
+		InputFilter[] filterArray = new InputFilter[1];
+		filterArray[0]=new InputFilter.LengthFilter(maxLength);
+		mUserText.setFilters(filterArray);
+        
         Button btn = (Button)findViewById(R.id.send_button);
         btn.setOnClickListener(this);
         
@@ -187,6 +207,24 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         // Disconnect messaging API
         messagingApi.removeApiEventListener(this);
         messagingApi.disconnectApi();
+    }
+    
+    @Override
+    protected void onPause() {
+    	super.onPause();
+    	isInBackground = true;
+    }
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	isInBackground = false;
+    	// Mark all messages that were received while we were in background as "displayed" 
+    	for (int i=0;i<imReceivedInBackground.size();i++){
+    		InstantMessage msg = imReceivedInBackground.get(i);
+    		markMessageAsDisplayed(msg);
+    	}
+    	imReceivedInBackground.clear();
     }
     
     /**
@@ -267,6 +305,19 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         }
     }
     
+    
+    /**
+     * Mark a message as "displayed"
+     * 
+     * @param msg
+     */
+    private void markMessageAsDisplayed(InstantMessage msg){
+    	try {
+    		chatSession.setMessageDeliveryStatus(msg.getMessageId(), msg.getRemote(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+    	}catch(RemoteException e){
+    	}
+    }
+
     /**
      * Receive a text and display it
      * 
@@ -398,6 +449,17 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		
 		// New text message received
 		public void handleReceiveMessage(final InstantMessage msg) {
+			
+			if (msg.isImdnDisplayedRequested()){
+				if (!isInBackground){
+					// We received the message, mark it as displayed if the view is not in background
+					markMessageAsDisplayed(msg);
+				}else{
+					// We save this message and will mark it as displayed when the activity resumes
+					imReceivedInBackground.add(msg);
+				}
+			}
+			
 			handler.post(new Runnable() { 
 				public void run() {
 					if (msg.getTextMessage().equals(WIZZ_MSG)) {
@@ -445,8 +507,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(String msgId, String status) {
-			// TODO
+		public void handleMessageDeliveryStatus(final String msgId, final String contact, final String status) {
+			handler.post(new Runnable(){
+				public void run(){
+					String number = PhoneUtils.extractNumberFromUri(contact);
+					// for now we do not display the messages except if it is "displayed"
+					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)){
+						receiveNotif(getString(R.string.label_receive_displayed_delivery_status, number));
+					}
+				}
+			});
 		}
 		
 		// Request to add participant is successful
@@ -618,7 +688,6 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 
     	// Get list of RCS contacts
 		List<String> contacts = contactsApi.getImSessionCapableContacts();
-		contacts.add("+34890890020");
 		
 		// Remove contacts already in the session
 		try {

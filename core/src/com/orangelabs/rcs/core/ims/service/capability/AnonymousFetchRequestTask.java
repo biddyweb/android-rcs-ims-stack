@@ -37,6 +37,7 @@ import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceError;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -286,6 +287,6 @@ public class AnonymousFetchRequestTask {
         
 		// We update the database with empty capabilities
     	Capabilities capabilities = new Capabilities();
-    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, false, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
 	}
 }

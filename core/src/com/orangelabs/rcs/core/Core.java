@@ -27,7 +27,6 @@ import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -53,11 +52,6 @@ public class Core {
      */
 	private boolean started = false;
 
-    /**
-     * Terminal config
-     */
-    private Config config;
-   
     /**
 	 * IMS module
 	 */
@@ -126,9 +120,6 @@ public class Core {
 		// Set core event listener
 		this.listener = listener;
 
-		// Create the terminal configuration file manager
-        config = new Config("terminal.xml");
-
         // Initialize the phone utils
     	PhoneUtils.initialize(AndroidFactory.getApplicationContext());        
         
@@ -165,15 +156,6 @@ public class Core {
 		return listener;
 	}
 
-	/**
-     * Returns the configuration file manager
-     * 
-     * @return Configuration file manager
-     */
-	public Config getConfig() {
-		return config;
-	}
-	
 	/**
      * Returns the IMS module
      * 
@@ -218,7 +200,7 @@ public class Core {
     		// Already started
     		return;
     	}
-
+    	   	
     	// Start the user account manager
     	userAccountManager.start();
     	

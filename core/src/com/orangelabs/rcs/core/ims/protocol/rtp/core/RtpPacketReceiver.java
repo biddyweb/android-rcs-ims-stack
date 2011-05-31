@@ -50,6 +50,11 @@ public class RtpPacketReceiver {
 	 */
     public DatagramConnection datagramConnection = null;
 
+    /**
+     * RTCP Session
+     */
+    private RtcpSession rtcpSession = null;
+
 	/**
 	 * The logger
 	 */
@@ -61,8 +66,9 @@ public class RtpPacketReceiver {
      * @param port Listenning port
      * @throws IOException
      */
-	public RtpPacketReceiver(int port) throws IOException {
-		// Create the UDP server
+    public RtpPacketReceiver(int port, RtcpSession rtcpSession) throws IOException {
+        this.rtcpSession = rtcpSession;
+        // Create the UDP server
         datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
         datagramConnection.open(port);
 		if (logger.isActivated()) {
@@ -104,6 +110,15 @@ public class RtpPacketReceiver {
 				// Update statistics
 				stats.numPackets++;
                 stats.numBytes += data.length;
+
+                RtpSource s = rtcpSession.getMySource();
+                s.activeSender = true;
+                s.timeOfLastRTPArrival = rtcpSession.currentTime();
+                s.updateSeq(pkt.seqnum);
+                if (s.noOfRTPPacketsRcvd == 0)
+                    s.base_seq = pkt.seqnum;
+                s.noOfRTPPacketsRcvd++;
+
 				return pkt;
 			} else {
 				// Drop the keep alive packets (payload 12)
@@ -135,42 +150,45 @@ public class RtpPacketReceiver {
      * @return RTP packet
      */
 	private RtpPacket parseRtpPacket(byte[] data) {
-		RtpPacket rtpPkt = new RtpPacket();
+		RtpPacket packet = new RtpPacket();
 		try {
 			// Read RTP packet length
-            rtpPkt.length = data.length;
+            packet.length = data.length;
+
+            // Set received timestamp
+            packet.receivedAt = System.currentTimeMillis();
 
 			// Read marker
 			if ((byte)((data[1] & 0xff) & 0x80) == (byte) 0x80){
-				rtpPkt.marker = 1;
+				packet.marker = 1;
 			}else{
-				rtpPkt.marker = 0;
+				packet.marker = 0;
 			}
 
 			// Read payload type
-			rtpPkt.payloadType = (byte) ((data[1] & 0xff) & 0x7f);
+			packet.payloadType = (byte) ((data[1] & 0xff) & 0x7f);
 
 			// Read seq number
-			rtpPkt.seqnum = (short)((data[2] << 8) | (data[3] & 0xff));
+			packet.seqnum = (short)((data[2] << 8) | (data[3] & 0xff));
 
 			// Read timestamp
-			rtpPkt.timestamp = (((data[4] & 0xff) << 24) | ((data[5] & 0xff) << 16)
+			packet.timestamp = (((data[4] & 0xff) << 24) | ((data[5] & 0xff) << 16)
 					| ((data[6] & 0xff) << 8) | (data[7] & 0xff));
 
 			// Read SSRC
-			rtpPkt.ssrc = (((data[8] & 0xff) << 24) | ((data[9] & 0xff) << 16)
+			packet.ssrc = (((data[8] & 0xff) << 24) | ((data[9] & 0xff) << 16)
 					| ((data[10] & 0xff) << 8) | (data[11] & 0xff));
 
 			// Read media data after the 12 byte header which is constant
-			rtpPkt.payloadoffset = 12;
-			rtpPkt.payloadlength = rtpPkt.length - rtpPkt.payloadoffset;
-			rtpPkt.data = new byte[rtpPkt.payloadlength];
-			System.arraycopy(data, rtpPkt.payloadoffset, rtpPkt.data, 0, rtpPkt.payloadlength);
+			packet.payloadoffset = 12;
+			packet.payloadlength = packet.length - packet.payloadoffset;
+			packet.data = new byte[packet.payloadlength];
+			System.arraycopy(data, packet.payloadoffset, packet.data, 0, packet.payloadlength);
 
 			// Update the buffer size
 			if (!recvBufSizeSet) {
 				recvBufSizeSet = true;
-				switch (rtpPkt.payloadType) {
+				switch (packet.payloadType) {
 					case 14:
 					case 26:
 					case 34:
@@ -185,7 +203,7 @@ public class RtpPacketReceiver {
 						break;
 
 					default:
-						if ((rtpPkt.payloadType >= 96) && (rtpPkt.payloadType <= 127)) {
+						if ((packet.payloadType >= 96) && (packet.payloadType <= 127)) {
 							setRecvBufSize(64000);
 						}
 						break;
@@ -197,7 +215,7 @@ public class RtpPacketReceiver {
 			}
 			return null;
 		}
-        return rtpPkt;
+        return packet;
 	}
 
     /**

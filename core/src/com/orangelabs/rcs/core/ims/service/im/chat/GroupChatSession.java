@@ -30,6 +30,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.core.ims.service.im.chat.event.ConferenceEventSubscribeManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -48,6 +49,11 @@ public abstract class GroupChatSession extends ChatSession {
 	private boolean referUseSameDialog = true;
 
 	/**
+	 * Conference event subscribe manager
+	 */
+	private ConferenceEventSubscribeManager conferenceSubscriber; 
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -62,6 +68,9 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public GroupChatSession(ImsService parent, String conferenceId, String subject, ListOfParticipant participants) {
 		super(parent, conferenceId, subject, participants);
+		
+		// Instanciate the subscribe manager for conference event 
+		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
 	}
 
 	/**
@@ -73,6 +82,9 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public GroupChatSession(ImsService parent, String contact, String subject) {
 		super(parent, contact, subject);
+		
+		// Instanciate the subscribe manager for conference event 
+		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
 	}
 	
 	/**
@@ -83,18 +95,25 @@ public abstract class GroupChatSession extends ChatSession {
 	public boolean isChatGroup() {
 		return true;
 	}
+	
+	/**
+	 * Returns the conference event subscriber
+	 * 
+	 * @return Subscribe manager
+	 */
+	public ConferenceEventSubscribeManager getConferenceEventSubscriber() {
+		return conferenceSubscriber;
+	}		
 
 	/**
-	 * Send a plain text message
-	 * 
-	 * @param msg Message
+	 * Close media session
 	 */
-	public void sendTextMessage(String msg) {
-		String content = StringUtils.encodeUTF8(msg);
-		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getImSessionIdentity();
-		String cpim = ChatUtils.buildCpimMessage(from, to, content, InstantMessage.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE);
+	public void closeMediaSession() {
+		// Stop conference subscription
+		conferenceSubscriber.terminate();
+		
+		// Close MSRP session
+		closeMsrpSession();
 	}
 
 	/**
@@ -102,13 +121,19 @@ public abstract class GroupChatSession extends ChatSession {
 	 * 
 	 * @param msg Message
 	 * @param id Message-id
+	 * @param imdnActivated If true, add IMDN headers to the request
 	 */ 
-	public void sendTextMessage(String msg, String msgId) {
+	public void sendTextMessage(String msg, String msgId, boolean imdnActivated) {
 		String content = StringUtils.encodeUTF8(msg);
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getImSessionIdentity();
-		String cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE);
+		String cpim = null;
+		if (imdnActivated){
+			cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
+		}else{
+			cpim = ChatUtils.buildCpimMessage(from, to, content, InstantMessage.MIME_TYPE);
+		}
+		sendDataChunks(cpim, CpimMessage.MIME_TYPE, msgId);
 	}
 	
 	/**
@@ -121,7 +146,7 @@ public abstract class GroupChatSession extends ChatSession {
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getImSessionIdentity();
 		String cpim = ChatUtils.buildCpimMessage(from, to, content, IsComposingInfo.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE);	
+		sendDataChunks(cpim, CpimMessage.MIME_TYPE, null);	
 	}
 	
 	/**

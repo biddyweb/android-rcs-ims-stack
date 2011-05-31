@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -33,7 +32,6 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
-import com.orangelabs.rcs.core.ims.service.im.chat.event.ConferenceEventSubscribeManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
@@ -53,11 +51,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ChatSession extends ImsServiceSession implements MsrpEventListener {
-	/**
-	 * Conference event subscribe manager
-	 */
-	private ConferenceEventSubscribeManager conferenceSubscriber; 
-
     /**
 	 * List of participants
 	 */
@@ -79,7 +72,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	private IsComposingManager isComposingMgr = new IsComposingManager(this);
 
 	/**
-	 * Activity manager
+	 * Chat activity manager
 	 */
 	private ChatActivityManager activityMgr = new ChatActivityManager(this);
 	
@@ -105,9 +98,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 
 		// Set the session subject
 		this.subject = subject;
-		
-		// Instanciate the subscribe manager for conference event 
-		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
 		
 		// Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
@@ -183,15 +173,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Returns the conference event subscriber
-	 * 
-	 * @return Subscribe manager
-	 */
-	public ConferenceEventSubscribeManager getConferenceEventSubscriber() {
-		return conferenceSubscriber;
-	}	
-	
-	/**
 	 * Returns the MSRP manager
 	 * 
 	 * @return MSRP manager
@@ -253,6 +234,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     	if (logger.isActivated()) {
     		logger.info("Data transfered");
     	}
+    	
 		// Restart the session idle timer
 		activityMgr.restartInactivityTimer();
 
@@ -270,6 +252,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     	if (logger.isActivated()) {
     		logger.info("Data received (type " + mimeType + ")");
     	}
+    	
 		// Restart the session idle timer
 		activityMgr.restartInactivityTimer();
 	
@@ -287,7 +270,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		} else
 		if (ChatUtils.isTextPlainType(mimeType)) {
 	    	// Text message
-			receiveText(getRemoteContact(), StringUtils.decodeUTF8(new String(data)), null);
+			receiveText(getRemoteContact(), StringUtils.decodeUTF8(new String(data)), null, false);
 		} else
 		if (ChatUtils.isMessageCpimType(mimeType)) {
 	    	// Receive a CPIM message
@@ -300,8 +283,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String msgId = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
-		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId);
-		    			
+		    			boolean imdnDisplayedRequested = false;
+			    		
 				    	// Check if the message contains an IMDN Disposition-Notification header
 				    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
 				    	if (dispositionNotification!=null){
@@ -310,10 +293,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    			sendMsrpMessageDeliveryStatus(msgId, from, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 				    		}
 				    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)){
-				    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
-				    			RichMessaging.getInstance().setMessageDeliveryStatus(msgId, from, EventsLogApi.STATUS_REPORT_REQUESTED, getParticipants().getList().size());
+				    			imdnDisplayedRequested = true;
 				    		}			    		
 				    	}
+		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested);
+		    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
+		    			if (imdnDisplayedRequested){
+		    				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, from, EventsLogApi.STATUS_REPORT_REQUESTED, getParticipants().getList().size());
+		    			}
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
 					    // Is composing event
@@ -349,13 +336,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param contact Contact
 	 * @param txt Text message
 	 * @param msgId Message Id
+	 * @param flag indicating that an IMDN "displayed" is requested for this message
 	 */
-	private void receiveText(String contact, String txt, String msgId) {
+	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested) {
 		// Is composing event is reset
 	    isComposingMgr.receiveIsComposingEvent(contact, false);
 	    
 	    // Notify listener
-	    getListener().handleReceiveMessage(new InstantMessage(msgId, contact, txt));			    
+	    getListener().handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested));			    
 	}
 	
 	/**
@@ -412,8 +400,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param data Data
 	 * @param mime MIME type
+	 * @param msgId Id of the message that is sent, to be used in case of error
 	 */
-	public void sendDataChunks(String data, String mime) {
+	public void sendDataChunks(String data, String mime, String msgId) {
 		// Restart the session idle timer
 		activityMgr.restartInactivityTimer();
 
@@ -426,7 +415,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	   		}
 	   		
 	    	// Notify listener
-	   		getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
+	   		getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage(), msgId));
 		}
 	}
 	
@@ -438,19 +427,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public abstract boolean isChatGroup();
 	
 	/**
-	 * Send a plain text message
-	 * 
-	 * @param msg Message
-	 */
-	public abstract void sendTextMessage(String msg);
-	
-	/**
-	 * Send a plain text message with IMDN headers
+	 * Send a text
 	 * 
 	 * @param msg Message
 	 * @param id Message-id
+	 * @param imdnActivated If true, add IMDN headers to the request
 	 */
-	public abstract void sendTextMessage(String msg, String msgId);
+	public abstract void sendTextMessage(String msg, String msgId, boolean imdnActivated);
 	
 	/**
 	 * Send is composing status
@@ -479,17 +462,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		}	
 	}
 	
-	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Stop conference subscription
-		conferenceSubscriber.terminate();
-		
-		// Close MSRP session
-		closeMsrpSession();
-	}
-
 	/**
 	 * Add a participant to the session
 	 * 
@@ -523,17 +495,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public void sendSipMessageDeliveryStatus(SipRequest request, String status) {
 		// Check notification disposition
 		if (ChatUtils.isImdnDeliveredRequested(getDialogPath().getInvite())){
-			// Get message ID
 			String msgId = ChatUtils.getMessageId(request);
-			if (msgId == null) {
-				if (logger.isActivated()) {
-					logger.warn("Message-ID not found");
-				}
-				return;
+			if (msgId != null) {
+				// Send message delivery status via a SIP MESSAGE
+				imdnMgr.sendSipMessageDeliveryStatus(msgId, status);
 			}
-
-			// Send message delivery status via a SIP MESSAGE
-			imdnMgr.sendSipMessageDeliveryStatus(msgId, status);
 		}
 	}
 	
@@ -546,11 +512,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public void sendMsrpMessageDeliveryStatus(String msgId, String contact, String status) {
    		// Create IDMN document
-		String content = ImdnDocument.buildImdnDocument(msgId, status, getRemoteContact(), getRemoteContact());
+		String content = ImdnDocument.buildImdnDocument(msgId, status);
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = contact;
 		String cpim = ChatUtils.buildCpimMessageWithImdnPlusXml(from, to, msgId, content, ImdnDocument.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE);
+		
+		// Send IMDN
+		sendDataChunks(cpim, CpimMessage.MIME_TYPE, null);
 	}
 		
 	/**

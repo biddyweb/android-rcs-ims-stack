@@ -43,7 +43,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.platform.file.FileFactory;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -85,12 +84,17 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	    		logger.info("Initiate a new sharing session as originating");
 	    	}
 	    	
+    		// Set setup mode
+	    	String localSetup = "active";
+	    	
+	    	// Set local port
+	    	int localMsrpPort = 9; // See RFC4145, Page 4
+	    	
 			// Create the MSRP manager
-			int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
 	    	
-	        // Build SDP part
+			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
 	    		"v=0" + SipUtils.CRLF +
@@ -98,10 +102,10 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + msrpMgr.getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
-	            "a=setup:active" + SipUtils.CRLF +
+	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +

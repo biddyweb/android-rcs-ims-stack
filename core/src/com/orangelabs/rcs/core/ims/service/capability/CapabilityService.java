@@ -216,7 +216,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
     public void receiveCapabilityRequest(SipRequest options) {
     	optionsManager.receiveCapabilityRequest(options);
     }
-
+    
 	/**
      * Receive a notification (anonymous fecth procedure)
      * 
@@ -266,14 +266,18 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			if (!alreadyRcsOrInvalidNumbers.contains(phoneNumber)) {
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
 				if (ContactsManager.getInstance().isRCSValidNumber(phoneNumber) 
-						&& !ContactsManager.getInstance().isRawContactRcsAssociated(rawContactId)) {
+						&& !ContactsManager.getInstance().isRawContactRcsAssociated(rawContactId, phoneNumber)) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
 					toBeTreatedNumbers.add(phoneNumber);
 				} else {
 					// This entry is either not valid or already RCS, this number is already done
 					alreadyRcsOrInvalidNumbers.add(phoneNumber);
+					// Remove the number from the treated list, if it is in it
 					toBeTreatedNumbers.remove(phoneNumber);
 				}
+			}else{
+				// Remove the number from the treated list, it was already queried for another raw contact on the same number
+				toBeTreatedNumbers.remove(phoneNumber);
 			}
 		}
 		phonesCursor.close();
@@ -289,4 +293,24 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			handleAddressBookHasChanged();
 		}
 	}
+	
+	/**
+	 * Reset the content sharing capabities for a given contact
+	 * 
+	 * @param contact Contact
+	 */
+	public void resetContactCapabilitiesForContentSharing(String contact) {
+		Capabilities capabilities = ContactsManager.getInstance().getContactCapabilities(contact);
+		if (capabilities != null) {
+			// Force a reset of content sharing capabilities 
+			capabilities.setImageSharingSupport(false);
+			capabilities.setVideoSharingSupport(false);
+			
+		 	// Update the database capabilities
+	        ContactsManager.getInstance().setContactCapabilities(contact, capabilities);
+		
+		 	// Notify listener
+		 	getImsModule().getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
+		}
+	 }
 }

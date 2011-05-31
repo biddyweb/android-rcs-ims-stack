@@ -177,11 +177,14 @@ public class OptionsRequestTask {
         	// If we do not have already some info on this contact
         	// We update the database with empty capabilities
         	Capabilities capabilities = new Capabilities();
-        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_OFFLINE);
-    	}else{
+        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactsManager.REGISTRATION_STATUS_OFFLINE);
+    	} else {
     		// We have some info on this contact
-    		// We update the database with its previous capabilities and set the registration state to offline
-    		ContactsManager.getInstance().setContactCapabilities(contact, info.getCapabilities(), true, ContactsManager.REGISTRATION_STATUS_OFFLINE);    		 
+    		// We update the database with its previous infos and set the registration state to offline
+    		ContactsManager.getInstance().setContactCapabilities(contact, info.getCapabilities(), info.getRcsStatus(), ContactsManager.REGISTRATION_STATUS_OFFLINE);
+    		
+        	// Notify listener
+        	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, info.getCapabilities());
     	}
 	}
 	
@@ -196,9 +199,12 @@ public class OptionsRequestTask {
             logger.info("User " + contact + " is not found");
         }
 
-        // We update the database with empty capabilities
+        // The contact is not RCS
         Capabilities capabilities = new Capabilities();
-        ContactsManager.getInstance().setContactCapabilities(contact, capabilities, false, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+        ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+        
+    	// Notify listener
+    	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
 	}
 
 	/**
@@ -214,14 +220,15 @@ public class OptionsRequestTask {
     	
     	// Read capabilities
         SipResponse resp = ctx.getSipResponse();
-    	Capabilities capabilities = OptionsManager.extractCapabilities(resp);
+    	Capabilities capabilities = CapabilityUtils.extractCapabilities(resp);
 
     	// Update the database capabilities
-    	// Set the contact registration state to true if it is a RCS-e contact
     	if (capabilities.isImSessionSupported()) {
-    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_ONLINE);
+    		// The contact is RCS capable
+   			ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactsManager.REGISTRATION_STATUS_ONLINE);
     	}else{
-    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    		// The contact is not RCS
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
     	}
 
     	// Notify listener
@@ -275,6 +282,4 @@ public class OptionsRequestTask {
     	// We update the database capabilities timestamp
     	ContactsManager.getInstance().setContactCapabilitiesTimestamp(contact, System.currentTimeMillis());
 	}	
-	
-
 }

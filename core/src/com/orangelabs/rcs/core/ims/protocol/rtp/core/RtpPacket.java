@@ -40,6 +40,7 @@ public class RtpPacket extends Packet {
 	public int payloadlength;
 
 	public RtpPacket() {
+		super();
 	}
 
 	public RtpPacket(Packet packet) {

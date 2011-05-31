@@ -142,6 +142,7 @@ public class EventLogResourceCursorAdapter extends ResourceCursorAdapter{
 		switch(type){
 		case EventsLogApi.TYPE_INCOMING_GSM_CALL:
 		case EventsLogApi.TYPE_OUTGOING_GSM_CALL:
+		case EventsLogApi.TYPE_MISSED_GSM_CALL:
 			eventIconView.setImageDrawable(mDrawableCall);
 			line1View.setText(DateUtils.formatElapsedTime(Long.parseLong(data)));
 			break;

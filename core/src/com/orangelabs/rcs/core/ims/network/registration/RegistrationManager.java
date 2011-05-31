@@ -36,8 +36,10 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -86,7 +88,17 @@ public class RegistrationManager extends PeriodicRefresher {
      * Registration flag
      */
     private boolean registered = false;
-   
+
+    /**
+     * Public GRUU
+     */
+	private String publicGruu = null;
+	
+	/**
+	 * Temporary GRUU
+	 */
+	private String tempGruu = null;
+    
     /**
      * The logger
      */
@@ -101,6 +113,7 @@ public class RegistrationManager extends PeriodicRefresher {
     public RegistrationManager(ImsNetworkInterface networkInterface, RegistrationProcedure registrationProcedure) {
     	this.networkInterface = networkInterface;
         this.registrationProcedure = registrationProcedure;
+        this.instanceId = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()).toString();
 
     	int defaultExpirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
@@ -321,11 +334,18 @@ public class RegistrationManager extends PeriodicRefresher {
 
     	SipResponse resp = ctx.getSipResponse();
     	
-        // Set the associated URI
+        // Get the associated URI
 		ExtensionHeader associatedHeader = (ExtensionHeader)resp.getHeader(SipUtils.HEADER_P_ASSOCIATED_URI);
 		if (associatedHeader != null) {		
 			String associatedUri = associatedHeader.getValue();
 			ImsModule.IMS_USER_PROFILE.setPublicUri(associatedUri);
+		}
+		
+		// Get the GRUU
+		ContactHeader contact = (ContactHeader)resp.getHeader(ContactHeader.NAME);
+		if (contact.getParameter("+sip.instance") != null) { 
+			publicGruu = contact.getParameter("pub-gruu");
+			tempGruu = contact.getParameter("temp-gruu");
 		}
 		
         // Set the service route path
@@ -472,6 +492,7 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private void resetDialogPath() {
         dialogPath = null;
+        tempGruu = null;
     }
 
     /**

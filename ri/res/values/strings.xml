@@ -155,6 +155,7 @@
 <string name="label_note_add_participant">This feature is only available from a chat group</string>
 <string name="label_add_participant_success">Request to add participant(s) is successful</string>
 <string name="label_add_participant_failed">Request to add participant(s) has failed</string>
+<string name="label_receive_displayed_delivery_status">%s has displayed the message</string>
 <string name="label_chat_terminated">Chat session terminated</string>
 
 <!--  Rich call menu -->

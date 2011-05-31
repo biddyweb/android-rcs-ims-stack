@@ -241,8 +241,10 @@ public class EventLog extends Activity {
 	private String buildContactsListSelection() {
 		String selection = " IN (\'" + currentContactNumber + "\'";
 		// If number matches a non international phone number
-		if (!currentContactNumber.startsWith(PhoneUtils.getCountryCode()))
-			selection += ",\'" + PhoneUtils.formatNumberToInternational(currentContactNumber)+"\')";
+		if (!currentContactNumber.startsWith(PhoneUtils.getCountryCode())){
+			selection += ",\'" + PhoneUtils.formatNumberToInternational(currentContactNumber)+"\'";
+		}
+		selection+=")";
 		return selection;
 	}
 		

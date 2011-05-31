@@ -363,11 +363,11 @@ public abstract class ImsServiceSession extends Thread {
     	// Interrupt the session
     	interruptSession();
 
-    	// Close media session
-    	closeMediaSession();
-    	
         // Terminate session
 		terminateSession();
+
+    	// Close media session
+    	closeMediaSession();
 
     	// Remove the current session
     	getImsService().removeSession(this);
@@ -439,19 +439,6 @@ public abstract class ImsServiceSession extends Thread {
         // Update the dialog path status
 		getDialogPath().sessionTerminated();
 	
-		// Send a 200 OK response
-		try {
-			if (logger.isActivated()) {
-				logger.info("Send 200 OK");
-			}
-	        SipResponse response = SipMessageFactory.createResponse(bye, 200);
-			getImsService().getImsModule().getSipManager().sendSipResponse(response);
-		} catch(Exception e) {
-	       	if (logger.isActivated()) {
-	    		logger.error("Can't send 200 OK response", e);
-	    	}
-		}
-
     	// Remove the current session
     	getImsService().removeSession(this);
 	
@@ -487,15 +474,8 @@ public abstract class ImsServiceSession extends Thread {
     	// Update dialog path
 		getDialogPath().sessionCancelled();
 
-		// Send a 200 OK
+		// Send a 487 Request terminated
     	try {
-	    	if (logger.isActivated()) {
-	    		logger.info("Send 200 OK");
-	    	}
-	        SipResponse cancelResp = SipMessageFactory.createResponse(cancel, 200);
-	        getImsService().getImsModule().getSipManager().sendSipResponse(cancelResp);
-	        
-			// Send a 487 Request terminated
 	    	if (logger.isActivated()) {
 	    		logger.info("Send 487 Request terminated");
 	    	}
@@ -503,7 +483,7 @@ public abstract class ImsServiceSession extends Thread {
 	        getImsService().getImsModule().getSipManager().sendSipResponse(terminatedResp);
 		} catch(Exception e) {
 	    	if (logger.isActivated()) {
-	    		logger.error("Session has been cancelled", e);
+	    		logger.error("Can't send 487 error response", e);
 	    	}
 		}
 		

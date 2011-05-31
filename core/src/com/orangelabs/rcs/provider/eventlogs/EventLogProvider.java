@@ -169,9 +169,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
         	break;
         case EventsLogApi.MODE_GROUP_CHAT:
-        	// Do not take the "terminated" entries
-        	extraSelection=" AND NOT ((type== "+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+") AND status == "+EventsLogApi.STATUS_TERMINATED+" )";
-        	
+        	extraSelection="";        	
         	sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
 			richMessagingSelectQuery = buildChatQuery(selection + extraSelection, false, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
@@ -798,8 +796,11 @@ public class EventLogProvider extends ContentProvider {
 	 * @return
 	 */
 	private String buildRichMessagingQuery(String selection, boolean chatFiltered, boolean fileTransferFiltered){
+
+		// Do not take the "terminated" rows for chat sessions
+		String selectionFilter = " NOT ("+RichMessagingData.KEY_TYPE+">="+EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE
+			+" AND "+RichMessagingData.KEY_TYPE+"<="+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+" AND "+RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED +")";
 		
-		String selectionFilter = "";
 		if (chatFiltered){
 			selectionFilter+=" AND NOT ("+RichMessagingData.KEY_TYPE+">="+EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE
 				+" AND "+RichMessagingData.KEY_TYPE+"<=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+")";
@@ -811,6 +812,8 @@ public class EventLogProvider extends ContentProvider {
 		
 		SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 		builder.setTables("\""+RichMessagingProvider.TABLE+"\"");
+		
+		// Group the result so we have just one row per session
 		String groupBy=EventLogData.KEY_EVENT_SESSION_ID;
 		return builder.buildUnionSubQuery(
 				EventLogData.KEY_EVENT_TYPE, 
@@ -818,7 +821,7 @@ public class EventLogProvider extends ContentProvider {
 				columnsPresentInRichMessagingTable, 
 				14, 
 				EventLogData.KEY_EVENT_TYPE, 
-				(selection!=null? RichMessagingData.KEY_CONTACT + selection + selectionFilter
+				(selection!=null? RichMessagingData.KEY_CONTACT + selection + " AND "+ selectionFilter
 						: selectionFilter), 
 				null, 
 				groupBy, 

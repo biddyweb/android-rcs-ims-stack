@@ -28,8 +28,6 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263EncoderParams;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
@@ -75,11 +73,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Local RTP port
      */
     private int localRtpPort;
-
-    /**
-     * RTP receiver session
-     */
-    private RtpPacketReceiver rtpReceiver = null;
 
     /**
      * RTP sender session
@@ -327,16 +320,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Init the RTP layer
         try {
             releasePort();
-            rtpReceiver = new RtpPacketReceiver(localRtpPort);
-            rtpSender = new MediaRtpSender(videoFormat);
+            rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            if (RtpConfig.SYMETRIC_RTP) {
-                rtpSender.prepareSession(rtpInput, remoteHost, remotePort,
-                        rtpReceiver.getConnection());
-            } else {
-                rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
-            }
+            rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -359,7 +346,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Close the RTP layer
         rtpInput.close();
         rtpSender.stopSession();
-        rtpReceiver.close();
 
         try {
             // Close the video encoder

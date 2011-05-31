@@ -18,10 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.Vector;
+
+
+
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpApplicationEvent;
 import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpByeEvent;
@@ -34,17 +33,21 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.Vector;
 
 /**
- * RTCP packe receiver
- * 
+ * RTCP packet receiver
+ *
  * @author jexa7410
  */
 public class RtcpPacketReceiver extends Thread {
 	/**
 	 * Datagram connection
 	 */
-	public static DatagramConnection datagramConnection = null;
+    public DatagramConnection datagramConnection = null;
 
 	/**
 	 * Statistics
@@ -56,42 +59,50 @@ public class RtcpPacketReceiver extends Thread {
 	 */
 	private Vector<RtcpEventListener> listeners = new Vector<RtcpEventListener>();
 
+    /**
+     * RTCP Session
+     */
+    private RtcpSession rtcpSession = null;
+
 	/**
 	 * The logger
 	 */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-	/**
-	 * Constructor
-	 * 
-	 * @param port Listenning port
-	 * @throws IOException
-	 */
-	public RtcpPacketReceiver(int port) throws IOException {
-		super("RtcpReceiver");
-		
+    /**
+     * Constructor
+     *
+     * @param port Listenning port
+     * @param rtcpSession the RTCP session
+     * @throws IOException
+     */
+    public RtcpPacketReceiver(int port, RtcpSession rtcpSession) throws IOException {
+        super();
+
+        this.rtcpSession = rtcpSession;
+
 		// Create the UDP server
 		datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
 		datagramConnection.open(port);
-		
+
 		// Start background processing
 		start();
 		if (logger.isActivated()) {
-			logger.debug("RTCP receiver started on port " + port);				
+            logger.debug("RTCP receiver started on port " + port);
 		}
 	}
-	
+
 	/**
-	 * Close the receiver
-	 * 
-	 * @throws IOException
-	 */
+     * Close the receiver
+     *
+     * @throws IOException
+     */
 	public void close() throws IOException {
 		// Interrup the current thread processing
 		try {
 			interrupt();
 		} catch(Exception e) {}
-		
+
 		// Close the datagram connection
 		if (datagramConnection != null) {
 			datagramConnection.close();
@@ -107,14 +118,14 @@ public class RtcpPacketReceiver extends Thread {
 			while (true) {
 				// Wait a packet
 				byte[] data = datagramConnection.receive();
-	
+
 		        // Create a packet object
 				Packet packet = new Packet();
 				packet.data = data;
 				packet.length = data.length;
 				packet.offset = 0;
-				packet.receiptAt = System.currentTimeMillis();
-				
+				packet.receivedAt = System.currentTimeMillis();
+
 		        // Process the received packet
 				handlePacket(packet);
 			}
@@ -125,17 +136,17 @@ public class RtcpPacketReceiver extends Thread {
 		}
 	}
 
-	/**
-	 * Handle the received packet
-	 * 
-	 * @param packet Packet
-	 * @return RTCP packet
-	 */
+    /**
+     * Handle the received packet
+     *
+     * @param packet Packet
+     * @return RTCP packet
+     */
 	public RtcpPacket handlePacket(Packet p) {
 		// Update statistics
 		stats.numRtcpPkts++;
 		stats.numRtcpBytes += p.length;
-		
+
 		// Parse the RTCP packet
 		RtcpPacket result;
 		try {
@@ -147,12 +158,12 @@ public class RtcpPacketReceiver extends Thread {
 		return result;
 	}
 
-	/**
-	 * Parse the RTCP packet
-	 * 
-	 * @param packet RTCP packet not yet parsed
-	 * @return RTCP packet
-	 */	
+    /**
+     * Parse the RTCP packet
+     *
+     * @param packet RTCP packet not yet parsed
+     * @return RTCP packet
+     */
 	public RtcpPacket parseRtcpPacket(Packet packet) {
 		RtcpCompoundPacket compoundPacket = new RtcpCompoundPacket(packet);
 		Vector<RtcpPacket> subpackets = new Vector<RtcpPacket>();
@@ -161,6 +172,7 @@ public class RtcpPacketReceiver extends Thread {
 						compoundPacket.offset,
 						compoundPacket.length));
 		try {
+            rtcpSession.updateavgrtcpsize(compoundPacket.length);
 			int length = 0;
 			for (int offset = 0; offset < compoundPacket.length; offset += length) {
 				// Read first byte
@@ -171,7 +183,7 @@ public class RtcpPacketReceiver extends Thread {
 					}
 					return null;
 				}
-				
+
 				// Read type of subpacket
 				int type = in.readUnsignedByte();
 
@@ -204,12 +216,12 @@ public class RtcpPacketReceiver extends Thread {
 				}
 				int inlength = length - padlen;
 				firstbyte &= 0x1f;
-				
+
 				// Parse subpacket
 				RtcpPacket subpacket;
 				switch (type) {
 					// RTCP SR event
-					case 200:
+                    case RtcpPacket.RTCP_SR:
 						stats.numSrPkts++;
 						if (inlength != 28 + 24 * firstbyte) {
 							stats.numMalformedRtcpPkts++;
@@ -227,7 +239,11 @@ public class RtcpPacketReceiver extends Thread {
 						srp.packetcount = (long) in.readInt() & 0xffffffffL;
 						srp.octetcount = (long) in.readInt() & 0xffffffffL;
 						srp.reports = new RtcpReport[firstbyte];
-	
+
+                        RtpSource sourceSR = rtcpSession.getMySource();
+                        if (sourceSR != null)
+                            sourceSR.timeOfLastRTCPArrival = rtcpSession.currentTime();
+
 						for (int i = 0; i < srp.reports.length; i++) {
 							RtcpReport report = new RtcpReport();
 							srp.reports[i] = report;
@@ -241,13 +257,13 @@ public class RtcpPacketReceiver extends Thread {
 							report.lsr = (long) in.readInt() & 0xffffffffL;
 							report.dlsr = (long) in.readInt() & 0xffffffffL;
 						}
-	
+
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpSenderReportEvent(srp));
 						break;
-	
+
 					// RTCP RR event
-					case 201:
+                    case RtcpPacket.RTCP_RR:
 						if (inlength != 8 + 24 * firstbyte) {
 							stats.numMalformedRtcpPkts++;
 							if (logger.isActivated()) {
@@ -259,6 +275,11 @@ public class RtcpPacketReceiver extends Thread {
 						subpacket = rrp;
 						rrp.ssrc = in.readInt();
 						rrp.reports = new RtcpReport[firstbyte];
+
+                        RtpSource sourceRR = rtcpSession.getMySource();
+                        if (sourceRR != null)
+                            sourceRR.timeOfLastRTCPArrival = rtcpSession.currentTime();
+
 						for (int i = 0; i < rrp.reports.length; i++) {
 							RtcpReport report = new RtcpReport();
 							rrp.reports[i] = report;
@@ -272,13 +293,13 @@ public class RtcpPacketReceiver extends Thread {
 							report.lsr = (long) in.readInt() & 0xffffffffL;
 							report.dlsr = (long) in.readInt() & 0xffffffffL;
 						}
-	
+
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpReceiverReportEvent(rrp));
 						break;
-	
+
 					// RTCP SDES event
-					case 202:
+                    case RtcpPacket.RTCP_SDES:
 						RtcpSdesPacket sdesp = new RtcpSdesPacket(compoundPacket);
 						subpacket = sdesp;
 						sdesp.sdes = new RtcpSdesBlock[firstbyte];
@@ -324,7 +345,7 @@ public class RtcpPacketReceiver extends Thread {
 								sdesoff = sdesoff + 3 & -4;
 							}
 						}
-	
+
 						if (inlength != sdesoff) {
 							stats.numMalformedRtcpPkts++;
 							if (logger.isActivated()) {
@@ -332,20 +353,20 @@ public class RtcpPacketReceiver extends Thread {
 							}
 							return null;
 						}
-						
+
 						// Notify event listeners
-						notifyRtcpListeners(new RtcpSdesEvent(sdesp));					
+                        notifyRtcpListeners(new RtcpSdesEvent(sdesp));
 						break;
-	
+
 					// RTCP BYE event
-					case 203:
+                    case RtcpPacket.RTCP_BYE:
 						RtcpByePacket byep = new RtcpByePacket(compoundPacket);
 						subpacket = byep;
 						byep.ssrc = new int[firstbyte];
 						for (int i = 0; i < byep.ssrc.length; i++) {
 							byep.ssrc[i] = in.readInt();
 						}
-	
+
 						int reasonlen;
 						if (inlength > 4 + 4 * firstbyte) {
 							reasonlen = in.readUnsignedByte();
@@ -365,13 +386,13 @@ public class RtcpPacketReceiver extends Thread {
 						}
 						in.readFully(byep.reason);
 						in.skip(reasonlen - byep.reason.length);
-						
+
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpByeEvent(byep));
 						break;
-	
+
 					// RTCP APP event
-					case 204:
+                    case RtcpPacket.RTCP_APP:
 						if (inlength < 12) {
 							if (logger.isActivated()) {
 								logger.error("Bad RTCP APP packet format");
@@ -386,11 +407,11 @@ public class RtcpPacketReceiver extends Thread {
 						appp.data = new byte[inlength - 12];
 						in.readFully(appp.data);
 						in.skip(inlength - 12 - appp.data.length);
-	
+
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpApplicationEvent(appp));
 						break;
-	
+
 					// RTCP unknown event
 					default:
 						stats.numUnknownTypes++;
@@ -416,35 +437,35 @@ public class RtcpPacketReceiver extends Thread {
 		return compoundPacket;
 	}
 
-	/**
-	 * Add a RTCP event listener
-	 * 
-	 * @param listener Listener
-	 */
+    /**
+     * Add a RTCP event listener
+     *
+     * @param listener Listener
+     */
 	public void addRtcpListener(RtcpEventListener listener) {
 		if (logger.isActivated()) {
 			logger.debug("Add a RTCP event listener");
 		}
 		listeners.addElement(listener);
 	}
-	
+
 	/**
-	 * Remove a RTCP event listener
-	 * 
-	 * @param listener Listener
-	 */
+     * Remove a RTCP event listener
+     *
+     * @param listener Listener
+     */
 	public void removeRtcpListener(RtcpEventListener listener) {
 		if (logger.isActivated()) {
 			logger.debug("Remove a RTCP event listener");
 		}
 		listeners.removeElement(listener);
 	}
-	
+
 	/**
-	 * Notify RTCP event listeners
-	 * 
-	 * @param event RTCP event
-	 */
+     * Notify RTCP event listeners
+     *
+     * @param event RTCP event
+     */
 	public void notifyRtcpListeners(RtcpEvent event) {
 		for(int i=0; i < listeners.size(); i++) {
 			RtcpEventListener listener = (RtcpEventListener)listeners.elementAt(i);
@@ -452,12 +473,21 @@ public class RtcpPacketReceiver extends Thread {
 		}
 	}
 
-	/**
-	 * Returns the statistics of RTCP reception
-	 * 
-	 * @return Statistics
-	 */
+    /**
+     * Returns the statistics of RTCP reception
+     *
+     * @return Statistics
+     */
 	public RtcpStatisticsReceiver getRtcpReceptionStats() {
 		return stats;
-	}	
+    }
+
+    /**
+     * Returns the DatagramConnection of RTCP
+     *
+     * @return DatagramConnection
+     */
+    public DatagramConnection getConnection() {
+        return datagramConnection;
+    }
 }

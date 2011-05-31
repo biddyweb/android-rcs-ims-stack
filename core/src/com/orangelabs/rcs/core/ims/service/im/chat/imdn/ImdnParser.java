@@ -37,8 +37,6 @@ public class ImdnParser extends DefaultHandler {
 	   <imdn xmlns="urn:ietf:params:xml:ns:imdn">
 		<message-id>34jk324j</message-id>
 		<datetime>2008-04-04T12:16:49-05:00</datetime>
-		<recipient-uri>im:bob@example.com</recipient-uri>
-		<original-recipient-uri>im:bob@example.com</original-recipient-uri>
 		<display-notification>
 		    <status>
 		       <displayed/>

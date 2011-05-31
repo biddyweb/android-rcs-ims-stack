@@ -6,8 +6,8 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -26,7 +26,7 @@ public class ImdnManager {
     /**
      * IM session
      */
-    private ChatSession session;
+    private ImsServiceSession session;
     
     /**
      * The logger
@@ -38,7 +38,7 @@ public class ImdnManager {
      * 
      * @param session IM session
      */    
-    public ImdnManager(ChatSession session) {
+    public ImdnManager(ImsServiceSession session) {
     	this.session = session;
     	this.activated = RcsSettings.getInstance().isImReportsActivated();
     }    
@@ -72,8 +72,7 @@ public class ImdnManager {
        		}
 
        		// Create IDMN document
-			//TODO check params
-			String imdn = ImdnDocument.buildImdnDocument(msgId, status, session.getRemoteContact(), session.getRemoteContact());
+			String imdn = ImdnDocument.buildImdnDocument(msgId, status);
 
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();

@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.provisioning;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
 import org.xml.sax.InputSource;
 
@@ -28,9 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 
-import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Appender;
@@ -97,17 +94,6 @@ public class ProvisioningPushReceiver extends BroadcastReceiver {
 	    		if (logger.isActivated()) {
 	    			logger.debug("Downloaded " + content.length + " bytes: " + new String(content));
 	    		}
-				
-/*				InputStream is = FileFactory.getFactory().openConfigFile("rcse_config.xml");
-				if (is == null) {
-					throw new CoreException("XML file not found");
-				}
-				String txt = new String();
-				int c = -1;
-				while ((c = is.read()) != -1) {
-					txt += (char)c;
-				}
-				byte[] content = txt.getBytes();*/
 	            
 	    		// Parse the received document
 				InputSource contentInput = new InputSource(new ByteArrayInputStream(content));
@@ -122,5 +108,40 @@ public class ProvisioningPushReceiver extends BroadcastReceiver {
         	}
             return null;
         }
+    }
+    
+    /**
+     * Only for debug
+     */
+    public static void test() {
+    	try {
+            // Instanciate the provisioning manager
+			ProvisioningManager mgr = new ProvisioningManager();
+
+			// Download the received URL
+			String url = "http://172.20.14.41/rcse_orange_ota/rcse_config.xml";
+			byte[] content = mgr.downloadConfigFile(url);
+
+    		/*
+			InputStream is = FileFactory.getFactory().openConfigFile("rcse_config.xml");
+			if (is == null) {
+				throw new CoreException("XML file not found");
+			}
+			String txt = new String();
+			int c = -1;
+			while ((c = is.read()) != -1) {
+				txt += (char)c;
+			}
+			byte[] content = txt.getBytes();*/
+            
+    		// Parse the received document
+			InputSource contentInput = new InputSource(new ByteArrayInputStream(content));
+			ProvisioningParser configParser = new ProvisioningParser(contentInput);
+    		
+    		// Check parameters
+			mgr.checkParams(configParser.getParams());
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
     }
 }
