@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp;
 
+
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
@@ -39,56 +41,57 @@ public class MediaRtpReceiver {
 	 * Local port number (RTP listening port)
 	 */
 	private int localPort;
-	
+
 	/**
 	 * The logger
 	 */
 	private Logger logger =	Logger.getLogger(this.getClass().getName());
 
-	/**
-	 * Constructor
-	 * 
-	 * @param localPort Local port number
-	 */
+    /**
+     * Constructor
+     *
+     * @param localPort Local port number
+     */
 	public MediaRtpReceiver(int localPort) {
 		this.localPort = localPort;
 
-		// Activate symetric RTP configuration
+        // Activate symmetric RTP configuration
 		RtpConfig.SYMETRIC_RTP = true;
 	}
-	
+
     /**
      * Prepare the RTP session
-     * 
+     *
      * @param renderer Media renderer
      * @param format Media format
      * @throws RtpException
      */
-    public void prepareSession(MediaOutput renderer, Format format) throws RtpException {
+    public void prepareSession(MediaOutput renderer, Format format)
+            throws RtpException {
     	try {
 			// Create the input stream
-    		RtpInputStream inputStream = new RtpInputStream(localPort, format);
+            RtpInputStream inputStream = new RtpInputStream(localPort, format);
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());
 			}
 
-			// Create the output stream 
+            // Create the output stream
         	MediaRendererStream outputStream = new MediaRendererStream(renderer);
     		outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());
 			}
-        	
+
         	// Create the codec chain
         	Codec[] codecChain = MediaRegistry.generateDecodingCodecChain(format.getCodec());
-        	
+
             // Create the media processor
     		processor = new Processor(inputStream, outputStream, codecChain);
-    		
+
         	if (logger.isActivated()) {
         		logger.debug("Session has been prepared with success");
-        	}			
+            }
         } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Can't prepare resources correctly", e);
@@ -96,7 +99,7 @@ public class MediaRtpReceiver {
         	throw new RtpException("Can't prepare resources");
         }
     }
-    	
+
     /**
 	 * Start the RTP session
 	 */

@@ -32,9 +32,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public abstract class MsrpConnection {
 	/**
-	 * MSRP trace activation
+	 * MSRP traces enabled
 	 */
-	public static boolean MSRP_TRACE = false;
+	public static boolean MSRP_TRACE_ENABLED = false;
 	
 	/**
 	 * MSRP session

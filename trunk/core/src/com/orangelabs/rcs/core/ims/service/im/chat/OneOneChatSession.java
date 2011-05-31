@@ -60,27 +60,32 @@ public abstract class OneOneChatSession extends ChatSession {
 	}
 	
 	/**
-	 * Send a plain text message
-	 * 
-	 * @param msg Message
-	 */
-	public void sendTextMessage(String msg) {
-		String content = StringUtils.encodeUTF8(msg);
-		sendDataChunks(content, InstantMessage.MIME_TYPE);
-	}	
-	
-	/**
-	 * Send a plain text message with IMDN headers
+	 * Send a text message
 	 * 
 	 * @param msg Message
 	 * @param id Message-id
+	 * @param imdnActivated If true, add IMDN headers to the request
 	 */
-	public void sendTextMessage(String msg, String msgId) {
+	public void sendTextMessage(String msg, String msgId, boolean imdnActivated) {
 		String content = StringUtils.encodeUTF8(msg);
-		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getRemoteContact();
-		String cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE);
+		if (imdnActivated){
+			// Send using CPIM + IMDN headers
+			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+			String to = getRemoteContact();
+			String cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
+			sendDataChunks(cpim, CpimMessage.MIME_TYPE, msgId);
+		}else{
+			// Send using plain text
+			sendDataChunks(content, InstantMessage.MIME_TYPE, msgId);
+		}
+	}
+	
+	/**
+	 * Close media session
+	 */
+	public void closeMediaSession() {
+		// Close MSRP session
+		closeMsrpSession();
 	}
 	
 	/**
@@ -90,7 +95,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public void sendIsComposingStatus(boolean status) {
 		String msg = IsComposingInfo.buildIsComposingInfo(status);
-		sendDataChunks(msg, IsComposingInfo.MIME_TYPE);
+		sendDataChunks(msg, IsComposingInfo.MIME_TYPE, null);
 	}
 	
 	/**

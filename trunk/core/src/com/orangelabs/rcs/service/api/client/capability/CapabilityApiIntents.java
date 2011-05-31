@@ -26,4 +26,9 @@ public interface CapabilityApiIntents {
      * Intent broadcasted when contact capabilities has changed
      */
     public final static String CONTACT_CAPABILITIES = "com.orangelabs.rcs.capability.CONTACT_CAPABILITIES";
+
+    /**
+     * Intent broadcasted to discover capability extensions
+     */
+    public final static String RCS_EXTENSIONS = "com.orangelabs.rcs.capability.EXTENSION";
 }

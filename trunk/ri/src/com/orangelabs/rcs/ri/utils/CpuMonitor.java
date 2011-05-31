@@ -25,13 +25,13 @@ public class CpuMonitor {
 	/**
 	 * Activation flag
 	 */
-	private static boolean ENABLED = false;
-	
+    private static boolean ENABLED = false;
+
 	/**
 	 * Control thread
 	 */
 	private boolean stopMonitor = false;
-	
+
 	/**
 	 * Data statistcs
 	 */
@@ -40,14 +40,14 @@ public class CpuMonitor {
 	private int previous_used_cpu = 0;
 	private int previous_total_cpu = 0;
 	private int mean_cpu = 0;
-	private int cpt_cpu = 0;	
-		
+	private int cpt_cpu = 0;
+
 	/**
 	 * Constructor
 	 */
 	public CpuMonitor() {
 	}
-	
+
 	/**
 	 * Start monitor
 	 */
@@ -56,7 +56,7 @@ public class CpuMonitor {
 			monitoringThread.start();
 		}
 	}
-	
+
 	/**
 	 * Stop monitor
 	 */
@@ -68,7 +68,7 @@ public class CpuMonitor {
 			} catch (InterruptedException e){}
 		}
 	}
-	
+
 	/**
 	 * Monitoring thread
 	 */
@@ -82,7 +82,7 @@ public class CpuMonitor {
 			}
 		}
 	};
-	
+
 	/**
 	 * Retreive CPU usage
 	 */
@@ -94,19 +94,19 @@ public class CpuMonitor {
 	        String line = in.readLine();
 	        if (line.startsWith("cpu")){
 	        	String val[] = line.split(" +");
-	        	int total = Integer.parseInt(val[1]) + 
-	        				Integer.parseInt(val[2]) + 
-	        				Integer.parseInt(val[3]) + 
-	        				Integer.parseInt(val[4]); 
-	        	int used = Integer.parseInt(val[1]) + 
-							Integer.parseInt(val[2])+ 
+	        	int total = Integer.parseInt(val[1]) +
+	        				Integer.parseInt(val[2]) +
+	        				Integer.parseInt(val[3]) +
+	        				Integer.parseInt(val[4]);
+	        	int used = Integer.parseInt(val[1]) +
+							Integer.parseInt(val[2])+
 							Integer.parseInt(val[3]);
 	        	current_cpu = ((used-previous_used_cpu)*100)/(total-previous_total_cpu);
 	        	previous_total_cpu = total;
 	        	previous_used_cpu = used;
 	        	total_cpu +=current_cpu;
 	        	cpt_cpu++;
-	        	mean_cpu = total_cpu/cpt_cpu;	        	
+	        	mean_cpu = total_cpu/cpt_cpu;
 	        }
 	        fileReader.close();
 
@@ -114,7 +114,7 @@ public class CpuMonitor {
 	    	System.out.println(mean_cpu + "% (" + current_cpu + "%)");
 		} catch (Exception e) {
 			e.printStackTrace();
-		}	        
+		}
 	}
-	
+
 }

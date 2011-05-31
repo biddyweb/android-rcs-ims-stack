@@ -74,6 +74,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    		logger.info("Initiate a new 1-1 chat session as originating");
 	    	}
 	    	
+    		// Set setup mode
+	    	String localSetup = "active";
+	    	
+    		// Set local port
+	    	int localMsrpPort = 9; // See RFC4145, Page 4
+	    	
 	    	// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
@@ -82,10 +88,10 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
-	            "a=setup:active" + SipUtils.CRLF +
+	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + InstantMessage.MIME_TYPE + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 	    	
@@ -240,9 +246,6 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        
 	        // Send an empty packet
         	sendEmptyDataChunk();
-        	
-        	// Subscribe to event package
-        	getConferenceEventSubscriber().subscribe();        	
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);
@@ -289,9 +292,8 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        	invite.addHeader(SubjectHeader.NAME, subject);
 	        }
 
-	        // Add IMDN headers
-	        // Take the same msgId than the one used before
-	        addImdnHeaders(invite, ChatUtils.getMessageId(getDialogPath().getInvite()));
+	        // Add IMDN headers with same message ID than the one used before
+        	addImdnHeaders(invite, ChatUtils.getMessageId(getDialogPath().getInvite()));
 	        
 	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);

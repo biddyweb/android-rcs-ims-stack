@@ -18,26 +18,58 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
-
 /**
  * Abstract RCTP packet
- * 
+ *
  * @author jexa7410
  */
 public abstract class RtcpPacket extends Packet {
-	public static final int SR = 200;
-	public static final int RR = 201;
-	public static final int SDES = 202;
-	public static final int BYE = 203;
-	public static final int APP = 204;
-	public static final int COMPOUND = -1;
+    /**
+     *   Version =2
+     */
+    public static final byte VERSION = 2;
+
+    /**
+    *   Padding =0
+    */
+    public static final byte PADDING = 0;
+
+    /**
+     * RTCP SR
+     */
+    public static final int RTCP_SR = 200;
+
+    /**
+     * RTCP RR
+     */
+    public static final int RTCP_RR = 201;
+
+    /**
+     * RTCP SDES
+     */
+    public static final int RTCP_SDES = 202;
+
+    /**
+     * RTCP BYE
+     */
+    public static final int RTCP_BYE = 203;
+
+    /**
+     * RTCP APP
+     */
+    public static final int RTCP_APP = 204;
+
+    /**
+     * RTCP APP
+     */
+    public static final int RTCP_COMPOUND = -1;
 
 	public Packet base;
-	
+
 	public int type;
 
 	public RtcpPacket() {
@@ -45,13 +77,13 @@ public abstract class RtcpPacket extends Packet {
 
 	public RtcpPacket(RtcpPacket rtcppacket) {
 		super((Packet)rtcppacket);
-		
+
 		base = rtcppacket.base;
 	}
 
 	public RtcpPacket(Packet packet) {
 		super(packet);
-		
+
 		base = packet;
 	}
 

@@ -31,7 +31,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
@@ -59,6 +59,7 @@ import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
+import java.lang.reflect.Method;
 
 /**
  * Visio sharing activity - two half duplex live video sharing
@@ -190,11 +191,18 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
         if (switchCamBtn == null) {
             switchCamBtn = (ImageButton)findViewById(R.id.switch_cam_btn);
-            try {
-                cam_num = Camera.getNumberOfCameras();
-            } catch (java.lang.NoSuchMethodError e) {
+            Method method = getCameraNumberOfCamerasMethod();
+            if (method != null) {
+                try {
+                    Integer ret = (Integer)method.invoke(null, (Object[])null);
+                    cam_num = ret.intValue();
+                } catch (Exception e) {
+                    cam_num = 1;
+                }
+            } else {
                 cam_num = 1;
             }
+
             if (cam_num > 1) {
                 switchCamBtn.setOnClickListener(btnSwitchCamListener);
                 switchCamBtn.setEnabled(true);
@@ -454,10 +462,18 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (camera == null) {
             // Start camera preview
             if (cam_num > 1) {
-                try {
-                    camera = Camera.open(1);
-                    openedCameraId = 1;
-                } catch (java.lang.NoSuchMethodError e) {
+                Method method = getCameraOpenMethod();
+                if (method != null) {
+                    try {
+                        camera = (Camera)method.invoke(camera, new Object[] {
+                            1
+                        });
+                        openedCameraId = 1;
+                    } catch (Exception e) {
+                        camera = Camera.open();
+                        openedCameraId = 0;
+                    }
+                } else {
                     camera = Camera.open();
                     openedCameraId = 0;
                 }
@@ -515,12 +531,28 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 camera.release();
             }
             // open the other camera
+
+            Method method = getCameraOpenMethod();
             if (openedCameraId == 0) {
-                camera = Camera.open(1);
-                openedCameraId = 1;
+                try {
+                    camera = (Camera)method.invoke(camera, new Object[] {
+                        1
+                    });
+                    openedCameraId = 1;
+                } catch (Exception e) {
+                    camera = Camera.open();
+                    openedCameraId = 0;
+                }
             } else {
-                camera = Camera.open(0);
-                openedCameraId = 0;
+                try {
+                    camera = (Camera)method.invoke(camera, new Object[] {
+                        0
+                    });
+                    openedCameraId = 0;
+                } catch (Exception e) {
+                    camera = Camera.open();
+                    openedCameraId = 0;
+                }
             }
             // restart the preview
             startCameraPreview();
@@ -691,6 +723,48 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     // -------------------------------- private METHODS
 
     /**
+     * Get Camera "open" Method
+     * 
+     * @return Method
+     */
+    private Method getCameraOpenMethod() {
+        ClassLoader classLoader = VisioSharing.class.getClassLoader();
+        Class cameraClass = null;
+        try {
+            cameraClass = classLoader.loadClass("android.hardware.Camera");
+            try {
+                return cameraClass.getMethod("open", new Class[] {
+                    int.class
+                });
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get Camera "numberOfCameras" Method
+     * 
+     * @return Method
+     */
+    private Method getCameraNumberOfCamerasMethod() {
+        ClassLoader classLoader = VisioSharing.class.getClassLoader();
+        Class cameraClass = null;
+        try {
+            cameraClass = classLoader.loadClass("android.hardware.Camera");
+            try {
+                return cameraClass.getMethod("getNumberOfCameras", (Class[])null);
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
      * Get incoming session.
      */
     private void getIncomingSession() {
@@ -852,7 +926,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (camera != null) {
             Camera.Parameters p = camera.getParameters();
             p.setPreviewSize(videoWidth, videoHeight);
-            p.setPreviewFormat(ImageFormat.NV21);
+            p.setPreviewFormat(PixelFormat.YCbCr_420_SP);
+            // p.setPreviewFormat(ImageFormat.NV21);
             camera.setParameters(p);
             try {
                 camera.setPreviewDisplay(video_holder);

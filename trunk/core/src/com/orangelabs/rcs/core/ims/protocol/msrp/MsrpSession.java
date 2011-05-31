@@ -307,6 +307,9 @@ public class MsrpSession {
 			// Notify event listener
 			msrpEventListener.msrpDataTransfered();
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Send chunk failed", e);
+			}
 			throw new MsrpException(e.getMessage());
 		}
 	}
@@ -337,6 +340,9 @@ public class MsrpSession {
 		try {
 			sendEmptyMsrpSendRequest(generateId(), to, from, generateId());
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Send chunk failed", e);
+			}
 			throw new MsrpException(e.getMessage());
 		}
 	}
@@ -643,7 +649,7 @@ public class MsrpSession {
 		}
 		
 		// Save received data chunk if there is some
-		if (data!=null) {
+		if (data != null) {
 			receivedChunks.addChunk(data);
 		}
 		
@@ -661,7 +667,7 @@ public class MsrpSession {
 				successReportNeeded = true;
 			}
 			
-			if (data!=null){
+			if (data != null) {
 				// Read the received content
 				byte[] dataContent = receivedChunks.getReceivedData();
 				receivedChunks.resetCache();
@@ -676,8 +682,7 @@ public class MsrpSession {
 
 				// Notify event listener
 				msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
-			}else{
-				// If data is null, we may still have a MRSP report to send
+			} else {
 				// Send MSRP report if requested
 				if (successReportNeeded) {
 					sendMsrpReportRequest(txId, headers, 0, totalSize);

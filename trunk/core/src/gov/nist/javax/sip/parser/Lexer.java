@@ -220,11 +220,7 @@ public class Lexer extends LexerCore {
                             TokenTypes.ALLOW_EVENTS); // JvB: added
                     addKeyword(TokenNames.V.toUpperCase(), TokenTypes.VIA);
                     addKeyword(TokenNames.R.toUpperCase(), TokenTypes.REFER_TO);
-                    addKeyword(TokenNames.O.toUpperCase(), TokenTypes.EVENT); // Bug
-                                                                                // fix
-                                                                                // by
-                                                                                // Mario
-                                                                                // Mantak
+                    addKeyword(TokenNames.O.toUpperCase(), TokenTypes.EVENT); // Bug fix by Mario Mantak
                     addKeyword(TokenNames.X.toUpperCase(), TokenTypes.SESSIONEXPIRES_TO); // Bug fix by Jozef Saniga
                     
                     // JvB: added to support RFC3903
@@ -238,8 +234,9 @@ public class Lexer extends LexerCore {
                             TokenTypes.SESSIONEXPIRES_TO);
                     addKeyword(MinSEHeader.NAME.toUpperCase(),
                             TokenTypes.MINSE_TO);
-                    addKeyword(ReferredByHeader.NAME.toUpperCase(),
-                            TokenTypes.REFERREDBY_TO);
+                    addKeyword(ReferredByHeader.NAME.toUpperCase(), TokenTypes.REFERREDBY_TO);
+                    addKeyword(TokenNames.B.toUpperCase(), TokenTypes.REFERREDBY_TO); // Bug fix OrangeLabs, AUFFRET Jean-Marc
+
 
                     // pmusgrave RFC3891
                     addKeyword(ReplacesHeader.NAME.toUpperCase(),

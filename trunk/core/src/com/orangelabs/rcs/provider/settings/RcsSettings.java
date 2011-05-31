@@ -1675,5 +1675,31 @@ public class RcsSettings {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_SIP_KEEP_ALIVE));
 		}
 		return result;
+	}
+	
+	/**
+	 * Get APN used to connect to RCS platform
+	 * 
+	 * @return APN (null means any APN may be used to connect to RCS)
+	 */
+	public String getNetworkApn() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.RCS_APN);
+		}
+		return result;
+	}	
+	
+	/**
+	 * Get operator authorized to connect to RCS platform
+	 * 
+	 * @return SIM operator name (null means any SIM operator is authorized to connect to RCS)
+	 */
+	public String getNetworkOperator() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.RCS_OPERATOR);
+		}
+		return result;
 	}	
 }

@@ -7,11 +7,12 @@
 
 	<characteristic type="APPLICATION">
 		<parm name="APPID" value="RCS-e"/>
+		<parm name="NAME" value="RCS-e settings"/>
 	</characteristic>
 
 	<characteristic type="IMS">
 		<characteristic type="LBO_P-CSCF_Address">
-			<parm name="Address" value="80.12.197.74:5060"/>
+			<parm name="Address" value="127.0.0.1:5061"/>
 			<parm name="AddressType" value="IPv4"/>
 		</characteristic>
 
@@ -36,10 +37,10 @@
 	</characteristic>
 	
 	<characteristic type="APPAUTH">
-		<parm name="AuthType" value="EarlyIMS"/>
-		<parm name="Realm" value="sip.osp.com"/>
-		<parm name="UserName" value="+34890890020"/>
-		<parm name="UserPwd" value="nsnims2008"/>
+		<parm name="AuthType" value="Digest"/>
+		<parm name="Realm" value="domain.com"/>
+		<parm name="UserName" value="+3xxxxxxxx"/>
+		<parm name="UserPwd" value="password"/>
 	</characteristic>
 
 	<characteristic type="PRESENCE">
@@ -71,8 +72,8 @@
  
 	<characteristic type="XDMS">
 		<parm name="RevokeTimer" value="300"/>
-		<parm name="XCAPRootURI" value="10.194.117.36:8080/services"/>
-		<parm name="XCAPAuthenticationUserName" value="tel:+34890890020"/>
+		<parm name="XCAPRootURI" value="127.0.0.1:8080/services"/>
+		<parm name="XCAPAuthenticationUserName" value="tel:+3xxxxxxxx"/>
 		<parm name="XCAPAuthenticationSecret" value="password"/>
 		<parm name="XCAPAuthenticationType" value="X"/>
 	</characteristic>

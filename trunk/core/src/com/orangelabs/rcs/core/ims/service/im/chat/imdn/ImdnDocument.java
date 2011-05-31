@@ -142,17 +142,13 @@ public class ImdnDocument {
 	 * 
 	 * @param msgId Message ID
 	 * @param status Status
-	 * @param recipientUri
-	 * @param originalRecipientUri
 	 * @return XML document
 	 */
-	public static String buildImdnDocument(String msgId, String status, String recipientUri, String originalRecipientUri) {
+	public static String buildImdnDocument(String msgId, String status) {
 		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<imdn xmlns=\"urn:ietf:params:xml:ns:imdn\">" + CRLF +
 	        " <message-id>" + msgId + "</message-id>" + CRLF +
 	        " <datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
-	        " <recipient-uri>"+recipientUri+"</recipient-uri>" + CRLF +
-	        " <original-recipient-uri>"+originalRecipientUri+"</original-recipient-uri>" + CRLF +
 	        " <delivery-notification><status><" + status + "/></status></delivery-notification>" + CRLF +
 	        "</imdn>";
 	}

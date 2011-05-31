@@ -61,11 +61,6 @@ public class Processor extends Thread {
     private long bigSeqNum = 0;
 
     /**
-     * Local startTime
-     */
-    private long startTime = 0;
-
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -82,7 +77,6 @@ public class Processor extends Thread {
 
 		this.inputStream = inputStream;
         this.outputStream = outputStream;
-        startTime = 0;
 
 		// Create the codec chain
 		codecChain = new CodecChain(codecs, outputStream);
@@ -139,19 +133,12 @@ public class Processor extends Thread {
 					break;
 				}
 
-                // drop the old packet
+                // Drop the old packet
                 long seqNum = inBuffer.getSequenceNumber();
                 if (seqNum + 3 > bigSeqNum) {
-                    if (seqNum > bigSeqNum)
+                    if (seqNum > bigSeqNum) {
                         bigSeqNum = seqNum;
-
-                    // TODO : drop by timestamp ? the TS in buffer must be
-                    // changed
-                    // long currentTime = System.currentTimeMillis();
-                    // if (startTime == 0)
-                    // startTime = currentTime;
-                    // System.out.println("local ts " + (currentTime -
-                    // startTime));
+                    }
 
                     // Codec chain processing
                     int result = codecChain.process(inBuffer);

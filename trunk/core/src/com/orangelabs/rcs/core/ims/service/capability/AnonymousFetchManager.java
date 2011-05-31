@@ -24,14 +24,14 @@ import java.util.Vector;
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfParser;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -109,30 +109,25 @@ public class AnonymousFetchManager implements DiscoveryManager {
 		    				state = true;
 		    			}
 		    			String id = tuple.getService().getId();
-		    			if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_VIDEO_SHARE)) {
+		    			if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_VIDEO_SHARE)) {
 		    				capabilities.setVideoSharingSupport(state);
 		    			} else
-	    				if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_IMAGE_SHARE)) {
+	    				if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_IMAGE_SHARE)) {
 	    					capabilities.setImageSharingSupport(state);
 	    				} else
-    					if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_FT)) {
+    					if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_FT)) {
     						capabilities.setFileTransferSupport(state);
     					} else
-						if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_CS_VIDEO)) {
+						if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_CS_VIDEO)) {
 							capabilities.setCsVideoSupport(state);
 						} else
-						if (id.equalsIgnoreCase(SipUtils.FEATURE_RCS2_CHAT)) {
+						if (id.equalsIgnoreCase(PresenceUtils.FEATURE_RCS2_CHAT)) {
 							capabilities.setImSessionSupport(state);
 						}
 		    		}
 
-		    		// Store & forward support
-		            if (RcsSettings.getInstance().isImAlwaysOn()) {
-						capabilities.setImSessionSupport(true);
-		            }		    		
-		    		
 		    		// Update capabilities in database
-		    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+		    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
 
 		    		// Notify listener
 		    		imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
@@ -152,7 +147,7 @@ public class AnonymousFetchManager implements DiscoveryManager {
 	    	Capabilities capabilities = new Capabilities();
 
 	    	// Update capabilities in database
-	    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, true, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+	    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
 
 	    	// Notify listener
 	    	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);

@@ -42,7 +42,7 @@ public class Packet {
 	/**
 	 * Received at
 	 */
-	public long receiptAt;
+	public long receivedAt;
 
 	/**
 	 * Constructor
@@ -59,6 +59,6 @@ public class Packet {
 		data = packet.data;
 		length = packet.length;
 		offset = packet.offset;
-		receiptAt = packet.receiptAt;
+		receivedAt = packet.receivedAt;
 	}
 }

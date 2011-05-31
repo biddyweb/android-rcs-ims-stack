@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.utils.FifoBuffer;
@@ -44,11 +45,6 @@ public class ImsServiceDispatcher extends Thread {
      * IMS module
      */
     private ImsModule imsModule;
-
-    /**
-     * Intent manager
-     */
-    private SipIntentManager intentMgr = new SipIntentManager();
 
     /**
 	 * Buffer of messages
@@ -126,57 +122,15 @@ public class ImsServiceDispatcher extends Thread {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
 
-    	// Subsequent requests
-		// -------------------
-    	ImsServiceSession session = searchSession(request.getCallId());
-    	if (session != null) {
-	    	if (request.getMethod().equals(Request.UPDATE)) {
-	    		session.receiveUpdate(request);
-    		} else    	
-    		if (request.getMethod().equals(Request.BYE)) {
-		    	session.receiveBye(request);
-    		} else    	
-    		if (request.getMethod().equals(Request.CANCEL)) {
-	    		session.receiveCancel(request);
-	    	} else
-    		if (request.getMethod().equals(Request.INVITE)) {
-		    	session.receiveReInvite(request);
-	    	} else {
-	    		// Unknown subsequent request
-		    	if (logger.isActivated()) {
-		    		logger.debug("Unknown subsequent request " + request.getMethod() + " " + request.getCallId());
-		    	}
-	    	}
-	    	return;
-	    }
-    	
-		// Initial requests
-		// ----------------
-		if (request.getMethod().equals(Request.MESSAGE)) {
-	        // MESSAGE received
-	    	if (ChatUtils.isImdnService(request)) {
-	    		// IMDN service
-				if (imsModule.isInstantMessagingServiceActivated()) {
-					imsModule.getInstantMessagingService().receiveMessageDeliveryStatus(request);
-				}
-	    	}
-		} else
-	    if (request.getMethod().equals(Request.NOTIFY)) {
-	    	// NOTIFY received
-	    	dispatchNotify(request);
-	    } else
-	    if (request.getMethod().equals(Request.OPTIONS)) {
-	    	// OPTIONS received
-	    	if (imsModule.isRichcallServiceActivated() &&
-	    			imsModule.getCallManager().isConnected()) { 
-		    	// Rich call service
-	    		imsModule.getRichcallService().receiveCapabilityRequest(request);
-	    	} else {
-	    		// Capability discovery service
-	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
-	    	}		    	
-	    } else		
 	    if (request.getMethod().equals(Request.INVITE)) {
+	    	// INVITE received
+	    	ImsServiceSession session = searchSession(request.getCallId());
+	    	if (session != null) {
+	    		// Subsequent request received
+	    		session.receiveReInvite(request);
+	    		return;
+	    	}
+	    	
 			// Send a 100 Trying response
 			send100Trying(request);
 			
@@ -191,7 +145,8 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
     			imsModule.getInstantMessagingService().getStoreAndForwardManager().receiveStoredMessages(request);
 	    	} else
-	    	if (isTagPresent(sdp, "rtp") && SipUtils.isFeatureTagPresent(request, SipUtils.FEATURE_RCSE_VIDEO_SHARE)) {
+	    	if (isTagPresent(sdp, "rtp") &&
+	    			SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE)) {
 	    		// Video streaming
 	    		if (logger.isActivated()) {
 	    			logger.debug("Video content sharing streaming invitation");
@@ -200,7 +155,9 @@ public class ImsServiceDispatcher extends Thread {
 	    			imsModule.getRichcallService().receiveVideoSharingInvitation(request);
 	    		}
 	    	} else
-	    	if (isTagPresent(sdp, "msrp") && SipUtils.isFeatureTagPresent(request, SipUtils.FEATURE_RCSE_IMAGE_SHARE)) {
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE) &&
+	    				SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_IMAGE_SHARE)) {
 	    		// Image sharing
 	    		if (logger.isActivated()) {
 	    			logger.debug("Image content sharing transfer invitation");
@@ -209,16 +166,17 @@ public class ImsServiceDispatcher extends Thread {
 	    			imsModule.getRichcallService().receiveImageSharingInvitation(request);
 	    		}
 	    	} else
-	    	if (isTagPresent(sdp, "msrp") && SipUtils.isFeatureTagPresent(request, SipUtils.FEATURE_OMA_IM) &&
-	    			isTagPresent(sdp, "file-selector")) {
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM) &&
+	    				isTagPresent(sdp, "file-selector")) {
 		        // File transfer
 	    		if (logger.isActivated()) {
 	    			logger.debug("File transfer invitation");
 	    		}
     			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
 	    	} else
-	    	if (isTagPresent(sdp, "msrp") && 
-	    			SipUtils.isFeatureTagPresent(request, SipUtils.FEATURE_OMA_IM) &&
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "resource-lists+xml")) {
 		        // Ad-hoc group chat session
 	    		if (logger.isActivated()) {
@@ -226,30 +184,96 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
     			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
 	    	} else
-    		if (isTagPresent(sdp, "msrp") && SipUtils.isFeatureTagPresent(request, SipUtils.FEATURE_OMA_IM)) {
+    		if (isTagPresent(sdp, "msrp") &&
+    				SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM)) {
 		        // 1-1 chat session
 	    		if (logger.isActivated()) {
 	    			logger.debug("1-1 chat session invitation");
 	    		}
     			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
 	    	} else {
-				// Broadcast the request to external activity via intent
-		    	boolean resolved = intentMgr.broadcastRequest(request);
-		    	if (!resolved) {
-					// Unknown service: reject the invitation with a 606 Not Acceptable
-					if (logger.isActivated()) {
-						logger.debug("Unknown invitation: automatically rejected");
-					}
-					sendFinalResponse(request, 606);
-		    	}
-		    	
-		    	// Exit here to avoid two broadcasts
-				return;
+				// Unknown service: reject the invitation with a 606 Not Acceptable
+				if (logger.isActivated()) {
+					logger.debug("Unknown invitation: automatically rejected");
+				}
+				sendFinalResponse(request, 606);
 	    	}
-		}
+		} else
+    	if (request.getMethod().equals(Request.MESSAGE)) {
+	        // MESSAGE received
+	    	if (ChatUtils.isImdnService(request)) {
+	    		// IMDN service
+				imsModule.getInstantMessagingService().receiveMessageDeliveryStatus(request);
+	    	}
+		} else
+	    if (request.getMethod().equals(Request.NOTIFY)) {
+	    	// NOTIFY received
+	    	dispatchNotify(request);
+	    } else
+	    if (request.getMethod().equals(Request.OPTIONS)) {
+	    	// OPTIONS received
+	    	if (imsModule.isRichcallServiceActivated() && imsModule.getCallManager().isConnected()) { 
+		    	// Rich call service
+	    		imsModule.getRichcallService().receiveCapabilityRequest(request);
+	    	} else {
+	    		// Capability discovery service
+	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
+	    	}		    	
+	    } else		
+		if (request.getMethod().equals(Request.BYE)) {
+	        // BYE received
+			
+			// Send a 200 OK response
+			try {
+				if (logger.isActivated()) {
+					logger.info("Send 200 OK");
+				}
+		        SipResponse response = SipMessageFactory.createResponse(request, 200);
+				imsModule.getSipManager().sendSipResponse(response);
+			} catch(Exception e) {
+		       	if (logger.isActivated()) {
+		    		logger.error("Can't send 200 OK response", e);
+		    	}
+			}
 
-		// Broadcast the request to external activity via intent
-		intentMgr.broadcastRequest(request);
+    		ImsServiceSession session = searchSession(request.getCallId());
+        	if (session != null) {
+        		session.receiveBye(request);
+        	}
+		} else    	
+		if (request.getMethod().equals(Request.CANCEL)) {
+	        // CANCEL received
+			
+			// Send a 200 OK
+	    	try {
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 200 OK");
+		    	}
+		        SipResponse cancelResp = SipMessageFactory.createResponse(request, 200);
+		        imsModule.getSipManager().sendSipResponse(cancelResp);
+			} catch(Exception e) {
+		    	if (logger.isActivated()) {
+		    		logger.error("Can't send 200 OK response", e);
+		    	}
+			}
+			
+	    	ImsServiceSession session = searchSession(request.getCallId());
+	    	if (session != null) {
+	    		session.receiveCancel(request);
+	    	}
+    	} else
+    	if (request.getMethod().equals(Request.UPDATE)) {
+	        // UPDATE received
+    		ImsServiceSession session = searchSession(request.getCallId());
+        	if (session != null) {
+        		session.receiveUpdate(request);
+        	}
+		} else {
+			// Unknown request received
+			if (logger.isActivated()) {
+				logger.debug("Unknown request " + request.getMethod());
+			}
+		}
     }
 
     /**

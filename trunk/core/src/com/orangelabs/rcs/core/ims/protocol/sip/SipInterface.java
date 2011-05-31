@@ -71,6 +71,12 @@ public class SipInterface implements SipListener {
 	public final static int DEFAULT_SIP_PORT = 5060;
 	
 	/**
+	 * SIP traces
+	 */
+	public static boolean SIP_TRACE_ENABLED = false;
+	
+	
+	/**
 	 * Local IP address
 	 */
 	private String localIpAddress;
@@ -178,7 +184,7 @@ public class SipInterface implements SipListener {
 			Properties properties = new Properties();
 			properties.setProperty("javax.sip.STACK_NAME", localIpAddress);
 			properties.setProperty("gov.nist.javax.sip.THREAD_POOL_SIZE", "1");
-			if (RcsSettings.getInstance().isSipTraceActivated()) {
+			if (SIP_TRACE_ENABLED) {
 				// Activate SIP stack traces
 				String siplog = "/sdcard/sip.txt";
 				
@@ -483,7 +489,7 @@ public class SipInterface implements SipListener {
 				if (logger.isActivated()) {
 					logger.debug(">>> Send SIP " + req.getMethod());
 				}
-				if (RcsSettings.getInstance().isSipTraceActivated()) {
+				if (SIP_TRACE_ENABLED) {
 					System.out.println(">>> " + req.getStackMessage().toString());
 					System.out.println(TRACE_SEPARATOR);
 				}
@@ -556,7 +562,7 @@ public class SipInterface implements SipListener {
 			if (logger.isActivated()) {
 				logger.debug(">>> Send SIP " + response.getStatusCode() + " response");
 			}
-			if (RcsSettings.getInstance().isSipTraceActivated()) {
+			if (SIP_TRACE_ENABLED) {
 				System.out.println(">>> " + response.getStackMessage().toString());
 				System.out.println(TRACE_SEPARATOR);
 			}
@@ -579,17 +585,19 @@ public class SipInterface implements SipListener {
 		try {
 			// Create the SIP request
 			SipRequest ack = SipMessageFactory.createAck(dialog);
-		    ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
 
 			// Send the SIP message to the network
 			if (logger.isActivated()) {
 				logger.debug(">>> Send SIP ACK");
 			}
-			if (RcsSettings.getInstance().isSipTraceActivated()) {
+			if (SIP_TRACE_ENABLED) {
 				System.out.println(">>> " + ack.getStackMessage().toString());
 				System.out.println(TRACE_SEPARATOR);
 			}
-		    transaction.getDialog().sendAck(ack.getStackMessage());
+			
+			// Re-use INVITE transaction
+		    ClientTransaction inviteTransaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
+		    inviteTransaction.getDialog().sendAck(ack.getStackMessage());
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't send SIP message", e);
@@ -618,12 +626,14 @@ public class SipInterface implements SipListener {
 			if (logger.isActivated()) {
 				logger.debug(">>> Send SIP BYE");
 			}
-			if (RcsSettings.getInstance().isSipTraceActivated()) {
+			if (SIP_TRACE_ENABLED) {
 				System.out.println(">>> " + bye.getStackMessage().toString());
 				System.out.println(TRACE_SEPARATOR);
 			}
-		    ClientTransaction transaction = getDefaultSipProvider().getNewClientTransaction(bye.getStackMessage());
-		    transaction.getDialog().sendRequest(transaction);
+			
+			// Create a new transaction
+		    ClientTransaction byeTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
+		    byeTransaction.getDialog().sendRequest(byeTransaction);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't send SIP message", e);
@@ -657,11 +667,14 @@ public class SipInterface implements SipListener {
 			if (logger.isActivated()) {
 				logger.debug(">>> Send SIP CANCEL");
 			}
-			if (RcsSettings.getInstance().isSipTraceActivated()) {
+			if (SIP_TRACE_ENABLED) {
 				System.out.println(">>> " + cancel.getStackMessage().toString());
 				System.out.println(TRACE_SEPARATOR);
 			}
-		    getDefaultSipProvider().getNewClientTransaction(cancel.getStackMessage()).sendRequest();
+
+			// Create a new transaction
+		    ClientTransaction cancelTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
+		    cancelTransaction.sendRequest();
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't send SIP message", e);
@@ -702,7 +715,7 @@ public class SipInterface implements SipListener {
 		if (logger.isActivated()) {
 			logger.debug("<<< Receive SIP " + requestEvent.getRequest().getMethod());
 		}
-		if (RcsSettings.getInstance().isSipTraceActivated()) {
+		if (SIP_TRACE_ENABLED) {
 			System.out.println("<<< " + requestEvent.getRequest().toString());
 			System.out.println(TRACE_SEPARATOR);
 		}
@@ -753,7 +766,7 @@ public class SipInterface implements SipListener {
 		if (logger.isActivated()) {
 			logger.debug("<<< Receive SIP " + responseEvent.getResponse().getStatusCode() + " response");
 		}
-		if (RcsSettings.getInstance().isSipTraceActivated()) {
+		if (SIP_TRACE_ENABLED) {
 			System.out.println("<<< " + responseEvent.getResponse().toString());
 			System.out.println(TRACE_SEPARATOR);
 		}

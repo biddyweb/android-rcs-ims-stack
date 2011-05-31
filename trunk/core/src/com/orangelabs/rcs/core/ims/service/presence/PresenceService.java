@@ -437,7 +437,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
     	    "<tuple id=\"t1\">" + SipUtils.CRLF +
 		    "  <status><basic>" + buildBooleanStatus(capabilities.isFileTransferSupported()) + "</basic></status>" + SipUtils.CRLF +
 			"  <op:service-description>" + SipUtils.CRLF +
-			"    <op:service-id>" + SipUtils.FEATURE_RCS2_FT + "</op:service-id>" + SipUtils.CRLF +
+			"    <op:service-id>" + PresenceUtils.FEATURE_RCS2_FT + "</op:service-id>" + SipUtils.CRLF +
 			"    <op:version>1.0</op:version>" + SipUtils.CRLF +
 			"  </op:service-description>" + SipUtils.CRLF +
 			"  <contact>" + ImsModule.IMS_USER_PROFILE.getPublicUri() + "</contact>" + SipUtils.CRLF +
@@ -446,7 +446,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 	    	"<tuple id=\"t2\">" + SipUtils.CRLF +
 		    "  <status><basic>" + buildBooleanStatus(capabilities.isImageSharingSupported()) + "</basic></status>" + SipUtils.CRLF +
 			"  <op:service-description>" + SipUtils.CRLF +
-			"    <op:service-id>" + SipUtils.FEATURE_RCS2_IMAGE_SHARE + "</op:service-id>" + SipUtils.CRLF +
+			"    <op:service-id>" + PresenceUtils.FEATURE_RCS2_IMAGE_SHARE + "</op:service-id>" + SipUtils.CRLF +
 			"    <op:version>1.0</op:version>" + SipUtils.CRLF +
 			"  </op:service-description>" + SipUtils.CRLF +
 			"  <contact>" + ImsModule.IMS_USER_PROFILE.getPublicUri() + "</contact>" + SipUtils.CRLF +
@@ -455,7 +455,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 			"<tuple id=\"t3\">" + SipUtils.CRLF +
 		    "  <status><basic>" + buildBooleanStatus(capabilities.isVideoSharingSupported()) + "</basic></status>" + SipUtils.CRLF +
 			"  <op:service-description>" + SipUtils.CRLF +
-			"    <op:service-id>" + SipUtils.FEATURE_RCS2_VIDEO_SHARE + "</op:service-id>" + SipUtils.CRLF +
+			"    <op:service-id>" + PresenceUtils.FEATURE_RCS2_VIDEO_SHARE + "</op:service-id>" + SipUtils.CRLF +
 			"    <op:version>1.0</op:version>" + SipUtils.CRLF +
 			"  </op:service-description>" + SipUtils.CRLF +
 			"  <contact>" + ImsModule.IMS_USER_PROFILE.getPublicUri() + "</contact>" + SipUtils.CRLF +
@@ -464,7 +464,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 			"<tuple id=\"t4\">" + SipUtils.CRLF +
 		    "  <status><basic>" + buildBooleanStatus(capabilities.isImSessionSupported()) + "</basic></status>" + SipUtils.CRLF +
 			"  <op:service-description>" + SipUtils.CRLF +
-			"    <op:service-id>" + SipUtils.FEATURE_RCS2_CHAT + "</op:service-id>" + SipUtils.CRLF +
+			"    <op:service-id>" + PresenceUtils.FEATURE_RCS2_CHAT + "</op:service-id>" + SipUtils.CRLF +
 			"    <op:version>1.0</op:version>" + SipUtils.CRLF +
 			"  </op:service-description>" + SipUtils.CRLF +
 			"  <contact>" + ImsModule.IMS_USER_PROFILE.getPublicUri() + "</contact>" + SipUtils.CRLF +
@@ -473,7 +473,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 			"<tuple id=\"t5\">" + SipUtils.CRLF +
 		    "  <status><basic>" + buildBooleanStatus(capabilities.isCsVideoSupported()) + "</basic></status>" + SipUtils.CRLF +
 			"  <op:service-description>" + SipUtils.CRLF +
-			"    <op:service-id>" + SipUtils.FEATURE_RCS2_CS_VIDEO + "</op:service-id>" + SipUtils.CRLF +
+			"    <op:service-id>" + PresenceUtils.FEATURE_RCS2_CS_VIDEO + "</op:service-id>" + SipUtils.CRLF +
 			"    <op:version>1.0</op:version>" + SipUtils.CRLF +
 			"  </op:service-description>" + SipUtils.CRLF +
 			"  <contact>" + ImsModule.IMS_USER_PROFILE.getPublicUri() + "</contact>" + SipUtils.CRLF +

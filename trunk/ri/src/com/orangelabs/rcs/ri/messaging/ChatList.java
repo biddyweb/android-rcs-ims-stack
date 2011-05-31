@@ -27,6 +27,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -105,12 +108,10 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 		// Set UI title
         setTitle(getString(R.string.menu_chat_list));
 
-        // Instanciate messaging API
+        // Instantiate messaging API
 		messagingApi = new MessagingApi(getApplicationContext());
-		messagingApi.addApiEventListener(this);
-		messagingApi.connectApi();
 		
-        // Instanciate contacts API
+        // Instantiate contacts API
         contactsApi = new ContactsApi(getApplicationContext());
         
         // Set list adapter
@@ -120,16 +121,25 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 	}
 	
 	@Override
-	protected void onDestroy() {
-		super.onDestroy();
+	protected void onResume() {
+		super.onResume();
+		
+		if (messagingApi != null) {
+			messagingApi.addApiEventListener(this);
+			messagingApi.connectApi();
+		}
+	}
 
-		// Disconnect messaging API
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
 		if (messagingApi != null) {
 			messagingApi.removeApiEventListener(this);
 			messagingApi.disconnectApi();
 		}
 	}
-	
+		
 	/**
 	 * Chat session list adapter
 	 */
@@ -159,7 +169,7 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 				return 0;
 			}
 			if (isAnActiveImSession(position)){
-				return activeImSessionsElements.size()-1;
+				return position-1;
 			}
 			if (isImCapableItem(position)){
 				return position - activeImSessionsElements.size()-2;
@@ -276,11 +286,15 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 			List<IBinder> chatSessionsBinder = messagingApi.getChatSessions();
 			for (IBinder binder : chatSessionsBinder) {
 				IChatSession chatSession = IChatSession.Stub.asInterface(binder);
-				String contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
+				String contact;
+				if (chatSession.isChatGroup()) {
+					contact = "Group chat";
+				} else {
+					contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
+				}
 				String sessionID = chatSession.getSessionID();
 				ImElement imElements=new ImElement(contact, sessionID);
 				activeImSessionsElements.add(imElements);
-
 			}
 		} catch (Exception e) {
 			Utils.showMessageAndExit(ChatList.this, getString(R.string.label_api_failed));
@@ -302,6 +316,21 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 			}
 		}
 		chatListAdapter.notifyDataSetChanged();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_chat_list, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.refresh_menu){
+			updateDataSet();
+		}
+		return true;
 	}
 	
 	@Override

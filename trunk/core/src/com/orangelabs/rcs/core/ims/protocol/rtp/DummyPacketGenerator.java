@@ -24,8 +24,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpOutputStream;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Dummy packet generator for maintaining alive the network address in NAT 
- * 
+ * Dummy packet generator for maintaining alive the network address in NAT
+ *
  * @author jexa7410
  */
 public class DummyPacketGenerator extends Thread {
@@ -33,6 +33,16 @@ public class DummyPacketGenerator extends Thread {
      * Media processor
      */
     private Processor processor = null;
+
+    /**
+     * RTP output stream
+     */
+    private RtpOutputStream outputStream = null;
+
+    /**
+     * DummyPacketSourceStream
+     */
+    private DummyPacketSourceStream inputStream = null;
 
     /**
      * The logger
@@ -47,34 +57,35 @@ public class DummyPacketGenerator extends Thread {
 
     /**
      * Prepare the RTP session
-     * 
-	 * @param remoteAddress Remote address
-	 * @param remotePort Remote port
+     *
+     * @param remoteAddress Remote address
+     * @param remotePort Remote port
      * @throws RtpException
      */
-    public void prepareSession(String remoteAddress, int remotePort) throws RtpException {
+    public void prepareSession(String remoteAddress, int remotePort)
+            throws RtpException {
     	try {
     		// Create the input stream
-    		DummyPacketSourceStream inputStream = new DummyPacketSourceStream();
+            inputStream = new DummyPacketSourceStream();
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());
 			}
 
-			// Create the output stream 
-        	RtpOutputStream outputStream = new RtpOutputStream(remoteAddress, remotePort);
+            // Create the output stream
+            outputStream = new RtpOutputStream(remoteAddress, remotePort);
     		outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());
 			}
-        	
+
             // Create the media processor
     		processor = new Processor(inputStream, outputStream, new Codec[0]);
-    		
+
         	if (logger.isActivated()) {
         		logger.debug("Session has been prepared with success");
-        	}			
-        	
+            }
+
         } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Can't prepare resources correctly", e);
@@ -109,5 +120,10 @@ public class DummyPacketGenerator extends Thread {
 		if (processor != null) {
 			processor.stopProcessing();
 		}
+
+        if (outputStream != null)
+            outputStream.close();
+        if (inputStream != null)
+            inputStream.close();
     }
 }

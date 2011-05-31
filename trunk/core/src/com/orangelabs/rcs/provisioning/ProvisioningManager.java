@@ -5,11 +5,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Vector;
 
+import android.content.Context;
+import android.content.Intent;
+
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.service.RcsCoreService;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -32,6 +39,12 @@ public class ProvisioningManager {
 	 */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 		
+    /**
+     * Constructor
+     */
+    public ProvisioningManager() {
+    }
+    
     /**
      * Download config file over HTTP
      * 
@@ -70,6 +83,12 @@ public class ProvisioningManager {
 			logger.debug("Check received parameters");
 		}
 
+		// Get the config version
+		Parameter version = params.get("/VERS/version");
+		if (logger.isActivated()) {
+			logger.debug("Config version is " + version.getValue());
+		}
+
 		// Check the application ID
 		Parameter appId = params.get("/APPLICATION/appid");
 		if ((appId != null) && (!appId.getValue().equals("RCS-e"))) {
@@ -78,18 +97,14 @@ public class ProvisioningManager {
 			}
 			return;
 		}
-		
-		// Get the config version
-		Parameter version = params.get("/VERS/version");
-		if (logger.isActivated()) {
-			logger.debug("Config version is " + version.getValue());
-		}
 
 		// Check parameters
-		Enumeration<String> e = params.keys();
-    	while(e.hasMoreElements()) {
-    		String key = (String)e.nextElement();
-    		Parameter param = (Parameter)params.get(key);
+		Vector<String> v = new Vector<String>(params.keySet());
+	    Collections.sort(v);
+	    Iterator<String> it = v.iterator();
+	    while(it.hasNext()) {		
+    		String key = it.next();
+    		Parameter param = params.get(key);
     		String value = param.getValue();
     		if (logger.isActivated()) {
     			logger.debug(param.toString());
@@ -159,9 +174,12 @@ public class ProvisioningManager {
     			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, param.getValue());
 			} else
 			if (key.startsWith("/IMS/public_user_identity_list/")) {
-				// List of public user identities defined by 3GPP TS 23.003 .
-				// Sample: sip: 234150999999999@ims.mnc015.mcc234.3gppnetwork.org
-				// TODO
+				// List of public user identities defined by 3GPP TS 23.003.
+				// Sample: sip:234150999999999@ims.mnc015.mcc234.3gppnetwork.org
+	    		if (logger.isActivated()) {
+	    			logger.debug("Update parameter " + key + ": " + param.getValue());
+	    		}
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME, param.getValue());
 			} else
 			if (key.equals("/IMS/home_network_domain_name")) {
 				// The home network domain name specified in 3GPP TS 24.229.
@@ -176,9 +194,13 @@ public class ProvisioningManager {
 				// subscriber‘s network for that subscriber.
 				// Not used
 			} else
-			if (key.startsWith("/IMS/lbo_p-cscf_address/")) {
-				// List of P-CSCFs.
-				// TODO
+			if (key.startsWith("/IMS/lbo_p-cscf_address/address")) {
+				// List of P-CSCFs
+	    		if (logger.isActivated()) {
+	    			logger.debug("Update parameter " + key + ": " + param.getValue());
+	    		}
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, param.getValue());
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, param.getValue());
 			} else
 			if (key.equals("/IMS/resource_allocation_mode")) {
 				// indicates whether UE initiates resource allocation for the media controlled
@@ -609,11 +631,11 @@ public class ProvisioningManager {
     		} else
     		if (key.equals("/IM/maxsize1to1")) {
     			// Represent the maximum authorized size of a content chat message in a 1 To 1 chat session in bytes
-    			// TODO
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH, param.getValue());
     		} else
     		if (key.equals("/IM/maxsize1tom")) {
     			// Represent the maximum authorized size of a content chat message in a 1 To M chat session in bytes
-    			// TODO
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH, param.getValue());
     		} else
     		if (key.equals("/IM/timeridle")) {
     			// Represent the timeout for a chat session in idle mode (when there is no chat user activity) in seconds
@@ -628,10 +650,35 @@ public class ProvisioningManager {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
     			RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_FILE_TRANSFER_SIZE, param.getValue());
+    		} else
+    		
+    		if (key.equals("/APN/rcseonlyapn")) {
+    			// RCS-e APN
+	    		if (logger.isActivated()) {
+	    			logger.debug("Update parameter " + key + ": " + param.getValue());
+	    		}
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.RCS_APN, param.getValue());
+    		} else
+    		if (key.equals("/APN/enablercseswitch")) {
+    			// Describes whether to show the RCS-e enabled/disabled switch permanently
+    			// Values:
+    			// 1- The setting is shown permanently
+    			// 0- Otherwise it may be only shown during roaming
+    			// Not used
     		}
     	}
 
-    	// Restart the service 
-    	// TODO
+    	// Restart the service in background
+		if (logger.isActivated()) {
+			logger.debug("Restart the RCS service in background");
+		}
+	    Thread t = new Thread() {
+	    	public void run() {
+	    		Context ctx = AndroidFactory.getApplicationContext();
+	    		ctx.stopService(new Intent(RcsCoreService.SERVICE_NAME));
+	    		ctx.startService(new Intent(RcsCoreService.SERVICE_NAME));
+	    	}
+	    };
+	    t.start();
     }
 }

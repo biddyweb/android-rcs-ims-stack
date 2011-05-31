@@ -140,7 +140,7 @@ public class CallManager {
 					// Set remote party
 				    remoteParty = incomingNumber;
 
-					// Incoming call is received: request capabilities
+					// Request capabilities
 					requestCapabilities(remoteParty);
 					break;
 					
@@ -153,7 +153,10 @@ public class CallManager {
 					callState = CallManager.DISCONNECTED;
 				    incomingCall = false;
 
-				    // End of call: update capabilities
+				    // Disable content sharing capabilities
+					resetContentSharingCapabilities(remoteParty);
+				    
+				    // Request capabilities
 					requestCapabilities(remoteParty);
 
 					// Reset remote party
@@ -261,4 +264,15 @@ public class CallManager {
 			 imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
 	}	
+	
+	/**
+	 * Reset content sharing capabilities of a given contact
+	 * 
+	 * @param contact Contact
+	 */
+	private void resetContentSharingCapabilities(String contact) {
+		if (contact != null) {
+			 imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(contact);
+		 }
+	}
 }

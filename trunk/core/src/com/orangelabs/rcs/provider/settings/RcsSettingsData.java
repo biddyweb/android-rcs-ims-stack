@@ -534,4 +534,14 @@ public class RcsSettingsData {
 	 * Use SIP keep alive 
 	 */
 	public static final String USE_SIP_KEEP_ALIVE = "UseSipKeepAlive";
+
+	/**
+	 * RCS APN
+	 */
+	public static final String RCS_APN = "RcsApn";
+
+	/**
+	 * RCS operator
+	 */
+	public static final String RCS_OPERATOR = "RcsOperator";
 }

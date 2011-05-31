@@ -265,7 +265,7 @@ public class InitiateChat extends Activity {
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(String msgId, String status) {
+		public void handleMessageDeliveryStatus(String msgId, String contact, String status) {
 		}
 		
 		// Request to add participant is successful

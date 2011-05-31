@@ -21,14 +21,14 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Chat activity manager which manages the idle state of the session.
- * It maintains a timer that is canceled and restarted when the session has activity, ie when MSRP chunks are received or emitted.
- * If the timer expires, the session is aborted.
+ * Chat activity manager which manages the idle state of the session. It maintains a timer
+ * that is canceled and restarted when the session has activity, ie when MSRP chunks are
+ * received or emitted. If the timer expires, the session is aborted.
  */
 public class ChatActivityManager {
     /**
@@ -49,7 +49,7 @@ public class ChatActivityManager {
     /**
      * IM session
      */
-    private ChatSession session;
+    private ImsServiceSession session;
     
     /**
      * The logger
@@ -61,7 +61,7 @@ public class ChatActivityManager {
      * 
      * @param session IM session
      */    
-    public ChatActivityManager(ChatSession session) {
+    public ChatActivityManager(ImsServiceSession session) {
     	this.session = session;
     	this.timeout = RcsSettings.getInstance().getChatIdleDuration();
     }

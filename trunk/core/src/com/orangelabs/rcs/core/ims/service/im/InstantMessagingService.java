@@ -27,12 +27,13 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
@@ -57,12 +58,12 @@ public class InstantMessagingService extends ImsService {
     /**
      * Chat features tags
      */
-    public final static String[] CHAT_FEATURE_TAGS = {SipUtils.FEATURE_OMA_IM};
+    public final static String[] CHAT_FEATURE_TAGS = { ChatUtils.FEATURE_OMA_IM };
 
     /**
      * File transfer features tags
      */
-    public final static String[] FT_FEATURE_TAGS = {SipUtils.FEATURE_OMA_IM, SipUtils.FEATURE_RCSE_FT};
+    public final static String[] FT_FEATURE_TAGS = { ChatUtils.FEATURE_OMA_IM };
     
 	/**
 	 * Max chat sessions
@@ -77,7 +78,7 @@ public class InstantMessagingService extends ImsService {
 	/**
 	 * Store & Forward manager
 	 */
-	private StoreAndForwardManager storeAndFwdMgr = new StoreAndForwardManager();
+	private StoreAndForwardManager storeAndFwdMgr = new StoreAndForwardManager(this);
 	
 	/**
      * The logger
@@ -328,7 +329,7 @@ public class InstantMessagingService extends ImsService {
 		}
 		
 		// Test if the contact is blocked
-		String remote = SipUtils.getAssertedIdentity(invite);
+		String remote = ChatUtils.getAssertedIdentity(invite, false);
 	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
@@ -428,7 +429,29 @@ public class InstantMessagingService extends ImsService {
 		}
 
 		// Test if the contact is blocked
-		// TODO
+		String remote = ChatUtils.getAssertedIdentity(invite, false);
+	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
+			}
+			try {
+				// Send a 603 Decline response
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 603 Decline");
+		    	}
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        getImsModule().getSipManager().sendSipResponse(resp);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't send 603 Decline", e);
+				}
+			}
+			return;
+	    } else {
+	    	if (logger.isActivated()) {
+				logger.info("Contact " + remote + " is not blocked");
+			}
+		}
 		
 		// Test number of sessions
 		if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
@@ -473,8 +496,11 @@ public class InstantMessagingService extends ImsService {
     	Vector<ChatSession> sessions = getImSessions();
     	for (int i=0; i < sessions.size(); i++) {
     		ChatSession session = (ChatSession)sessions.get(i);
-    		if (session.getConferenceEventSubscriber().isNotifyForThisSubscriber(notify)) {
-    			session.getConferenceEventSubscriber().receiveNotification(notify);
+    		if (session instanceof GroupChatSession) {
+    			GroupChatSession groupChatSession = (GroupChatSession)session;
+	    		if (groupChatSession.getConferenceEventSubscriber().isNotifyForThisSubscriber(notify)) {
+	    			groupChatSession.getConferenceEventSubscriber().receiveNotification(notify);
+	    		}
     		}
     	}
     }

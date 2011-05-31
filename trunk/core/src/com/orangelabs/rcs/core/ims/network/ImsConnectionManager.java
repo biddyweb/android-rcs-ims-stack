@@ -106,8 +106,8 @@ public class ImsConnectionManager implements Runnable {
 		network = RcsSettings.getInstance().getNetworkAccess();
 
 		// Get network operator parameters
-		operator = imsModule.getCore().getConfig().getString("Operator", "");
-		apn = imsModule.getCore().getConfig().getString("APN", "");
+		operator = RcsSettings.getInstance().getNetworkOperator();
+		apn = RcsSettings.getInstance().getNetworkApn();
 		
 		// Set the connectivity manager
 		connectivityMgr = (ConnectivityManager)AndroidFactory.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);

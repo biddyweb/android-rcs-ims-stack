@@ -31,6 +31,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -320,7 +321,7 @@ public class RichcallService extends ImsService {
 	    	// Create 200 OK response
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		getImsModule().getSipManager().getSipStack().getContactHeader(),
-	        		SipUtils.getSupportedFeatureTags(true), sdp);
+	        		CapabilityUtils.getSupportedFeatureTags(true), sdp);
 
 	        // Send 200 OK response
 	        getImsModule().getSipManager().sendSipResponse(resp);

@@ -57,6 +57,11 @@ public class RtpPacketTransmitter {
 	 */
 	private DatagramConnection datagramConnection = null;
 
+    /**
+     * RTCP Session
+     */
+    private RtcpSession rtcpSession = null;
+
 	/**
 	 * The logger
 	 */
@@ -69,9 +74,11 @@ public class RtpPacketTransmitter {
      * @param port Remote port
      * @throws IOException
      */
-	public RtpPacketTransmitter(String address, int port) throws IOException {
+    public RtpPacketTransmitter(String address, int port, RtcpSession rtcpSession)
+            throws IOException {
 		this.remoteAddress = address;
 		this.remotePort = port;
+        this.rtcpSession = rtcpSession;
         datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
         datagramConnection.open();
 		if (logger.isActivated()) {
@@ -87,10 +94,12 @@ public class RtpPacketTransmitter {
      * @param DatagramConnection datagram connection of the RtpPacketReceiver
      * @throws IOException
      */
-    public RtpPacketTransmitter(String address, int port, DatagramConnection connection)
+    public RtpPacketTransmitter(String address, int port, RtcpSession rtcpSession,
+            DatagramConnection connection)
             throws IOException {
         this.remoteAddress = address;
         this.remotePort = port;
+        this.rtcpSession = rtcpSession;
         if (datagramConnection != null) {
             this.datagramConnection = connection;
         } else {
@@ -165,7 +174,7 @@ public class RtpPacketTransmitter {
 		rtppacket.payloadType = buffer.getFormat().getPayload();
 		rtppacket.seqnum = seqNumber++;
 		rtppacket.timestamp = buffer.getTimeStamp();
-		rtppacket.ssrc = RtpSource.SSRC;
+        rtppacket.ssrc = rtcpSession.SSRC;
 		rtppacket.payloadoffset = buffer.getOffset();
 		rtppacket.payloadlength = buffer.getLength();
 		return rtppacket;
@@ -191,6 +200,12 @@ public class RtpPacketTransmitter {
 		// Send data over UDP
 		try {
 			datagramConnection.send(remoteAddress, remotePort, data);
+
+            RtpSource s = rtcpSession.getMySource();
+            s.activeSender = true;
+            rtcpSession.timeOfLastRTPSent = rtcpSession.currentTime();
+            rtcpSession.packetCount++;
+            rtcpSession.octetCount += data.length;
 		} catch (IOException e) {
 			if (logger.isActivated()) {
 				logger.error("Can't send the RTP packet", e);

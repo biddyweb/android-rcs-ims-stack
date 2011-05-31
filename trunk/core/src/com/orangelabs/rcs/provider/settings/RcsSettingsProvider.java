@@ -68,7 +68,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 36;
+        private static final int DATABASE_VERSION = 38;
 
         private Context ctx;
         
@@ -166,9 +166,9 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.PERMANENT_STATE_MODE,	 			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_ACTIVATION,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
-            addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATION, 				RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATION, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATION,			RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
+            addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"5");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
             addParameter(db, RcsSettingsData.USE_PRESENCE_SERVICE,				RcsSettingsData.FALSE);
@@ -180,6 +180,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SIP_TIMER_T2,						"16000");
             addParameter(db, RcsSettingsData.SIP_TIMER_T4,						"17000");
             addParameter(db, RcsSettingsData.USE_SIP_KEEP_ALIVE,				RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.RCS_APN,							"");
+            addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
         }
         
         /**

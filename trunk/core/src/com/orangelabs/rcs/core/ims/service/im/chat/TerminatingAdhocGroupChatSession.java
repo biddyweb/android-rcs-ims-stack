@@ -60,8 +60,8 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
-		super(parent, invite.getFromUri() /* TODO SipUtils.getAssertedIdentity(invite)*/, StringUtils.decodeUTF8(invite.getSubject()));
-
+		super(parent, ChatUtils.getAssertedIdentity(invite, true), StringUtils.decodeUTF8(invite.getSubject()));
+		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
 	}
@@ -177,6 +177,14 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 				logger.debug("Local setup attribute is " + localSetup);
 			}
 
+    		// Set local port
+	    	int localMsrpPort;
+	    	if (localSetup.equals("active")) {
+		    	localMsrpPort = 9; // See RFC4145, Page 4
+	    	} else {
+	    		localMsrpPort = getMsrpMgr().getLocalMsrpPort();
+	    	}            
+            
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
@@ -185,7 +193,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	            "s=-" + SipUtils.CRLF +
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + getMsrpMgr().getLocalMsrpPort() + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
@@ -216,6 +224,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     					try {
     						// Open the MSRP session
     						getMsrpMgr().openMsrpSession();
+    						
+    		    	        // Send an empty packet
+    		            	sendEmptyDataChunk();    						
 						} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
@@ -261,6 +272,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
         			
         			// Open the MSRP session
         			getMsrpMgr().openMsrpSession();
+        			
+        	        // Send an empty packet
+                	sendEmptyDataChunk();
                 }
 
                 // Notify listener
@@ -268,9 +282,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     	        	getListener().handleSessionStarted();
     	        }
 
-    	        // Send an empty packet
-            	sendEmptyDataChunk();
-    	        
             	// Subscribe to event package
             	getConferenceEventSubscriber().subscribe();
             } else {

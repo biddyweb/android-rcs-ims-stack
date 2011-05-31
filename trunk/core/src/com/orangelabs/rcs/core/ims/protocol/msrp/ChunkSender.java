@@ -101,7 +101,7 @@ public class ChunkSender extends Thread {
 			byte chunk[] = null;
 			while ((chunk = (byte[])buffer.getMessage()) != null) {
 				// Write chunk to the output stream
-				if (logger.isActivated() && MsrpConnection.MSRP_TRACE) {
+				if (logger.isActivated() && MsrpConnection.MSRP_TRACE_ENABLED) {
 					logger.debug(">>> Send MSRP message:\n" + new String(chunk));
 				}
 				stream.write(chunk);
@@ -133,7 +133,7 @@ public class ChunkSender extends Thread {
 		if (connection.getSession().isFailureReportRequested()) {
 			buffer.putMessage(chunk);
 		} else {
-			if (logger.isActivated() && MsrpConnection.MSRP_TRACE) {
+			if (logger.isActivated() && MsrpConnection.MSRP_TRACE_ENABLED) {
 				logger.debug(">>> Send MSRP message:\n" + new String(chunk));
 			}
 			stream.write(chunk);

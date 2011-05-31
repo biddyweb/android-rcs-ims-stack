@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.protocol.sip;
 
 import java.util.Vector;
 
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.utils.IdGenerator;
 
@@ -138,7 +139,7 @@ public class SipDialogPath {
 		this.stack = stack;
 		this.callId = callId;
 		this.cseq = cseq;
-		this.target = target;
+		this.target = SipUtils.extractUriFromAddress(target);
 		this.localParty = localParty;
 		this.remoteParty = remoteParty;
 		this.route = route;

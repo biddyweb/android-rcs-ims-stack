@@ -38,6 +38,11 @@ public class ContactInfo implements Parcelable {
      */
     public final static String NOT_RCS = "not_rcs";
 
+    /**
+     * We do not know the contact yet
+     */
+    public final static String NO_INFO = "no_info";
+    
 	/**
 	 * Capabilities
 	 */

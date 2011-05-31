@@ -141,7 +141,10 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.CountryCode);
 		txt.setText(settings.get("CountryCode"));
 		
-    	// Display capabilities
+		txt = (EditText)this.findViewById(R.id.RcsApn);
+		txt.setText(settings.get("RcsApn"));
+
+		// Display capabilities
         CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityImageShare")));
         
@@ -224,6 +227,9 @@ public class ProfileProvisioning extends Activity {
 		        }
 		        Provisioning.writeParameter(cr, "CountryCode", value);
 
+		        txt = (EditText)this.findViewById(R.id.RcsApn);
+		        Provisioning.writeParameter(cr, "RcsApn", txt.getText().toString());
+
 		        // Save capabilities
 		        CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
 		        Provisioning.writeParameter(cr, "CapabilityImageShare", Boolean.toString(box.isChecked()));
@@ -290,7 +296,7 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0: // Default
+		                        case 0: // Default
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "password";
@@ -300,7 +306,7 @@ public class ProfileProvisioning extends Activity {
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
 			            			chatConfUri  = "Conference-Factory";
 			            			break;
-			            		default:
+		            			default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "";

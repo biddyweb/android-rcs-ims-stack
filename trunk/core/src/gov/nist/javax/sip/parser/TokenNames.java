@@ -89,6 +89,7 @@ public interface TokenNames
     public static final String R = "R";
     public static final String O = "O";
     public static final String X = "X"; //Jozef Saniga added
+    public static final String B = "B"; // Bug fix OrangeLabs, AUFFRET Jean-Marc
 }
 /*
  * $Log: TokenNames.java,v $

@@ -116,6 +116,15 @@ public class CapabilityApi extends ClientApi {
     	}
     }    
     
+    /**
+     * Get list of RCS-e related mime types
+     * 
+     * @return list of mime types
+     */
+    public String[] getRcsRelatedMimeTypes(){
+    	return ContactsManager.getInstance().getRcsRelatedMimeTypes();
+    }
+    
 	/**
 	 * Request capabilities for a given contact
 	 * 

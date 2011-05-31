@@ -450,6 +450,9 @@ public final class ContactsManager {
 		// May be called from outside the core, so be sure the number format is international before doing the queries 
 		contact = PhoneUtils.extractNumberFromUri(contact);
 		
+		// Set the contact type
+		setContactType(contact, info.getRcsStatus());
+		
 		// Set the availability status
 		int availability = PRESENCE_STATUS_NOT_SET;
 		if (info.getPresenceInfo().isOnline()){
@@ -1703,7 +1706,7 @@ public final class ContactsManager {
 	 * @param contact
 	 * @return boolean
 	 */
-	private boolean isContactRcsActive(String contact){
+	public boolean isContactRcsActive(String contact){
 		contact = PhoneUtils.extractNumberFromUri(contact);
 		if (isNumberShared(contact)){
 			return true;
@@ -1780,10 +1783,10 @@ public final class ContactsManager {
 	 * 
 	 * @param contact Contact
 	 * @param capabilities Capabilities
-	 * @param isSuccessfulQuery This flag is true if the capability discovery was complete, else false (e.g. contact is not RCS capable)
+	 * @param contactType Contact type
 	 * @param registrationState Three possible values : 
 	 */
-	public void setContactCapabilities(String contact, Capabilities capabilities, boolean isSuccessfulQuery, int registrationState) {
+	public void setContactCapabilities(String contact, Capabilities capabilities, String contactType, int registrationState) {
 		
 		contact = PhoneUtils.extractNumberFromUri(contact);
 
@@ -1794,32 +1797,27 @@ public final class ContactsManager {
 			}
 			return;
 		}
+		
+		setContactType(contact, contactType);
 
-		// Set the contact type 
-		if (!isSuccessfulQuery || !capabilities.isImSessionSupported()){
-			// The query was a failure or the IM tag was not present, so the contact is considered not RCS capable
-			setContactType(contact, ContactInfo.NOT_RCS);
-		}else{
-			// The query was successful, the contact is at least RCS capable				
-			if (isContactRcsActive(contact)){
-				// The contact is even RCS active (we shared our presence)
-				setContactType(contact, PresenceInfo.RCS_ACTIVE);
-			}else{
-				// Contact is RCS capable (we do not share our presence yet)
-				setContactType(contact, ContactInfo.RCS_CAPABLE);
-			}
-		}			
-
+		boolean isRegistered = (registrationState==REGISTRATION_STATUS_ONLINE);
+		// Set the capabilities if the remote is trully registered
+		
 		// Cs Video
-		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported() && isRegistered );
 		// File transfer
-		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, capabilities.isFileTransferSupported());
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, capabilities.isFileTransferSupported() && isRegistered);
 		// Image sharing
-		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IMAGE_SHARING, capabilities.isImageSharingSupported());
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IMAGE_SHARING, capabilities.isImageSharingSupported() && isRegistered);
 		// IM session
-		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IM_SESSION, capabilities.isImSessionSupported());
+		// This capability is enabled:
+		// - if the capability is present and the contact is registered
+		// - if the IM store&forward is enabled and the contact is RCS capable
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IM_SESSION, 
+				(capabilities.isImSessionSupported() && isRegistered) 
+				|| (RcsSettings.getInstance().isImAlwaysOn() && !(contactType.equalsIgnoreCase(ContactInfo.NO_INFO)||contactType.equalsIgnoreCase(ContactInfo.NOT_RCS))));
 		// Video sharing
-		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_VIDEO_SHARING, capabilities.isVideoSharingSupported());
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_VIDEO_SHARING, capabilities.isVideoSharingSupported() && isRegistered);
 		// Presence discovery
 		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
 		// Social presence
@@ -1843,6 +1841,50 @@ public final class ContactsManager {
 		default:
 			break;
 		}
+	}
+	
+	/**
+	 * Set contact capabilities
+	 * 
+	 * @param contact Contact
+	 * @param capabilities Capabilities
+	 */
+	public void setContactCapabilities(String contact, Capabilities capabilities) {
+		
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
+		// Update capabilities in database, only if the number is in the address book
+		if (!isNumberInAddressBook(contact)) {
+			if (logger.isActivated()){
+				logger.debug(contact +" is not a number in the address book, we do not save its capabilities");
+			}
+			return;
+		}
+		
+		// Cs Video
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
+		// File transfer
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, capabilities.isFileTransferSupported());
+		// Image sharing
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IMAGE_SHARING, capabilities.isImageSharingSupported());
+		// IM session
+		// This capability is enabled:
+		// - if the capability is present and the contact is registered
+		// - if the IM store&forward is enabled and the contact is RCS capable
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_IM_SESSION, 
+				(capabilities.isImSessionSupported()) 
+				|| (RcsSettings.getInstance().isImAlwaysOn()));
+		// Video sharing
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_VIDEO_SHARING, capabilities.isVideoSharingSupported());
+		// Presence discovery
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
+		// Social presence
+		setCapabilityForContact(contact, MIMETYPE_CAPABILITY_SOCIAL_PRESENCE, capabilities.isSocialPresenceSupported());
+		// RCS extensions
+		setExtensionsCapabilityForContact(contact, MIMETYPE_CAPABILITY_EXTENSIONS, capabilities.getSupportedExtensions());
+
+		// Contact capabilities timestamp
+		setContactCapabilitiesTimestamp(contact, capabilities.getTimestamp());
 	}
 	
 	/**
@@ -2546,9 +2588,10 @@ public final class ContactsManager {
      * Utility to check if a rawContact is associated to a RCS account
      *
      * @param rawContactId the id of the rawContact to check
+     * @param phoneNumber The phone number associated to the RCS contact
      * @return true if contact is associated to a RCS raw contact, else false
      */
-    public boolean isRawContactRcsAssociated(final long rawContactId) {
+    public boolean isRawContactRcsAssociated(final long rawContactId, final String phoneNumber) {
     	
     	// We look at the aggregation exception table to see which contacts are aggregated to this one
     	// Raw contact ID 2 is always the raw contact corresponding to the phone entry
@@ -2565,7 +2608,7 @@ public final class ContactsManager {
         if (rawCur != null){ 
         	while (rawCur.moveToNext()){
         		long rawContactToBeChecked = rawCur.getLong(1);
-        		if (isRawContactRcs(rawContactToBeChecked)){
+        		if (isRawContactRcs(rawContactToBeChecked) && getRcsRawContactIdFromPhoneNumber(phoneNumber)!=INVALID_ID){
                     rawCur.close();
         			return true;
         		}
@@ -3527,6 +3570,40 @@ public final class ContactsManager {
      */
     public boolean isNumberInAddressBook(String number){
     	return (getRawContactIdFromPhoneNumber(number)!=INVALID_ID);
+    }
+
+    /**
+     * Get list of RCS-e related mime types
+     * 
+     * @return list of mime types
+     */
+    public String[] getRcsRelatedMimeTypes(){
+    	return new String[]{
+    			MIMETYPE_NUMBER,
+    			MIMETYPE_RCS_STATUS,
+    			MIMETYPE_REGISTRATION_STATE,
+    			MIMETYPE_RCS_STATUS_TIMESTAMP,
+    			MIMETYPE_PRESENCE_STATUS,
+    			MIMETYPE_FREE_TEXT,
+    			MIMETYPE_WEBLINK,
+    		    MIMETYPE_PHOTO_ETAG,
+    		    MIMETYPE_PRESENCE_TIMESTAMP,
+    		    MIMETYPE_CAPABILITY_TIMESTAMP,
+    		    MIMETYPE_CAPABILITY_CS_VIDEO,
+    		    MIMETYPE_CAPABILITY_IMAGE_SHARING,
+    		    MIMETYPE_CAPABILITY_VIDEO_SHARING,
+    		    MIMETYPE_CAPABILITY_IM_SESSION,
+    		    MIMETYPE_CAPABILITY_FILE_TRANSFER,
+    		    MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY,
+    		    MIMETYPE_CAPABILITY_SOCIAL_PRESENCE,
+    		    MIMETYPE_CAPABILITY_EXTENSIONS,
+    		    MIMETYPE_SEE_MY_PROFILE,
+    		    MIMETYPE_RCS_CONTACT,
+    		    MIMETYPE_RCS_CAPABLE_CONTACT,
+    		    MIMETYPE_NOT_RCS_CONTACT,
+    		    MIMETYPE_EVENT_LOG,
+    		    MIMETYPE_IM_BLOCKED,MIMETYPE_WEBLINK_UPDATED
+    		    };
     }
     
 }

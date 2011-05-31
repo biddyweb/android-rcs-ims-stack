@@ -32,9 +32,11 @@ import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.event.User;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -134,7 +136,7 @@ public class RichMessaging {
 		// Set the subject as the first message
 		if ((sessionSubject != null) && (sessionSubject.length() > 0)) {
 			String msgId = ChatUtils.getMessageId(session.getDialogPath().getInvite());
-			addChatMessageReception(new InstantMessage(msgId, inviter, sessionSubject), session);
+			addChatMessageReception(new InstantMessage(msgId, inviter, sessionSubject, RcsSettings.getInstance().isImReportsActivated()), session);
 
 			// Mark the message as "requested for report" if needed
 			if (msgId!=null && ChatUtils.isImdnDisplayedRequested(session.getDialogPath().getInvite())){
@@ -166,12 +168,14 @@ public class RichMessaging {
 	public void addChatInitiation(ChatSession session){
 		String sessionId = session.getSessionID();
 		String invited = "";
-		String sessionSubject = session.getSubject();
+		String sessionSubject = StringUtils.decodeUTF8(session.getSubject());
 		int type = EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE;
 		if (session.isChatGroup()){
 			type = EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE;
 			for(String contact : session.getParticipants().getList()){
-				invited += PhoneUtils.extractNumberFromUri(contact)+";";
+				if (contact!=null){
+					invited += PhoneUtils.extractNumberFromUri(contact)+";";
+				}
 			}
 		}else{
 			invited = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
@@ -180,7 +184,7 @@ public class RichMessaging {
 
 		// Set the subject as the first message
 		if ((sessionSubject != null) && (sessionSubject.length() > 0)) {
-			addChatMessageInitiation(new InstantMessage(ChatUtils.getMessageId(session.getDialogPath().getInvite()), invited, sessionSubject), session);
+			addChatMessageInitiation(new InstantMessage(ChatUtils.getMessageId(session.getDialogPath().getInvite()), invited, sessionSubject, RcsSettings.getInstance().isImReportsActivated()), session);
 		}		
 	}
 	
@@ -287,6 +291,7 @@ public class RichMessaging {
 					status = EventsLogApi.STATUS_ALL_DISPLAYED;
 				}
 			}
+			cursor.close();
 		}
 		
 		values = new ContentValues();
@@ -352,6 +357,34 @@ public class RichMessaging {
 		return addMessage(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts, null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 	}
 	
+	/**
+	 * A session initiation failed and the message was not delivered
+	 * 
+	 * @param sessionId
+	 */
+	public void markMessageFailedForSession(String sessionId){
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_FAILED);
+		cr.update(databaseUri, 
+				values, 
+				RichMessagingData.KEY_CHAT_SESSION_ID +" = \""+sessionId+"\"" +" AND " + RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE, 
+				null);
+	}
+	
+	/**
+	 * A message could not be sent
+	 * 
+	 * @param msgId
+	 */
+	public void markMessageFailed(String msgId){
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_FAILED);
+		cr.update(databaseUri, 
+				values, 
+				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"" +" AND " + RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE, 
+				null);
+	}
+
 	/**
 	 * Add a new message (chat message, file transfer, large IM, short IM)
 	 * 
