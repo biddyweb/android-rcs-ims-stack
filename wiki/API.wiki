@@ -13,4 +13,4 @@ RCS Settings API<br>
 
 = Details =
 
-See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.0.pdf]
+See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.1.pdf]
