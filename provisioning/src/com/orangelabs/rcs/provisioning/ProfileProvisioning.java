@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import java.util.Map;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -37,13 +35,13 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import java.util.Map;
 
 /**
  * End user profile parameters provisioning
- * 
+ *
  * @author jexa7410
  */
 public class ProfileProvisioning extends Activity {
@@ -70,27 +68,27 @@ public class ProfileProvisioning extends Activity {
 	 * Content resolver
 	 */
 	private ContentResolver cr;
-	
+
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.profile_provisioning);
-        
+
         // Set database content resolver
         this.cr = getContentResolver();
-        
+
 	}
- 
+
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
+
 		// Get settings from database
 		Map<String, String> settings = RcsSettings.getInstance().dump();
-		
+
 		// Display profile parameters
 		Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, MOBILE_IMS_AUTHENT);
@@ -101,7 +99,7 @@ public class ProfileProvisioning extends Activity {
 		} else {
 			spinner.setSelection(1);
 		}
-		
+
 		spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, WIFI_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -110,77 +108,77 @@ public class ProfileProvisioning extends Activity {
 
 		EditText txt = (EditText)this.findViewById(R.id.ImsUsername);
 		txt.setText(settings.get("ImsUsername"));
-		
+
 		txt = (EditText)this.findViewById(R.id.ImsDisplayName);
 		txt.setText(settings.get("ImsDisplayName"));
-		
+
 		txt = (EditText)this.findViewById(R.id.ImsPrivateId);
 		txt.setText(settings.get("ImsPrivateId"));
-		
+
 		txt = (EditText)this.findViewById(R.id.ImsPassword);
 		txt.setText(settings.get("ImsPassword"));
-		
+
 		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
 		txt.setText(settings.get("ImsHomeDomain"));
-		
+
 		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddr);
 		txt.setText(settings.get("ImsOutboundProxyAddrForMobile"));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerAddr);
-		txt.setText(settings.get("XdmServerAddr"));        
-		
+        txt.setText(settings.get("XdmServerAddr"));
+
 		txt = (EditText)this.findViewById(R.id.XdmServerLogin);
-		txt.setText(settings.get("XdmServerLogin"));        
-		
+        txt.setText(settings.get("XdmServerLogin"));
+
 		txt = (EditText)this.findViewById(R.id.XdmServerPassword);
-		txt.setText(settings.get("XdmServerPassword"));        
-		
+        txt.setText(settings.get("XdmServerPassword"));
+
 		txt = (EditText)this.findViewById(R.id.ImConferenceUri);
 		txt.setText(settings.get("ImConferenceUri"));
-		
+
 		txt = (EditText)this.findViewById(R.id.CountryCode);
 		txt.setText(settings.get("CountryCode"));
-		
+
 		txt = (EditText)this.findViewById(R.id.RcsApn);
 		txt.setText(settings.get("RcsApn"));
 
 		// Display capabilities
         CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityImageShare")));
-        
+
         box = (CheckBox)findViewById(R.id.video_sharing);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityVideoShare")));
-        
+
         box = (CheckBox)findViewById(R.id.file_transfer);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityFileTransfer")));
-        
+
         box = (CheckBox)findViewById(R.id.im);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityImSession")));
-        
+
         box = (CheckBox)findViewById(R.id.cs_video);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityCsVideo")));
-        
+
         box = (CheckBox)findViewById(R.id.presence_discovery);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilityPresenceDiscovery")));
-        
+
         box = (CheckBox)findViewById(R.id.social_presence);
         box.setChecked(Boolean.parseBoolean(settings.get("CapabilitySocialPresence")));
 	}
-	
+
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater=new MenuInflater(getApplicationContext());
 		inflater.inflate(R.menu.profile_menu, menu);
 		return true;
 	}
-    
+
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case R.id.menu_generate_profile:
-				showDialog(DIALOG_GENERATE_VALUE);			
+                showDialog(DIALOG_GENERATE_VALUE);
 				break;
-				
+
 			case R.id.menu_save:
 		        // Save UI parameters
 				Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
@@ -191,7 +189,7 @@ public class ProfileProvisioning extends Activity {
 
 				EditText txt = (EditText)this.findViewById(R.id.ImsUsername);
 				Provisioning.writeParameter(cr, "ImsUsername", txt.getText().toString());
-		        
+
 		        txt = (EditText)this.findViewById(R.id.ImsDisplayName);
 				Provisioning.writeParameter(cr, "ImsDisplayName", txt.getText().toString());
 
@@ -210,13 +208,13 @@ public class ProfileProvisioning extends Activity {
 
 				txt = (EditText)this.findViewById(R.id.XdmServerAddr);
 				Provisioning.writeParameter(cr, "XdmServerAddr", txt.getText().toString());
-		        
+
 		        txt = (EditText)this.findViewById(R.id.XdmServerLogin);
 				Provisioning.writeParameter(cr, "XdmServerLogin", txt.getText().toString());
-		        
+
 		        txt = (EditText)this.findViewById(R.id.XdmServerPassword);
 				Provisioning.writeParameter(cr, "XdmServerPassword", txt.getText().toString());
-		        
+
 		        txt = (EditText)this.findViewById(R.id.ImConferenceUri);
 		        Provisioning.writeParameter(cr, "ImConferenceUri", txt.getText().toString());
 
@@ -233,31 +231,32 @@ public class ProfileProvisioning extends Activity {
 		        // Save capabilities
 		        CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
 		        Provisioning.writeParameter(cr, "CapabilityImageShare", Boolean.toString(box.isChecked()));
-		        
+
 		        box = (CheckBox)findViewById(R.id.video_sharing);
 		        Provisioning.writeParameter(cr, "CapabilityVideoShare", Boolean.toString(box.isChecked()));
-		        
+
 		        box = (CheckBox)findViewById(R.id.file_transfer);
 		        Provisioning.writeParameter(cr, "CapabilityFileTransfer", Boolean.toString(box.isChecked()));
-		        
+
 		        box = (CheckBox)findViewById(R.id.im);
 		        Provisioning.writeParameter(cr, "CapabilityImSession", Boolean.toString(box.isChecked()));
-		        
+
 		        box = (CheckBox)findViewById(R.id.cs_video);
 		        Provisioning.writeParameter(cr, "CapabilityCsVideo", Boolean.toString(box.isChecked()));
-		        
+
 		        box = (CheckBox)findViewById(R.id.presence_discovery);
 	        	Provisioning.writeParameter(cr, "CapabilityPresenceDiscovery", Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.social_presence);
 		        Provisioning.writeParameter(cr, "CapabilitySocialPresence", Boolean.toString(box.isChecked()));
 
-		        Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();				
+                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG)
+                        .show();
 		        break;
 		}
 		return true;
 	}
-    
+
     @Override
     protected Dialog onCreateDialog(int id) {
         switch(id) {
@@ -266,16 +265,16 @@ public class ProfileProvisioning extends Activity {
 	            final View view = factory.inflate(R.layout.generate_profile_layout, null);
 				EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
-	            
+
 	            final String[] platforms = {
-	                "Default"
+                        "BRUNE", "Kamailio1"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
 	                    android.R.layout.simple_spinner_item, platforms);
 	            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	            spinner.setAdapter(adapter);
-	            
+
 	            return new AlertDialog.Builder(this)
 	                .setTitle(R.string.rcs_settings_title_generate_profile)
 	                .setView(view)
@@ -286,7 +285,7 @@ public class ProfileProvisioning extends Activity {
 	            			String number = textEdit.getText().toString();
 	        	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	        	            int index = spinner.getSelectedItemPosition();
-	            			
+
 	            			String sipUri;
 	            			String imsPwd;
 	            			String homeDomain;
@@ -296,17 +295,27 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-		                        case 0: // Default
-			            			homeDomain = "domain.com";
+	                        	case 0: // Brune
+			            			homeDomain = "rcs.brune.com";
 		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "password";
-			            			imsProxy = "127.0.0.1:5060";
-			            			xdms = "127.0.0.1:8080/services";
-			            			xdmsPwd = "password";
+			            			imsPwd = "nsnims2008";
+			            			imsProxy = "80.12.197.74:5060";
+			            			xdms = "10.194.117.34:8080/services";
+			            			xdmsPwd = "nsnims2008";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
 			            			chatConfUri  = "Conference-Factory";
 			            			break;
-		            			default:
+                                case 1: // Kamailio1
+                                    homeDomain = "rcs.kamailio1.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "nsnims2008";
+                                    imsProxy = "172.20.14.43:5060";
+                                    xdms = "10.194.117.34:8080/services";
+                                    xdmsPwd = "nsnims2008";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
+			            		default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "";
@@ -316,20 +325,20 @@ public class ProfileProvisioning extends Activity {
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
 			            			chatConfUri  = "conference-factory";
 	            			}
-	                        
+
 	            			// Update UI
 	        				EditText txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsUsername);
 	        				txt.setText(number);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsDisplayName);
 	        				txt.setText(number);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPrivateId);
-	        		        txt.setText(sipUri);	        				
+                            txt.setText(sipUri);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPassword);
 	        		        txt.setText(imsPwd);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
 	        		        txt.setText(homeDomain);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddr);
-	        		        txt.setText(imsProxy);	        				
+                            txt.setText(imsProxy);
 	        				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
 	        				txt.setText(xdms);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);
@@ -344,5 +353,5 @@ public class ProfileProvisioning extends Activity {
 	                .create();
         }
         return null;
-    }    
+    }
 }
