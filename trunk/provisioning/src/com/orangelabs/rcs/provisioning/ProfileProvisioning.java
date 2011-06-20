@@ -267,7 +267,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "BRUNE", "Kamailio1"
+                        "Your platform"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -295,26 +295,15 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0: // Brune
-			            			homeDomain = "rcs.brune.com";
+	                        	case 0: // Add your own platform config here
+			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsProxy = "80.12.197.74:5060";
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
+			            			imsPwd = "";
+			            			imsProxy = "127.0.0.1:5060";
+			            			xdms = "127.0.0.1:8080/services";
+			            			xdmsPwd = "";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-                                case 1: // Kamailio1
-                                    homeDomain = "rcs.kamailio1.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "nsnims2008";
-                                    imsProxy = "172.20.14.43:5060";
-                                    xdms = "10.194.117.34:8080/services";
-                                    xdmsPwd = "nsnims2008";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
+			            			chatConfUri  = "conference-factory";
 			            		default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
