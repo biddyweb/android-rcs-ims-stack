@@ -25,7 +25,7 @@ interface IChatEventListener {
 	void handleIsComposingEvent(in String contact, in boolean status);
 	
 	// Conference event
-	void handleConferenceEvent(in String contact, in String state);
+	void handleConferenceEvent(in String contact, in String contactDisplayname, in String state);
 
 	// Message delivery status
 	void handleMessageDeliveryStatus(in String msgId, in String contact, in String status);

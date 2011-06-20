@@ -789,7 +789,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
      */
     public boolean inviteContactToSharePresence(String contact) {
 		// Remove contact from the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		xdm.removeContactFromBlockedList(contactUri);
 
 		// Remove contact from the revoked contacts list
@@ -812,7 +812,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
      */
     public boolean revokeSharedContact(String contact){
 		// Add contact in the revoked contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		HttpResponse response = xdm.addContactToRevokedList(contactUri);
 		if ((response == null) || (!response.isSuccessfullResponse())) {
 			return false;
@@ -835,7 +835,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 	 */
 	public boolean acceptPresenceSharingInvitation(String contact) {
 		// Add contact in the granted contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		HttpResponse response = xdm.addContactToGrantedList(contactUri);
 		if ((response != null) && response.isSuccessfullResponse()) { 
 			return true;
@@ -852,7 +852,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 	 */
 	public boolean blockPresenceSharingInvitation(String contact){
 		// Add contact in the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		HttpResponse response = xdm.addContactToBlockedList(contactUri);
 		if ((response != null) && response.isSuccessfullResponse()) { 
 			return true;
@@ -869,7 +869,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
      */
 	public boolean removeRevokedContact(String contact) {
 		// Remove contact from the revoked contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		HttpResponse response = xdm.removeContactFromRevokedList(contactUri);
 		if ((response != null) && (response.isSuccessfullResponse() || response.isNotFoundResponse())) { 
 			return true;
@@ -886,7 +886,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
      */
 	public boolean removeBlockedContact(String contact) {
 		// Remove contact from the blocked contacts list
-		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 		HttpResponse response = xdm.removeContactFromBlockedList(contactUri);
 		if ((response != null) && (response.isSuccessfullResponse() || response.isNotFoundResponse())) { 
 			return true;

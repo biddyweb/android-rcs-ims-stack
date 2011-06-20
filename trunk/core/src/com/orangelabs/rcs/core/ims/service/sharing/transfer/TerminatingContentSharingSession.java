@@ -36,6 +36,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
@@ -259,7 +260,12 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 					msrpMgr.openMsrpSession(ContentSharingTransferSession.DEFAULT_SO_TIMEOUT);
                 }
                 
-    	        // Notify listener
+            	// Start session timer
+            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
+            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
+            	}
+
+            	// Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();
     	        }

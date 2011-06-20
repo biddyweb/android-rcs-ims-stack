@@ -82,7 +82,7 @@ public class OptionsRequestTask {
 
     	try {
         	// Create a dialog path
-        	String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+        	String contactUri = PhoneUtils.formatNumberToSipUri(contact);
         	dialogPath = new SipDialogPath(
         			imsModule.getSipManager().getSipStack(),
         			imsModule.getSipManager().getSipStack().generateCallId(),

@@ -45,7 +45,7 @@ public class PresenceSettingsDisplay extends PreferenceActivity implements Prefe
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_presence_preferences);
-        setTitle(R.string.rcs_settings_title_settings);
+        setTitle(R.string.rcs_settings_title_presence_settings);
 
         freetextEdit1 = (EditTextPreference)findPreference("edit_freetext1");
         freetextEdit1.setPersistent(false);

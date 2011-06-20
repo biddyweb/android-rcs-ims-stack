@@ -18,12 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+
 /**
  * Chat error
  * 
  * @author jexa7410
  */
-public class ChatError extends Error {
+public class ChatError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
 	
 	/**
@@ -55,16 +57,6 @@ public class ChatError extends Error {
 	 * Subscription to conference package has failed
 	 */
 	public final static int SUBSCRIBE_CONFERENCE_FAILED = 0x06;
-
-	/**
-	 * Error code
-	 */
-	private int code;
-	
-	/**
-	 * Message ID
-	 */
-	private String msgId;
 	
 	/**
 	 * Constructor
@@ -72,9 +64,7 @@ public class ChatError extends Error {
 	 * @param code Error code
 	 */
 	public ChatError(int code) {
-		super();
-		
-		this.code = code;
+		super(code);
 	}
 	
 	/**
@@ -84,38 +74,6 @@ public class ChatError extends Error {
 	 * @param msg Detail message 
 	 */
 	public ChatError(int code, String msg) {
-		super(msg);
-		
-		this.code = code;
-	}
-
-	/**
-	 * Constructor
-	 * 
-	 * @param code Error code
-	 * @param msg Detail message 
-	 * @param msgId Id of the message that could not be sent
-	 */
-	public ChatError(int code, String msg, String msgId) {
-		this(code, msg);
-		this.msgId = msgId;
-	}
-	
-	/**
-	 * Returns the error code
-	 * 
-	 * @return Error code
-	 */
-	public int getErrorCode() {
-		return code; 
-	}
-	
-	/**
-	 * Returns the message id of the message that could not be sent
-	 * 
-	 * @return msgId
-	 */
-	public String getMsgId(){
-		return msgId;
+		super(code, msg);
 	}
 }

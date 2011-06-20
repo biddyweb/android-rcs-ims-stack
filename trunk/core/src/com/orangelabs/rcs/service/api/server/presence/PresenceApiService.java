@@ -70,7 +70,10 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Set my presence info");
 		}
 
-    	if (Core.getInstance().getPresenceService().isPermanentState()) {
+    	// Check permission
+		ServerApiUtils.testPermission();
+
+		if (Core.getInstance().getPresenceService().isPermanentState()) {
     		// Test core availability
     		ServerApiUtils.testCore();
     	} else {
@@ -107,6 +110,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Invite " + contact + " to share presence");
 		}
 
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -135,7 +141,10 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Accept sharing invitation from " + contact);
 		}
 
-        // Test core availability
+    	// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
 		ServerApiUtils.testCore();
 
 		try {
@@ -163,7 +172,10 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Reject sharing invitation from " + contact);
 		}
 
-        // Test core availability
+    	// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
 		ServerApiUtils.testCore();
 
 		try {
@@ -190,6 +202,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Ignore sharing invitation from " + contact);
 		}
 
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		try {
 			// Set this contact presence status to "pending"
 			ContactsManager.getInstance().setContactSharingStatus(contact, PresenceInfo.RCS_PENDING, "");
@@ -210,6 +225,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Revoke contact " + contact);
 		}
 		
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -242,6 +260,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Unrevoke contact " + contact);
 		}
 		
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -270,6 +291,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			logger.info("Unblock contact " + contact);
 		}
 		
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -294,8 +318,11 @@ public class PresenceApiService extends IPresenceApi.Stub {
 	 */
 	public List<String> getGrantedContacts() throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Returns list of granted contacts");
+			logger.info("Get granted contacts");
 		}
+
+    	// Check permission
+		ServerApiUtils.testPermission();
 
 		// Test core availability
 		ServerApiUtils.testCore();
@@ -315,8 +342,11 @@ public class PresenceApiService extends IPresenceApi.Stub {
 	 */
 	public List<String> getRevokedContacts() throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Returns list of revoked contacts");
+			logger.info("Get revoked contacts");
 		}
+
+    	// Check permission
+		ServerApiUtils.testPermission();
 
 		// Test core availability
 		ServerApiUtils.testCore();
@@ -336,9 +366,12 @@ public class PresenceApiService extends IPresenceApi.Stub {
 	 */
 	public List<String> getBlockedContacts() throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Returns list of blocked contacts");
+			logger.info("Get blocked contacts");
 		}
 		
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -348,5 +381,4 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			throw new ServerApiException(e.getMessage());
 		}
 	}
-
 }

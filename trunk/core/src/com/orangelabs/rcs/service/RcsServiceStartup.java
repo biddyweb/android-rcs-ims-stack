@@ -19,7 +19,7 @@ public class RcsServiceStartup extends BroadcastReceiver {
     	// Try to start the service only if a data connectivity is available
     	NetworkInfo info = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
 		if ((info != null) && info.isConnected()) {
-			// Instanciate the settings manager if needed
+			// Instanciate the settings manager
 	    	RcsSettings.createInstance(context);
 
 	    	// Try to start the service only if service is enabled in settings

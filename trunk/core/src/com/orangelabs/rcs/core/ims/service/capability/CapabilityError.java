@@ -1,11 +1,13 @@
 package com.orangelabs.rcs.core.ims.service.capability;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+
 /**
  * Capability error
  * 
  * @author jexa7410
  */
-public class CapabilityError extends Error {
+public class CapabilityError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
 	
 	/**
@@ -19,19 +21,12 @@ public class CapabilityError extends Error {
 	public final static int OPTIONS_FAILED = 0x02;	
 	
 	/**
-	 * Error code
-	 */
-	private int code;
-	
-	/**
 	 * Constructor
 	 * 
 	 * @param code Error code
 	 */
 	public CapabilityError(int code) {
-		super();
-		
-		this.code = code;
+		super(code);
 	}
 	
 	/**
@@ -41,17 +36,6 @@ public class CapabilityError extends Error {
 	 * @param msg Detail message 
 	 */
 	public CapabilityError(int code, String msg) {
-		super(msg);
-		
-		this.code = code;
-	}
-
-	/**
-	 * Returns the error code
-	 * 
-	 * @return Error code
-	 */
-	public int getErrorCode() {
-		return code; 
+		super(code, msg);
 	}
 }

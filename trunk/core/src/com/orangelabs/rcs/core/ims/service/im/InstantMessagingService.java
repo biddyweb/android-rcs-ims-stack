@@ -44,7 +44,9 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileTransf
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileTransferSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -234,7 +236,7 @@ public class InstantMessagingService extends ImsService {
 		OriginatingFileTransferSession session = new OriginatingFileTransferSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToSipAddress(contact));
+				PhoneUtils.formatNumberToSipUri(contact));
 
 		// Start the session
 		session.startSession();
@@ -310,7 +312,7 @@ public class InstantMessagingService extends ImsService {
 		// Create a new session
 		OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
 				this,
-	        	PhoneUtils.formatNumberToSipAddress(contact),
+	        	PhoneUtils.formatNumberToSipUri(contact),
 	        	StringUtils.encodeUTF8(subject));
 		
 		// Start the session
@@ -334,6 +336,10 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
 			}
+			// Save the message in the spam folder
+			String msgId = ChatUtils.getMessageId(invite);
+			RichMessaging.getInstance().addSpamMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
+			
 			try {
 				// Send a 603 Decline response
 		    	if (logger.isActivated()) {

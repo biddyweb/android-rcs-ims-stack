@@ -18,12 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.service.sharing;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+
 /**
  * Content sharing error
  * 
  * @author jexa7410
  */
-public class ContentSharingError extends Error {
+public class ContentSharingError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
 	
 	/**
@@ -72,19 +74,12 @@ public class ContentSharingError extends Error {
 	public final static int MEDIA_SAVING_FAILED = 0x09;
 	
 	/**
-	 * Error code
-	 */
-	private int code;
-	
-	/**
 	 * Constructor
 	 * 
 	 * @param code Error code
 	 */
 	public ContentSharingError(int code) {
-		super();
-		
-		this.code = code;
+		super(code);
 	}
 	
 	/**
@@ -94,17 +89,6 @@ public class ContentSharingError extends Error {
 	 * @param msg Detail message 
 	 */
 	public ContentSharingError(int code, String msg) {
-		super(msg);
-		
-		this.code = code;
-	}
-
-	/**
-	 * Returns the error code
-	 * 
-	 * @return Error code
-	 */
-	public int getErrorCode() {
-		return code; 
+		super(code, msg);
 	}
 }

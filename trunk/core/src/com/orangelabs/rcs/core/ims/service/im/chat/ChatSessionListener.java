@@ -58,9 +58,10 @@ public interface ChatSessionListener extends ImsSessionListener {
      * New conference event
      * 
 	 * @param contact Contact
+	 * @param contactDisplayname Contact display name
      * @param state State associated to the contact
      */
-    public void handleConferenceEvent(String contact, String state);
+    public void handleConferenceEvent(String contact, String contactDisplayname, String state);
 
     /**
      * New message delivery status

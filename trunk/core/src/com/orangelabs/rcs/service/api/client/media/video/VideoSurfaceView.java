@@ -165,6 +165,24 @@ public class VideoSurfaceView extends SurfaceView {
 			}
 		}
 	}
+	
+	public void clearImage() {	
+		if (surfaceCreated) {
+			Canvas canvas = null;
+			try {				
+				synchronized(holder) {
+					canvas = holder.lockCanvas();					
+				}							
+			} finally {
+				if (canvas != null) {
+					// Clear screen
+					canvas.drawARGB(255, 0, 0, 0);
+					
+					holder.unlockCanvasAndPost(canvas);
+				}
+			}
+		}
+	}
 
 	/**
 	 * Init the view

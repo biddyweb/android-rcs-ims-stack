@@ -63,6 +63,13 @@ public class ToIpApiService extends IToIpApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IToIpSession initiateToIpCall(String contact, IMediaPlayer player, IMediaRenderer renderer) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Initiate a ToIP session with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
@@ -82,6 +89,13 @@ public class ToIpApiService extends IToIpApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IToIpSession getToIpSession(String id) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get ToIP session " + id);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		

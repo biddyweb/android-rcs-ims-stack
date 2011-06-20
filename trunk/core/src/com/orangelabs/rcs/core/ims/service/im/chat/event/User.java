@@ -35,6 +35,8 @@ public class User {
 	
 	private String state = STATE_UNKNOWN;
 	
+	private String displayName = null;
+	
 	public User(String entity, boolean me) {
 		this.entity = entity;
 		this.me = me;
@@ -54,5 +56,13 @@ public class User {
 
 	public void setState(String state) {
 		this.state = state;
-	}	
+	}
+	
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
 }

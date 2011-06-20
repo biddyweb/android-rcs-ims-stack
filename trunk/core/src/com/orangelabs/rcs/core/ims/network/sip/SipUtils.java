@@ -121,6 +121,11 @@ public class SipUtils {
 	 * Content-ID header
 	 */
 	public static final String HEADER_CONTENT_ID = "Content-ID";
+	
+	/**
+	 * Session-Expires header
+	 */
+	public static final String HEADER_SESSION_EXPIRES = "Session-Expires";
 
 	/**
 	 * Extract the URI part of a SIP address
@@ -158,7 +163,7 @@ public class SipUtils {
      * @param Header
      */
 	public static Header buildUserAgentHeader() throws Exception {
-	    String value = TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
 	    Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
 	    return userAgentHeader;
     }
@@ -170,6 +175,7 @@ public class SipUtils {
 	 */
 	public static void buildAllowHeader(Message msg) throws Exception {
 		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.INVITE));
+		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.UPDATE));
 		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.ACK));
 		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.CANCEL));
 		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.BYE));

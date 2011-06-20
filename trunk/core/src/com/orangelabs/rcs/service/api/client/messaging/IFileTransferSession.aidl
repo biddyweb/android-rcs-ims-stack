@@ -9,6 +9,12 @@ interface IFileTransferSession {
 	// Get session ID
 	String getSessionID();
 
+	// Get filename
+	String getFilename();
+	
+	// Get filesize
+	long getFilesize();
+
 	// Accept the session invitation
 	void acceptSession();
 

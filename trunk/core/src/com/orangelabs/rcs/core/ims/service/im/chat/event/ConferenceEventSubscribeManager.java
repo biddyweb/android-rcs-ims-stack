@@ -169,7 +169,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    		}
 			    		
 			    		// Notify session listener
-			    		session.getListener().handleConferenceEvent(entity, user.getState());
+			    		session.getListener().handleConferenceEvent(entity, user.getDisplayName(), user.getState());
 			    	}
 		    	}
 	    	} catch(Exception e) {

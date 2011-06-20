@@ -98,7 +98,7 @@ public class ToIpService extends ImsService {
 				this,
 				player,
 				renderer,
-				PhoneUtils.formatNumberToSipAddress(contact));
+				PhoneUtils.formatNumberToSipUri(contact));
 		
 		// Start the session
 		session.startSession();

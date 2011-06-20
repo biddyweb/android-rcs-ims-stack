@@ -203,7 +203,7 @@ public abstract class GroupChatSession extends ChatSession {
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
-    		String contactUri = PhoneUtils.formatNumberToSipAddress(participant);
+    		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
 	        SipRequest refer = SipMessageFactory.createRefer(dialogPath, contactUri);
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
 	

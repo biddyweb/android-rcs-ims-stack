@@ -25,6 +25,7 @@ import javax.sip.header.ContactHeader;
 import javax.sip.header.ExpiresHeader;
 import javax.sip.header.ExtensionHeader;
 import javax.sip.header.Header;
+import javax.sip.header.ViaHeader;
 
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -89,7 +90,12 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private boolean registered = false;
 
-    /**
+	/**
+	 * NAT traversal
+	 */
+	private boolean natTraversal = false;
+	
+	/**
      * Public GRUU
      */
 	private String publicGruu = null;
@@ -141,6 +147,24 @@ public class RegistrationManager extends PeriodicRefresher {
         return registered;
     }
     
+    /**
+     * Get public GRUU
+     * 
+     * @return GRUU
+     */
+    public String getPublicGruu() {
+    	return publicGruu;
+    }
+    
+    /**
+     * Get temporary GRUU
+     * 
+     * @return GRUU
+     */
+    public String getTemporaryGruu() {
+    	return tempGruu;
+    }
+
     /**
      * Registration
      * 
@@ -345,12 +369,33 @@ public class RegistrationManager extends PeriodicRefresher {
 		ContactHeader contact = (ContactHeader)resp.getHeader(ContactHeader.NAME);
 		if (contact.getParameter("+sip.instance") != null) { 
 			publicGruu = contact.getParameter("pub-gruu");
-			tempGruu = contact.getParameter("temp-gruu");
+	        if (logger.isActivated()) {
+	            logger.debug("Public GRUU: " + publicGruu);
+	        }
+
+	        tempGruu = contact.getParameter("temp-gruu");
+	        if (logger.isActivated()) {
+	            logger.debug("Temp GRUU: " + tempGruu);
+	        }
 		}
 		
         // Set the service route path
 		ListIterator<Header> routes = resp.getHeaders(SipUtils.HEADER_SERVICE_ROUTE);
 		networkInterface.getSipManager().getSipStack().setServiceRoutePath(routes);
+		
+    	// If the IP address of the Via header in the 200 OK response to the initial
+        // SIP REGISTER request is different than the local IP address then there is
+        // a NAT 
+    	String localIpAddr = networkInterface.getNetworkAccess().getIpAddress();
+    	ViaHeader respViaHeader = ctx.getSipResponse().getViaHeaders().next();
+    	if (respViaHeader.getHost().equals(localIpAddr)) {
+    		natTraversal = false;
+    	} else {
+    		natTraversal = true;
+    	}        	
+        if (logger.isActivated()) {
+            logger.debug("NAT traversal detection: " + natTraversal);
+        }
 		
         // Read the security header
     	registrationProcedure.readSecurityHeader(resp);
@@ -530,5 +575,14 @@ public class RegistrationManager extends PeriodicRefresher {
     		logger.info("Execute re-registration");
     	}
         registration();
+    }
+    
+    /**
+     * Is behind a NAT
+     *
+     * @return boolean
+     */
+    public boolean isBehindNat() {
+    	return natTraversal;
     }
 }

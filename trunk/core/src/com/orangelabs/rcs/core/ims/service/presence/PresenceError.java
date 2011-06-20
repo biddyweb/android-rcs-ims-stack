@@ -18,12 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.service.presence;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+
 /**
  * Presence error
  * 
  * @author jexa7410
  */
-public class PresenceError extends Error {
+public class PresenceError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
 	
 	/**
@@ -42,19 +44,12 @@ public class PresenceError extends Error {
 	public final static int PUBLISH_FAILED = 0x03;
 	
 	/**
-	 * Error code
-	 */
-	private int code;
-	
-	/**
 	 * Constructor
 	 * 
 	 * @param code Error code
 	 */
 	public PresenceError(int code) {
-		super();
-		
-		this.code = code;
+		super(code);
 	}
 	
 	/**
@@ -64,17 +59,6 @@ public class PresenceError extends Error {
 	 * @param msg Detail message 
 	 */
 	public PresenceError(int code, String msg) {
-		super(msg);
-		
-		this.code = code;
-	}
-
-	/**
-	 * Returns the error code
-	 * 
-	 * @return Error code
-	 */
-	public int getErrorCode() {
-		return code; 
+		super(code, msg);
 	}
 }

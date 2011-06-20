@@ -77,6 +77,24 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 	}
 	
 	/**
+     * Get filename
+     *
+     * @return Filename
+     */
+	public String getFilename() {
+		return session.getContent().getName();
+	}
+
+	/**
+     * Get file size
+     *
+     * @return Size in bytes
+     */
+	public long getFilesize() {
+		return session.getContent().getSize();
+	}	
+	
+	/**
 	 * Accept the session invitation
 	 */
 	public void acceptSession() {

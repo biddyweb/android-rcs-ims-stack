@@ -101,7 +101,7 @@ public class AnonymousFetchRequestTask {
 
     	try {
 	        // Create a dialog path
-    		String contactUri = PhoneUtils.formatNumberToSipAddress(contact);
+    		String contactUri = PhoneUtils.formatNumberToSipUri(contact);
 
         	// Set Call-Id
         	String callId = imsModule.getSipManager().getSipStack().generateCallId();

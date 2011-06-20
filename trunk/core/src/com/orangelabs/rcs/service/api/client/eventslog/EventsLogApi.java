@@ -155,6 +155,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_SENT = 4;
 	public static final int STATUS_RECEIVED = 5;
 	public static final int STATUS_MISSED = 6;
+
 	// IMDN
 	public static final int STATUS_DELIVERED = 7; // sender side
 	public static final int STATUS_DISPLAYED = 8; // sender side
@@ -168,6 +169,10 @@ public class EventsLogApi extends ClientApi {
 	public static final int EVENT_INVITED = 14;		// We were invited
 	public static final int EVENT_INITIATED = 15;	// We initiated the chat
 
+	// Is Spam
+	public static final int MESSAGE_IS_NOT_SPAM = 0;
+	public static final int MESSAGE_IS_SPAM = 1;
+	
 	/**
 	 * Mode One to one chat
 	 */
@@ -177,6 +182,11 @@ public class EventsLogApi extends ClientApi {
 	 * Mode group chat
 	 */
 	public static final int MODE_GROUP_CHAT = 33;
+	
+	/**
+	 * Mode spam box
+	 */
+	public static final int MODE_SPAM_BOX = 34;
 	
 	/**
 	 * Each mode below is valued according to the binary representation of a variable representing the selected mode.
@@ -391,6 +401,38 @@ public class EventsLogApi extends ClientApi {
      */
     public Uri getGroupChatLogContentProviderUri(){
     	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_GROUP_CHAT);
+    }
+    
+    /**
+     * Mark message as spam
+     * 
+     * @param msgId
+     * @param isSpam
+     */
+    public void markMessageAsSpam(String msgId, boolean isSpam){
+    	if (RichMessaging.getInstance()==null){
+    		RichMessaging.createInstance(ctx);
+    	}
+    	RichMessaging.getInstance().markMessageAsSpam(msgId, isSpam);
+    }
+    
+    /**
+     * Delete all spams
+     */
+    public void deleteAllSpams(){
+    	if (RichMessaging.getInstance()==null){
+    		RichMessaging.createInstance(ctx);
+    	}
+    	RichMessaging.getInstance().deleteAllSpams();
+    }
+    
+    /**
+     * Get spam box log
+     * 
+     * @return uri
+     */
+    public Uri getSpamBoxLogContentProviderUri(){
+    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_SPAM_BOX);
     }
     
 }

@@ -95,6 +95,9 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 
     	// Instanciate the anonymous fetch manager
     	anonymousFetchManager = new AnonymousFetchManager(parent);
+    	
+    	// Get capability extensions
+    	CapabilityUtils.updateExternalSupportedFeatures(AndroidFactory.getApplicationContext());
 	}
 
 	/**
@@ -113,7 +116,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		// Start polling
 		pollingManager.start();
 		
-		// Force a capability check
+		// Force a first capability check
 		handleAddressBookHasChanged();
 	}
 

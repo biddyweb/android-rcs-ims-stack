@@ -70,6 +70,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public String getRemotePhoneNumber() throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get remote phone number");
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 
@@ -88,6 +95,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IVideoSharingSession initiateLiveVideoSharing(String contact, IMediaPlayer player) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Initiate a live video session with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
@@ -116,6 +130,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
  	 */
 	public IVideoSharingSession initiateVideoSharing(String contact, String file, IMediaPlayer player) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Initiate a pre-recorded video session with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
@@ -144,6 +165,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IVideoSharingSession getVideoSharingSession(String id) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get video sharing session " + id);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -167,6 +195,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IImageSharingSession initiateImageSharing(String contact, String file) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Initiate an image sharing session with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 		
@@ -195,6 +230,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IImageSharingSession getImageSharingSession(String id) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get image sharing session " + id);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		

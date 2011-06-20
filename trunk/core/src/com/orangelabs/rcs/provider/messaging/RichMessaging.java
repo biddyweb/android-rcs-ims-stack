@@ -384,6 +384,55 @@ public class RichMessaging {
 				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"" +" AND " + RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE, 
 				null);
 	}
+	
+	/**
+	 * Mark a message as spam message or remove it from spam
+	 * 
+	 * @param message
+	 */
+	public void addSpamMsg(InstantMessage message){
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_SPAM);
+		int type = EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE;
+		addMessage(type, ""+System.currentTimeMillis(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);
+		markMessageAsSpam(message.getMessageId(), true);
+	}
+	
+	/**
+	 * Mark a message as spam message or remove it from spam
+	 * 
+	 * @param msgId
+	 * @param isSpam
+	 */
+	public void markMessageAsSpam(String msgId, boolean isSpam){
+		ContentValues values = new ContentValues();
+		if (isSpam){
+			values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_SPAM);
+		}else{
+			values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_NOT_SPAM);
+		}
+		cr.update(databaseUri, 
+				values, 
+				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"" +" AND " + RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, 
+				null);
+	}
+	
+	/**
+	 * Delete all spams
+	 */
+	public void deleteAllSpams(){
+		// We use delete im item method to recyclate the message number available for contacts
+		Cursor c = cr.query(databaseUri,
+				new String[]{RichMessagingData.KEY_ID},
+				RichMessagingData.KEY_IS_SPAM + " = \"" + EventsLogApi.MESSAGE_IS_SPAM +"\"",
+				null,
+				null);
+		while (c.moveToNext()){
+			long rowId = c.getLong(0);
+			deleteImItem(rowId);
+		}
+		c.close();
+	}
 
 	/**
 	 * Add a new message (chat message, file transfer, large IM, short IM)
@@ -417,6 +466,7 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_DATA, data);
 		values.put(RichMessagingData.KEY_STATUS, status);
 		values.put(RichMessagingData.KEY_NUMBER_MESSAGES, recycler(contact)+1);
+		values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_NOT_SPAM);
 		if(date == null) {
 			values.put(RichMessagingData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
 		} else {

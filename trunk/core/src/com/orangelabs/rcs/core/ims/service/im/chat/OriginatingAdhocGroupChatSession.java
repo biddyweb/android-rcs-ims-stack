@@ -259,16 +259,21 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 			// Open the MSRP session
 			getMsrpMgr().openMsrpSession();
 			
-			// Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleSessionStarted();
-	        }
-
 	        // Send an empty packet
         	sendEmptyDataChunk();
         	
         	// Subscribe to event package
         	getConferenceEventSubscriber().subscribe();
+
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+			
+			// Notify listener
+	        if (getListener() != null) {
+	        	getListener().handleSessionStarted();
+	        }
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);

@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -184,7 +185,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 				return;
 			}
 	        
-    		// Create the MSRP server session, setting the soTimeout on the socket to false
+    		// Create the MSRP server session
             if (localSetup.equals("passive")) {
             	// Passive mode: client wait a connection
             	MsrpSession session = getMsrpMgr().createMsrpServerSession(remotePath, this);
@@ -236,7 +237,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
                 // The session is established
     	        getDialogPath().sessionEstablished();
     	                        
-        		// Create the MSRP client session, setting the soTimeout on the socket to false
+        		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
                 	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
@@ -250,6 +251,11 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	            	sendEmptyDataChunk();
                 }
 
+            	// Start session timer
+            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
+            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
+            	}
+            	
                 // Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();

@@ -80,6 +80,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			logger.info("Transfer file " + file + " to " + contact);
 		}
 
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
@@ -115,6 +118,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IFileTransferSession getFileTransferSession(String id) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get file transfer session " + id);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -138,6 +148,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public List<IBinder> getFileTransferSessionsWith(String contact) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get file transfer sessions with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -162,6 +179,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public List<IBinder> getFileTransferSessions() throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get file transfer sessions");
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -196,6 +220,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			logger.info("Initiate a 1-1 chat session with " + contact);
 		}
 
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 		
@@ -225,6 +252,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
 		
+    	// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
@@ -249,6 +279,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public IChatSession getChatSession(String id) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get chat session " + id);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -272,6 +309,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public List<IBinder> getChatSessionsWith(String contact) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get chat sessions with " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		
@@ -296,6 +340,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * @throws ServerApiException
 	 */
 	public List<IBinder> getChatSessions() throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get chat sessions");
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
 		// Test core availability
 		ServerApiUtils.testCore();
 		

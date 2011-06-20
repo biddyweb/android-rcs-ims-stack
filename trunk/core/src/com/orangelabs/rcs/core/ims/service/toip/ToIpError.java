@@ -18,12 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.service.toip;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+
 /**
  * ToIP error
  * 
  * @author jexa7410
  */
-public class ToIpError extends Error {
+public class ToIpError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
 	
 	/**
@@ -65,11 +67,6 @@ public class ToIpError extends Error {
 	 * Media renderer is not initialized
 	 */
 	public final static int MEDIA_RENDERER_NOT_INITIALIZED = 0x08;
-
-	/**
-	 * Error code
-	 */
-	private int code;
 	
 	/**
 	 * Constructor
@@ -77,9 +74,7 @@ public class ToIpError extends Error {
 	 * @param code Error code
 	 */
 	public ToIpError(int code) {
-		super();
-		
-		this.code = code;
+		super(code);
 	}
 	
 	/**
@@ -89,17 +84,6 @@ public class ToIpError extends Error {
 	 * @param msg Detail message 
 	 */
 	public ToIpError(int code, String msg) {
-		super(msg);
-		
-		this.code = code;
-	}
-
-	/**
-	 * Returns the error code
-	 * 
-	 * @return Error code
-	 */
-	public int getErrorCode() {
-		return code; 
+		super(code, msg);
 	}
 }

@@ -18,37 +18,51 @@
 
 package com.orangelabs.rcs.core.ims.service;
 
-import com.orangelabs.rcs.platform.registry.RegistryFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.core.ims.network.sip.SipManager;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Session timer manager
+ * Session timer manager (see RFC 4028)
  * 
- * @author JM. Auffret
+ * @author jexa7410
  */
 public class SessionTimerManager extends PeriodicRefresher {
 	/**
-	 * Last min expire period (in seconds)
+	 * UAC role
 	 */
-	private static final String REGISTRY_MIN_EXPIRE_PERIOD = "MinSessionRefreshExpirePeriod";
+	public final static String UAC_ROLE = "uac";
 	
+	/**
+	 * UAC role
+	 */
+	public final static String UAS_ROLE = "uas";
+
 	/**
 	 * Session to be refreshed
 	 */
 	private ImsServiceSession session;
+
+	/**
+	 * Expire period
+	 */
+	private int expirePeriod;
 	
 	/**
-	 * Default expire period
+	 * Refresher
 	 */
-	private int defaultExpirePeriod;
+	private String refresher = "uas";
 	
-    /**
-     * Expire period
-     */
-    private int expirePeriod;
-    
+	/**
+	 * Last session refresh time
+	 */
+	private long lastSessionRefresh;
+	
 	/**
 	 * The logger
 	 */
@@ -59,17 +73,8 @@ public class SessionTimerManager extends PeriodicRefresher {
 	 * 
 	 * @param session Session to be refreshed
 	 */
-	public SessionTimerManager(ImsServiceSession session, int expirePeriod) {
+	public SessionTimerManager(ImsServiceSession session) {
 		this.session = session;
-		
-		// TODO: remove attribut defaultExpirePeriod
-    	int defaultExpirePeriod = RcsSettings.getInstance().getSessionRefreshExpirePeriod();
-    	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
-    	if ((minExpireValue != -1) && (defaultExpirePeriod < minExpireValue)) {
-        	this.expirePeriod = minExpireValue;
-    	} else {
-    		this.expirePeriod = defaultExpirePeriod;
-    	}
 	}
 	
 	/**
@@ -80,13 +85,59 @@ public class SessionTimerManager extends PeriodicRefresher {
 	}
 	
 	/**
-	 * Start the session timer
+	 * Is session timer activated
+	 * 
+	 * @param msg SIP message
+	 * @return Boolean
 	 */
-	public void start() {
-		if (logger.isActivated()) {
-			logger.info("Start session timer for session " + session.getId());
+	public boolean isSessionTimerActivated(SipMessage msg) {
+		// Check the Session-Expires header
+		int expire = msg.getSessionTimerExpire();
+		if (expire < 90) {
+			if (logger.isActivated()) {
+				logger.debug("Session timer not supported: no expire value");
+			}
+			return false;
 		}
-		startTimer(expirePeriod, 0.5);
+
+		// Check if the UPDATE method is supported in Allow header
+	/* TODO	AllowHeader allowHeader = (AllowHeader)msg.getHeader(AllowHeader.NAME);
+		if ((allowHeader != null) && !allowHeader.getMethod().contains("UPDATE")) {
+			if (logger.isActivated()) {
+				logger.debug("Session timer not supported: UPDATE method not allowed");
+			}
+			return false;
+		}*/
+		
+		return true;
+	}
+	
+	/**
+	 * Start the session timer
+	 * 
+	 * @param refresher Refresher role
+	 * @param expirePeriod Expire period
+	 */
+	public void start(String refresher, int expirePeriod) {
+		if (logger.isActivated()) {
+			logger.debug("Start session timer for session " + session.getId() + " (role=" + refresher + ", expire=" + expirePeriod + ")");
+		}
+
+		// Set refresher role
+		this.refresher = refresher;
+		
+		// Set expire period
+		this.expirePeriod = expirePeriod;
+
+		// Reset last session refresh time
+		lastSessionRefresh = System.currentTimeMillis();			
+
+		// Start processing
+		if (refresher.equals(UAC_ROLE)) {
+			startTimer(expirePeriod, 0.5);
+		} else {
+			startTimer(expirePeriod, 1);
+		}
 	}
 	
 	/**
@@ -94,43 +145,135 @@ public class SessionTimerManager extends PeriodicRefresher {
 	 */
 	public void stop() {
 		if (logger.isActivated()) {
-			logger.info("Stop session timer for session " + session.getId());
+			logger.debug("Stop session timer for session " + session.getId());
 		}
 		stopTimer();
 	}
 	
 	/**
-	 * Set the expire period
-	 * 
-	 * @param period Expire period in seconds
-	 */
-	public void setExpirePeriod(int period) {
-		if (period != -1)
-			expirePeriod = period;
-		else
-			expirePeriod = defaultExpirePeriod;
-	}
-	
-	/**
-	 * Return the expire period
-	 * 
-	 * @return Expire period in seconds
-	 */
-	public int getExpirePeriod() {
-		return expirePeriod;
-	}
-	
-	/**
-	 * Periodic session refresh request
+	 * Periodic session timer processing
 	 */
 	public void periodicProcessing() {
+		if (refresher.equals(UAC_ROLE)) {
+			// Refresher role
+			sessionRefreshForUAC();
+		} else {
+			// Refreshee role
+			sessionRefreshForUAS();
+		}
+	}
+   
+	/**
+	 * Session refresh processing for UAC role. If the refresher never sends a
+	 * session refresh request then the session should be terminated.
+	 */
+    private void sessionRefreshForUAC() {
 		try {
 			if (logger.isActivated()) {
-				logger.info("Send re-INVITE");
+				logger.debug("Session timer refresh (UAC role)");
 			}
+			
+			// Increment the Cseq number of the dialog path
+	        session.getDialogPath().incrementCseq();
+
+	        // Send UPDATE request
+	        SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipUpdate(session.getDialogPath());
+			
+	        // Wait response
+	        ctx.waitResponse(SipManager.TIMEOUT);
+
+			// Analyze the received response 
+	        if (ctx.isSipResponse() && (ctx.getStatusCode() == 200)) {
+	        	// Success
+				if (logger.isActivated()) {
+					logger.debug("Session timer refresh with success");
+				}
+
+				// Update last session refresh time
+				lastSessionRefresh = System.currentTimeMillis();			
+				
+				// Restart timer
+	    		startTimer(expirePeriod, 0.5);
+	        } else {
+				if (logger.isActivated()) {
+					logger.debug("Session timer refresh has failed: close the session");
+				}
+
+				// Close the session
+	        	session.abortSession();
+	        }
+	        
+        } catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Session timer refresh has failed", e);
+			}
+			
+        	// Close the session
+        	session.abortSession();
+        }
+    }
+	
+    /**
+	 * Session refresh processing for UAS role. If the refresher never gets a
+	 * response from the remote then the session should be terminated.
+	 */
+    private void sessionRefreshForUAS() {
+		try {
+			if (logger.isActivated()) {
+				logger.debug("Session timer refresh (UAS role)");
+			}
+			
+			if (((System.currentTimeMillis()-lastSessionRefresh)/1000) >= expirePeriod) {
+				// Session has expired
+				if (logger.isActivated()) {
+					logger.debug("Session timer refresh has failed: close the session");
+				}
+
+				// Close the session
+		    	session.abortSession();
+			} else {
+	        	// Success
+				if (logger.isActivated()) {
+					logger.debug("Session timer refresh with success");
+				}
+
+				// Restart timer
+	    		startTimer(expirePeriod, 1);
+			}			
+			
+	    } catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Session timer refresh has failed", e);
+			}
+			
+	    	// Close the session
+	    	session.abortSession();
+	    }
+    }
+
+    /**
+	 * Receive UPDATE request 
+	 * 
+	 * @param update UPDATE request
+	 */
+	public void receiveUpdate(SipRequest update) {
+		try {
+        	if (logger.isActivated()) {
+        		logger.debug("Session refresh request received");
+        	}
+
+        	// Update last session refresh time
+			lastSessionRefresh = System.currentTimeMillis();			
+
+			// Send 200 OK response
+        	if (logger.isActivated()) {
+        		logger.debug("Send 200 OK");
+        	}
+	        SipResponse resp = SipMessageFactory.create200OkUpdateResponse(session.getDialogPath(), update);
+	        session.getImsService().getImsModule().getSipManager().sendSipResponse(resp);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
-				logger.error("Re-INVITE processing has failed", e);
+				logger.error("Session timer refresh has failed", e);
 			}
 		}
 	}

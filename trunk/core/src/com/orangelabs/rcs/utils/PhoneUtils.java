@@ -88,12 +88,12 @@ public class PhoneUtils {
 	}
 	
 	/**
-	 * Format a phone number to a SIP address (SIP-URI or Tel-URI)
+	 * Format a phone number to a SIP URI
 	 * 
 	 * @param number Phone number
-	 * @return SIP address
+	 * @return SIP URI
 	 */
-	public static String formatNumberToSipAddress(String number) {
+	public static String formatNumberToSipUri(String number) {
 		if (number == null) {
 			return null;
 		}
@@ -115,10 +115,25 @@ public class PhoneUtils {
 		} else {
 			// SIP-URI format
 			return "sip:" + formatNumberToInternational(number) + "@" +
-				ImsModule.IMS_USER_PROFILE.getHomeDomain() + ";user=phone";
+				ImsModule.IMS_USER_PROFILE.getHomeDomain() + ";user=phone";	 
 		}
 	}
 
+	/**
+	 * Format a phone number to a SIP address
+	 * 
+	 * @param number Phone number
+	 * @return SIP address
+	 */
+	public static String formatNumberToSipAddress(String number) {
+		String addr = formatNumberToSipUri(number);	 
+		String displayName = RcsSettings.getInstance().getUserProfileImsDisplayName();
+		if ((displayName != null) && (displayName.length() > 0)) {
+			addr = "\"" + displayName + "\" <" + addr + ">"; 
+		}
+		return addr;
+	}
+	
 	/**
 	 * Extract user part phone number from a SIP-URI or Tel-URI or SIP address
 	 * 
@@ -152,6 +167,32 @@ public class PhoneUtils {
 			
 			// Format the extracted number (username part of the URI)
 			return formatNumberToInternational(uri);
+		} catch(Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Extract display name from URI
+	 * 
+	 * @param uri URI
+	 * @return Display name or null
+	 */
+	public static String extractDisplayNameFromUri(String uri) {
+		if (uri == null) {
+			return null;
+		}
+
+		try {
+			int index0 = uri.indexOf("\"");
+			if (index0 != -1) {
+				int index1 = uri.indexOf("\"", index0+1);
+				if (index1 > 0) {
+					return uri.substring(index0+1, index1);
+				}
+			}			
+			
+			return null;
 		} catch(Exception e) {
 			return null;
 		}

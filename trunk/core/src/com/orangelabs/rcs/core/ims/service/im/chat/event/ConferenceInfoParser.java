@@ -167,6 +167,11 @@ public class ConferenceInfoParser extends DefaultHandler {
 				user = null;
 			}
 		} else
+		if (localName.equals("display-text")) {
+			if (user != null) {
+				user.setDisplayName(accumulator.toString().trim());
+			}
+		} else
 		if (localName.equals("status")) {
 			if (user != null) {
 				user.setState(accumulator.toString().trim());

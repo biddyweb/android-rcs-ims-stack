@@ -231,7 +231,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 				return;
 			}
 	        	        
-	        // Create the MSRP client session, setting the soTimeout on the socket to false
+	        // Create the MSRP client session
 			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
 			session.setFailureReportOption(false);
 			session.setSuccessReportOption(false);
@@ -239,13 +239,18 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 			// Open the MSRP session
 			getMsrpMgr().openMsrpSession();
 			
+	        // Send an empty packet
+        	sendEmptyDataChunk();
+        	
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+        	
 			// Notify listener
 	        if (getListener() != null) {
 	        	getListener().handleSessionStarted();
 	        }
-	        
-	        // Send an empty packet
-        	sendEmptyDataChunk();
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);

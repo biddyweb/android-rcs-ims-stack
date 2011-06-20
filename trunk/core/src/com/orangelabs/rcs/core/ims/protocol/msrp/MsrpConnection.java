@@ -118,15 +118,15 @@ public abstract class MsrpConnection {
 	/**
 	 * Open the connection with SO_TIMEOUT on the socket
 	 * 
-	 * @param soTimeout SO_TIMEOUT value (in seconds)
+	 * @param timeout Timeout value (in seconds)
 	 * @throws IOException
 	 */
-	public void open(int soTimeout) throws IOException {
+	public void open(int timeout) throws IOException {
 		// Open socket connection
 		socket = getSocketConnection();
 
 		// Set SoTimeout
-		socket.setSoTimeout(soTimeout*1000);
+		socket.setSoTimeout(timeout*1000);
 		
 		// Open I/O stream
 		inputStream = socket.getInputStream();

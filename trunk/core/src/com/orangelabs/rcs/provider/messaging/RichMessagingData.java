@@ -38,6 +38,7 @@ public class RichMessagingData {
 	public static final String KEY_STATUS = "status";
 	public static final String KEY_DATA = "_data";
 	public static final String KEY_MESSAGE_ID = "message_id";
+	public static final String KEY_IS_SPAM = "is_spam";
 	
 	// Fields for file transfers
 	public static final String KEY_MIME_TYPE = "mime_type";

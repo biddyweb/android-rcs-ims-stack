@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
+import com.orangelabs.rcs.core.ims.service.sip.SipService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.DeviceUtils;
@@ -308,5 +309,14 @@ public class Core {
 	 */
 	public ToIpService getToIpService() {
 		return getImsModule().getToIpService();
+	}
+
+	/**
+	 * Returns the SIP service
+	 * 
+	 * @return SIP service
+	 */
+	public SipService getSipService() {
+		return getImsModule().getSipService();
 	}
 }

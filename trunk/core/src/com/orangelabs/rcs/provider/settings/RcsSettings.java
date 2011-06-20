@@ -18,21 +18,19 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import java.util.Map;
-import java.util.TreeMap;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.utils.logger.Logger;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * RCS settings
- * 
+ *
  * @author jexa7410
  */
 public class RcsSettings {
@@ -45,7 +43,7 @@ public class RcsSettings {
 	 * Content resolver
 	 */
 	private ContentResolver cr;
-	
+
 	/**
 	 * Database URI
 	 */
@@ -57,44 +55,44 @@ public class RcsSettings {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-	 * Create instance
-	 * 
-	 * @param ctx Context
-	 */
+     * Create instance
+     *
+     * @param ctx Context
+     */
 	public static synchronized void createInstance(Context ctx) {
 		if (instance == null) {
 			instance = new RcsSettings(ctx);
 		}
 	}
-	
+
 	/**
-	 * Returns instance
-	 * 
-	 * @return Instance
-	 */
+     * Returns instance
+     *
+     * @return Instance
+     */
 	public static RcsSettings getInstance() {
 		return instance;
 	}
-	
+
 	/**
      * Constructor
-     * 
+     *
      * @param ctx Application context
      */
 	private RcsSettings(Context ctx) {
 		super();
-		
+
         this.cr = ctx.getContentResolver();
 	}
-	
+
 	/**
-	 * Dump the content provider
-	 * 
-	 * @return List of parameters
-	 */
+     * Dump the content provider
+     *
+     * @return List of parameters
+     */
 	public Map<String, String> dump() {
 		TreeMap<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		
+
 		if (logger.isActivated()) {
 			logger.debug("List of settings:");
 		}
@@ -112,16 +110,16 @@ public class RcsSettings {
         	}
 	        c.close();
         }
-        
+
         return result;
 	}
-	
+
 	/**
-	 * Read a parameter
-	 * 
-	 * @param key Key
-	 * @return Value
-	 */
+     * Read a parameter
+     *
+     * @param key Key
+     * @return Value
+     */
 	private String readParameter(String key) {
 		String result = null;
         Cursor c = cr.query(databaseUri, null, RcsSettingsData.KEY_KEY + "='" + key + "'", null, null);
@@ -133,73 +131,73 @@ public class RcsSettings {
         }
         return result;
 	}
-	
+
 	/**
-	 * Write a parameter
-	 * 
-	 * @param key Key
-	 * @param value Value
-	 */
+     * Write a parameter
+     *
+     * @param key Key
+     * @param value Value
+     */
 	public void writeParameter(String key, String value) {
         ContentValues values = new ContentValues();
         values.put(RcsSettingsData.KEY_VALUE, value);
         String where = RcsSettingsData.KEY_KEY + "='" + key + "'";
         cr.update(databaseUri, values, where, null);
 	}
-	
+
 	/**
-	 * Is RCS service activated
-	 * 
-	 * @return Boolean
-	 */
+     * Is RCS service activated
+     *
+     * @return Boolean
+     */
 	public boolean isServiceActivated() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.SERVICE_ACTIVATED));
 		}
 		return result;
-	}	
-	
+    }
+
 	/**
-	 * Set the RCS service activation state
-	 * 
-	 * @param state State
-	 */
+     * Set the RCS service activation state
+     *
+     * @param state State
+     */
 	public void setServiceActivationState(boolean state) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.SERVICE_ACTIVATED, Boolean.toString(state));
 		}
-	}	
-	
+    }
+
 	/**
-	 * Is RCS service authorized in roaming
-	 * 
-	 * @return Boolean
-	 */
+     * Is RCS service authorized in roaming
+     *
+     * @return Boolean
+     */
 	public boolean isRoamingAuthorized() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.ROAMING_AUTHORIZED));
 		}
 		return result;
-	}	
-	
+    }
+
 	/**
-	 * Set the roaming authorization state 
-	 * 
-	 * @param state State
-	 */
+     * Set the roaming authorization state
+     *
+     * @param state State
+     */
 	public void setRoamingAuthorizationState(boolean state) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.ROAMING_AUTHORIZED, Boolean.toString(state));
 		}
 	}
-	
+
 	/**
-	 * Get the ringtone for presence invitation
-	 * 
-	 * @return Ringtone URI or null if there is no ringtone
-	 */
+     * Get the ringtone for presence invitation
+     *
+     * @return Ringtone URI or null if there is no ringtone
+     */
 	public String getPresenceInvitationRingtone() {
 		String result = null;
 		if (instance != null) {
@@ -207,47 +205,47 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the presence invitation ringtone
-	 * 
-	 * @param uri Ringtone URI
-	 */
+     * Set the presence invitation ringtone
+     *
+     * @param uri Ringtone URI
+     */
 	public void setPresenceInvitationRingtone(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.PRESENCE_INVITATION_RINGTONE, uri);
 		}
 	}
 
-	/**
-	 * Is phone vibrate for presence invitation
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is phone vibrate for presence invitation
+     *
+     * @return Boolean
+     */
 	public boolean isPhoneVibrateForPresenceInvitation() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.PRESENCE_INVITATION_VIBRATE));
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set phone vibrate for presence invitation
-	 * 
-	 * @param vibrate Vibrate state
-	 */
+     * Set phone vibrate for presence invitation
+     *
+     * @param vibrate Vibrate state
+     */
 	public void setPhoneVibrateForPresenceInvitation(boolean vibrate) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.PRESENCE_INVITATION_VIBRATE, Boolean.toString(vibrate));
 		}
-	}	
-	
+    }
+
 	/**
-	 * Get the ringtone for CSh invitation
-	 * 
-	 * @return Ringtone URI or null if there is no ringtone
-	 */
+     * Get the ringtone for CSh invitation
+     *
+     * @return Ringtone URI or null if there is no ringtone
+     */
 	public String getCShInvitationRingtone() {
 		String result = null;
 		if (instance != null) {
@@ -255,71 +253,71 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the CSh invitation ringtone
-	 * 
-	 * @param uri Ringtone URI
-	 */
+     * Set the CSh invitation ringtone
+     *
+     * @param uri Ringtone URI
+     */
 	public void setCShInvitationRingtone(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_INVITATION_RINGTONE, uri);
 		}
 	}
 
-	/**
-	 * Is phone vibrate for CSh invitation
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is phone vibrate for CSh invitation
+     *
+     * @return Boolean
+     */
 	public boolean isPhoneVibrateForCShInvitation() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CSH_INVITATION_VIBRATE));
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set phone vibrate for CSh invitation
-	 * 
-	 * @param vibrate Vibrate state
-	 */
+     * Set phone vibrate for CSh invitation
+     *
+     * @param vibrate Vibrate state
+     */
 	public void setPhoneVibrateForCShInvitation(boolean vibrate) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_INVITATION_VIBRATE, Boolean.toString(vibrate));
 		}
-	}	
+    }
 
 	/**
-	 * Is phone beep if the CSh available
-	 * 
-	 * @return Boolean
-	 */
+     * Is phone beep if the CSh available
+     *
+     * @return Boolean
+     */
 	public boolean isPhoneBeepIfCShAvailable() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CSH_AVAILABLE_BEEP));
 		}
 		return result;
-	}	
-	
+    }
+
 	/**
-	 * Set phone beep if CSh available
-	 * 
-	 * @param beep Beep state
-	 */
+     * Set phone beep if CSh available
+     *
+     * @param beep Beep state
+     */
 	public void setPhoneBeepIfCShAvailable(boolean beep) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_AVAILABLE_BEEP, Boolean.toString(beep));
 		}
-	}	
-	
+    }
+
 	/**
-	 * Get the CSh video format
-	 * 
-	 * @return Video format as string
-	 */
+     * Get the CSh video format
+     *
+     * @return Video format as string
+     */
 	public String getCShVideoFormat() {
 		String result = null;
 		if (instance != null) {
@@ -327,23 +325,23 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the CSh video format
-	 * 
-	 * @param fmt Video format
-	 */
+     * Set the CSh video format
+     *
+     * @param fmt Video format
+     */
 	public void setCShVideoFormat(String fmt) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_VIDEO_FORMAT, fmt);
 		}
-	}	
-	
+    }
+
 	/**
-	 * Get the CSh video size
-	 * 
-	 * @return Size (e.g. QCIF, QVGA)
-	 */
+     * Get the CSh video size
+     *
+     * @return Size (e.g. QCIF, QVGA)
+     */
 	public String getCShVideoSize() {
 		String result = null;
 		if (instance != null) {
@@ -351,23 +349,23 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the CSh video size
-	 * 
-	 * @param size Video size
-	 */
+     * Set the CSh video size
+     *
+     * @param size Video size
+     */
 	public void setCShVideoSize(String size) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CSH_VIDEO_SIZE, size);
 		}
-	}	
-	
+    }
+
 	/**
-	 * Get the ringtone for file transfer invitation
-	 * 
-	 * @return Ringtone URI or null if there is no ringtone
-	 */
+     * Get the ringtone for file transfer invitation
+     *
+     * @return Ringtone URI or null if there is no ringtone
+     */
 	public String getFileTransferInvitationRingtone() {
 		String result = null;
 		if (instance != null) {
@@ -375,47 +373,47 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the file transfer invitation ringtone
-	 * 
-	 * @param uri Ringtone URI
-	 */
+     * Set the file transfer invitation ringtone
+     *
+     * @param uri Ringtone URI
+     */
 	public void setFileTransferInvitationRingtone(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.FILETRANSFER_INVITATION_RINGTONE, uri);
 		}
 	}
 
-	/**
-	 * Is phone vibrate for file transfer invitation
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is phone vibrate for file transfer invitation
+     *
+     * @return Boolean
+     */
 	public boolean isPhoneVibrateForFileTransferInvitation() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE));
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set phone vibrate for file transfer invitation
-	 * 
-	 * @param vibrate Vibrate state
-	 */
+     * Set phone vibrate for file transfer invitation
+     *
+     * @param vibrate Vibrate state
+     */
 	public void setPhoneVibrateForFileTransferInvitation(boolean vibrate) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE, Boolean.toString(vibrate));
 		}
-	}	
-		
+    }
+
 	/**
-	 * Get the ringtone for chat invitation
-	 * 
-	 * @return Ringtone URI or null if there is no ringtone
-	 */
+     * Get the ringtone for chat invitation
+     *
+     * @return Ringtone URI or null if there is no ringtone
+     */
 	public String getChatInvitationRingtone() {
 		String result = null;
 		if (instance != null) {
@@ -423,47 +421,47 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the chat invitation ringtone
-	 * 
-	 * @param uri Ringtone URI
-	 */
+     * Set the chat invitation ringtone
+     *
+     * @param uri Ringtone URI
+     */
 	public void setChatInvitationRingtone(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CHAT_INVITATION_RINGTONE, uri);
 		}
 	}
 
-	/**
-	 * Is phone vibrate for chat invitation
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is phone vibrate for chat invitation
+     *
+     * @return Boolean
+     */
 	public boolean isPhoneVibrateForChatInvitation() {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CHAT_INVITATION_VIBRATE));
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set phone vibrate for chat invitation
-	 * 
-	 * @param vibrate Vibrate state
-	 */
+     * Set phone vibrate for chat invitation
+     *
+     * @param vibrate Vibrate state
+     */
 	public void setPhoneVibrateForChatInvitation(boolean vibrate) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CHAT_INVITATION_VIBRATE, Boolean.toString(vibrate));
 		}
 	}
-	
+
 	/**
-	 * Is auto accept mode for chat invitations activated
-	 * 
-	 * @return Boolean
-	 */
+     * Is auto accept mode for chat invitations activated
+     *
+     * @return Boolean
+     */
 	public boolean isAutoAcceptModeForChatInvitation(){
 		boolean result = false;
 		if (instance != null) {
@@ -471,23 +469,23 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set auto accept mode for chat invitations
-	 * 
-	 * @param auto Auto accept mode
-	 */
+     * Set auto accept mode for chat invitations
+     *
+     * @param auto Auto accept mode
+     */
 	public void setAutoAcceptModeForChatInvitation(boolean auto) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT, Boolean.toString(auto));
 		}
 	}
 
-	/**
-	 * Get the pre-defined freetext 1
-	 * 
-	 * @return String
-	 */
+    /**
+     * Get the pre-defined freetext 1
+     *
+     * @return String
+     */
 	public String getPredefinedFreetext1() {
 		String result = null;
 		if (instance != null) {
@@ -496,22 +494,22 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Set the pre-defined freetext 1
-	 * 
-	 * @param txt Text
-	 */
+    /**
+     * Set the pre-defined freetext 1
+     *
+     * @param txt Text
+     */
 	public void setPredefinedFreetext1(String txt) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.FREETEXT1, txt);
 		}
 	}
 
-	/**
-	 * Get the pre-defined freetext 2
-	 * 
-	 * @return String
-	 */
+    /**
+     * Get the pre-defined freetext 2
+     *
+     * @return String
+     */
 	public String getPredefinedFreetext2() {
 		String result = null;
 		if (instance != null) {
@@ -519,12 +517,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the pre-defined freetext 2
-	 * 
-	 * @param txt Text
-	 */
+     * Set the pre-defined freetext 2
+     *
+     * @param txt Text
+     */
 	public void setPredefinedFreetext2(String txt) {
 		if (instance != null) {
 			if (instance != null) {
@@ -533,11 +531,11 @@ public class RcsSettings {
 		}
 	}
 
-	/**
-	 * Get the pre-defined freetext 3
-	 * 
-	 * @return String
-	 */
+    /**
+     * Get the pre-defined freetext 3
+     *
+     * @return String
+     */
 	public String getPredefinedFreetext3() {
 		String result = null;
 		if (instance != null) {
@@ -546,11 +544,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Set the pre-defined freetext 3
-	 * 
-	 * @param txt Text
-	 */
+    /**
+     * Set the pre-defined freetext 3
+     *
+     * @param txt Text
+     */
 	public void setPredefinedFreetext3(String txt) {
 		if (instance != null) {
 			if (instance != null) {
@@ -559,11 +557,11 @@ public class RcsSettings {
 		}
 	}
 
-	/**
-	 * Get the pre-defined freetext 4
-	 * 
-	 * @return String
-	 */
+    /**
+     * Get the pre-defined freetext 4
+     *
+     * @return String
+     */
 	public String getPredefinedFreetext4() {
 		String result = null;
 		if (instance != null) {
@@ -571,12 +569,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Set the pre-defined freetext 4
-	 * 
-	 * @param txt Text
-	 */
+     * Set the pre-defined freetext 4
+     *
+     * @param txt Text
+     */
 	public void setPredefinedFreetext4(String txt) {
 		if (instance != null) {
 			if (instance != null) {
@@ -585,290 +583,316 @@ public class RcsSettings {
 		}
 	}
 
-	/**
-	 * Get user profile IMS username (i.e. username part of the IMPU)
-	 * 
-	 * @return Username part of SIP-URI
-	 */
+    /**
+     * Get user profile IMS username (i.e. username part of the IMPU)
+     *
+     * @return Username part of SIP-URI
+     */
 	public String getUserProfileImsUserName() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS username (i.e. username part of the IMPU)
-	 * 
-	 * @param value Value
-	 */
+     * Set user profile IMS username (i.e. username part of the IMPU)
+     *
+     * @param value Value
+     */
 	public void setUserProfileImsUserName(String value) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME, value);
 		}
-	}	
+    }
 
 	/**
-	 * Get user profile IMS display name associated to IMPU
-	 * 
-	 * @return String
-	 */
+     * Get user profile IMS display name associated to IMPU
+     *
+     * @return String
+     */
 	public String getUserProfileImsDisplayName() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS display name associated to IMPU
-	 * 
-	 * @param value Value
-	 */
+     * Set user profile IMS display name associated to IMPU
+     *
+     * @param value Value
+     */
 	public void setUserProfileImsDisplayName(String value) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, value);
 		}
-	}	
+    }
 
 	/**
-	 * Get user profile IMS private Id (i.e. IMPI)
-	 * 
-	 * @return SIP-URI
-	 */
+     * Get user profile IMS private Id (i.e. IMPI)
+     *
+     * @return SIP-URI
+     */
 	public String getUserProfileImsPrivateId() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS private Id (i.e. IMPI)
-	 * 
-	 * @param uri SIP-URI
-	 */
+     * Set user profile IMS private Id (i.e. IMPI)
+     *
+     * @param uri SIP-URI
+     */
 	public void setUserProfileImsPrivateId(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, uri);
 		}
-	}	
+    }
 
 	/**
-	 * Get user profile IMS password
-	 * 
-	 * @return String
-	 */
+     * Get user profile IMS password
+     *
+     * @return String
+     */
 	public String getUserProfileImsPassword() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS password
-	 * 
-	 * @param pwd Password
-	 */
+     * Set user profile IMS password
+     *
+     * @param pwd Password
+     */
 	public void setUserProfileImsPassword(String pwd) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD, pwd);
 		}
-	}	
+    }
 
 	/**
-	 * Get user profile IMS home domain
-	 * 
-	 * @return Domain
-	 */
+     * Get user profile IMS home domain
+     *
+     * @return Domain
+     */
 	public String getUserProfileImsDomain() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS home domain
-	 * 
-	 * @param domain Domain
-	 */
+     * Set user profile IMS home domain
+     *
+     * @param domain Domain
+     */
 	public void setUserProfileImsDomain(String domain) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, domain);
 		}
 	}
 
-	/**
-	 * Get user profile IMS proxy for mobile access
-	 * 
-	 * @return Address as <host>:<port>
-	 */
+    /**
+     * Get user profile IMS proxy for mobile access
+     *
+     * @return Address as <host>:<port>
+     */
 	public String getUserProfileImsProxyForMobile() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS proxy for mobile access
-	 * 
-	 * @param addr Address as <host>:<port>
-	 */
+     * Set user profile IMS proxy for mobile access
+     *
+     * @param addr Address as <host>:<port>
+     */
 	public void setUserProfileImsProxyForMobile(String addr) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, addr);
 		}
 	}
 
-	/**
-	 * Get user profile IMS proxy for Wi-Fi access
-	 * 
-	 * @return Address as <host>:<port>
-	 */
+    /**
+     * Get user profile IMS proxy for Wi-Fi access
+     *
+     * @return Address as <host>:<port>
+     */
 	public String getUserProfileImsProxyForWifi() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IMS proxy for Wi-Fi access
-	 * 
-	 * @param addr Address as <host>:<port>
-	 */
+     * Set user profile IMS proxy for Wi-Fi access
+     *
+     * @param addr Address as <host>:<port>
+     */
 	public void setUserProfileImsProxyForWifi(String addr) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, addr);
 		}
 	}
 
-	/**
-	 * Get user profile XDM server address
-	 * 
-	 * @return Address as <host>:<port>/<root>
-	 */
+    /**
+     * Get user profile IMS proxy secure port
+     *
+     * @return Address as <host>:<port>
+     */
+    public String getUserProfileImsProxySecurePort() {
+        String result = null;
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT);
+        }
+        return result;
+    }
+
+    /**
+     * Set user profile IMS proxy secure port
+     *
+     * @param addr Address as <host>:<port>
+     */
+    public void setUserProfileImsProxySecurePort(String port) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT, port);
+        }
+    }
+
+    /**
+     * Get user profile XDM server address
+     *
+     * @return Address as <host>:<port>/<root>
+     */
 	public String getUserProfileXdmServer() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_XDM_SERVER);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile XDM server address
-	 * 
-	 * @param addr Address as <host>:<port>/<root>
-	 */
+     * Set user profile XDM server address
+     *
+     * @param addr Address as <host>:<port>/<root>
+     */
 	public void setUserProfileXdmServer(String addr) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_XDM_SERVER, addr);
 		}
 	}
 
-	/**
-	 * Get user profile XDM server login
-	 * 
-	 * @return String value
-	 */
+    /**
+     * Get user profile XDM server login
+     *
+     * @return String value
+     */
 	public String getUserProfileXdmLogin() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile XDM server login
-	 * 
-	 * @param value Value
-	 */
+     * Set user profile XDM server login
+     *
+     * @param value Value
+     */
 	public void setUserProfileXdmLogin(String value) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN, value);
 		}
 	}
 
-	/**
-	 * Get user profile XDM server password
-	 * 
-	 * @return String value
-	 */
+    /**
+     * Get user profile XDM server password
+     *
+     * @return String value
+     */
 	public String getUserProfileXdmPassword() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile XDM server password
-	 * 
-	 * @param value Value
-	 */
+     * Set user profile XDM server password
+     *
+     * @param value Value
+     */
 	public void setUserProfileXdmPassword(String value) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD, value);
 		}
 	}
 
-	/**
-	 * Get user profile IM conference URI
-	 * 
-	 * @return SIP-URI
-	 */
+    /**
+     * Get user profile IM conference URI
+     *
+     * @return SIP-URI
+     */
 	public String getUserProfileImConferenceUri() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI);
 		}
 		return result;
-	}	
+    }
 
 	/**
-	 * Set user profile IM conference URI
-	 * 
-	 * @param uri SIP-URI
-	 */
+     * Set user profile IM conference URI
+     *
+     * @param uri SIP-URI
+     */
 	public void setUserProfileImConferenceUri(String uri) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI, uri);
 		}
 	}
-	
+
 	/**
-	 * Get country code
-	 * 
-	 * @return Country code
-	 */
+     * Get country code
+     *
+     * @return Country code
+     */
 	public String getCountryCode() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.USERPROFILE_COUNTRY_CODE);
 		}
 		return result;
-	}	
-	
+    }
+
 	/**
-	 * Get my capabilities
-	 * 
-	 * @return capability
-	 */
+     * Get my capabilities
+     *
+     * @return capability
+     */
 	public Capabilities getMyCapabilities(){
 		Capabilities capabilities = new Capabilities();
+
+		// Add default capabilities
 		capabilities.setCsVideoSupport(isCsVideoSupported());
 		capabilities.setFileTransferSupport(isFileTransferSupported());
 		capabilities.setImageSharingSupport(isImageSharingSupported());
@@ -876,20 +900,26 @@ public class RcsSettings {
 		capabilities.setPresenceDiscoverySupport(isPresenceDiscoverySupported());
 		capabilities.setSocialPresenceSupport(isSocialPresenceSupported());
 		capabilities.setVideoSharingSupport(isVideoSharingSupported());
-		String extensions = getSupportedRcsExtensions();
-		String[] extensionList = extensions.split(";");
-		for (int i=0;i<extensionList.length;i++){
-			capabilities.addSupportedExtension(extensionList[i]);
-		}
 		capabilities.setTimestamp(System.currentTimeMillis());
+
+		// Add extensions
+		String exts = getSupportedRcsExtensions();
+        System.out.println(">>>>>>> exts =" + exts);
+		if ((exts != null) && (exts.length() > 0)) {
+			String[] ext = exts.split(",");
+			for(int i=0; i < ext.length; i++) {
+				capabilities.addSupportedExtension(ext[i]);
+			}
+		}
+
 		return capabilities;
 	}
-	
+
 	/**
-	 * Get max photo-icon size
-	 * 
-	 * @return Size in kilobytes
-	 */
+     * Get max photo-icon size
+     *
+     * @return Size in kilobytes
+     */
 	public int getMaxPhotoIconSize() {
 		int result = 256;
 		if (instance != null) {
@@ -900,11 +930,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max freetext length
-	 * 
-	 * @return Number of char
-	 */
+    /**
+     * Get max freetext length
+     *
+     * @return Number of char
+     */
 	public int getMaxFreetextLength() {
 		int result = 100;
 		if (instance != null) {
@@ -915,11 +945,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max number of participants in a group chat
-	 * 
-	 * @return Number of participants
-	 */
+    /**
+     * Get max number of participants in a group chat
+     *
+     * @return Number of participants
+     */
 	public int getMaxChatParticipants() {
 		int result = 5;
 		if (instance != null) {
@@ -929,12 +959,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get max length of a chat message
-	 * 
-	 * @return Number of char
-	 */
+     * Get max length of a chat message
+     *
+     * @return Number of char
+     */
 	public int getMaxChatMessageLength() {
 		int result = 100;
 		if (instance != null) {
@@ -945,11 +975,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get idle duration of a chat session
-	 * 
-	 * @return Duration in seconds
-	 */
+    /**
+     * Get idle duration of a chat session
+     *
+     * @return Duration in seconds
+     */
 	public int getChatIdleDuration() {
 		int result = 120;
 		if (instance != null) {
@@ -960,11 +990,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max file transfer size
-	 * 
-	 * @return Size in kilobytes
-	 */
+    /**
+     * Get max file transfer size
+     *
+     * @return Size in kilobytes
+     */
 	public int getMaxFileTransferSize() {
 		int result = 2048;
 		if (instance != null) {
@@ -975,11 +1005,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get warning threshold for max file transfer size
-	 * 
-	 * @return Size in kilobytes
-	 */
+    /**
+     * Get warning threshold for max file transfer size
+     *
+     * @return Size in kilobytes
+     */
 	public int getWarningMaxFileTransferSize() {
 		int result = 2048;
 		if (instance != null) {
@@ -989,12 +1019,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get max image share size
-	 * 
-	 * @return Size in kilobytes
-	 */
+     * Get max image share size
+     *
+     * @return Size in kilobytes
+     */
 	public int getMaxImageSharingSize() {
 		int result = 2048;
 		if (instance != null) {
@@ -1005,11 +1035,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max duration of a video share
-	 * 
-	 * @return Duration in seconds
-	 */
+    /**
+     * Get max duration of a video share
+     *
+     * @return Duration in seconds
+     */
 	public int getMaxVideoShareDuration() {
 		int result = 600;
 		if (instance != null) {
@@ -1020,11 +1050,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max number of simultaneous chat sessions
-	 * 
-	 * @return Number of sessions
-	 */
+    /**
+     * Get max number of simultaneous chat sessions
+     *
+     * @return Number of sessions
+     */
 	public int getMaxChatSessions() {
 		int result = 1;
 		if (instance != null) {
@@ -1035,11 +1065,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get max number of simultaneous file transfer sessions
-	 * 
-	 * @return Number of sessions
-	 */
+    /**
+     * Get max number of simultaneous file transfer sessions
+     *
+     * @return Number of sessions
+     */
 	public int getMaxFileTransferSessions() {
 		int result = 1;
 		if (instance != null) {
@@ -1049,12 +1079,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is SMS fallback service activated
-	 * 
-	 * @return Boolean
-	 */
+     * Is SMS fallback service activated
+     *
+     * @return Boolean
+     */
 	public boolean isSmsFallbackServiceActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1062,12 +1092,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is Store & Forward service warning activated
-	 * 
-	 * @return Boolean
-	 */
+     * Is Store & Forward service warning activated
+     *
+     * @return Boolean
+     */
 	public boolean isStoreForwardWarningActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1075,12 +1105,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get polling period used before each IMS connection attempt
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get polling period used before each IMS connection attempt
+     *
+     * @return Period in seconds
+     */
 	public int getImsConnectionPollingPeriod() {
 		int result = 30;
 		if (instance != null) {
@@ -1091,11 +1121,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get polling period used before each IMS service check (e.g. test subscription state for presence service)
-	 * 
-	 * @return Period in seconds
-	 */
+    /**
+     * Get polling period used before each IMS service check (e.g. test subscription state for presence service)
+     *
+     * @return Period in seconds
+     */
 	public int getImsServicePollingPeriod(){
 		int result = 300;
 		if (instance != null) {
@@ -1105,12 +1135,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default SIP listening port
-	 * 
-	 * @return Port
-	 */
+     * Get default SIP listening port
+     *
+     * @return Port
+     */
 	public int getSipListeningPort() {
 		int result = 5060;
 		if (instance != null) {
@@ -1120,12 +1150,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default SIP protocol
-	 * 
-	 * @return Protocol (udp | tcp)
-	 */
+     * Get default SIP protocol
+     *
+     * @return Protocol (udp | tcp)
+     */
 	public String getSipDefaultProtocol() {
 		String result = null;
 		if (instance != null) {
@@ -1134,11 +1164,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get SIP transaction timeout used to wait SIP response  
-	 * 
-	 * @return Timeout in seconds
-	 */
+    /**
+     * Get SIP transaction timeout used to wait SIP response
+     *
+     * @return Timeout in seconds
+     */
 	public int getSipTransactionTimeout() {
 		int result = 30;
 		if (instance != null) {
@@ -1148,12 +1178,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default MSRP port
-	 * 
-	 * @return Port
-	 */
+     * Get default MSRP port
+     *
+     * @return Port
+     */
 	public int getDefaultMsrpPort() {
 		int result = 20000;
 		if (instance != null) {
@@ -1163,12 +1193,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default RTP port
-	 * 
-	 * @return Port
-	 */
+     * Get default RTP port
+     *
+     * @return Port
+     */
 	public int getDefaultRtpPort() {
 		int result = 10000;
 		if (instance != null) {
@@ -1179,11 +1209,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get MSRP transaction timeout used to wait MSRP response
-	 * 
-	 * @return Timeout in seconds
-	 */
+    /**
+     * Get MSRP transaction timeout used to wait MSRP response
+     *
+     * @return Timeout in seconds
+     */
 	public int getMsrpTransactionTimeout() {
 		int result = 5;
 		if (instance != null) {
@@ -1193,12 +1223,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default expire period for REGISTER
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get default expire period for REGISTER
+     *
+     * @return Period in seconds
+     */
 	public int getRegisterExpirePeriod() {
 		int result = 3600;
 		if (instance != null) {
@@ -1208,12 +1238,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default expire period for PUBLISH
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get default expire period for PUBLISH
+     *
+     * @return Period in seconds
+     */
 	public int getPublishExpirePeriod() {
 		int result = 3600;
 		if (instance != null) {
@@ -1223,12 +1253,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get revoke timeout before to unrevoke a revoked contact
-	 *   
-	 * @return Timeout in seconds
-	 */
+     * Get revoke timeout before to unrevoke a revoked contact
+     *
+     * @return Timeout in seconds
+     */
 	public int getRevokeTimeout() {
 		int result = 300;
 		if (instance != null) {
@@ -1238,12 +1268,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get IMS authentication procedure for mobile access
-	 * 
-	 * @return Authentication procedure
-	 */
+     * Get IMS authentication procedure for mobile access
+     *
+     * @return Authentication procedure
+     */
 	public String getImsAuhtenticationProcedureForMobile() {
 		String result = null;
 		if (instance != null) {
@@ -1251,12 +1281,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get IMS authentication procedure for Wi-Fi access
-	 * 
-	 * @return Authentication procedure
-	 */
+     * Get IMS authentication procedure for Wi-Fi access
+     *
+     * @return Authentication procedure
+     */
 	public String getImsAuhtenticationProcedureForWifi() {
 		String result = null;
 		if (instance != null) {
@@ -1265,11 +1295,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is Tel-URI format used
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is Tel-URI format used
+     *
+     * @return Boolean
+     */
 	public boolean isTelUriFormatUsed() {
 		boolean result = false;
 		if (instance != null) {
@@ -1277,12 +1307,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get ringing period
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get ringing period
+     *
+     * @return Period in seconds
+     */
 	public int getRingingPeriod() {
 		int result = 120;
 		if (instance != null) {
@@ -1292,12 +1322,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default expire period for SUBSCRIBE
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get default expire period for SUBSCRIBE
+     *
+     * @return Period in seconds
+     */
 	public int getSubscribeExpirePeriod() {
 		int result = 3600;
 		if (instance != null) {
@@ -1307,12 +1337,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get "Is-composing" timeout for chat service
-	 * 
-	 * @return Timer in seconds
-	 */
+     * Get "Is-composing" timeout for chat service
+     *
+     * @return Timer in seconds
+     */
 	public int getIsComposingTimeout() {
 		int result = 15;
 		if (instance != null) {
@@ -1322,12 +1352,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get default expire period for INVITE (session refresh)
-	 * 
-	 * @return Period in seconds
-	 */
+     * Get default expire period for INVITE (session refresh)
+     *
+     * @return Period in seconds
+     */
 	public int getSessionRefreshExpirePeriod() {
 		int result = 3600;
 		if (instance != null) {
@@ -1338,11 +1368,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is permanente state mode activated
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is permanente state mode activated
+     *
+     * @return Boolean
+     */
 	public boolean isPermanentStateModeActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1351,11 +1381,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is trace activated
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is trace activated
+     *
+     * @return Boolean
+     */
 	public boolean isTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1363,12 +1393,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get trace level
-	 * 
-	 * @return trace level
-	 */
+     * Get trace level
+     *
+     * @return trace level
+     */
 	public String getTraceLevel() {
 		String result = null;
 		if (instance != null) {
@@ -1377,11 +1407,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is media trace activated
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is media trace activated
+     *
+     * @return Boolean
+     */
 	public boolean isSipTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1390,11 +1420,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is media trace activated
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is media trace activated
+     *
+     * @return Boolean
+     */
 	public boolean isMediaTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1403,11 +1433,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get capability refresh timeout used to avoid too many requests in a short time
-	 * 
-	 * @return Timeout in seconds 
-	 */
+    /**
+     * Get capability refresh timeout used to avoid too many requests in a short time
+     *
+     * @return Timeout in seconds
+     */
 	public int getCapabilityRefreshTimeout() {
 		int result = 1;
 		if (instance != null) {
@@ -1417,12 +1447,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get capability expiry timeout used to decide when to refresh contact capabilities
-	 * 
-	 * @return Timeout in seconds 
-	 */
+     * Get capability expiry timeout used to decide when to refresh contact capabilities
+     *
+     * @return Timeout in seconds
+     */
 	public int getCapabilityExpiryTimeout() {
 		int result = 3600;
 		if (instance != null) {
@@ -1433,11 +1463,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get capability polling period used to refresh contacts capabilities
-	 * 
-	 * @return Timeout in seconds 
-	 */
+    /**
+     * Get capability polling period used to refresh contacts capabilities
+     *
+     * @return Timeout in seconds
+     */
 	public int getCapabilityPollingPeriod() {
 		int result = 3600;
 		if (instance != null) {
@@ -1447,10 +1477,10 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
     /**
      * Is presence service activated
-     * 
+     *
      * @return Boolean
      */
     public boolean isPresenceServiceActivated() {
@@ -1459,11 +1489,11 @@ public class RcsSettings {
     		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_PRESENCE_SERVICE));
     	}
 		return result;
-    }	
-	
+    }
+
     /**
      * Is rich call service activated
-     * 
+     *
      * @return Boolean
      */
     public boolean isRichcallServiceActivated() {
@@ -1472,13 +1502,13 @@ public class RcsSettings {
     		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_RICHCALL_SERVICE));
     	}
 		return result;
-    }	
+    }
 
     /**
-	 * Is CS video supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is CS video supported
+     *
+     * @return Boolean
+     */
 	public boolean isCsVideoSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1486,12 +1516,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is file transfer supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is file transfer supported
+     *
+     * @return Boolean
+     */
 	public boolean isFileTransferSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1499,12 +1529,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is IM session supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is IM session supported
+     *
+     * @return Boolean
+     */
 	public boolean isImSessionSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1512,12 +1542,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is image sharing supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is image sharing supported
+     *
+     * @return Boolean
+     */
 	public boolean isImageSharingSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1525,12 +1555,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is video sharing supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is video sharing supported
+     *
+     * @return Boolean
+     */
 	public boolean isVideoSharingSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1538,12 +1568,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is presence discovery supported 
-	 * 
-	 * @return Boolean
-	 */
+     * Is presence discovery supported
+     *
+     * @return Boolean
+     */
 	public boolean isPresenceDiscoverySupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1552,11 +1582,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Is social presence supported 
-	 * 
-	 * @return Boolean
-	 */
+    /**
+     * Is social presence supported
+     *
+     * @return Boolean
+     */
 	public boolean isSocialPresenceSupported() {
 		boolean result = false;
 		if (instance != null) {
@@ -1564,25 +1594,25 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get supported RCS extensions
-	 * 
-	 * @return List of extensions (semicolon separated)
-	 */
+     * Get supported RCS extensions
+     *
+     * @return List of extensions (semicolon separated)
+     */
 	public String getSupportedRcsExtensions() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.CAPABILITY_RCS_EXTENSIONS);
+			return readParameter(RcsSettingsData.CAPABILITY_RCS_EXTENSIONS);
 		}
 		return result;
-	}
-	
+    }
+
 	/**
-	 * Is IM always-on thanks to the Store & Forward functionality
-	 * 
-	 * @return Boolean
-	 */
+     * Is IM always-on thanks to the Store & Forward functionality
+     *
+     * @return Boolean
+     */
 	public boolean isImAlwaysOn() {
 		boolean result = false;
 		if (instance != null) {
@@ -1590,12 +1620,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is IM reports activated
-	 * 
-	 * @return Boolean
-	 */
+     * Is IM reports activated
+     *
+     * @return Boolean
+     */
 	public boolean isImReportsActivated() {
 		boolean result = false;
 		if (instance != null) {
@@ -1603,12 +1633,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get network access
-	 * 
-	 * @return Network type
-	 */
+     * Get network access
+     *
+     * @return Network type
+     */
 	public int getNetworkAccess() {
 		int result = RcsSettingsData.ANY_ACCESS;
 		if (instance != null) {
@@ -1619,11 +1649,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get SIP timer T1
-	 * 
-	 * @return Timer in milliseconds
-	 */
+    /**
+     * Get SIP timer T1
+     *
+     * @return Timer in milliseconds
+     */
 	public int getSipTimerT1() {
 		int result = 2000;
 		if (instance != null) {
@@ -1634,11 +1664,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get SIP timer T2
-	 * 
-	 * @return Timer in milliseconds
-	 */
+    /**
+     * Get SIP timer T2
+     *
+     * @return Timer in milliseconds
+     */
 	public int getSipTimerT2() {
 		int result = 16000;
 		if (instance != null) {
@@ -1649,11 +1679,11 @@ public class RcsSettings {
 		return result;
 	}
 
-	/**
-	 * Get SIP timer T4
-	 * 
-	 * @return Timer in milliseconds
-	 */
+    /**
+     * Get SIP timer T4
+     *
+     * @return Timer in milliseconds
+     */
 	public int getSipTimerT4() {
 		int result = 17000;
 		if (instance != null) {
@@ -1663,12 +1693,12 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Is SIP keep alive used 
-	 * 
-	 * @return Boolean
-	 */
+     * Is SIP keep alive used
+     *
+     * @return Boolean
+     */
 	public boolean isSipKeepAliveUsed() {
 		boolean result = true;
 		if (instance != null) {
@@ -1676,30 +1706,30 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * Get APN used to connect to RCS platform
-	 * 
-	 * @return APN (null means any APN may be used to connect to RCS)
-	 */
+     * Get APN used to connect to RCS platform
+     *
+     * @return APN (null means any APN may be used to connect to RCS)
+     */
 	public String getNetworkApn() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.RCS_APN);
 		}
 		return result;
-	}	
-	
+    }
+
 	/**
-	 * Get operator authorized to connect to RCS platform
-	 * 
-	 * @return SIM operator name (null means any SIM operator is authorized to connect to RCS)
-	 */
+     * Get operator authorized to connect to RCS platform
+     *
+     * @return SIM operator name (null means any SIM operator is authorized to connect to RCS)
+     */
 	public String getNetworkOperator() {
 		String result = null;
 		if (instance != null) {
 			result = readParameter(RcsSettingsData.RCS_OPERATOR);
 		}
 		return result;
-	}	
+    }
 }

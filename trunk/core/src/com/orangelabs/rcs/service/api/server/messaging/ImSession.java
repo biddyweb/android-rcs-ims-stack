@@ -418,8 +418,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 				RichMessaging.getInstance().markMessageFailedForSession(session.getSessionID());
 	    		break;
 	    	case ChatError.MSG_TRANSFER_FAILED:
-				// Mark the message that was sent as failed
-				RichMessaging.getInstance().markMessageFailed(error.getMsgId());
+	    		// Already done in core service processing
 	    		break;
 	    	default:
 				if (isChatGroup()){
@@ -473,9 +472,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * Conference event
      * 
 	 * @param contact Contact
+	 * @param contactDisplayname Contact display name
      * @param state State associated to the contact
      */
-    public void handleConferenceEvent(String contact, String state) {
+    public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
 		if (logger.isActivated()) {
 			logger.info("New conference event " + state + " for " + contact);
 		}
@@ -487,7 +487,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {
             try {
-            	listeners.getBroadcastItem(i).handleConferenceEvent(contact, state);
+            	listeners.getBroadcastItem(i).handleConferenceEvent(contact, contactDisplayname, state);
             } catch (RemoteException e) {
             	if (logger.isActivated()) {
             		logger.error("Can't notify listener", e);

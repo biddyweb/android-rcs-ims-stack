@@ -41,6 +41,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
+import com.orangelabs.rcs.core.ims.service.sip.SipService;
 import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -119,7 +120,7 @@ public class ImsModule implements SipEventListener {
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
 		// Instanciates the IMS services
-        services = new ImsService[6];
+        services = new ImsService[7];
         
         // Create capability discovery service (mandatory)
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
@@ -139,6 +140,9 @@ public class ImsModule implements SipEventListener {
         // Create ToIP service (deactivated for RCS)
         services[ImsService.TOIP_SERVICE] = new ToIpService(this, false);
         
+        // Create generic SIP service
+        services[ImsService.SIP_SERVICE] = new SipService(this, false);
+
         // Create the service dispatcher
         serviceDispatcher = new ImsServiceDispatcher(this);
 
@@ -405,6 +409,15 @@ public class ImsModule implements SipEventListener {
     	return (service != null) && (service.isActivated());
     }
     
+    /**
+     * Returns the SIP service
+     * 
+     * @return SIP service
+     */
+    public SipService getSipService() {
+    	return (SipService)services[ImsService.SIP_SERVICE];
+    }
+
     /**
      * Return the core instance
      * 

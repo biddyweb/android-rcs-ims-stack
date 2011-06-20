@@ -115,7 +115,7 @@ public class ContentSharingService extends ImsService {
 		OriginatingContentSharingSession session = new OriginatingContentSharingSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToSipAddress(contact));
+				PhoneUtils.formatNumberToSipUri(contact));
 		
 		// Start the session
 		session.startSession();
@@ -140,7 +140,7 @@ public class ContentSharingService extends ImsService {
 				this,
 				player,
 				content,
-				PhoneUtils.formatNumberToSipAddress(contact));
+				PhoneUtils.formatNumberToSipUri(contact));
 		
 		// Start the session
 		session.startSession();
@@ -168,7 +168,7 @@ public class ContentSharingService extends ImsService {
 				this,
 				player,
 				content,
-				PhoneUtils.formatNumberToSipAddress(contact));
+				PhoneUtils.formatNumberToSipUri(contact));
 		
 		// Start the session
 		session.startSession();

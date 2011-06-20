@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.network;
 
+import android.net.ConnectivityManager;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.access.NetworkAccess;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -35,7 +37,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Abstract IMS network interface
- *  
+ *
  * @author JM. Auffret
  */
 public abstract class ImsNetworkInterface {
@@ -43,17 +45,17 @@ public abstract class ImsNetworkInterface {
 	 * IMS module
 	 */
 	private ImsModule imsModule;
-	
+
 	/**
 	 * Network interface type
 	 */
 	private int type;
-	
+
     /**
 	 * Network access
 	 */
 	private NetworkAccess access;
-	
+
     /**
      * SIP manager
      */
@@ -63,7 +65,12 @@ public abstract class ImsNetworkInterface {
 	 * IMS authentication mode associated to the network interface
 	 */
 	protected String authentMode;
-	
+
+    /**
+     * Need to use a secure connection or not
+     */
+    protected boolean isSecure = false;
+
     /**
      * IMS proxy
      */
@@ -73,55 +80,70 @@ public abstract class ImsNetworkInterface {
 	 * Registration procedure associated to the network interface
 	 */
 	protected RegistrationProcedure registrationProcedure;
-	
+
 	/**
      * Registration manager
      */
     private RegistrationManager registration;
-	
+
 	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-	 * Constructor
-	 * 
-	 * @param imsModule IMS module
-	 * @param type Network interface type
-	 * @param access Network access
-	 * @param imsProxyAddr IMS proxy address
-	 * @param authentMode Authentication mode
-	 */
-	public ImsNetworkInterface(ImsModule imsModule, int type, NetworkAccess access, String imsProxyAddr, String authentMode) {
+     * Constructor
+     *
+     * @param imsModule IMS module
+     * @param type Network interface type
+     * @param access Network access
+     * @param imsProxyAddr IMS proxy address
+     * @param authentMode Authentication mode
+     */
+	public ImsNetworkInterface(ImsModule imsModule, int type, NetworkAccess access,
+            String imsProxyAddr, String authentMode) {
 		this.imsModule = imsModule;
 		this.type = type;
 		this.access = access;
-		this.imsProxyAddr = imsProxyAddr; 
+        this.imsProxyAddr = imsProxyAddr;
 		this.authentMode = authentMode;
-		
-        // Instanciates the SIP manager
+
+        if (this.type == ConnectivityManager.TYPE_WIFI) {
+            // TODO: test the presence of a valid certificate
+            this.isSecure = false; // must be set to true
+        }
+
+        // Instantiates the SIP manager
         sip = new SipManager(this);
-         
+
         // Load the registration procedure
-        loadRegistrationProcedure();        
-        
-        // Instanciates the registration manager
+        loadRegistrationProcedure();
+
+        // Instantiates the registration manager
         registration = new RegistrationManager(this, registrationProcedure);
 	}
-	
+
 	/**
-	 * Returns the IMS authentication mode
-	 * 
-	 * @return Authentication mode
-	 */
+     * Returns the IMS authentication mode
+     *
+     * @return Authentication mode
+     */
 	public String getAuthenticationMode() {
 		return authentMode;
 	}
-	
+
+    /**
+     * Returns true if need of secure connection
+     *
+     * @return isSecure
+     */
+    public boolean getIsSecure() {
+        return isSecure;
+    }
+
 	/**
-	 * Load the registration procedure associated to the network access  
-	 */
+     * Load the registration procedure associated to the network access
+     */
 	public void loadRegistrationProcedure() {
 		if (authentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
 			if (logger.isActivated()) {
@@ -134,14 +156,14 @@ public abstract class ImsNetworkInterface {
 				logger.debug("Load HTTP Digest authentication procedure");
 			}
 			this.registrationProcedure = new HttpDigestRegistrationProcedure();
-		}		
+        }
 	}
-	
+
 	/**
-	 * Returns the user profile associated to the network access
-	 * 
-	 * @return User profile
-	 */
+     * Returns the user profile associated to the network access
+     *
+     * @return User profile
+     */
 	public UserProfile getUserProfile() {
 		UserProfileInterface intf;
 		if (authentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
@@ -153,41 +175,41 @@ public abstract class ImsNetworkInterface {
 			if (logger.isActivated()) {
 				logger.debug("Load user profile from RCS settings database");
 			}
-    		intf = new SettingsUserProfileInterface();  
+            intf = new SettingsUserProfileInterface();
     	}
     	return intf.read();
 	}
-	
+
 	/**
-	 * Returns the IMS module
-	 * 
-	 * @return IMS module
-	 */
+     * Returns the IMS module
+     *
+     * @return IMS module
+     */
 	public ImsModule getImsModule() {
 		return imsModule;
 	}
 
-	/**
-	 * Returns the network interface type
-	 * 
-	 * @return Type (see ConnectivityManager class)
-	 */
+    /**
+     * Returns the network interface type
+     *
+     * @return Type (see ConnectivityManager class)
+     */
 	public int getType() {
 		return type;
 	}
-	
+
 	/**
      * Returns the network access
-     * 
+     *
      * @return Network access
      */
     public NetworkAccess getNetworkAccess() {
     	return access;
     }
 
-	/**
+    /**
      * Returns the SIP manager
-     * 
+     *
      * @return SIP manager
      */
     public SipManager getSipManager() {
@@ -196,16 +218,16 @@ public abstract class ImsNetworkInterface {
 
     /**
      * Is registered
-     * 
+     *
      * @return Return True if the terminal is registered, else return False
      */
     public boolean isRegistered() {
         return registration.isRegistered();
-    }    
+    }
 
 	/**
      * Register to the IMS
-     * 
+     *
      * @return Registration result
      */
     public boolean register() {
@@ -215,7 +237,7 @@ public abstract class ImsNetworkInterface {
 
 		// Initialize the SIP stack
 		try {
-	    	sip.initStack(access.getIpAddress(), imsProxyAddr);
+            sip.initStack(access.getIpAddress(), imsProxyAddr, isSecure);
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -223,25 +245,30 @@ public abstract class ImsNetworkInterface {
 			}
 			return false;
 		}
-		
+
 		// Init the registration procedure
 		registration.init();
-		
+
     	// Register to IMS
 		boolean registered = registration.registration();
-		if (!registered) {
-			if (logger.isActivated()) {
-				logger.debug("IMS registration has failed");
-			}
-		} else {
+		if (registered) {
 			if (logger.isActivated()) {
 				logger.debug("IMS registration successful");
 			}
+			
+            // Start keep-alive for NAT
+            if (registration.isBehindNat()) {
+                sip.getSipStack().getKeepAliveManager().start();
+            }
+		} else {
+			if (logger.isActivated()) {
+				logger.debug("IMS registration has failed");
+			}
 		}
-    	
+
     	return registered;
     }
-    
+
 	/**
      * Unregister from the IMS
      */
@@ -252,11 +279,11 @@ public abstract class ImsNetworkInterface {
 
 		// Unregister from IMS
 		registration.unRegistration();
-    	
+
     	// Close the SIP stack
     	sip.closeStack();
     }
-    
+
 	/**
      * Registration terminated
      */
@@ -271,10 +298,10 @@ public abstract class ImsNetworkInterface {
 		// Close the SIP stack
     	sip.closeStack();
     }
-    
+
     /**
      * Returns the network access info
-     * 
+     *
      * @return String
      * @throws CoreException
      */

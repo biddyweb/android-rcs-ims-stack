@@ -38,11 +38,6 @@ public class UserProfile {
 	private String username;
 
 	/**
-	 * User display name
-	 */
-	private String displayName;
-
-	/**
 	 * User private ID
 	 */
 	private String privateID;
@@ -86,7 +81,6 @@ public class UserProfile {
 	 * Constructor
 	 * 
 	 * @param username Username
-	 * @param displayName Display name
 	 * @param privateID Private id
 	 * @param password Password
 	 * @param homeDomain Home domain
@@ -96,7 +90,6 @@ public class UserProfile {
 	 * @param imConferenceUri IM conference factory URI
 	 */
 	public UserProfile(String username,
-			String displayName,
 			String privateID,
 			String password,
 			String homeDomain,
@@ -105,7 +98,6 @@ public class UserProfile {
 			String xdmServerPassword,
 			String imConferenceUri) {
 		this.username = username;
-		this.displayName = displayName;
 		this.privateID = privateID;
 		this.password = password;
 		this.homeDomain = homeDomain;
@@ -171,19 +163,6 @@ public class UserProfile {
 			this.associatedUri = null;
 		}
 	}
-
-	/**
-	 * Get the user public SIP URI prefixed with its display name
-	 * 
-	 * @return Public SIP address
-	 */
-	public String getPublicAddress() {
-		if ((displayName != null) && (displayName.length() > 0)) {
-			return "\""+ displayName + "\"" + " <" +getPublicUri()+ ">";			
-		} else {
-			return "<" +getPublicUri()+ ">";			
-		}
-	}	
 	
 	/**
 	 * Get the user private ID
@@ -201,24 +180,6 @@ public class UserProfile {
 	 */
 	public String getPassword() {
 		return password;
-	}
-
-	/**
-	 * Returns the user display name
-	 * 
-	 * @return Display name
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Set the user display name
-	 * 
-	 * @param displayName Display name
-	 */
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
 	}
 
 	/**
@@ -320,7 +281,6 @@ public class UserProfile {
 		String result = "IMS username=" + username + ", " 
 			+ "IMS private ID=" + privateID + ", "
 			+ "IMS password=" + password + ", "
-			+ "IMS display name=" + displayName + ", "
 			+ "IMS home domain=" + homeDomain + ", "
 			+ "XDM server=" + xdmServerAddr + ", "
 			+ "XDM login=" + xdmServerLogin + ", "

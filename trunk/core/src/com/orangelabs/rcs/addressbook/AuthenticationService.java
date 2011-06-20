@@ -35,7 +35,6 @@ import android.provider.ContactsContract.Groups;
 import android.provider.ContactsContract.Settings;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -87,8 +86,10 @@ public class AuthenticationService extends Service {
      * @param enableSync true to enable synchronization
      * @param showUngroupedContacts true to show ungrouped contacts
      */
-    public static void createRcsAccount(Context context, String username, boolean enableSync,
-            boolean showUngroupedContacts) {
+    public static void createRcsAccount(Context context, String username, boolean enableSync, boolean showUngroupedContacts) {
+		// Instanciate contacts manager
+		ContactsManager.createInstance(context);
+    	
         // Save the account info into the AccountManager if needed
         Account mAccount = getAccount(context, username);
         if (mAccount == null) {
@@ -121,9 +122,6 @@ public class AuthenticationService extends Service {
         context.getContentResolver().insert(Settings.CONTENT_URI, contentValues);
 
         // Create the "Me" item
-        if (RcsSettings.getInstance()==null){
-        	RcsSettings.createInstance(context);
-        }
         ContactsManager.getInstance().createMyContact();
     }
 

@@ -242,6 +242,11 @@ public class OriginatingLiveVideoContentSharingSession extends ContentSharingStr
 	        
 	        // Start the media player
 	        player.start();
+	        
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
 
 	        // Notify listener
 	        if (getListener() != null) {

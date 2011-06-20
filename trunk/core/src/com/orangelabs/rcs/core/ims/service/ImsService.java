@@ -65,6 +65,11 @@ public abstract class ImsService {
 	public static final int TOIP_SERVICE = 5;
 
 	/**
+	 * SIP service
+	 */	
+	public static final int SIP_SERVICE = 6;
+
+	/**
 	 * Configuration
 	 */
 	private Config config;

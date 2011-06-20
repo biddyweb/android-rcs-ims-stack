@@ -24,6 +24,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
 import com.orangelabs.rcs.core.ims.service.toip.TerminatingToIpSession;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
@@ -133,4 +134,11 @@ public interface CoreListener {
      * @param session ToIP session
      */
     public void handleToIpCallInvitation(TerminatingToIpSession session);
+
+    /**
+     * New SIP session invitation
+     * 
+     * @param session SIP session
+     */
+    public void handleSipSessionInvitation(TerminatingSipSession session);
 }

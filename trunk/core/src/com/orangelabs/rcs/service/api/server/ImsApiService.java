@@ -54,8 +54,11 @@ public class ImsApiService extends IImsApi.Stub {
 	 */
     public boolean isImsConnected()throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Request IMS connection state");
+			logger.info("Get IMS connection state");
 		}
+
+    	// Check permission
+		ServerApiUtils.testPermission();
 
 		try {
 			// Test IMS connection
@@ -64,5 +67,4 @@ public class ImsApiService extends IImsApi.Stub {
 			throw new ServerApiException(e.getMessage());
 		}
 	}
-	
 }
