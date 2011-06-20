@@ -18,26 +18,34 @@
 
 package com.orangelabs.rcs.ri.capabilities;
 
+import java.io.InputStream;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.Contacts;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.QuickContactBadge;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
@@ -122,6 +130,9 @@ public class CapabilitiesDiscovery extends Activity {
 			
 			// Update capabilities
 			updateCapabilities(contact);
+			
+			// Display quick contact badge
+			updateQuickContactBadge(contact);
 		}
 
 		@Override
@@ -228,12 +239,13 @@ public class CapabilitiesDiscovery extends Activity {
     		
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
-            StringBuffer stringBuff = new StringBuffer();
+            String result = "";
             List<String> extensionList = capabilities.getSupportedExtensions();
-            for(int i=0;i<extensionList.size();i++) {
-            	stringBuff.append(extensionList.get(i) + "\n");
+            for(int i=0; i<extensionList.size(); i++) {
+            	String value = extensionList.get(i);
+            	result += value.substring(CapabilityUtils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
             }
-            extensions.setText(stringBuff.toString());    		
+            extensions.setText(result);    		
     	} else {
     		lastCapabilitiesModified.setText("");
     		imageCSh.setVisibility(View.GONE);
@@ -245,6 +257,49 @@ public class CapabilitiesDiscovery extends Activity {
     		socialPresence.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
+    }
+    
+    /**
+     * Update the quick contact badge
+     * 
+     * @param contact
+     */
+    private void updateQuickContactBadge(String contact) {
+		QuickContactBadge quickContactBadge = (QuickContactBadge)findViewById(R.id.contact_badge);
+		quickContactBadge.assignContactFromPhone(contact, true);
+		
+		// Get the contact id
+		int id = -1;
+		
+		// Query the Phone API
+        Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+        		new String[]{ContactsContract.CommonDataKinds.Phone.CONTACT_ID,  ContactsContract.CommonDataKinds.Phone.NUMBER},
+        		null, 
+     		    null, 
+     		    null);
+        while(cursor.moveToNext()) {
+    		String databaseNumber = PhoneUtils.extractNumberFromUri(cursor.getString(1));
+    		if (PhoneUtils.compareNumbers(databaseNumber, contact)) {
+    			id = cursor.getInt(0);
+    			break;
+    		}
+        }
+        cursor.close();
+        
+        // Set the photo
+        if (id != -1) {
+        	Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, id);
+        	InputStream input = Contacts.openContactPhotoInputStream(getContentResolver(), contactUri);     
+        	if (input != null) {         
+        		Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
+        		quickContactBadge.setImageURI(photoUri);
+        	} else {
+        		quickContactBadge.setImageResource(R.drawable.ri_default_portrait_icon);
+        	}
+        } else { 
+        	// Could not find the contact, set default portrait
+        	quickContactBadge.setImageResource(R.drawable.ri_default_portrait_icon);
+        }		
     }
     
     /**

@@ -23,27 +23,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * Contact presence info update event receiver
  */
-public class ContactPresenceChangedReceiver extends BroadcastReceiver{
+public class ContactPresenceChangedReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {	
-		// Get invitation info
-		String contact = intent.getStringExtra("contact");
-
-		// Instanciate settings
-        RcsSettings.createInstance(context);
-
-        // Initialize the country code
-		PhoneUtils.initialize(context);        
-
 		// Display a toast
+		String contact = intent.getStringExtra("contact");
 		Toast.makeText(context, context.getString(R.string.label_presence_info_changed, contact), Toast.LENGTH_LONG).show();
 	}
 }

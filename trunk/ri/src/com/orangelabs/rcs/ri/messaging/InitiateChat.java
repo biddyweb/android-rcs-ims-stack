@@ -32,6 +32,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
@@ -146,11 +147,14 @@ public class InitiateChat extends Activity {
         	MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
             final String remote = cursor.getString(1);
 
+            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
+            final String firstMessage = firstMessageText.getText().toString().trim();
+            
     		// Initiate the chat session in background
             Thread thread = new Thread() {
             	public void run() {
                 	try {
-	            		chatSession = messagingApi.initiateOne2OneChatSession(remote, "");
+	            		chatSession = messagingApi.initiateOne2OneChatSession(remote, firstMessage);
 	            		chatSession.addSessionListener(chatSessionListener);
 	            	} catch(Exception e) {
 	            		handler.post(new Runnable(){
@@ -261,7 +265,7 @@ public class InitiateChat extends Activity {
 		}
 
 		// Conference event
-	    public void handleConferenceEvent(String contact, String state) {
+	    public void handleConferenceEvent(String contact,  String contactDisplayname, String state) {
 		}
 	    
 		// Message delivery status

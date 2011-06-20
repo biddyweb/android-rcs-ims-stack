@@ -94,9 +94,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
-		fileSize = getIntent().getLongExtra("size", -1);
-		
-        // Remove the notification
+		fileSize = getIntent().getLongExtra("filesize", -1);
+
+		// Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
         
         // Instanciate messaging API
@@ -349,16 +349,15 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * Add file transfer notification
      * 
      * @param context Context
-     * @param contact Contact
-     * @param sessionId Session ID
-     * @param size File size
+     * @param invitation Intent invitation
      */
-    public static void addFileTransferInvitationNotification(Context context, String contact, String sessionId, long size) {
+    public static void addFileTransferInvitationNotification(Context context, Intent invitation) {
+    	// Instanciate settings
+        RcsSettings.createInstance(context);
+    	
     	// Create notification
-		Intent intent = new Intent(context, ReceiveFileTransfer.class);
-		intent.putExtra("contact", contact);
-		intent.putExtra("sessionId", sessionId);
-		intent.putExtra("size", size);
+		Intent intent = new Intent(invitation);
+		intent.setClass(context, ReceiveFileTransfer.class);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notif = new Notification(R.drawable.ri_notif_file_transfer_icon,
         		context.getString(R.string.title_recv_file_transfer),
@@ -366,7 +365,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         notif.flags = Notification.FLAG_NO_CLEAR;
         notif.setLatestEventInfo(context,
         		context.getString(R.string.title_recv_file_transfer),
-        		context.getString(R.string.label_from) + " " + contact,
+        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
         		contentIntent);
         
         // Set ringtone
@@ -381,6 +380,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         }
         
         // Send notification
+		String sessionId = invitation.getStringExtra("sessionId");
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify((int)Long.parseLong(sessionId), notif);
     }

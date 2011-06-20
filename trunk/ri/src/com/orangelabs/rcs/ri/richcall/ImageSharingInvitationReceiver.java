@@ -22,10 +22,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.PhoneUtils;
-
 /**
  * Image sharing invitation receiver
  * 
@@ -34,20 +30,7 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 public class ImageSharingInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Get invitation info
-		String contact = intent.getStringExtra("contact");
-		String sessionId = intent.getStringExtra("sessionId");
-		
-		// Set application context
-		AndroidFactory.setApplicationContext(context);
-
-		// Instanciate settings
-        RcsSettings.createInstance(context);
-
-        // Initialize the country code
-		PhoneUtils.initialize(context);        
-
 		// Display invitation notification
-		ReceiveImageSharing.addImageSharingInvitationNotification(context, contact, sessionId);
+		ReceiveImageSharing.addImageSharingInvitationNotification(context, intent);
     }
 }

@@ -192,12 +192,15 @@ public class ReceivePresenceInvitation extends Activity {
      * Add presence sharing notification
      * 
      * @param context Context
-     * @param contact Contact
+     * @param invitation Intent invitation
      */
-    public static void addSharingInvitationNotification(Context context, String contact) {
+    public static void addSharingInvitationNotification(Context context, Intent invitation) {
+        // Initialize settings
+		RcsSettings.createInstance(context);
+		
     	// Create notification
-		Intent intent = new Intent(context, ReceivePresenceInvitation.class);
-		intent.putExtra("contact", contact);
+		Intent intent = new Intent(invitation);
+		intent.setClass(context, ReceivePresenceInvitation.class);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notif = new Notification(R.drawable.ri_notif_presence_icon,
         		context.getString(R.string.title_presence_invitation),
@@ -205,7 +208,7 @@ public class ReceivePresenceInvitation extends Activity {
         notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
         		context.getString(R.string.title_presence_invitation),
-        		context.getString(R.string.label_from)+" "+contact,
+        		context.getString(R.string.label_from) + " " + invitation.getStringExtra("contact"),
         		contentIntent);
 
         // Set ringtone

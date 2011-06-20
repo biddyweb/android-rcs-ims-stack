@@ -19,19 +19,13 @@
 package com.orangelabs.rcs.ri.richcall;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -39,18 +33,10 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.CpuMonitor;
 import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
-import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
 
 /**
  * Initiate pre-recorded video sharing
@@ -64,44 +50,9 @@ public class InitiatePrerecordedVideoSharing extends Activity {
 	private final static int SELECT_VIDEO = 0;
 
 	/**
-	 * UI handler
-	 */
-	private final Handler handler = new Handler();
-
-    /**
-	 * Rich call API
-	 */
-    private RichCallApi callApi;
-
-	/**
-     * Outgoing video preview
-     */
-	private VideoSurfaceView outgoingVideoView;
-
-	/**
-	 * Video player
-	 */
-	private PrerecordedVideoPlayer player = null;
-
-	/**
 	 * Video filename
 	 */
 	private String filename;
-
-    /**
-     * Outgoing video sharing session
-     */
-    private IVideoSharingSession outgoingSession = null;
-
-    /**
-     * Progress dialog
-     */
-    private Dialog progressDialog = null;
-
-    /**
-     * CPU monitoring
-     */
-    private CpuMonitor cpu = new CpuMonitor();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -112,7 +63,7 @@ public class InitiatePrerecordedVideoSharing extends Activity {
         setContentView(R.layout.richcall_initiate_prerecorded_video_sharing);
 
         // Set title
-        setTitle(R.string.menu_initiate_livevideo_sharing);
+        setTitle(R.string.menu_initiate_prerecorded_video_sharing);
 
         // Set the contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);
@@ -132,35 +83,11 @@ public class InitiatePrerecordedVideoSharing extends Activity {
         	dialBtn.setEnabled(false);
         	selectBtn.setEnabled(false);
         }
-
-        // Set the video preview
-        outgoingVideoView = (VideoSurfaceView)findViewById(R.id.video_prerecorded_preview);
-        outgoingVideoView.setAspectRatio(176, 144);
-
-        // Instanciate rich call API
-		callApi = new RichCallApi(getApplicationContext());
-		callApi.connectApi();
-
-		// Start CPU monitoring
-		cpu.start();    }
+	}
 
     @Override
     public void onDestroy() {
     	super.onDestroy();
-
-		// Stop CPU monitoring
-		cpu.stop();
-
-		// Remove session listener
-        if (outgoingSession != null) {
-        	try {
-        		outgoingSession.removeSessionListener(outgoingSessionEventListener);
-        		outgoingSession.cancelSession();
-        	} catch(Exception e) {}
-        }
-
-        // Disconnect rich call API
-        callApi.disconnectApi();
     }
 
     /**
@@ -192,33 +119,15 @@ public class InitiatePrerecordedVideoSharing extends Activity {
 
             Thread thread = new Thread() {
             	public void run() {
-                	try {
-                        // Initiate sharing
-                		player = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
-                		player.setVideoSurface(outgoingVideoView);
-                		outgoingSession = callApi.initiateVideoSharing(remote, filename, player);
-                		outgoingSession.addSessionListener(outgoingSessionEventListener);
-	            	} catch(Exception e) {
-	    				handler.post(new Runnable() { 
-	    					public void run() {
-	    						Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_failed));
-	    					}
-	    				});
-	            	}
+                    Intent intent = new Intent(getApplicationContext(), VisioSharing.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("contact", remote);
+                    intent.putExtra("incoming", false);
+                    intent.putExtra("filename", filename);
+                    getApplicationContext().startActivity(intent);
             	}
             };
             thread.start();
-
-            // Display a progress dialog
-            progressDialog = Utils.showProgressDialog(InitiatePrerecordedVideoSharing.this, getString(R.string.label_command_in_progress));
-
-            // Hide buttons
-            Button inviteBtn = (Button)findViewById(R.id.invite_btn);
-        	inviteBtn.setVisibility(View.INVISIBLE);
-            Button selectBtn = (Button)findViewById(R.id.select_btn);
-            selectBtn.setVisibility(View.INVISIBLE);
-            Button dialBtn = (Button)findViewById(R.id.dial_btn);
-            dialBtn.setVisibility(View.INVISIBLE);
         }
     };
 
@@ -322,152 +231,4 @@ public class InitiatePrerecordedVideoSharing extends Activity {
             break;
         }
     }
-
-    /**
-     * Player event listener
-     */
-    private VideoPlayerEventListener playerEventListener = new VideoPlayerEventListener() {
-	    /**
-	     * End of video stream event
-	     */
-		public void endOfStream() {
-			handler.post(new Runnable() {
-				public void run() {
-					Utils.displayToast(InitiatePrerecordedVideoSharing.this, getString(R.string.label_end_of_media));
-				}
-			});
-		}
-
-	    /**
-	     * Video stream progress event
-	     *
-	     * @param progress Progress
-	     */
-		public void updateDuration(long progress) {
-		}
-    };
-
-    /**
-     * Outgoing video sharing session event listener
-     */
-    private IVideoSharingEventListener outgoingSessionEventListener = new IVideoSharingEventListener.Stub() {
-		// Session is started
-		public void handleSessionStarted() {
-			handler.post(new Runnable() {
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-				}
-			});
-		}
-
-		// Session has been aborted
-		public void handleSessionAborted() {
-			handler.post(new Runnable() {
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show message
-					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_aborted));
-				}
-			});
-		}
-
-		// Session has been terminated by remote
-		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable() {
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show message
-					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_sharing_terminated_by_remote));
-				}
-			});
-		}
-
-		// Content sharing error
-		public void handleSharingError(final int error) {
-			handler.post(new Runnable() {
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show error
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-    					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_invitation_declined));
-					} else {
-    					Utils.showMessageAndExit(InitiatePrerecordedVideoSharing.this, getString(R.string.label_csh_failed, error));
-					}
-				}
-			});
-		}
-    };
-
-	/**
-	 * Hide progress dialog
-	 */
-    public void hideProgressDialog() {
-		if (progressDialog != null) {
-			progressDialog.dismiss();
-			progressDialog = null;
-		}
-    }
-
-    /**
-     * Quit the session
-     */
-    private void quitSession() {
-		// Stop sessions
-	    Thread thread = new Thread() {
-	    	public void run() {
-	        	try {
-	                if (outgoingSession != null) {
-	                	try {
-	                		outgoingSession.removeSessionListener(outgoingSessionEventListener);
-	                		outgoingSession.cancelSession();
-	                	} catch(Exception e) {
-	                	}
-	                	outgoingSession = null;
-	                }
-	        	} catch(Exception e) {
-	        	}
-	    	}
-	    };
-	    thread.start();
-
-	    // Exit activity
-		finish();
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:
-                // Quit session
-            	quitSession();
-                return true;
-        }
-
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater=new MenuInflater(getApplicationContext());
-		inflater.inflate(R.menu.menu_outgoing_prerecordedvideo, menu);
-		return true;
-	}
-
-    @Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.menu_close_session:
-				// Quit the session
-				quitSession();
-				break;
-		}
-		return true;
-	}
 }

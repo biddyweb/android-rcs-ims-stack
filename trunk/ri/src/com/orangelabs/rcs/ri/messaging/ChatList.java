@@ -288,7 +288,7 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 				IChatSession chatSession = IChatSession.Stub.asInterface(binder);
 				String contact;
 				if (chatSession.isChatGroup()) {
-					contact = "Group chat";
+					contact = getString(R.string.label_group_chat);
 				} else {
 					contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
 				}

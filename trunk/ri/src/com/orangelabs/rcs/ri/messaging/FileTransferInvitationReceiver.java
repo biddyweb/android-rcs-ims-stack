@@ -22,9 +22,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.PhoneUtils;
-
 /**
  * File transfer invitation receiver
  * 
@@ -33,18 +30,7 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 public class FileTransferInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Get invitation info
-		String contact = intent.getStringExtra("contact");
-		String sessionId = intent.getStringExtra("sessionId");
-		long size = intent.getLongExtra("size", -1);
-
-		// Instanciate settings
-        RcsSettings.createInstance(context);
-
-        // Initialize the country code
-		PhoneUtils.initialize(context);        
-        
         // Display invitation notification
-		ReceiveFileTransfer.addFileTransferInvitationNotification(context, contact, sessionId, size);
+		ReceiveFileTransfer.addFileTransferInvitationNotification(context, intent);
     }
 }

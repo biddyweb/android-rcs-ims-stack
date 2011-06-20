@@ -142,12 +142,17 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     			}
     			sharingSession.addSessionListener(imageSharingEventListener);
     			
+    			String sizeDesc;
+    			long fileSize = sharingSession.getFilesize();
+    	    	if (fileSize != -1) {
+    	    		sizeDesc = getString(R.string.label_file_size, " "+ (fileSize/1024), " Kb");
+    	    	} else {
+    	    		sizeDesc = getString(R.string.label_file_size_unknown);
+    	    	}
+    			
     			AlertDialog.Builder builder = new AlertDialog.Builder(this);
     			builder.setTitle(R.string.title_recv_image_sharing);
-    			builder.setMessage(
-    					getString(R.string.label_from) + " " + remoteContact +"\n"+
-    					getString(R.string.label_file_size, " " + (sharingSession.getFilesize()/1024), " Kb")
-    			);
+    			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" + sizeDesc);
     			builder.setCancelable(false);
     			builder.setIcon(R.drawable.ri_notif_csh_icon);
     			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
@@ -349,14 +354,15 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      * Add image share notification
      * 
      * @param context Context
-     * @param contact Contact
-     * @param sessionId Session ID
+     * @param intent Intent invitation
      */
-	public static void addImageSharingInvitationNotification(Context context, String contact, String sessionId) {
-    	// Create notification
-		Intent intent = new Intent(context, ReceiveImageSharing.class);
-		intent.putExtra("contact", contact);
-		intent.putExtra("sessionId", sessionId);
+	public static void addImageSharingInvitationNotification(Context context, Intent invitation) {
+        // Initialize settings
+		RcsSettings.createInstance(context);        
+
+		// Create notification
+		Intent intent = new Intent(invitation);
+		intent.setClass(context, ReceiveImageSharing.class);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_image_sharing);
         Notification notif = new Notification(R.drawable.ri_notif_csh_icon,
@@ -365,7 +371,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
         notif.flags = Notification.FLAG_NO_CLEAR;
         notif.setLatestEventInfo(context,
         		notifTitle,
-        		context.getString(R.string.label_from)+" "+contact,
+        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
         		contentIntent);
         
         // Set ringtone
@@ -380,6 +386,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
         }
         
         // Send notification
+		String sessionId = invitation.getStringExtra("sessionId");
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify((int)Long.parseLong(sessionId), notif);
 	}

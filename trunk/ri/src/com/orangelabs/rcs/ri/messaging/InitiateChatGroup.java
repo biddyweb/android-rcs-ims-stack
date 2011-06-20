@@ -238,7 +238,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 		}
 
 		// Conference event
-	    public void handleConferenceEvent(String contact, String state) {
+	    public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
 		}
 	    
 		// Message delivery status

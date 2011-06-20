@@ -31,6 +31,7 @@ import com.orangelabs.rcs.ri.messaging.ChatList;
 import com.orangelabs.rcs.ri.messaging.InitiateChat;
 import com.orangelabs.rcs.ri.messaging.InitiateChatGroup;
 import com.orangelabs.rcs.ri.messaging.InitiateFileTransfer;
+import com.orangelabs.rcs.ri.messaging.SpamBox;
 import com.orangelabs.rcs.ri.utils.Utils;
 
 
@@ -53,7 +54,8 @@ public class MessagingRI extends ListActivity {
         		getString(R.string.menu_transfer_file),
         		getString(R.string.menu_one_to_one_chat),
         		getString(R.string.menu_adhoc_group_chat),
-        		getString(R.string.menu_chat_list)
+        		getString(R.string.menu_chat_list),
+        		getString(R.string.menu_spambox)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -82,6 +84,9 @@ public class MessagingRI extends ListActivity {
 	        case 4: 
 	        	startActivity(new Intent(this, ChatList.class));
 	            break;
+	        case 5:
+	        	startActivity(new Intent(this, SpamBox.class));
+	        	break;
         }
     }
 }
