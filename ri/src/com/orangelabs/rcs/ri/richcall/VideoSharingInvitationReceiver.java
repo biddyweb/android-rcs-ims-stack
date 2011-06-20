@@ -18,12 +18,11 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
+import com.orangelabs.rcs.platform.AndroidFactory;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * Video sharing invitation receiver
@@ -33,21 +32,11 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 public class VideoSharingInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Get invitation info
-		String contact = intent.getStringExtra("contact");
-		String sessionId = intent.getStringExtra("sessionId");
-
 		// Set application context
-		AndroidFactory.setApplicationContext(context);
-
-        // Instantiate settings
-        RcsSettings.createInstance(context);
-
-        // Initialize the country code
-		PhoneUtils.initialize(context);        
+		AndroidFactory.setApplicationContext(context); //TODO: use context at player level
 
 		// Display invitation notification
-        VisioSharing.addVideoSharingInvitationNotification(context, contact, sessionId);
+        VisioSharing.addVideoSharingInvitationNotification(context, intent);
     }
 }
 

@@ -48,7 +48,7 @@ public class InitiateOutgoingVisioSharing extends Activity {
         setContentView(R.layout.richcall_initiate_visio_sharing);
 
         // Set title
-        setTitle(R.string.menu_initiate_visio_sharing);
+        setTitle(R.string.menu_initiate_video_sharing);
 
         // Set the contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);

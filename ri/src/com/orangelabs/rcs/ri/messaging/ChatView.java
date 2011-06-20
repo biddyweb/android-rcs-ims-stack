@@ -169,6 +169,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         mUserText.setOnClickListener(this);
         mUserText.setOnKeyListener(this);
         mUserText.addTextChangedListener(mUserTextWatcher);
+        
         // Set the message composer max length
 		RcsSettings.createInstance(getApplicationContext());
 		int maxLength = RcsSettings.getInstance().getMaxChatMessageLength();
@@ -176,6 +177,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		filterArray[0]=new InputFilter.LengthFilter(maxLength);
 		mUserText.setFilters(filterArray);
         
+		// Set button listener
         Button btn = (Button)findViewById(R.id.send_button);
         btn.setOnClickListener(this);
         
@@ -212,13 +214,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     @Override
     protected void onPause() {
     	super.onPause();
+    	
     	isInBackground = true;
     }
     
     @Override
     protected void onResume() {
     	super.onResume();
+    	
     	isInBackground = false;
+    	
     	// Mark all messages that were received while we were in background as "displayed" 
     	for (int i=0;i<imReceivedInBackground.size();i++){
     		InstantMessage msg = imReceivedInBackground.get(i);
@@ -497,7 +502,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}
 
 		// Conference event
-	    public void handleConferenceEvent(final String contact, final String state) {
+	    public void handleConferenceEvent(final String contact, final String contactDisplayname, final String state) {
 			handler.post(new Runnable() {
 				public void run(){
 					String number = PhoneUtils.extractNumberFromUri(contact);

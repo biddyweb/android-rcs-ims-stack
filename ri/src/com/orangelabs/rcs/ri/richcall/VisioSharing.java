@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
+import java.lang.reflect.Method;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -45,6 +47,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
@@ -53,114 +56,182 @@ import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
-import java.lang.reflect.Method;
 
 /**
  * Visio sharing activity - two half duplex live video sharing
  *
  * @author hlxn7157
  */
-public class VisioSharing extends Activity implements SurfaceHolder.Callback, ClientApiListener,
-        ImsEventListener {
+public class VisioSharing extends Activity implements SurfaceHolder.Callback, ClientApiListener, ImsEventListener {
 
-    /** UI handler */
-    private final Handler handler = new Handler();
+	/**
+	 * UI handler
+	 */
+	private final Handler handler = new Handler();
 
-    /** Rich call API */
-    private RichCallApi callApi = null;
+	/**
+	 * Rich call API
+	 */
+	private RichCallApi callApi = null;
 
-    /** Rich call API connected*/
-    private boolean isCallApiConnected = false;
+	/** 
+	 * Rich call API connected
+	 */
+	private boolean isCallApiConnected = false;
 
-    /** Outgoing video sharing session */
-    private IVideoSharingSession outgoingCshSession = null;
+	/**
+	 * Outgoing video sharing session
+	 */
+	private IVideoSharingSession outgoingCshSession = null;
 
-    /** Video player */
-    private LiveVideoPlayer outgoingPlayer;
+	/**
+	 * Video player
+	 */
+	private LiveVideoPlayer outgoingPlayer;
 
-    /** Video preview */
-    private VideoSurfaceView outgoingVideoView = null;
+	/**
+	 * Prerecorded video player
+	 */
+	private PrerecordedVideoPlayer outgoingPrerecordedPlayer;
 
-    /** Video surface holder */
-    private SurfaceHolder surface;
+	/**
+	 * Name of the file to be played
+	 */
+	private String filename = null;
 
-    /** Camera */
-    private Camera camera = null;
+	/**
+	 * Flag indicating if the outgoing session is prerecorded or live
+	 */
+	private boolean isPrerecordedSession = false;
 
-    /** Camera preview started flag */
-    private boolean cameraPreviewRunning = false;
+	/**
+	 * Video preview
+	 */
+	private VideoSurfaceView outgoingVideoView = null;
 
-    /** Outgoing first launch */
-    private Boolean fisrtLaunchDone = false;
+	/**
+	 * Video surface holder
+	 */
+	private SurfaceHolder surface;
 
-    /** Progress dialog */
-    private Dialog outgoingProgressDialog = null;
+	/**
+	 * Camera
+	 */
+	private Camera camera = null;
 
-    /** CPU monitoring */
-    private CpuMonitor cpu = new CpuMonitor();
+	/**
+	 * Camera preview started flag
+	 */
+	private boolean cameraPreviewRunning = false;
 
-    /** Incoming video sharing session */
-    private IVideoSharingSession incomingCshSession = null;
+	/**
+	 * Outgoing first launch
+	 */
+	private Boolean fisrtLaunchDone = false;
 
-    /** Session ID */
-    private String incomingSessionId = null;
+	/**
+	 * Progress dialog
+	 */	
+	private Dialog outgoingProgressDialog = null;
 
-    /** RemoteContact */
-    private String remoteContact;
+	/**
+	 * CPU monitoring
+	 */
+	private CpuMonitor cpu = new CpuMonitor();
 
-    /** Video renderer */
-    private VideoRenderer incomingRenderer = null;
+	/**
+	 * Incoming video sharing session
+	 */
+	private IVideoSharingSession incomingCshSession = null;
 
-    /** Video preview */
-    private VideoSurfaceView incomingVideoView = null;
+	/**
+	 * Incoming session ID
+	 */
+	private String incomingSessionId = null;
 
-    /** direction */
-    private Boolean isIncoming;
+	/**
+	 * RemoteContact
+	 */
+	private String remoteContact;
 
-    /** wait API connected to do getIncomingSession **/
-    private Boolean getIncomingSessionWhenApiConnected = false;
+	/**
+	 * Video renderer
+	 */
+	private VideoRenderer incomingRenderer = null;
 
-    /** wait API connected to do startOutgoingSession **/
-    private Boolean startOutgoingSessionWhenApiConnected = false;
+	/**
+	 * Video preview
+	 */
+	private VideoSurfaceView incomingVideoView = null;
 
-    /** from TextView */
-    private TextView fromTxt = null;
+	/**
+	 * Direction
+	 */
+	private Boolean isIncoming;
 
-    /** switch camera button */
-    private ImageButton switchCamBtn = null;
+	/** wait API connected to do getIncomingSession **/
+	private Boolean getIncomingSessionWhenApiConnected = false;
 
-    /** opened camera id */
-    private int openedCameraId = 0;
+	/** wait API connected to do startOutgoingSession **/
+	private Boolean startOutgoingSessionWhenApiConnected = false;
 
-    /** surface holder for video preview **/
-    private SurfaceHolder video_holder = null;
+	/**
+	 * Switch camera button
+	 */
+	private ImageButton switchCamBtn = null;
 
-    /** number of cameras */
-    private int cam_num = 1;
+	/**
+	 * Opened camera id
+	 */
+	private int openedCameraId = 0;
 
-    /** startOutgoing button */
-    private Button startOutgoingBtn = null;
+	/**
+	 * Surface holder for video preview
+	 */
+	private SurfaceHolder video_holder = null;
 
-    /** stopOutgoing button */
-    private Button stopOutgoingBtn = null;
+	/**
+	 * Number of cameras
+	 */
+	private int cam_num = 1;
 
-    /** stopIncoming button */
-    private Button stopIncomingBtn = null;
+	/** 
+	 * Start outgoing button
+	 */
+	private Button startOutgoingBtn = null;
 
-    /** Video Format */
-    private String videoFormat;
+	/**
+	 * Stop outgoing button
+	 */
+	private Button stopOutgoingBtn = null;
 
-    /** Video Width */
-    private int videoWidth;
+	/**
+	 * Stop incoming button
+	 */
+	private Button stopIncomingBtn = null;
 
-    /** Video Height */
-    private int videoHeight;
+	/**
+	 * Video format
+	 */
+	private String videoFormat;
+
+	/**
+	 * Video width
+	 */
+	private int videoWidth;
+
+	/**
+	 * Video height
+	 */
+	private int videoHeight;
 
     // -------------------------------- Activity METHODS
 
@@ -176,20 +247,22 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         setContentView(R.layout.richcall_visio_sharing);
         setTitle(R.string.menu_visio_sharing);
 
+        filename = getIntent().getStringExtra("filename");
+        isPrerecordedSession = (filename!=null);
+        
         videoFormat = RcsSettings.getInstance().getCShVideoFormat();
         if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
-            videoWidth = 320;
+            // QVGA
+        	videoWidth = 320;
             videoHeight = 240;
-        } else { // QCIF
+        } else {
+        	// QCIF
             videoWidth = 176;
             videoHeight = 144;
         }
 
         // Texts and buttons
-        if (fromTxt == null) {
-            fromTxt = (TextView)findViewById(R.id.visio_with_txt);
-        }
-        if (switchCamBtn == null) {
+        if (switchCamBtn == null && !isPrerecordedSession) {
             switchCamBtn = (ImageButton)findViewById(R.id.switch_cam_btn);
             Method method = getCameraNumberOfCamerasMethod();
             if (method != null) {
@@ -209,8 +282,14 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             } else {
                 switchCamBtn.setVisibility(View.INVISIBLE);
             }
-
         }
+        
+        if (isPrerecordedSession){
+        	// Hide switch camera button
+        	switchCamBtn = (ImageButton)findViewById(R.id.switch_cam_btn);
+        	switchCamBtn.setVisibility(View.GONE);
+        }
+        
         if (startOutgoingBtn == null) {
             startOutgoingBtn = (Button)findViewById(R.id.start_outgoing_btn);
             startOutgoingBtn.setOnClickListener(btnStartOutgoingListener);
@@ -230,12 +309,20 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         // Set the video preview
         if (outgoingVideoView == null) {
             outgoingVideoView = (VideoSurfaceView)findViewById(R.id.outgoing_video_preview);
+        }
+        if (!isPrerecordedSession){
+        	// Create the live video player
+        	outgoingPlayer = new LiveVideoPlayer(videoFormat);
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
-            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);            
             surface.addCallback(this);
-            // Create the live video player
-            outgoingPlayer = new LiveVideoPlayer(videoFormat);
+        }else{
+        	// Create the prerecorded video player
+        	outgoingPrerecordedPlayer = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
+        	outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
+        	// Force ratio for pre-recorded video
+        	outgoingVideoView.setAspectRatio(176, 144);
         }
 
         // Set incoming video preview
@@ -274,9 +361,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (incomingSessionId != null) {
             removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
         }
-        if (remoteContact != null) {
-            fromTxt.setText("Video sharing with " + remoteContact);
-        }
+    	TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
+        fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
+
         if ((isIncoming) && (lastIncomingSessionId != incomingSessionId)) {
             if (isCallApiConnected) {
                 getIncomingSession();
@@ -449,7 +536,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 camera.stopPreview();
             }
         }
-        startCameraPreview();
+        if (!isPrerecordedSession){
+        	startCameraPreview();
+        }
     }
 
     /**
@@ -459,7 +548,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
      */
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        if (camera == null) {
+        if (camera == null && !isPrerecordedSession) {
             // Start camera preview
             if (cam_num > 1) {
                 Method method = getCameraOpenMethod();
@@ -579,9 +668,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     stopOutgoingSession();
                     exitActivityIfNoSession(null);
 
-                    // Create the live video player
-                    outgoingPlayer = new LiveVideoPlayer(videoFormat);
-                    camera.setPreviewCallback(outgoingPlayer);
+                    recreateVideoPlayer();
                 }
             };
             thread.start();
@@ -589,6 +676,25 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             stopOutgoingBtn.setEnabled(false);
         }
     };
+    
+    /**
+     * Recreate the video player
+     */
+    private void recreateVideoPlayer(){
+    	if (!isPrerecordedSession){
+    		// Create the live video player
+    		outgoingPlayer = new LiveVideoPlayer(videoFormat);
+            surface = outgoingVideoView.getHolder();
+            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);            
+            surface.addCallback(this);
+    		camera.setPreviewCallback(outgoingPlayer);
+    	}else{
+    		// Create the prerecorded video player
+    		outgoingPrerecordedPlayer = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
+    		outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
+    	}
+    }
+
 
     /**
      * Stop incoming session button listener
@@ -631,8 +737,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     hideProgressDialog();
                     stopOutgoingSession();
                     exitActivityIfNoSession(getString(R.string.label_outgoing_sharing_aborted));
-                    outgoingPlayer = new LiveVideoPlayer(videoFormat);
-                    camera.setPreviewCallback(outgoingPlayer);
+                    recreateVideoPlayer();
                 }
             });
         }
@@ -646,8 +751,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     hideProgressDialog();
                     stopOutgoingSession();
                     exitActivityIfNoSession(getString(R.string.label_outgoing_sharing_terminated_by_remote));
-                    outgoingPlayer = new LiveVideoPlayer(videoFormat);
-                    camera.setPreviewCallback(outgoingPlayer);
+                    recreateVideoPlayer();
                 }
             });
         }
@@ -665,8 +769,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     } else {
                         exitActivityIfNoSession(getString(R.string.label_csh_failed, error));
                     }
-                    outgoingPlayer = new LiveVideoPlayer(videoFormat);
-                    camera.setPreviewCallback(outgoingPlayer);
+                    recreateVideoPlayer();
                 }
             });
         }
@@ -875,7 +978,11 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             public void run() {
                 try {
                     // Initiate sharing
-                    outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
+                	if (!isPrerecordedSession){
+                		outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
+                	}else{
+                		outgoingCshSession = callApi.initiateVideoSharing(remoteContact, filename, outgoingPrerecordedPlayer);
+                	}
                     outgoingCshSession.addSessionListener(outgoingSessionEventListener);
                 } catch (Exception e) {
                     handler.post(new Runnable() {
@@ -954,9 +1061,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     if (incomingSessionId != null) {
                         removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
                     }
-                    if (remoteContact != null) {
-                        fromTxt.setText("Video sharing with " + remoteContact);
-                    }
+                	TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
+                    fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
                     if (lastIncomingSessionId != incomingSessionId) {
                         if (isCallApiConnected) {
                             getIncomingSession();
@@ -978,21 +1084,23 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     * @param contact Contact
     * @param sessionId Session ID
     */
-    public static void addVideoSharingInvitationNotification(Context context, String contact,
-            String sessionId) {
+    public static void addVideoSharingInvitationNotification(Context context, Intent invitation) {
+		// Initialize settings
+		RcsSettings.createInstance(context);
+		
         // Create notification
-        Intent intent = new Intent(context, VisioSharing.class);
-        intent.putExtra("contact", contact);
-        intent.putExtra("sessionId", sessionId);
+        Intent intent = new Intent(invitation);
+        intent.setClass(context, VisioSharing.class);
         intent.putExtra("incoming", true);
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_video_sharing);
         Notification notif = new Notification(R.drawable.ri_notif_csh_icon, notifTitle,
                 System.currentTimeMillis());
         notif.flags = Notification.FLAG_NO_CLEAR;
-        notif.setLatestEventInfo(context, notifTitle, context.getString(R.string.label_from) + " "
-                + contact, contentIntent);
+        notif.setLatestEventInfo(context,
+        		notifTitle,
+        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
+        		contentIntent);
 
         // Set ringtone
         String ringtone = RcsSettings.getInstance().getCShInvitationRingtone();
@@ -1006,8 +1114,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
 
         // Send notification
-        NotificationManager notificationManager = (NotificationManager)context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
+		String sessionId = invitation.getStringExtra("sessionId");
+        NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify((int)Long.parseLong(sessionId), notif);
     }
 
@@ -1022,5 +1130,32 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel((int)Long.parseLong(sessionId));
     }
+    
+    /**
+     * Player event listener for prerecorded sessions
+     */
+    private VideoPlayerEventListener playerEventListener = new VideoPlayerEventListener() {
+	    /**
+	     * End of video stream event
+	     */
+		public void endOfStream() {
+			handler.post(new Runnable() {
+				public void run() {
+					Utils.displayToast(VisioSharing.this, getString(R.string.label_end_of_media));
+                    startOutgoingBtn.setEnabled(true);
+                    stopOutgoingBtn.setEnabled(false);
+				}
+			});
+			recreateVideoPlayer();
+		}
+
+	    /**
+	     * Video stream progress event
+	     *
+	     * @param progress Progress
+	     */
+		public void updateDuration(long progress) {
+		}
+    };
 
 }

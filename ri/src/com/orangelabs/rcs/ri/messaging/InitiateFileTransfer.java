@@ -322,8 +322,10 @@ public class InitiateFileTransfer extends Activity {
 					hideProgressDialog();
 					
 					// Display session status
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("error");
+					if (error == ContentSharingError.MEDIA_TRANSFER_FAILED) {
+						TextView statusView = (TextView)findViewById(R.id.progress_status);
+						statusView.setText("error");
+					} else
 					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
 						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
 					} else {

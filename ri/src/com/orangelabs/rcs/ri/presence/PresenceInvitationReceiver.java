@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.ri.presence;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.PhoneUtils;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -33,16 +30,7 @@ import android.content.Intent;
 public class PresenceInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Get invitation info
-		String contact = intent.getStringExtra("contact");
-
-		// Instanciate settings
-        RcsSettings.createInstance(context);
-        
-        // Initialize the country code
-		PhoneUtils.initialize(context);        
-        
         // Display invitation notification
-		ReceivePresenceInvitation.addSharingInvitationNotification(context, contact);
+		ReceivePresenceInvitation.addSharingInvitationNotification(context, intent);
     }
 }

@@ -289,7 +289,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		}
 		
 		// Conference event
-	    public void handleConferenceEvent(String contact, String state) {
+	    public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
 		}
 	    
 		// Message delivery status
@@ -309,16 +309,15 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      * Add chat notification
      * 
      * @param context Context
-     * @param contact Contact
-     * @param sessionId Session ID
-     * @param subject Subject
+     * @param invitation Intent invitation
      */
-    public static void addChatInvitationNotification(Context context, String contact, String sessionId, String subject) {   	
-		// Create notification
-		Intent intent = new Intent(context, ReceiveChat.class);
-		intent.putExtra("contact", contact);
-		intent.putExtra("sessionId", sessionId);
-		intent.putExtra("subject", subject);
+    public static void addChatInvitationNotification(Context context, Intent invitation) {
+    	// Instanciate settings
+        RcsSettings.createInstance(context);
+
+        // Create notification
+		Intent intent = new Intent(invitation);
+		intent.setClass(context, ReceiveChat.class);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_chat);
         Notification notif = new Notification(R.drawable.ri_notif_chat_icon,
@@ -327,7 +326,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         notif.flags = Notification.FLAG_NO_CLEAR;
         notif.setLatestEventInfo(context,
         		notifTitle,
-        		context.getString(R.string.label_from) + " " + contact,
+        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
         		contentIntent);
         
         // Set ringtone
@@ -342,6 +341,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         }
         
         // Send notification
+		String sessionId = invitation.getStringExtra("sessionId");
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify((int)Long.parseLong(sessionId), notif);
     }

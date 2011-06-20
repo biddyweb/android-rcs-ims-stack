@@ -28,10 +28,11 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.database.MatrixCursor;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,6 +48,22 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  * @author jexa7410
  */
 public class Utils {
+	/**
+	 * Format caller id
+	 * 
+	 * @param intent Intent invitation
+	 * @return Id
+	 */
+	public static String formatCallerId(Intent invitation) {
+		String number = invitation.getStringExtra("contact");
+		String displayName = invitation.getStringExtra("contactDisplayname"); 
+		if ((displayName != null) && (displayName.length() > 0)) { 
+			return displayName + " (" + number + ")";
+		} else {
+			return number;
+		}
+	}
+	
 	/**
 	 * Create a contact selector based on the native address book
 	 * 
