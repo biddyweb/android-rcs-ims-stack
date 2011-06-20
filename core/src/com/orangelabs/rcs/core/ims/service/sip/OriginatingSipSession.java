@@ -1,0 +1,292 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright © 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
+package com.orangelabs.rcs.core.ims.service.sip;
+
+import java.util.Vector;
+
+import com.orangelabs.rcs.core.ims.network.sip.SipManager;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+/**
+ * Originating SIP session
+ * 
+ * @author jexa7410
+ */
+public class OriginatingSipSession extends GenericSipSession {
+	/**
+	 * Feature tags
+	 */
+	private String[] featureTags;
+	
+	/**
+	 * SDP offer
+	 */
+	private String sdpOffer;
+
+	/**
+	 * SDP answer
+	 */
+	private String sdpAnswer = null;
+
+	/**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+	/**
+	 * Constructor
+	 * 
+	 * @param parent IMS service
+	 * @param offer SDP offer
+	 * @param contact Remote contact
+	 */
+	public OriginatingSipSession(ImsService parent, String contact, String offer, String[] featureTags) {
+		super(parent, contact);
+		
+		// Create dialog path
+		createOriginatingDialogPath();
+		
+		// Set the SDP offer 
+		this.sdpOffer = offer;
+		
+		// Set the feature tags
+		this.featureTags = featureTags;
+	}
+
+	/**
+	 * Background processing
+	 */
+	public void run() {
+		try {
+	    	if (logger.isActivated()) {
+	    		logger.info("Initiate a new session as originating");
+	    	}
+    	
+			// Set the local SDP part in the dialog path
+	        getDialogPath().setLocalContent(sdpOffer);
+
+	        // Create an INVITE request
+	        if (logger.isActivated()) {
+	        	logger.info("Send INVITE");
+	        }
+	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),	featureTags, sdpOffer);
+
+	        // Set initial request in the dialog path
+	        getDialogPath().setInvite(invite);
+	        
+	        // Send INVITE request
+	        sendInvite(invite);	        
+		} catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Session initiation has failed", e);
+        	}
+
+        	// Unexpected error
+			handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+		}
+	}
+	
+	/**
+	 * Send INVITE message
+	 * 
+	 * @param invite SIP INVITE
+	 * @throws SipException
+	 */
+	private void sendInvite(SipRequest invite) throws SipException {
+		// Send INVITE request
+		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
+		
+        // Wait response
+        ctx.waitResponse(ImsServiceSession.RINGING_PERIOD + SipManager.TIMEOUT);
+        
+        // Analyze the received response 
+        if (ctx.isSipResponse()) {
+	        // A response has been received
+            if (ctx.getStatusCode() == 200) {
+            	// 200 OK
+            	handle200OK(ctx.getSipResponse());
+            } else
+            if (ctx.getStatusCode() == 407) {
+            	// 407 Proxy Authentication Required
+            	handle407Authentication(ctx.getSipResponse());
+            } else {
+            	// Error response
+                if (ctx.getStatusCode() == 603) {
+                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_DECLINED,
+        					ctx.getReasonPhrase()));
+                } else
+                if (ctx.getStatusCode() == 487) {
+                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_CANCELLED,
+        					ctx.getReasonPhrase()));
+                } else {
+                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_FAILED,
+                			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+                }
+            }
+        } else {
+        	// No response received: timeout
+        	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_FAILED, "timeout"));
+        }
+	}	
+
+	/**
+	 * Handle 200 0K response 
+	 * 
+	 * @param resp 200 OK response
+	 */
+	public void handle200OK(SipResponse resp) {
+		try {
+	        // 200 OK received
+			if (logger.isActivated()) {
+				logger.info("200 OK response received");
+			}
+
+	        // The signalisation is established
+	        getDialogPath().sigEstablished();
+
+	        // Set the remote tag
+	        getDialogPath().setRemoteTag(resp.getToTag());
+	        
+	        // Set the target
+	        getDialogPath().setTarget(resp.getContactURI());
+	
+	        // Set the route path with the Record-Route header
+	        Vector<String> newRoute = SipUtils.routeProcessing(resp, true);
+			getDialogPath().setRoute(newRoute);
+	
+	        // Set the remote SDP part
+	        getDialogPath().setRemoteContent(resp.getContent());
+	                      		
+	        // The session is established
+	        getDialogPath().sessionEstablished();
+
+	        // Send ACK request
+	        if (logger.isActivated()) {
+	        	logger.info("Send ACK");
+	        }
+	        getImsService().getImsModule().getSipManager().sendSipAck(getDialogPath());
+	        
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+
+	        // Notify listener
+	        if (getListener() != null) {
+	        	getListener().handleSessionStarted();
+	        }
+				        
+		} catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Session initiation has failed", e);
+        	}
+
+        	// Unexpected error
+			handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+        }
+	}
+	
+	/**
+	 * Handle 407 Proxy Authentication Required 
+	 * 
+	 * @param resp 407 response
+	 */
+	public void handle407Authentication(SipResponse resp) {
+		try {
+	        if (logger.isActivated()) {
+	        	logger.info("407 response received");
+	        }
+	
+	        // Set the remote tag
+	        getDialogPath().setRemoteTag(resp.getToTag());
+	
+	        // Update the authentication agent
+	    	getAuthenticationAgent().readProxyAuthenticateHeader(resp);            
+	
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
+	
+	        // Create a second INVITE request with the right token
+	        if (logger.isActivated()) {
+	        	logger.info("Send second INVITE");
+	        }
+	        SipRequest invite = SipMessageFactory.createInvite(
+	        		getDialogPath(),
+	        		featureTags,
+					getDialogPath().getLocalContent());
+
+	        // Reset initial request in the dialog path
+	        getDialogPath().setInvite(invite);
+	        
+	        // Set the Proxy-Authorization header
+	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
+	
+	        // Send INVITE request
+	        sendInvite(invite);
+	        
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Session initiation has failed", e);
+        	}
+
+        	// Unexpected error
+			handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+        }
+	}
+
+	/**
+	 * Handle error 
+	 * 
+	 * @param error Error
+	 */
+	public void handleError(SipSessionError error) {
+        // Error	
+    	if (logger.isActivated()) {
+    		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
+    	}
+
+        // Close media session
+    	closeMediaSession();
+    	
+		// Remove the current session
+    	getImsService().removeSession(this);
+
+		// Notify listener
+    	if ((!isInterrupted()) && (getListener() != null)) {
+    		getListener().handleSessionError(error);
+        }
+	}
+
+	/**
+	 * Close media session
+	 */
+	public void closeMediaSession() {
+	}
+}

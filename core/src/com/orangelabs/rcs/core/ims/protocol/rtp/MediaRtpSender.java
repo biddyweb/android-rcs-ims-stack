@@ -145,7 +145,5 @@ public class MediaRtpSender {
 
         if (outputStream != null)
             outputStream.close();
-        if (inputStream != null)
-            inputStream.close();
     }
 }

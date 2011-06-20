@@ -179,12 +179,13 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 				return;
 			}
 	        
-    		// Create the MSRP server session, setting the soTimeout on the socket to false
+    		// Create the MSRP server session
             if (localSetup.equals("passive")) {
             	// Passive mode: client wait a connection
             	MsrpSession session = getMsrpMgr().createMsrpServerSession(remotePath, this);
     			session.setFailureReportOption(false);
     			session.setSuccessReportOption(false);
+    			
     			// Open the connection
     			Thread thread = new Thread(){
     				public void run(){
@@ -230,7 +231,7 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
                 // The session is established
     	        getDialogPath().sessionEstablished();
     	                        
-        		// Create the MSRP client session, setting the soTimeout on the socket to false
+        		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
                 	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
@@ -243,11 +244,6 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	    	        // Send an empty packet
 	            	sendEmptyDataChunk();
                 }
-
-                // Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleSessionStarted();
-    	        }
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

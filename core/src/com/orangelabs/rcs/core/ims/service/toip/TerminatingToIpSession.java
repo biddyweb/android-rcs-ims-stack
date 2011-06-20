@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -262,7 +263,12 @@ public class TerminatingToIpSession extends ToIpSession {
 				// Start the media renderer
 				getMediaRenderer().start();
 
-				// Notify listener
+            	// Start session timer
+            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
+            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
+            	}
+
+            	// Notify listener
 		        if (getListener() != null) {
 		        	getListener().handleSessionStarted();
 		        }

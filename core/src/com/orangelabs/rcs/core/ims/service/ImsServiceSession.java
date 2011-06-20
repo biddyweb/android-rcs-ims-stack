@@ -88,6 +88,11 @@ public abstract class ImsServiceSession extends Thread {
 	private ImsSessionListener listener = null;
 
 	/**
+	 * Session timer manager
+	 */
+	private SessionTimerManager sessionTimer = new SessionTimerManager(this);
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -170,6 +175,9 @@ public abstract class ImsServiceSession extends Thread {
 	
 	    // Set the remote content part
 		dialogPath.setRemoteContent(invite.getContent());
+		
+		// Set the session timer expire
+		dialogPath.setSessionExpireTime(invite.getSessionTimerExpire());
 	}
 	
 	/**
@@ -196,6 +204,16 @@ public abstract class ImsServiceSession extends Thread {
 	public ImsSessionListener getListener() {
 		return listener;
 	}
+	
+	/**
+	 * Get the session timer manager
+	 * 
+	 * @return Session timer manager
+	 */
+	public SessionTimerManager getSessionTimerManager() {
+		return sessionTimer;
+	}
+	
 
 	/**
 	 * Start the session in background
@@ -236,6 +254,22 @@ public abstract class ImsServiceSession extends Thread {
 	}
 
 	/**
+	 * Returns display name of the remote contact
+	 * 
+	 * @return String
+	 */
+	public String getRemoteDisplayName() {
+		String displayName = null;
+		try {
+			String from = getDialogPath().getInvite().getFrom();
+			displayName = PhoneUtils.extractDisplayNameFromUri(from);
+		} catch(Exception e) {
+			displayName = null;
+		}
+		return displayName;
+	}
+
+	/**
 	 * Get the dialog path of the session
 	 * 
 	 * @return Dialog path object
@@ -261,7 +295,7 @@ public abstract class ImsServiceSession extends Thread {
 	public SessionAuthenticationAgent getAuthenticationAgent() {
 		return authenticationAgent;
 	}
-
+	
 	/**
 	 * Reject the session invitation
 	 */
@@ -390,6 +424,9 @@ public abstract class ImsServiceSession extends Thread {
 			// Already terminated
 			return;
 		}
+		
+    	// Stop session timer
+    	getSessionTimerManager().stop();		
 
 		// Update dialog path
 		dialogPath.sessionTerminated();
@@ -514,7 +551,7 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param update UPDATE request
 	 */
 	public void receiveUpdate(SipRequest update) {
-		send405Error(update);		
+		sessionTimer.receiveUpdate(update);		
 	}
 
 	/**

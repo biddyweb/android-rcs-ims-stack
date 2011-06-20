@@ -71,7 +71,7 @@ public class SyncAdapterService extends Service {
      */
     @Override
     public IBinder onBind(Intent intent) {
-        if ((ANDROID_CONTENT_SYNCADPTER).equals(intent.getAction())) {
+        if (intent.getAction().equals(ANDROID_CONTENT_SYNCADPTER)) {
             return mSyncAdapter.getSyncAdapterBinder();
         }
         if (logger.isActivated()){

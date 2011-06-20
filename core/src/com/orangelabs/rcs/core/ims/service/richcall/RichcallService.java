@@ -18,25 +18,19 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall;
 
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.utils.MimeManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -47,16 +41,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class RichcallService extends ImsService {
-	/**
-     * Video sharing config
-     */
-    private String videoSharingConfig;
-    
-	/**
-     * Image sharing config
-     */
-    private String imageSharingConfig;
-
     /**
      * The logger
      */
@@ -71,29 +55,6 @@ public class RichcallService extends ImsService {
 	 */
 	public RichcallService(ImsModule parent, boolean activated) throws CoreException {
 		super(parent, "richcall_service.xml", activated);
-		
-    	// Get video config
-    	Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
-    	videoSharingConfig = "";
-    	for(int i=0; i < videoFormats.size(); i++) {
-    		VideoFormat fmt = videoFormats.elementAt(i);
-    		videoSharingConfig += "m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF;
-    		videoSharingConfig += "a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF;
-    	}
-    	
-    	// Get supported image MIME types
-    	String supportedImageFormats = "";
-    	Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
-    	for(int i=0; i < mimeTypes.size(); i++) {
-			supportedImageFormats += mimeTypes.elementAt(i) + " ";
-	    }    	    	
-		supportedImageFormats = supportedImageFormats.trim();
-
-		// Get the image config
-    	imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
-    		"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
-    		"a=file-selector" + SipUtils.CRLF +
-    		"a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
 	}
 
 	/**
@@ -123,36 +84,6 @@ public class RichcallService extends ImsService {
 	 */
 	public void check() {
 	}
-	
-    /**
-     * Build an SDP part
-     * 
-     * @return SDP part
-     */
-    private String buildSdp() {
-	    try {
-	    	// Build the local SDP
-	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
-	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-	    	String sdp = "v=0" + SipUtils.CRLF +
-		        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
-		            "s=-" + SipUtils.CRLF +
-		            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
-		            "t=0 0" + SipUtils.CRLF;
-	        if (RcsSettings.getInstance().isVideoSharingSupported()) {
-		    	sdp += videoSharingConfig;
-	        }
-	        if (RcsSettings.getInstance().isImageSharingSupported()) {
-		    	sdp += imageSharingConfig;
-	        }
-	        return sdp;
-	    } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't build SDP part", e);
-        	}
-        	return null;
-	    }
-    } 
     
     /**
 	 * Initiate an image sharing session
@@ -315,13 +246,12 @@ public class RichcallService extends ImsService {
 		}
 
 	    try {
-	    	// Build the local SDP
-    		String sdp = buildSdp();
-
 	    	// Create 200 OK response
+	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		getImsModule().getSipManager().getSipStack().getContactHeader(),
-	        		CapabilityUtils.getSupportedFeatureTags(true), sdp);
+	        		CapabilityUtils.getSupportedFeatureTags(true),
+	        		CapabilityUtils.buildSdp(ipAddress));
 
 	        // Send 200 OK response
 	        getImsModule().getSipManager().sendSipResponse(resp);

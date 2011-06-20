@@ -21,17 +21,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
-import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
@@ -85,14 +89,14 @@ public class CapabilityUtils {
 	/**
 	 * Get all supported feature tags
 	 *
-	 * @return List of tags
+	 * @return Table of tags
 	 */
 	public static List<String> getAllSupportedFeatureTags() {
 		return getSupportedFeatureTags(true);
 	}
 	
 	/**
-	 * Get supported feature tags based on the in call state
+	 * Get supported feature tags based on the call state
 	 *
 	 * @param inCall In call flag
 	 * @return List of tags
@@ -123,18 +127,18 @@ public class CapabilityUtils {
 			supported += FEATURE_RCSE_SOCIAL_PRESENCE + ",";
 		}
 
-		// Add RCS extensions
-		String extensions = RcsSettings.getInstance().getSupportedRcsExtensions();
-		if ((extensions != null) && (extensions.length() > 0)) {
-			String[] extensionList = extensions.split(";");
-			for (int i=0;i<extensionList.length;i++) {
-				supported += extensionList[i] + ",";
-			}
+		// Add extensions
+		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
+		if ((exts != null) && (exts.length() > 0)) {
+			 supported += exts;
 		}
 
 		// Add prefixes
 		if (supported.length() != 0) {
-			supported = FEATURE_RCSE + "=\"" + supported.substring(0, supported.length()-1) + "\"";
+			if (supported.endsWith(",")) {
+				supported = supported.substring(0, supported.length()-1);
+			}
+			supported = FEATURE_RCSE + "=\"" + supported + "\"";
 			tags.add(supported);
 		}
 		
@@ -153,7 +157,7 @@ public class CapabilityUtils {
     	ArrayList<String> tags = msg.getFeatureTags();
     	for(int i=0; i < tags.size(); i++) {
     		String tag = tags.get(i);
-        	if (tag.equals(FEATURE_RCSE_VIDEO_SHARE)) {
+    		if (tag.equals(FEATURE_RCSE_VIDEO_SHARE)) {
         		capabilities.setVideoSharingSupport(true);
         	}
         	if (tag.equals(FEATURE_RCSE_IMAGE_SHARE)) {
@@ -171,7 +175,7 @@ public class CapabilityUtils {
         	if (tag.equals(FEATURE_RCSE_SOCIAL_PRESENCE)) {
         		capabilities.setSocialPresenceSupport(true);
         	}
-    		if (tag.equals(FEATURE_RCSE_EXTENSION)) {
+    		if (tag.startsWith(FEATURE_RCSE_EXTENSION)) {
     			capabilities.addSupportedExtension(tag);
     		}
     	}
@@ -231,21 +235,90 @@ public class CapabilityUtils {
     }
     
 	/**
-	 * Get external supported features
+	 * Update external supported features
 	 * 
-	 * @return List of tags
+	 * @param context Context
 	 */
-	public static List<String> getExternalSupportedFeatures() {
-		PackageManager packageManager = AndroidFactory.getApplicationContext().getPackageManager();
-		Intent intent = new Intent(CapabilityApiIntents.RCS_EXTENSIONS);
-		intent.setType(FEATURE_RCSE_EXTENSION + "/*");
-		
-		List<ResolveInfo> list = packageManager.queryIntentActivities(intent, 0);
-		ArrayList<String> result = new ArrayList<String>();
-		for(int i=0; i < list.size(); i++) {
-			ResolveInfo info = list.get(i);
-			result.add(info.activityInfo.name);
+	public static void updateExternalSupportedFeatures(Context context) {
+		try {
+			// Intent query on current installed activities
+			PackageManager packageManager = context.getPackageManager();
+			Intent intent = new Intent(CapabilityApiIntents.RCS_EXTENSIONS);
+			intent.setType(CapabilityUtils.FEATURE_RCSE_EXTENSION + "/*");
+			List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
+			
+			String extensions = "";
+			for(int i=0; i < list.size(); i++) {
+				ResolveInfo info = list.get(i);
+				for(int j =0; j < info.filter.countDataTypes(); j++) {
+					String value = info.filter.getDataType(j);
+					if (value.startsWith(CapabilityUtils.FEATURE_RCSE_EXTENSION)) {
+						String[] mime = value.split("/");
+						String mimeType = mime[0] + "." + mime[1];
+						if (extensions.indexOf(mimeType) == -1) {
+							extensions += "," + mimeType;
+						}
+					}
+				}
+			}
+			if (extensions.startsWith(",")) {
+				extensions = extensions.substring(1);
+			}
+			
+			// Save extensions in database
+			RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_RCS_EXTENSIONS, extensions);
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
-		return result;
-	}	    
+	}
+    
+    /**
+     * Build supported SDP part
+     * 
+     * @param ipAddress Local IP address
+     * @return SDP
+     */
+    public static String buildSdp(String ipAddress) {
+	    try {
+			// Get video config
+			Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
+			String videoSharingConfig = "";
+			for(int i=0; i < videoFormats.size(); i++) {
+				VideoFormat fmt = videoFormats.elementAt(i);
+				videoSharingConfig += "m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF;
+				videoSharingConfig += "a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF;
+			}
+			
+			// Get supported image MIME types
+			String supportedImageFormats = "";
+			Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
+			for(int i=0; i < mimeTypes.size(); i++) {
+				supportedImageFormats += mimeTypes.elementAt(i) + " ";
+		    }    	    	
+			supportedImageFormats = supportedImageFormats.trim();
+		
+			// Get the image config
+			String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
+				"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
+				"a=file-selector" + SipUtils.CRLF +
+				"a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
+	    	
+	    	// Build the local SDP
+	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	String sdp = "v=0" + SipUtils.CRLF +
+		        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+		            "s=-" + SipUtils.CRLF +
+		            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
+		            "t=0 0" + SipUtils.CRLF;
+	        if (RcsSettings.getInstance().isVideoSharingSupported()) {
+		    	sdp += videoSharingConfig;
+	        }
+	        if (RcsSettings.getInstance().isImageSharingSupported()) {
+		    	sdp += imageSharingConfig;
+	        }
+	        return sdp;
+	    } catch(Exception e) {
+        	return null;
+	    }
+    } 
 }

@@ -139,31 +139,26 @@ public final class ContactsManager {
      * MIME type for CS_VIDEO capability
      */
     private static final String MIMETYPE_CAPABILITY_CS_VIDEO = "vnd.android.cursor.item/com.orangelabs.rcs.capability.cs-video";
-    private static final String MIMETYPE_CAPABILITY_CS_VIDEO_DEACTIVATED = "vnd.android.cursor.item/com.orangelabs.rcs.capability.cs-video.deactivated";
 
     /** 
      * MIME type for GSMA_CS_IMAGE (image sharing) capability 
      */
     private static final String MIMETYPE_CAPABILITY_IMAGE_SHARING = "vnd.android.cursor.item/com.orangelabs.rcs.capability.image-sharing";
-    private static final String MIMETYPE_CAPABILITY_IMAGE_SHARING_DEACTIVATED = "vnd.android.cursor.item/com.orangelabs.rcs.capability.image-sharing.deactivated";
     
     /** 
      * MIME type for 3GPP_CS_VOICE (video sharing) capability 
      */
     private static final String MIMETYPE_CAPABILITY_VIDEO_SHARING = "vnd.android.cursor.item/com.orangelabs.rcs.capability.video-sharing";
-    private static final String MIMETYPE_CAPABILITY_VIDEO_SHARING_DEACTIVATED = "vnd.android.cursor.item/com.orangelabs.rcs.capability.video-sharing.deactivated";
 
     /** 
      * MIME type for RCS_IM (IM session) capability 
      */
     private static final String MIMETYPE_CAPABILITY_IM_SESSION = "vnd.android.cursor.item/com.orangelabs.rcs.capability.im-session";
-    private static final String MIMETYPE_CAPABILITY_IM_SESSION_DEACTIVATED = "vnd.android.cursor.item/com.orangelabs.rcs.capability.im-session.deactivated";
 
     /** 
      * MIME type for RCS_FT (file transfer) capability 
      */
     private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer";
-    private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_DEACTIVATED = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer.deactivated";
 
     /** 
      * MIME type for presence discovery capability 
@@ -179,6 +174,11 @@ public final class ContactsManager {
      * MIME type for RCS extensions 
      */
     private static final String MIMETYPE_CAPABILITY_EXTENSIONS = "vnd.android.cursor.item/com.orangelabs.rcs.capability.extensions";
+
+    /** 
+     * MIME type when RCS extensions that I also support are present 
+     */
+    private static final String MIMETYPE_CAPABILITY_COMMON_EXTENSION = "vnd.android.cursor.item/com.orangelabs.rcs.capability.support.extension";
     
     /** 
      * MIME type for my CS_VIDEO capability
@@ -1491,6 +1491,41 @@ public final class ContactsManager {
         				new String[] {String.valueOf(dataId)});
         	}
         }
+        
+        // Check if we support at least one of the extensions this contact has
+        boolean hasCommonExtensions = false;
+        String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
+        if (exts != null) {
+	        for(int i=0; i<extensions.size(); i++) {
+	        	if (exts.contains(extensions.get(i))) {
+	        		hasCommonExtensions = true;
+	        		break;
+	        	}
+	        }
+        }
+        
+        dataId = getDataIdForRawContact(rawContactId, MIMETYPE_CAPABILITY_COMMON_EXTENSION);
+        
+        if (dataId == INVALID_ID) {
+        	// No flag now
+        	if (hasCommonExtensions){
+        		// We have to add a new one
+        		ContentValues values = new ContentValues();
+        		values.put(Data.RAW_CONTACT_ID, rawContactId); 
+        		values.put(Data.MIMETYPE, MIMETYPE_CAPABILITY_COMMON_EXTENSION);
+        		values.put(Data.DATA1, number);
+        		ctx.getContentResolver().insert(Data.CONTENT_URI, values);
+        	}
+        }else{
+        	// The flag capability is present
+        	if (!hasCommonExtensions){
+        		// We no longer support at least one of the contacts'extensions, so remove it
+        		ctx.getContentResolver().delete(Data.CONTENT_URI, 
+        				Data._ID + "=?", 
+        				new String[] {String.valueOf(dataId)});
+        	}
+        }
+        
 	}
 	
 	/**
@@ -2290,7 +2325,7 @@ public final class ContactsManager {
      * @return the rawContactId of the newly created contact
      */
     public long createMyContact() {
-
+    	RcsSettings.createInstance(ctx);
 		if (!RcsSettings.getInstance().isSocialPresenceSupported()){
 			return INVALID_ID;
 		}
@@ -2461,7 +2496,7 @@ public final class ContactsManager {
             }
             
             // RCS extensions
-            String extensions = RcsSettings.getInstance().getSupportedRcsExtensions();
+            /* String extensions = RcsSettings.getInstance().getSupportedRcsExtensions();
             if (extensions!=null && extensions.length()>0){
             	ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
             			.withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
@@ -2469,7 +2504,7 @@ public final class ContactsManager {
             			.withValue(Data.DATA1, MYSELF)
             			.withValue(Data.DATA2, extensions)
             			.build());
-            }
+            }*/
             
             // Insert default avatar
             Bitmap rcsAvatar = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.rcs_core_default_portrait_icon);
@@ -3517,8 +3552,10 @@ public final class ContactsManager {
     	ctx.getContentResolver().update(Data.CONTENT_URI, 
     			values, 
     			Data.MIMETYPE + "=?", 
-    			new String[]{MIMETYPE_EVENT_LOG});
-    	
+    			new String[]{MIMETYPE_EVENT_LOG});    	
+
+    	// Update extensions menu
+    	// TODO
     }
     
     /**
@@ -3573,12 +3610,12 @@ public final class ContactsManager {
     }
 
     /**
-     * Get list of RCS-e related mime types
+     * Get list of supported MIME types associated to RCS contacts
      * 
-     * @return list of mime types
+     * @return MIME types
      */
-    public String[] getRcsRelatedMimeTypes(){
-    	return new String[]{
+    public String[] getRcsMimeTypes(){
+    	return new String[] {
     			MIMETYPE_NUMBER,
     			MIMETYPE_RCS_STATUS,
     			MIMETYPE_REGISTRATION_STATE,
@@ -3603,7 +3640,7 @@ public final class ContactsManager {
     		    MIMETYPE_NOT_RCS_CONTACT,
     		    MIMETYPE_EVENT_LOG,
     		    MIMETYPE_IM_BLOCKED,MIMETYPE_WEBLINK_UPDATED
-    		    };
+		    };
     }
     
 }

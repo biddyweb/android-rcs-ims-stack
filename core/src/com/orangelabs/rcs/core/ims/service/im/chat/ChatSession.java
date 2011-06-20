@@ -414,8 +414,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	   			logger.error("Problem while sending data chunks", e);
 	   		}
 	   		
+			// Mark the message that was sent as failed
+			RichMessaging.getInstance().markMessageFailed(msgId);
+	   		
 	    	// Notify listener
-	   		getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage(), msgId));
+	   		getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
 		}
 	}
 	
@@ -449,7 +452,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param mimeType MIME type of the data
 	 * @param length of the stream
 	 */
-	public void sendContent(InputStream dataStream, String mimeType, long dataLength){
+	public void sendContent(InputStream dataStream, String mimeType, long dataLength) {
 		try {
 			msrpMgr.sendChunks(dataStream, mimeType, dataLength);
 		} catch(Exception e) {

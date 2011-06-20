@@ -50,15 +50,6 @@ public interface MsrpConstants {
 	public static final String METHOD_REPORT = "REPORT";
 	
 	public static final int RESPONSE_OK = 200;
-	public static final int RESPONSE_UNINTELLIGIBLE = 400;
-	public static final int RESPONSE_STOP_SEND = 413;
-	public static final int RESPONSE_NOT_UNDERSTOOD = 415;
-	public static final int RESPONSE_OUT_OF_BOUND = 423;
-	public static final int RESPONSE_NOT_ALLOWED = 403;
-	public static final int RESPONSE_NOT_COMPLETED = 408;
-	public static final int RESPONSE_SESSION_NOT_EXIST = 481;
-	public static final int RESPONSE_METHOD_NOT_UNDERSTOOD = 501;
-	public static final int RESPONSE_ALREADY_BOUND_OTHER_CONNECTION = 506;
 	
 	public static final int CHUNK_MAX_SIZE = 2048;
 	public static final String COMMENT_OK = "OK";

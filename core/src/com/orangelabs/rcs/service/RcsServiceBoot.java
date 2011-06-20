@@ -32,7 +32,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 public class RcsServiceBoot extends BroadcastReceiver {
     @Override
 	public void onReceive(Context context, Intent intent) {
-		// Instanciate the settings manager if needed
+		// Instanciate the settings manager
     	RcsSettings.createInstance(context);
     	
     	// Try to start the RCS service only if service is enabled in settings

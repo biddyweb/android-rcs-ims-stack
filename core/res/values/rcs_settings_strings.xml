@@ -5,6 +5,7 @@
 
     <string name="rcs_settings_title_settings">Settings</string>
 	<string name="rcs_settings_title_about">About RCS</string>
+	<string name="rcs_settings_title_userprofile_settings">User profile settings</string>
 	<string name="rcs_settings_title_presence_settings">Presence settings</string>
 	<string name="rcs_settings_title_presence_invitation">Presence invitation settings</string>
     <string name="rcs_settings_title_freetexts">Predefined freetexts</string>
@@ -83,4 +84,8 @@
         <!-- <item>High (320x240)</item> -->
     </string-array>
 
+	<string name="rcs_settings_summary_userprofile_settings">Manage user profile settings</string>
+	<string name="rcs_settings_title_caller_id">Caller identity</string>
+	<string name="rcs_settings_title_displayname">Display name</string>
+	<string name="rcs_settings_summary_edit_displayname">Display name associated to my phone number in outgoing calls</string>
 </resources>

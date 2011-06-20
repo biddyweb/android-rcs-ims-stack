@@ -675,13 +675,13 @@ public class MsrpSession {
 				// Read content type
 				String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
 
+				// Notify event listener
+				msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
+				
 				// Send MSRP report if requested
 				if (successReportNeeded) {
 					sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
 				}
-
-				// Notify event listener
-				msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
 			} else {
 				// Send MSRP report if requested
 				if (successReportNeeded) {

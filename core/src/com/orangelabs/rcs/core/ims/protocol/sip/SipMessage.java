@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
+import gov.nist.javax.sip.header.extensions.SessionExpiresHeader;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -333,7 +335,7 @@ public abstract class SipMessage {
 	        for(Iterator i = contactHeader.getParameterNames(); i.hasNext();) {
 	        	String pname = (String)i.next();
 	        	String value = contactHeader.getParameter(pname);
-        		if (value.length() == 0) {
+        		if ((value == null) || (value.length() == 0)) {
         			tags.add(pname);	        		
 	        	} else {
 		        	String[] values = value.split(",");
@@ -345,5 +347,33 @@ public abstract class SipMessage {
 		}
 		
 		return tags;
-	}	
+	}
+	
+	/**
+	 * Get session timer expire
+	 * 
+	 * @return Expire time or -1 if no session timer
+	 */
+	public int getSessionTimerExpire() {
+		SessionExpiresHeader sessionExpiresHeader = (SessionExpiresHeader)getHeader(SessionExpiresHeader.NAME);
+		if (sessionExpiresHeader != null) {
+			return sessionExpiresHeader.getExpires();
+		} else {
+			return -1;
+		}
+	}
+	
+	/**
+	 * Get session timer refresher role
+	 * 
+	 * @return "uac" or "uas"
+	 */
+	public String getSessionTimerRefresher() {
+		String role = "uac";
+		SessionExpiresHeader sessionExpiresHeader = (SessionExpiresHeader)getHeader(SessionExpiresHeader.NAME);
+		if (sessionExpiresHeader != null) {
+			role = sessionExpiresHeader.getRefresher();
+		}
+		return role;
+	}
 }

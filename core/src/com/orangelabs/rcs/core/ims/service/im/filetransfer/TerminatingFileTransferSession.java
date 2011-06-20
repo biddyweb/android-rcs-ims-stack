@@ -36,6 +36,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
@@ -215,6 +216,9 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     					try {
 							// Open the MSRP session
     						msrpMgr.openMsrpSession(ContentSharingTransferSession.DEFAULT_SO_TIMEOUT);
+    						
+			    	        // Send an empty packet
+			            	sendEmptyDataChunk();
 						} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
@@ -255,12 +259,20 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 
 					// Open the MSRP session
 					msrpMgr.openMsrpSession(ContentSharingTransferSession.DEFAULT_SO_TIMEOUT);
+					
+	    	        // Send an empty packet
+	            	sendEmptyDataChunk();
                 }
 
                 // The session is established
     	        getDialogPath().sessionEstablished();
 
-    	        // Notify listener
+            	// Start session timer
+            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
+            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
+            	}
+
+            	// Notify listener
     	        if (getListener() != null) {
     	        	getListener().handleSessionStarted();
     	        }
@@ -287,6 +299,19 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     	}
 	}
 
+	/**
+	 * Send an empty data chunk
+	 */
+	public void sendEmptyDataChunk() {
+		try {
+			msrpMgr.sendEmptyChunk();
+		} catch(Exception e) {
+	   		if (logger.isActivated()) {
+	   			logger.error("Problem while sending empty data chunk", e);
+	   		}
+		}
+	}	
+	
 	/**
 	 * Handle error 
 	 * 

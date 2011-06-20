@@ -22,6 +22,7 @@ import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.IdGenerator;
 
 
@@ -98,6 +99,11 @@ public class SipDialogPath {
 	 */
 	private SessionAuthenticationAgent authenticationAgent = null;
 
+	/**
+	 * Session expire time 
+	 */
+	private int sessionExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod(); 
+	
 	/**
 	 * Flag that indicates if the signalisation is established or not
 	 */
@@ -394,5 +400,23 @@ public class SipDialogPath {
 	 */
 	public SessionAuthenticationAgent getAuthenticationAgent() {
 		return authenticationAgent;
+	}
+
+	/**
+	 * Returns the session expire value
+	 * 
+	 * @return Session expire time in seconds
+	 */
+	public int getSessionExpireTime() {
+		return sessionExpireTime;
+	}
+
+	/**
+	 * Returns the session expire value
+	 * 
+	 * @param sessionExpireTime Session expire time in seconds
+	 */
+	public void setSessionExpireTime(int sessionExpireTime) {
+		this.sessionExpireTime = sessionExpireTime;
 	}
 }

@@ -29,7 +29,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP manager
- *  
+ *
  * @author JM. Auffret
  */
 public class SipManager {
@@ -38,7 +38,7 @@ public class SipManager {
 	 * SIP timeout for SIP transaction (in seconds)
 	 */
 	public static int TIMEOUT = 30;
-	   
+
 	/**
      * IMS network interface
      */
@@ -53,37 +53,37 @@ public class SipManager {
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
-	
+
 	/**
-	 * Constructor
-	 * 
+     * Constructor
+     *
      * @param parent IMS network interface
-	 */
+     */
 	public SipManager(ImsNetworkInterface parent) {
 		this.networkInterface = parent;
-		
+
 		if (logger.isActivated()) {
 			logger.info("SIP manager started");
 		}
 	}
-	
+
 	/**
-	 * Returns the network interface
-	 * 
-	 * @return Network interface
-	 */
+     * Returns the network interface
+     *
+     * @return Network interface
+     */
 	public ImsNetworkInterface getNetworkInterface() {
 		return networkInterface;
-	}	
-	
+    }
+
 	/**
-	 * Returns the SIP stack
-	 * 
-	 * @return SIP stack
-	 */
+     * Returns the SIP stack
+     *
+     * @return SIP stack
+     */
 	public SipInterface getSipStack() {
 		return sipstack;
-	}	
+    }
 
 	/**
 	 * Terminate the manager
@@ -92,33 +92,35 @@ public class SipManager {
 		if (logger.isActivated()) {
 			logger.info("Terminate the SIP manager");
 		}
-		
+
 		// Close the SIP stack
 		if (sipstack != null) {
 			closeStack();
 		}
-		
+
 		if (logger.isActivated()) {
 			logger.info("SIP manager has been terminated");
 		}
 	}
-	
+
 	/**
-	 * Initialize the SIP stack
-	 * 
-	 * @param localAddr Local IP address
-	 * @param outboundProxy Outbound proxy
-	 * @return SIP stack
-	 * @throws SipException
-	 */
-	public void initStack(String localAddr, String outboundProxy) throws SipException {
+     * Initialize the SIP stack
+     *
+     * @param localAddr Local IP address
+     * @param outboundProxy Outbound proxy
+     * @param isSecure Need secure connection or not
+     * @return SIP stack
+     * @throws SipException
+     */
+	public void initStack(String localAddr, String outboundProxy, boolean isSecure)
+            throws SipException {
 		// Close the stack if necessary
 		closeStack();
-		
+
 		// Create the SIP stack
-		sipstack = new SipInterface(localAddr, outboundProxy);
-	}	
-	
+        sipstack = new SipInterface(localAddr, outboundProxy, isSecure);
+    }
+
 	/**
 	 * Close the SIP stack
 	 */
@@ -127,7 +129,7 @@ public class SipManager {
 			// Already closed
 			return;
 		}
-		
+
 		try {
 			// Close the SIP stack
 			sipstack.close();
@@ -138,55 +140,67 @@ public class SipManager {
 			}
 		}
 	}
-	
+
 	/**
-	 * Send a SIP message and wait a SIP response
-	 * 
-	 * @param message SIP message
-	 * @return Transaction context
-	 * @throws SipException
-	 */
+     * Send a SIP message and wait a SIP response
+     *
+     * @param message SIP message
+     * @return Transaction context
+     * @throws SipException
+     */
 	public SipTransactionContext sendSipMessageAndWait(SipMessage message) throws SipException {
 		return sipstack.sendSipMessageAndWait(message);
 	}
-	
+
 	/**
-	 * Send a SIP response
-	 * 
-	 * @param response SIP response
-	 * @throws SipException
-	 */
+     * Send a SIP response
+     *
+     * @param response SIP response
+     * @throws SipException
+     */
 	public void sendSipResponse(SipResponse response) throws SipException {
 		sipstack.sendSipResponse(response);
 	}
 
-	/**
-	 * Send a SIP ACK
-	 * 
-	 * @param dialog Dialog path
-	 * @throws SipException
-	 */
+    /**
+     * Send a SIP ACK
+     *
+     * @param dialog Dialog path
+     * @throws SipException
+     */
 	public void sendSipAck(SipDialogPath dialog) throws SipException {
 		sipstack.sendSipAck(dialog);
 	}
 
-	/**
-	 * Send a SIP BYE
-	 * 
-	 * @param dialog Dialog path
-	 * @throws SipException
-	 */
+    /**
+     * Send a SIP BYE
+     *
+     * @param dialog Dialog path
+     * @throws SipException
+     */
 	public void sendSipBye(SipDialogPath dialog) throws SipException {
 		sipstack.sendSipBye(dialog);
 	}
 
-	/**
-	 * Send a SIP CANCEL
-	 * 
-	 * @param dialog Dialog path
-	 * @throws SipException
-	 */
+    /**
+     * Send a SIP CANCEL
+     *
+     * @param dialog Dialog path
+     * @throws SipException
+     */
 	public void sendSipCancel(SipDialogPath dialog) throws SipException {
 		sipstack.sendSipCancel(dialog);
 	}
+	
+	
+    /**
+     * Send a SIP UPDATE
+     *
+     * @param dialog Dialog path
+     * @return Transaction context
+     * @throws SipException
+     */
+	public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
+		return sipstack.sendSipUpdate(dialog);
+	}    
 }

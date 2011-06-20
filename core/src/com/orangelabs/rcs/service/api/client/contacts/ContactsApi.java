@@ -41,6 +41,15 @@ public class ContactsApi {
     }
 
     /**
+     * Get list of supported MIME types associated to RCS contacts
+     * 
+     * @return MIME types
+     */
+    public String[] getRcsMimeTypes(){
+    	return ContactsManager.getInstance().getRcsMimeTypes();
+    }
+    
+    /**
      * Get contact info
      * 
      * @param contact Contact

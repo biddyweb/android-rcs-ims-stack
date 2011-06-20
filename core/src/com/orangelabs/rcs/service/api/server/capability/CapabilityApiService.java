@@ -22,8 +22,8 @@ import java.util.List;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -63,6 +63,9 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 		if (logger.isActivated()) {
 			logger.info("Request capabilities for contact " + contact);
 		}
+		
+    	// Check permission
+		ServerApiUtils.testPermission();
 
 		// Test IMS connection
 		ServerApiUtils.testIms();
@@ -84,6 +87,9 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 		if (logger.isActivated()) {
 			logger.info("Synchronize all contacts");
 		}
+
+    	// Check permission
+		ServerApiUtils.testPermission();
 
 		// Test IMS connection
 		ServerApiUtils.testIms();

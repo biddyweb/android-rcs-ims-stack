@@ -18,14 +18,13 @@
 
 package com.orangelabs.rcs.addressbook;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.service.RcsCoreService;
-
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.service.RcsCoreService;
 
 /**
  * Setup RCS account activity
@@ -34,9 +33,6 @@ public class SetupRcsAccount extends android.accounts.AccountAuthenticatorActivi
 
 	public void onCreate(Bundle icicle){
 		super.onCreate(icicle);
-		
-		// Instanciate contacts manager
-		ContactsManager.createInstance(this);
 		
 		// Create RCS account
 		AuthenticationService.createRcsAccount(this, getString(R.string.rcs_core_account_username), true, true);

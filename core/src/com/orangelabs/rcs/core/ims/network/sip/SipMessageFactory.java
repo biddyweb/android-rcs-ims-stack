@@ -36,6 +36,7 @@ import javax.sip.header.EventHeader;
 import javax.sip.header.ExpiresHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
+import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.ReferToHeader;
 import javax.sip.header.RequireHeader;
 import javax.sip.header.RouteHeader;
@@ -50,6 +51,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
@@ -526,6 +528,12 @@ public class SipMessageFactory {
 			Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");
 			invite.addHeader(supportedHeader);
 	
+			// Add Session-Timer header
+			if (dialog.getSessionExpireTime() >= 90) {
+				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
+				invite.addHeader(sessionExpiresHeader);
+			}
+			
 			// Set the message content
 	        invite.setContent(content, contentType);
 
@@ -541,7 +549,7 @@ public class SipMessageFactory {
 			throw new SipException("Can't create SIP INVITE message");
 		}
     }
-
+    
     /**
 	 * Create a 200 OK response for INVITE request
 	 * 
@@ -574,7 +582,14 @@ public class SipMessageFactory {
 	
 			// Set the Require header
 	    	Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");
-			response.addHeader(requireHeader);			
+			response.addHeader(requireHeader);	
+			
+			// Set Session-Timer header
+			if (dialog.getSessionExpireTime() >= 90) {
+				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES,
+						dialog.getSessionExpireTime() + ";refresher=" + SessionTimerManager.UAC_ROLE);
+				response.addHeader(sessionExpiresHeader);
+			}
 			
 	        // Set the message content
 			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "sdp");
@@ -625,6 +640,7 @@ public class SipMessageFactory {
 	 */
 	public static SipResponse createResponse(SipRequest request, int code) throws SipException {
 		try {
+			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(code, (Request)request.getStackMessage());
 			SipResponse resp = new SipResponse(response);
 			resp.setStackTransaction(request.getStackTransaction());
@@ -1023,5 +1039,111 @@ public class SipMessageFactory {
 			}
 			throw new SipException("Can't create SIP REFER message");
 		}
-    }    
+    }
+    
+    /**
+     * Create a SIP UPDATE request
+     * 
+     * @param dialog SIP dialog path
+	 * @return SIP request
+     * @throws SipException
+     */
+    public static SipRequest createUpdate(SipDialogPath dialog) throws SipException {
+		try {
+	        // Set request line header
+	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
+	        
+	        // Set Call-Id header
+	        CallIdHeader callIdHeader = SipUtils.HEADER_FACTORY.createCallIdHeader(dialog.getCallId()); 
+	        
+	        // Set the CSeq header
+	        CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.UPDATE);
+	
+	        // Set the From header
+	        Address fromAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getLocalParty());
+	        FromHeader fromHeader = SipUtils.HEADER_FACTORY.createFromHeader(fromAddress, dialog.getLocalTag());
+	
+	        // Set the To header
+	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
+	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, dialog.getRemoteTag());
+
+	        // Create the request
+	        Request update = SipUtils.MSG_FACTORY.createRequest(requestURI,
+	                Request.UPDATE,
+	                callIdHeader,
+	                cseqHeader,
+					fromHeader,
+					toHeader,
+					dialog.getSipStack().getViaHeaders(),
+					SipUtils.buildMaxForwardsHeader());       
+
+	        // Set Contact header
+	        update.addHeader(dialog.getSipStack().getContactHeader());
+	
+			// Set the Route header
+	        Vector<String> route = dialog.getRoute();
+	        for(int i=0; i < route.size(); i++) {
+	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));
+	        	update.addHeader(routeHeader);
+	        }
+	        
+	        // Set the P-Preferred-Identity header
+			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
+			update.addHeader(prefHeader);
+
+			// Set User-Agent header
+			update.addHeader(SipUtils.buildUserAgentHeader());
+	        
+	        // Set the Supported header
+			Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");
+			update.addHeader(supportedHeader);
+	
+			// Add Session-Timer header
+			Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
+			update.addHeader(sessionExpiresHeader);
+			
+			return new SipRequest(update);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create SIP message", e);
+			}
+			throw new SipException("Can't create SIP UPDATE message");
+		}
+    }
+    
+	/**
+	 * Create a SIP response for UPDATE request
+	 * 
+	 * @param dialog Dialog path SIP request
+	 * @param request SIP request
+	 * @return SIP response
+	 * @throws SipException
+	 */
+	public static SipResponse create200OkUpdateResponse(SipDialogPath dialog, SipRequest request) throws SipException {
+		try {
+			// Create the response
+			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)request.getStackMessage());
+			
+			// Set Record-Route header
+			Header recordRoute = dialog.getInvite().getHeader(RecordRouteHeader.NAME);
+			response.addHeader(recordRoute);
+			
+	        // Set the Require header
+			Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");
+			response.addHeader(requireHeader);
+	
+			// Add Session-Timer header
+			Header sessionExpiresHeader = request.getHeader(SipUtils.HEADER_SESSION_EXPIRES);
+			response.addHeader(sessionExpiresHeader);
+			
+			SipResponse resp = new SipResponse(response);
+			resp.setStackTransaction(request.getStackTransaction());
+			return resp;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create SIP message", e);
+			}
+			throw new SipException("Can't create SIP response");
+		}
+	}     
 }

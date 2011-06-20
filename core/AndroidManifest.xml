@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1"
- android:versionName="2.2.5" package="com.orangelabs.rcs">
+ android:versionName="2.2.6" package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
 
@@ -26,6 +26,11 @@
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+	 
+	<permission android:name="com.orangelabs.rcs.permission.RCS"
+        android:label="@string/rcs_core_application_title"
+        android:description="@string/rcs_core_rcs_notification_title"
+        android:protectionLevel="signature" />	 
 	 
 	<application android:icon="@drawable/rcs_icon" android:label="@string/rcs_core_application_title">  
 		
@@ -71,6 +76,8 @@
         </service>
 
 		<activity android:name="com.orangelabs.rcs.settings.AboutDisplay"/>
+
+		<activity android:name="com.orangelabs.rcs.settings.UserprofileSettingsDisplay"/>
 
 		<activity android:name="com.orangelabs.rcs.settings.PresenceSettingsDisplay"/>
 
@@ -154,6 +161,15 @@
  			</intent-filter>  
 		</receiver> 
 		
+		<!-- External capability monitoring -->	
+		<receiver android:name="com.orangelabs.rcs.core.ims.service.capability.ExternalCapabilityMonitoring">  
+ 			<intent-filter>
+ 				<action android:name="android.intent.action.PACKAGE_ADDED"/>  
+ 				<action android:name="android.intent.action.PACKAGE_REMOVED"/>  
+				<data android:scheme="package"/> 
+ 			</intent-filter>  
+		</receiver> 
+
 </application> 
 
 </manifest>

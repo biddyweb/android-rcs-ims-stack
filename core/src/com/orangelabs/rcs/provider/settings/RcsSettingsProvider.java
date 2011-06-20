@@ -1,4 +1,4 @@
-/*******************************************************************************
+﻿/*******************************************************************************
  * Software Name : RCS IMS Stack
  *
  * Copyright © 2010 France Telecom S.A.
@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import java.util.ArrayList;
-
-import javax.sip.ListeningPoint;
-
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -31,24 +27,25 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-
 import com.orangelabs.rcs.R;
+import java.util.ArrayList;
+import javax.sip.ListeningPoint;
 
 /**
  * RCS settings provider
- * 
+ *
  * @author jexa7410
  */
 public class RcsSettingsProvider extends ContentProvider {
 	/**
 	 * Database table
 	 */
-	private static final String TABLE = "settings";	
+    private static final String TABLE = "settings";
 
 	// Create the constants used to differentiate between the different URI requests
 	private static final int SETTINGS = 1;
     private static final int SETTINGS_ID = 2;
-    
+
 	// Allocate the UriMatcher object, where a URI ending in 'settings'
 	// will correspond to a request for all settings, and 'settings'
 	// with a trailing '/[rowID]' will represent a single settings row.
@@ -68,28 +65,28 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 38;
+        private static final int DATABASE_VERSION = 39;
 
         private Context ctx;
-        
+
         public DatabaseHelper(Context ctx) {
             super(ctx, DATABASE_NAME, null, DATABASE_VERSION);
-            
+
             this.ctx = ctx;
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db) {        	
+        public void onCreate(SQLiteDatabase db) {
         	db.execSQL("CREATE TABLE " + TABLE + " ("
         			+ RcsSettingsData.KEY_ID + " integer primary key autoincrement,"
                     + RcsSettingsData.KEY_KEY + " TEXT,"
                     + RcsSettingsData.KEY_VALUE + " TEXT);");
 
             // Insert default values for parameters
-        	
+
             // UI parameters
             addParameter(db, RcsSettingsData.SERVICE_ACTIVATED, 				RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.ROAMING_AUTHORIZED, 				RcsSettingsData.FALSE);            
+            addParameter(db, RcsSettingsData.ROAMING_AUTHORIZED, RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_RINGTONE, 		"");
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_VIBRATE, 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CSH_INVITATION_RINGTONE, 			"");
@@ -130,6 +127,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"");
 		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE,		"80.12.197.74:5060");
 		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI,		"80.12.197.74:5060");
+            addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT, "5061");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password");
@@ -143,7 +141,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
-            
+
             // Stack parameters (read only)
             addParameter(db, RcsSettingsData.IMS_CONNECTION_POLLING_PERIOD, 	"30");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
@@ -162,13 +160,13 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60");
             addParameter(db, RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.IS_COMPOSING_TIMEOUT, 				"15");
-            addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"3600");
+            addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"-1");
             addParameter(db, RcsSettingsData.PERMANENT_STATE_MODE,	 			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_ACTIVATION,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
             addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATION, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATION,			RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"5");
+            addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
             addParameter(db, RcsSettingsData.USE_PRESENCE_SERVICE,				RcsSettingsData.FALSE);
@@ -183,10 +181,10 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RCS_APN,							"");
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
         }
-        
+
         /**
          * Add a parameter in the database
-         *  
+         *
          * @param db Database
          * @param key Key
          * @param value Value
@@ -203,8 +201,9 @@ public class RcsSettingsProvider extends ContentProvider {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int currentVersion) {
         	// Get old data before deleting the table
         	Cursor oldDataCursor = db.query(TABLE, null, null, null, null, null, null);
-    	
-        	// Get all the pairs key/value of the old table to insert them back after update      	
+
+            // Get all the pairs key/value of the old table to insert them back
+            // after update
         	ArrayList<ContentValues> valuesList = new ArrayList<ContentValues>();
         	while(oldDataCursor.moveToNext()){
         		String key = null;
@@ -225,13 +224,13 @@ public class RcsSettingsProvider extends ContentProvider {
         		}
         	}
             oldDataCursor.close();
-        	
+
         	// Delete old table
         	db.execSQL("DROP TABLE IF EXISTS " + TABLE);
-        	
+
             // Recreate table
         	onCreate(db);
-        	
+
         	// Put the old values back when possible
         	for (int i=0; i<valuesList.size();i++) {
         		ContentValues values = valuesList.get(i);
@@ -261,7 +260,7 @@ public class RcsSettingsProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
     }
-    	
+
     @Override
     public Cursor query(Uri uri, String[] projectionIn, String selection, String[] selectionArgs, String sort) {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
@@ -291,7 +290,7 @@ public class RcsSettingsProvider extends ContentProvider {
 
         return c;
     }
-    
+
     @Override
     public int update(Uri uri, ContentValues values, String where, String[] whereArgs) {
         int count;
@@ -313,12 +312,12 @@ public class RcsSettingsProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
     }
-    
+
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
     public int delete(Uri uri, String where, String[] whereArgs) {
         throw new UnsupportedOperationException();

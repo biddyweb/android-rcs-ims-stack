@@ -121,7 +121,7 @@ public class RtpPacketReceiver {
 
 				return pkt;
 			} else {
-				// Drop the keep alive packets (payload 12)
+				// Drop the keep-alive packets (payload 12)
 				return readRtpPacket();
 			}
 

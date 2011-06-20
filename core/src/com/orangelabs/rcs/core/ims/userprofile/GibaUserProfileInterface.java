@@ -39,14 +39,13 @@ public class GibaUserProfileInterface extends UserProfileInterface {
 	 * @return User profile
 	 */
 	public UserProfile read() {
-		// Hardcoded values
+		// Read profile info from the database settings
 		String xdmServer = RcsSettings.getInstance().getUserProfileXdmServer();
 		String xdmPassword = RcsSettings.getInstance().getUserProfileImsPassword();		
 
 		// The user profile will be complete during the registration procedure
 		return new UserProfile(
 				null, // User name derived from GIBA procedure
-				null, // Display name derived from GIBA procedure
 				null, // No private ID with GIBA procedure
 				null, // No password with GIBA procedure
 				null, // Domain derived from GIBA procedure

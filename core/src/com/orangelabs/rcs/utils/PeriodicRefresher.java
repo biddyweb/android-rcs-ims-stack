@@ -83,7 +83,12 @@ public abstract class PeriodicRefresher {
      * @param expirePeriod Expiration period in seconds
      * @param delta Delta to apply on the expire period in percentage
      */
-    public void startTimer(int expirePeriod, double delta) {
+    public synchronized void startTimer(int expirePeriod, double delta) {
+    	if (timerStarted) {
+    		// Already started
+    		return;
+    	}
+
     	// Check expire period
     	if (expirePeriod <= 0) {
     		// Expire period is null
@@ -113,24 +118,25 @@ public abstract class PeriodicRefresher {
     /**
      * Stop the timer
      */
-    public void stopTimer() {
+    public synchronized void stopTimer() {
+    	if (!timerStarted) {
+    		// Already stopped
+    		return;
+    	}
+    	
     	if (logger.isActivated()) {
     		logger.debug("Stop timer");
     	}
 
-		// Check if the timer was started, there is no broadcast receiver unregistration to be done if it is not the case
-    	// This can happen as startTimer() is called only if first request was successful, but stopTimer() is always called on manager stop    
-    	if (timerStarted) {
-        	// The timer is stopped
-    		timerStarted = false;
-    		
-			// Cancel alarm
-    		AlarmManager am = (AlarmManager)AndroidFactory.getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-    		am.cancel(alarmIntent);
+    	// The timer is stopped
+		timerStarted = false;
+		
+		// Cancel alarm
+		AlarmManager am = (AlarmManager)AndroidFactory.getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+		am.cancel(alarmIntent);
 
-    		// Unregister the alarm receiver
-    		AndroidFactory.getApplicationContext().unregisterReceiver(alarmReceiver);
-    	}
+		// Unregister the alarm receiver
+		AndroidFactory.getApplicationContext().unregisterReceiver(alarmReceiver);
     }
 
     /**

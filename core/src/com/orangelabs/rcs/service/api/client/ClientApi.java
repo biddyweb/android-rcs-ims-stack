@@ -37,7 +37,11 @@ import android.os.RemoteException;
  * @author jexa7410
  */
 public abstract class ClientApi {
-	
+	/**
+	 * RCS permission
+	 */
+	public final static String RCS_PERMISSION = "com.orangelabs.rcs.permission.RCS";
+
 	/**
 	 * API event listeners
 	 */

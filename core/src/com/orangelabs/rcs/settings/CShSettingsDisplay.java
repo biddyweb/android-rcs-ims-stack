@@ -46,7 +46,7 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_csh_preferences);
-        setTitle(R.string.rcs_settings_title_settings);
+        setTitle(R.string.rcs_settings_title_csh_settings);
         
         beep = (CheckBoxPreference)findPreference("csh_available");
         beep.setPersistent(false);

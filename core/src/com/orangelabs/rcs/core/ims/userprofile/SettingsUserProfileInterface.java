@@ -41,7 +41,6 @@ public class SettingsUserProfileInterface extends UserProfileInterface {
 	public UserProfile read() {
 		// Read profile info from the database settings
 		String username = RcsSettings.getInstance().getUserProfileImsUserName(); 
-		String displayName = RcsSettings.getInstance().getUserProfileImsDisplayName();
 		String privateID = RcsSettings.getInstance().getUserProfileImsPrivateId();
 		String password = RcsSettings.getInstance().getUserProfileImsPassword();
 		String homeDomain = RcsSettings.getInstance().getUserProfileImsDomain();
@@ -50,7 +49,7 @@ public class SettingsUserProfileInterface extends UserProfileInterface {
 		String xdmPassword = RcsSettings.getInstance().getUserProfileXdmPassword();
 		String imConfUri = "sip:" + RcsSettings.getInstance().getUserProfileImConferenceUri() + "@" + homeDomain;
 
-		return new UserProfile(username, displayName, privateID, password, homeDomain,
+		return new UserProfile(username, privateID, password, homeDomain,
 				xdmServer, xdmLogin, xdmPassword, imConfUri);
 	}
 }

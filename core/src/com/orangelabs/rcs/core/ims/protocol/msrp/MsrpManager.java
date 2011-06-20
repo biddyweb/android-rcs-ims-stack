@@ -114,15 +114,15 @@ public class MsrpManager {
 	/**
 	 * Open the connection with SO_TIMEOUT on the socket
 	 * 
-	 * @param soTimeout SO_TIMEOUT value (in seconds)
+	 * @param timeout Timeout value (in seconds)
 	 * @throws IOException
 	 */
-	public void openMsrpSession(int soTimeout) throws IOException {
+	public void openMsrpSession(int timeout) throws IOException {
 		if ((msrpSession == null) || (msrpSession.getConnection() == null)) {
 			throw new IOException("Session not yet created");
 		}
 
-		msrpSession.getConnection().open(soTimeout);
+		msrpSession.getConnection().open(timeout);
 	}
 	
 	/**

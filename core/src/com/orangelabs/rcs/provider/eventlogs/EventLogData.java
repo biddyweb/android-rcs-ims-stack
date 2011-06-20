@@ -49,6 +49,7 @@ public class EventLogData {
 	public static final String KEY_EVENT_STATUS = "status";
 	public static final String KEY_EVENT_DATA = "_data";
 	public static final String KEY_EVENT_MESSAGE_ID = "message_id";
+	public static final String KEY_EVENT_IS_SPAM = "is_spam";
 	public static final String KEY_EVENT_MIMETYPE = "mime_type";
 	public static final String KEY_EVENT_NAME = "name";
 	public static final String KEY_EVENT_SIZE = "size";

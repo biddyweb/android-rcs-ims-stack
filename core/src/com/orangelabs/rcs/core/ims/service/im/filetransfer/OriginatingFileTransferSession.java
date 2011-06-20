@@ -255,6 +255,12 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 			// Open the MSRP session
 			msrpMgr.openMsrpSession();
 	        
+
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+			
 	        // Notify listener
 	        if (getListener() != null) {
 	        	getListener().handleSessionStarted();

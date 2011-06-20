@@ -123,7 +123,5 @@ public class DummyPacketGenerator extends Thread {
 
         if (outputStream != null)
             outputStream.close();
-        if (inputStream != null)
-            inputStream.close();
     }
 }

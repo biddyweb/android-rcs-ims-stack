@@ -41,7 +41,7 @@ public class MessagingSettingsDisplay extends PreferenceActivity implements Pref
         super.onCreate(savedInstanceState);
         
         addPreferencesFromResource(R.xml.rcs_settings_messaging_preferences);
-        setTitle(R.string.rcs_settings_title_settings);
+        setTitle(R.string.rcs_settings_title_messaging_settings);
         
         filetransfer_vibrate = (CheckBoxPreference)findPreference("filetransfer_invitation_vibration");
         filetransfer_vibrate.setPersistent(false);

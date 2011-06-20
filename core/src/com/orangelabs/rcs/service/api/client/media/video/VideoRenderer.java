@@ -531,7 +531,8 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          * Close the renderer
          */
         public void close() {
-            // Nothing to do
+            // Force black screen
+        	surface.clearImage();
         }
 
         /**

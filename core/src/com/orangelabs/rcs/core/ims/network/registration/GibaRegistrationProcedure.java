@@ -135,7 +135,6 @@ public class GibaRegistrationProcedure extends RegistrationProcedure {
 			
 			// Update the user profile
 			ImsModule.IMS_USER_PROFILE.setUsername(username);
-			ImsModule.IMS_USER_PROFILE.setDisplayName(username);
 			ImsModule.IMS_USER_PROFILE.setHomeDomain(domain);
 			ImsModule.IMS_USER_PROFILE.setXdmServerLogin("sip:" + username + "@" + domain);
 			ImsModule.IMS_USER_PROFILE.setImConferenceUri("sip:" + RcsSettings.getInstance().getUserProfileImConferenceUri() + "@" + domain);

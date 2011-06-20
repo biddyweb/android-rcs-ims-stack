@@ -18,7 +18,11 @@
 
 package com.orangelabs.rcs.service.api.server;
 
+import android.content.pm.PackageManager;
+
 import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.service.api.client.ClientApi;
 
 /**
  * Server API utils
@@ -26,6 +30,17 @@ import com.orangelabs.rcs.core.Core;
  * @author jexa7410
  */
 public class ServerApiUtils {
+	/**
+	 * Test permission
+	 * 
+	 * @throws SecurityException
+	 */
+	public static void testPermission() throws SecurityException {
+		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApi.RCS_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+			throw new SecurityException();
+	    }
+	}
+	
 	/**
 	 * Test core
 	 * 

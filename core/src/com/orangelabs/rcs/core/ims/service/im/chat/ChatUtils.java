@@ -50,6 +50,7 @@ public class ChatUtils {
 	 * @return SIP URI
 	 */
 	public static String getAssertedIdentity(SipRequest request, boolean groupChat) {
+		// Get from identity
 		if (groupChat) {
 			ExtensionHeader referredBy = (ExtensionHeader)request.getHeader(SipUtils.HEADER_REFERRED_BY);
 			if (referredBy != null) {
@@ -140,7 +141,7 @@ public class ChatUtils {
 		String uriList = "";
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
-			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipAddress(contact) + "\"/>" + SipUtils.CRLF;
+			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + SipUtils.CRLF;
 		}
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
