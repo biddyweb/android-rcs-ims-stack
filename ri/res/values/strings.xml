@@ -5,6 +5,7 @@
 <string name="app_name">RCS-e 1.1</string>
 <string name="menu_address_book">Address book</string>
 <string name="menu_eventlog">Event Log</string>
+<string name="menu_spambox">Spam box</string>
 <string name="menu_settings">Settings</string>
 <string name="menu_about">About</string>
 <string name="label_ab_not_found">The address book is not found, launch it manually from your device home screen.</string>
@@ -134,6 +135,7 @@
 <string name="label_file">Selected file:</string>
 <string name="title_recv_chat">New chat invitation</string>
 <string name="label_subject">Subject:</string>
+<string name="label_hint_first_message">Enter first message</string>
 <string name="title_chat_view">Chat</string>
 <string name="title_chat_view_group">Chat group</string>
 <string name="title_chat_view_oneone">Chat with</string>
@@ -157,13 +159,17 @@
 <string name="label_add_participant_failed">Request to add participant(s) has failed</string>
 <string name="label_receive_displayed_delivery_status">%s has displayed the message</string>
 <string name="label_chat_terminated">Chat session terminated</string>
+<string name="label_group_chat">Group chat</string>
+<string name="menu_delete_spam">Delete message</string>
+<string name="menu_unspam">Move to my messages</string>
+<string name="menu_clear_all_spams">Clear all spams</string>
+<string name="label_spam_empty">No spam</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
-<string name="menu_initiate_livevideo_sharing">Initiate livevideo sharing</string>
 <string name="menu_initiate_prerecorded_video_sharing">Initiate pre-recorded video sharing</string>
-<string name="menu_initiate_visio_sharing">Initiate visio sharing</string>
+<string name="menu_initiate_video_sharing">Initiate video sharing</string>
 <string name="label_progress_status">Status:</string>
 <string name="label_progress_bar">Progress:</string>
 <string name="label_sharing_aborted">Sharing aborted</string>
@@ -185,6 +191,9 @@
 <string name="label_video_format_not_supported">Only H.263 QCIF format supported!\nPlease select another file.</string>
 
 <string name="menu_visio_sharing">Visio Sharing</string>
+<string name="label_video_sharing_with">Video sharing with %s</string> 
+<string name="label_remote_view">Remote:</string>
+<string name="label_local_view">Local:</string>
 <string name="label_stop_incoming_btn">Stop reception</string>
 <string name="label_start_outgoing_btn">Send</string>
 <string name="label_stop_outgoing_btn">Stop</string>
@@ -215,6 +224,7 @@
 <string name="label_quick_normal_contact">RCS</string>
 <string name="label_quick_invite">Invite</string>
 <string name="label_quick_me">Details</string>
+<string name="label_quick_extensions">Extensions</string>
 
 </resources>
 

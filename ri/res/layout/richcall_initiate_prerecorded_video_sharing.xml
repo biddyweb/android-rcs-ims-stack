@@ -23,16 +23,6 @@
          android:layout_width="fill_parent"
          android:layout_height="wrap_content"/>
 
-	    <TableRow android:paddingTop="5dip"
-	    	android:gravity="center_horizontal">
-			<com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView 
-				android:id="@+id/video_prerecorded_preview" 
-				android:layout_width="352px" 
-				android:layout_height="288px"/>
-	    </TableRow>
-	
-	    <TableRow android:padding="5dip"></TableRow>
-
 		<Button android:text="@string/label_dial"
 		 android:id="@+id/dial_btn"
 		 android:layout_marginLeft="5dip"
