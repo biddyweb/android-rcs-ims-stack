@@ -17,7 +17,7 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
+	 	android:maxLength="4" android:inputType="number" android:lines="1"/>
 
        	<TextView android:text="Max length of the freetext:"
 	    android:paddingTop="5dip"
@@ -72,7 +72,7 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
+	 	android:maxLength="4" android:inputType="number" android:lines="1"/>
 
        	<TextView android:text="Threshold warning on file transfer size (kB):"
 	    android:paddingTop="5dip"
@@ -94,7 +94,7 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
+	 	android:maxLength="4" android:inputType="number" android:lines="1"/>
 
        	<TextView android:text="Max duration of a video share (seconds):"
 	    android:paddingTop="5dip"
@@ -116,7 +116,7 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:maxLength="1" android:inputType="number" android:lines="1"/>
+	 	android:maxLength="2" android:inputType="number" android:lines="1"/>
 	 	
        	<TextView android:text="Max number of simultaneous file transfer sessions:"
 	    android:paddingTop="5dip"
@@ -127,7 +127,7 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:maxLength="1" android:inputType="number" android:lines="1"/>
+	 	android:maxLength="2" android:inputType="number" android:lines="1"/>
 
         <CheckBox android:id="@+id/UseRichcallService"
 		android:layout_height="wrap_content"
