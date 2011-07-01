@@ -82,9 +82,7 @@ public class IsComposingManager {
 			IsComposingInfo isComposingInfo = parser.getIsComposingInfo();
 			if ((isComposingInfo != null) && isComposingInfo.isStateActive()) {
 				// Send status message to "active"
-				if (session.getListener() != null) {
-					session.getListener().handleIsComposingEvent(contact, true);
-				}
+				session.getListener().handleIsComposingEvent(contact, true);
 				
 				// Start the expiration timer
 				if (isComposingInfo.getRefreshTime() != 0) {
@@ -94,9 +92,7 @@ public class IsComposingManager {
 				}
 			} else {
 				// Send status message to "idle"
-				if (session.getListener() != null) {
-					session.getListener().handleIsComposingEvent(contact, false);
-				}
+				session.getListener().handleIsComposingEvent(contact, false);
 
 				// Stop the expiration timer
 				stopExpirationTimer(contact);
@@ -117,9 +113,7 @@ public class IsComposingManager {
 	public void receiveIsComposingEvent(String contact, boolean state) {
     	// We just received an instant message, so if composing info was active, it must
 		// be changed to idle. If it was already idle, no need to notify listener again
-		if (session.getListener() != null) {
-			session.getListener().handleIsComposingEvent(contact, state);
-		}
+		session.getListener().handleIsComposingEvent(contact, state);
 				
 		// Stop the expiration timer
 		stopExpirationTimer(contact);
@@ -182,9 +176,7 @@ public class IsComposingManager {
         	}
         	
 			// Send status message to "idle"
-			if (session.getListener() != null) {
-				session.getListener().handleIsComposingEvent(contact, false);
-			}
+			session.getListener().handleIsComposingEvent(contact, false);
         	
         	// Terminate the timer thread
         	// TODO: necessary

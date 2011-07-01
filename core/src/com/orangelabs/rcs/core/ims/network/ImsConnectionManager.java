@@ -208,68 +208,32 @@ public class ImsConnectionManager implements Runnable {
      * @param action Connectivity action
      */
     private void connectionEvent(String action) {
-		if (logger.isActivated()) {
-			logger.debug("Connection event " + action);
-		}
-
-		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-	    	// Check received network info
-	    	NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
-			if (networkInfo == null) {
+	    if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+			NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
+			if ((networkInfo != null) && (networkInfo.getType() != currentNetworkInterface.getType())) {
 				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: no network (e.g. air plane mode)");
-				}
-				disconnectFromIms();
-				return;
-			}
-			
-			// Save last network interface 
-			ImsNetworkInterface lastNetworkInterface = currentNetworkInterface;
-			
-			// Check in the network access type has changed 
-			if (networkInfo.getType() != currentNetworkInterface.getType()) {
-				if (logger.isActivated()) {
-					logger.info("Data connection state: NETWORK ACCESS CHANGED");
+					logger.info("Data connection state: FAILOVER");
 				}
 			
 				// Change of network interface
 				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
 					if (logger.isActivated()) {
-						logger.debug("Change the network interface to mobile");
+						logger.debug("Set the network interface to mobile");
 					}
 					currentNetworkInterface = getMobileNetworkInterface();
 				} else
 				if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
 					if (logger.isActivated()) {
-						logger.debug("Change the network interface to Wi-Fi");
+						logger.debug("Set the network interface to Wi-Fi");
 					}
 					currentNetworkInterface = getWifiNetworkInterface();
 				}
 				
 				// Reset the user profile
 				resetUserProfile();
-				if (logger.isActivated()) {
-					logger.debug("User profile has been reloaded");
-				}
 			}
 			
-			// Get the current local IP address
-			String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress();
-			if (logger.isActivated()) {
-				logger.debug("Local IP address is " + localIpAddr);
-			}   				
-
-			// Check if the IP address has changed
-			if ((localIpAddr != null) && (lastNetworkInterface != null ) &&
-					!localIpAddr.equals(lastNetworkInterface.getNetworkAccess().getIpAddress())) {
-				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: IP address has changed");
-				}
-				disconnectFromIms();
-			}
-			
-			// Check if there is an IP connectivity
-			if (networkInfo.isConnected()) {
+			if ((networkInfo != null) && (networkInfo.isConnected())) {
 				if (logger.isActivated()) {
 					logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName());
 				}
@@ -321,21 +285,21 @@ public class ImsConnectionManager implements Runnable {
 					}
 					return;
 				}
-									
-				// Connect to IMS network interface
+	
+				// Get the current local IP address
+				String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress();
 				if (logger.isActivated()) {
-					logger.debug("Connect to IMS");
-				}
+					logger.debug("Local IP address is " + localIpAddr);
+				}   				
+				
+				// Connect to IMS network interface
 				connectToIms(localIpAddr);
 			} else {
 				if (logger.isActivated()) {
-					logger.info("Data connection state: DISCONNECTED from " + networkInfo.getTypeName());
+					logger.info("Data connection state: DISCONNECTED");
 				}
 	
 				// Disconnect from IMS network interface
-				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: IP connection lost");
-				}
 				disconnectFromIms();
 	    	}
 	    }

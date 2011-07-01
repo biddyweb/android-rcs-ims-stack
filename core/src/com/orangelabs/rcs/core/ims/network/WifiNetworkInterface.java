@@ -28,7 +28,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Wi-Fi network interface
- *
+ *  
  * @author JM. Auffret
  */
 public class WifiNetworkInterface extends ImsNetworkInterface {
@@ -39,7 +39,7 @@ public class WifiNetworkInterface extends ImsNetworkInterface {
 
     /**
      * Constructor
-     *
+     * 
      * @param imsModule IMS module
      * @throws CoreException
      */
@@ -47,8 +47,7 @@ public class WifiNetworkInterface extends ImsNetworkInterface {
     	super(imsModule, ConnectivityManager.TYPE_WIFI,
     			new WifiNetworkAccess(),
     			RcsSettings.getInstance().getUserProfileImsProxyForWifi(),
-    			RcsSettings.getInstance().getImsAuhtenticationProcedureForWifi(),
-                RcsSettings.getInstance().getSipDefaultProtocolForWifi());
+    			RcsSettings.getInstance().getImsAuhtenticationProcedureForWifi());    	
 
     	if (logger.isActivated()) {
     		logger.info("Wi-Fi network interface has been loaded");

@@ -40,20 +40,15 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * Rich address book provider
  *
  * <br>This provider contains the list of the RCS contacts and their status
- * <br>It is used by the AddressBookManager to keep the synchronization between the native address book and the RCS contacts.
- * 
- * <br>It also contains the list of aggregations between native raw contacts and rcs raw contacts
+ * <br>It is used by the AddressBookManager to keep the synchronization between the native address book and the RCS contacts.  
  */
 public class RichAddressBookProvider extends ContentProvider {
 	// Database table
-	public static final String EAB_TABLE = "eab_contacts";
-	public static final String AGGREGATION_TABLE = "aggregation";
+	public static final String TABLE = "eab_contacts";
 	
 	// Create the constants used to differentiate between the different URI requests
 	private static final int CONTACTS = 1;
 	private static final int CONTACT_ID = 2;
-	private static final int AGGREGATIONS = 3;
-	private static final int AGGREGATION_ID = 4;
 	
 	// Allocate the UriMatcher object, where a URI ending in 'contacts'
 	// will correspond to a request for all contacts, and 'contacts'
@@ -63,8 +58,6 @@ public class RichAddressBookProvider extends ContentProvider {
 		uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 		uriMatcher.addURI("com.orangelabs.rcs.eab", "eab", CONTACTS);
 		uriMatcher.addURI("com.orangelabs.rcs.eab", "eab/#", CONTACT_ID);
-		uriMatcher.addURI("com.orangelabs.rcs.eab", "aggregation", AGGREGATIONS);
-		uriMatcher.addURI("com.orangelabs.rcs.eab", "aggregation/#", AGGREGATION_ID);
 	}
 
     /**
@@ -82,7 +75,7 @@ public class RichAddressBookProvider extends ContentProvider {
      */
 	private static class DatabaseHelper extends SQLiteOpenHelper{
 		private static final String DATABASE_NAME = "eab.db";
-		private static final int DATABASE_VERSION = 11;
+		private static final int DATABASE_VERSION = 9;
 		
         public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -103,11 +96,7 @@ public class RichAddressBookProvider extends ContentProvider {
 			while (cursor.moveToNext()){
 				String tableName = cursor.getString(0);
 				// We want to drop all tables that starts with "eab_contacts"
-				if (tableName.startsWith(EAB_TABLE)){
-					Cursor cursor2 = db.rawQuery("DROP TABLE " + tableName, null);
-					cursor2.close();
-				}
-				if (tableName.startsWith(AGGREGATION_TABLE)){
+				if (tableName.startsWith(TABLE)){
 					Cursor cursor2 = db.rawQuery("DROP TABLE " + tableName, null);
 					cursor2.close();
 				}
@@ -118,16 +107,11 @@ public class RichAddressBookProvider extends ContentProvider {
 		}
 		
 		private void createDb(SQLiteDatabase db){
-			db.execSQL("CREATE TABLE IF NOT EXISTS " + EAB_TABLE + " ("
+			db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE + " ("
 					+ RichAddressBookData.KEY_ID + " integer primary key autoincrement, "
 					+ RichAddressBookData.KEY_CONTACT_NUMBER + " TEXT, "
 					+ RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + " TEXT, "
 					+ RichAddressBookData.KEY_TIMESTAMP + " long)");
-			db.execSQL("CREATE TABLE IF NOT EXISTS " + AGGREGATION_TABLE + " ("
-					+ AggregationData.KEY_ID + " integer primary key autoincrement, "
-					+ AggregationData.KEY_RCS_NUMBER + " TEXT, "
-					+ AggregationData.KEY_RAW_CONTACT_ID + " long, "
-					+ AggregationData.KEY_RCS_RAW_CONTACT_ID + " long)");
 		}
 		
 	}
@@ -145,26 +129,16 @@ public class RichAddressBookProvider extends ContentProvider {
         SQLiteDatabase db = openHelper.getWritableDatabase();
 		switch(uriMatcher.match(uri)){
 			case CONTACTS:
-				count = db.delete(EAB_TABLE, where, whereArgs);
+				count = db.delete(TABLE, where, whereArgs);
 				break;
 
 			case CONTACT_ID:
 				String segment = uri.getPathSegments().get(1);
-				count = db.delete(EAB_TABLE, RichAddressBookData.KEY_ID + "="
+				count = db.delete(TABLE, RichAddressBookData.KEY_ID + "="
 						+ segment
 						+ (!TextUtils.isEmpty(where) ? " AND ("	+ where + ')' : ""),
 						whereArgs);
 				
-			case AGGREGATIONS:
-				count = db.delete(AGGREGATION_TABLE, where, whereArgs);
-				break;
-
-			case AGGREGATION_ID:
-				segment = uri.getPathSegments().get(1);
-				count = db.delete(AGGREGATION_TABLE, AggregationData.KEY_ID + "="
-						+ segment
-						+ (!TextUtils.isEmpty(where) ? " AND ("	+ where + ')' : ""),
-						whereArgs);
 				break;
 
 			default:
@@ -182,10 +156,6 @@ public class RichAddressBookProvider extends ContentProvider {
 				return "vnd.android.cursor.dir/com.orangelabs.rcs.eab";
 			case CONTACT_ID:
 				return "vnd.android.cursor.item/com.orangelabs.rcs.eab";
-			case AGGREGATIONS:
-				return "vnd.android.cursor.dir/com.orangelabs.rcs.aggregation";
-			case AGGREGATION_ID:
-				return "vnd.android.cursor.item/com.orangelabs.rcs.aggregation";
 			default:
 				throw new IllegalArgumentException("Unsupported URI " + uri);
 		}
@@ -198,24 +168,11 @@ public class RichAddressBookProvider extends ContentProvider {
 	        case CONTACTS:
 	        case CONTACT_ID:
 	            // Insert the new row, will return the row number if successful
-	    		long rowID = db.insert(EAB_TABLE, null, initialValues);
+	    		long rowID = db.insert(TABLE, null, initialValues);
 
 	    		// Return a URI to the newly inserted row on success
 	    		if (rowID > 0) {
 	    		    Uri newUri = ContentUris.withAppendedId(RichAddressBookData.CONTENT_URI, rowID);
-	    		    getContext().getContentResolver().notifyChange(newUri, null);
-	    		    return newUri;
-	    		}
-	        	
-	        	break;
-	        case AGGREGATIONS:
-	        case AGGREGATION_ID:
-	            // Insert the new row, will return the row number if successful
-	    		rowID = db.insert(AGGREGATION_TABLE, null, initialValues);
-
-	    		// Return a URI to the newly inserted row on success
-	    		if (rowID > 0) {
-	    		    Uri newUri = ContentUris.withAppendedId(AggregationData.CONTENT_URI, rowID);
 	    		    getContext().getContentResolver().notifyChange(newUri, null);
 	    		    return newUri;
 	    		}
@@ -231,39 +188,26 @@ public class RichAddressBookProvider extends ContentProvider {
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sort) {
 		SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
-		String orderBy = sort;
-		
 		// Generate the body of the query
         int match = uriMatcher.match(uri);
         switch(match) {
         	case CONTACTS:
-        		qb.setTables(EAB_TABLE);
-        		if (TextUtils.isEmpty(sort)){
-        			orderBy = RichAddressBookData.KEY_CONTACT_NUMBER;
-        		}
+        		qb.setTables(TABLE);
         		break;
 	        case CONTACT_ID:
-	        	qb.setTables(EAB_TABLE);
+	        	qb.setTables(TABLE);
 				qb.appendWhere(RichAddressBookData.KEY_ID + "=" + uri.getPathSegments().get(1));
-        		if (TextUtils.isEmpty(sort)){
-        			orderBy = RichAddressBookData.KEY_CONTACT_NUMBER;
-        		}
-	            break;
-        	case AGGREGATIONS:
-        		qb.setTables(AGGREGATION_TABLE);
-        		if (TextUtils.isEmpty(sort)){
-        			orderBy = AggregationData.KEY_RCS_NUMBER;
-        		}
-        		break;
-	        case AGGREGATION_ID:
-	        	qb.setTables(AGGREGATION_TABLE);
-				qb.appendWhere(AggregationData.KEY_ID + "=" + uri.getPathSegments().get(1));
-        		if (TextUtils.isEmpty(sort)){
-        			orderBy = AggregationData.KEY_RCS_NUMBER;
-        		}
 	            break;
 	        default:
 	            throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+
+		// If no sort order is specified sort by contact id
+		String orderBy;
+		if (TextUtils.isEmpty(sort)){
+			orderBy = RichAddressBookData.KEY_CONTACT_NUMBER;
+		} else {
+			orderBy = sort;
 		}
 
 		// Apply the query to the underlying database.
@@ -292,21 +236,11 @@ public class RichAddressBookProvider extends ContentProvider {
         int match = uriMatcher.match(uri);
         switch (match) {
 			case CONTACTS:
-				count = db.update(EAB_TABLE, values, where, whereArgs);
+				count = db.update(TABLE, values, where, whereArgs);
 				break;
 			case CONTACT_ID:
 				String segment = uri.getPathSegments().get(1);
-				count = db.update(EAB_TABLE, values, RichAddressBookData.KEY_ID + "="
-						+ segment
-						+ (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""),
-						whereArgs);
-				break;
-			case AGGREGATIONS:
-				count = db.update(AGGREGATION_TABLE, values, where, whereArgs);
-				break;
-			case AGGREGATION_ID:
-				segment = uri.getPathSegments().get(1);
-				count = db.update(AGGREGATION_TABLE, values, AggregationData.KEY_ID + "="
+				count = db.update(TABLE, values, RichAddressBookData.KEY_ID + "="
 						+ segment
 						+ (!TextUtils.isEmpty(where) ? " AND (" + where + ')' : ""),
 						whereArgs);

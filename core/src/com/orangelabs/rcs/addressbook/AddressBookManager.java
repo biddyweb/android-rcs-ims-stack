@@ -117,7 +117,6 @@ public class AddressBookManager {
 					null, 
 					null, 
 					null);
-			
 			// Register content observer
 			contactsContractCursor.registerContentObserver(contactsContractObserver);
 			observerIsRegistered = true;

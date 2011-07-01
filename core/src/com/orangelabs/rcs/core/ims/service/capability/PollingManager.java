@@ -76,6 +76,14 @@ public class PollingManager extends PeriodicRefresher {
 	}
 	
 	/**
+	 * Restart polling
+	 */
+	public void restart() {
+		stopTimer();
+		startTimer(pollingPeriod, 1);
+	}
+	
+	/**
      * Update processing
      */
     public void periodicProcessing() {
@@ -89,10 +97,7 @@ public class PollingManager extends PeriodicRefresher {
 		for (int i=0; i < contactList.size(); i++) {
 			String contact = contactList.get(i);
 			requestContactCapabilities(contact);
-		}
-		
-		// Restart timer
-		startTimer(pollingPeriod, 1);		
+		}		
     }
     
 	/**

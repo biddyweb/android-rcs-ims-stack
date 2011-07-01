@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.sharing.transfer;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingSession;
 
@@ -39,11 +38,6 @@ public abstract class ContentSharingTransferSession extends ContentSharingSessio
 	 */
 	public final static int DEFAULT_SO_TIMEOUT = 30;
 	
-	/**
-	 * Content transfered terminated flag
-	 */
-	public boolean contentTransferTerminated = false;
-	
     /**
 	 * Constructor
 	 * 
@@ -62,19 +56,5 @@ public abstract class ContentSharingTransferSession extends ContentSharingSessio
 	 */
 	public ContentSharingTransferSessionListener getListener() {
 		return (ContentSharingTransferSessionListener)super.getListener();
-	}
-	
-	/**
-	 * Receive BYE request 
-	 * 
-	 * @param bye BYE request
-	 */
-	public void receiveBye(SipRequest bye) {
-		super.receiveBye(bye);
-		
-		// If the content is not fully transfered then request capabilities to the remote
-		if (!contentTransferTerminated){
-			getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
-		}
 	}
 }

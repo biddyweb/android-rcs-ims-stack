@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -59,7 +60,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, false), invite.getSubject());
+		super(parent, ChatUtils.getAssertedIdentity(invite, false), StringUtils.decodeUTF8(invite.getSubject()));
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -114,31 +115,8 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 				return;
 			}
 
-			// Extract the SDP part
-			byte[] remoteSdp = null;
-		    String content = getDialogPath().getInvite().getContent();
-		    String boundary = getDialogPath().getInvite().getBoundaryContentType();
-		    if (boundary != null) {
-	    		int index  = 0;
-	    		while(index != -1) {
-	    			int begin = content.indexOf("--" + boundary, index);
-	    			int end = content.indexOf(boundary, begin+boundary.length());
-	    			if ((begin != -1) && (end != -1)) {
-	    				String part = content.substring(begin+boundary.length(), end);
-	    				if (part.indexOf("application/sdp") != -1) {
-	    	    			// SDP
-	        				String contentPart = part.substring(part.indexOf("v=")); // TODO: is v= always in first ?
-	    					remoteSdp = contentPart.getBytes();
-	    				}
-	    			}
-	    			index = end; 
-	    		}
-		    } else {
-		    	remoteSdp = content.getBytes();
-		    }
-			
         	// Parse the remote SDP part
-        	SdpParser parser = new SdpParser(remoteSdp);
+        	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
 			MediaDescription mediaDesc = media.elementAt(0);
 			MediaAttribute attr1 = mediaDesc.getMediaAttribute("path");
@@ -157,7 +135,18 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 			}
             
     		// Set setup mode
-            String localSetup = createSetupAnswer(remoteSetup);
+            String localSetup = "passive";
+            if (remoteSetup.equals("active")) {
+            	// Passive mode: the terminal should wait a media connection
+    			localSetup = "passive";
+            } else 
+            if (remoteSetup.equals("passive")) {
+            	// Active mode: the terminal should initiate a media connection
+    			localSetup = "active";
+            } else {
+            	// The terminal is active by default
+    			localSetup = "active";
+            }
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}

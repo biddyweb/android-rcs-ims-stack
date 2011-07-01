@@ -49,11 +49,6 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  */
 public class Utils {
 	/**
-	 * RCS-e extension feature tag prefix
-	 */
-	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";
-
-	/**
 	 * Format caller id
 	 * 
 	 * @param intent Intent invitation
@@ -182,22 +177,17 @@ public class Utils {
 	 * @param msg Message to be displayed
 	 */
     public static void showMessageAndExit(final Activity activity, String msg) {
-        if (activity.isFinishing()) {
-        	return;
-        }
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-		builder.setMessage(msg);
-		builder.setTitle(R.string.title_msg);
-		builder.setCancelable(false);
-		builder.setPositiveButton(activity.getString(R.string.label_ok),
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						activity.finish();
-					}
-				});
-		AlertDialog alert = builder.create();
-		alert.show();
+    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+    	builder.setMessage(msg);
+    	builder.setTitle(R.string.title_msg);
+    	builder.setCancelable(false);
+    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {
+    			activity.finish();
+    		}
+    	});
+    	AlertDialog alert = builder.create();
+    	alert.show();
     }
 
 	/**
@@ -244,11 +234,7 @@ public class Utils {
 	 * @param url Picture to be displayed
 	 */
     public static void showPictureAndExit(final Activity activity, String url) {
-        if (activity.isFinishing()) {
-        	return;
-        }
-        
-    	Bitmap bitmap = null;
+        Bitmap bitmap = null;
     	try {
 	        File file = new File(url);
 	        FileInputStream stream =  new FileInputStream(file);
@@ -283,19 +269,17 @@ public class Utils {
 	 * @param activity Activity
 	 * @param title Title of the dialog
 	 * @param items Items
+	 * @return Dialog
 	 */
-    public static void showList(Activity activity, String title, CharSequence[] items) {
-        if (activity.isFinishing()) {
-        	return;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+    public static AlertDialog showList(Activity activity, String title, CharSequence[] items) {
+    	AlertDialog.Builder builder = new AlertDialog.Builder(activity);
     	builder.setTitle(title);
     	builder.setCancelable(false);
     	builder.setPositiveButton(activity.getString(R.string.label_ok), null);
         builder.setItems(items, null);
         AlertDialog alert = builder.create();
     	alert.show();
+		return alert;
     }
     
 	/**
@@ -306,7 +290,7 @@ public class Utils {
 	 * @return Dialog
 	 */
 	public static ProgressDialog showProgressDialog(Activity activity, String msg) {
-        ProgressDialog dlg = new ProgressDialog(activity);
+		ProgressDialog dlg = new ProgressDialog(activity);
 		dlg.setMessage(msg);
 		dlg.setIndeterminate(true);
 		dlg.setCancelable(true);

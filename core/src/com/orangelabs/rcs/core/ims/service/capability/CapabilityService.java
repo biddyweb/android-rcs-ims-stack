@@ -34,7 +34,6 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -111,9 +110,6 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		}
 		setServiceStarted(true);
 		
-		// Start options manager
-		optionsManager.start();
-
 		// Listen to address book changes
 		getImsModule().getCore().getAddressBookManager().addAddressBookListener(this);
 		
@@ -133,9 +129,6 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			return;
 		}
 		setServiceStarted(false);
-	
-		// Stop options manager
-		optionsManager.stop();
 		
 		// Stop polling
 		pollingManager.stop();
@@ -175,13 +168,9 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 	 * @return Capabilities
 	 */
 	public void requestContactCapabilities(List<String> contactList) {
-    	if (logger.isActivated()) {
-    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
-    	}
-
-    	for (int i=0; i < contactList.size(); i++) {
+		for (int i=0; i < contactList.size(); i++) {
 			String contact = contactList.get(i);
-			optionsManager.requestCapabilities(contact);
+			requestContactCapabilities(contact);
 		}	
 	}
 	
@@ -260,7 +249,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		Cursor phonesCursor = AndroidFactory.getApplicationContext().getContentResolver().query(
 				ContactsContract.CommonDataKinds.Phone.CONTENT_URI, 
 				new String[]{Phone._ID, Phone.NUMBER, Phone.RAW_CONTACT_ID}, 
-				null,
+				null, 
 				null, 
 				null);
 
@@ -269,20 +258,19 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		
 		// List of unique number that have already been queried
 		ArrayList<String> alreadyRcsOrInvalidNumbers = new ArrayList<String>();
-
+		
 		// We add "My number" to the numbers that are already RCS, so we don't query it if it is present in the address book
 		alreadyRcsOrInvalidNumbers.add(PhoneUtils.extractNumberFromUri(ImsModule.IMS_USER_PROFILE.getPublicUri()));	
 
 		while(phonesCursor.moveToNext()) {
 			// Keep a trace of already treated row. Key is (phone number in international format)
 			String phoneNumber = PhoneUtils.formatNumberToInternational(phonesCursor.getString(1));
+			long rawContactId = phonesCursor.getLong(2);
 			if (!alreadyRcsOrInvalidNumbers.contains(phoneNumber)) {
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
 				if (ContactsManager.getInstance().isRCSValidNumber(phoneNumber) 
-						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
-						&& !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber)) {
+						&& !ContactsManager.getInstance().isRawContactRcsAssociated(rawContactId, phoneNumber)) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
-					// We exclude the number that comes from SIM only contacts, as those cannot be aggregated to RCS raw contacts					
 					toBeTreatedNumbers.add(phoneNumber);
 				} else {
 					// This entry is either not valid or already RCS, this number is already done
@@ -293,15 +281,6 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			}else{
 				// Remove the number from the treated list, it was already queried for another raw contact on the same number
 				toBeTreatedNumbers.remove(phoneNumber);
-				// Check if the raw contact is associated with a RCS raw contact, if not the case then we have to create a new association for it
-				long rawContactId = phonesCursor.getLong(2);
-				
-				if (!ContactsManager.getInstance().isSimAccount(rawContactId) 
-						&& (ContactsManager.getInstance().getAssociatedRcsRawContact(rawContactId, phoneNumber)==-1)){
-					ContactInfo currentInfo = ContactsManager.getInstance().getContactInfo(phoneNumber);
-					// Create a new RCS raw contact with the same info and attach it to the raw contact
-					ContactsManager.getInstance().createRcsContact(currentInfo, rawContactId);
-				}
 			}
 		}
 		phonesCursor.close();

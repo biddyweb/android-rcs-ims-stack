@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,7 +35,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import java.util.Map;
 
 /**
@@ -123,11 +121,8 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
 		txt.setText(settings.get("ImsHomeDomain"));
 
-        txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
+		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddr);
 		txt.setText(settings.get("ImsOutboundProxyAddrForMobile"));
-
-        txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-        txt.setText(settings.get("ImsOutboundProxyAddrForWifi"));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerAddr);
         txt.setText(settings.get("XdmServerAddr"));
@@ -207,11 +202,9 @@ public class ProfileProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
 				Provisioning.writeParameter(cr, "ImsHomeDomain", txt.getText().toString());
 
-		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
+		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddr);
 				Provisioning.writeParameter(cr, "ImsOutboundProxyAddrForMobile", txt.getText().toString());
-
-                txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                Provisioning.writeParameter(cr, "ImsOutboundProxyAddrForWifi", txt.getText().toString());
+				Provisioning.writeParameter(cr, "ImsOutboundProxyAddrForWifi", txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.XdmServerAddr);
 				Provisioning.writeParameter(cr, "XdmServerAddr", txt.getText().toString());
@@ -263,7 +256,7 @@ public class ProfileProvisioning extends Activity {
 		}
 		return true;
 	}
-    
+
     @Override
     protected Dialog onCreateDialog(int id) {
         switch(id) {
@@ -274,7 +267,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Default"
+                        "Your platform"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -283,7 +276,7 @@ public class ProfileProvisioning extends Activity {
 	            spinner.setAdapter(adapter);
 
 	            return new AlertDialog.Builder(this)
-	                .setTitle(R.string.label_generate_profile)
+	                .setTitle(R.string.rcs_settings_title_generate_profile)
 	                .setView(view)
 	                .setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
 	                    public void onClick(DialogInterface dialog, int whichButton) {
@@ -296,19 +289,17 @@ public class ProfileProvisioning extends Activity {
 	            			String sipUri;
 	            			String imsPwd;
 	            			String homeDomain;
-	            			String imsProxyForMobile;
-                            String imsProxyForWifi;
+	            			String imsProxy;
 	            			String xdms;
 	            			String xdmsPwd;
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0:
+	                        	case 0: // Add your own platform config here
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "";
-			            			imsProxyForMobile = "127.0.0.1:5060";
-			            			imsProxyForWifi = "127.0.0.1:5060";
+			            			imsProxy = "127.0.0.1:5060";
 			            			xdms = "127.0.0.1:8080/services";
 			            			xdmsPwd = "";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
@@ -317,8 +308,7 @@ public class ProfileProvisioning extends Activity {
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "";
-			            			imsProxyForMobile = "127.0.0.1:5060";
-			            			imsProxyForWifi = "127.0.0.1:5060";
+			            			imsProxy = "127.0.0.1:5060";
 			            			xdms = "127.0.0.1:8080/services";
 			            			xdmsPwd = "";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
@@ -336,10 +326,8 @@ public class ProfileProvisioning extends Activity {
 	        		        txt.setText(imsPwd);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
 	        		        txt.setText(homeDomain);
-	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-                            txt.setText(imsProxyForMobile);
-                            txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                            txt.setText(imsProxyForWifi);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddr);
+                            txt.setText(imsProxy);
 	        				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
 	        				txt.setText(xdms);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);

@@ -388,11 +388,10 @@ public class RegistrationManager extends PeriodicRefresher {
         // a NAT 
     	String localIpAddr = networkInterface.getNetworkAccess().getIpAddress();
     	ViaHeader respViaHeader = ctx.getSipResponse().getViaHeaders().next();
-    	String received = respViaHeader.getParameter("received");
-    	if (!respViaHeader.getHost().equals(localIpAddr) || ((received != null) && !received.equals(localIpAddr))) {
-    		natTraversal = true;
-    	} else {
+    	if (respViaHeader.getHost().equals(localIpAddr)) {
     		natTraversal = false;
+    	} else {
+    		natTraversal = true;
     	}        	
         if (logger.isActivated()) {
             logger.debug("NAT traversal detection: " + natTraversal);
@@ -465,7 +464,6 @@ public class RegistrationManager extends PeriodicRefresher {
 	 * Handle 423 response 
 	 * 
 	 * @param ctx SIP transaction context
-	 * @throws Exception
 	 */
 	private void handle423IntervalTooBrief(SipTransactionContext ctx) throws Exception {
 		// 423 response received
@@ -475,13 +473,17 @@ public class RegistrationManager extends PeriodicRefresher {
 
     	SipResponse resp = ctx.getSipResponse();
 
+        if (logger.isActivated()) {
+        	logger.info("Send second REGISTER");
+        }
+
         // Extract the Min-Expire value
         int minExpire = SipUtils.getMinExpiresPeriod(resp);
         if (minExpire == -1) {
             if (logger.isActivated()) {
             	logger.error("Can't read the Min-Expires value");
             }
-        	handleError(new ImsError(ImsError.UNEXPECTED_EXCEPTION, "No Min-Expires value found"));
+        	handleError(new ImsError(ImsError.UNEXPECTED_EXCEPTION, "No Min-Epires value found"));
         	return;
         }
         
@@ -578,7 +580,7 @@ public class RegistrationManager extends PeriodicRefresher {
     /**
      * Is behind a NAT
      *
-     * @return Boolean
+     * @return boolean
      */
     public boolean isBehindNat() {
     	return natTraversal;

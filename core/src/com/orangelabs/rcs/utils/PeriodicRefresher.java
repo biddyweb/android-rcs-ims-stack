@@ -55,11 +55,6 @@ public abstract class PeriodicRefresher {
     private boolean timerStarted = false;
     
     /**
-     * Polling period
-     */
-    private int pollingPeriod;
-    
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -89,6 +84,11 @@ public abstract class PeriodicRefresher {
      * @param delta Delta to apply on the expire period in percentage
      */
     public synchronized void startTimer(int expirePeriod, double delta) {
+    	if (timerStarted) {
+    		// Already started
+    		return;
+    	}
+
     	// Check expire period
     	if (expirePeriod <= 0) {
     		// Expire period is null
@@ -99,9 +99,9 @@ public abstract class PeriodicRefresher {
     	}
 
     	// Calculate the effective refresh period
-    	pollingPeriod = (int)(expirePeriod * delta);
+    	int period = (int)(expirePeriod * delta);
     	if (logger.isActivated()) {
-    		logger.debug("Start timer at period=" + pollingPeriod +  "s (expiration=" + expirePeriod + "s)");
+    		logger.debug("Start timer at period=" + period +  "s (expiration=" + expirePeriod + "s)");
     	}
 
         // Register the alarm receiver
@@ -109,7 +109,7 @@ public abstract class PeriodicRefresher {
     	
     	// Start alarm from now to the expire value
         AlarmManager am = (AlarmManager)AndroidFactory.getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+pollingPeriod*1000, alarmIntent);
+        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+period*1000, alarmIntent);
 
         // The timer is started
     	timerStarted = true;
@@ -146,7 +146,6 @@ public abstract class PeriodicRefresher {
     	public void onReceive(Context context, Intent intent) {
     		Thread t = new Thread() {
     			public void run() {
-    				// Processing
     				periodicProcessing();
     			}
     		};

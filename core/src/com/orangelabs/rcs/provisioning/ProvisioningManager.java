@@ -249,9 +249,9 @@ public class ProvisioningManager {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
 				if (value.equals("1")) {
-	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_KEEP_ALIVE, RcsSettingsData.TRUE);					
+	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USE_SIP_KEEP_ALIVE, RcsSettingsData.TRUE);					
 				} else {
-	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_KEEP_ALIVE, RcsSettingsData.FALSE);					
+	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USE_SIP_KEEP_ALIVE, RcsSettingsData.FALSE);					
 				}
 			} else
 			if (key.equals("/IMS/voice_domain_preference_utran")) {

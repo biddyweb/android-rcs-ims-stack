@@ -48,11 +48,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	/**
-	 * Boundary tag
-	 */
-	private String boundary = "boundary1";
-	
-	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -82,17 +77,17 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	    	}
 
     		// Set setup mode
-	    	String localSetup = createSetupOffer();
-            if (logger.isActivated()){
-				logger.debug("Local setup attribute is " + localSetup);
-			}
-            
+	    	String localSetup = "active";
+    		
 	    	// Set local port
 	    	int localMsrpPort = 9; // See RFC4145, Page 4
 	    	
-	    	// Build SDP part
+			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
+	    		"--boundary1" + SipUtils.CRLF +
+	    		"Content-Type: application/sdp" + SipUtils.CRLF +
+	    		"" + SipUtils.CRLF +
 	    		"v=0" + SipUtils.CRLF +
 	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
@@ -106,24 +101,18 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
 
 	        // Generate the resource list for given participants
-	        String resourceList =
-	        	ChatUtils.generateResourceListForParticipants(getParticipants().getList())
-	        	+ SipUtils.CRLF;
+	        String resourceList = ChatUtils.generateResourceListForParticipants(getParticipants().getList());	        
 	    	
-	    	// Build multipart
-	    	String multipart =
-	    		"--" + boundary + SipUtils.CRLF +
-	    		"Content-Type: application/sdp" + SipUtils.CRLF +
-    			"Content-Length: " + sdp.length() + SipUtils.CRLF +
-	    		SipUtils.CRLF +
-	    		sdp +
-	    		"--" + boundary + SipUtils.CRLF +
+	        // Generate xml document
+	    	String xml =
+	    		"--boundary1" + SipUtils.CRLF +
 	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
-    			"Content-Length: " + resourceList.length() + SipUtils.CRLF +
 	    		"Content-Disposition: recipient-list" + SipUtils.CRLF +
-	    		SipUtils.CRLF +
-	    		resourceList +
-	    		"--" + boundary + "--";
+	    		"" + SipUtils.CRLF +
+	    		resourceList + SipUtils.CRLF +
+	    		"--boundary1--";
+	    	
+	    	String multipart = sdp + xml;
 
 			// Set the local SDP part in the dialog path
 	    	getDialogPath().setLocalContent(multipart);
@@ -134,13 +123,16 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        }
 	        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
 	        		InstantMessagingService.CHAT_FEATURE_TAGS,
-	        		multipart, boundary);
-
-	    	// Test if there is a first message
-	    	if (getFirstMessage() != null) {
-		        // Add a subject header
-	    		invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-	    	}
+	        		multipart, "boundary1");
+	        
+	        // Add a subject header
+	        String subject = getSubject();
+	        if (subject != null) {
+	        	invite.addHeader(SubjectHeader.NAME, subject);
+	        }
+	        
+	        // Add IMDN headers
+	        addImdnHeaders(invite, ChatUtils.generateMessageId());
 
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
@@ -181,24 +173,19 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
             if (ctx.getStatusCode() == 407) {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 422) {
-            	// 422 Session Interval Too Small
-            	handle422SessionTooSmall(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 603) {
-            	// 603 Invitation declined
-            	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
-    					ctx.getReasonPhrase()));
-            } else
-            if (ctx.getStatusCode() == 487) {
-            	// 487 Invitation cancelled
-            	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
-    					ctx.getReasonPhrase()));
-            } else {
-            	// Other error response
-    			handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED,
-    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+            } else {           	
+            	// Error response
+                if (ctx.getStatusCode() == 603) {
+                	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
+        					ctx.getReasonPhrase()));
+                } else
+                if (ctx.getStatusCode() == 487) {
+                	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
+        					ctx.getReasonPhrase()));
+                } else {
+	    			handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED,
+	    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+                }
             }
         } else {
     		if (logger.isActivated()) {
@@ -326,7 +313,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        		getDialogPath(),
 	        		InstantMessagingService.CHAT_FEATURE_TAGS,
 					getDialogPath().getLocalContent(),
-					boundary);
+					"boundary1");
 	               
 	        // Add a subject header
 	        String subject = getSubject();
@@ -356,73 +343,4 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 					e.getMessage()));
         }
 	}
-
-	/**
-	 * Handle 422 response 
-	 * 
-	 * @param resp 422 response
-	 */
-	private void handle422SessionTooSmall(SipResponse resp) {
-		try {
-			// 422 response received
-	    	if (logger.isActivated()) {
-	    		logger.info("422 response received");
-	    	}
-	
-	        // Extract the Min-SE value
-	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
-	        if (minExpire == -1) {
-	            if (logger.isActivated()) {
-	            	logger.error("Can't read the Min-SE value");
-	            }
-	        	handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
-	        	return;
-	        }
-	        
-	        // Set the expire value
-	        getDialogPath().setSessionExpireTime(minExpire);
-	
-	        // Create a new INVITE with the right expire period
-	        if (logger.isActivated()) {
-	        	logger.info("Send new INVITE");
-	        }
-
-	        // If there is a first message then builds a multipart content else builds a SDP content
-	    	SipRequest invite; 
-	    	if (getFirstMessage() != null) {
-		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent(),
-		        		boundary);
-		        
-		        // Add a subject header
-	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-
-	        	// Add IMDN headers
-		        addImdnHeaders(invite, getFirstMessage().getMessageId());
-	    	} else {
-		        invite = SipMessageFactory.createInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent());
-	    	}
-
-	    	// Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
-	        
-	        // Send INVITE request
-	        sendInvite(invite);
-	        
-	    } catch(Exception e) {
-	    	if (logger.isActivated()) {
-	    		logger.error("Session initiation has failed", e);
-	    	}
-	
-	    	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-	    }
-	}		
 }

@@ -28,7 +28,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Mobile network interface
- *
+ *  
  * @author JM. Auffret
  */
 public class MobileNetworkInterface extends ImsNetworkInterface {
@@ -36,10 +36,10 @@ public class MobileNetworkInterface extends ImsNetworkInterface {
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
+    
     /**
      * Constructor
-     *
+     * 
      * @param imsModule IMS module
      * @throws CoreException
      */
@@ -47,8 +47,7 @@ public class MobileNetworkInterface extends ImsNetworkInterface {
     	super(imsModule, ConnectivityManager.TYPE_MOBILE,
     			new MobileNetworkAccess(),
     			RcsSettings.getInstance().getUserProfileImsProxyForMobile(),
-    			RcsSettings.getInstance().getImsAuhtenticationProcedureForMobile(),
-    			RcsSettings.getInstance().getSipDefaultProtocolForMobile());
+    			RcsSettings.getInstance().getImsAuhtenticationProcedureForMobile());    	
 
     	if (logger.isActivated()) {
     		logger.info("Mobile network interface has been loaded");

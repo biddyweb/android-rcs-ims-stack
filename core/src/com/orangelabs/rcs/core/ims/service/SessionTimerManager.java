@@ -78,6 +78,13 @@ public class SessionTimerManager extends PeriodicRefresher {
 	}
 	
 	/**
+	 * Terminate the manager
+	 */
+	public void terminate() {
+		stop();
+	}
+	
+	/**
 	 * Is session timer activated
 	 * 
 	 * @param msg SIP message
@@ -94,8 +101,7 @@ public class SessionTimerManager extends PeriodicRefresher {
 		}
 
 		// Check if the UPDATE method is supported in Allow header
-	/* TODO: not supported by our platform 
-	 	AllowHeader allowHeader = (AllowHeader)msg.getHeader(AllowHeader.NAME);
+	/* TODO	AllowHeader allowHeader = (AllowHeader)msg.getHeader(AllowHeader.NAME);
 		if ((allowHeader != null) && !allowHeader.getMethod().contains("UPDATE")) {
 			if (logger.isActivated()) {
 				logger.debug("Session timer not supported: UPDATE method not allowed");
@@ -168,7 +174,7 @@ public class SessionTimerManager extends PeriodicRefresher {
 			}
 			
 			// Increment the Cseq number of the dialog path
-			session.getDialogPath().incrementCseq();
+	        session.getDialogPath().incrementCseq();
 
 	        // Send UPDATE request
 	        SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipUpdate(session.getDialogPath());
@@ -177,7 +183,7 @@ public class SessionTimerManager extends PeriodicRefresher {
 	        ctx.waitResponse(SipManager.TIMEOUT);
 
 			// Analyze the received response 
-	        if (ctx.getStatusCode() == 200) {
+	        if (ctx.isSipResponse() && (ctx.getStatusCode() == 200)) {
 	        	// Success
 				if (logger.isActivated()) {
 					logger.debug("Session timer refresh with success");
@@ -188,26 +194,22 @@ public class SessionTimerManager extends PeriodicRefresher {
 				
 				// Restart timer
 	    		startTimer(expirePeriod, 0.5);
-	        } else
-	        if (ctx.getStatusCode() == 405) {
-				if (logger.isActivated()) {
-					logger.debug("Session timer refresh not supported");
-				}	        
 	        } else {
 				if (logger.isActivated()) {
 					logger.debug("Session timer refresh has failed: close the session");
 				}
-	        
+
 				// Close the session
 	        	session.abortSession();
-
-	        	// Request capabilities to the remote
-				session.getImsService().getImsModule().getCapabilityService().requestContactCapabilities(session.getDialogPath().getRemoteParty());
-	        }	        
+	        }
+	        
         } catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Session timer refresh has failed", e);
 			}
+			
+        	// Close the session
+        	session.abortSession();
         }
     }
 	
@@ -229,9 +231,6 @@ public class SessionTimerManager extends PeriodicRefresher {
 
 				// Close the session
 		    	session.abortSession();
-		    	
-	        	// Request capabilities to the remote
-				session.getImsService().getImsModule().getCapabilityService().requestContactCapabilities(session.getDialogPath().getRemoteParty());
 			} else {
 	        	// Success
 				if (logger.isActivated()) {

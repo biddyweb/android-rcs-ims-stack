@@ -156,7 +156,18 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 			}
             
     		// Set setup mode
-            String localSetup = createSetupAnswer(remoteSetup);
+            String localSetup = "passive";
+            if (remoteSetup.equals("active")) {
+            	// Passive mode: the terminal should wait a media connection
+    			localSetup = "passive";
+            } else 
+            if (remoteSetup.equals("passive")) {
+            	// Active mode: the terminal should initiate a media connection
+    			localSetup = "active";
+            } else {
+            	// The terminal is active by default
+    			localSetup = "active";
+            }
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
@@ -345,11 +356,9 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     	if (logger.isActivated()) {
     		logger.info("Data received");
     	}
-    	
-    	// Set flag transfered
-    	contentTransferTerminated = true;
 	
     	try {
+					
 	    	// Update the content with the received data 
 	    	getContent().setData(data);
 
@@ -447,5 +456,4 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 		// Close MSRP session
 		closeMsrpSession();
 	}
-	
 }

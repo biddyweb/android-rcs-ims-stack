@@ -21,7 +21,7 @@
 		 android:layout_marginLeft="5dip"
  		 android:layout_marginRight="5dip"/>
 
-		<Button android:text="@string/label_initiate_sharing"
+		<Button android:text="@string/label_initiate_visio"
 		 android:id="@+id/invite_btn"
 		 android:layout_marginLeft="5dip"
  		 android:layout_marginRight="5dip"/>

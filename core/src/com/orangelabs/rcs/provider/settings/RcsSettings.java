@@ -18,15 +18,13 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.utils.logger.Logger;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -754,6 +752,30 @@ public class RcsSettings {
 	}
 
     /**
+     * Get user profile IMS proxy secure port
+     *
+     * @return Address as <host>:<port>
+     */
+    public String getUserProfileImsProxySecurePort() {
+        String result = null;
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT);
+        }
+        return result;
+    }
+
+    /**
+     * Set user profile IMS proxy secure port
+     *
+     * @param addr Address as <host>:<port>
+     */
+    public void setUserProfileImsProxySecurePort(String port) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT, port);
+        }
+    }
+
+    /**
      * Get user profile XDM server address
      *
      * @return Address as <host>:<port>/<root>
@@ -1129,61 +1151,22 @@ public class RcsSettings {
 		return result;
 	}
 
-    /**
-     * Get default SIP protocol for mobile
-     * 
-     * @return Protocol (udp | tcp | tls)
+	/**
+     * Get default SIP protocol
+     *
+     * @return Protocol (udp | tcp)
      */
-	public String getSipDefaultProtocolForMobile() {
+	public String getSipDefaultProtocol() {
 		String result = null;
 		if (instance != null) {
-            result = readParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE);
+			result = readParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL);
 		}
 		return result;
 	}
 
     /**
-     * Get default SIP protocol for wifi
-     * 
-     * @return Protocol (udp | tcp | tls)
-     */
-    public String getSipDefaultProtocolForWifi() {
-        String result = null;
-        if (instance != null) {
-            result = readParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_WIFI);
-        }
-        return result;
-    }
-
-    /**
-     * Get TLS Certificate root
-     * 
-     * @return Path of the certificate
-     */
-    public String getTlsCertificateRoot() {
-        String result = null;
-        if (instance != null) {
-            result = readParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT);
-        }
-        return result;
-    }
-
-    /**
-     * Get TLS Certificate intermediate
-     * 
-     * @return Path of the certificate
-     */
-    public String getTlsCertificateIntermediate() {
-        String result = null;
-        if (instance != null) {
-            result = readParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE);
-        }
-        return result;
-    }
-
-    /**
      * Get SIP transaction timeout used to wait SIP response
-     * 
+     *
      * @return Timeout in seconds
      */
 	public int getSipTransactionTimeout() {
@@ -1712,32 +1695,17 @@ public class RcsSettings {
 	}
 
 	/**
-     * Is SIP keep-alive enabled
+     * Is SIP keep alive used
      *
      * @return Boolean
      */
-	public boolean isSipKeepAliveEnabled() {
+	public boolean isSipKeepAliveUsed() {
 		boolean result = true;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.SIP_KEEP_ALIVE));
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_SIP_KEEP_ALIVE));
 		}
 		return result;
 	}
-
-    /**
-     * Get SIP keep-alive period
-     *
-     * @return Period in seconds
-     */
-	public int getSipKeepAlivePeriod() {
-		int result = 60;
-		if (instance != null) {
-			try {
-				result = Integer.parseInt(readParameter(RcsSettingsData.SIP_KEEP_ALIVE_PERIOD));
-			} catch(Exception e) {}
-		}
-		return result;
-    }
 
 	/**
      * Get APN used to connect to RCS platform

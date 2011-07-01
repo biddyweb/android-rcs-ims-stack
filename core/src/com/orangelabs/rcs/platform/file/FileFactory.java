@@ -64,6 +64,15 @@ public abstract class FileFactory {
 	}
 
 	/**
+	 * Open a configuration file input stream 
+	 * 
+	 * @param filename Configuration filename
+	 * @return Input stream
+	 * @throws IOException
+	 */
+	public abstract InputStream openConfigFile(String filename) throws IOException;
+
+	/**
 	 * Open a file input stream
 	 * 
 	 * @param url URL

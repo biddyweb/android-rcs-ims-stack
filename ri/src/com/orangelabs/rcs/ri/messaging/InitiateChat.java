@@ -196,21 +196,10 @@ public class InitiateChat extends Activity {
 					}
 				});
 				
-				// Get subject
-	            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
-	            final String firstMessage = firstMessageText.getText().toString().trim();
-	            // Get remote contact
-	        	Spinner spinner = (Spinner)findViewById(R.id.contact);
-	        	MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
-	            final String remote = cursor.getString(1);
-
 				// Display chat view
 	        	Intent intent = new Intent(InitiateChat.this, ChatView.class);
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	        	intent.putExtra("sessionId", chatSession.getSessionID());
-	        	intent.putExtra("subject", firstMessage);
-	        	intent.putExtra("originating", true);
-	        	intent.putExtra("contact", remote);
 	        	startActivity(intent);
 	        	
 	        	// Exit activity

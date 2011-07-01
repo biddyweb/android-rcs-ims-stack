@@ -213,27 +213,13 @@ public class ChatUtils {
 	 * @return String or empty
 	 */
 	public static String getMessageId(SipRequest request) {
-		// Read ID from Message-Id header
+		// Read Message-Id header
 		ExtensionHeader messageIdHeader = (ExtensionHeader)request.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 		if (messageIdHeader != null) {
 			return messageIdHeader.getValue();
-		} 
-		
-		// Read ID from multipart content
-		try {
-		    String content = request.getContent();
-			int index = content.indexOf(ImdnUtils.HEADER_IMDN_MSG_ID);
-			if (index != -1) {
-				index = index+ImdnUtils.HEADER_IMDN_MSG_ID.length()+1;
-				String part = content.substring(index);
-				String msgId = part.substring(0, part.indexOf(SipUtils.CRLF));
-				return msgId.trim();
-			}
-		} catch(Exception e) {
+		} else {
+			return null;
 		}
-		
-		// No message id
-		return null;
 	}
 	
 	/**

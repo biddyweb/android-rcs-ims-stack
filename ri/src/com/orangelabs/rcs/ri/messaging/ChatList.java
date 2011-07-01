@@ -54,7 +54,7 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 	 * Position of headers
 	 */
 	private static final int ACTIVE_IM_HEADER_POSITION = 0;
-	private static int IM_CAPABLE_CONTACTS_HEADER_POSITION = 1;
+	private static int IM_CAPABLE_CONTACTS_HEADER_POSITION = 0;
 	
 	/**
 	 * View IDs
@@ -205,20 +205,20 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 				return convertView;
 			}
 			
-			if (position ==  IM_CAPABLE_CONTACTS_HEADER_POSITION){
-				if (convertView == null) {
-					convertView = (TextView)layoutInflater.inflate(R.layout.messaging_chat_list_header, null);
-				}
-				((TextView)convertView).setText(getString(R.string.label_im_capable_contacts_header));
-				return convertView;
-			}
-			
 			if (isAnActiveImSession(position)){
 				if (convertView == null) {
 					convertView = (TextView)layoutInflater.inflate(android.R.layout.simple_list_item_1, null);
 				}
 				int id=(int) getItemId(position);
 				((TextView)convertView).setText(activeImSessionsElements.get(id).contact);
+				return convertView;
+			}
+			
+			if (position ==  IM_CAPABLE_CONTACTS_HEADER_POSITION){
+				if (convertView == null) {
+					convertView = (TextView)layoutInflater.inflate(R.layout.messaging_chat_list_header, null);
+				}
+				((TextView)convertView).setText(getString(R.string.label_im_capable_contacts_header));
 				return convertView;
 			}
 			

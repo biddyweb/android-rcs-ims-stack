@@ -136,8 +136,8 @@ public class ShowEab extends Activity {
 	        // Show general info
 	        msisdn.setText(contact);
 	        lastModified.setText(Utils.formatDateToString(contactInfo.getRcsStatusTimestamp()));
-	        int rcsStatus = contactInfo.getRcsStatus();
-	        if (rcsStatus==ContactInfo.NOT_RCS){
+	        String rcsStatus = contactInfo.getRcsStatus();
+	        if (rcsStatus.equalsIgnoreCase(ContactInfo.NOT_RCS)){
 	        	type.setText(getString(R.string.label_normal_contact));
 	        }else{
 	        	type.setText(getString(R.string.label_rcs_contact));	
@@ -155,7 +155,7 @@ public class ShowEab extends Activity {
 	        
 	        // Show presence info
 	        PresenceInfo presenceInfo = contactInfo.getPresenceInfo();
-	        if ((presenceInfo != null) && (contactInfo.getRcsStatus()==ContactInfo.RCS_ACTIVE)) {
+	        if ((presenceInfo != null) && (contactInfo.getRcsStatus().equals(PresenceInfo.RCS_ACTIVE))) {
 		        photoView.setVisibility(View.VISIBLE);
 		    	status.setVisibility(View.VISIBLE);
 		    	freetextEdit.setVisibility(View.VISIBLE);

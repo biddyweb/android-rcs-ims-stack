@@ -143,7 +143,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		if (logger.isActivated()) {
 	    			logger.debug("Store & Forward session invitation");
 	    		}
-    			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
+    			imsModule.getInstantMessagingService().getStoreAndForwardManager().receiveStoredMessages(request);
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
 	    			SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE)) {

@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.sharing.streaming;
 
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.Config;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -38,8 +37,9 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
+import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -171,24 +171,19 @@ public class OriginatingLiveVideoContentSharingSession extends ContentSharingStr
             if (ctx.getStatusCode() == 407) {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 422) {
-            	// 422 Session Interval Too Small
-            	handle422SessionTooSmall(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 603) {
-            	// 603 Invitation declined
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
-    					ctx.getReasonPhrase()));
-            } else
-            if (ctx.getStatusCode() == 487) {
-            	// 487 Invitation cancelled
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
-    					ctx.getReasonPhrase()));
             } else {
-            	// Other error response
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
-            			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+            	// Error response
+                if (ctx.getStatusCode() == 603) {
+                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
+        					ctx.getReasonPhrase()));
+                } else
+                if (ctx.getStatusCode() == 487) {
+                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
+        					ctx.getReasonPhrase()));
+                } else {
+                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
+                			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+                }
             }
         } else {
         	// No response received: timeout
@@ -340,60 +335,6 @@ public class OriginatingLiveVideoContentSharingSession extends ContentSharingStr
     		getListener().handleSharingError(error);
         }
 	}
-
-	/**
-	 * Handle 422 response 
-	 * 
-	 * @param resp 422 response
-	 */
-	private void handle422SessionTooSmall(SipResponse resp) {
-		try {
-			// 422 response received
-	    	if (logger.isActivated()) {
-	    		logger.info("422 response received");
-	    	}
-	
-	        // Extract the Min-SE value
-	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
-	        if (minExpire == -1) {
-	            if (logger.isActivated()) {
-	            	logger.error("Can't read the Min-SE value");
-	            }
-	        	handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
-	        	return;
-	        }
-	        
-	        // Set the expire value
-	        getDialogPath().setSessionExpireTime(minExpire);
-	
-	        // Create a new INVITE with the right expire period
-	        if (logger.isActivated()) {
-	        	logger.info("Send new INVITE");
-	        }
-	        SipRequest invite = SipMessageFactory.createInvite(
-	        		getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_VIDEO_SHARE,
-					getDialogPath().getLocalContent());
-
-	        // Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
-	
-	        // Send INVITE request
-	        sendInvite(invite);
-	        
-	    } catch(Exception e) {
-	    	if (logger.isActivated()) {
-	    		logger.error("Session initiation has failed", e);
-	    	}
-	
-	    	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-	    }
-	}		
 
 	/**
 	 * Close media session

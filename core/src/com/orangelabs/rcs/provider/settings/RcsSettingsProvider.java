@@ -1,4 +1,4 @@
-/*******************************************************************************
+﻿/*******************************************************************************
  * Software Name : RCS IMS Stack
  *
  * Copyright © 2010 France Telecom S.A.
@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import com.orangelabs.rcs.R;
-
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -29,9 +27,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-
+import com.orangelabs.rcs.R;
 import java.util.ArrayList;
-
 import javax.sip.ListeningPoint;
 
 /**
@@ -68,7 +65,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 42;
+        private static final int DATABASE_VERSION = 39;
 
         private Context ctx;
 
@@ -130,6 +127,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"");
 		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE,		"80.12.197.74:5060");
 		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI,		"80.12.197.74:5060");
+            addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_SECURE_PORT, "5061");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"");
 		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password");
@@ -148,10 +146,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.IMS_CONNECTION_POLLING_PERIOD, 	"30");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
-            addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE,   ListeningPoint.UDP);
-            addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_WIFI,     ListeningPoint.TCP);
-            addParameter(db, RcsSettingsData.TLS_CERTIFICATE_ROOT,              "");
-            addParameter(db, RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE,      "");
+            addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL,				ListeningPoint.UDP);
             addParameter(db, RcsSettingsData.SIP_TRANSACTION_TIMEOUT, 			"30");
             addParameter(db, RcsSettingsData.MSRP_DEFAULT_PORT, 				"20000");
             addParameter(db, RcsSettingsData.RTP_DEFAULT_PORT, 					"10000");
@@ -165,7 +160,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60");
             addParameter(db, RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.IS_COMPOSING_TIMEOUT, 				"15");
-            addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"0");
+            addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"-1");
             addParameter(db, RcsSettingsData.PERMANENT_STATE_MODE,	 			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_ACTIVATION,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
@@ -182,8 +177,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SIP_TIMER_T1,						"2000");
             addParameter(db, RcsSettingsData.SIP_TIMER_T2,						"16000");
             addParameter(db, RcsSettingsData.SIP_TIMER_T4,						"17000");
-            addParameter(db, RcsSettingsData.SIP_KEEP_ALIVE,					RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.SIP_KEEP_ALIVE_PERIOD,				"60");
+            addParameter(db, RcsSettingsData.USE_SIP_KEEP_ALIVE,				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.RCS_APN,							"");
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
         }

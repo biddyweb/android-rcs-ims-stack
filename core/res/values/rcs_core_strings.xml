@@ -21,7 +21,6 @@
 	<string name="rcs_core_contact_im_session">Initiate a chat session</string>
 	<string name="rcs_core_contact_cs_video">Video call</string>
 	<string name="rcs_core_contact_event_log">Event log</string>
-	<string name="rcs_core_capability_common_extension">RCS extensions</string>
 	
 	<!-- Strings linked to RCS account -->
 	<string name="rcs_core_configure_rcs_service">Configure RCS service</string>

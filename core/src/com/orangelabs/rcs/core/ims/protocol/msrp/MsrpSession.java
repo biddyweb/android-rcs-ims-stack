@@ -515,8 +515,8 @@ public class MsrpSession {
 		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 			
-		// Byte-range header may not be present
-		if (headers.get(MsrpConstants.HEADER_BYTE_RANGE) != null) {
+		if (headers.get(MsrpConstants.HEADER_BYTE_RANGE)!=null){
+			// Byte-range header may not be present
 			buffer.write(MsrpConstants.HEADER_BYTE_RANGE.getBytes());
 			buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 			buffer.write(MsrpConstants.CHAR_SP);
@@ -628,16 +628,12 @@ public class MsrpSession {
 	 */
 	public void receiveMsrpSend(String txId, Hashtable<String, String> headers, int flag, byte[] data, long totalSize) throws IOException {
 		// Receive a SEND request
-		if (data != null) {
-			if (logger.isActivated()) {
+		if (logger.isActivated()) {
+			if (data != null) {
 				logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + ", data size=" + data.length + ")");
-			}
-		} else {
-			// By-pass empty chunk
-			if (logger.isActivated()) {
+			} else {
 				logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + "), no data");
 			}
-			return;
 		}
 		
 		// Test if a failure report is needed
@@ -653,7 +649,9 @@ public class MsrpSession {
 		}
 		
 		// Save received data chunk if there is some
-		receivedChunks.addChunk(data);
+		if (data != null) {
+			receivedChunks.addChunk(data);
+		}
 		
 		// Check the continuation flag
 		if (flag == MsrpConstants.FLAG_LAST_CHUNK) {
@@ -662,14 +660,6 @@ public class MsrpSession {
 				logger.info("Transfer terminated");
 			}
 
-			// Read the received content
-			byte[] dataContent = receivedChunks.getReceivedData();
-			receivedChunks.resetCache();
-
-			// Notify event listener
-			String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
-			msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
-
 			// Test if a success report is needed
 			boolean successReportNeeded = false;
 			String reportHeader = headers.get(MsrpConstants.HEADER_SUCCESS_REPORT);
@@ -677,9 +667,26 @@ public class MsrpSession {
 				successReportNeeded = true;
 			}
 			
-			// Send MSRP report if requested
-			if (successReportNeeded) {
-				sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
+			if (data != null) {
+				// Read the received content
+				byte[] dataContent = receivedChunks.getReceivedData();
+				receivedChunks.resetCache();
+
+				// Read content type
+				String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
+
+				// Notify event listener
+				msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
+				
+				// Send MSRP report if requested
+				if (successReportNeeded) {
+					sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
+				}
+			} else {
+				// Send MSRP report if requested
+				if (successReportNeeded) {
+					sendMsrpReportRequest(txId, headers, 0, totalSize);
+				}
 			}
 		} else
 		if (flag == MsrpConstants.FLAG_ABORT_CHUNK) {

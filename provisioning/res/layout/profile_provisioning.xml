@@ -85,22 +85,11 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="100" android:lines="1"/>
 
-       	<TextView android:text="P-CSCF address and port for Mobile access:"
+       	<TextView android:text="P-CSCF address and port:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
-		<EditText android:id="@+id/ImsOutboundProxyAddrForMobile"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	 	android:layout_marginLeft="5dip"
-	 	android:layout_marginRight="5dip"
-	 	android:maxLength="100" android:lines="1"/>
-
-	 	<TextView android:text="P-CSCF address and port for Wi-Fi access:"
-	    android:paddingTop="5dip"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"/>
-		<EditText android:id="@+id/ImsOutboundProxyAddrForWifi"
+		<EditText android:id="@+id/ImsOutboundProxyAddr"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"

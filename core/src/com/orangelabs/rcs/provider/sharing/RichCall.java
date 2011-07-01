@@ -26,7 +26,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -110,12 +109,7 @@ public class RichCall {
 		values.put(RichCallData.KEY_DESTINATION, direction);
 		values.put(RichCallData.KEY_NAME, content.getName());
 		values.put(RichCallData.KEY_MIME_TYPE, content.getEncoding());
-		if (!content.getUrl().equalsIgnoreCase(LiveVideoContent.URL)){
-			// In case of live video content, we do not want to save the uri, as it is meaningless (we won't be able to replay it)
-			values.put(RichCallData.KEY_DATA, content.getUrl());
-		}else{
-			values.put(RichCallData.KEY_DATA, "");
-		}
+		values.put(RichCallData.KEY_DATA, content.getUrl());
 		values.put(RichCallData.KEY_SIZE, content.getKbSize());
 		values.put(RichCallData.KEY_NUMBER_MESSAGES, purge(contact)+1);
 		values.put(RichCallData.KEY_STATUS, status);

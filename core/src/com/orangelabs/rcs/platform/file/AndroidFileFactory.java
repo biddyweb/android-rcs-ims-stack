@@ -24,15 +24,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
 import android.os.Environment;
 
-import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
+import com.orangelabs.rcs.R;
 
 /**
  * Android file factory
@@ -45,6 +46,29 @@ public class AndroidFileFactory extends FileFactory {
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	
+	/**
+	 * Open a configuration file input stream 
+	 * 
+	 * @param filename Configuration filename
+	 * @return Input stream
+	 * @throws IOException
+	 */
+	public InputStream openConfigFile(String filename) throws IOException {
+		// Extract file name without extension
+		int index = filename.indexOf(".");
+		String name = filename.substring(0, index);		
+		
+		// Get the ressource associated to the filename
+		try {
+			Field field = R.raw.class.getField(name);
+			Integer id = (Integer)field.getInt(field);
+			InputStream is = AndroidFactory.getApplicationContext().getResources().openRawResource(id.intValue());
+			return is;
+		} catch(Exception e) {
+			return null;
+		}
+	}
+
 	/**
 	 * Open a file input stream
 	 * 

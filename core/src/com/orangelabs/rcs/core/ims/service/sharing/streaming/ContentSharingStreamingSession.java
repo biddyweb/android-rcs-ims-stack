@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.sharing.streaming;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingSession;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
@@ -71,17 +70,5 @@ public abstract class ContentSharingStreamingSession extends ContentSharingSessi
 	 */
 	public void setMediaRenderer(IMediaRenderer renderer) {
 		this.renderer = renderer;
-	}
-	
-	/**
-	 * Receive BYE request 
-	 * 
-	 * @param bye BYE request
-	 */
-	public void receiveBye(SipRequest bye) {
-		super.receiveBye(bye);
-		
-		// Request capabilities to the remote
-		getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 	}
 }

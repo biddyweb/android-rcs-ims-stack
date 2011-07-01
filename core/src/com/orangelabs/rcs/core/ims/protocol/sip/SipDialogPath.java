@@ -33,6 +33,7 @@ import com.orangelabs.rcs.utils.IdGenerator;
  * @author JM. Auffret
  */
 public class SipDialogPath {
+	
 	/**
 	 * SIP stack interface
 	 */
@@ -101,7 +102,7 @@ public class SipDialogPath {
 	/**
 	 * Session expire time 
 	 */
-	private int sessionExpireTime; 
+	private int sessionExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod(); 
 	
 	/**
 	 * Flag that indicates if the signalisation is established or not
@@ -148,7 +149,6 @@ public class SipDialogPath {
 		this.localParty = localParty;
 		this.remoteParty = remoteParty;
 		this.route = route;
-		this.sessionExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod();
 	}
 
 	/**

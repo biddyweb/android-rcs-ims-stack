@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -29,9 +28,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class KeepAliveManager extends PeriodicRefresher {
     /**
-     * Keep-alive period (in seconds)
+     * Default keep-alive period (in seconds)
      */
-	private int period;
+    public static int SIP_KEEPALIVE_PERIOD = 60;
 	
     /**
      * SIP interface
@@ -48,7 +47,6 @@ public class KeepAliveManager extends PeriodicRefresher {
 	 */
 	public KeepAliveManager(SipInterface sip) {
 		this.sip = sip;
-		this.period = RcsSettings.getInstance().getSipKeepAlivePeriod();
 	}
 	
 	/**
@@ -58,7 +56,7 @@ public class KeepAliveManager extends PeriodicRefresher {
 		if (logger.isActivated()) {
 			logger.debug("Start keep-alive");
 		}
-		startTimer(period, 1);
+		startTimer(SIP_KEEPALIVE_PERIOD, 1.0);
 	}
 	
 	/**
@@ -83,8 +81,8 @@ public class KeepAliveManager extends PeriodicRefresher {
     		// Send a double-CRLF
         	sip.getDefaultSipProvider().getListeningPoints()[0].sendHeartbeat(sip.getOutboundProxyAddr(), sip.getOutboundProxyPort());
         	
-        	// Start timer
-    		startTimer(period, 1);
+        	// Restart timer
+    		startTimer(SIP_KEEPALIVE_PERIOD, 1.0);
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("SIP heartbeat has failed", e);

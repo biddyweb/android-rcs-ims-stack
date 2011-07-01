@@ -22,7 +22,6 @@
 				android:minWidth="50dp"
 				android:background="@drawable/ri_quickcontact_badge_background"/>
 	        <Spinner android:id="@+id/contact"
-	        	android:layout_width="0dip"
 				android:layout_marginRight="5dip"/>
 	    </TableRow>
 

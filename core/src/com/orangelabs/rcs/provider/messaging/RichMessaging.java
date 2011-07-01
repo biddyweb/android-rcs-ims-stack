@@ -36,6 +36,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -161,11 +162,13 @@ public class RichMessaging {
 	/**
 	 * We initiated a chat session
 	 * 
-	 * @param session Chat session 
+	 * @param session
+	 * @return uri
 	 */
 	public void addChatInitiation(ChatSession session){
 		String sessionId = session.getSessionID();
 		String invited = "";
+		String sessionSubject = StringUtils.decodeUTF8(session.getSubject());
 		int type = EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE;
 		if (session.isChatGroup()){
 			type = EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE;
@@ -177,13 +180,11 @@ public class RichMessaging {
 		}else{
 			invited = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 		}
-		
-		addMessage(type, sessionId, null, invited, session.getSubject(), InstantMessage.MIME_TYPE, null, 0, null, EventsLogApi.EVENT_INITIATED);
+		addMessage(type, sessionId, null, invited, sessionSubject, InstantMessage.MIME_TYPE, null, sessionSubject.length(), null, EventsLogApi.EVENT_INITIATED);
 
 		// Set the subject as the first message
-		InstantMessage firstMessage = session.getFirstMessage();
-		if (firstMessage != null) {
-			addChatMessageInitiation(firstMessage, session);
+		if ((sessionSubject != null) && (sessionSubject.length() > 0)) {
+			addChatMessageInitiation(new InstantMessage(ChatUtils.getMessageId(session.getDialogPath().getInvite()), invited, sessionSubject, RcsSettings.getInstance().isImReportsActivated()), session);
 		}		
 	}
 	

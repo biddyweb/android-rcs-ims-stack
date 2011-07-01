@@ -127,7 +127,7 @@ public class AnonymousFetchManager implements DiscoveryManager {
 		    		}
 
 		    		// Update capabilities in database
-		    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
+		    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
 
 		    		// Notify listener
 		    		imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
@@ -147,7 +147,7 @@ public class AnonymousFetchManager implements DiscoveryManager {
 	    	Capabilities capabilities = new Capabilities();
 
 	    	// Update capabilities in database
-	    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
+	    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
 
 	    	// Notify listener
 	    	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);

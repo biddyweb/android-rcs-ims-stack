@@ -32,7 +32,6 @@ import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.eab.ContactsManagerException;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
 import com.orangelabs.rcs.service.api.client.presence.Geoloc;
 import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
@@ -238,7 +237,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 				}
 
 				// Add the contact to the rich address book provider
-				ContactsManager.getInstance().modifyRcsContactInProvider(rcsNumber, ContactInfo.RCS_PENDING_OUT);
+				ContactsManager.getInstance().addOrModifyRcsContactInProvider(rcsNumber, PresenceInfo.RCS_PENDING_OUT);
 			}
 		}
 
@@ -270,7 +269,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 				}
 
 				// Add the contact to the rich address book provider
-				ContactsManager.getInstance().modifyRcsContactInProvider(rcsNumber, ContactInfo.RCS_BLOCKED);
+				ContactsManager.getInstance().addOrModifyRcsContactInProvider(rcsNumber, PresenceInfo.RCS_BLOCKED);
 			}
 		}
 	}
@@ -927,7 +926,13 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 						result = removeRevokedContact(rcsNumber);
 						if (result){
 							// Remove entry from rich address book provider
-							ContactsManager.getInstance().modifyRcsContactInProvider(rcsNumber, ContactInfo.RCS_CAPABLE);
+							try {
+								ContactsManager.getInstance().removeContact(rcsNumber);
+							} catch (ContactsManagerException e) {
+								if (logger.isActivated()){
+									logger.error("Something went wrong when removing entry from rich address book provider",e);
+								}
+							}
 						}else{
 							if (logger.isActivated()){
 								logger.error("Something went wrong when revoking shared contact");
@@ -944,7 +949,13 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 					boolean result = removeBlockedContact(rcsNumber);
 					if (result){
 						// Remove entry from rich address book provider
-						ContactsManager.getInstance().modifyRcsContactInProvider(rcsNumber, ContactInfo.RCS_CAPABLE);
+						try {
+							ContactsManager.getInstance().removeContact(rcsNumber);
+						} catch (ContactsManagerException e) {
+							if (logger.isActivated()){
+								logger.error("Something went wrong when removing entry from rich address book provider",e);
+							}
+						}
 					}else{
 						if (logger.isActivated()){
 							logger.error("Something went wrong when removing blocked contact");
@@ -963,7 +974,13 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 						logger.debug("We remove it from rich address book provider");
 					}
 					// Remove entry from rich address book provider
-					ContactsManager.getInstance().modifyRcsContactInProvider(rcsNumber, ContactInfo.RCS_CAPABLE);
+					try {
+						ContactsManager.getInstance().removeContact(rcsNumber);
+					} catch (ContactsManagerException e) {
+						if (logger.isActivated()){
+							logger.error("Something went wrong when removing entry from rich address book provider",e);
+						}
+					}
 				}
 			}
 		}
