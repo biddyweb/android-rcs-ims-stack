@@ -236,6 +236,9 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	        	Intent intent = new Intent(ReceiveChat.this, ChatView.class);
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	        	intent.putExtra("sessionId", chatSession.getSessionID());
+	        	intent.putExtra("subject", subject);
+	        	intent.putExtra("originating", false);
+	        	intent.putExtra("contact", remoteContact);
 	        	startActivity(intent);
 
 	        	// Exit activity

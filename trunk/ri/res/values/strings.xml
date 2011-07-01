@@ -189,19 +189,18 @@
 <string name="label_csh_failed">Sharing has failed or is aborted (code %d)</string>
 <string name="label_end_of_media">End of media</string>
 <string name="label_video_format_not_supported">Only H.263 QCIF format supported!\nPlease select another file.</string>
-
-<string name="menu_visio_sharing">Visio Sharing</string>
-<string name="label_video_sharing_with">Video sharing with %s</string> 
+<string name="label_video_sharing_with">Video sharing with %s</string>
+<string name="title_video_sharing">Video sharing</string> 
 <string name="label_remote_view">Remote:</string>
 <string name="label_local_view">Local:</string>
 <string name="label_stop_incoming_btn">Stop reception</string>
 <string name="label_start_outgoing_btn">Send</string>
 <string name="label_stop_outgoing_btn">Stop</string>
-<string name="label_initiate_visio">Visio</string>
 <string name="label_incoming_sharing_aborted">Incoming sharing aborted</string>
 <string name="label_incoming_sharing_terminated_by_remote">Incoming sharing terminated by remote</string>
 <string name="label_outgoing_sharing_aborted">Outgoing sharing aborted</string>
 <string name="label_outgoing_sharing_terminated_by_remote">Outgoing sharing terminated by remote</string>
+<string name="label_switch_camera">Switch camera</string>
 
 <!-- Event Log -->
 <string name="menu_filter">Change filter</string>

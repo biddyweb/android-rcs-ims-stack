@@ -26,7 +26,6 @@ import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
@@ -36,7 +35,6 @@ import com.orangelabs.rcs.service.api.client.capability.CapabilityApi;
  * My capabilities
  */
 public class MyCapabilities extends Activity {
-
 	/**
 	 * Capability API
 	 */
@@ -85,8 +83,7 @@ public class MyCapabilities extends Activity {
         List<String> extensionList = capabilities.getSupportedExtensions();
         for(int i=0; i<extensionList.size(); i++) {
         	String value = extensionList.get(i);
-System.out.println(">>>>>>>> " + value);        	
-        	result += value.substring(CapabilityUtils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
+        	result += value.substring(Utils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
         }
         extensions.setText(result);    		
     }

@@ -183,6 +183,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         
         // Get chat session-ID
 		sessionId = getIntent().getStringExtra("sessionId");
+		// Get subject
+		String subject = getIntent().getStringExtra("subject");
+		if (subject!=null && subject.trim().length()>0){
+			// Add subject to the message history as first message
+			if (getIntent().getBooleanExtra("originating", false)){
+				mAdapter.add("[Me] " + subject);
+			}else{
+				mAdapter.add("["+getIntent().getStringExtra("contact")+"] " + subject);
+			}
+		}
         
 		// Instanciate messaging API
         messagingApi = new MessagingApi(getApplicationContext());

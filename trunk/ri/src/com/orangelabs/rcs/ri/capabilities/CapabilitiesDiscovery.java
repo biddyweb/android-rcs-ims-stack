@@ -45,7 +45,6 @@ import android.widget.QuickContactBadge;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
@@ -243,7 +242,7 @@ public class CapabilitiesDiscovery extends Activity {
             List<String> extensionList = capabilities.getSupportedExtensions();
             for(int i=0; i<extensionList.size(); i++) {
             	String value = extensionList.get(i);
-            	result += value.substring(CapabilityUtils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
+            	result += value.substring(Utils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
             }
             extensions.setText(result);    		
     	} else {
