@@ -85,8 +85,11 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	    	}
 	    	
     		// Set setup mode
-	    	String localSetup = "active";
-	    	
+	    	String localSetup = createSetupOffer();
+            if (logger.isActivated()){
+				logger.debug("Local setup attribute is " + localSetup);
+			}
+            
 	    	// Set local port
 	    	int localMsrpPort = 9; // See RFC4145, Page 4
 	    	
@@ -177,19 +180,24 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
             if (ctx.getStatusCode() == 407) {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx.getSipResponse());
-            } else {           	
-            	// Error response
-                if (ctx.getStatusCode() == 603) {
-                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
-        					ctx.getReasonPhrase()));
-                } else
-                if (ctx.getStatusCode() == 487) {
-                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
-        					ctx.getReasonPhrase()));
-                } else {
-                	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
-                			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
-                }
+            } else           	
+            if (ctx.getStatusCode() == 422) {
+            	// 422 Session Interval Too Small
+            	handle422SessionTooSmall(ctx.getSipResponse());
+            } else
+            if (ctx.getStatusCode() == 603) {
+            	// 603 Invitation declined
+            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
+    					ctx.getReasonPhrase()));
+            } else
+            if (ctx.getStatusCode() == 487) {
+            	// 487 Invitation cancelled
+            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
+    					ctx.getReasonPhrase()));
+            } else {
+            	// Other error response
+            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
+            			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
             }
         } else {
     		if (logger.isActivated()) {
@@ -366,13 +374,70 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	}
 
 	/**
+	 * Handle 422 response 
+	 * 
+	 * @param resp 422 response
+	 */
+	private void handle422SessionTooSmall(SipResponse resp) {
+		try {
+			// 422 response received
+	    	if (logger.isActivated()) {
+	    		logger.info("422 response received");
+	    	}
+	
+	        // Extract the Min-SE value
+	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
+	        if (minExpire == -1) {
+	            if (logger.isActivated()) {
+	            	logger.error("Can't read the Min-SE value");
+	            }
+	        	handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
+	        	return;
+	        }
+	        
+	        // Set the expire value
+	        getDialogPath().setSessionExpireTime(minExpire);
+	
+	        // Create a new INVITE with the right expire period
+	        if (logger.isActivated()) {
+	        	logger.info("Send new INVITE");
+	        }
+	        SipRequest invite = SipMessageFactory.createInvite(
+	        		getDialogPath(),
+	        		InstantMessagingService.FT_FEATURE_TAGS,
+					getDialogPath().getLocalContent());
+	               
+	        // Reset initial request in the dialog path
+	        getDialogPath().setInvite(invite);
+	        
+	        // Set the Proxy-Authorization header
+	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
+	
+	        // Send INVITE request
+	        sendInvite(invite);
+	        
+	    } catch(Exception e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("Session initiation has failed", e);
+	    	}
+	
+	    	// Unexpected error
+			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+	    }
+	}		
+	
+	/**
 	 * Data has been transfered
 	 */
 	public void msrpDataTransfered() {
     	if (logger.isActivated()) {
     		logger.info("Data transfered");
     	}
-
+    	
+    	// Set flag transfered
+    	contentTransferTerminated = true;
+    	
     	// Close the MSRP session
     	closeMsrpSession();
 		
@@ -469,5 +534,5 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	public void closeMediaSession() {
 		// Close MSRP session
 		closeMsrpSession();
-	}
+	}	
 }

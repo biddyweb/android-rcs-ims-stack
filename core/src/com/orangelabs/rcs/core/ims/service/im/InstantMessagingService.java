@@ -336,6 +336,7 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
 			}
+			
 			// Save the message in the spam folder
 			String msgId = ChatUtils.getMessageId(invite);
 			RichMessaging.getInstance().addSpamMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
@@ -538,4 +539,44 @@ public class InstantMessagingService extends ImsService {
 	 	    session.receiveMessageDeliveryStatus(message);
 		}
     }
+    
+    /**
+     * Receive a S&F invitation
+     * 
+     * @param invite Received invite
+     */
+    public void receiveStoredAndForwardInvitation(SipRequest invite) {
+    	if (logger.isActivated()) {
+			logger.debug("Receive a S&F invitation");
+		}
+    	
+		// Test if the contact is blocked
+		String remote = invite.getFromUri();
+	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
+			}
+			
+			try {
+				// Send a 603 Decline response
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 603 Decline");
+		    	}
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        getImsModule().getSipManager().sendSipResponse(resp);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't send 603 Decline", e);
+				}
+			}
+			return;
+	    } else {
+	    	if (logger.isActivated()) {
+				logger.info("Contact " + remote + " is not blocked");
+			}
+		}
+    	
+		// Create a new session
+    	getStoreAndForwardManager().receiveStoredMessages(invite);
+    }     
 }

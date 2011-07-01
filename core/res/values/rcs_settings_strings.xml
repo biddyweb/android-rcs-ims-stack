@@ -17,7 +17,6 @@
 	<string name="rcs_settings_title_csh_invitation">Content sharing invitation settings</string>
 	<string name="rcs_settings_title_csh_available">Content sharing notification</string>
 	<string name="rcs_settings_title_video_settings">Video settings</string>
-	<string name="rcs_settings_title_generate_profile">Generate an IMS profile</string>
 
 	<string name="rcs_settings_menu_about">About</string>
 	<string name="rcs_settings_menu_help">More infos</string>

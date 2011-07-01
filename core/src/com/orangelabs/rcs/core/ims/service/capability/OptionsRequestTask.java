@@ -21,7 +21,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class OptionsRequestTask {
+public class OptionsRequestTask implements Runnable {
     /**
      * IMS module
      */
@@ -48,6 +48,11 @@ public class OptionsRequestTask {
 	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
 
 	/**
+	 * Counter
+	 */
+	private static int counter = 0;
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -66,10 +71,28 @@ public class OptionsRequestTask {
 	}
 	
 	/**
-	 * Start task
+	 * Increment counter
 	 */
-	public void start() {
+	private synchronized void incrementCounter() {
+		counter++;
+	}
+	
+	/**
+	 * Background processing
+	 */
+	public void run() {
+		long startAt = System.currentTimeMillis();
+		incrementCounter();
+    	if (logger.isActivated()) {
+    		logger.debug("Request " + counter + " started");
+    	}
+		
     	sendOptions();
+
+		long duration = System.currentTimeMillis() - startAt;
+    	if (logger.isActivated()) {
+    		logger.debug("Request " + counter + " terminated in " + duration + "ms");
+    	}
 	}
 	
 	/**
@@ -177,11 +200,11 @@ public class OptionsRequestTask {
         	// If we do not have already some info on this contact
         	// We update the database with empty capabilities
         	Capabilities capabilities = new Capabilities();
-        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactsManager.REGISTRATION_STATUS_OFFLINE);
+        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactInfo.REGISTRATION_STATUS_OFFLINE);
     	} else {
     		// We have some info on this contact
     		// We update the database with its previous infos and set the registration state to offline
-    		ContactsManager.getInstance().setContactCapabilities(contact, info.getCapabilities(), info.getRcsStatus(), ContactsManager.REGISTRATION_STATUS_OFFLINE);
+    		ContactsManager.getInstance().setContactCapabilities(contact, info.getCapabilities(), info.getRcsStatus(), ContactInfo.REGISTRATION_STATUS_OFFLINE);
     		
         	// Notify listener
         	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, info.getCapabilities());
@@ -201,7 +224,7 @@ public class OptionsRequestTask {
 
         // The contact is not RCS
         Capabilities capabilities = new Capabilities();
-        ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+        ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
         
     	// Notify listener
     	imsModule.getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
@@ -225,10 +248,10 @@ public class OptionsRequestTask {
     	// Update the database capabilities
     	if (capabilities.isImSessionSupported()) {
     		// The contact is RCS capable
-   			ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactsManager.REGISTRATION_STATUS_ONLINE);
-    	}else{
+   			ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactInfo.REGISTRATION_STATUS_ONLINE);
+    	} else {
     		// The contact is not RCS
-    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
     	}
 
     	// Notify listener

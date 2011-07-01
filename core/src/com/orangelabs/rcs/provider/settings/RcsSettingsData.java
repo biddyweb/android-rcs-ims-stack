@@ -86,6 +86,16 @@ public class RcsSettingsData {
 	 */
     public static final int WIFI_ACCESS = ConnectivityManager.TYPE_WIFI;
 
+    /**
+     * Folder path for certificate
+     */
+    public static final String CERTIFICATE_FOLDER_PATH = "/sdcard/";
+
+    /**
+     * File type for certificate
+     */
+    public static final String CERTIFICATE_FILE_TYPE = ".crt";
+
 	// ---------------------------------------------------------------------------
 	// Parameters which can be modified by the end user. These parameters may be
 	// displayed at UI level (e.g. settings application).
@@ -290,11 +300,6 @@ public class RcsSettingsData {
 	 */
 	public static final String USERPROFILE_IMS_PROXY_WIFI = "ImsOutboundProxyAddrForWifi";
 
-    /**
-     * Proxy secure port
-     */
-    public static final String USERPROFILE_IMS_PROXY_SECURE_PORT = "ImsOutboundProxySecurePort";
-
 	/**
 	 * XDM server address & port
 	 */
@@ -343,7 +348,22 @@ public class RcsSettingsData {
 	/**
      * Default SIP protocol
      */
-	public static final String SIP_DEFAULT_PROTOCOL = "SipDefaultProtocol";
+    public static final String SIP_DEFAULT_PROTOCOL_FOR_MOBILE = "SipDefaultProtocolForMobile";
+
+    /**
+     * Default SIP protocol
+     */
+    public static final String SIP_DEFAULT_PROTOCOL_FOR_WIFI = "SipDefaultProtocolForWifi";
+
+    /**
+     * TLS Certifcate root
+     */
+    public static final String TLS_CERTIFICATE_ROOT = "TlsCertificateRoot";
+
+    /**
+     * TLS Certifcate intermediate
+     */
+    public static final String TLS_CERTIFICATE_INTERMEDIATE = "TlsCertificateIntermediate";
 
 	/**
 	 * SIP transaction timeout used to wait a SIP response
@@ -536,9 +556,14 @@ public class RcsSettingsData {
 	public static final String SIP_TIMER_T4 = "SipTimerT4";
 
 	/**
-     * Use SIP keep alive
+     * Enable SIP keep alive
      */
-	public static final String USE_SIP_KEEP_ALIVE = "UseSipKeepAlive";
+	public static final String SIP_KEEP_ALIVE = "SipKeepAlive";
+
+	/**
+     * SIP keep alive period
+     */
+	public static final String SIP_KEEP_ALIVE_PERIOD = "SipKeepAlivePeriod";
 
 	/**
 	 * RCS APN

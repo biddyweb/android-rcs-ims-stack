@@ -1,5 +1,9 @@
 package com.orangelabs.rcs.core.ims.service.capability;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -16,11 +20,21 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class OptionsManager implements DiscoveryManager {
+	/**
+	 * Max number of threads for background processing
+	 */
+	private final static int MAX_PROCESSING_THREADS = 15;
+	
     /**
      * IMS module
      */
     private ImsModule imsModule;
     
+    /**
+     * Thread pool to request capabilities in background
+     */
+    private ExecutorService threadPool;
+
     /**
      * The logger
      */
@@ -33,6 +47,26 @@ public class OptionsManager implements DiscoveryManager {
      */
     public OptionsManager(ImsModule parent) {
         this.imsModule = parent;
+    }
+
+    /**
+     * Start the manager
+     */
+    public void start() {
+    	threadPool = Executors.newFixedThreadPool(MAX_PROCESSING_THREADS);
+    }
+
+    /**
+     * Stop the manager
+     */
+    public void stop() {
+        try {
+        	threadPool.shutdownNow();
+        } catch (SecurityException e) {
+            if (logger.isActivated()) {
+            	logger.error("Could not stop all threads");
+            }
+        }
     }
     
 	/**
@@ -52,8 +86,14 @@ public class OptionsManager implements DiscoveryManager {
 		boolean inCall = imsModule.isRichcallServiceActivated() && imsModule.getCallManager().isConnectedWith(contact);
 		
     	// Start request in background
-    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(inCall));
-    	task.start();
+		try {
+	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(inCall));
+	    	threadPool.submit(task);
+		} catch(RejectedExecutionException e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("Can't start thread pool execution for multiple options", e);
+	    	}			
+		}
     }
     
     /**
@@ -90,10 +130,10 @@ public class OptionsManager implements DiscoveryManager {
     	// Update capabilities in database
     	if (capabilities.isImSessionSupported()) {
     		// RCS-e contact
-    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactsManager.REGISTRATION_STATUS_ONLINE);
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactInfo.REGISTRATION_STATUS_ONLINE);
     	} else {
     		// Not a RCS-e contact
-    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
     	}
     	
     	// Notify listener

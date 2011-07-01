@@ -129,18 +129,7 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 			}
             
     		// Set setup mode
-            String localSetup = "passive";
-            if (remoteSetup.equals("active")) {
-            	// Passive mode: the terminal should wait a media connection
-    			localSetup = "passive";
-            } else 
-            if (remoteSetup.equals("passive")) {
-            	// Active mode: the terminal should initiate a media connection
-    			localSetup = "active";
-            } else {
-            	// The terminal is active by default
-    			localSetup = "active";
-            }
+            String localSetup = createSetupAnswer(remoteSetup);
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
@@ -166,7 +155,7 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF;
+	    		"a=recvonly" + SipUtils.CRLF;
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);

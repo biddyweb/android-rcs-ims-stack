@@ -287,6 +287,6 @@ public class AnonymousFetchRequestTask {
         
 		// We update the database with empty capabilities
     	Capabilities capabilities = new Capabilities();
-    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactsManager.REGISTRATION_STATUS_UNKNOWN);
+    	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
 	}
 }

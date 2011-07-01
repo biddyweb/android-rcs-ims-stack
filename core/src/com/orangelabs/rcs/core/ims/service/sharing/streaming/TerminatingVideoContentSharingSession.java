@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.service.sharing.streaming;
 
+import com.orangelabs.rcs.core.Config;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -36,7 +37,6 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
-import com.orangelabs.rcs.utils.Config;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**

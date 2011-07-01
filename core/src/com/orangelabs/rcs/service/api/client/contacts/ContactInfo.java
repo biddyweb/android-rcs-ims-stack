@@ -31,17 +31,62 @@ public class ContactInfo implements Parcelable {
     /**
      * The contact is RCS capable but there is no special presence relationship with the user
      */
-    public final static String RCS_CAPABLE = "rcs_capable";
+    public final static int RCS_CAPABLE = 0;
     
     /**
      * The contact is not RCS
      */
-    public final static String NOT_RCS = "not_rcs";
+    public final static int NOT_RCS = 1;
 
-    /**
-     * We do not know the contact yet
+    /** 
+     * Presence relationship: contact 'rcs granted' with the user 
      */
-    public final static String NO_INFO = "no_info";
+    public final static int RCS_ACTIVE = 2;
+    
+    /**
+     * Presence relationship: the user has revoked the contact 
+     */
+    public final static int RCS_REVOKED = 3;
+    
+    /**
+     * Presence relationship: the user has blocked the contact 
+     */
+    public final static int RCS_BLOCKED = 4;
+    
+    /**
+     * Presence relationship: the user has sent an invitation to the contact without response for now 
+     */
+    public final static int RCS_PENDING_OUT = 5;
+    
+    /**
+     * Presence relationship: the contact has sent an invitation to the user without response for now 
+     */
+    public final static int RCS_PENDING = 6;
+    
+    /** 
+     * Presence relationship: the contact has sent an invitation to the user and cancel it
+     */
+    public final static int RCS_CANCELLED = 7;
+    
+    /** 
+     * We have never queried the contact capabilities for now
+     */
+    public final static int NO_INFO = 8;
+    
+    /** 
+     * Registration state : unknown
+     */
+    public final static int REGISTRATION_STATUS_UNKNOWN = 0;
+    
+    /** 
+     * Registration state : registered
+     */
+    public final static int REGISTRATION_STATUS_ONLINE = 1;
+    
+    /** 
+     * Registration state : not registered
+     */
+    public final static int REGISTRATION_STATUS_OFFLINE = 2;
     
 	/**
 	 * Capabilities
@@ -61,12 +106,12 @@ public class ContactInfo implements Parcelable {
 	/**
 	 * Registration state
 	 */
-	private boolean isRegistered = false;
+	private int registrationState = REGISTRATION_STATUS_UNKNOWN;
 	
 	/**
 	 * RCS status
 	 */
-	private String rcsStatus = ContactInfo.NOT_RCS;
+	private int rcsStatus = ContactInfo.NOT_RCS;
 	
 	/**
 	 * RCS status timestamp
@@ -79,6 +124,20 @@ public class ContactInfo implements Parcelable {
 	public ContactInfo() {
 	}
 
+    /**
+	 * Constructor
+	 * 
+	 * @param contactInfo
+	 */
+	public ContactInfo(ContactInfo info) {
+		this.contact = info.getContact();
+		this.registrationState = info.getRegistrationState();
+		this.rcsStatus = info.getRcsStatus();
+		this.rcsStatusTimestamp = info.getRcsStatusTimestamp();
+		this.capabilities = info.capabilities;
+		this.presenceInfo = info.getPresenceInfo();		
+	}
+	
 	/**
 	 * Constructor
 	 * 
@@ -101,11 +160,11 @@ public class ContactInfo implements Parcelable {
 		
 		contact = source.readString();
 		
-		rcsStatus = source.readString();
+		rcsStatus = source.readInt();
 		
 		rcsStatusTimestamp = source.readLong();
 		
-		isRegistered = source.readInt() != 0;
+		registrationState = source.readInt();
     }
 	
 	/**
@@ -128,9 +187,9 @@ public class ContactInfo implements Parcelable {
     	dest.writeParcelable(capabilities, flags);
     	dest.writeParcelable(presenceInfo, flags);
     	dest.writeString(contact);
-    	dest.writeString(rcsStatus);
+    	dest.writeInt(rcsStatus);
     	dest.writeLong(rcsStatusTimestamp);
-    	dest.writeInt(isRegistered ? 1 : 0);
+    	dest.writeInt(registrationState);
     }
 
     /**
@@ -206,7 +265,7 @@ public class ContactInfo implements Parcelable {
 	 * 
 	 * @param rcsStatus RCS status
 	 */
-	public void setRcsStatus(String rcsStatus) {
+	public void setRcsStatus(int rcsStatus) {
 		this.rcsStatus = rcsStatus;
 	}
 	
@@ -215,26 +274,26 @@ public class ContactInfo implements Parcelable {
 	 * 
 	 * @return rcsStatus
 	 */
-	public String getRcsStatus(){
+	public int getRcsStatus(){
 		return rcsStatus;
 	}
 	
     /**
 	 * Set the registration state
 	 * 
-	 * @param boolean registrationState
+	 * @param int registrationState
 	 */
-	public void setRegistrationState(boolean registrationState) {
-		this.isRegistered = registrationState;
+	public void setRegistrationState(int registrationState) {
+		this.registrationState = registrationState;
 	}
 	
 	/**
 	 * Returns the registration state
 	 * 
-	 * @return isRegistered
+	 * @return registrationState
 	 */
-	public boolean isRegistered(){
-		return isRegistered;
+	public int getRegistrationState(){
+		return registrationState;
 	}
 	
     /**
@@ -262,7 +321,8 @@ public class ContactInfo implements Parcelable {
 	 */
 	public String toString() {
 		String result =  "- Contact: " + contact + "\n" +
-			"- RCS Status: " + rcsStatus + "\n" +
+			"- RCS Status: " + rcsStatus + "\n" +	
+			"- RCS registration state: " + registrationState+ "\n" +
 			"- RCS status timestamp: " + rcsStatusTimestamp + "\n";
 		if (capabilities != null) {
 			result += "- Capabilities: " + capabilities.toString() + "\n";

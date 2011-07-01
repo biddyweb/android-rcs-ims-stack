@@ -44,6 +44,15 @@ public class ImdnManager {
     }    
     
     /**
+     * Is IMDN activated
+     * 
+     * @return Boolean
+     */
+    public boolean isImdnActivated() {
+    	return activated;
+    }
+    
+    /**
      * Add IMDN headers
      * 
      * @param invite INVITE request 

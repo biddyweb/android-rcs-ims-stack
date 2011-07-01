@@ -35,6 +35,7 @@ import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
  * Capability API
  */
 public class CapabilityApi extends ClientApi {
+
 	/**
 	 * Core service API
 	 */
