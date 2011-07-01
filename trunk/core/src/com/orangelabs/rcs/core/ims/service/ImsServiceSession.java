@@ -213,7 +213,15 @@ public abstract class ImsServiceSession extends Thread {
 	public SessionTimerManager getSessionTimerManager() {
 		return sessionTimer;
 	}
-	
+
+    /**
+     * Is behind a NAT
+     *
+     * @return Boolean
+     */
+    public boolean isBehindNat() {
+		return getImsService().getImsModule().getCurrentNetworkInterface().isBehindNat();
+    }	
 
 	/**
 	 * Start the session in background
@@ -441,7 +449,6 @@ public abstract class ImsServiceSession extends Thread {
         	if (dialogPath.isSigEstablished()) {
 		        // Increment the Cseq number of the dialog path
 		        getDialogPath().incrementCseq();
-		        // TODO: necessary ?
 	
 		        // Send BYE without waiting a response
 		        getImsService().getImsModule().getSipManager().sendSipBye(getDialogPath());
@@ -479,13 +486,13 @@ public abstract class ImsServiceSession extends Thread {
     	// Remove the current session
     	getImsService().removeSession(this);
 	
-        // Notify listener
+    	// Stop session timer
+    	getSessionTimerManager().stop();		
+
+    	// Notify listener
         if (getListener() != null) {
         	getListener().handleSessionTerminatedByRemote();
         }
-        
-        // Request capabilities to the remote
-        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 	}
 	
 	/**
@@ -638,4 +645,43 @@ public abstract class ImsServiceSession extends Thread {
 			}
 		}
 	}
+	
+	/**
+	 * Create SDP setup offer (see RFC6135, RFC4145)
+	 * 
+	 * @return Setup offer ("active" or "actpass")
+	 */
+	public String createSetupOffer() {
+    	if (isBehindNat()) {
+        	// Active mode by default if there is a NAT. Active/passive mode is
+    		// exchanged in order to be compatible with UE not supporting COMEDIA
+    		return "actpass";
+    	} else {
+        	return "active";
+    	}
+	}
+	
+	/**
+	 * Create SDP setup answer (see RFC6135, RFC4145)
+	 * 
+	 * @param offer setup offer
+	 * @return Setup answer ("active" or "passive")
+	 */
+	public String createSetupAnswer(String offer) {
+    	if (offer.equals("actpass")) {
+        	// Active mode by default if there is a NAT or AS IM
+    		return "active";
+    	} else
+        if (offer.equals("active")) {
+        	// Passive mode
+			return "passive";
+        } else 
+        if (offer.equals("passive")) {
+        	// Active mode
+			return "active";
+        } else {
+        	// Passive mode by default
+			return "passive";
+        }
+	}	
 }

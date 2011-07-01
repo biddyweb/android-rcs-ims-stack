@@ -155,18 +155,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
 			}
             
     		// Set setup mode
-            String localSetup = "passive";
-            if (remoteSetup.equals("active")) {
-            	// Passive mode: the terminal should wait a media connection
-    			localSetup = "passive";
-            } else 
-            if (remoteSetup.equals("passive")) {
-            	// Active mode: the terminal should initiate a media connection
-    			localSetup = "active";
-            } else {
-            	// The terminal is active by default
-    			localSetup = "active";
-            }
+            String localSetup = createSetupAnswer(remoteSetup);
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
@@ -336,6 +325,9 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
     	if (logger.isActivated()) {
     		logger.info("Data received");
     	}
+    	
+    	// Set flag transfered
+    	contentTransferTerminated = true;
 	
 	   	try {
 	    	// Update the content with the received data 

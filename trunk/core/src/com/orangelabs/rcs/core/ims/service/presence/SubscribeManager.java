@@ -475,6 +475,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
 	 * Handle 423 response 
 	 * 
 	 * @param ctx SIP transaction context
+	 * @throws Exception
 	 */
 	private void handle423IntervalTooBrief(SipTransactionContext ctx) throws Exception {
 		// 423 response received
@@ -493,7 +494,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
             if (logger.isActivated()) {
             	logger.error("Can't read the Min-Expires value");
             }
-        	handleError(new PresenceError(PresenceError.SUBSCRIBE_FAILED, "No Min-Epires value found"));
+        	handleError(new PresenceError(PresenceError.SUBSCRIBE_FAILED, "No Min-Expires value found"));
         	return;
         }
         

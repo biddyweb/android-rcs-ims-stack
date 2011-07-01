@@ -134,19 +134,24 @@ public class OriginatingSipSession extends GenericSipSession {
             if (ctx.getStatusCode() == 407) {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx.getSipResponse());
+            } else
+            if (ctx.getStatusCode() == 422) {
+            	// 422 Session Interval Too Small
+            	handle422SessionTooSmall(ctx.getSipResponse());
+            } else
+            if (ctx.getStatusCode() == 603) {
+            	// 603 Invitation declined
+            	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_DECLINED,
+    					ctx.getReasonPhrase()));
+            } else
+            if (ctx.getStatusCode() == 487) {
+            	// 487 Invitation cancelled
+            	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_CANCELLED,
+    					ctx.getReasonPhrase()));
             } else {
-            	// Error response
-                if (ctx.getStatusCode() == 603) {
-                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_DECLINED,
-        					ctx.getReasonPhrase()));
-                } else
-                if (ctx.getStatusCode() == 487) {
-                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_CANCELLED,
-        					ctx.getReasonPhrase()));
-                } else {
-                	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_FAILED,
-                			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
-                }
+            	// Other error response
+            	handleError(new SipSessionError(SipSessionError.SESSION_INITIATION_FAILED,
+            			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
             }
         } else {
         	// No response received: timeout
@@ -284,6 +289,59 @@ public class OriginatingSipSession extends GenericSipSession {
         }
 	}
 
+	/**
+	 * Handle 422 response 
+	 * 
+	 * @param resp 422 response
+	 */
+	private void handle422SessionTooSmall(SipResponse resp) {
+		try {
+			// 422 response received
+	    	if (logger.isActivated()) {
+	    		logger.info("422 response received");
+	    	}
+	
+	        // Extract the Min-SE value
+	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
+	        if (minExpire == -1) {
+	            if (logger.isActivated()) {
+	            	logger.error("Can't read the Min-SE value");
+	            }
+	        	handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
+	        	return;
+	        }
+	        
+	        // Set the expire value
+	        getDialogPath().setSessionExpireTime(minExpire);
+	
+	        // Create a new INVITE with the right expire period
+	        if (logger.isActivated()) {
+	        	logger.info("Send new INVITE");
+	        }
+	        SipRequest invite = SipMessageFactory.createInvite(
+	        		getDialogPath(),
+	        		featureTags,
+					getDialogPath().getLocalContent());
+
+	        // Reset initial request in the dialog path
+	        getDialogPath().setInvite(invite);
+	        
+	        // Set the Proxy-Authorization header
+	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
+	
+	        // Send INVITE request
+	        sendInvite(invite);
+	    } catch(Exception e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("Session initiation has failed", e);
+	    	}
+	
+	    	// Unexpected error
+			handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+	    }
+	}		
+	
 	/**
 	 * Close media session
 	 */

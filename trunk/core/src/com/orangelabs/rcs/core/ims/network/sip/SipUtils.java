@@ -128,6 +128,11 @@ public class SipUtils {
 	public static final String HEADER_SESSION_EXPIRES = "Session-Expires";
 
 	/**
+	 * Min-SE header
+	 */
+	public static final String HEADER_MIN_SE = "Min-SE";
+	
+	/**
 	 * Extract the URI part of a SIP address
 	 * 
 	 * @param addr SIP address
@@ -167,6 +172,17 @@ public class SipUtils {
 	    Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
 	    return userAgentHeader;
     }
+	
+	/**
+     * Build Server header
+     * 
+     * @return Header
+     * @throws Exception
+     */
+	public static Header buildServerHeader() throws Exception {
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
+		return HEADER_FACTORY.createHeader(ServerHeader.NAME, value);
+    }
     
 	/**
 	 * Build Allow header
@@ -194,18 +210,7 @@ public class SipUtils {
 	public static MaxForwardsHeader buildMaxForwardsHeader() throws InvalidArgumentException {
     	return HEADER_FACTORY.createMaxForwardsHeader(70);	
 	}
-    
-	/**
-     * Build Server header
-     * 
-     * @return Header
-     * @throws Exception
-     */
-	public static Header buildServerHeader() throws Exception {
-		String value = TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
-		return HEADER_FACTORY.createHeader(ServerHeader.NAME, value);
-    }
-    
+       
     /**
 	 * Build P-Access-Network-info
 	 * 
@@ -264,6 +269,22 @@ public class SipUtils {
 		}
 	}
 
+    /**
+	 * Get Min-SE period from message
+	 * 
+	 * @param message SIP message
+	 * @return Expire period in seconds or -1 in case of error
+	 */
+	public static int getMinSessionExpirePeriod(SipMessage message) {
+		ExtensionHeader minSeHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_MIN_SE);
+		if (minSeHeader != null) {
+			String value = minSeHeader.getValue();
+			return Integer.parseInt(value);
+		} else {
+			return -1;
+		}
+	}
+	
 	/**
 	 * Get asserted identity
 	 * 

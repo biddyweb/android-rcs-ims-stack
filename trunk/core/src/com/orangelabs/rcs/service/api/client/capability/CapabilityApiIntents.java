@@ -31,4 +31,9 @@ public interface CapabilityApiIntents {
      * Intent broadcasted to discover capability extensions
      */
     public final static String RCS_EXTENSIONS = "com.orangelabs.rcs.capability.EXTENSION";
+    
+	/**
+	 * RCS-e extension prefix
+	 */
+	public final static String RCSE_EXTENSION_ORANGE_PREFIX = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";	    
 }

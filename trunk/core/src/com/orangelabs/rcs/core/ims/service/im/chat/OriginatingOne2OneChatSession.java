@@ -46,7 +46,12 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class OriginatingOne2OneChatSession extends OneOneChatSession {	
-    /**
+	/**
+	 * Boundary tag
+	 */
+	private String boundary = "boundary1";
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -75,11 +80,14 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	}
 	    	
     		// Set setup mode
-	    	String localSetup = "active";
+	    	String localSetup = createSetupOffer();
+            if (logger.isActivated()){
+				logger.debug("Local setup attribute is " + localSetup);
+			}
 	    	
     		// Set local port
 	    	int localMsrpPort = 9; // See RFC4145, Page 4
-	    	
+
 	    	// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String sdp =
@@ -93,27 +101,61 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + InstantMessage.MIME_TYPE + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF;
+	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
 	    	
-			// Set the local SDP part in the dialog path
-	    	getDialogPath().setLocalContent(sdp);
+	    	// If there is a first message then builds a multipart content else builds a SDP content
+	    	SipRequest invite; 
+	    	if (getFirstMessage() != null) {
+		    	// Build CPIM part
+		        String cpim =
+		        	ChatUtils.buildCpimMessageWithIMDN(getDialogPath().getLocalParty(),
+		        			getDialogPath().getRemoteParty(), getFirstMessage().getMessageId(), getSubject(), "text/plain")
+		        	+ SipUtils.CRLF;
+		        
+		    	// Build multipart
+		        String multipart = 
+		        	"--" + boundary + SipUtils.CRLF +
+	    			"Content-Type: application/sdp" + SipUtils.CRLF +
+	    			"Content-Length: " + sdp.length() + SipUtils.CRLF +
+	    			SipUtils.CRLF +
+	    			sdp + 
+	    			"--" + boundary + SipUtils.CRLF +
+	    			"Content-Type: message/cpim" + SipUtils.CRLF +
+	    			"Content-Length: "+ cpim.length() + SipUtils.CRLF +
+	    			SipUtils.CRLF +
+	    			cpim +
+	    			"--" + boundary + "--" + SipUtils.CRLF;
 
-	        // Create an INVITE request
-	        if (logger.isActivated()) {
-	        	logger.info("Send INVITE");
-	        }
-	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-	        		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
-	        
-	        // Add a subject header
-	        String subject = getSubject();
-	        if (subject != null) {
-	        	invite.addHeader(SubjectHeader.NAME, subject);
-	        }
-	        
-	        // Add IMDN headers
-	        addImdnHeaders(invite, ChatUtils.generateMessageId());
-	        
+				// Set the local SDP part in the dialog path
+		    	getDialogPath().setLocalContent(multipart);
+		        
+		        // Create an INVITE request
+		        if (logger.isActivated()) {
+		        	logger.info("Send INVITE");
+		        }
+		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		multipart,
+		        		boundary);
+		        
+		        // Add a subject header
+	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+
+	        	// Add IMDN headers
+		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+	    	} else {
+				// Set the local SDP part in the dialog path
+		    	getDialogPath().setLocalContent(sdp);
+		        
+		        // Create an INVITE request
+		        if (logger.isActivated()) {
+		        	logger.info("Send INVITE");
+		        }
+		        invite = SipMessageFactory.createInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		sdp);
+	    	}
+
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
@@ -125,8 +167,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
         	}
 
         	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
+			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}		
 	}
 	
@@ -153,19 +194,24 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
             if (ctx.getStatusCode() == 407) {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx.getSipResponse());
-            } else {           	
-            	// Error response
-                if (ctx.getStatusCode() == 603) {
-                	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
-        					ctx.getReasonPhrase()));
-                } else
-                if (ctx.getStatusCode() == 487) {
-                	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
-        					ctx.getReasonPhrase()));
-                } else {
-	    			handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED,
-	    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
-                }
+            } else           	
+            if (ctx.getStatusCode() == 422) {
+            	// 422 Session Interval Too Small
+            	handle422SessionTooSmall(ctx.getSipResponse());
+            } else
+            if (ctx.getStatusCode() == 603) {
+            	// 603 Invitation declined
+            	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
+    					ctx.getReasonPhrase()));
+            } else
+            if (ctx.getStatusCode() == 487) {
+            	// 487 Invitation cancelled
+            	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
+    					ctx.getReasonPhrase()));
+            } else {
+            	// Other error response
+    			handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED,
+    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
             }
         } else {
     		if (logger.isActivated()) {
@@ -286,21 +332,27 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        if (logger.isActivated()) {
 	        	logger.info("Send second INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(
-	        		getDialogPath(),
-	        		InstantMessagingService.CHAT_FEATURE_TAGS,
-					getDialogPath().getLocalContent());
-	               
-	        // Add a subject header
-	        String subject = getSubject();
-	        if (subject != null) {
-	        	invite.addHeader(SubjectHeader.NAME, subject);
-	        }
 
-	        // Add IMDN headers with same message ID than the one used before
-        	addImdnHeaders(invite, ChatUtils.getMessageId(getDialogPath().getInvite()));
-	        
-	        // Reset initial request in the dialog path
+	        // If there is a first message then builds a multipart content else builds a SDP content
+	    	SipRequest invite; 
+	    	if (getFirstMessage() != null) {
+		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		getDialogPath().getLocalContent(),
+		        		boundary);
+		        
+		        // Add a subject header
+	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+
+	        	// Add IMDN headers
+		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+	    	} else {
+		        invite = SipMessageFactory.createInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		getDialogPath().getLocalContent());
+	    	}
+
+	    	// Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
 	        // Set the Proxy-Authorization header
@@ -319,4 +371,73 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 					e.getMessage()));
         }
 	}
+
+	/**
+	 * Handle 422 response 
+	 * 
+	 * @param resp 422 response
+	 */
+	private void handle422SessionTooSmall(SipResponse resp) {
+		try {
+			// 422 response received
+	    	if (logger.isActivated()) {
+	    		logger.info("422 response received");
+	    	}
+	
+	        // Extract the Min-SE value
+	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
+	        if (minExpire == -1) {
+	            if (logger.isActivated()) {
+	            	logger.error("Can't read the Min-SE value");
+	            }
+	        	handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
+	        	return;
+	        }
+	        
+	        // Set the expire value
+	        getDialogPath().setSessionExpireTime(minExpire);
+	
+	        // Create a new INVITE with the right expire period
+	        if (logger.isActivated()) {
+	        	logger.info("Send new INVITE");
+	        }
+
+	        // If there is a first message then builds a multipart content else builds a SDP content
+	    	SipRequest invite; 
+	    	if (getFirstMessage() != null) {
+		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		getDialogPath().getLocalContent(),
+		        		boundary);
+		        
+		        // Add a subject header
+	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+
+	        	// Add IMDN headers
+		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+	    	} else {
+		        invite = SipMessageFactory.createInvite(getDialogPath(), 
+		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+		        		getDialogPath().getLocalContent());
+	    	}
+
+	    	// Reset initial request in the dialog path
+	        getDialogPath().setInvite(invite);
+	        
+	        // Set the Proxy-Authorization header
+	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
+	        
+	        // Send INVITE request
+	        sendInvite(invite);
+	        
+	    } catch(Exception e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("Session initiation has failed", e);
+	    	}
+	
+	    	// Unexpected error
+			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+	    }
+	}		
 }

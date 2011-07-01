@@ -18,7 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.network;
 
-import android.net.ConnectivityManager;
+
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.access.NetworkAccess;
@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.userprofile.GibaUserProfileInterface;
 import com.orangelabs.rcs.core.ims.userprofile.SettingsUserProfileInterface;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfileInterface;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -67,9 +68,9 @@ public abstract class ImsNetworkInterface {
 	protected String authentMode;
 
     /**
-     * Need to use a secure connection or not
+     * IMS transport protocol
      */
-    protected boolean isSecure = false;
+    protected String protocol;
 
     /**
      * IMS proxy
@@ -101,17 +102,13 @@ public abstract class ImsNetworkInterface {
      * @param authentMode Authentication mode
      */
 	public ImsNetworkInterface(ImsModule imsModule, int type, NetworkAccess access,
-            String imsProxyAddr, String authentMode) {
+            String imsProxyAddr, String authentMode, String protocol) {
 		this.imsModule = imsModule;
 		this.type = type;
 		this.access = access;
         this.imsProxyAddr = imsProxyAddr;
 		this.authentMode = authentMode;
-
-        if (this.type == ConnectivityManager.TYPE_WIFI) {
-            // TODO: test the presence of a valid certificate
-            this.isSecure = false; // must be set to true
-        }
+        this.protocol = protocol;
 
         // Instantiates the SIP manager
         sip = new SipManager(this);
@@ -123,6 +120,15 @@ public abstract class ImsNetworkInterface {
         registration = new RegistrationManager(this, registrationProcedure);
 	}
 
+    /**
+     * Is behind a NAT
+     *
+     * @return Boolean
+     */
+    public boolean isBehindNat() {
+		return registration.isBehindNat();
+    }
+	
 	/**
      * Returns the IMS authentication mode
      *
@@ -131,15 +137,6 @@ public abstract class ImsNetworkInterface {
 	public String getAuthenticationMode() {
 		return authentMode;
 	}
-
-    /**
-     * Returns true if need of secure connection
-     *
-     * @return isSecure
-     */
-    public boolean getIsSecure() {
-        return isSecure;
-    }
 
 	/**
      * Load the registration procedure associated to the network access
@@ -237,7 +234,7 @@ public abstract class ImsNetworkInterface {
 
 		// Initialize the SIP stack
 		try {
-            sip.initStack(access.getIpAddress(), imsProxyAddr, isSecure);
+            sip.initStack(access.getIpAddress(), imsProxyAddr, protocol);
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -255,9 +252,9 @@ public abstract class ImsNetworkInterface {
 			if (logger.isActivated()) {
 				logger.debug("IMS registration successful");
 			}
-			
-            // Start keep-alive for NAT
-            if (registration.isBehindNat()) {
+
+            // Start keep-alive for NAT if activated
+            if (registration.isBehindNat() && RcsSettings.getInstance().isSipKeepAliveEnabled()) {
                 sip.getSipStack().getKeepAliveManager().start();
             }
 		} else {

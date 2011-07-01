@@ -36,7 +36,6 @@ import javax.sip.header.EventHeader;
 import javax.sip.header.ExpiresHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
-import javax.sip.header.RecordRouteHeader;
 import javax.sip.header.ReferToHeader;
 import javax.sip.header.RequireHeader;
 import javax.sip.header.RouteHeader;
@@ -524,13 +523,15 @@ public class SipMessageFactory {
 			// Set User-Agent header
 	        invite.addHeader(SipUtils.buildUserAgentHeader());
 	        
-	        // Set the Supported header
-			Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");
-			invite.addHeader(supportedHeader);
-	
-			// Add Session-Timer header
+			// Add session timer management
 			if (dialog.getSessionExpireTime() >= 90) {
-				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
+		        // Set the Supported header
+				Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");
+				invite.addHeader(supportedHeader);
+
+				// Set Session-Timer headers
+				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES,
+						""+dialog.getSessionExpireTime());
 				invite.addHeader(sessionExpiresHeader);
 			}
 			
@@ -580,12 +581,13 @@ public class SipMessageFactory {
 	        // Set the Server header
 			response.addHeader(SipUtils.buildServerHeader());
 	
-			// Set the Require header
-	    	Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");
-			response.addHeader(requireHeader);	
-			
-			// Set Session-Timer header
+			// Add session timer management
 			if (dialog.getSessionExpireTime() >= 90) {
+				// Set the Require header
+		    	Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");
+				response.addHeader(requireHeader);	
+
+				// Set Session-Timer header
 				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES,
 						dialog.getSessionExpireTime() + ";refresher=" + SessionTimerManager.UAC_ROLE);
 				response.addHeader(sessionExpiresHeader);
@@ -666,8 +668,8 @@ public class SipMessageFactory {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(code, (Request)request.getStackMessage());
 	
+			// Set the local tag
 			if (localTag != null) {
-				// Set the local tag
 				ToHeader to = (ToHeader)response.getHeader(ToHeader.NAME);
 				to.setTag(localTag);
 			}
@@ -692,10 +694,9 @@ public class SipMessageFactory {
 	 */
 	public static SipRequest createBye(SipDialogPath dialog) throws SipException {
 		try {
-	        // Create the request
+			// Create the request
 			Transaction transaction = dialog.getInvite().getStackTransaction();
 		    Request bye = transaction.getDialog().createRequest(Request.BYE);
-		    
 	        return new SipRequest(bye);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -717,7 +718,6 @@ public class SipMessageFactory {
 	        // Create the request
 		    ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
 		    Request cancel = transaction.createCancel();
-		    
 			return new SipRequest(cancel);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -1124,9 +1124,8 @@ public class SipMessageFactory {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)request.getStackMessage());
 			
-			// Set Record-Route header
-			Header recordRoute = dialog.getInvite().getHeader(RecordRouteHeader.NAME);
-			response.addHeader(recordRoute);
+	        // Set the Server header
+			response.addHeader(SipUtils.buildServerHeader());
 			
 	        // Set the Require header
 			Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");

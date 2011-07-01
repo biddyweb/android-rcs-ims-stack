@@ -525,8 +525,8 @@ public class RcsCoreService extends Service implements CoreListener {
 				presenceInfoNotificationForMe(presence);
 			} else {
 				// Check that the contact exist in database
-				String rcsStatus = ContactsManager.getInstance().getContactSharingStatus(contact);
-				if (rcsStatus == null) {
+				int rcsStatus = ContactsManager.getInstance().getContactSharingStatus(contact);
+				if (rcsStatus == -1) {
 					if (logger.isActivated()) {
 						logger.debug("Contact " + contact + " is not a RCS contact, by-pass the notification");
 					}
@@ -644,17 +644,18 @@ public class RcsCoreService extends Service implements CoreListener {
     		String number = PhoneUtils.extractNumberFromUri(contact);
 
     		// Get the current presence info
-    		ContactInfo contactInfo = ContactsManager.getInstance().getContactInfo(contact);
-    		if (contactInfo == null) {
+    		ContactInfo currentContactInfo = ContactsManager.getInstance().getContactInfo(contact);
+    		ContactInfo newContactInfo = currentContactInfo;
+    		if (currentContactInfo == null) {
     			if (logger.isActivated()) {
     				logger.warn("Contact " + contact + " not found in EAB: by-pass the notification");
     			}
     			return;
     		}
-    		PresenceInfo currentPresenceInfo = contactInfo.getPresenceInfo();
-    		if (currentPresenceInfo == null) {
-    			currentPresenceInfo = new PresenceInfo();
-    			contactInfo.setPresenceInfo(currentPresenceInfo);
+    		PresenceInfo newPresenceInfo = currentContactInfo.getPresenceInfo();
+    		if (newPresenceInfo == null) {
+    			newPresenceInfo = new PresenceInfo();
+    			newContactInfo.setPresenceInfo(newPresenceInfo);
     		}
 
 			// Update the current capabilities
@@ -685,7 +686,7 @@ public class RcsCoreService extends Service implements CoreListener {
 					capabilities.setImSessionSupport(state);
 				}
 			}
-			contactInfo.setCapabilities(capabilities);
+			newContactInfo.setCapabilities(capabilities);
 
 			// Update presence status
 			String presenceStatus = PresenceInfo.UNKNOWN;
@@ -696,15 +697,15 @@ public class RcsCoreService extends Service implements CoreListener {
 					presenceStatus = willingness.getBasic().getValue();
 				}
 			}				
-			currentPresenceInfo.setPresenceStatus(presenceStatus);
+			newPresenceInfo.setPresenceStatus(presenceStatus);
 
 			// Update the presence info
-			currentPresenceInfo.setTimestamp(person.getTimestamp());
+			newPresenceInfo.setTimestamp(person.getTimestamp());
 			if (person.getNote() != null) {
-				currentPresenceInfo.setFreetext(person.getNote().getValue());
+				newPresenceInfo.setFreetext(person.getNote().getValue());
 			}
 			if (person.getHomePage() != null) {
-				currentPresenceInfo.setFavoriteLink(new FavoriteLink(person.getHomePage()));
+				newPresenceInfo.setFavoriteLink(new FavoriteLink(person.getHomePage()));
 			}
 			
 			// Update geoloc info
@@ -712,11 +713,12 @@ public class RcsCoreService extends Service implements CoreListener {
 				Geoloc geoloc = new Geoloc(presence.getGeopriv().getLatitude(),
 						presence.getGeopriv().getLongitude(),
 						presence.getGeopriv().getAltitude());
-				currentPresenceInfo.setGeoloc(geoloc);
+				newPresenceInfo.setGeoloc(geoloc);
 			}
 			
+			newContactInfo.setPresenceInfo(newPresenceInfo);
 	    	// Update contacts database
-			ContactsManager.getInstance().setContactInfo(contact, contactInfo);
+			ContactsManager.getInstance().setContactInfo(newContactInfo, currentContactInfo);
 
     		// Get photo Etag values
 			String lastEtag = ContactsManager.getInstance().getContactPhotoEtag(contact);

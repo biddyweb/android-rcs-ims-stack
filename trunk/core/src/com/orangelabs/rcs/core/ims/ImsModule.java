@@ -211,9 +211,6 @@ public class ImsModule implements SipEventListener {
 		// Stop call monitoring
     	callManager.stopCallMonitoring();
 
-    	// Abort all pending sessions
-    	abortAllSessions();
-    	
     	// Terminate the connection manager
     	connectionManager.terminate();
 
@@ -229,6 +226,7 @@ public class ImsModule implements SipEventListener {
      * Start IMS services
      */
     public void startImsServices() {
+    	// Start each services
 		for(int i=0; i < services.length; i++) {
 			if (services[i].isActivated()) {
 				if (logger.isActivated()) {
@@ -243,6 +241,10 @@ public class ImsModule implements SipEventListener {
      * Stop IMS services
      */
     public void stopImsServices() {
+    	// Abort all pending sessions
+    	abortAllSessions();
+    	
+    	// Stop each services
     	for(int i=0; i < services.length; i++) {
     		if (services[i].isActivated()) {
 				if (logger.isActivated()) {

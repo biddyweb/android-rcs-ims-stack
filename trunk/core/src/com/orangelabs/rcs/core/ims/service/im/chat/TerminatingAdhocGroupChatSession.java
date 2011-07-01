@@ -40,7 +40,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -61,7 +60,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, true), StringUtils.decodeUTF8(invite.getSubject()));
+		super(parent, ChatUtils.getAssertedIdentity(invite, true), invite.getSubject());
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -162,18 +161,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 			}
             
     		// Set setup mode
-            String localSetup = "passive";
-            if (remoteSetup.equals("active")) {
-            	// Passive mode: the terminal should wait a media connection
-    			localSetup = "passive";
-            } else 
-            if (remoteSetup.equals("passive")) {
-            	// Active mode: the terminal should initiate a media connection
-    			localSetup = "active";
-            } else {
-            	// The terminal is active by default
-    			localSetup = "active";
-            }
+            String localSetup = createSetupAnswer(remoteSetup);
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}

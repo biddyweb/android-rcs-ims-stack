@@ -16,13 +16,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.utils;
+package com.orangelabs.rcs.core;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.Hashtable;
 
-import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -54,9 +55,18 @@ public class Config {
     		logger.debug("Parse the configuration file " + name);
     	}
 		try {
-			// Get an input stream from XML configuration file
-			InputStream is = FileFactory.getFactory().openConfigFile(name);
-			if (is == null) {
+			// Get the resource associated to the filename
+			InputStream is = null;
+			try {
+				// Extract file name without extension
+				int index = name.indexOf(".");
+				String filename = name.substring(0, index);		
+				
+				// Get raw ID associated to the config filename
+				Field field = R.raw.class.getField(filename);
+				Integer id = (Integer)field.getInt(field);
+				is = AndroidFactory.getApplicationContext().getResources().openRawResource(id.intValue());
+			} catch(Exception e) {
 				throw new CoreException("XML configuration file " + name + " not found");
 			}
 			

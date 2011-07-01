@@ -377,6 +377,9 @@ public class VideoRenderer extends IMediaRenderer.Stub {
             rtpOutput.close();
         }
 
+        // Force black screen
+    	surface.clearImage();
+
         // Stop decoder
         // TODO
 
@@ -531,8 +534,6 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          * Close the renderer
          */
         public void close() {
-            // Force black screen
-        	surface.clearImage();
         }
 
         /**

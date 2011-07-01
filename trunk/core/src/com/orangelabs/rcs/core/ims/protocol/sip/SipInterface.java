@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,14 @@
  ******************************************************************************/
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
+
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -43,13 +51,6 @@ import javax.sip.header.ContactHeader;
 import javax.sip.header.ExtensionHeader;
 import javax.sip.header.Header;
 import javax.sip.header.ViaHeader;
-
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP interface which manage the SIP stack. The NIST stack is used
@@ -153,23 +154,24 @@ public class SipInterface implements SipListener {
      * @param isSecure Need secure connection or not
      * @throws SipException
      */
-    public SipInterface(String localIpAddress, String outboundProxy, boolean isSecure)
+    public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol)
             throws SipException {
+
 		this.localIpAddress = localIpAddress;
-		this.defaultProtocol = RcsSettings.getInstance().getSipDefaultProtocol();
+        this.defaultProtocol = defaultProtocol;
 		this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
 
 		// Get outbound proxy config
-		try {
-			String[] parts = outboundProxy.split(":");
-			this.outboundProxyAddr = parts[0];
-			this.outboundProxyPort = Integer.parseInt(parts[1]);
-		} catch(Exception e) {
-			throw new SipException("Bad outbound proxy address");
-		}
-		if (logger.isActivated()) {
-			logger.debug("SIP outbound proxy set to " + outboundProxyAddr + ":" + outboundProxyPort);
-		}
+        try {
+            String[] parts = outboundProxy.split(":");
+            this.outboundProxyAddr = parts[0];
+            this.outboundProxyPort = Integer.parseInt(parts[1]);
+        } catch (Exception e) {
+            throw new SipException("Bad outbound proxy address");
+        }
+        if (logger.isActivated()) {
+            logger.debug("SIP outbound proxy set to " + outboundProxyAddr + ":" + outboundProxyPort);
+        }
 
 		// Set the default route path
 		defaultRoutePath = new Vector<String>();
@@ -204,43 +206,76 @@ public class SipInterface implements SipListener {
 		        properties.setProperty("gov.nist.javax.sip.LOG_MESSAGE_CONTENT", "true");
 		        properties.setProperty("gov.nist.javax.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
             }
-            // TODO: Add certificate for secure connection
-            // if (isSecure) {
-            // properties.setProperty("gov.nist.javax.sip.TLS_CLIENT_PROTOCOLS","SSLv3, SSLv2Hello, TLSv1");
-            // properties.setProperty("javax.net.ssl.keyStore", filename...);
-            // properties.setProperty("javax.net.ssl.keyStorePassword",
-            // password...);
-            // }
+            if (defaultProtocol.equals(ListeningPoint.TLS)) {
+                // Create a keystore if not exist
+                if (!KeyStoreManager.exists())
+                    KeyStoreManager.createKeyStore();
+
+                // Add certificates if not present
+                String certPathRoot = RcsSettings.getInstance().getTlsCertificateRoot();
+                if (!certPathRoot.equals("")) {
+                    certPathRoot = RcsSettingsData.CERTIFICATE_FOLDER_PATH + certPathRoot;
+                    if (!KeyStoreManager.isCertificateEntry(certPathRoot))
+                        KeyStoreManager.addCertificate(certPathRoot);
+                }
+                String certPathIntermediate = RcsSettings.getInstance()
+                        .getTlsCertificateIntermediate();
+                if (!certPathIntermediate.equals("")) {
+                    certPathIntermediate = RcsSettingsData.CERTIFICATE_FOLDER_PATH
+                            + certPathIntermediate;
+                    if (!KeyStoreManager.isCertificateEntry(certPathIntermediate))
+                        KeyStoreManager.addCertificate(certPathIntermediate);
+                }
+
+                // Set SSL properties
+                properties.setProperty("gov.nist.javax.sip.TLS_CLIENT_PROTOCOLS", "SSLv3, TLSv1");
+                properties.setProperty("javax.net.ssl.keyStoreType", KeyStoreManager.TYPE);
+                properties.setProperty("javax.net.ssl.keyStore", KeyStoreManager.PATH);
+                properties.setProperty("javax.net.ssl.keyStorePassword", KeyStoreManager.PASSWORD);
+                properties.setProperty("javax.net.ssl.trustStore", KeyStoreManager.PATH);
+            }
 
 			// Create the SIP stack
 			sipStack = sipFactory.createSipStack(properties);
 
-			// Create SIP providers
-            if (isSecure) {
+			// Create UDP provider
+            ListeningPoint udp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.UDP);
+            SipProvider udpSipProvider = sipStack.createSipProvider(udp);
+            udpSipProvider.addSipListener(this);
+            sipProviders.addElement(udpSipProvider);
+
+			// Set the default SIP provider
+            if (defaultProtocol.equals(ListeningPoint.TLS)) {
+                // Create TLS provider
                 ListeningPoint tls = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TLS);
                 SipProvider tlsSipProvider = sipStack.createSipProvider(tls);
                 tlsSipProvider.addSipListener(this);
                 sipProviders.addElement(tlsSipProvider);
+
+                // TLS protocol used by default
                 defaultSipProvider = tlsSipProvider;
-			} else {
+			} else
+            if (defaultProtocol.equals(ListeningPoint.TCP)) {
+    			// Create TCP provider
                 ListeningPoint tcp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TCP);
                 SipProvider tcpSipProvider = sipStack.createSipProvider(tcp);
                 tcpSipProvider.addSipListener(this);
                 sipProviders.addElement(tcpSipProvider);
-                
-                ListeningPoint udp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.UDP);
-                SipProvider udpSipProvider = sipStack.createSipProvider(udp);
-                udpSipProvider.addSipListener(this);
-                sipProviders.addElement(udpSipProvider);
-                
-                if (defaultProtocol.equals(ListeningPoint.TCP)) {
-                    defaultSipProvider = tcpSipProvider;
-                } else
-                if (defaultProtocol.equals(ListeningPoint.UDP)) {
-                    defaultSipProvider = udpSipProvider;
-                }
+
+                // TCP protocol used by default
+                defaultSipProvider = tcpSipProvider;
+            } else {
+    			// Create TCP provider
+                ListeningPoint tcp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TCP);
+                SipProvider tcpSipProvider = sipStack.createSipProvider(tcp);
+                tcpSipProvider.addSipListener(this);
+                sipProviders.addElement(tcpSipProvider);
+
+                // UDP protocol used by default
+                defaultSipProvider = udpSipProvider;
             }
-			if (logger.isActivated()) {
+
+            if (logger.isActivated()) {
 				logger.debug("Default SIP provider is " + defaultProtocol);
 			}
 
@@ -342,15 +377,15 @@ public class SipInterface implements SipListener {
 		return listeningPort;
 	}
 
-	/**
-	 * Returns the keep-alive manager
-	 * 
-	 * @return Keep-alive manager
-	 */
+    /**
+     * Returns the keep-alive manager
+     *
+     * @return Keep-alive manager
+     */
 	public KeepAliveManager getKeepAliveManager() {
 		return keepAliveManager;
 	}
-	
+
 	/**
      * Returns the local via path
      *
@@ -718,7 +753,7 @@ public class SipInterface implements SipListener {
 			throw new SipException("Can't send SIP message");
 		}
 	}
-	
+
 	/**
      * Send a SIP UPDATE
      *
@@ -747,7 +782,7 @@ public class SipInterface implements SipListener {
 
 			// Get stack transaction
 		    ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(update.getStackMessage());
-			
+
 			// Create a transaction context
 			SipTransactionContext ctx = new SipTransactionContext(transaction);
 			String id = SipTransactionContext.getTransactionContextId(update);
@@ -755,8 +790,8 @@ public class SipInterface implements SipListener {
 			if (logger.isActivated()) {
 				logger.debug("Create a transaction context " + id);
 			}
-			transaction.sendRequest();		    
-			
+            transaction.sendRequest();
+
 			// Returns the created transaction to wait synchronously the response
 			return ctx;
 		} catch(Exception e) {

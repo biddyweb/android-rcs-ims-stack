@@ -112,13 +112,13 @@ public class SipManager {
      * @return SIP stack
      * @throws SipException
      */
-	public void initStack(String localAddr, String outboundProxy, boolean isSecure)
+    public void initStack(String localAddr, String outboundProxy, String protocol)
             throws SipException {
 		// Close the stack if necessary
 		closeStack();
 
 		// Create the SIP stack
-        sipstack = new SipInterface(localAddr, outboundProxy, isSecure);
+        sipstack = new SipInterface(localAddr, outboundProxy, protocol);
     }
 
 	/**
@@ -191,8 +191,7 @@ public class SipManager {
 	public void sendSipCancel(SipDialogPath dialog) throws SipException {
 		sipstack.sendSipCancel(dialog);
 	}
-	
-	
+
     /**
      * Send a SIP UPDATE
      *
@@ -202,5 +201,5 @@ public class SipManager {
      */
 	public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
 		return sipstack.sendSipUpdate(dialog);
-	}    
+    }
 }
