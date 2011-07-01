@@ -33,6 +33,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
@@ -123,11 +124,15 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
      */
     private OnClickListener btnInviteListener = new OnClickListener() {
         public void onClick(View v) {
+			// Get subject
+            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
+            final String firstMessage = firstMessageText.getText().toString().trim();
+            
     		// Initiate the chat session in background
             Thread thread = new Thread() {
             	public void run() {
                 	try {
-	            		chatSession = messagingApi.initiateAdhocGroupChatSession(participants, "");
+	            		chatSession = messagingApi.initiateAdhocGroupChatSession(participants, firstMessage);
 	            		chatSession.addSessionListener(chatSessionListener);
 	            	} catch(Exception e) {
 	            		handler.post(new Runnable(){
@@ -169,10 +174,16 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 					}
 				});
 				
+				// Get subject
+	            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
+	            final String firstMessage = firstMessageText.getText().toString().trim();
+				
 				// Display chat view
 	        	Intent intent = new Intent(InitiateChatGroup.this, ChatView.class);
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	        	intent.putExtra("sessionId", chatSession.getSessionID());
+	        	intent.putExtra("subject", firstMessage);
+	        	intent.putExtra("originating", true);
 	        	startActivity(intent);
 	        	
 	        	// Exit activity

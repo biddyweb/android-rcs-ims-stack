@@ -45,7 +45,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
@@ -186,7 +185,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	/**
 	 * Switch camera button
 	 */
-	private ImageButton switchCamBtn = null;
+	private Button switchCamBtn = null;
 
 	/**
 	 * Opened camera id
@@ -239,13 +238,15 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Set layout / ContentView / title
+        // Set layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.richcall_visio_sharing);
-        setTitle(R.string.menu_visio_sharing);
+        
+        // Set title
+        setTitle(R.string.title_video_sharing);
 
         filename = getIntent().getStringExtra("filename");
         isPrerecordedSession = (filename!=null);
@@ -263,7 +264,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
         // Texts and buttons
         if (switchCamBtn == null && !isPrerecordedSession) {
-            switchCamBtn = (ImageButton)findViewById(R.id.switch_cam_btn);
+            switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
             Method method = getCameraNumberOfCamerasMethod();
             if (method != null) {
                 try {
@@ -286,7 +287,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         
         if (isPrerecordedSession){
         	// Hide switch camera button
-        	switchCamBtn = (ImageButton)findViewById(R.id.switch_cam_btn);
+        	switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
         	switchCamBtn.setVisibility(View.GONE);
         }
         
