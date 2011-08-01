@@ -8,6 +8,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -71,18 +72,22 @@ public class ImdnManager {
 	/**
 	 * Send message delivery status via SIP MESSAGE
 	 * 
+	 * @param contact Contact
 	 * @param msgId Message ID
 	 * @param status Status
 	 */
-	public void sendSipMessageDeliveryStatus(String msgId, String status) {
+	public void sendSipMessageDeliveryStatus(String contact, String msgId, String status) {
 		try {
 			if (logger.isActivated()) {
        			logger.debug("Send delivery status " + status + " for message " + msgId);
        		}
 
-       		// Create IDMN document
-			String imdn = ImdnDocument.buildImdnDocument(msgId, status);
-
+	   		// Create CPIM/IDMN document
+			String content = ImdnDocument.buildImdnDocument(msgId, status);
+			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+			String to = contact;
+			String cpim = ChatUtils.buildCpimMessageWithImdnPlusXml(from, to, msgId, content, ImdnDocument.MIME_TYPE);
+			
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
        		
@@ -100,7 +105,7 @@ public class ImdnManager {
         	if (logger.isActivated()) {
         		logger.info("Send first MESSAGE");
         	}
-	        SipRequest msg = SipMessageFactory.createMessage(dialogPath, ImdnDocument.MIME_TYPE, imdn);
+	        SipRequest msg = SipMessageFactory.createMessage(dialogPath, CpimMessage.MIME_TYPE, cpim);
 	        
 	        // Add IMDN headers
 	        msg.addHeader(CpimMessage.HEADER_NS, ImdnDocument.IMDN_NAMESPACE);
@@ -133,7 +138,7 @@ public class ImdnManager {
                 if (logger.isActivated()) {
                 	logger.info("Send second MESSAGE");
                 }
-    	        msg = SipMessageFactory.createMessage(dialogPath, ImdnDocument.MIME_TYPE, imdn);
+    	        msg = SipMessageFactory.createMessage(dialogPath, CpimMessage.MIME_TYPE, cpim);
     	        
     	        // Add IMDN headers
     	        msg.addHeader(CpimMessage.HEADER_NS, ImdnDocument.IMDN_NAMESPACE);

@@ -24,9 +24,9 @@ import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.OriginatingLiveVideoContentSharingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.OriginatingPreRecordedVideoContentSharingSession;
@@ -47,13 +47,13 @@ public class ContentSharingService extends ImsService {
     /**
      * Video share features tags
      */
-    public final static String[] FEATURE_TAGS_VIDEO_SHARE = { CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE };
+    public final static String[] FEATURE_TAGS_VIDEO_SHARE = { FeatureTags.FEATURE_RCSE_VIDEO_SHARE };
     
     /**
      * Image share features tags
      */
-    public final static String[] FEATURE_TAGS_IMAGE_SHARE = { CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE ,
-    	CapabilityUtils.FEATURE_RCSE + "=\"" + CapabilityUtils.FEATURE_RCSE_IMAGE_SHARE + "\"" };
+    public final static String[] FEATURE_TAGS_IMAGE_SHARE = { FeatureTags.FEATURE_RCSE_VIDEO_SHARE ,
+    	FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_IMAGE_SHARE + "\"" };
 	
 	/**
      * The logger

@@ -515,9 +515,7 @@ public class EventLogProvider extends ContentProvider {
 		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_NAME,
 		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_SIZE,
 		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_IMDN_DELIVERED,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_IMDN_DISPLAYED,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_IS_SPAM,
+		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_IS_SPAM
 	};
 	
 	private static String KEY_SMS_ADDRESS = "address";
@@ -542,9 +540,7 @@ public class EventLogProvider extends ContentProvider {
 		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_NAME,
 		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_SIZE,
 		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_IMDN_DELIVERED,
-		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_IMDN_DISPLAYED,
-		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_IS_SPAM,
+		KEY_SMS_ADDRESS+" AS "+EventLogData.KEY_EVENT_IS_SPAM
 	};
 		
 	/* RCS projections */
@@ -561,8 +557,6 @@ public class EventLogProvider extends ContentProvider {
 			RichMessagingData.KEY_NAME+" AS "+EventLogData.KEY_EVENT_NAME,
 			RichMessagingData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_SIZE,
 			RichMessagingData.KEY_TOTAL_SIZE+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-			RichMessagingData.KEY_CHAT_GROUP_IMDN_DELIVERED+" AS "+EventLogData.KEY_EVENT_IMDN_DELIVERED,
-			RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED+" AS "+EventLogData.KEY_EVENT_IMDN_DISPLAYED,
 			RichMessagingData.KEY_IS_SPAM+" AS "+EventLogData.KEY_EVENT_IS_SPAM
 		};
 	
@@ -580,9 +574,7 @@ public class EventLogProvider extends ContentProvider {
 			RichMessagingData.KEY_NAME,
 			RichMessagingData.KEY_SIZE,
 			RichMessagingData.KEY_TOTAL_SIZE,		
-			RichMessagingData.KEY_CHAT_GROUP_IMDN_DELIVERED,
-			RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED,
-			RichMessagingData.KEY_IS_SPAM	
+			RichMessagingData.KEY_IS_SPAM
 	}));
 	
 	private static String [] unionRichCallColumns = new String[]{
@@ -598,8 +590,6 @@ public class EventLogProvider extends ContentProvider {
 			RichCallData.KEY_NAME+" AS "+EventLogData.KEY_EVENT_NAME,
 			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_SIZE,
 			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_IMDN_DELIVERED,
-			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_IMDN_DISPLAYED,
 			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_IS_SPAM
 	};
 	
@@ -614,8 +604,6 @@ public class EventLogProvider extends ContentProvider {
 			RichCallData.KEY_ID,
 			RichCallData.KEY_MIME_TYPE,
 			RichCallData.KEY_NAME,
-			RichCallData.KEY_SIZE,
-			RichCallData.KEY_SIZE,
 			RichCallData.KEY_SIZE,
 			RichCallData.KEY_SIZE,
 			RichCallData.KEY_SIZE
@@ -799,7 +787,7 @@ public class EventLogProvider extends ContentProvider {
 				EventLogData.KEY_EVENT_TYPE, 
 				unionRichMessagingColumns, 
 				columnsPresentInRichMessagingTable, 
-				15, 
+				unionRichMessagingColumns.length, 
 				EventLogData.KEY_EVENT_TYPE, 
 				(selection!=null? selection + selectionFilter
 						: selectionFilter), 
@@ -845,7 +833,7 @@ public class EventLogProvider extends ContentProvider {
 				EventLogData.KEY_EVENT_TYPE, 
 				unionRichMessagingColumns, 
 				columnsPresentInRichMessagingTable, 
-				15, 
+				unionRichMessagingColumns.length, 
 				EventLogData.KEY_EVENT_TYPE, 
 				(selection!=null? RichMessagingData.KEY_CONTACT + selection + " AND "+ selectionFilter
 						: selectionFilter), 
@@ -868,7 +856,7 @@ public class EventLogProvider extends ContentProvider {
 				EventLogData.KEY_EVENT_TYPE, 
 				unionRichCallColumns, 
 				columnsPresentInRichCallTable, 
-				15, 
+				unionRichCallColumns.length, 
 				"("+Integer.toString(EventsLogApi.TYPE_OUTGOING_RICH_CALL) + "||" + Integer.toString(EventsLogApi.TYPE_INCOMING_RICH_CALL) +")", 
 				(selection!=null?RichCallData.KEY_CONTACT+selection:null), 
 				null, 

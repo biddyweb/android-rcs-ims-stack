@@ -20,23 +20,39 @@ package com.orangelabs.rcs.core.ims.service.sip;
 
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.toip.ToIpSessionListener;
 
 /**
- * Generic SIP session
- * 
+ * Generic SIP session 
  * 
  * @author jexa7410
  */
 public abstract class GenericSipSession extends ImsServiceSession {
+	/**
+	 * Feature tag
+	 */
+	private String featureTag;	
+	
+	/**
+	 * SDP offer
+	 */
+	private String sdpOffer = null;
+
+	/**
+	 * SDP answer
+	 */
+	private String sdpAnswer = null;
+	
     /**
 	 * Constructor
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
+	 * @param featureTag Feature tag
 	 */
-	public GenericSipSession(ImsService parent, String contact) {
+	public GenericSipSession(ImsService parent, String contact, String featureTag) {
 		super(parent, contact);
+		
+		this.featureTag = featureTag;
 	}
 	
 	/**
@@ -47,4 +63,49 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	public SipSessionListener getListener() {
 		return (SipSessionListener)super.getListener();
 	}	
+	
+	/**
+	 * Returns feature tag of the service
+	 * 
+	 * @return Feature tag
+	 */
+	public String getFeatureTag() {
+		return featureTag;
+	}
+
+	/**
+	 * Get SDP offer
+	 * 
+	 * @return SDP offer
+	 */
+	public String getSdpOffer() {
+		return sdpOffer;
+	}
+
+	/**
+	 * Set SDP offer
+	 * 
+	 * @param offer SDP offer
+	 */
+	public void setSdpOffer(String offer) {
+		this.sdpOffer = offer;
+	}
+
+	/**
+	 * Get SDP answer
+	 * 
+	 * @return SDP answer
+	 */
+	public String getSdpAnswer() {
+		return sdpAnswer;
+	}
+
+	/**
+	 * Set SDP answer
+	 * 
+	 * @param answer SDP answer
+	 */
+	public void setSdpAnswer(String answer) {
+		this.sdpAnswer = answer;
+	}
 }

@@ -27,6 +27,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
@@ -52,6 +53,9 @@ public class PresenceApi extends ClientApi {
     	
     	// Initialize contacts provider
     	ContactsManager.createInstance(ctx);
+    	
+    	// Initialize settings provider
+    	RcsSettings.createInstance(ctx);
     }
     
     /**

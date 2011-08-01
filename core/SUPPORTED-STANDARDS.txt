@@ -41,7 +41,10 @@ RFC 5262 - Presence Information Data Format (PIDF) Extension for Partial Presenc
 RFC 5438 - Instant Message Disposition Notification (IMDN)
 RFC 5547 - A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer
 RFC 5626 - Managing Client-Initiated Connection in the Session Initiation Protocol
+RFC 5627 - Obtaining and Using Globally Routable User Agent URIs (GRUUs) in the Session Initiation Protocol (SIP)
 RFC 5839 - An Extension to Session Initiation Protocol (SIP) Events for Conditional Event Notification"
+RFC 6135 - An Alternative Connection Model for the Message Session Relay Protocol (MSRP)
+RFC 6223 - Indication of Support for Keep-Alive
 
 draft-ietf-sip-uri-list-conferencing-01	 - Conference Establishment Using Request-Contained Lists in the Session Initiation Protocol (SIP)
 draft-ietf-sip-multiple-refer-01	 - Referring to Multiple Resources in the Session Initiation Protocol (SIP)

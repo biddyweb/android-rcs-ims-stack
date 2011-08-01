@@ -51,7 +51,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -71,14 +70,14 @@ public class SipMessageFactory {
 	 * Create a SIP REGISTER request
 	 * 
 	 * @param dialog SIP dialog path
+     * @param featureTags Feature tags
 	 * @param expirePeriod Expiration period
-	 * @param regId Registration Id
 	 * @param instanceId UA instance Id
 	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRegister(SipDialogPath dialog, int expirePeriod, int regId, String instanceId, String accessInfo) throws SipException {
+    public static SipRequest createRegister(SipDialogPath dialog, List<String> featureTags, int expirePeriod, String instanceId, String accessInfo) throws SipException {
 		try {
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -109,17 +108,14 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 	        
 	        // Set Contact header
-	        ContactHeader contact = dialog.getSipStack().getContactHeader();
-	        if (regId != 0) {
-	        	contact.setParameter("reg-id", ""+regId);
-	        }
+	        ContactHeader contact = dialog.getSipStack().getLocalContact();
 	        if (instanceId != null) {
 	        	contact.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
 	        }
 	        register.addHeader(contact);	        
 	        
             // Set feature tags
-            SipUtils.setFeatureTags(register, CapabilityUtils.getAllSupportedFeatureTags());
+            SipUtils.setFeatureTags(register, featureTags);
 
             // Set Allow header
 	        SipUtils.buildAllowHeader(register);
@@ -210,7 +206,7 @@ public class SipMessageFactory {
 	        subscribe.addHeader(SipUtils.buildUserAgentHeader());
 	        
 	        // Set Contact header
-	        subscribe.addHeader(dialog.getSipStack().getContactHeader());
+	        subscribe.addHeader(dialog.getSipStack().getContact());
 
 	        // Set Allow header
 	        SipUtils.buildAllowHeader(subscribe);
@@ -280,10 +276,10 @@ public class SipMessageFactory {
 			message.addHeader(prefHeader);
 
 	        // Set Contact header
-			message.addHeader(dialog.getSipStack().getContactHeader());	        
+			message.addHeader(dialog.getSipStack().getContact());	        
 			
             // Set feature tags
-	        String[] tags = {ChatUtils.FEATURE_OMA_IM };
+	        String[] tags = {FeatureTags.FEATURE_OMA_IM };
             SipUtils.setFeatureTags(message, tags);
 	        
 	        // Set User-Agent header
@@ -501,7 +497,7 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 
 	        // Set Contact header
-	        invite.addHeader(dialog.getSipStack().getContactHeader());
+	        invite.addHeader(dialog.getSipStack().getContact());
 	
 	        // Set feature tags
 	        SipUtils.setFeatureTags(invite, featureTags);
@@ -570,7 +566,7 @@ public class SipMessageFactory {
 			to.setTag(dialog.getLocalTag());	
 	
 	        // Set Contact header
-	        response.addHeader(dialog.getSipStack().getContactHeader());
+	        response.addHeader(dialog.getSipStack().getContact());
 	
 	        // Set feature tags
 	        SipUtils.setFeatureTags(response, featureTags);
@@ -765,7 +761,7 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 	        
 			// Set Contact header
-	        options.addHeader(dialog.getSipStack().getContactHeader());
+	        options.addHeader(dialog.getSipStack().getLocalContact());
 	        
 	        // Set Accept header
 	    	Header acceptHeader = SipUtils.HEADER_FACTORY.createHeader(AcceptHeader.NAME, "application/sdp");
@@ -815,7 +811,7 @@ public class SipMessageFactory {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)options.getStackMessage());
 	
-			// Set the local tag
+	        // Set the local tag
 			ToHeader to = (ToHeader)response.getHeader(ToHeader.NAME);
 			to.setTag(IdGenerator.getIdentifier());
 	
@@ -891,10 +887,10 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 	        
 	        // Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContactHeader());	        
+	        refer.addHeader(dialog.getSipStack().getContact());	        
 	        
             // Set feature tags
-	        String[] tags = {ChatUtils.FEATURE_OMA_IM};
+	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
 			
 	        // Set Refer-To header
@@ -973,10 +969,10 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 	        
 	        // Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContactHeader());	        
+	        refer.addHeader(dialog.getSipStack().getContact());	        
 	        
             // Set feature tags
-	        String[] tags = {ChatUtils.FEATURE_OMA_IM};
+	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
 			
 	        // Set Require header
@@ -1078,7 +1074,7 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 
 	        // Set Contact header
-	        update.addHeader(dialog.getSipStack().getContactHeader());
+	        update.addHeader(dialog.getSipStack().getContact());
 	
 			// Set the Route header
 	        Vector<String> route = dialog.getRoute();
@@ -1124,6 +1120,9 @@ public class SipMessageFactory {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)request.getStackMessage());
 			
+	        // Set Contact header
+	        response.addHeader(dialog.getSipStack().getContact());
+
 	        // Set the Server header
 			response.addHeader(SipUtils.buildServerHeader());
 			

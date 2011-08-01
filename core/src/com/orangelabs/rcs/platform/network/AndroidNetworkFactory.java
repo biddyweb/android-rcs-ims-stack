@@ -28,7 +28,7 @@ import java.util.Enumeration;
  * @author jexa7410
  */
 public class AndroidNetworkFactory extends NetworkFactory {
-	
+
 	/**
 	 * Returns the local IP address
 	 *
@@ -40,9 +40,9 @@ public class AndroidNetworkFactory extends NetworkFactory {
 	            NetworkInterface intf = (NetworkInterface)en.nextElement();
 	            for (Enumeration<InetAddress> addr = intf.getInetAddresses(); addr.hasMoreElements();) {
 	                InetAddress inetAddress = (InetAddress)addr.nextElement();
-	                if (!inetAddress.isLoopbackAddress()) {
-	                	return inetAddress.getHostAddress().toString();
-	                }
+                    if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
+                        return inetAddress.getHostAddress().toString();
+                    }
 	            }
 	        }
 	        return null;
@@ -50,39 +50,39 @@ public class AndroidNetworkFactory extends NetworkFactory {
 			return null;
 		}
 	}
-	
-	/**
-	 * Create a datagram connection
-	 * 
-	 * @return Datagram connection
-	 */
+
+    /**
+     * Create a datagram connection
+     * 
+     * @return Datagram connection
+     */
 	public DatagramConnection createDatagramConnection() {
 		return new AndroidDatagramConnection();
 	}
 
-	/**
-	 * Create a socket client connection
-	 * 
-	 * @return Socket connection
-	 */
+    /**
+     * Create a socket client connection
+     * 
+     * @return Socket connection
+     */
 	public SocketConnection createSocketClientConnection() {
 		return new AndroidSocketConnection();
 	}
 
-	/**
-	 * Create a socket server connection
-	 * 
-	 * @return Socket server connection
-	 */
+    /**
+     * Create a socket server connection
+     * 
+     * @return Socket server connection
+     */
 	public SocketServerConnection createSocketServerConnection() {
 		return new AndroidSocketServerConnection();
 	}
 
-	/**
-	 * Create an HTTP connection
-	 * 
-	 * @return HTTP connection
-	 */
+    /**
+     * Create an HTTP connection
+     * 
+     * @return HTTP connection
+     */
 	public HttpConnection createHttpConnection() {
 		return new AndroidHttpConnection();
 	}

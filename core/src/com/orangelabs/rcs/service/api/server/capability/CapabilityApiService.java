@@ -79,13 +79,13 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 	}
 	
 	/**
-	 * Synchronize all contacts
+	 * Refresh capabilities for all contacts
 	 * 
 	 * @throws ServerApiException
 	 */
-	public void synchronizeAll() throws ServerApiException {
+	public void refreshAllCapabilities() throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Synchronize all contacts");
+			logger.info("Refresh capabilities for all contacts");
 		}
 
     	// Check permission

@@ -138,15 +138,15 @@ public class CapabilityApi extends ClientApi {
 	}
 
 	/**
-	 * Synchronize all contacts
+	 * Refresh capabilities for all contacts
 	 * 
 	 * @throws ClientApiException
 	 */
-	public void synchronizeAll() throws ClientApiException {
+	public void refreshAllCapabilities() throws ClientApiException {
 		if (coreApi != null) {
 			try {
-				// Start a new synchronization
-				coreApi.synchronizeAll();
+				// Start refresh
+				coreApi.refreshAllCapabilities();
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

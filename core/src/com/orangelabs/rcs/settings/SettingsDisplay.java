@@ -77,16 +77,15 @@ public class SettingsDisplay extends PreferenceActivity {
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-       
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
 		// Set title
         setTitle(R.string.rcs_settings_title_settings);
         addPreferencesFromResource(R.xml.rcs_settings_preferences);
 
-        // Instanciate the settings provider
+        // Instantiate the settings provider
         RcsSettings.createInstance(getApplicationContext());
         
         // Save user profile preference the first time
@@ -176,11 +175,7 @@ public class SettingsDisplay extends PreferenceActivity {
     	}
     	
 		protected Void doInBackground(Void... params) {
-			handler.post(new Runnable() {
-				public void run() {
-					stopService(new Intent(RcsCoreService.SERVICE_NAME));
-				}
-			});
+			stopService(new Intent(RcsCoreService.SERVICE_NAME));
 			return null;
 		}
     	
@@ -210,11 +205,7 @@ public class SettingsDisplay extends PreferenceActivity {
     	
 		@Override
 		protected Void doInBackground(Void... params) {
-			handler.post(new Runnable() {
-				public void run() {
-					startService(new Intent(RcsCoreService.SERVICE_NAME));
-				}
-			});
+			startService(new Intent(RcsCoreService.SERVICE_NAME));
 			return null;
 		}
     	

@@ -183,7 +183,13 @@ public class UserAccountManager {
 	 * Stop the user account manager
 	 */
 	public void stop(){
-		// Unregister account changed broadcast receiver
-		AndroidFactory.getApplicationContext().unregisterReceiver(accountChangedReceiver);
+		try {
+			// Unregister account changed broadcast receiver
+			AndroidFactory.getApplicationContext().unregisterReceiver(accountChangedReceiver);
+		} catch (IllegalArgumentException e) {
+			if (logger.isActivated()){
+				logger.error("Receiver not registered");
+			}
+		}
 	}
 }

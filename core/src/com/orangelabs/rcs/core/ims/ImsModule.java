@@ -42,7 +42,6 @@ import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.sip.SipService;
-import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -120,7 +119,7 @@ public class ImsModule implements SipEventListener {
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
 		// Instanciates the IMS services
-        services = new ImsService[7];
+        services = new ImsService[6];
         
         // Create capability discovery service (mandatory)
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
@@ -137,9 +136,6 @@ public class ImsModule implements SipEventListener {
         // Create presence service (optional)
         services[ImsService.PRESENCE_SERVICE] = new PresenceService(this, RcsSettings.getInstance().isPresenceServiceActivated());
 
-        // Create ToIP service (deactivated for RCS)
-        services[ImsService.TOIP_SERVICE] = new ToIpService(this, false);
-        
         // Create generic SIP service
         services[ImsService.SIP_SERVICE] = new SipService(this, false);
 
@@ -391,26 +387,7 @@ public class ImsModule implements SipEventListener {
     	ContentSharingService service = getContentSharingService();
     	return (service != null) && (service.isActivated());
     }
-
-    /**
-     * Returns the ToIP service
-     * 
-     * @return ToIP service
-     */
-    public ToIpService getToIpService() {
-    	return (ToIpService)services[ImsService.TOIP_SERVICE];
-    }
-    
-    /**
-     * Is the ToIP service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isToIpServiceActivated() {
-    	ToIpService service = getToIpService();
-    	return (service != null) && (service.isActivated());
-    }
-    
+   
     /**
      * Returns the SIP service
      * 

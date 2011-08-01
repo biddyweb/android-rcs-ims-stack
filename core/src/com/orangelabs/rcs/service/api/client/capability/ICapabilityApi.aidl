@@ -9,6 +9,6 @@ interface ICapabilityApi {
 	// Request capabilities for a contact
 	Capabilities requestCapabilities(in String contact);
 
-	// Synchronize all contacts
-	void synchronizeAll();
+	// Refresh capabilities for all contacts
+	void refreshAllCapabilities();
 }

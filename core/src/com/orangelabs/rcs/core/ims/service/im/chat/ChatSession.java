@@ -20,14 +20,17 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -293,7 +296,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		} else
 		if (ChatUtils.isTextPlainType(mimeType)) {
 	    	// Text message
-			receiveText(getRemoteContact(), StringUtils.decodeUTF8(new String(data)), null, false);
+			receiveText(getRemoteContact(), StringUtils.decodeUTF8(new String(data)), null, false, new Date());
 		} else
 		if (ChatUtils.isMessageCpimType(mimeType)) {
 	    	// Receive a CPIM message
@@ -319,7 +322,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    			imdnDisplayedRequested = true;
 				    		}			    		
 				    	}
-		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested);
+				    	// Check DateTime header
+				    	Date date = new Date();
+//				    	String dateTime = cpimMsg.getHeader(CpimMessage.HEADER_DATETIME);
+//				    	if (dateTime!=null){
+//				    		date.setTime(DateUtils.decodeDate(dateTime));
+//				    	}
+		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
 		    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
 		    			if (imdnDisplayedRequested){
 		    				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, from, EventsLogApi.STATUS_REPORT_REQUESTED, getParticipants().getList().size());
@@ -360,14 +369,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param txt Text message
 	 * @param msgId Message Id
 	 * @param flag indicating that an IMDN "displayed" is requested for this message
+	 * @param date Date at which the message was emitted
 	 */
-	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested) {
+	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested, Date date) {
 		// Is composing event is reset
 	    isComposingMgr.receiveIsComposingEvent(contact, false);
 	    
 	    // Notify listener
 		if (getListener() != null) {
-			getListener().handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested));
+			getListener().handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested, date));
 		}
 	}
 	
@@ -534,7 +544,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			String msgId = ChatUtils.getMessageId(request);
 			if (msgId != null) {
 				// Send message delivery status via a SIP MESSAGE
-				imdnMgr.sendSipMessageDeliveryStatus(msgId, status);
+				imdnMgr.sendSipMessageDeliveryStatus(getDialogPath().getRemoteParty(), msgId, status);
 			}
 		}
 	}
@@ -564,19 +574,31 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      */
     public void receiveMessageDeliveryStatus(SipRequest message) {
     	try {
-	    	// Parse the IMDN document
-			InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
-			ImdnParser parser = new ImdnParser(input);
-			ImdnDocument imdn = parser.getImdnDocument();
-			if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-		    	// Notify listener
-				if (getListener() != null) {
-					getListener().handleMessageDeliveryStatus(imdn.getMsgId(), message.getFromUri(), imdn.getStatus());
-				}
-			}
+    		// Try to parse the content as CPIM
+    		String content = message.getContent();
+    		CpimParser cpimParser = new CpimParser(content);
+    		CpimMessage cpimMsg = cpimParser.getCpimMessage();
+    		if (cpimMsg != null) {
+    			String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
+    			String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+
+    			// Check if the content is a IMDN message    		
+    			if (ChatUtils.isMessageImdnType(contentType)) {
+    				// Parse the IMDN document
+    				InputSource input = new InputSource(new ByteArrayInputStream(cpimMsg.getMessageContent().getBytes()));
+    				ImdnParser parser = new ImdnParser(input);
+    				ImdnDocument imdn = parser.getImdnDocument();
+    				if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+    					// Notify listener
+    					if (getListener() != null) {
+    						getListener().handleMessageDeliveryStatus(imdn.getMsgId(), from, imdn.getStatus());
+    					}
+    				}
+    			}
+    		}
     	} catch(Exception e) {
     		if (logger.isActivated()) {
-    			logger.error("Can't parse IMDN document", e);
+    			logger.error("Can't parse SIP message as IMDN document", e);
     		}
     	}
     }
@@ -605,4 +627,46 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		}
     	}
     }
+    
+	/**
+	 * Reject the session invitation
+	 */
+	public void rejectSession() {
+		if (logger.isActivated()) {
+			logger.debug("Session invitation has been rejected");
+		}
+		invitationStatus = INVITATION_REJECTED;
+
+		// Unblock semaphore
+		synchronized(waitUserAnswer) {
+			waitUserAnswer.notifyAll();
+		}
+
+		// Decline the invitation
+		send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+			
+		// Remove the session in the session manager
+		getImsService().removeSession(this);
+	}
+	
+    /**
+     * Send a 486 "Busy" to the remote party
+     * 
+     * @param request SIP request
+     * @param localTag Local tag
+     */
+	public void send486Busy(SipRequest request, String localTag) {
+		try {
+	        // Send a 486 Busy error
+	    	if (logger.isActivated()) {
+	    		logger.info("Send 486 Busy");
+	    	}
+	        SipResponse resp = SipMessageFactory.createResponse(request, localTag, 486);
+	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 486 Busy response", e);
+			}
+		}
+	}
 }

@@ -186,8 +186,8 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 603) {
-            	// 603 Invitation declined
+            if (ctx.getStatusCode() == 603 || ctx.getStatusCode() == 486) {
+            	// 603 Invitation declined or 486 Busy
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else

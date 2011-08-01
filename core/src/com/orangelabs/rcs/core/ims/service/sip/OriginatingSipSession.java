@@ -38,21 +38,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class OriginatingSipSession extends GenericSipSession {
 	/**
-	 * Feature tags
-	 */
-	private String[] featureTags;
-	
-	/**
-	 * SDP offer
-	 */
-	private String sdpOffer;
-
-	/**
-	 * SDP answer
-	 */
-	private String sdpAnswer = null;
-
-	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -61,20 +46,18 @@ public class OriginatingSipSession extends GenericSipSession {
 	 * Constructor
 	 * 
 	 * @param parent IMS service
-	 * @param offer SDP offer
 	 * @param contact Remote contact
+	 * @param featureTag Feature tag
+	 * @param offer SDP offer
 	 */
-	public OriginatingSipSession(ImsService parent, String contact, String offer, String[] featureTags) {
-		super(parent, contact);
+	public OriginatingSipSession(ImsService parent, String contact, String featureTag, String offer) {
+		super(parent, contact, featureTag);
 		
 		// Create dialog path
 		createOriginatingDialogPath();
 		
 		// Set the SDP offer 
-		this.sdpOffer = offer;
-		
-		// Set the feature tags
-		this.featureTags = featureTags;
+		setSdpOffer(offer);
 	}
 
 	/**
@@ -87,13 +70,15 @@ public class OriginatingSipSession extends GenericSipSession {
 	    	}
     	
 			// Set the local SDP part in the dialog path
-	        getDialogPath().setLocalContent(sdpOffer);
+	        getDialogPath().setLocalContent(getSdpOffer());
 
 	        // Create an INVITE request
 	        if (logger.isActivated()) {
 	        	logger.info("Send INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),	featureTags, sdpOffer);
+	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
+	        		new String [] { getFeatureTag() },
+	        		getSdpOffer());
 
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
@@ -243,7 +228,7 @@ public class OriginatingSipSession extends GenericSipSession {
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		featureTags,
+	        		new String [] { getFeatureTag() },
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path
@@ -320,7 +305,7 @@ public class OriginatingSipSession extends GenericSipSession {
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		featureTags,
+	        		new String [] { getFeatureTag() },
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path

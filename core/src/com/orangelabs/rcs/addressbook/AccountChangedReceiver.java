@@ -74,7 +74,7 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 				Handler handler = new Handler();
 				handler.post(new Runnable(){
 					public void run(){
-						Toast.makeText(context, context.getString(R.string.rcs_core_stopping_after_rcs_account_deletion), Toast.LENGTH_LONG).show();
+						Toast.makeText(context, context.getString(R.string.rcs_core_account_stopping_after_deletion), Toast.LENGTH_LONG).show();
 					}
 				});
 

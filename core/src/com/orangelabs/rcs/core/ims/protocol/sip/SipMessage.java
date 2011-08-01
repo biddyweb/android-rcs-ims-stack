@@ -31,6 +31,7 @@ import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
+import javax.sip.header.ExtensionHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
 import javax.sip.header.SubjectHeader;
@@ -340,11 +341,32 @@ public abstract class SipMessage {
 	        	} else {
 		        	String[] values = value.split(",");
 		        	for(int j=0; j < values.length; j++) {
-	        			tags.add(values[j].trim());
+		        		String tag = values[j].trim();
+		        		if (!tags.contains(tag)){
+		        			tags.add(tag);
+		        		}
 		        	}
 	        	}
 	        }
 		}
+		
+		// Read Accept-Contact header
+		ExtensionHeader acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+		if (acceptHeader == null) {
+			// Check contracted form
+			acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
+		}
+		if (acceptHeader != null) {
+			String[] pnames = acceptHeader.getValue().split(";");
+			if (pnames.length > 1) {
+				// Start at index 1 to bypass the address
+				for(int i=1; i < pnames.length; i++) {
+					if (!tags.contains(pnames[i])){
+						tags.add(pnames[i]);
+					}
+				}
+			}
+		}		
 		
 		return tags;
 	}

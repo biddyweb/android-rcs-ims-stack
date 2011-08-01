@@ -128,7 +128,7 @@ public class MsrpSession {
 	/**
 	 * Set the success report option
 	 * 
-	 * @param failureReportOption Boolean flag
+	 * @param successReportOption Boolean flag
 	 */
 	public void setSuccessReportOption(boolean successReportOption) {
 		this.successReportOption = successReportOption;

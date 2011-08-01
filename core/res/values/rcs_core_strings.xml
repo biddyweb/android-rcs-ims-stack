@@ -24,9 +24,11 @@
 	<string name="rcs_core_capability_common_extension">RCS extensions</string>
 	
 	<!-- Strings linked to RCS account -->
-	<string name="rcs_core_configure_rcs_service">Configure RCS service</string>
     <string name="rcs_core_account_id">RCS</string>
 	<string name="rcs_core_account_username">Rich Communication Suite</string>
-	<string name="rcs_core_stopping_after_rcs_account_deletion">The RCS service will be stopped as the RCS account was deleted</string>
+	<string name="rcs_core_account_main_title">General settings</string>
+	<string name="rcs_core_account_menu_settings">Settings</string>
+	<string name="rcs_core_account_configure">Configure RCS service</string>
+	<string name="rcs_core_account_stopping_after_deletion">The RCS service will be stopped as the RCS account was deleted</string>
 	
 </resources>

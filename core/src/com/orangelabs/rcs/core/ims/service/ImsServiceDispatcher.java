@@ -24,12 +24,12 @@ import javax.sip.header.EventHeader;
 import javax.sip.message.Request;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
-import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.utils.FifoBuffer;
@@ -51,6 +51,11 @@ public class ImsServiceDispatcher extends Thread {
 	 */
 	private FifoBuffer buffer = new FifoBuffer();
 
+	/**
+	 * SIP intent manager
+	 */
+	private SipIntentManager intentMgr = new SipIntentManager(); 
+	
 	/**
      * The logger
      */
@@ -146,7 +151,7 @@ public class ImsServiceDispatcher extends Thread {
     			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
-	    			SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE)) {
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_VIDEO_SHARE)) {
 	    		// Video streaming
 	    		if (logger.isActivated()) {
 	    			logger.debug("Video content sharing streaming invitation");
@@ -156,8 +161,8 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_VIDEO_SHARE) &&
-	    				SipUtils.isFeatureTagPresent(request, CapabilityUtils.FEATURE_RCSE_IMAGE_SHARE)) {
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_VIDEO_SHARE) &&
+	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IMAGE_SHARE)) {
 	    		// Image sharing
 	    		if (logger.isActivated()) {
 	    			logger.debug("Image content sharing transfer invitation");
@@ -167,7 +172,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM) &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "file-selector")) {
 		        // File transfer
 	    		if (logger.isActivated()) {
@@ -176,7 +181,7 @@ public class ImsServiceDispatcher extends Thread {
     			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM) &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "resource-lists+xml")) {
 		        // Ad-hoc group chat session
 	    		if (logger.isActivated()) {
@@ -185,19 +190,27 @@ public class ImsServiceDispatcher extends Thread {
     			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
 	    	} else
     		if (isTagPresent(sdp, "msrp") &&
-    				SipUtils.isFeatureTagPresent(request, ChatUtils.FEATURE_OMA_IM)) {
+    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM)) {
 		        // 1-1 chat session
 	    		if (logger.isActivated()) {
 	    			logger.debug("1-1 chat session invitation");
 	    		}
     			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
-	    	} else {
-				// Unknown service: reject the invitation with a 606 Not Acceptable
-				if (logger.isActivated()) {
-					logger.debug("Unknown invitation: automatically rejected");
-				}
-				sendFinalResponse(request, 606);
-	    	}
+    		} else {
+	    		if (intentMgr.isSipIntentResolved(request)) {
+	    			// Generic SIP session
+		    		if (logger.isActivated()) {
+		    			logger.debug("Generic SIP session invitation");
+		    		}
+	    			imsModule.getSipService().receiveSessionInvitation(request);
+		    	} else {
+					// Unknown service: reject the invitation with a 606 Not Acceptable
+					if (logger.isActivated()) {
+						logger.debug("Unknown invitation: automatically rejected");
+					}
+					sendFinalResponse(request, 606);
+		    	}
+    		}
 		} else
     	if (request.getMethod().equals(Request.MESSAGE)) {
 	        // MESSAGE received

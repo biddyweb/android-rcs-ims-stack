@@ -260,7 +260,7 @@ public class CallManager {
 	 * @param contact Contact
 	 */
 	private void requestCapabilities(String contact) {
-		 if (contact != null) {
+		 if ((contact != null) && imsModule.getCapabilityService().isServiceStarted()) {
 			 imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
 	}	
@@ -273,6 +273,6 @@ public class CallManager {
 	private void resetContentSharingCapabilities(String contact) {
 		if (contact != null) {
 			 imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(contact);
-		 }
+		}
 	}
 }

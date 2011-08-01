@@ -60,14 +60,9 @@ public abstract class ImsService {
 	public static final int PRESENCE_SERVICE = 4;
 
 	/**
-	 * ToIP service
-	 */	
-	public static final int TOIP_SERVICE = 5;
-
-	/**
 	 * SIP service
 	 */	
-	public static final int SIP_SERVICE = 6;
+	public static final int SIP_SERVICE = 5;
 
 	/**
 	 * Configuration

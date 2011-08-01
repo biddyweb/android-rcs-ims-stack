@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
+import android.text.TextUtils;
+
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -142,6 +144,16 @@ public class SipInterface implements SipListener {
     private KeepAliveManager keepAliveManager = new KeepAliveManager(this);
 
 	/**
+     * Public GRUU
+     */
+	private String publicGruu = null;    
+    
+	/**
+     * Temporary GRUU
+     */
+	private String tempGruu = null;    
+
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -151,7 +163,7 @@ public class SipInterface implements SipListener {
      *
      * @param localIpAddress Local IP address
      * @param outboundProxy Outbound proxy
-     * @param isSecure Need secure connection or not
+     * @param defaultProtocol Default protocol
      * @throws SipException
      */
     public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol)
@@ -188,6 +200,11 @@ public class SipInterface implements SipListener {
 			SipUtils.ADDR_FACTORY = sipFactory.createAddressFactory();
 			SipUtils.MSG_FACTORY = sipFactory.createMessageFactory();
 
+            // Create the RCS keystore if not present
+            if (!KeyStoreManager.isKeystoreExists(KeyStoreManager.getKeystorePath())) {
+                KeyStoreManager.createKeyStore();
+            }
+
 			// Set SIP stack properties
 			Properties properties = new Properties();
 			properties.setProperty("javax.sip.STACK_NAME", localIpAddress);
@@ -207,32 +224,13 @@ public class SipInterface implements SipListener {
 		        properties.setProperty("gov.nist.javax.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
             }
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
-                // Create a keystore if not exist
-                if (!KeyStoreManager.exists())
-                    KeyStoreManager.createKeyStore();
-
-                // Add certificates if not present
-                String certPathRoot = RcsSettings.getInstance().getTlsCertificateRoot();
-                if (!certPathRoot.equals("")) {
-                    certPathRoot = RcsSettingsData.CERTIFICATE_FOLDER_PATH + certPathRoot;
-                    if (!KeyStoreManager.isCertificateEntry(certPathRoot))
-                        KeyStoreManager.addCertificate(certPathRoot);
-                }
-                String certPathIntermediate = RcsSettings.getInstance()
-                        .getTlsCertificateIntermediate();
-                if (!certPathIntermediate.equals("")) {
-                    certPathIntermediate = RcsSettingsData.CERTIFICATE_FOLDER_PATH
-                            + certPathIntermediate;
-                    if (!KeyStoreManager.isCertificateEntry(certPathIntermediate))
-                        KeyStoreManager.addCertificate(certPathIntermediate);
-                }
-
                 // Set SSL properties
                 properties.setProperty("gov.nist.javax.sip.TLS_CLIENT_PROTOCOLS", "SSLv3, TLSv1");
-                properties.setProperty("javax.net.ssl.keyStoreType", KeyStoreManager.TYPE);
-                properties.setProperty("javax.net.ssl.keyStore", KeyStoreManager.PATH);
-                properties.setProperty("javax.net.ssl.keyStorePassword", KeyStoreManager.PASSWORD);
-                properties.setProperty("javax.net.ssl.trustStore", KeyStoreManager.PATH);
+                properties.setProperty("javax.net.ssl.keyStoreType", KeyStoreManager.KEYSTORE_TYPE);
+                properties.setProperty("javax.net.ssl.keyStore", KeyStoreManager.getKeystorePath());
+                properties.setProperty("javax.net.ssl.keyStorePassword", KeyStoreManager.KEYSTORE_PASSWORD);
+                properties.setProperty("javax.net.ssl.trustStore",
+                        KeyStoreManager.getKeystorePath());
             }
 
 			// Create the SIP stack
@@ -246,6 +244,23 @@ public class SipInterface implements SipListener {
 
 			// Set the default SIP provider
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
+                // Add certificates if not present
+                String certPathRoot = RcsSettings.getInstance().getTlsCertificateRoot();
+                if (!TextUtils.isEmpty(certPathRoot)) {
+                    certPathRoot = RcsSettingsData.CERTIFICATE_FOLDER_PATH + certPathRoot;
+                    if (!KeyStoreManager.isCertificateEntry(certPathRoot)) {
+                        KeyStoreManager.addCertificate(certPathRoot);
+                    }
+                }
+                String certPathIntermediate = RcsSettings.getInstance().getTlsCertificateIntermediate();
+                if (!TextUtils.isEmpty(certPathIntermediate)) {
+                    certPathIntermediate = RcsSettingsData.CERTIFICATE_FOLDER_PATH
+                            + certPathIntermediate;
+                    if (!KeyStoreManager.isCertificateEntry(certPathIntermediate)) {
+                        KeyStoreManager.addCertificate(certPathIntermediate);
+                    }
+                }
+
                 // Create TLS provider
                 ListeningPoint tls = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TLS);
                 SipProvider tlsSipProvider = sipStack.createSipProvider(tls);
@@ -385,8 +400,44 @@ public class SipInterface implements SipListener {
 	public KeepAliveManager getKeepAliveManager() {
 		return keepAliveManager;
 	}
+	
+    /**
+     * Get public GRUU
+     * 
+     * @return GRUU
+     */
+    public String getPublicGruu() {
+    	return publicGruu;
+    }
 
-	/**
+    /**
+     * Set public GRUU
+     * 
+     * @param gruu GRUU
+     */
+    public void setPublicGruu(String gruu) {
+    	this.publicGruu = gruu;
+    }
+    
+    /**
+     * Get temporary GRUU
+     * 
+     * @return GRUU
+     */
+    public String getTemporaryGruu() {
+    	return tempGruu;
+    }
+
+    /**
+     * Set temporary GRUU
+     * 
+     * @param gruu GRUU
+     */
+    public void setTemporaryGruu(String gruu) {
+    	this.tempGruu = gruu;
+    }
+    
+    /**
      * Returns the local via path
      *
      * @return List of headers
@@ -412,26 +463,41 @@ public class SipInterface implements SipListener {
 	}
 
 	/**
-     * Get the local contact header
+     * Get local contact
      *
      * @return Header
      * @throws Exception
      */
-	public ContactHeader getContactHeader() throws Exception {
+	public ContactHeader getLocalContact() throws Exception {
     	// Set the contact with the terminal IP address and SIP port
-		SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(
-				null,
-				localIpAddress);
+		SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(null, localIpAddress);
 		contactURI.setPort(listeningPort);
 
-		// Add display name
-		Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
-
 		// Create the Contact header
-        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+		Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
+        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);               
 		return contactHeader;
     }
 
+	/**
+     * Get contact
+     *
+     * @return Header
+     * @throws Exception
+     */
+	public ContactHeader getContact() throws Exception {
+		if (publicGruu != null) {
+			// Create a contact from the GRUU
+			SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(publicGruu);
+			Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
+	        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+			return contactHeader;
+		} else {
+			// Create a local contact
+			return getLocalContact();
+		}
+    }	
+	
 	/**
      * Returns the default route
      *
@@ -467,13 +533,15 @@ public class SipInterface implements SipListener {
      */
     public void setServiceRoutePath(ListIterator<Header> routes) {
     	serviceRoutePath.clear();
-		serviceRoutePath.addElement(getDefaultRoute());
-    	if (routes != null) {
+    	if ((routes != null) && (routes.hasNext())) {
     		// Add the received service route path
     		while(routes.hasNext()) {
     			ExtensionHeader route = (ExtensionHeader)routes.next();
     			serviceRoutePath.addElement(route.getValue());
     		}
+        } else {
+    		// Add the default route path
+    		serviceRoutePath.addElement(getDefaultRoute());
         }
 	}
 

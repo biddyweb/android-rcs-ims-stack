@@ -108,20 +108,6 @@ public class EventsLogApi extends ClientApi {
 	 */
 	public static final int TOTAL_SIZE_COLUMN = 11;
 	
-	/**
-	 * List of contacts that have sent a "delivered" IMDN notification
-	 * 	 
-	 * <br>Only relevant for IM messages when IMDN is activated
-	 */
-	public static final int IMDN_DELIVERED_COLUMN = 12;
-	
-	/**
-	 * List of contacts that have sent a "displayed" IMDN notification
-	 * 	 
-	 * <br>Only relevant for IM messages when IMDN is activated
-	 */
-	public static final int IMDN_DISPLAYED_COLUMN = 13;
-	
 	// Entry types
 	// One to one chat
 	public static final int TYPE_INCOMING_CHAT_MESSAGE = 0;
@@ -158,10 +144,9 @@ public class EventsLogApi extends ClientApi {
 
 	// IMDN
 	public static final int STATUS_DELIVERED = 7; // sender side
-	public static final int STATUS_DISPLAYED = 8; // sender side
+	public static final int STATUS_DISPLAYED = 8; // the IMDN "displayed" report has been received (sender side) or the user has read the received message (receiver side)  
 	public static final int STATUS_ALL_DISPLAYED = 9; // sender side
 	public static final int STATUS_REPORT_REQUESTED = 10; // receiver side : the sender has requested a "displayed" report when the message will be displayed
-	public static final int STATUS_REPORTED = 11; // receiver side : the "displayed" report has already been sent
 	
 	// Possible data for chat system event
 	public static final int EVENT_JOINED_CHAT = 12;
@@ -375,6 +360,26 @@ public class EventsLogApi extends ClientApi {
     }
     
     /**
+     * Get the last message from a given chat session
+     * 
+     * @param sessionId
+     * @return message Last message from this chat
+     */
+    public String getLastChatMessage(String sessionId){
+    	String result = null;
+    	Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
+    			new String[]{RichMessagingData.KEY_DATA},
+    			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'" + " AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND status = "+EventsLogApi.STATUS_TERMINATED+" )", 
+    			null, 
+    			RichMessagingData.KEY_TIMESTAMP + " DESC");
+    	if (cursor.moveToNext()){
+    		result = cursor.getString(0);
+    	}
+    	cursor.close();
+    	return result;
+    }
+    
+    /**
      * Get the events log content provider base uri
      * 
      * @param mode
@@ -409,11 +414,59 @@ public class EventsLogApi extends ClientApi {
      * @param msgId
      * @param isSpam
      */
-    public void markMessageAsSpam(String msgId, boolean isSpam){
+    public void markChatMessageAsSpam(String msgId, boolean isSpam){
     	if (RichMessaging.getInstance()==null){
     		RichMessaging.createInstance(ctx);
     	}
-    	RichMessaging.getInstance().markMessageAsSpam(msgId, isSpam);
+    	RichMessaging.getInstance().markChatMessageAsSpam(msgId, isSpam);
+    }
+    
+    /**
+     * Mark message as read
+     * 
+     * @param msgId
+     * @param isRead
+     */
+    public void markChatMessageAsRead(String msgId, boolean isRead){
+    	if (RichMessaging.getInstance()==null){
+    		RichMessaging.createInstance(ctx);
+    	}
+    	RichMessaging.getInstance().markChatMessageAsRead(msgId, isRead);
+    }
+    
+    /**
+     * Get the number of unread messages for a given chat session
+     * 
+     * @param sessionId
+     * @return number of unread messages in this chat session
+     */
+    public int getNumberOfUnreadChatMessages(String sessionId){
+    	// Get incoming messages count
+    	Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
+    			new String[]{RichMessagingData.KEY_ID},
+    			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'" +
+    					" AND ("+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE +
+    					" OR "+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE + ")", 
+    			null, 
+    			null);
+   		int messagesNumber = cursor.getCount();
+    	cursor.close();
+    	
+    	// Get read messages count
+    	cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
+    			new String[]{RichMessagingData.KEY_ID},
+    			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'" +
+    					" AND ("+RichMessagingData.KEY_STATUS +" = "+EventsLogApi.STATUS_DISPLAYED +
+    					" OR "+RichMessagingData.KEY_STATUS + " = " + EventsLogApi.STATUS_ALL_DISPLAYED + ")" +    					
+    					" AND ("+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE +
+    					" OR "+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE + ")", 
+    			null, 
+    			null);
+   		int readMessages = cursor.getCount();
+    	cursor.close();
+    	
+    	// Result is the difference
+    	return (messagesNumber - readMessages);
     }
     
     /**

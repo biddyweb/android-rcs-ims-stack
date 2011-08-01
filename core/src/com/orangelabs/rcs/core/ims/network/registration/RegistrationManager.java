@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -30,6 +32,7 @@ import javax.sip.header.ViaHeader;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -66,6 +69,11 @@ public class RegistrationManager extends PeriodicRefresher {
     private SipDialogPath dialogPath = null;
 
     /**
+     * Supported feature tags
+     */
+    private List<String> featureTags;
+    
+    /**
      * IMS network interface
      */
     private ImsNetworkInterface networkInterface;
@@ -75,11 +83,6 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private RegistrationProcedure registrationProcedure;
 
-    /**
-     * Registration ID
-     */
-    private int regId = 0;
-    
     /**
      * Instance ID
      */
@@ -95,16 +98,6 @@ public class RegistrationManager extends PeriodicRefresher {
 	 */
 	private boolean natTraversal = false;
 	
-	/**
-     * Public GRUU
-     */
-	private String publicGruu = null;
-	
-	/**
-	 * Temporary GRUU
-	 */
-	private String tempGruu = null;
-    
     /**
      * The logger
      */
@@ -120,7 +113,8 @@ public class RegistrationManager extends PeriodicRefresher {
     	this.networkInterface = networkInterface;
         this.registrationProcedure = registrationProcedure;
         this.instanceId = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()).toString();
-
+        this.featureTags = getAllSupportedFeatureTags();
+        
     	int defaultExpirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
     	if ((minExpireValue != -1) && (defaultExpirePeriod < minExpireValue)) {
@@ -129,7 +123,56 @@ public class RegistrationManager extends PeriodicRefresher {
     		this.expirePeriod = defaultExpirePeriod;
     	}
     }
+    
+	/**
+	 * Get all supported feature tags
+	 *
+	 * @return List of tags
+	 */
+	private List<String> getAllSupportedFeatureTags() {
+		List<String> tags = new ArrayList<String>();
 
+		// Add RCS tags
+		if (RcsSettings.getInstance().isVideoSharingSupported()) {
+			tags.add(FeatureTags.FEATURE_RCSE_VIDEO_SHARE);
+		}
+
+		// Add RCS-e tags
+		String supported = "";
+		if (RcsSettings.getInstance().isImSessionSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_CHAT + ",";
+		}
+		if (RcsSettings.getInstance().isImageSharingSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
+		}
+		if (RcsSettings.getInstance().isFileTransferSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_FT + ",";
+		}
+		if (RcsSettings.getInstance().isPresenceDiscoverySupported()) {
+			supported += FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY + ",";
+		}
+		if (RcsSettings.getInstance().isSocialPresenceSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
+		}
+
+		// Add extensions
+		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
+		if ((exts != null) && (exts.length() > 0)) {
+			 supported += exts;
+		}
+
+		// Add prefixes
+		if (supported.length() != 0) {
+			if (supported.endsWith(",")) {
+				supported = supported.substring(0, supported.length()-1);
+			}
+			supported = FeatureTags.FEATURE_RCSE + "=\"" + supported + "\"";
+			tags.add(supported);
+		}
+		
+		return tags;		
+	}		
+    
     /**
      * Init the registration procedure
      */
@@ -147,24 +190,6 @@ public class RegistrationManager extends PeriodicRefresher {
         return registered;
     }
     
-    /**
-     * Get public GRUU
-     * 
-     * @return GRUU
-     */
-    public String getPublicGruu() {
-    	return publicGruu;
-    }
-    
-    /**
-     * Get temporary GRUU
-     * 
-     * @return GRUU
-     */
-    public String getTemporaryGruu() {
-    	return tempGruu;
-    }
-
     /**
      * Registration
      * 
@@ -208,8 +233,8 @@ public class RegistrationManager extends PeriodicRefresher {
 
             // Create REGISTER request
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
+            		featureTags,
             		expirePeriod,
-            		regId,
             		instanceId,
             		networkInterface.getAccessInfo());
 
@@ -266,8 +291,8 @@ public class RegistrationManager extends PeriodicRefresher {
             
             // Create REGISTER request with expire 0
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
+            		featureTags,
             		0,
-            		regId,
             		instanceId,
             		networkInterface.getAccessInfo());
 
@@ -366,17 +391,16 @@ public class RegistrationManager extends PeriodicRefresher {
 		}
 		
 		// Get the GRUU
-		ContactHeader contact = (ContactHeader)resp.getHeader(ContactHeader.NAME);
-		if (contact.getParameter("+sip.instance") != null) { 
-			publicGruu = contact.getParameter("pub-gruu");
-	        if (logger.isActivated()) {
-	            logger.debug("Public GRUU: " + publicGruu);
-	        }
-
-	        tempGruu = contact.getParameter("temp-gruu");
-	        if (logger.isActivated()) {
-	            logger.debug("Temp GRUU: " + tempGruu);
-	        }
+		ListIterator<Header> contacts = resp.getHeaders(ContactHeader.NAME);
+		while(contacts.hasNext()) {
+			ContactHeader contact = (ContactHeader)contacts.next();
+			String contactInstanceId = contact.getParameter("+sip.instance");
+			if ((contactInstanceId != null) && (contactInstanceId.contains(instanceId))) {
+				String pubGruu = contact.getParameter("pub-gruu");
+				networkInterface.getSipManager().getSipStack().setPublicGruu(pubGruu);			
+				String tempGruu = contact.getParameter("temp-gruu");
+				networkInterface.getSipManager().getSipStack().setTemporaryGruu(tempGruu);			
+			}
 		}
 		
         // Set the service route path
@@ -449,8 +473,8 @@ public class RegistrationManager extends PeriodicRefresher {
         	logger.info("Send second REGISTER");
         }
         SipRequest register = SipMessageFactory.createRegister(dialogPath,
+        		featureTags,
         		ctx.getTransaction().getRequest().getExpires().getExpires(),
-        		regId,
         		instanceId,
         		networkInterface.getAccessInfo());
         
@@ -496,8 +520,8 @@ public class RegistrationManager extends PeriodicRefresher {
         	logger.info("Send new REGISTER");
         }
         SipRequest register = SipMessageFactory.createRegister(dialogPath,
+        		featureTags,
         		expirePeriod,
-        		regId,
         		instanceId,
         		networkInterface.getAccessInfo());
         
@@ -535,7 +559,6 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private void resetDialogPath() {
         dialogPath = null;
-        tempGruu = null;
     }
 
     /**

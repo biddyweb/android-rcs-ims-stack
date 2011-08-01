@@ -36,21 +36,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class TerminatingSipSession extends GenericSipSession {
 	/**
-	 * Feature tags
-	 */
-	private String[] featureTags;
-	
-	/**
-	 * SDP offer
-	 */
-	private String sdpOffer;
-
-	/**
-	 * SDP answer
-	 */
-	private String sdpAnswer = null;
-	
-	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -62,7 +47,7 @@ public class TerminatingSipSession extends GenericSipSession {
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingSipSession(ImsService parent, SipRequest invite) {
-		super(parent, SipUtils.getAssertedIdentity(invite));
+		super(parent, SipUtils.getAssertedIdentity(invite), invite.getFeatureTags().get(0));
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -115,13 +100,15 @@ public class TerminatingSipSession extends GenericSipSession {
 			}
 			
 			// Set the local SDP part in the dialog path
-			getDialogPath().setLocalContent(sdpAnswer);
+			getDialogPath().setLocalContent(getSdpAnswer());
 
 			// Create a 200 OK response
 			if (logger.isActivated()) {
 				logger.info("Send 200 OK");
 			}
-			SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),	featureTags, sdpAnswer);
+			SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
+	        		new String [] { getFeatureTag() },
+					getSdpAnswer());
 
 	        // Send response
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);

@@ -102,7 +102,7 @@ public class RcsSettingsData {
 	// ---------------------------------------------------------------------------
 
 	/**
-     * Service activation parameter which indicates if the RCS service may be started or not
+     * Activate or not the RCS service
      */
 	public static final String SERVICE_ACTIVATED = "ServiceActivated";
 
@@ -441,9 +441,9 @@ public class RcsSettingsData {
 	public static final String PERMANENT_STATE_MODE = "PermanentState";
 
 	/**
-	 * Activate or not the logger
+	 * Activate or not the traces
 	 */
-	public static final String TRACE_ACTIVATION = "TraceActivation";
+	public static final String TRACE_ACTIVATED = "TraceActivated";
 
 	/**
 	 * Logger trace level
@@ -453,12 +453,12 @@ public class RcsSettingsData {
 	/**
 	 * Activate or not the SIP trace
 	 */
-	public static final String SIP_TRACE_ACTIVATION = "SipTraceActivation";
+	public static final String SIP_TRACE_ACTIVATED = "SipTraceActivated";
 
 	/**
 	 * Activate or not the media trace
 	 */
-	public static final String MEDIA_TRACE_ACTIVATION = "MediaTraceActivation";
+	public static final String MEDIA_TRACE_ACTIVATED = "MediaTraceActivated";
 
 	/**
 	 * Capability refresh timeout used to avoid too many requests in a short time
@@ -476,12 +476,12 @@ public class RcsSettingsData {
 	public static final String CAPABILITY_POLLING_PERIOD = "CapabilityPollingPeriod";
 
 	/**
-	 * Presence service activation
+	 * Activate or not the presence service
 	 */
 	public static final String USE_PRESENCE_SERVICE = "UsePresenceService";
 
 	/**
-	 * Rich call service activation
+	 * Activate or not the rich call service
 	 */
 	public static final String USE_RICHCALL_SERVICE = "UseRichcallService";
 

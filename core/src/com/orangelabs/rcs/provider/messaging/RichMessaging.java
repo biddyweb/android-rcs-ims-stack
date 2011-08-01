@@ -213,7 +213,7 @@ public class RichMessaging {
 		if (session.isChatGroup()){
 			type = EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE;
 		}
-		return addMessage(type, session.getSessionID(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);			
+		return addMessage(type, session.getSessionID(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);
 	}
 	
 	/**
@@ -244,64 +244,61 @@ public class RichMessaging {
 		
 		ContentValues values = new ContentValues();
 		
-		String columnName = null;		
-		// Update the contacts in the IMDN displayed and delivered columns 
-		if (status == EventsLogApi.STATUS_DISPLAYED){
-			columnName = RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED;
-		}else if (status == EventsLogApi.STATUS_DELIVERED){
-			columnName = RichMessagingData.KEY_CHAT_GROUP_IMDN_DELIVERED;
-		}
-		
-		if (columnName!=null){
-			Cursor cursor = cr.query(databaseUri, 
-					new String[]{columnName}, 
-					RichMessagingData.KEY_MESSAGE_ID + " =\'" + messageId + "\'", 
-					null, 
-					null);
-			if (cursor.moveToFirst()){
-				String contacts = cursor.getString(0);
-				
-				// Append the new contact to the end of IMDN displayed column
-				if (contacts==null || contacts.equalsIgnoreCase("null")){
-					values.put(columnName, contact+";");
-				}else if (!contacts.contains(contact)){
-					values.put(columnName, contacts + contact+";");
-				}
-				cr.update(databaseUri, 
-						values, 
-						RichMessagingData.KEY_MESSAGE_ID + " = \'" + messageId + "\'", 
-						null);
-			}
-			cursor.close();
-		}
-		
-		if (status == EventsLogApi.STATUS_DISPLAYED){
-			// In case of a displayed status, we check if everyone has displayed the message
-			Cursor cursor = cr.query(databaseUri, 
-					new String[]{RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED}, 
-					RichMessagingData.KEY_MESSAGE_ID + " =\'" + messageId + "\'", 
-					null, 
-					null);
-			if (cursor.moveToFirst()){
-				String contacts = cursor.getString(0);
-				if (contacts.split(";").length == numberOfRecipients){
-					// All participants have received the message
-					// Instead of setting the status to EventsLogApi.STATUS_DISPLAYED, we set it to EventsLogApi.STATUS_ALL_DISPLAYED
-					status = EventsLogApi.STATUS_ALL_DISPLAYED;
-				}
-			}
-			cursor.close();
-		}
-		
-		values = new ContentValues();
+//		String columnName = null;		
+//		// Update the contacts in the IMDN displayed and delivered columns 
+//		if (status == EventsLogApi.STATUS_DISPLAYED){
+//			columnName = RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED;
+//		}else if (status == EventsLogApi.STATUS_DELIVERED){
+//			columnName = RichMessagingData.KEY_CHAT_GROUP_IMDN_DELIVERED;
+//		}
+//		
+//		if (columnName!=null){
+//			Cursor cursor = cr.query(databaseUri, 
+//					new String[]{columnName}, 
+//					RichMessagingData.KEY_MESSAGE_ID + " =\'" + messageId + "\'", 
+//					null, 
+//					null);
+//			if (cursor.moveToFirst()){
+//				String contacts = cursor.getString(0);
+//				
+//				// Append the new contact to the end of IMDN displayed column
+//				if (contacts==null || contacts.equalsIgnoreCase("null")){
+//					values.put(columnName, contact+";");
+//				}else if (!contacts.contains(contact)){
+//					values.put(columnName, contacts + contact+";");
+//				}
+//				cr.update(databaseUri, 
+//						values, 
+//						RichMessagingData.KEY_MESSAGE_ID + " = \'" + messageId + "\'", 
+//						null);
+//			}
+//			cursor.close();
+//		}
+//		
+//		if (status == EventsLogApi.STATUS_DISPLAYED){
+//			// In case of a displayed status, we check if everyone has displayed the message
+//			Cursor cursor = cr.query(databaseUri, 
+//					new String[]{RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED}, 
+//					RichMessagingData.KEY_MESSAGE_ID + " =\'" + messageId + "\'", 
+//					null, 
+//					null);
+//			if (cursor.moveToFirst()){
+//				String contacts = cursor.getString(0);
+//				if (contacts.split(";").length == numberOfRecipients){
+//					// All participants have received the message
+//					// Instead of setting the status to EventsLogApi.STATUS_DISPLAYED, we set it to EventsLogApi.STATUS_ALL_DISPLAYED
+//					status = EventsLogApi.STATUS_ALL_DISPLAYED;
+//				}
+//			}
+//			cursor.close();
+//		}
+//		
+//		values = new ContentValues();
 		values.put(RichMessagingData.KEY_STATUS, status);
 		cr.update(databaseUri, 
 				values, 
 				RichMessagingData.KEY_MESSAGE_ID + " = \'" + messageId + "\'", 
 				null);
-		
-		
-
 	}
 	
 	/**
@@ -380,21 +377,46 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_FAILED);
 		cr.update(databaseUri, 
 				values, 
-				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"" +" AND " + RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE, 
+				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"", 
 				null);
 	}
 	
 	/**
-	 * Mark a message as spam message or remove it from spam
+	 * A received message has been read
+	 * 
+	 * @param msgId
+	 * @param isRead
+	 */
+	public void markChatMessageAsRead(String msgId, boolean isRead){
+		ContentValues values = new ContentValues();
+		if (isRead){
+			values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_DISPLAYED);
+		}else{
+			values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_RECEIVED);
+		}
+		cr.update(databaseUri, 
+				values, 
+				RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"", 
+				null);
+	}
+	
+	/**
+	 * Add a spam message
 	 * 
 	 * @param message
 	 */
 	public void addSpamMsg(InstantMessage message){
-		ContentValues values = new ContentValues();
-		values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_SPAM);
-		int type = EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE;
-		addMessage(type, ""+System.currentTimeMillis(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);
-		markMessageAsSpam(message.getMessageId(), true);
+		addMessage(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, ""+System.currentTimeMillis(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);
+		markChatMessageAsSpam(message.getMessageId(), true);
+	}
+	
+	/**
+	 * Add a single message
+	 * 
+	 * @param message
+	 */
+	public void addMsg(InstantMessage message){
+		addMessage(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, ""+System.currentTimeMillis(), message.getMessageId(), message.getRemote(), message.getTextMessage(), InstantMessage.MIME_TYPE, message.getRemote(), message.getTextMessage().length(), message.getDate(), EventsLogApi.STATUS_RECEIVED);
 	}
 	
 	/**
@@ -403,7 +425,7 @@ public class RichMessaging {
 	 * @param msgId
 	 * @param isSpam
 	 */
-	public void markMessageAsSpam(String msgId, boolean isSpam){
+	public void markChatMessageAsSpam(String msgId, boolean isSpam){
 		ContentValues values = new ContentValues();
 		if (isSpam){
 			values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_SPAM);

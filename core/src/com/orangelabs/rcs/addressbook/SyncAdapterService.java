@@ -99,7 +99,7 @@ public class SyncAdapterService extends Service {
             SyncResult syncResult) {
 	        
         	if (logger.isActivated()){
-	        	logger.debug("Performing a contact synchronization");
+	        	logger.debug("Performing a refresh on contact capabilities");
 	        }
         	
         	// Test IMS connection
