@@ -861,7 +861,6 @@ public final class ContactsManager {
 		
 		int result = -1;
 		try {
-			
 			// Get this number status in address book provider
 			Cursor cursor = ctx.getContentResolver().query(RichAddressBookData.CONTENT_URI, 
 					new String[]{RichAddressBookData.KEY_PRESENCE_SHARING_STATUS}, 
@@ -1493,7 +1492,7 @@ public final class ContactsManager {
     			// Remove mime-type capable
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CAPABLE_CONTACT));
 
-    		}else if (oldContactType==ContactInfo.NOT_RCS){
+    		}else if (oldContactType==ContactInfo.NOT_RCS || oldContactType==ContactInfo.NO_INFO){
     			// Remove mime-type not capable
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_NOT_RCS_CONTACT));
 
@@ -1506,7 +1505,7 @@ public final class ContactsManager {
     	break;
     	default:{
     		// Other types : contact is RCS capable
-    		if (oldContactType==ContactInfo.NOT_RCS){
+    		if (oldContactType==ContactInfo.NOT_RCS || oldContactType==ContactInfo.NO_INFO){
     			// Remove mime-type not capable active
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_NOT_RCS_CONTACT));
 
@@ -1518,7 +1517,7 @@ public final class ContactsManager {
     		}
 
     		// Add mime-type RCS capable
-    		ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CAPABLE_CONTACT));
+    		ops.add(insertMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CAPABLE_CONTACT));
     	}
     	}
 
@@ -1900,7 +1899,7 @@ public final class ContactsManager {
 			values.put(Website.URL, newPresenceInfo.getFavoriteLinkUrl());
 			values.put(Website.TYPE, Website.TYPE_HOMEPAGE);
 			values.put(Data.IS_PRIMARY, 1);
-				values.put(Data.IS_SUPER_PRIMARY, 1);
+			values.put(Data.IS_SUPER_PRIMARY, 1);
 
 			// Get the id of the current weblink mimetype
 			long currentNativeWebLinkDataId = INVALID_ID;
@@ -2185,7 +2184,7 @@ public final class ContactsManager {
 		// - if the capability is present and the contact is registered
 		// - if the IM store&forward is enabled and the contact is RCS capable
 		capabilities.setImSessionSupport((capabilities.isImSessionSupported() && isRegistered) 
-				|| (RcsSettings.getInstance().isImAlwaysOn() && !(contactType==ContactInfo.NO_INFO)||contactType==ContactInfo.NOT_RCS));
+				|| (RcsSettings.getInstance().isImAlwaysOn() && (contactType!=ContactInfo.NO_INFO) && (contactType!=ContactInfo.NOT_RCS)));
 		// Video sharing
 		capabilities.setVideoSharingSupport(capabilities.isVideoSharingSupported() && isRegistered);
 		
@@ -2527,7 +2526,7 @@ public final class ContactsManager {
     			.withValue(Data.DATA2, info.getRegistrationState())
     			.build());		
 
-        // Insert contact type, it is either RCS active, RCS capable or not RCS
+        // Insert contact type, it is either RCS active, RCS capable, not RCS or we have no info on it
         if (info.getRcsStatus()==ContactInfo.RCS_ACTIVE){
             ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
                     .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
@@ -2541,6 +2540,8 @@ public final class ContactsManager {
                     .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
                     .withValue(Data.MIMETYPE, MIMETYPE_EVENT_LOG)
                     .withValue(Data.DATA1, info.getContact())
+                    .withValue(Data.DATA2, getMimeTypeDescription(MIMETYPE_EVENT_LOG))
+                    .withValue(Data.DATA3, info.getContact())
                     .build());
             
             // Insert avatar, only if status is "active"
@@ -2561,8 +2562,8 @@ public final class ContactsManager {
                     .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
                     .withValue(Data.MIMETYPE, MIMETYPE_NOT_RCS_CONTACT)
                     .withValue(Data.DATA1, info.getContact())
-                    .build());        	
-        }else {
+                    .build());
+        }else if (info.getRcsStatus()!=ContactInfo.NO_INFO){
         	// In all other cases, contact is RCS capable
             ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
                     .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
@@ -2575,6 +2576,8 @@ public final class ContactsManager {
                     .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
                     .withValue(Data.MIMETYPE, MIMETYPE_EVENT_LOG)
                     .withValue(Data.DATA1, info.getContact())
+                    .withValue(Data.DATA2, getMimeTypeDescription(MIMETYPE_EVENT_LOG))
+                    .withValue(Data.DATA3, info.getContact())
                     .build());
         }
         
@@ -2929,11 +2932,12 @@ public final class ContactsManager {
     	for (int i=0;i<rawContactIds.size();i++){
     		Cursor rawCur = ctx.getContentResolver().query(RawContacts.CONTENT_URI, 
     				new String[]{RawContacts._ID}, 
-    				RawContacts.ACCOUNT_TYPE + "<> \'"+SIM_ACCOUNT_NAME+"\' AND " + RawContacts._ID + "= "+ Long.toString(rawContactIds.get(i)),
+    				"("+RawContacts.ACCOUNT_TYPE + " IS NULL OR "+RawContacts.ACCOUNT_TYPE +" <> \'"+SIM_ACCOUNT_NAME+"\') AND " + RawContacts._ID + "= "+ Long.toString(rawContactIds.get(i)),
     				null, 
     				null);
     		if (rawCur != null){ 
     			if (rawCur.getCount() > 0) {
+        			rawCur.close();
     				return false;
     			}
     			rawCur.close();

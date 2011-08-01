@@ -54,8 +54,6 @@ public class EventLogData {
 	public static final String KEY_EVENT_NAME = "name";
 	public static final String KEY_EVENT_SIZE = "size";
 	public static final String KEY_EVENT_TOTAL_SIZE = "total_size";
-	public static final String KEY_EVENT_IMDN_DELIVERED = "imdn_delivered";
-	public static final String KEY_EVENT_IMDN_DISPLAYED = "imdn_displayed";
 	
 	/**
 	 * Values representing the direction of the event.

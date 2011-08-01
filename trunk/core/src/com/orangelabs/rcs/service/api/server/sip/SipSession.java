@@ -79,6 +79,16 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	}
 
 	/**
+	 * Get feature tags of the service
+	 * 
+	 * @return Feature tags
+	 */
+	public String[] getFeatureTags() {
+		// TODO
+		return null;
+	}	
+	
+	/**
 	 * Accept the session invitation
 	 */
 	public void acceptSession() {

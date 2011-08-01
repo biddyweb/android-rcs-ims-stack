@@ -38,11 +38,6 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  */
 public class ChatUtils {
 	/**
-	 * OMA IM feature tag
-	 */
-	public final static String FEATURE_OMA_IM = "+g.oma.sip-im";
-
-	/**
 	 * Get asserted identity
 	 * 
 	 * @param request SIP request

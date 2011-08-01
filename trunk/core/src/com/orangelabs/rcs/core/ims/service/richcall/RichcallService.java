@@ -249,7 +249,7 @@ public class RichcallService extends ImsService {
 	    	// Create 200 OK response
 	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
-	        		getImsModule().getSipManager().getSipStack().getContactHeader(),
+	        		getImsModule().getSipManager().getSipStack().getLocalContact(),
 	        		CapabilityUtils.getSupportedFeatureTags(true),
 	        		CapabilityUtils.buildSdp(ipAddress));
 

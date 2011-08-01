@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
@@ -60,12 +61,12 @@ public class InstantMessagingService extends ImsService {
     /**
      * Chat features tags
      */
-    public final static String[] CHAT_FEATURE_TAGS = { ChatUtils.FEATURE_OMA_IM };
+    public final static String[] CHAT_FEATURE_TAGS = { FeatureTags.FEATURE_OMA_IM };
 
     /**
      * File transfer features tags
      */
-    public final static String[] FT_FEATURE_TAGS = { ChatUtils.FEATURE_OMA_IM };
+    public final static String[] FT_FEATURE_TAGS = { FeatureTags.FEATURE_OMA_IM };
     
 	/**
 	 * Max chat sessions
@@ -253,6 +254,28 @@ public class InstantMessagingService extends ImsService {
     		logger.info("Receive a file transfer session invitation");
     	}
 
+		// Test if the contact is blocked
+		String remote = ChatUtils.getAssertedIdentity(invite, false);
+	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + remote + " is blocked: automatically reject the file transfer invitation");
+			}
+			
+			try {
+				// Send a 603 Decline response
+		    	if (logger.isActivated()) {
+		    		logger.info("Send 603 Decline");
+		    	}
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        getImsModule().getSipManager().sendSipResponse(resp);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't send 603 Decline", e);
+				}
+			}
+			return;
+	    }
+		
 		// Test number of sessions
 		if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
 			if (logger.isActivated()) {
@@ -354,17 +377,18 @@ public class InstantMessagingService extends ImsService {
 				}
 			}
 			return;
-	    } else {
-	    	if (logger.isActivated()) {
-				logger.info("Contact " + remote + " is not blocked");
-			}
-		}
+	    }
 
 		// Test number of sessions
 		if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
 			if (logger.isActivated()) {
 				logger.debug("The max number of chat sessions is achieved: reject the invitation");
 			}
+			
+			// Save the message
+			String msgId = ChatUtils.getMessageId(invite);
+			RichMessaging.getInstance().addMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), ChatUtils.isImdnDisplayedRequested(invite)));
+
 			try {
 				// Send a 486 Busy response
 		    	if (logger.isActivated()) {
@@ -454,11 +478,7 @@ public class InstantMessagingService extends ImsService {
 				}
 			}
 			return;
-	    } else {
-	    	if (logger.isActivated()) {
-				logger.info("Contact " + remote + " is not blocked");
-			}
-		}
+	    }
 		
 		// Test number of sessions
 		if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
@@ -570,11 +590,7 @@ public class InstantMessagingService extends ImsService {
 				}
 			}
 			return;
-	    } else {
-	    	if (logger.isActivated()) {
-				logger.info("Contact " + remote + " is not blocked");
-			}
-		}
+	    }
     	
 		// Create a new session
     	getStoreAndForwardManager().receiveStoredMessages(invite);

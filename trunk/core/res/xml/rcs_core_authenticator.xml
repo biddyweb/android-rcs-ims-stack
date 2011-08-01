@@ -8,6 +8,6 @@
     android:icon="@drawable/rcs_icon"
     android:smallIcon="@drawable/rcs_icon"
     android:label="@string/rcs_core_account_id"
-    android:accountPreferences="@xml/rcs_settings_account_preferences"
+    android:accountPreferences="@xml/rcs_core_account_preferences"
 />
 

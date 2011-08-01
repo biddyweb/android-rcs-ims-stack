@@ -77,7 +77,7 @@ public class ImsApi extends ClientApi {
 			} catch (RemoteException e) {
 				return false;
 			}
-		}else{
+		} else {
 			return false;
 		}
 	}	

@@ -26,7 +26,6 @@ import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.sip.SipService;
-import com.orangelabs.rcs.core.ims.service.toip.ToIpService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -236,6 +235,9 @@ public class Core {
     	// Stop the address book monitoring
     	addressBookManager.stopAddressBookMonitoring();
     	   	
+    	// Stop the user account manager
+    	userAccountManager.stop();
+
     	try {
 	    	// Stop the IMS module 
 	    	imsModule.stop();	    	
@@ -244,9 +246,6 @@ public class Core {
     			logger.error("Error during core shutdown", e);
     		}
     	}
-   	
-    	// Stop the user account manager
-    	userAccountManager.stop();
     	
     	// Notify event listener
 		listener.handleCoreLayerStopped();
@@ -300,15 +299,6 @@ public class Core {
 	 */
 	public InstantMessagingService getImService() {
 		return getImsModule().getInstantMessagingService();
-	}
-
-	/**
-	 * Returns the ToIP service
-	 * 
-	 * @return ToIP service
-	 */
-	public ToIpService getToIpService() {
-		return getImsModule().getToIpService();
 	}
 
 	/**

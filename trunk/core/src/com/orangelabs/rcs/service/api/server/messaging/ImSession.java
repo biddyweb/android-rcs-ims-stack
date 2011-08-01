@@ -238,7 +238,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 				session.sendMsrpMessageDeliveryStatus(msgId, contact, status);
 
 				// Update rich messaging history
-				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_REPORTED, getParticipants().size());
+				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DISPLAYED, getParticipants().size());
 			}catch(Exception e){
 				if (logger.isActivated()){
 					logger.error("Could not send MSRP delivery status",e);

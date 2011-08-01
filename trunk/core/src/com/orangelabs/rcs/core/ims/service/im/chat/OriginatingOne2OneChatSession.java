@@ -37,6 +37,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -100,7 +101,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
-	    		"a=accept-types:" + InstantMessage.MIME_TYPE + SipUtils.CRLF +
+	            "a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
 	    	
 	    	// If there is a first message then builds a multipart content else builds a SDP content
@@ -199,8 +200,8 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 603) {
-            	// 603 Invitation declined
+            if (ctx.getStatusCode() == 603 || (ctx.getStatusCode() == 486)) {
+            	// 603 Invitation declined or 486 busy
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else

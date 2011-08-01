@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1"
- android:versionName="2.2.7" package="com.orangelabs.rcs">
+ android:versionName="2.2.8" package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
 
@@ -44,7 +44,7 @@
 	            <action android:name="com.orangelabs.rcs.service.api.client.presence.IPresenceApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.messaging.IMessagingApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.richcall.IRichCallApi"/>
-	            <action android:name="com.orangelabs.rcs.service.api.client.toip.IToIpApi"/>	            
+	            <action android:name="com.orangelabs.rcs.service.api.client.sip.ISipApi"/>	            
 	        </intent-filter>
 	    </service>
 	
@@ -54,7 +54,9 @@
 			android:icon="@drawable/rcs_icon"
 			android:label="@string/rcs_settings_title_settings"
 			android:launchMode="singleInstance"
-			android:name="com.orangelabs.rcs.settings.SettingsDisplay">
+			android:name="com.orangelabs.rcs.settings.SettingsDisplay"
+		  	android:process=":settings" 
+			>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -67,34 +69,39 @@
             </intent-filter>            
  		</activity>
 
- 		<!-- Authenticator service for authenticate user's account information -->
+		<activity android:name="com.orangelabs.rcs.settings.AboutDisplay"
+		  	android:process=":settings" />
+
+		<activity android:name="com.orangelabs.rcs.settings.UserprofileSettingsDisplay"
+		  	android:process=":settings" />
+
+		<activity android:name="com.orangelabs.rcs.settings.PresenceSettingsDisplay"
+		  	android:process=":settings" />
+
+		<activity android:name="com.orangelabs.rcs.settings.CShSettingsDisplay"
+		  	android:process=":settings" />
+
+		<activity android:name="com.orangelabs.rcs.settings.MessagingSettingsDisplay"
+		  	android:process=":settings" />
+
+ 		<!-- RCS account: authenticator service for user's account information -->
         <service android:exported="true" android:name="com.orangelabs.rcs.addressbook.AuthenticationService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator"/>
             </intent-filter>
-            <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/rcs_settings_authenticator"/>
+            <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/rcs_core_authenticator"/>
         </service>
 
-		<activity android:name="com.orangelabs.rcs.settings.AboutDisplay"/>
-
-		<activity android:name="com.orangelabs.rcs.settings.UserprofileSettingsDisplay"/>
-
-		<activity android:name="com.orangelabs.rcs.settings.PresenceSettingsDisplay"/>
-
-		<activity android:name="com.orangelabs.rcs.settings.CShSettingsDisplay"/>
-
-		<activity android:name="com.orangelabs.rcs.settings.MessagingSettingsDisplay"/>
-		
-        <!-- Sync adapter service to do the actual sync -->
+        <!-- RCS account: sync adapter service -->
         <service android:exported="true" android:name="com.orangelabs.rcs.addressbook.SyncAdapterService">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter"/>
             </intent-filter>
-            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/rcs_settings_syncadapter"/>
-            <meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/rcs_settings_contacts"/>
+            <meta-data android:name="android.content.SyncAdapter" android:resource="@xml/rcs_core_syncadapter"/>
+            <meta-data android:name="android.provider.CONTACTS_STRUCTURE" android:resource="@xml/rcs_core_contacts"/>
         </service>
         
-		<!-- Activity to create a RCS account-->
+		<!-- RCS account: activity to create an account-->
         <activity android:name="com.orangelabs.rcs.addressbook.SetupRcsAccount">
 			<intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -168,7 +175,21 @@
  				<action android:name="android.intent.action.PACKAGE_REMOVED"/>  
 				<data android:scheme="package"/> 
  			</intent-filter>  
-		</receiver> 
+		</receiver>
+		
+		<!-- Widget --> 
+		<receiver android:name="com.orangelabs.rcs.widget.RcsWidgetProvider">
+			<intent-filter>
+		        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+		        <action android:name="com.orangelabs.rcs.SERVICE_STATUS"/>
+		        <action android:name="com.orangelabs.rcs.SERVICE_REGISTRATION"/>
+		        <action android:name="com.orangelabs.rcs.widget.ACTIVATE"/>
+		        <action android:name="com.orangelabs.rcs.widget.DEACTIVATE"/>
+			</intent-filter>
+		    
+			<meta-data android:name="android.appwidget.provider"
+				android:resource="@xml/rcs_widget_provider" />
+		</receiver>
 
 </application> 
 

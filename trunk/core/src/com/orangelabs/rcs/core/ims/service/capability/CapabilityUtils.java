@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
@@ -46,57 +47,9 @@ import com.orangelabs.rcs.utils.MimeManager;
  * @author jexa7410
  */
 public class CapabilityUtils {
-	/**
-	 * RCS-e video share feature tag
-	 */
-	public final static String FEATURE_RCSE_VIDEO_SHARE = "+g.3gpp.cs-voice";
-
-	/**
-	 * RCS-e feature tag
-	 */
-	public final static String FEATURE_RCSE = "+g.3gpp.iari-ref";
 	
 	/**
-	 * RCS-e image share feature tag
-	 */
-	public final static String FEATURE_RCSE_IMAGE_SHARE = "urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is";
-
-	/**
-	 * RCS-e chat feature tag
-	 */
-	public final static String FEATURE_RCSE_CHAT = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.im";
-
-	/**
-	 * RCS-e file transfer feature tag
-	 */
-	public final static String FEATURE_RCSE_FT = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.ft";
-
-	/**
-	 * RCS-e presence discovery feature tag
-	 */
-	public final static String FEATURE_RCSE_PRESENCE_DISCOVERY = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.dp";
-
-	/**
-	 * RCS-e social presence feature tag
-	 */
-	public final static String FEATURE_RCSE_SOCIAL_PRESENCE = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.sp";
-
-	/**
-	 * RCS-e extension feature tag prefix
-	 */
-	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";
-	
-	/**
-	 * Get all supported feature tags
-	 *
-	 * @return Table of tags
-	 */
-	public static List<String> getAllSupportedFeatureTags() {
-		return getSupportedFeatureTags(true);
-	}
-	
-	/**
-	 * Get supported feature tags based on the call state
+	 * Get supported feature tags for capability exchange
 	 *
 	 * @param inCall In call flag
 	 * @return List of tags
@@ -105,26 +58,26 @@ public class CapabilityUtils {
 		List<String> tags = new ArrayList<String>();
 
 		// Add RCS tags
-		if (RcsSettings.getInstance().isVideoSharingSupported()&& inCall) {
-			tags.add(FEATURE_RCSE_VIDEO_SHARE);
+		if (RcsSettings.getInstance().isVideoSharingSupported() && inCall) {
+			tags.add(FeatureTags.FEATURE_RCSE_VIDEO_SHARE);
 		}
 
 		// Add RCS-e tags
 		String supported = "";
 		if (RcsSettings.getInstance().isImSessionSupported()) {
-			supported += FEATURE_RCSE_CHAT + ",";
+			supported += FeatureTags.FEATURE_RCSE_CHAT + ",";
 		}
-		if (RcsSettings.getInstance().isImageSharingSupported()&& inCall) {
-			supported += FEATURE_RCSE_IMAGE_SHARE + ",";
+		if (RcsSettings.getInstance().isImageSharingSupported() && inCall) {
+			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
 		}
 		if (RcsSettings.getInstance().isFileTransferSupported()) {
-			supported += FEATURE_RCSE_FT + ",";
+			supported += FeatureTags.FEATURE_RCSE_FT + ",";
 		}
 		if (RcsSettings.getInstance().isPresenceDiscoverySupported()) {
-			supported += FEATURE_RCSE_PRESENCE_DISCOVERY + ",";
+			supported += FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY + ",";
 		}
 		if (RcsSettings.getInstance().isSocialPresenceSupported()) {
-			supported += FEATURE_RCSE_SOCIAL_PRESENCE + ",";
+			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
 		}
 
 		// Add extensions
@@ -133,12 +86,12 @@ public class CapabilityUtils {
 			 supported += exts;
 		}
 
-		// Add prefixes
+		// Add RCS-e prefix
 		if (supported.length() != 0) {
 			if (supported.endsWith(",")) {
 				supported = supported.substring(0, supported.length()-1);
 			}
-			supported = FEATURE_RCSE + "=\"" + supported + "\"";
+			supported = FeatureTags.FEATURE_RCSE + "=\"" + supported + "\"";
 			tags.add(supported);
 		}
 		
@@ -157,25 +110,37 @@ public class CapabilityUtils {
     	ArrayList<String> tags = msg.getFeatureTags();
     	for(int i=0; i < tags.size(); i++) {
     		String tag = tags.get(i);
-    		if (tag.equals(FEATURE_RCSE_VIDEO_SHARE)) {
+    		if (tag.equals(FeatureTags.FEATURE_RCSE_VIDEO_SHARE)) {
+        		// Support video share service
         		capabilities.setVideoSharingSupport(true);
-        	}
-        	if (tag.equals(FEATURE_RCSE_IMAGE_SHARE)) {
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_RCSE_IMAGE_SHARE)) {
+        		// Support image share service
         		capabilities.setImageSharingSupport(true);
-        	}
-        	if (tag.equals(FEATURE_RCSE_CHAT)) {
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_RCSE_CHAT)) {
+        		// Support IM service
         		capabilities.setImSessionSupport(true);
-        	}
-        	if (tag.equals(FEATURE_RCSE_FT)) {
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_RCSE_FT)) {
+        		// Support FT service
         		capabilities.setFileTransferSupport(true);
-        	}
-        	if (tag.equals(FEATURE_RCSE_PRESENCE_DISCOVERY)) {
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_OMA_IM)) {
+        		// Support both IM & FT services
+        		capabilities.setImSessionSupport(true);
+        		capabilities.setFileTransferSupport(true);
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY)) {
+        		// Support capability discovery via presence service
         		capabilities.setPresenceDiscoverySupport(true);
-        	}
-        	if (tag.equals(FEATURE_RCSE_SOCIAL_PRESENCE)) {
+        	} else
+        	if (tag.equals(FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE)) {
+        		// Support social presence service
         		capabilities.setSocialPresenceSupport(true);
-        	}
-    		if (tag.startsWith(FEATURE_RCSE_EXTENSION)) {
+        	} else
+    		if (tag.startsWith(FeatureTags.FEATURE_RCSE_EXTENSION)) {
+    			// Support a RCS extension
     			capabilities.addSupportedExtension(tag);
     		}
     	}
@@ -244,7 +209,7 @@ public class CapabilityUtils {
 			// Intent query on current installed activities
 			PackageManager packageManager = context.getPackageManager();
 			Intent intent = new Intent(CapabilityApiIntents.RCS_EXTENSIONS);
-			intent.setType(CapabilityUtils.FEATURE_RCSE_EXTENSION + "/*");
+			intent.setType(FeatureTags.FEATURE_RCSE_EXTENSION + "/*");
 			List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
 			
 			String extensions = "";
@@ -252,7 +217,7 @@ public class CapabilityUtils {
 				ResolveInfo info = list.get(i);
 				for(int j =0; j < info.filter.countDataTypes(); j++) {
 					String value = info.filter.getDataType(j);
-					if (value.startsWith(CapabilityUtils.FEATURE_RCSE_EXTENSION)) {
+					if (value.startsWith(FeatureTags.FEATURE_RCSE_EXTENSION)) {
 						String[] mime = value.split("/");
 						String mimeType = mime[0] + "." + mime[1];
 						if (extensions.indexOf(mimeType) == -1) {

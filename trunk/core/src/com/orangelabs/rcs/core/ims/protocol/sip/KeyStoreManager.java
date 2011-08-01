@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+
 package com.orangelabs.rcs.core.ims.protocol.sip;
+
+import com.orangelabs.rcs.platform.AndroidFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,32 +36,47 @@ import java.security.cert.X509Certificate;
 public class KeyStoreManager {
 
     /**
-     * Keystore path
+     * Keystore name
      */
-    public final static String PATH = "/sdcard/rcs_keystore.jks";
+    public final static String KEYSTORE_NAME = "rcs_keystore.jks";
 
     /**
      * Keystore password
      */
-    public final static String PASSWORD = "01RCSrcs";
+    public final static String KEYSTORE_PASSWORD = "01RCSrcs";
 
     /**
      * Keystore type
      */
-    public final static String TYPE = KeyStore.getDefaultType();
+    public final static String KEYSTORE_TYPE = KeyStore.getDefaultType();
 
     /**
-     * Test if the RCS keystore is created.
+     * Private key alias
+     */
+    public final static String PRIVATE_KEY_ALIAS = "MyPrivateKey";
+
+    /**
+     * returns keystore path.
+     * 
+     * @return keystore path
+     */
+    public static String getKeystorePath() {
+        return AndroidFactory.getApplicationContext().getFilesDir().getAbsolutePath() + "/"
+                + KEYSTORE_NAME;
+    }
+
+    /**
+     * Test if a keystore is created.
      * 
      * @return true if already created.
      */
-    public static boolean exists() {
-        File file = new File(PATH);
+    public static boolean isKeystoreExists(String path) {
+        File file = new File(path);
         if ((file == null) || (!file.exists()))
             return false;
         try {
-            KeyStore ks = KeyStore.getInstance(TYPE);
-            ks.load(new FileInputStream(PATH), PASSWORD.toCharArray());
+            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+            ks.load(new FileInputStream(path), KEYSTORE_PASSWORD.toCharArray());
         } catch (Exception e) {
             return false;
         }
@@ -71,14 +89,14 @@ public class KeyStoreManager {
      * @throws Exception
      */
     public static void createKeyStore() throws Exception {
-        File file = new File(PATH);
+        File file = new File(getKeystorePath());
         if ((file == null) || (!file.exists())) {
             // Build empty keystore
-            KeyStore ks = KeyStore.getInstance(TYPE);
-            ks.load(null, PASSWORD.toCharArray());
+            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+            ks.load(null, KEYSTORE_PASSWORD.toCharArray());
 
             // Export keystore in a file
-            ks.store(new FileOutputStream(PATH), PASSWORD.toCharArray());
+            ks.store(new FileOutputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
         }
     }
 
@@ -90,12 +108,12 @@ public class KeyStoreManager {
      * @throws Exception
      */
     public static boolean isCertificateEntry(String path) throws Exception {
-        if (KeyStoreManager.exists()) {
+        if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
             // Open the existing keystore
-            KeyStore ks = KeyStore.getInstance(TYPE);
-            ks.load(new FileInputStream(PATH), PASSWORD.toCharArray());
+            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+            ks.load(new FileInputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
             // isCertificateEntry
-            return ks.isCertificateEntry(buildAlias(path));
+            return ks.isCertificateEntry(buildCertificateAlias(path));
         }
         return false;
     }
@@ -108,20 +126,20 @@ public class KeyStoreManager {
      * @throws Exception
      */
     public static void addCertificate(String path) throws Exception {
-        if (KeyStoreManager.exists()) {
+        if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
             // Open the existing keystore
-            KeyStore ks = KeyStore.getInstance(TYPE);
-            ks.load(new FileInputStream(PATH), PASSWORD.toCharArray());
+            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+            ks.load(new FileInputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
 
             // Get certificate and add in keystore
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             InputStream inStream = new FileInputStream(path);
             X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
             inStream.close();
-            ks.setCertificateEntry(buildAlias(path), cert);
+            ks.setCertificateEntry(buildCertificateAlias(path), cert);
 
             // save the keystore
-            ks.store(new FileOutputStream(PATH), PASSWORD.toCharArray());
+            ks.store(new FileOutputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
         }
     }
 
@@ -131,7 +149,7 @@ public class KeyStoreManager {
      * @param path file path
      * @return the alias
      */
-    private static String buildAlias(String path) {
+    private static String buildCertificateAlias(String path) {
         String alias = "";
         File file = new File(path);
         String filename = file.getName();
@@ -144,4 +162,55 @@ public class KeyStoreManager {
         return alias;
     }
 
+    // /**
+    // * Initialize a private key with self signed certificate.
+    // *
+    // * @throws Exception
+    // */
+    // @SuppressWarnings("deprecation")
+    // public static void initPrivateKeyAndSelfsignedCertificate() throws
+    // Exception {
+    // if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
+    // // Open the existing keystore
+    // KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+    // ks.load(new FileInputStream(getKeystorePath()),
+    // KEYSTORE_PASSWORD.toCharArray());
+    //
+    // // is Private Key not exists
+    // if (!ks.isKeyEntry(PRIVATE_KEY_ALIAS)) {
+    // // Generate Key
+    // KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+    // kpg.initialize(1024);
+    // KeyPair kp = kpg.generateKeyPair();
+    //
+    // // Generate certificate
+    // long currentTime = System.currentTimeMillis();
+    // X509V3CertificateGenerator v3CertGen = new X509V3CertificateGenerator();
+    // v3CertGen.setSerialNumber(new BigInteger(Long.toString(currentTime)));
+    // v3CertGen.setIssuerDN(new X509Principal(
+    // "CN=OrangeLabs, OU=None, O=None, L=None, C=None"));
+    // v3CertGen.setNotBefore(new Date(currentTime - 1000L * 60 * 60 * 24 *
+    // 30));
+    // v3CertGen.setNotAfter(new Date(currentTime + (1000L * 60 * 60 * 24 * 365
+    // * 10)));
+    // v3CertGen.setSubjectDN(new X509Principal(
+    // "CN=OrangeLabs, OU=None, O=None, L=None, C=None"));
+    // v3CertGen.setPublicKey(kp.getPublic());
+    // v3CertGen.setSignatureAlgorithm("MD5WithRSAEncryption");
+    // X509Certificate cert =
+    // v3CertGen.generateX509Certificate(kp.getPrivate());
+    //
+    // // Add the private key with cert in keystore
+    // ks.setKeyEntry(PRIVATE_KEY_ALIAS, kp.getPrivate(),
+    // KEYSTORE_PASSWORD.toCharArray(),
+    // new Certificate[] {
+    // cert
+    // });
+    //
+    // // save the keystore
+    // ks.store(new FileOutputStream(getKeystorePath()),
+    // KEYSTORE_PASSWORD.toCharArray());
+    // }
+    // }
+    // }
 }

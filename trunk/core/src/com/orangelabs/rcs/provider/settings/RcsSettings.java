@@ -1406,7 +1406,7 @@ public class RcsSettings {
 	public boolean isTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.TRACE_ACTIVATION));
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.TRACE_ACTIVATED));
 		}
 		return result;
 	}
@@ -1432,7 +1432,7 @@ public class RcsSettings {
 	public boolean isSipTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.SIP_TRACE_ACTIVATION));
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.SIP_TRACE_ACTIVATED));
 		}
 		return result;
 	}
@@ -1445,7 +1445,7 @@ public class RcsSettings {
 	public boolean isMediaTraceActivated() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.MEDIA_TRACE_ACTIVATION));
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.MEDIA_TRACE_ACTIVATED));
 		}
 		return result;
 	}

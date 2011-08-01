@@ -19,12 +19,15 @@
 package com.orangelabs.rcs.core.ims.service;
 
 import java.util.List;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.service.api.client.sip.SipApiIntents;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -45,84 +48,44 @@ public class SipIntentManager {
 	}
 	
 	/**
-	 * Broadcast request as intent
+	 * Is the SIP intent may be resolved
 	 * 
-	 * @param request SIP request
+	 * @param request Incoming request
 	 * @return Returns true if the intent has been resolved, else returns false
 	 */
-	public boolean broadcastRequest(SipRequest request) {
-		boolean result = false;
-		
+	public boolean isSipIntentResolved(SipRequest request) {
+		// Get feature tags
+		List<String> tags = request.getFeatureTags();
+		if (tags.size() == 0) {
+    		if (logger.isActivated()) {
+    			logger.debug("No feature tag found in the request");
+    		}
+			return false;
+		}		
+
+		// Create the intent associated to the SIP request
+		Intent intent = generateSipIntent(request);
+		return isSipIntentResolvedByBroadcastReceiver(intent);
+	}	
+
+	/**
+	 * Generate a SIP Intent
+	 * 
+	 * @param request SIP request
+	 */
+	private Intent generateSipIntent(SipRequest request) {
 		// Create the intent
-		String action = "com.orangelabs.rcs.intent." + request.getMethod();
+		String action = SipApiIntents.SESSION_INVITATION;
 		Intent intent = new Intent(action);
 		intent.addCategory(Intent.CATEGORY_DEFAULT);
 
 		// Set intent parameters
-		String mime = request.getContentType();
-		if (mime != null) {
-			intent.setType(mime.toLowerCase());
-		}
+		List<String> tags = request.getFeatureTags();
+		String featureTag = tags.get(0);
+		intent.setType(FeatureTags.FEATURE_RCSE + "/" + featureTag);
         
-		String callId = request.getCallId();
-		if (callId != null) {
-			intent.putExtra("CallId", callId);
-		}
-        
-		String from = request.getFromUri();
-		if (from != null) {
-			intent.putExtra("From", from);
-		}
-
-		String content = request.getContent();
-		if (content != null) {
-			intent.putExtra("Content", content);
-		}
-        
-		if (logger.isActivated()) {
-			logger.debug("Create SIP intent " + action + ", call-Id=" + callId + ", mime-type=" + mime);
-		}
-		
-		try {
-			if (isSipIntentResolvedByBroadcastReceiver(intent)) {
-	  			// Broadcast intent to intent receivers
-	    		if (logger.isActivated()) {
-	    			logger.debug("Broadcast intent to broadcast receivers");
-	    		}
-	    		AndroidFactory.getApplicationContext().sendBroadcast(intent);
-	    		result = true;
-			}
-
-			if (isSipIntentResolvedByActivity(intent)) {
-	    		// Broadcast intent to activities
-	    		if (logger.isActivated()) {
-	    			logger.debug("Broadcast intent to activities");
-	    		}
-	    		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    		AndroidFactory.getApplicationContext().startActivity(intent);
-	    		result = true;
-			}
-	    } catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP intent " + action, e);
-			}
-	    }
-	    
-	    return result;
+		return intent;
 	}
-	
-	/**
-	 * Is the SIP intent action may be resolved by at least an activity
-	 * 
-	 * @param intent The Intent to resolve
-	 * @return Returns true if the intent has been resolved, else returns false
-	 */
-	private boolean isSipIntentResolvedByActivity(Intent intent) {
-		PackageManager packageManager = AndroidFactory.getApplicationContext().getPackageManager();
-		List<ResolveInfo> list = packageManager.queryIntentActivities(intent,
-				PackageManager.MATCH_DEFAULT_ONLY);
-		return (list.size() > 0);
-	}	
 
 	/**
 	 * Is the SIP intent may be resolved by at least broadcast receiver
@@ -135,15 +98,5 @@ public class SipIntentManager {
 		List<ResolveInfo> list = packageManager.queryBroadcastReceivers(intent,
 				PackageManager.MATCH_DEFAULT_ONLY);
 		return (list.size() > 0);
-	}	
-	
-	/**
-	 * Is the SIP intent may be resolved
-	 * 
-	 * @param intent The Intent to check
-	 * @return Returns true if the intent has been resolved, else returns false
-	 */
-	public boolean isSipIntentResolved(Intent intent) {
-		return (isSipIntentResolvedByActivity(intent) || isSipIntentResolvedByBroadcastReceiver(intent));
 	}	
 }

@@ -12,6 +12,9 @@ interface ISipSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get feature tags of the service
+	String[] getFeatureTags();
+
 	// Accept the session invitation
 	void acceptSession();
 

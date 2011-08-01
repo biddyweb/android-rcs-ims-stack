@@ -55,10 +55,7 @@ LOCAL_SRC_FILES += \
     src/com/orangelabs/rcs/service/api/client/richcall/IVideoSharingSession.aidl \
     src/com/orangelabs/rcs/service/api/client/sip/ISipApi.aidl \
     src/com/orangelabs/rcs/service/api/client/sip/ISipSession.aidl \
-    src/com/orangelabs/rcs/service/api/client/sip/ISipSessionEventListener.aidl \
-    src/com/orangelabs/rcs/service/api/client/toip/IToIpApi.aidl \
-    src/com/orangelabs/rcs/service/api/client/toip/IToIpEventListener.aidl \
-    src/com/orangelabs/rcs/service/api/client/toip/IToIpSession.aidl
+    src/com/orangelabs/rcs/service/api/client/sip/ISipSessionEventListener.aidl
 
 # FRAMEWORKS_BASE_JAVA_SRC_DIRS comes from build/core/pathmap.mk
 LOCAL_AIDL_INCLUDES += $(FRAMEWORKS_BASE_JAVA_SRC_DIRS)
@@ -92,6 +89,7 @@ RcsApi: FILES_TO_INCLUDE:= com/orangelabs/rcs/utils/ \
     com/orangelabs/rcs/core/ims/protocol/rtp/ \
     com/orangelabs/rcs/core/ims/service/sharing/ContentSharingError.class \
     com/orangelabs/rcs/core/ims/service/im/chat/ChatError.class \
+	com/orangelabs/rcs/core/ims/service/sip/SipSessionError.class \
     com/orangelabs/rcs/core/ims/service/im/chat/imdn/ImdnDocument.class \
     com/orangelabs/rcs/core/ims/service/im/chat/event/User.class
 RcsApi:

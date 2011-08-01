@@ -75,12 +75,12 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Session invitation status
 	 */
-	private int invitationStatus = INVITATION_NOT_ANSWERED;
+	protected int invitationStatus = INVITATION_NOT_ANSWERED;
 	
 	/**
 	 * Wait user answer for session invitation
 	 */
-	private Object waitUserAnswer = new Object();
+	protected Object waitUserAnswer = new Object();
 
 	/**
 	 * Session listener

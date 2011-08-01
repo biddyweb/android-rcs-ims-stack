@@ -299,7 +299,7 @@ public class SipUtils {
 			return assertedHeader.getValue();
 		}
 	}
-
+	
     /**
 	 * Generate a list of route headers. The record route of the incoming message
 	 * is used to generate the corresponding route header.

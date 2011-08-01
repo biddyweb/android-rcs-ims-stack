@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.TerminalInfo;
 import com.orangelabs.rcs.core.UserAccountException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
@@ -46,7 +47,6 @@ import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
-import com.orangelabs.rcs.core.ims.service.toip.TerminatingToIpSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
@@ -71,15 +71,14 @@ import com.orangelabs.rcs.service.api.client.presence.PresenceApiIntents;
 import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
 import com.orangelabs.rcs.service.api.client.richcall.IRichCallApi;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
+import com.orangelabs.rcs.service.api.client.sip.ISipApi;
 import com.orangelabs.rcs.service.api.client.sip.SipApiIntents;
-import com.orangelabs.rcs.service.api.client.toip.IToIpApi;
-import com.orangelabs.rcs.service.api.client.toip.ToIpApiIntents;
 import com.orangelabs.rcs.service.api.server.ImsApiService;
 import com.orangelabs.rcs.service.api.server.capability.CapabilityApiService;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
-import com.orangelabs.rcs.service.api.server.toip.ToIpApiService;
+import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Appender;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -130,12 +129,12 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * Rich call API
 	 */
 	private RichCallApiService richcallApi = new RichCallApiService(); 
-
-	/**
-	 * ToIP API
-	 */
-	private ToIpApiService toipApi = new ToIpApiService(); 
 	
+	/**
+	 * SIP API
+	 */
+	private SipApiService sipApi = new SipApiService(); 
+
 	/**
 	 * The logger
 	 */
@@ -170,7 +169,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		capabilityApi.close();
 		richcallApi.close();
 		messagingApi.close();
-		toipApi.close();
+		sipApi.close();
 		
         // Stop the core
         stopCore();
@@ -340,11 +339,11 @@ public class RcsCoreService extends Service implements CoreListener {
     		}
             return richcallApi;
         } else
-        if (IToIpApi.class.getName().equals(intent.getAction())) {
+        if (ISipApi.class.getName().equals(intent.getAction())) {
     		if (logger.isActivated()) {
-    			logger.debug("ToIP API binding");
+    			logger.debug("SIP API binding");
     		}
-            return toipApi;
+            return sipApi;
         } else {
         	return null;
         }
@@ -899,6 +898,7 @@ public class RcsCoreService extends Service implements CoreListener {
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
+    	intent.putExtra("filetype", session.getContent().getEncoding());
     	getApplicationContext().sendBroadcast(intent);		
     }
     
@@ -926,6 +926,7 @@ public class RcsCoreService extends Service implements CoreListener {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
+    	intent.putExtra("videotype", session.getContent().getEncoding());
     	getApplicationContext().sendBroadcast(intent);		
     }
 
@@ -961,6 +962,7 @@ public class RcsCoreService extends Service implements CoreListener {
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
+    	intent.putExtra("filetype", session.getContent().getEncoding());
     	getApplicationContext().sendBroadcast(intent);
 	}
     
@@ -1017,27 +1019,6 @@ public class RcsCoreService extends Service implements CoreListener {
 	}
     
     /**
-     * New ToIP call invitation
-     * 
-     * @param session ToIP session
-     */
-    public void handleToIpCallInvitation(TerminatingToIpSession session) {
-		if (logger.isActivated()) {
-			logger.debug("Handle event receive ToIP session invitation");
-		}
-		
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-    	// Notify event listeners
-    	Intent intent = new Intent(ToIpApiIntents.TOIP_CALL_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	getApplicationContext().sendBroadcast(intent);
-    }
-    
-    /**
      * New SIP session invitation
      * 
      * @param session SIP session
@@ -1052,6 +1033,7 @@ public class RcsCoreService extends Service implements CoreListener {
 
     	// Notify event listeners
     	Intent intent = new Intent(SipApiIntents.SESSION_INVITATION);
+		intent.setType(FeatureTags.FEATURE_RCSE + "/" + session.getFeatureTag());
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());

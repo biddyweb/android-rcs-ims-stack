@@ -5,5 +5,6 @@ com/orangelabs/rcs/platform/
 com/orangelabs/rcs/core/ims/protocol/rtp/
 com/orangelabs/rcs/core/ims/service/sharing/ContentSharingError.class
 com/orangelabs/rcs/core/ims/service/im/chat/ChatError.class
+com/orangelabs/rcs/core/ims/service/sip/SipSessionError.class
 com/orangelabs/rcs/core/ims/service/im/chat/imdn/ImdnDocument.class
 com/orangelabs/rcs/core/ims/service/im/chat/event/User.class

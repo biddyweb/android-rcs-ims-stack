@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.service.api.client.sip;
 
+import java.util.List;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -95,17 +97,18 @@ public class SipApi extends ClientApi {
     };
 	
 	/**
-	 * Initiate a new session
+	 * Initiate a new SIP session
 	 * 
 	 * @param contact Contact
+	 * @param featureTag Feature tag of the service
 	 * @param sdp SDP offer
 	 * @return Session
 	 * @throws ClientApiException
 	 */
-	public ISipSession initiateSession(String contact, String offer) throws ClientApiException {
+	public ISipSession initiateSession(String contact, String featureTag, String offer) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateSession(contact, offer);
+		    	return coreApi.initiateSession(contact, featureTag, offer);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -115,7 +118,7 @@ public class SipApi extends ClientApi {
 	}
 
 	/**
-	 * Get a session from its session ID
+	 * Get a SIP session from its session ID
 	 *
 	 * @param id Session ID
 	 * @return Session
@@ -125,6 +128,43 @@ public class SipApi extends ClientApi {
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getSession(id);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+
+	/**
+	 * Get list of SIP sessions with a contact
+	 * 
+	 * @param contact Contact
+	 * @return Session
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getSessionsWith(String contact) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.getSessionsWith(contact);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+
+	/**
+	 * Get list of current established SIP sessions
+	 * 
+	 * @return List of sessions
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getSessions() throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	return coreApi.getSessions();
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
