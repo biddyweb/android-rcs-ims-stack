@@ -68,17 +68,17 @@
 				android:layout_marginLeft="5dp"
 				android:layout_marginRight="5dp"
 				android:gravity="center"
-				android:stretchColumns="1">
+				android:stretchColumns="1" android:weightSum="1">
 				<Button android:text="@string/label_start_outgoing_btn"
 					android:id="@+id/start_outgoing_btn"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content"
-					android:textSize="10sp"/>
+					android:textSize="10sp" android:layout_weight="1"/>
 				<Button android:text="@string/label_stop_outgoing_btn"
 					android:id="@+id/stop_outgoing_btn"
 					android:layout_width="fill_parent"
 					android:layout_height="wrap_content"
-					android:textSize="10sp"/>
+					android:textSize="10sp" android:layout_weight="1"/>
 			</TableRow>
 			
 			<TableRow android:layout_width="fill_parent"

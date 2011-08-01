@@ -326,7 +326,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         Notification notif = new Notification(R.drawable.ri_notif_chat_icon,
         		notifTitle,
         		System.currentTimeMillis());
-        notif.flags = Notification.FLAG_NO_CLEAR;
+        notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
         		notifTitle,
         		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),

@@ -21,6 +21,7 @@ package com.orangelabs.rcs.ri.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -40,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
@@ -111,12 +113,12 @@ public class Utils {
 	}
 	
 	/**
-	 * Create a multi contacts selector based on the native address book
+	 * Create a contact selector with RCS capable contacts
 	 * 
 	 * @param activity Activity
 	 * @return List adapter
 	 */
-	public static MultiContactListAdapter createMultiContactListAdapter(Activity activity) {
+	public static ContactListAdapter createRcsContactListAdapter(Activity activity) {
 	    String[] PROJECTION = new String[] {
 	    		Phone._ID,
 	    		Phone.NUMBER,
@@ -124,24 +126,27 @@ public class Utils {
 	    		Phone.TYPE,
 	    		Phone.CONTACT_ID
 		    };
-        ContentResolver content = activity.getContentResolver();
-		Cursor cursor = content.query(Phone.CONTENT_URI, PROJECTION, Phone.NUMBER + "!='null'", null, null);
-		// There is now some filtering to do
-		// Same number may be used many time for a single contact (for example, this is needed to aggregate contacts with ContactsContract)
-		// A number may be present in national or international format, it is considered to be the same
-
-		// There is now some filtering to do
-		// A number may be present in national or international format, it is considered to be the same
+		MatrixCursor matrix = new MatrixCursor(PROJECTION);
+	    ContactsApi contactsApi = new ContactsApi(activity);
+	    
+	    // Get the list of RCS contacts 
+	    List<String> rcsContacts = contactsApi.getRcsContacts();
+	    ContentResolver content = activity.getContentResolver();
+	    
+		// Query all phone numbers
+        Cursor cursor = content.query(Phone.CONTENT_URI, 
+        		PROJECTION, 
+        		null, 
+        		null, 
+        		null);
 
 		// List of unique number
 		Vector<String> treatedNumbers = new Vector<String>();
-		
-		MatrixCursor matrix = new MatrixCursor(PROJECTION);
 		while (cursor.moveToNext()){
 			// Keep a trace of already treated row. Key is (phone number in international, phone contact id)
 			String phoneNumber = PhoneUtils.formatNumberToInternational(cursor.getString(1));
-			
-			if (!treatedNumbers.contains(phoneNumber)){
+			// If this number is RCS and not already in the list, take it 
+			if (rcsContacts.contains(phoneNumber) && !treatedNumbers.contains(phoneNumber)){
 				matrix.addRow(new Object[]{cursor.getLong(0), 
 						phoneNumber,
 						cursor.getString(2),
@@ -151,7 +156,55 @@ public class Utils {
 			}
 		}
 		cursor.close();
-        activity.startManagingCursor(matrix);
+		
+		return new ContactListAdapter(activity, matrix);
+	}
+	
+	/**
+	 * Create a multi contacts selector with RCS capable contacts
+	 * 
+	 * @param activity Activity
+	 * @return List adapter
+	 */
+	public static MultiContactListAdapter createMultiContactImCapableListAdapter(Activity activity) {
+	    String[] PROJECTION = new String[] {
+	    		Phone._ID,
+	    		Phone.NUMBER,
+	    		Phone.LABEL,
+	    		Phone.TYPE,
+	    		Phone.CONTACT_ID
+		    };
+
+		MatrixCursor matrix = new MatrixCursor(PROJECTION);
+	    ContactsApi contactsApi = new ContactsApi(activity);
+
+	    // Get the list of RCS contacts 
+	    List<String> rcsContacts = contactsApi.getRcsContacts();
+
+	    ContentResolver content = activity.getContentResolver();
+		// Query all phone numbers
+        Cursor cursor = content.query(Phone.CONTENT_URI, 
+        		PROJECTION, 
+        		null, 
+        		null, 
+        		null);
+
+		// List of unique number
+		Vector<String> treatedNumbers = new Vector<String>();
+		while (cursor.moveToNext()){
+			// Keep a trace of already treated row. Key is (phone number in international, phone contact id)
+			String phoneNumber = PhoneUtils.formatNumberToInternational(cursor.getString(1));
+			// If this number is RCS and not already in the list, take it 
+			if (rcsContacts.contains(phoneNumber) && !treatedNumbers.contains(phoneNumber)){
+				matrix.addRow(new Object[]{cursor.getLong(0), 
+						phoneNumber,
+						cursor.getString(2),
+						cursor.getInt(3),
+						cursor.getLong(4)});
+				treatedNumbers.add(phoneNumber);
+			}
+		}
+		cursor.close();
 		return new MultiContactListAdapter(activity, matrix);
 	}
 	

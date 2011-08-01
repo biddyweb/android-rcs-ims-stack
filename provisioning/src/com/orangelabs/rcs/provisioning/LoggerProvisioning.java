@@ -74,14 +74,14 @@ public class LoggerProvisioning extends Activity {
         Map<String, String> settings = RcsSettings.getInstance().dump();
         
         // Display logger parameters
-    	CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivation);
-        check.setChecked(Boolean.parseBoolean(settings.get("TraceActivation")));
+    	CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivated);
+        check.setChecked(Boolean.parseBoolean(settings.get("TraceActivated")));
         
-    	check = (CheckBox)this.findViewById(R.id.SipTraceActivation);
-        check.setChecked(Boolean.parseBoolean(settings.get("SipTraceActivation")));
+    	check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
+        check.setChecked(Boolean.parseBoolean(settings.get("SipTraceActivated")));
 
-    	check = (CheckBox)this.findViewById(R.id.MediaTraceActivation);
-        check.setChecked(Boolean.parseBoolean(settings.get("MediaTraceActivation")));
+    	check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
+        check.setChecked(Boolean.parseBoolean(settings.get("MediaTraceActivated")));
 
         Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -113,14 +113,14 @@ public class LoggerProvisioning extends Activity {
 		switch (item.getItemId()) {
 			case R.id.menu_save:
 		        // Save logger parameters
-		        CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivation);
-				Provisioning.writeParameter(cr, "TraceActivation", Boolean.toString(check.isChecked()));
+		        CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivated);
+				Provisioning.writeParameter(cr, "TraceActivated", Boolean.toString(check.isChecked()));
 
-		        check = (CheckBox)this.findViewById(R.id.SipTraceActivation);
-				Provisioning.writeParameter(cr, "SipTraceActivation", Boolean.toString(check.isChecked()));
+		        check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
+				Provisioning.writeParameter(cr, "SipTraceActivated", Boolean.toString(check.isChecked()));
 
-		        check = (CheckBox)this.findViewById(R.id.MediaTraceActivation);
-				Provisioning.writeParameter(cr, "MediaTraceActivation", Boolean.toString(check.isChecked()));
+		        check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
+				Provisioning.writeParameter(cr, "MediaTraceActivated", Boolean.toString(check.isChecked()));
 
 				Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
 				String value = (String)spinner.getSelectedItem();

@@ -52,7 +52,7 @@ public class InitiateOutgoingVisioSharing extends Activity {
 
         // Set the contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);
-        spinner.setAdapter(Utils.createContactListAdapter(this));
+        spinner.setAdapter(Utils.createRcsContactListAdapter(this));
 
         // Set button callback
         Button inviteBtn = (Button)findViewById(R.id.invite_btn);

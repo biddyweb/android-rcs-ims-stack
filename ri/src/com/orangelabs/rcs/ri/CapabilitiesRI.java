@@ -28,7 +28,7 @@ import android.widget.ListView;
 
 import com.orangelabs.rcs.ri.capabilities.CapabilitiesDiscovery;
 import com.orangelabs.rcs.ri.capabilities.MyCapabilities;
-import com.orangelabs.rcs.ri.capabilities.SynchronizeAddressBook;
+import com.orangelabs.rcs.ri.capabilities.RefreshCapabilities;
 
 /**
  * Capabilities RI
@@ -46,9 +46,9 @@ public class CapabilitiesRI extends ListActivity {
 
         // Set items
         String[] items = {
-        		getString(R.string.menu_my_capabilities),
-        		getString(R.string.menu_capabilities_request),        		
-        		getString(R.string.menu_sync_capabilities)        		
+    		getString(R.string.menu_my_capabilities),
+    		getString(R.string.menu_capabilities_request),        		
+    		getString(R.string.menu_refresh_capabilities)        		
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -63,7 +63,7 @@ public class CapabilitiesRI extends ListActivity {
             	startActivity(new Intent(this, CapabilitiesDiscovery.class));
                 break;
 	        case 2:
-            	startActivity(new Intent(this, SynchronizeAddressBook.class));
+            	startActivity(new Intent(this, RefreshCapabilities.class));
                 break;
         }
     }

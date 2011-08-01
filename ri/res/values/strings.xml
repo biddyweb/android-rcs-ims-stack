@@ -10,20 +10,19 @@
 <string name="menu_about">About</string>
 <string name="label_ab_not_found">The address book is not found, launch it manually from your device home screen.</string>
 <string name="label_sms_not_found">The SMS/MMS application is not found, launch it manually from applications list.</string>
-<string name="label_file_size">Size: %1$s%2$s</string>
-<string name="label_file_size_unknown">Size: unknown</string>
-<string name="menu_close_session">Quit</string>
-<string name="label_command_in_progress">Command in progress...</string>
 <string name="label_presence_service_not_activated">The presence service is not activated</string>
-<string name="label_session_has_expired">Session has expired (timeout or any other error)</string>
 
 <!-- Commons -->
+<string name="menu_close_session">Quit</string>
+<string name="label_file_size">Size: %1$s%2$s</string>
+<string name="label_file_size_unknown">Size: unknown</string>
+<string name="label_command_in_progress">Command in progress...</string>
+<string name="label_session_has_expired">Session has expired (timeout or any other error)</string>
 <string name="label_not_implemented">Not yet implemented</string>
 <string name="label_ims_disconnected">Service has been disconnected from the IMS</string>
 <string name="label_api_failed">Call API method has failed</string>
 <string name="label_api_disconnected">RCS service has been stopped</string>
 <string name="label_api_disabled">RCS service is not started</string>
-<string name="label_autocomplete_contact_hint">Typing * will show all of your contacts</string>
 <string name="label_ok">OK</string>
 <string name="label_cancel">Cancel</string>
 <string name="label_delete">Delete</string>
@@ -32,6 +31,7 @@
 <string name="label_accept">Accept</string>
 <string name="label_decline">Decline</string>
 <string name="label_ignore">Ignore</string>
+<string name="label_refresh">Refresh</string>
 <string name="label_from">From:</string>
 <string name="label_invitation_failed">Invitation has failed</string>
 
@@ -44,14 +44,13 @@
 <string name="menu_capabilities">Capabilities</string>
 <string name="menu_my_capabilities">My capabilities</string>
 <string name="menu_capabilities_request">Request capabilities</string>
-<string name="menu_sync_capabilities">Synchronize all capabilities</string>
+<string name="menu_refresh_capabilities">Refresh all capabilities</string>
 <string name="menu_request_capabilities">Request capabilities</string>
-<string name="label_sync_failed">Could not initiate synchronization</string>
-<string name="label_sync_success">Capabilities synchronization is initiated in background</string>
+<string name="label_refresh_failed">Could not refresh contacts</string>
+<string name="label_refresh_success">Contacts has been refreshed</string>
 <string name="label_capabilities">Capabilities:</string>
-<string name="label_sync_all_capabilities">This command permits to force an update of capabilities for each contact in the address book. This may take a long time if there is a lof of contacts.</string>
-<string name="label_sync">Synchronize</string>
-<string name="label_sync_in_progress">Synchronize in progress...</string>
+<string name="label_refresh_all_capabilities">This command permits to force an update of capabilities for each contact in the address book. This may take a long time if there is a lof of contacts.</string>
+<string name="label_refresh_in_progress">Refresh in progress...</string>
 
 <!--  Presence menu -->
 <string name="menu_presence">Presence</string>
@@ -106,7 +105,6 @@
 <string name="label_request_in_background">Request has been sent in background for %s</string>
 <string name="label_browser_bookmarks">Browser bookmarks</string>
 <string name="label_predefined_freetext">Pre-defined freetext</string>
-<string name="label_refresh">Refresh</string>
 <string name="title_presence_invitation">New invitation to share profile</string>
 <string name="label_rcs_contact">RCS</string>
 <string name="label_normal_contact">Not RCS</string>
@@ -152,6 +150,8 @@
 <string name="label_transfer_failed">Transfer has failed or is aborted (code %d)</string>
 <string name="label_select_contacts">Select contacts</string>
 <string name="label_chat_wizz">Wizz</string>
+<string name="label_chat_initiation_canceled">Chat session has been canceled</string>
+<string name="label_ft_initiation_canceled">File transfer session has been canceled</string>
 <string name="label_select_quicktext">Quick text</string>
 <string name="menu_quicktext">Quick text</string>
 <string name="label_note_add_participant">This feature is only available from a chat group</string>
@@ -170,6 +170,8 @@
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
 <string name="menu_initiate_prerecorded_video_sharing">Initiate pre-recorded video sharing</string>
 <string name="menu_initiate_video_sharing">Initiate video sharing</string>
+<string name="label_image_sharing_canceled">Image sharing session has been canceled</string>
+<string name="label_video_sharing_canceled">Video sharing session has been canceled</string>
 <string name="label_progress_status">Status:</string>
 <string name="label_progress_bar">Progress:</string>
 <string name="label_sharing_aborted">Sharing aborted</string>

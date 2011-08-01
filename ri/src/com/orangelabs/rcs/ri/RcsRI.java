@@ -71,14 +71,14 @@ public class RcsRI extends ListActivity {
 		
 		// Set items
         String[] items = {
-        		getString(R.string.menu_address_book),
-        		getString(R.string.menu_capabilities),
-        		getString(R.string.menu_presence),
-        		getString(R.string.menu_messaging),
-        		getString(R.string.menu_richcall),
-        		getString(R.string.menu_eventlog),
-        		getString(R.string.menu_settings),
-        		getString(R.string.menu_about)
+    		getString(R.string.menu_address_book),
+    		getString(R.string.menu_capabilities),
+    		getString(R.string.menu_presence),
+    		getString(R.string.menu_messaging),
+    		getString(R.string.menu_richcall),
+    		getString(R.string.menu_eventlog),
+    		getString(R.string.menu_settings),
+    		getString(R.string.menu_about)
         };
     	setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }

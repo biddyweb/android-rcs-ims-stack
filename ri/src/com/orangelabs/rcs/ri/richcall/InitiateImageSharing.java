@@ -20,7 +20,9 @@ package com.orangelabs.rcs.ri.richcall;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -38,6 +40,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.platform.file.FileDescription;
@@ -97,7 +100,7 @@ public class InitiateImageSharing extends Activity {
         
         // Set contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);
-        spinner.setAdapter(Utils.createContactListAdapter(this));
+        spinner.setAdapter(Utils.createRcsContactListAdapter(this));
 
         // Set buttons callback
         Button inviteBtn = (Button)findViewById(R.id.invite_btn);
@@ -181,7 +184,15 @@ public class InitiateImageSharing extends Activity {
 
             // Display a progress dialog
             progressDialog = Utils.showProgressDialog(InitiateImageSharing.this, getString(R.string.label_command_in_progress));            
-
+            progressDialog.setOnCancelListener(new OnCancelListener() {
+				
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					Toast.makeText(InitiateImageSharing.this, getString(R.string.label_image_sharing_canceled), Toast.LENGTH_SHORT).show();
+					quitSession();
+				}
+			});
+            
             // Hide buttons
             Button inviteBtn = (Button)findViewById(R.id.invite_btn);
         	inviteBtn.setVisibility(View.INVISIBLE);
@@ -251,7 +262,7 @@ public class InitiateImageSharing extends Activity {
 	 * Hide progress dialog
 	 */
     public void hideProgressDialog() {
-		if (progressDialog != null) {
+		if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 			progressDialog = null;
 		}
