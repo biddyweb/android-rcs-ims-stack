@@ -59,6 +59,7 @@ import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -135,9 +136,14 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	private boolean isInBackground = false;
 	
 	/**
-	 * Message that were received while we were in background
+	 * Messages that were received while we were in background as have to be marked as displayed
 	 */
-	private List<InstantMessage> imReceivedInBackground = new ArrayList<InstantMessage>();
+	private List<InstantMessage> imReceivedInBackgroundToBeDisplayed = new ArrayList<InstantMessage>();
+
+	/**
+	 * Messages that were received while we were in background as have to be marked as read
+	 */
+	private List<InstantMessage> imReceivedInBackgroundToBeRead = new ArrayList<InstantMessage>();
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -235,11 +241,18 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     	isInBackground = false;
     	
     	// Mark all messages that were received while we were in background as "displayed" 
-    	for (int i=0;i<imReceivedInBackground.size();i++){
-    		InstantMessage msg = imReceivedInBackground.get(i);
+    	for (int i=0;i<imReceivedInBackgroundToBeDisplayed.size();i++){
+    		InstantMessage msg = imReceivedInBackgroundToBeDisplayed.get(i);
     		markMessageAsDisplayed(msg);
     	}
-    	imReceivedInBackground.clear();
+    	imReceivedInBackgroundToBeDisplayed.clear();
+    	
+    	// Mark all messages that were received while we were in background as "read" 
+    	for (int i=0;i<imReceivedInBackgroundToBeRead.size();i++){
+    		InstantMessage msg = imReceivedInBackgroundToBeRead.get(i);
+    		markMessageAsDisplayed(msg);
+    	}
+    	imReceivedInBackgroundToBeRead.clear();
     }
     
     /**
@@ -333,6 +346,14 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     	}
     }
 
+    /**
+     * Mark a message as "read"
+     */
+    private void markMessageAsRead(InstantMessage msg){
+    	EventsLogApi events = new EventsLogApi(getApplicationContext());
+    	events.markChatMessageAsRead(msg.getMessageId(), true);
+    }
+    
     /**
      * Receive a text and display it
      * 
@@ -471,7 +492,15 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 					markMessageAsDisplayed(msg);
 				}else{
 					// We save this message and will mark it as displayed when the activity resumes
-					imReceivedInBackground.add(msg);
+					imReceivedInBackgroundToBeDisplayed.add(msg);
+				}
+			}else{
+				if (!isInBackground){
+					// We received the message, mark it as read if the view is not in background
+					markMessageAsRead(msg);
+				}else{
+					// We save this message and will mark it as read when the activity resumes
+					imReceivedInBackgroundToBeRead.add(msg);
 				}
 			}
 			
@@ -525,9 +554,9 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleMessageDeliveryStatus(final String msgId, final String contact, final String status) {
 			handler.post(new Runnable(){
 				public void run(){
-					String number = PhoneUtils.extractNumberFromUri(contact);
-					// for now we do not display the messages except if it is "displayed"
+					// For now we do not display the messages except if it is "displayed"
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)){
+						String number = PhoneUtils.extractNumberFromUri(contact);
 						receiveNotif(getString(R.string.label_receive_displayed_delivery_status, number));
 					}
 				}
@@ -761,13 +790,17 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
                     		
         					handler.post(new Runnable(){
         						public void run(){
-        							progressDialog.dismiss();
+        							if (progressDialog != null && progressDialog.isShowing()) {
+										progressDialog.dismiss();
+									}
         						}
         					});
                     	} catch(Exception e) {
         					handler.post(new Runnable(){
         						public void run(){
-    								progressDialog.dismiss();
+        							if (progressDialog != null && progressDialog.isShowing()) {
+        								progressDialog.dismiss();
+        							}
         							Utils.showMessage(ChatView.this, getString(R.string.label_add_participant_failed));
         						}
         					});

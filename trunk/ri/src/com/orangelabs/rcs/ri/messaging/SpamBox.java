@@ -74,7 +74,7 @@ public class SpamBox extends Activity{
 
 		// Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setContentView(R.layout.spambox);
+        setContentView(R.layout.messaging_spambox);
         
         // Set title
         setTitle(R.string.menu_spambox);
@@ -175,7 +175,7 @@ public class SpamBox extends Activity{
             case MENU_ITEM_MARK_NO_SPAM: {
             	// Unspam the message
             	String msgId = cursor.getString(EventsLogApi.MESSAGE_ID_COLUMN);
-            	eventsLogApi.markMessageAsSpam(msgId, false);
+            	eventsLogApi.markChatMessageAsSpam(msgId, false);
                 return true;
             }
         }

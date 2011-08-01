@@ -8,7 +8,7 @@
 		    android:layout_width="fill_parent"
 		    android:layout_height="fill_parent">
 		    
-		<TextView android:text="@string/label_sync_all_capabilities"
+		<TextView android:text="@string/label_refresh_all_capabilities"
 			android:gravity="left"
 			android:paddingTop="10dip"
 			android:layout_width="fill_parent"
@@ -16,10 +16,10 @@
 			android:layout_marginLeft="5dip"
 			android:layout_marginRight="5dip"/>
 	
-		<Button android:text="@string/label_sync"
+		<Button android:text="@string/label_refresh"
 			 android:layout_marginLeft="5dip"
 			 android:layout_marginRight="5dip"
-			 android:id="@+id/sync_btn"
+			 android:id="@+id/refresh_btn"
 			 android:paddingTop="10dip"
 			 android:layout_width="fill_parent"
 	    	 android:layout_height="wrap_content"/>

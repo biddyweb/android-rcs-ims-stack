@@ -135,7 +135,7 @@ public class ExtensionsCapabilities extends ListActivity implements OnItemClickL
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (convertView == null){
-				convertView=inflater.inflate(R.layout.activity_list_item, null);
+				convertView=inflater.inflate(R.layout.utils_list_item, null);
 			}
 			ResolveInfoViewHolder resolveInfoHolder = (ResolveInfoViewHolder) convertView.getTag();
 			if (resolveInfoHolder == null){

@@ -20,7 +20,9 @@ package com.orangelabs.rcs.ri.messaging;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -34,6 +36,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.ri.R;
@@ -61,14 +64,14 @@ public class InitiateChat extends Activity {
     private MessagingApi messagingApi;
     
     /**
-     * Chat session 
-     */
-    private IChatSession chatSession = null;
-
-    /**
      * Progress dialog
      */
     private Dialog progressDialog = null;
+
+    /**
+     * Chat session 
+     */
+    private IChatSession chatSession = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,7 +86,7 @@ public class InitiateChat extends Activity {
         
         // Set contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);
-        spinner.setAdapter(Utils.createContactListAdapter(this));
+        spinner.setAdapter(Utils.createRcsContactListAdapter(this));
         
         // Set button callback
         Button inviteBtn = (Button)findViewById(R.id.invite_btn);
@@ -168,7 +171,15 @@ public class InitiateChat extends Activity {
             thread.start();
 
             // Display a progress dialog
-            progressDialog = Utils.showProgressDialog(InitiateChat.this, getString(R.string.label_command_in_progress));            
+            progressDialog = Utils.showProgressDialog(InitiateChat.this, getString(R.string.label_command_in_progress));
+            progressDialog.setOnCancelListener(new OnCancelListener() {
+				
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					Toast.makeText(InitiateChat.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
+					quitSession();
+				}
+			});
         }
     };
            
@@ -176,7 +187,7 @@ public class InitiateChat extends Activity {
 	 * Hide progress dialog
 	 */
     public void hideProgressDialog() {
-		if (progressDialog != null) {
+    	if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 			progressDialog = null;
 		}

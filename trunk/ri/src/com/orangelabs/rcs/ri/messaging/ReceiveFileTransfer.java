@@ -362,7 +362,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         Notification notif = new Notification(R.drawable.ri_notif_file_transfer_icon,
         		context.getString(R.string.title_recv_file_transfer),
         		System.currentTimeMillis());
-        notif.flags = Notification.FLAG_NO_CLEAR;
+        notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
         		context.getString(R.string.title_recv_file_transfer),
         		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),

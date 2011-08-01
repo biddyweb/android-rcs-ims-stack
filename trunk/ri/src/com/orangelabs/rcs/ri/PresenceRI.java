@@ -51,12 +51,12 @@ public class PresenceRI extends ListActivity {
         
         // Set items
         String[] presenceItems = {
-        		getString(R.string.menu_presence_info),
-        		getString(R.string.menu_eab),
-        		getString(R.string.menu_manage_contacts),
-        		getString(R.string.menu_granted_contacts),
-        		getString(R.string.menu_blocked_contacts),
-        		getString(R.string.menu_revoked_contacts)    		
+    		getString(R.string.menu_presence_info),
+    		getString(R.string.menu_eab),
+    		getString(R.string.menu_manage_contacts),
+    		getString(R.string.menu_granted_contacts),
+    		getString(R.string.menu_blocked_contacts),
+    		getString(R.string.menu_revoked_contacts)    		
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, presenceItems));
     }

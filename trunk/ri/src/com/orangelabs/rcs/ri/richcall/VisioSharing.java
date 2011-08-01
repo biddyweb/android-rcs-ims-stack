@@ -18,7 +18,22 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
-import java.lang.reflect.Method;
+import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.CpuMonitor;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
+import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
+import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
+import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
+import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
+import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
+import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -29,6 +44,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -46,23 +62,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.CpuMonitor;
-import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ClientApiListener;
-import com.orangelabs.rcs.service.api.client.ImsEventListener;
-import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
-import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Visio sharing activity - two half duplex live video sharing
@@ -81,9 +84,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private RichCallApi callApi = null;
 
-	/** 
-	 * Rich call API connected
-	 */
+    /**
+     * Rich call API connected
+     */
 	private boolean isCallApiConnected = false;
 
 	/**
@@ -136,9 +139,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private Boolean fisrtLaunchDone = false;
 
-	/**
-	 * Progress dialog
-	 */	
+    /**
+     * Progress dialog
+     */
 	private Dialog outgoingProgressDialog = null;
 
 	/**
@@ -202,9 +205,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private int cam_num = 1;
 
-	/** 
-	 * Start outgoing button
-	 */
+    /**
+     * Start outgoing button
+     */
 	private Button startOutgoingBtn = null;
 
 	/**
@@ -232,8 +235,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private int videoHeight;
 
-    // -------------------------------- Activity METHODS
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -244,13 +245,13 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.richcall_visio_sharing);
-        
+
         // Set title
         setTitle(R.string.title_video_sharing);
 
         filename = getIntent().getStringExtra("filename");
         isPrerecordedSession = (filename!=null);
-        
+
         videoFormat = RcsSettings.getInstance().getCShVideoFormat();
         if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
             // QVGA
@@ -284,13 +285,13 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 switchCamBtn.setVisibility(View.INVISIBLE);
             }
         }
-        
+
         if (isPrerecordedSession){
         	// Hide switch camera button
         	switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
         	switchCamBtn.setVisibility(View.GONE);
         }
-        
+
         if (startOutgoingBtn == null) {
             startOutgoingBtn = (Button)findViewById(R.id.start_outgoing_btn);
             startOutgoingBtn.setOnClickListener(btnStartOutgoingListener);
@@ -316,7 +317,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         	outgoingPlayer = new LiveVideoPlayer(videoFormat);
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
-            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);            
+            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
             surface.addCallback(this);
         }else{
         	// Create the prerecorded video player
@@ -452,8 +453,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         return super.onKeyDown(keyCode, event);
     }
 
-    // -------------------------------- ClientApiListener METHODS
-
     /**
      * API disabled
      */
@@ -497,8 +496,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         });
     }
 
-    // -------------------------------- ImsEventListener METHODS
-
     /**
      * IMS connected
      */
@@ -517,8 +514,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             }
         });
     }
-
-    // -------------------------------- SurfaceHolder.Callback METHODS
 
     /**
      * Surface has been changed
@@ -583,8 +578,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
     }
-
-    // -------------------------------- Button Listeners
 
     /**
      * Accept button listener
@@ -677,7 +670,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             stopOutgoingBtn.setEnabled(false);
         }
     };
-    
+
     /**
      * Recreate the video player
      */
@@ -686,7 +679,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     		// Create the live video player
     		outgoingPlayer = new LiveVideoPlayer(videoFormat);
             surface = outgoingVideoView.getHolder();
-            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);            
+            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
             surface.addCallback(this);
     		camera.setPreviewCallback(outgoingPlayer);
     	}else{
@@ -712,7 +705,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             stopIncomingBtn.setEnabled(false);
         }
     };
-    // -------------------------------- Session listeners
 
     /**
      * Outgoing video sharing session event listener
@@ -823,8 +815,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
         }
     };
-
-    // -------------------------------- private METHODS
 
     /**
      * Get Camera "open" Method
@@ -999,6 +989,14 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         // Display a progress dialog
         outgoingProgressDialog = Utils.showProgressDialog(VisioSharing.this,
                 getString(R.string.label_command_in_progress));
+        outgoingProgressDialog.setOnCancelListener(new OnCancelListener() {
+			
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				Toast.makeText(VisioSharing.this, getString(R.string.label_video_sharing_canceled), Toast.LENGTH_SHORT).show();
+				finish();
+			}
+		});
     }
 
     /**
@@ -1021,7 +1019,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
      * Hide progress dialog
      */
     public void hideProgressDialog() {
-        if (outgoingProgressDialog != null) {
+        if (outgoingProgressDialog != null && outgoingProgressDialog.isShowing()) {
             outgoingProgressDialog.dismiss();
             outgoingProgressDialog = null;
         }
@@ -1033,9 +1031,20 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     private void startCameraPreview() {
         if (camera != null) {
             Camera.Parameters p = camera.getParameters();
+            // Init Camera
             p.setPreviewSize(videoWidth, videoHeight);
             p.setPreviewFormat(PixelFormat.YCbCr_420_SP);
             // p.setPreviewFormat(ImageFormat.NV21);
+            // Try to set front camera if back camera doesn't support size
+            List<Camera.Size> sizes = p.getSupportedPreviewSizes();
+            if (!sizes.contains(camera.new Size(videoWidth, videoHeight))) {
+                String cam_id = p.get("camera-id");
+                if (cam_id != null) {
+                    p.set("camera-id", 2);
+                    p.setRotation(270);
+                    p.setPreviewSize(videoHeight, videoWidth);
+                }
+            }
             camera.setParameters(p);
             try {
                 camera.setPreviewDisplay(video_holder);
@@ -1046,8 +1055,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             }
         }
     }
-
-    // -------------------------------- BroadcastReceiver
 
     private BroadcastReceiver sharingIntentReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, final Intent intent) {
@@ -1076,8 +1083,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
     };
 
-    // -------------------------------- STATIC METHODS
-
     /**
     * Add video share notification
     *
@@ -1088,7 +1093,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     public static void addVideoSharingInvitationNotification(Context context, Intent invitation) {
 		// Initialize settings
 		RcsSettings.createInstance(context);
-		
+
         // Create notification
         Intent intent = new Intent(invitation);
         intent.setClass(context, VisioSharing.class);
@@ -1097,7 +1102,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         String notifTitle = context.getString(R.string.title_recv_video_sharing);
         Notification notif = new Notification(R.drawable.ri_notif_csh_icon, notifTitle,
                 System.currentTimeMillis());
-        notif.flags = Notification.FLAG_NO_CLEAR;
+        notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
         		notifTitle,
         		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
@@ -1131,7 +1136,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel((int)Long.parseLong(sessionId));
     }
-    
+
     /**
      * Player event listener for prerecorded sessions
      */
@@ -1158,5 +1163,4 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 		public void updateDuration(long progress) {
 		}
     };
-
 }

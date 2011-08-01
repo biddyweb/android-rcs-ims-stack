@@ -8,26 +8,26 @@
     android:layout_height="fill_parent"
     android:paddingTop="10dip">
     
-		<CheckBox android:id="@+id/TraceActivation"
+		<CheckBox android:id="@+id/TraceActivated"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
-        android:text="Trace activation"/>	
+        android:text="Application traces"/>	
     
-		<CheckBox android:id="@+id/SipTraceActivation"
+		<CheckBox android:id="@+id/SipTraceActivated"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
-        android:text="SIP trace activation"/>			
+        android:text="SIP traces"/>			
 
-		<CheckBox android:id="@+id/MediaTraceActivation"
+		<CheckBox android:id="@+id/MediaTraceActivated"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
-        android:text="Media trace activation"/>		
+        android:text="Media traces"/>		
         
         <TextView android:text="Trace level:"
 	    android:paddingTop="5dip"

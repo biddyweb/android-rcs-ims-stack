@@ -49,7 +49,7 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 /**
  * List of current chat sessions and blocked contacts
  */
-public class ChatList extends ListActivity implements ClientApiListener, OnItemClickListener{
+public class ChatList extends ListActivity implements ClientApiListener, OnItemClickListener {
 	/**
 	 * Position of headers
 	 */

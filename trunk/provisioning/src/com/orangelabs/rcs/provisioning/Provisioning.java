@@ -28,10 +28,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TabHost;
 
-import com.orangelabs.rcs.platform.logger.AndroidAppender;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.logger.Appender;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Main
@@ -62,13 +59,6 @@ public class Provisioning extends TabActivity {
         // Instanciate the settings manager
         RcsSettings.createInstance(getApplicationContext());
         
-		// Set logger appenders
-		Appender[] appenders = new Appender[] { 
-				new AndroidAppender()
-			};        
-		Logger.setAppenders(appenders);
-		Logger.activationFlag = Logger.TRACE_ON;
-
 		// Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 

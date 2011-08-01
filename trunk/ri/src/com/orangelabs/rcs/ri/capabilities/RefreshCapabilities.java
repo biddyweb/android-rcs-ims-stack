@@ -18,11 +18,11 @@ import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApi;
 
 /**
- * Synchronize the address book capabilities
+ * Refresh capabilities
  * 
  * @author jexa7410
  */
-public class SynchronizeAddressBook extends Activity implements ClientApiListener {
+public class RefreshCapabilities extends Activity implements ClientApiListener {
     /**
      * UI handler
      */
@@ -44,13 +44,13 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
         
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        setContentView(R.layout.capabilities_sync);
+        setContentView(R.layout.capabilities_refresh);
         
         // Set title
-        setTitle(R.string.menu_sync_capabilities);
+        setTitle(R.string.menu_refresh_capabilities);
         
 		// Set buttons callback
-        Button btn = (Button)findViewById(R.id.sync_btn);
+        Button btn = (Button)findViewById(R.id.refresh_btn);
         btn.setOnClickListener(btnSyncListener);        
         
         // Instanciate contacts API
@@ -73,7 +73,7 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
 	public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showMessageAndExit(SynchronizeAddressBook.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(RefreshCapabilities.this, getString(R.string.label_api_disabled));
 			}
 		});
 	}
@@ -90,7 +90,7 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
 	public void handleApiDisconnected() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showMessageAndExit(SynchronizeAddressBook.this, getString(R.string.label_api_failed));
+				Utils.showMessageAndExit(RefreshCapabilities.this, getString(R.string.label_api_failed));
 			}
 		});
 	}
@@ -105,7 +105,7 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
         	tsk.execute();
 
         	// Display a progress dialog
-            progressDialog = Utils.showProgressDialog(SynchronizeAddressBook.this, getString(R.string.label_sync_in_progress));
+            progressDialog = Utils.showProgressDialog(RefreshCapabilities.this, getString(R.string.label_refresh_in_progress));
             progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             	public void onCancel(DialogInterface dialog) {
             		try {
@@ -117,6 +117,9 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
         }
     };
     
+    /**
+     * Background task
+     */
     private class SyncTask extends AsyncTask<Void, Void, Void> {
     	private CapabilityApi api; 
     	
@@ -126,24 +129,24 @@ public class SynchronizeAddressBook extends Activity implements ClientApiListene
     	
         protected Void doInBackground(Void... unused) {        	
         	try {
-                // Synchronize
-        		api.synchronizeAll();
+    			// Refresh all
+        		api.refreshAllCapabilities();
         	} catch (ClientApiException e) {
         		// Display error
-        		Utils.showMessage(SynchronizeAddressBook.this, getString(R.string.label_sync_failed));
+        		Utils.showMessage(RefreshCapabilities.this, getString(R.string.label_refresh_failed));
         	}
         	return null;
         }
 
         protected void onPostExecute(Void unused) {
-    		// Display message
-			Utils.displayLongToast(SynchronizeAddressBook.this, getString(R.string.label_sync_success));
-			
 			// Hide progress dialog
-    		if (progressDialog != null) {
+    		if (progressDialog != null && progressDialog.isShowing()) {
     			progressDialog.dismiss();
     			progressDialog = null;
     		}
+    		
+    		// Display message
+			Utils.displayLongToast(RefreshCapabilities.this, getString(R.string.label_refresh_success));
         }
     }    
 }

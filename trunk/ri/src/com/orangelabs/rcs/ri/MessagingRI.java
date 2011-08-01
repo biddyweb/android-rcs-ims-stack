@@ -50,12 +50,12 @@ public class MessagingRI extends ListActivity {
 
         // Set items
         String[] items = {
-        		getString(R.string.menu_sms_mms),
-        		getString(R.string.menu_transfer_file),
-        		getString(R.string.menu_one_to_one_chat),
-        		getString(R.string.menu_adhoc_group_chat),
-        		getString(R.string.menu_chat_list),
-        		getString(R.string.menu_spambox)
+    		getString(R.string.menu_sms_mms),
+    		getString(R.string.menu_transfer_file),
+    		getString(R.string.menu_one_to_one_chat),
+    		getString(R.string.menu_adhoc_group_chat),
+    		getString(R.string.menu_chat_list),
+    		getString(R.string.menu_spambox)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }

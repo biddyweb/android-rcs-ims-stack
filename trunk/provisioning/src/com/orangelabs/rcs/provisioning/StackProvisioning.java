@@ -342,8 +342,7 @@ public class StackProvisioning extends Activity {
 		    	check = (CheckBox)this.findViewById(R.id.ImUseReports);
 				Provisioning.writeParameter(cr, "ImUseReports", Boolean.toString(check.isChecked()));
 
-                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG)
-                        .show();
+				Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 				break;
 		}
 		return true;

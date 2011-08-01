@@ -23,7 +23,9 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -35,6 +37,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.ri.R;
@@ -89,7 +92,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
         
         // Set contact selector
         ListView contactList = (ListView)findViewById(R.id.contacts);
-        contactList.setAdapter(Utils.createMultiContactListAdapter(this));
+        contactList.setAdapter(Utils.createMultiContactImCapableListAdapter(this));
         contactList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         contactList.setOnItemClickListener(this);
         
@@ -146,7 +149,15 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
             thread.start();
 
             // Display a progress dialog
-            progressDialog = Utils.showProgressDialog(InitiateChatGroup.this, getString(R.string.label_command_in_progress));            
+            progressDialog = Utils.showProgressDialog(InitiateChatGroup.this, getString(R.string.label_command_in_progress));
+            progressDialog.setOnCancelListener(new OnCancelListener() {
+				
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					Toast.makeText(InitiateChatGroup.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
+					quitSession();
+				}
+			});
         }
     };
            
@@ -154,7 +165,7 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
 	 * Hide progress dialog
 	 */
     public void hideProgressDialog() {
-		if (progressDialog != null) {
+		if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 			progressDialog = null;
 		}
