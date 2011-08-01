@@ -1,0 +1,149 @@
+package com.orangelabs.rcs.ri.capabilities;
+
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiException;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.capability.CapabilityApi;
+
+/**
+ * Synchronize the address book capabilities
+ * 
+ * @author jexa7410
+ */
+public class SynchronizeAddressBook extends Activity implements ClientApiListener {
+    /**
+     * UI handler
+     */
+    private Handler handler = new Handler();    
+    
+	/**
+	 * Capability API
+	 */
+    private CapabilityApi capabilityApi;
+	
+    /**
+     * Progress dialog
+     */
+    private Dialog progressDialog = null;    
+   
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Set layout
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setContentView(R.layout.capabilities_sync);
+        
+        // Set title
+        setTitle(R.string.menu_sync_capabilities);
+        
+		// Set buttons callback
+        Button btn = (Button)findViewById(R.id.sync_btn);
+        btn.setOnClickListener(btnSyncListener);        
+        
+        // Instanciate contacts API
+        capabilityApi = new CapabilityApi(getApplicationContext());
+    	capabilityApi.addApiEventListener(this);
+    	capabilityApi.connectApi();
+    }
+
+    @Override
+    public void onDestroy() {
+    	super.onDestroy();
+    	
+		// Disconnect contacts API
+    	capabilityApi.disconnectApi();    	
+    }
+    
+    /**
+     * API disabled
+     */
+	public void handleApiDisabled() {
+		handler.post(new Runnable() { 
+			public void run() {
+				Utils.showMessageAndExit(SynchronizeAddressBook.this, getString(R.string.label_api_disabled));
+			}
+		});
+	}
+
+    /**
+     * API connected
+     */
+	public void handleApiConnected() {
+	}
+
+    /**
+     * API disconnected
+     */
+	public void handleApiDisconnected() {
+		handler.post(new Runnable() { 
+			public void run() {
+				Utils.showMessageAndExit(SynchronizeAddressBook.this, getString(R.string.label_api_failed));
+			}
+		});
+	}
+	
+    /**
+     * Publish button listener
+     */
+    private OnClickListener btnSyncListener = new OnClickListener() {
+        public void onClick(View v) {
+        	// Execute in background
+        	final SyncTask tsk = new SyncTask(capabilityApi);
+        	tsk.execute();
+
+        	// Display a progress dialog
+            progressDialog = Utils.showProgressDialog(SynchronizeAddressBook.this, getString(R.string.label_sync_in_progress));
+            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            	public void onCancel(DialogInterface dialog) {
+            		try {
+            			tsk.cancel(true);
+            		} catch(Exception e) {
+            		}
+            	}
+            });
+        }
+    };
+    
+    private class SyncTask extends AsyncTask<Void, Void, Void> {
+    	private CapabilityApi api; 
+    	
+    	public SyncTask(CapabilityApi api) {
+    		this.api = api;
+    	}
+    	
+        protected Void doInBackground(Void... unused) {        	
+        	try {
+                // Synchronize
+        		api.synchronizeAll();
+        	} catch (ClientApiException e) {
+        		// Display error
+        		Utils.showMessage(SynchronizeAddressBook.this, getString(R.string.label_sync_failed));
+        	}
+        	return null;
+        }
+
+        protected void onPostExecute(Void unused) {
+    		// Display message
+			Utils.displayLongToast(SynchronizeAddressBook.this, getString(R.string.label_sync_success));
+			
+			// Hide progress dialog
+    		if (progressDialog != null) {
+    			progressDialog.dismiss();
+    			progressDialog = null;
+    		}
+        }
+    }    
+}
