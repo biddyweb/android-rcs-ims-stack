@@ -57,30 +57,39 @@ public class CapabilityUtils {
 	public static List<String> getSupportedFeatureTags(boolean inCall) {
 		List<String> tags = new ArrayList<String>();
 
-		// Add RCS tags
+		// Video share support
 		if (RcsSettings.getInstance().isVideoSharingSupported() && inCall) {
-			tags.add(FeatureTags.FEATURE_RCSE_VIDEO_SHARE);
+			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
 		}
 
-		// Add RCS-e tags
 		String supported = "";
+
+		// Chat support
 		if (RcsSettings.getInstance().isImSessionSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_CHAT + ",";
 		}
-		if (RcsSettings.getInstance().isImageSharingSupported() && inCall) {
-			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
-		}
+		
+		// FT support
 		if (RcsSettings.getInstance().isFileTransferSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_FT + ",";
 		}
+
+		// Image share support
+		if (RcsSettings.getInstance().isImageSharingSupported() && inCall) {
+			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
+		}
+
+		// Presence discovery support
 		if (RcsSettings.getInstance().isPresenceDiscoverySupported()) {
 			supported += FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY + ",";
 		}
+		
+		// Social presence support
 		if (RcsSettings.getInstance().isSocialPresenceSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
 		}
 
-		// Add extensions
+		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
 		if ((exts != null) && (exts.length() > 0)) {
 			 supported += exts;
@@ -110,7 +119,7 @@ public class CapabilityUtils {
     	ArrayList<String> tags = msg.getFeatureTags();
     	for(int i=0; i < tags.size(); i++) {
     		String tag = tags.get(i);
-    		if (tag.equals(FeatureTags.FEATURE_RCSE_VIDEO_SHARE)) {
+    		if (tag.equals(FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
         		// Support video share service
         		capabilities.setVideoSharingSupport(true);
         	} else

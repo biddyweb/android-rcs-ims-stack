@@ -172,6 +172,9 @@ public class OriginatingSipSession extends GenericSipSession {
 	        // Set the remote SDP part
 	        getDialogPath().setRemoteContent(resp.getContent());
 	                      		
+			// Set the SDP answer 
+			setSdpAnswer(resp.getContent());
+	        
 	        // The session is established
 	        getDialogPath().sessionEstablished();
 
@@ -186,9 +189,9 @@ public class OriginatingSipSession extends GenericSipSession {
         		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
         	}
 
-	        // Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleSessionStarted();
+	        // Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		getListeners().get(i).handleSessionStarted();
 	        }
 				        
 		} catch(Exception e) {
@@ -268,10 +271,12 @@ public class OriginatingSipSession extends GenericSipSession {
 		// Remove the current session
     	getImsService().removeSession(this);
 
-		// Notify listener
-    	if ((!isInterrupted()) && (getListener() != null)) {
-    		getListener().handleSessionError(error);
-        }
+		// Notify listeners
+    	if (!isInterrupted()) {
+	    	for(int j=0; j < getListeners().size(); j++) {
+	    		((SipSessionListener)getListeners().get(j)).handleSessionError(error);
+	    	}
+    	}
 	}
 
 	/**

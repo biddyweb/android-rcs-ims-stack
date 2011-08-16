@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.sip;
 
-import java.util.Enumeration;
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -28,6 +25,9 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Enumeration;
+import java.util.Vector;
 
 /**
  * SIP service
@@ -41,20 +41,19 @@ public class SipService extends ImsService {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-	 * Constructor
-	 * 
-	 * @param parent IMS module
-	 * @param activated Activation flag
-	 * @throws CoreException
-	 */
+     * Constructor
+     * 
+     * @param parent IMS module
+     * @param activated Activation flag
+     * @throws CoreException
+     */
 	public SipService(ImsModule parent, boolean activated) throws CoreException {
-		super(parent, "sip_service.xml", activated);
+        super(parent, activated);
 	}
-    
+
     /**
-    /**
-	 * Start the IMS service 
-	 */
+     * /** Start the IMS service
+     */
 	public synchronized void start() {
 		if (isServiceStarted()) {
 			// Already started
@@ -63,9 +62,9 @@ public class SipService extends ImsService {
 		setServiceStarted(true);
 	}
 
-	/**
-	 * Stop the IMS service 
-	 */
+    /**
+     * Stop the IMS service
+     */
 	public synchronized void stop() {
 		if (!isServiceStarted()) {
 			// Already stopped
@@ -73,49 +72,49 @@ public class SipService extends ImsService {
 		}
 		setServiceStarted(false);
 	}
-	
+
 	/**
-	 * Check the IMS service 
-	 */
+     * Check the IMS service
+     */
 	public void check() {
 	}
 
-	/**
-	 * Initiate a session
-	 * 
-	 * @param contact Remote contact
-	 * @param featureTag Feature tag of the service
-	 * @param offer SDP offer
-	 * @return SIP session 
-	 */
+    /**
+     * Initiate a session
+     * 
+     * @param contact Remote contact
+     * @param featureTag Feature tag of the service
+     * @param offer SDP offer
+     * @return SIP session
+     */
 	public GenericSipSession initiateSession(String contact, String featureTag, String offer) {
 		if (logger.isActivated()) {
 			logger.info("Initiate a session with contact " + contact);
 		}
-			
+
 		// Create a new session
 		OriginatingSipSession session = new OriginatingSipSession(
 				this,
 				PhoneUtils.formatNumberToSipUri(contact),
 				featureTag,
 				offer);
-		
+
 		// Start the session
 		session.startSession();
 		return session;
 	}
 
-	/**
-	 * Reveive a session invitation
-	 * 
-	 * @param invite Initial invite
-	 */
+    /**
+     * Reveive a session invitation
+     * 
+     * @param invite Initial invite
+     */
 	public void receiveSessionInvitation(SipRequest invite) {
 		// Create a new session
     	TerminatingSipSession session = new TerminatingSipSession(
 					this,
 					invite);
-		
+
 		// Start the session
 		session.startSession();
 
@@ -123,11 +122,11 @@ public class SipService extends ImsService {
 		getImsModule().getCore().getListener().handleSipSessionInvitation(session);
 	}
 
-	/**
-	 * Returns SIP sessions
-	 * 
-	 * @return List of sessions
-	 */
+    /**
+     * Returns SIP sessions
+     * 
+     * @return List of sessions
+     */
 	public Vector<GenericSipSession> getSipSessions() {
 		// Search all SIP sessions
 		Vector<GenericSipSession> result = new Vector<GenericSipSession>();
@@ -138,16 +137,16 @@ public class SipService extends ImsService {
 				result.add((GenericSipSession)session);
 			}
 		}
-		
+
 		return result;
-	}	
+    }
 
 	/**
-	 * Returns SIP sessions with a given contact
-	 * 
-	 * @param contact Contact
-	 * @return List of sessions
-	 */
+     * Returns SIP sessions with a given contact
+     * 
+     * @param contact Contact
+     * @return List of sessions
+     */
 	public Vector<GenericSipSession> getSipSessionsWith(String contact) {
 		// Search all SIP sessions
 		Vector<GenericSipSession> result = new Vector<GenericSipSession>();
@@ -158,7 +157,7 @@ public class SipService extends ImsService {
 				result.add((GenericSipSession)session);
 			}
 		}
-		
+
 		return result;
-	}	
+    }
 }

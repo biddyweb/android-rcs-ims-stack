@@ -19,6 +19,8 @@
 package com.orangelabs.rcs.core;
 
 import com.orangelabs.rcs.core.ims.ImsError;
+import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
@@ -126,6 +128,14 @@ public interface CoreListener {
      * @param session Chat session
      */
     public void handleAdhocGroupChatSessionInvitation(TerminatingAdhocGroupChatSession session);
+
+    /**
+     * One-to-one chat session extended to a group chat session
+     * 
+     * @param groupSession Group chat session
+     * @param oneoneSession 1-1 chat session
+     */
+    public void handleOneOneChatSessionExtended(GroupChatSession groupSession, OneOneChatSession oneoneSession);
 
     /**
      * New SIP session invitation

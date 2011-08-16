@@ -18,6 +18,7 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.List;
+
 import javax.sip.header.ExtensionHeader;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -30,6 +31,7 @@ import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 
 /**
  * Chat utility functions
@@ -37,6 +39,11 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  * @author jexa7410
  */
 public class ChatUtils {
+	/**
+	 * Contribution ID header
+	 */
+	public static final String HEADER_CONTRIBUTION_ID = "Contribution-ID";
+	
 	/**
 	 * Get asserted identity
 	 * 
@@ -127,17 +134,18 @@ public class ChatUtils {
     }
 
     /**
-     * Generate resource-list document for a list of participants
+     * Generate resource-list for a chat session
      * 
      * @param participants List of participants
      * @return XML document
      */
-    public static String generateResourceListForParticipants(List<String> participants) {
+    public static String generateChatResourceList(List<String> participants) {
 		String uriList = "";
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
 			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + SipUtils.CRLF;
 		}
+		
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 			"<list>" + SipUtils.CRLF +
@@ -145,7 +153,35 @@ public class ChatUtils {
 			"</list></resource-lists>";
 		return xml;
     }    
-    
+
+    /**
+     * Generate resource-list for a extended chat session
+     * 
+     * @param existingParticipant Replaced participant
+     * @param replaceHeader Replace header
+     * @param newParticipants List of new participants
+     * @return XML document
+     */
+    public static String generateExtendedChatResourceList(String existingParticipant, String replaceHeader, List<String> newParticipants) {
+		String uriList = "";
+		for(int i=0; i < newParticipants.size(); i++) {
+			String contact = newParticipants.get(i);
+			if (contact.equals(existingParticipant)) {
+				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
+					StringUtils.encodeXML(replaceHeader) + "\"/>" + SipUtils.CRLF;
+			} else {
+				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + SipUtils.CRLF;
+			}
+		}
+		
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
+			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
+			"<list>" + SipUtils.CRLF +
+			uriList +
+			"</list></resource-lists>";
+		return xml;
+    }    
+
     /**
      * Is IMDN service
      * 

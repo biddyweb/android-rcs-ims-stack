@@ -91,9 +91,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
 			} else
@@ -108,9 +108,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
 			}
@@ -268,9 +268,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
             	
-                // Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleSessionStarted();
+                // Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		getListeners().get(i).handleSessionStarted();
     	        }
             } else {
         		if (logger.isActivated()) {

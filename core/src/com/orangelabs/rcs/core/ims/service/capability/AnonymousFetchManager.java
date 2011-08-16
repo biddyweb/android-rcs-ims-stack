@@ -64,13 +64,15 @@ public class AnonymousFetchManager implements DiscoveryManager {
      * Request contact capabilities
      * 
      * @param contact Remote contact
+     * @return Returns true if success
      */
-    public void requestCapabilities(String contact) {
+    public boolean requestCapabilities(String contact) {
     	if (logger.isActivated()) {
     		logger.debug("Request capabilities in background for " + contact);
     	}
 		AnonymousFetchRequestTask task = new AnonymousFetchRequestTask(imsModule, contact);
 		task.start();
+		return true;
 	}
 	
 	/**

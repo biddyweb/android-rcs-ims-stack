@@ -43,6 +43,11 @@ public abstract class ClientApi {
 	public final static String RCS_PERMISSION = "com.orangelabs.rcs.permission.RCS";
 
 	/**
+	 * RCS extensions permission
+	 */
+	public final static String RCS_EXTENSION_PERMISSION = "com.orangelabs.rcs.permission.RCS_EXTENSION";
+
+	/**
 	 * API event listeners
 	 */
 	private Vector<ClientApiListener> listeners = new Vector<ClientApiListener>();

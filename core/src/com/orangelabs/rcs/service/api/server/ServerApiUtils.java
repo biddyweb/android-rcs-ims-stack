@@ -42,6 +42,17 @@ public class ServerApiUtils {
 	}
 	
 	/**
+	 * Test permission for extensions
+	 * 
+	 * @throws SecurityException
+	 */
+	public static void testPermissionForExtensions() throws SecurityException {
+		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApi.RCS_EXTENSION_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+			throw new SecurityException();
+	    }
+	}
+
+	/**
 	 * Test core
 	 * 
 	 * @throws ServerApiException

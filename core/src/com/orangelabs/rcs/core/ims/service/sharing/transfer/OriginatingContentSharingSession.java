@@ -277,9 +277,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
         		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
         	}
 
-        	// Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleSessionStarted();
+        	// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		getListeners().get(i).handleSessionStarted();
 	        }
 
 			// Start sending data chunks
@@ -376,9 +376,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 		// Remove the current session
     	getImsService().removeSession(this);
 
-		// Notify listener
-    	if (getListener() != null) {
-        	getListener().handleSharingError(error);
+		// Notify listeners
+    	for(int j=0; j < getListeners().size(); j++) {
+    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(error);
     	}
 	}
 
@@ -456,9 +456,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
     	// Remove the current session
     	getImsService().removeSession(this);
     	
-    	// Notify listener
-        if (getListener() != null) {
-        	getListener().handleContentTransfered(getContent().getUrl());
+    	// Notify listeners
+    	for(int j=0; j < getListeners().size(); j++) {
+    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleContentTransfered(getContent().getUrl());
         }
 	}
 	
@@ -479,9 +479,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	 * @param totalSize Total size in bytes
 	 */
 	public void msrpTransferProgress(long currentSize, long totalSize) {
-		// Notify listener
-    	if (getListener() != null) {
-        	getListener().handleSharingProgress(currentSize, totalSize);
+		// Notify listeners
+    	for(int j=0; j < getListeners().size(); j++) {
+    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
         }
 	}	
 
@@ -517,9 +517,9 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 		// Remove the current session
     	getImsService().removeSession(this);
     	
-    	// Notify listener
-    	if (getListener() != null) {
-        	getListener().handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
+    	// Notify listeners
+    	for(int j=0; j < getListeners().size(); j++) {
+    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
         }
 	}
 	

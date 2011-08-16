@@ -1,8 +1,8 @@
 package com.orangelabs.rcs.core.ims.service.capability;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -61,7 +61,7 @@ public class OptionsManager implements DiscoveryManager {
      */
     public void stop() {
         try {
-        	threadPool.shutdownNow();
+        	threadPool.shutdown();
         } catch (SecurityException e) {
             if (logger.isActivated()) {
             	logger.error("Could not stop all threads");
@@ -73,8 +73,9 @@ public class OptionsManager implements DiscoveryManager {
      * Request contact capabilities
      * 
      * @param contact Remote contact
+     * @return Returns true if success
      */
-    public void requestCapabilities(String contact) {
+    public boolean requestCapabilities(String contact) {
     	if (logger.isActivated()) {
     		logger.debug("Request capabilities in background for " + contact);
     	}
@@ -89,12 +90,36 @@ public class OptionsManager implements DiscoveryManager {
 		try {
 	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(inCall));
 	    	threadPool.submit(task);
-		} catch(RejectedExecutionException e) {
+	    	return true;
+		} catch(Exception e) {
 	    	if (logger.isActivated()) {
-	    		logger.error("Can't start thread pool execution for multiple options", e);
-	    	}			
+	    		logger.error("Can't submit task", e);
+	    	}
+	    	return false;
 		}
     }
+    
+    /**
+     * Request capabilities for a list of contacts
+     * 
+     * @param contactList Contact list
+     */
+	public void requestCapabilities(List<String> contactList) {
+    	if (logger.isActivated()) {
+    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
+    	}
+
+    	for (int i=0; i < contactList.size(); i++) {
+			String contact = contactList.get(i);
+			if (!requestCapabilities(contact)) {
+		    	if (logger.isActivated()) {
+		    		logger.debug("Processing has been stopped");
+		    	}
+				break;
+			}
+        }
+	}
+    
     
     /**
      * Receive a capability request (options procedure)

@@ -882,7 +882,6 @@ public class RcsSettings {
 
 		// Add extensions
 		String exts = getSupportedRcsExtensions();
-        System.out.println(">>>>>>> exts =" + exts);
 		if ((exts != null) && (exts.length() > 0)) {
 			String[] ext = exts.split(",");
 			for(int i=0; i < ext.length; i++) {
@@ -1080,6 +1079,22 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.WARN_SF_SERVICE));
+		}
+		return result;
+	}
+
+	/**
+     * Get IM session start mode
+     *
+     * @return Integer (1: The 200 OK is sent when the receiver starts to type a message back
+     * in the chat window. 2: The 200 OK is sent when the receiver sends a message)
+     */
+	public int getImSessionStartMode() {
+		int result = 1;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.IM_SESSION_START));
+			} catch(Exception e) {}
 		}
 		return result;
 	}

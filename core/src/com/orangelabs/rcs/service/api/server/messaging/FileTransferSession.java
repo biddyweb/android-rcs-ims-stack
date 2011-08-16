@@ -115,11 +115,11 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 			logger.info("Reject session invitation");
 		}
 		
-        // Reject invitation
-		session.rejectSession();
-
 		// Update rich messaging history
   		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+
+  		// Reject invitation
+		session.rejectSession();
 	}
 
 	/**
@@ -207,7 +207,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        MessagingApiService.removeFileTransferSession(session.getSessionID());
     }
    
     /**
@@ -236,6 +239,9 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 	        }
 	        listeners.finishBroadcast();
   		}
+
+        // Remove session from the list
+        MessagingApiService.removeFileTransferSession(session.getSessionID());
     }
 	
     /**
@@ -262,7 +268,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        MessagingApiService.removeFileTransferSession(session.getSessionID());
     }
 
     /**

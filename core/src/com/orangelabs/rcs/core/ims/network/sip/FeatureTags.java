@@ -12,12 +12,17 @@ public class FeatureTags {
 	public final static String FEATURE_OMA_IM = "+g.oma.sip-im";
 
 	/**
-	 * RCS-e video share feature tag
+	 * 3GPP video share feature tag
 	 */
-	public final static String FEATURE_RCSE_VIDEO_SHARE = "+g.3gpp.cs-voice";
+	public final static String FEATURE_3GPP_VIDEO_SHARE = "+g.3gpp.cs-voice";
 
 	/**
-	 * RCS-e feature tag
+     * 3GPP image share feature tag
+     */
+    public final static String FEATURE_3GPP_IMAGE_SHARE = "+g.3gpp.app_ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is\"";	
+	
+	/**
+	 * RCS-e feature tag prefix
 	 */
 	public final static String FEATURE_RCSE = "+g.3gpp.iari-ref";
 	

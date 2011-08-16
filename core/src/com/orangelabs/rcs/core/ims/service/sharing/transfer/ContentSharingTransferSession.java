@@ -56,15 +56,6 @@ public abstract class ContentSharingTransferSession extends ContentSharingSessio
 	}
 	
 	/**
-	 * Returns the event listener
-	 * 
-	 * @return Listener
-	 */
-	public ContentSharingTransferSessionListener getListener() {
-		return (ContentSharingTransferSessionListener)super.getListener();
-	}
-	
-	/**
 	 * Receive BYE request 
 	 * 
 	 * @param bye BYE request

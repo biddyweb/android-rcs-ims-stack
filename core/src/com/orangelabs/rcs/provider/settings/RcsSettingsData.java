@@ -260,6 +260,11 @@ public class RcsSettingsData {
 	 * Display a warning if Store & Forward service is activated
 	 */
 	public static final String WARN_SF_SERVICE = "StoreForwardServiceWarning";
+	
+	/**
+	 * Define when the chat receiver sends the 200 OK back to the sender
+	 */
+	public static final String IM_SESSION_START = "ImSessionStart";
 
 	// ---------------------------------------------------------------------------
 	// Parameters of the end user profile

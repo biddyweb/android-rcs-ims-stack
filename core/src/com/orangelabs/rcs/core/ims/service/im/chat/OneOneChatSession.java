@@ -115,34 +115,18 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * @param participants List of participants
 	 */
 	public void addParticipants(List<String> participants) {
-		/*
-	    When a participant in a one to one session wants to extend the session to an Ad-hoc conference session, the IM Client:
-		- 1. SHALL generate an initial SIP INVITE request according to rules and procedures of [RFC3261] and with the
-		additional clarification as specified in section 7.1.1.1 "General";
-		- 2. SHALL set the Request-URI of the SIP INVITE request to the Conference-factory-URI for the IM service in the
-		Home Network of the IM User;
-		- 3. SHALL add the invited user(s) in a MIME resource-list body according to [draft-URI-list], including also the identity
-		of the original invited user;
-		- a) SHALL for the originally invited user identity in the MIME resource list, include a Replaces header with the
-		original session identity according to rules and procedures of [RFC3891] as illustrated in Appendix L “Extending a
-		one to one session to a conference”;
-		- 4. The IM Client SHALL check that the number of Invited IM Users on the URI-list does not exceed the maximum
-		number of Participants allowed in an Ad-hoc IM Group Session as indicated in “MAX-ADHOC-GROUP-SIZE”
-		parameter provisioned for IM Client as described in Appendix I “The parameters to be provisioned for IM service”. If
-		exceeded, the IM Client SHOULD notify the IM User. Otherwise, continue with the rest of the steps;
-		- 5. SHALL insert in the SIP INVITE request a Content-Type header with multipart/mixed as specified in [RFC2046];
-		- 6. SHALL include in the SIP INVITE request a MIME SDP body as a SDP offer according to rules and procedures of
-		[RFC3264], [RFC 4566] and [MSRP] with the following additional clarification, the IM Client:
-		- a) SHALL set the SDP “accept-types” attribute to a = accept-types : message/cpim; and
-		- b) MAY list other formats or use ‘*’ as defined in [MSRP];
-		- 7. SHALL send the SIP INVITE request towards the controlling IM Server according to rules and procedures of SIP/IP
-		Core.
-		On receiving a SIP 200 "OK" response to the SIP INVITE request the IM Client:
-		- 1. SHALL store the IM Session Identity if received in the Contact header as described in [draft-URI-list]; and,
-		- 2. SHALL interact with the User Plane.
-		NOTE: The BYE request received as a result of the Replaces header is handled as described in 7.1.2.3 “IM Client
-		Receiving a session release request”.
-	*/
-		// TODO
+		// Build the list of participants
+    	String existingParticipant = getParticipants().getList().get(0);
+    	participants.add(existingParticipant);
+		
+		// Create a new session
+		ExtendOneOneChatSession session = new ExtendOneOneChatSession(
+			getImsService(),
+			ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
+			this,
+			new ListOfParticipant(participants));
+		
+		// Start the session
+		session.startSession();
 	}	
 }

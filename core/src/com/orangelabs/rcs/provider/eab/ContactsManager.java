@@ -1850,7 +1850,7 @@ public final class ContactsManager {
     					.withValue(Data.DATA2, newPresenceInfo.getTimestamp())
     					.build());
     		}
-    	}else if (newPresenceInfo!=null){
+    	} else if (newPresenceInfo!=null) {
     		// The new presence info is not null but the old one was, add new fields 
     		int availability = ContactInfo.REGISTRATION_STATUS_UNKNOWN;
     		if (newPresenceInfo.isOnline()){
@@ -1952,7 +1952,7 @@ public final class ContactsManager {
     					.withValue(Data.DATA2, newPresenceInfo.getTimestamp())
     					.build());
     		}
-    	}else{
+    	} else if (oldPresenceInfo!=null) {
     		// The new presence info is null but the old one was not, remove fields
     		
     		// Remove the presence status to native address book

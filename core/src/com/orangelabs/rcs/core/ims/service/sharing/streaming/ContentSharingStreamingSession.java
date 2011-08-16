@@ -47,15 +47,6 @@ public abstract class ContentSharingStreamingSession extends ContentSharingSessi
 	}
 
 	/**
-	 * Returns the event listener
-	 * 
-	 * @return Listener
-	 */
-	public ContentSharingStreamingSessionListener getListener() {
-		return (ContentSharingStreamingSessionListener)super.getListener();
-	}
-	
-	/**
 	 * Get the media renderer
 	 * 
 	 * @return Renderer

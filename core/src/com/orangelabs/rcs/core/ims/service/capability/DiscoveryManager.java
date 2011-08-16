@@ -10,6 +10,7 @@ public interface DiscoveryManager {
      * Request contact capabilities
      * 
      * @param contact Remote contact
+     * @return Returns true if success
      */
-    public void requestCapabilities(String contact);
+    public boolean requestCapabilities(String contact);
 }

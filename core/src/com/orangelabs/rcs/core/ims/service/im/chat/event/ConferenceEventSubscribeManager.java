@@ -38,6 +38,7 @@ import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
@@ -168,10 +169,10 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    			session.getParticipants().removeParticipant(entity);
 			    		}
 			    		
-			    		// Notify session listener
-			    		if (session.getListener() != null) {
-			    			session.getListener().handleConferenceEvent(entity, user.getDisplayName(), user.getState());
-			    		}
+			    		// Notify session listeners
+		    	    	for(int j=0; j < session.getListeners().size(); j++) {
+		    	    		((ChatSessionListener)session.getListeners().get(j)).handleConferenceEvent(entity, user.getDisplayName(), user.getState());
+				        }
 			    	}
 		    	}
 	    	} catch(Exception e) {

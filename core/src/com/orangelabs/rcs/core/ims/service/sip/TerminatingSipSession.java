@@ -75,9 +75,9 @@ public class TerminatingSipSession extends GenericSipSession {
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
 			} else
@@ -92,15 +92,18 @@ public class TerminatingSipSession extends GenericSipSession {
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+    	    	for(int j=0; j < getListeners().size(); j++) {
+    	    		getListeners().get(j).handleSessionAborted();
 		        }
 				return;
 			}
 			
 			// Set the local SDP part in the dialog path
 			getDialogPath().setLocalContent(getSdpAnswer());
+
+			// Set the SDP offer 
+			setSdpOffer(getDialogPath().getInvite().getContent());
 
 			// Create a 200 OK response
 			if (logger.isActivated()) {
@@ -125,7 +128,7 @@ public class TerminatingSipSession extends GenericSipSession {
 				if (logger.isActivated()) {
 					logger.info("ACK request received");
 				}
-
+				
 				// The session is established
 				getDialogPath().sessionEstablished();
 
@@ -134,10 +137,10 @@ public class TerminatingSipSession extends GenericSipSession {
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
 
-            	// Notify listener
-		        if (getListener() != null) {
-		        	getListener().handleSessionStarted();
-		        }
+            	// Notify listeners
+    	    	for(int j=0; j < getListeners().size(); j++) {
+    	    		getListeners().get(j).handleSessionStarted();
+    	    	}
 			} else {
 	    		if (logger.isActivated()) {
 	        		logger.debug("No ACK received for INVITE");
@@ -174,10 +177,12 @@ public class TerminatingSipSession extends GenericSipSession {
     	// Remove the current session
     	getImsService().removeSession(this);
 
-		// Notify listener
-    	if ((!isInterrupted()) && (getListener() != null)) {
-        	getListener().handleSessionError(error);
-        }
+		// Notify listeners
+    	if (!isInterrupted()) {
+	    	for(int j=0; j < getListeners().size(); j++) {
+	    		((SipSessionListener)getListeners().get(j)).handleSessionError(error);
+	    	}
+    	}
 	}
 
 	/**

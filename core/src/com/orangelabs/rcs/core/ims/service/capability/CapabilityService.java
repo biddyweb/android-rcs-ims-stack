@@ -53,50 +53,51 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 	 * Options manager
 	 */
 	private OptionsManager optionsManager;
-	
+
 	/**
 	 * Anonymous fetch manager
 	 */
 	private AnonymousFetchManager anonymousFetchManager;
-	
+
 	/**
 	 * Polling manager
 	 */
 	private PollingManager pollingManager;
-	
+
 	/**
-	 * Flag: set during the address book changed procedure, if we are notified of a change 
-	 */
+     * Flag: set during the address book changed procedure, if we are notified
+     * of a change
+     */
 	private boolean isRecheckNeeded = false;
-	
+
 	/**
-	 * Flag indicating if a check procedure is in progress 
-	 */
+     * Flag indicating if a check procedure is in progress
+     */
 	private boolean isCheckInProgress = false;
-	
+
 	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-	 * Constructor
-	 * 
-	 * @param parent IMS module
-	 * @throws CoreException
-	 */
+     * Constructor
+     * 
+     * @param parent IMS module
+     * @throws CoreException
+     */
 	public CapabilityService(ImsModule parent) throws CoreException {
-		super(parent, "capabilities_service.xml", true);
-		
+        super(parent, true);
+
     	// Instanciate the polling manager
         pollingManager = new PollingManager(this);
-        
+
     	// Instanciate the options manager
 		optionsManager = new OptionsManager(parent);
 
     	// Instanciate the anonymous fetch manager
     	anonymousFetchManager = new AnonymousFetchManager(parent);
-    	
+
     	// Get capability extensions
     	CapabilityUtils.updateExternalSupportedFeatures(AndroidFactory.getApplicationContext());
 	}
@@ -110,87 +111,75 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			return;
 		}
 		setServiceStarted(true);
-		
+
 		// Start options manager
 		optionsManager.start();
 
 		// Listen to address book changes
 		getImsModule().getCore().getAddressBookManager().addAddressBookListener(this);
-		
+
 		// Start polling
 		pollingManager.start();
-		
+
 		// Force a first capability check
-		handleAddressBookHasChanged();
+		Thread t = new Thread() {
+			public void run() {
+				handleAddressBookHasChanged();
+			}
+		};
+		t.start();
 	}
 
-	/**
-	 * Stop the IMS service 
-	 */
+    /**
+     * Stop the IMS service
+     */
 	public synchronized void stop() {
 		if (!isServiceStarted()) {
 			// Already stopped
 			return;
 		}
 		setServiceStarted(false);
-	
+
 		// Stop options manager
 		optionsManager.stop();
-		
+
 		// Stop polling
 		pollingManager.stop();
 
 		// Stop listening to address book changes
 		getImsModule().getCore().getAddressBookManager().removeAddressBookListener(this);
 	}
-    
+
 	/**
-	 * Check the IMS service 
-	 */
+     * Check the IMS service
+     */
 	public void check() {
 	}
-	
+
 	/**
-	 * Get the options manager
-	 * 
-	 * @return Options manager
-	 */
+     * Get the options manager
+     * 
+     * @return Options manager
+     */
 	public OptionsManager getOptionsManager() {
 		return optionsManager;
 	}
 
-	/**
-	 * Get the options manager
-	 * 
-	 * @return Options manager
-	 */
+    /**
+     * Get the options manager
+     * 
+     * @return Options manager
+     */
 	public AnonymousFetchManager getAnonymousFetchManager() {
 		return anonymousFetchManager;
 	}
 
 	/**
-	 * Request capabilities for a list of contacts
-	 * 
-	 * @param contactList Contact list
-	 * @return Capabilities
-	 */
-	public void requestContactCapabilities(List<String> contactList) {
-    	if (logger.isActivated()) {
-    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
-    	}
-
-    	for (int i=0; i < contactList.size(); i++) {
-			String contact = contactList.get(i);
-			optionsManager.requestCapabilities(contact);
-		}	
-	}
-	
-	/**
-	 * Request contact capabilities
-	 * 
-	 * @param contact Contact
-	 * @return Capabilities
-	 */
+     * Request contact capabilities
+     * 
+     * @param contact Contact
+     * @return Capabilities
+     */
 	public synchronized Capabilities requestContactCapabilities(String contact) {
     	if (logger.isActivated()) {
     		logger.debug("Request capabilities to " + contact);
@@ -220,6 +209,19 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			}
 		}
 		return capabilities;
+    }
+
+    /**
+     * Request capabilities for a list of contacts
+     * 
+     * @param contactList Contact list
+     */
+	public void requestContactCapabilities(List<String> contactList) {
+    	if (logger.isActivated()) {
+    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
+    	}
+
+		optionsManager.requestCapabilities(contactList);
 	}	
 	
     /**
@@ -230,7 +232,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
     public void receiveCapabilityRequest(SipRequest options) {
     	optionsManager.receiveCapabilityRequest(options);
     }
-    
+
 	/**
      * Receive a notification (anonymous fecth procedure)
      * 
@@ -249,40 +251,42 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			isRecheckNeeded = true;
 			return;
 		}
-		
+
 		// We are beginning the check procedure
 		isCheckInProgress = true;
 
 		// Reset recheck flag
 		isRecheckNeeded = false;
-		
+
 		// Check all phone numbers and query only the new ones
 		Cursor phonesCursor = AndroidFactory.getApplicationContext().getContentResolver().query(
-				ContactsContract.CommonDataKinds.Phone.CONTENT_URI, 
-				new String[]{Phone._ID, Phone.NUMBER, Phone.RAW_CONTACT_ID}, 
+				ContactsContract.CommonDataKinds.Phone.CONTENT_URI, new String[] {
+                        Phone._ID, Phone.NUMBER, Phone.RAW_CONTACT_ID },
+                null,
 				null,
-				null, 
 				null);
 
 		// List of unique number that will have to be queried for capabilities
 		ArrayList<String> toBeTreatedNumbers = new ArrayList<String>();
-		
+
 		// List of unique number that have already been queried
 		ArrayList<String> alreadyRcsOrInvalidNumbers = new ArrayList<String>();
 
 		// We add "My number" to the numbers that are already RCS, so we don't query it if it is present in the address book
-		alreadyRcsOrInvalidNumbers.add(PhoneUtils.extractNumberFromUri(ImsModule.IMS_USER_PROFILE.getPublicUri()));	
+        alreadyRcsOrInvalidNumbers.add(PhoneUtils.extractNumberFromUri(ImsModule.IMS_USER_PROFILE
+                .getPublicUri()));
 
 		while(phonesCursor.moveToNext()) {
 			// Keep a trace of already treated row. Key is (phone number in international format)
 			String phoneNumber = PhoneUtils.formatNumberToInternational(phonesCursor.getString(1));
 			if (!alreadyRcsOrInvalidNumbers.contains(phoneNumber)) {
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
-				if (ContactsManager.getInstance().isRCSValidNumber(phoneNumber) 
+                if (ContactsManager.getInstance().isRCSValidNumber(phoneNumber)
 						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
 						&& !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber)) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
-					// We exclude the number that comes from SIM only contacts, as those cannot be aggregated to RCS raw contacts					
+                    // We exclude the number that comes from SIM only contacts,
+                    // as those cannot be aggregated to RCS raw contacts
 					toBeTreatedNumbers.add(phoneNumber);
 				} else {
 					// This entry is either not valid or already RCS, this number is already done
@@ -295,8 +299,8 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 				toBeTreatedNumbers.remove(phoneNumber);
 				// Check if the raw contact is associated with a RCS raw contact, if not the case then we have to create a new association for it
 				long rawContactId = phonesCursor.getLong(2);
-				
-				if (!ContactsManager.getInstance().isSimAccount(rawContactId) 
+
+                if (!ContactsManager.getInstance().isSimAccount(rawContactId)
 						&& (ContactsManager.getInstance().getAssociatedRcsRawContact(rawContactId, phoneNumber)==-1)){
 					ContactInfo currentInfo = ContactsManager.getInstance().getContactInfo(phoneNumber);
 					// Create a new RCS raw contact with the same info and attach it to the raw contact
@@ -305,10 +309,10 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			}
 		}
 		phonesCursor.close();
-		
+
 		// Get the capabilities for the numbers that haven't got a RCS associated contact
 		requestContactCapabilities(toBeTreatedNumbers);
-		
+
 		// End of the check procedure
 		isCheckInProgress = false;
 
@@ -317,22 +321,22 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			handleAddressBookHasChanged();
 		}
 	}
-	
+
 	/**
-	 * Reset the content sharing capabities for a given contact
-	 * 
-	 * @param contact Contact
-	 */
+     * Reset the content sharing capabities for a given contact
+     * 
+     * @param contact Contact
+     */
 	public void resetContactCapabilitiesForContentSharing(String contact) {
 		Capabilities capabilities = ContactsManager.getInstance().getContactCapabilities(contact);
 		if (capabilities != null) {
-			// Force a reset of content sharing capabilities 
+            // Force a reset of content sharing capabilities
 			capabilities.setImageSharingSupport(false);
 			capabilities.setVideoSharingSupport(false);
-			
+
 		 	// Update the database capabilities
 	        ContactsManager.getInstance().setContactCapabilities(contact, capabilities);
-		
+
 		 	// Notify listener
 		 	getImsModule().getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
 		}

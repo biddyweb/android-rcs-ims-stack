@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="rcs_core_application_title">RCS service</string>	
-	<string name="rcs_core_rcs_notification_title">Rich Communication Suite</string>	
-
+	<string name="rcs_core_rcs_notification_title">Rich Communication Suite</string>
+	<string name="rcs_core_permission">RCS</string>	
+	<string name="rcs_core_permission_ext">RCS extensions</string>	
+	<string name="rcs_core_permission_desc">Rich Communication Suite</string>
+	<string name="rcs_core_permission_ext_desc">Rich Communication Suite extensions</string>
+		
     <string name="rcs_core_images_directory">/My RCS pictures/</string>	
     <string name="rcs_core_videos_directory">/My RCS videos/</string>	
     <string name="rcs_core_files_directory">/My RCS files/</string>	

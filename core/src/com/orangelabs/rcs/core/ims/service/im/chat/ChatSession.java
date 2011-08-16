@@ -137,15 +137,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Returns the event listener
-	 * 
-	 * @return Listener
-	 */
-	public ChatSessionListener getListener() {
-		return (ChatSessionListener)super.getListener();
-	}
-
-	/**
 	 * Return the subject of the conference
 	 * 
 	 * @return Subject
@@ -153,6 +144,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public String getSubject() {
 		return subject;
 	}
+	
+	/**
+	 * Return the contribution ID
+	 * 
+	 * @return Contribution ID
+	 */
+	public String getContributionID() {
+		return getSessionID();
+	}	
 	
 	/**
 	 * Return the first message of the session
@@ -232,11 +232,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     	// Remove the current session
     	getImsService().removeSession(this);
 
+		// Notify listeners
 		if (!isInterrupted()) {
-			// Notify listener
-			if (getListener() != null) {
-				getListener().handleImError(error);
-			}
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleImError(error);
+	        }
 		}
 	}
 
@@ -262,10 +262,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Restart the session idle timer
 		activityMgr.restartInactivityTimer();
 
-	    // Notify listener
-		if (getListener() != null) {
-			getListener().handleMessageTransfered();
-		}
+	    // Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleMessageTransfered();
+        }
 	}
 	
 	/**
@@ -375,9 +375,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Is composing event is reset
 	    isComposingMgr.receiveIsComposingEvent(contact, false);
 	    
-	    // Notify listener
-		if (getListener() != null) {
-			getListener().handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested, date));
+	    // Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested, date));
 		}
 	}
 	
@@ -399,9 +399,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		logger.info("Data transfer aborted");
     	}
     	
-    	// Notify listener
-		if (getListener() != null) {
-			getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED));
+    	// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED));
 		}
 	}	
 
@@ -415,9 +415,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		logger.info("Data transfer error: " + error);
     	}
     	
-    	// Notify listener
-		if (getListener() != null) {
-			getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, error));
+    	// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, error));
 		}
     }
 	
@@ -456,9 +456,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			// Mark the message that was sent as failed
 			RichMessaging.getInstance().markMessageFailed(msgId);
 	   		
-	    	// Notify listener
-			if (getListener() != null) {
-				getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
+	    	// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
 			}
 		}
 	}
@@ -501,9 +501,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	   			logger.error("Problem while sending data", e);
 	   		}
 	   		
-	    	// Notify listener
-			if (getListener() != null) {
-				getListener().handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
+	    	// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
 			}
 		}	
 	}
@@ -589,9 +589,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     				ImdnParser parser = new ImdnParser(input);
     				ImdnDocument imdn = parser.getImdnDocument();
     				if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-    					// Notify listener
-    					if (getListener() != null) {
-    						getListener().handleMessageDeliveryStatus(imdn.getMsgId(), from, imdn.getStatus());
+    					// Notify listeners
+    			    	for(int i=0; i < getListeners().size(); i++) {
+    			    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(imdn.getMsgId(), from, imdn.getStatus());
     					}
     				}
     			}
@@ -616,9 +616,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			ImdnParser parser = new ImdnParser(input);
 			ImdnDocument imdn = parser.getImdnDocument();
 			if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-		    	// Notify listener
-				if (getListener() != null) {
-					getListener().handleMessageDeliveryStatus(imdn.getMsgId(), contact, imdn.getStatus());
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(imdn.getMsgId(), contact, imdn.getStatus());
 				}
 			}
     	} catch(Exception e) {

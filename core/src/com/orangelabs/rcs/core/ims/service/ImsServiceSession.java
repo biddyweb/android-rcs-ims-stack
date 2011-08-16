@@ -83,9 +83,9 @@ public abstract class ImsServiceSession extends Thread {
 	protected Object waitUserAnswer = new Object();
 
 	/**
-	 * Session listener
+	 * Session listeners
 	 */
-	private ImsSessionListener listener = null;
+	private Vector<ImsSessionListener> listeners = new Vector<ImsSessionListener>();
 
 	/**
 	 * Session timer manager
@@ -186,23 +186,30 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param listener Listener
 	 */
 	public void addListener(ImsSessionListener listener) {
-		this.listener = listener;
+		listeners.add(listener);
 	}
 
 	/**
-	 * Remove the listener
+	 * Remove a listener
 	 */
-	public void removeListener() {
-		listener = null;
+	public void removeListener(ImsSessionListener listener) {
+		listeners.remove(listener);
+	}
+	
+	/**
+	 * Remove all listeners
+	 */
+	public void removeListeners() {
+		listeners.removeAllElements();
 	}
 
 	/**
-	 * Returns the event listener
+	 * Returns the event listeners
 	 * 
-	 * @return Listener
+	 * @return Listeners
 	 */
-	public ImsSessionListener getListener() {
-		return listener;
+	public Vector<ImsSessionListener> getListeners() {
+		return listeners;
 	}
 	
 	/**
@@ -414,9 +421,9 @@ public abstract class ImsServiceSession extends Thread {
     	// Remove the current session
     	getImsService().removeSession(this);
 
-    	// Notify listener
-        if (getListener() != null) {
-        	getListener().handleSessionAborted();
+    	// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		getListeners().get(i).handleSessionAborted();
         }
 	}
 
@@ -489,9 +496,9 @@ public abstract class ImsServiceSession extends Thread {
     	// Stop session timer
     	getSessionTimerManager().stop();		
 
-    	// Notify listener
-        if (getListener() != null) {
-        	getListener().handleSessionTerminatedByRemote();
+    	// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		getListeners().get(i).handleSessionTerminatedByRemote();
         }
 	}
 	
@@ -534,9 +541,9 @@ public abstract class ImsServiceSession extends Thread {
     	// Remove the current session
     	getImsService().removeSession(this);
 
-		// Notify listener
-        if (getListener() != null) {
-        	getListener().handleSessionTerminatedByRemote();
+		// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		getListeners().get(i).handleSessionTerminatedByRemote();
         }
         
         // Request capabilities to the remote

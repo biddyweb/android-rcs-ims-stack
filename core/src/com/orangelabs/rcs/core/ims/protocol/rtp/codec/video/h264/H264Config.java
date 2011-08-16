@@ -25,6 +25,24 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264;
  */
 public class H264Config {
     /**
+     * H264 Codec Name
+     */
+    public final static String CODEC_NAME = "h264";
+
+    /**
+     * Default clock rate
+     */
+    public final static int CLOCK_RATE = 90000;
+
+    /**
+     * Default codec params
+     * 42B00B => Profile Baseline / Level 1b
+     */
+    public final static String CODEC_PARAMS = "";
+    // TODO: with value "profile-level-id=42B00B", the native encoder fails to
+    // enncode video frame ?
+
+    /**
      * Default video width
      */
     public final static int VIDEO_WIDTH = 176;

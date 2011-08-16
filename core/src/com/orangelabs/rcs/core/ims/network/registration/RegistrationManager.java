@@ -132,42 +132,19 @@ public class RegistrationManager extends PeriodicRefresher {
 	private List<String> getAllSupportedFeatureTags() {
 		List<String> tags = new ArrayList<String>();
 
-		// Add RCS tags
-		if (RcsSettings.getInstance().isVideoSharingSupported()) {
-			tags.add(FeatureTags.FEATURE_RCSE_VIDEO_SHARE);
-		}
-
-		// Add RCS-e tags
-		String supported = "";
+		// IM support
 		if (RcsSettings.getInstance().isImSessionSupported()) {
-			supported += FeatureTags.FEATURE_RCSE_CHAT + ",";
+			tags.add(FeatureTags.FEATURE_OMA_IM);
 		}
+
+		// Video share support
+		if (RcsSettings.getInstance().isVideoSharingSupported()) {
+			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
+		}
+		
+		// Image share support
 		if (RcsSettings.getInstance().isImageSharingSupported()) {
-			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
-		}
-		if (RcsSettings.getInstance().isFileTransferSupported()) {
-			supported += FeatureTags.FEATURE_RCSE_FT + ",";
-		}
-		if (RcsSettings.getInstance().isPresenceDiscoverySupported()) {
-			supported += FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY + ",";
-		}
-		if (RcsSettings.getInstance().isSocialPresenceSupported()) {
-			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
-		}
-
-		// Add extensions
-		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
-		if ((exts != null) && (exts.length() > 0)) {
-			 supported += exts;
-		}
-
-		// Add prefixes
-		if (supported.length() != 0) {
-			if (supported.endsWith(",")) {
-				supported = supported.substring(0, supported.length()-1);
-			}
-			supported = FeatureTags.FEATURE_RCSE + "=\"" + supported + "\"";
-			tags.add(supported);
+			tags.add(FeatureTags.FEATURE_3GPP_IMAGE_SHARE);
 		}
 		
 		return tags;		

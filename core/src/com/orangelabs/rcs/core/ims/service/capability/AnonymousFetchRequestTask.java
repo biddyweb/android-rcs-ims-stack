@@ -196,9 +196,8 @@ public class AnonymousFetchRequestTask {
             	// 407 Proxy Authentication Required
             	handle407Authentication(ctx);
             } else
-            if ((ctx.getStatusCode() == 403) || (ctx.getStatusCode() == 404)) {
+            if (ctx.getStatusCode() == 404) {
             	// User not found
-            	// TODO: check error code, same as OPTIONS?
             	handleUserNotFound(ctx);
             } else {
             	// Other error response

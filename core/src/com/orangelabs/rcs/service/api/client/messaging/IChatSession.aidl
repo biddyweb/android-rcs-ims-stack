@@ -37,7 +37,7 @@ interface IChatSession {
 	void addParticipants(in List<String> participants);
 
 	// Send a text message
-	void sendMessage(in String text);
+	String sendMessage(in String text);
 
 	// Set is composing status
 	void setIsComposingStatus(in boolean status);

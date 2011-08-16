@@ -1,6 +1,7 @@
 package com.orangelabs.rcs.service.api.client.media;
 
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
+import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 
 /**
  * Media RTP player
@@ -8,7 +9,7 @@ import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 interface IMediaPlayer {
 	// Open the player
 	void open(in String remoteHost, in int remotePort);
-	
+
 	// Close the player
 	void close();
 
@@ -26,4 +27,7 @@ interface IMediaPlayer {
 
 	// Remove media listeners
 	void removeAllListeners();
+
+	// Get media Codec
+	MediaCodec getMediaCodec();
 }

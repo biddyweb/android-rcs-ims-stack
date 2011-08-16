@@ -62,6 +62,7 @@ LOCAL_AIDL_INCLUDES += $(FRAMEWORKS_BASE_JAVA_SRC_DIRS)
 LOCAL_AIDL_INCLUDES += \
     src/com/orangelabs/rcs/service/api/client/capability/Capabilities.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/InstantMessage.aidl \
+    src/com/orangelabs/rcs/service/api/client/media/MediaCodec.aidl \
     src/com/orangelabs/rcs/service/api/client/presence/FavoriteLink.aidl \
     src/com/orangelabs/rcs/service/api/client/presence/Geoloc.aidl \
     src/com/orangelabs/rcs/service/api/client/presence/PhotoIcon.aidl \
