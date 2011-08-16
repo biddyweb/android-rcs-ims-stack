@@ -201,6 +201,7 @@ public class ReceivePresenceInvitation extends Activity {
     	// Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceivePresenceInvitation.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);		
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notif = new Notification(R.drawable.ri_notif_presence_icon,
         		context.getString(R.string.title_presence_invitation),

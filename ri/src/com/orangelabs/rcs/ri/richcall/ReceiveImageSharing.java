@@ -70,7 +70,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     private IImageSharingSession sharingSession = null;
 
     /**
-     * VoIP session ID
+     * Session ID
      */
     private String sessionId = null;
     
@@ -159,7 +159,11 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
     			builder.show();    			
     		} catch(Exception e) {
-    			Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
+    			handler.post(new Runnable(){
+    				public void run(){
+    					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
+    				}
+    			});
 			}
     	}
     }
@@ -363,6 +367,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 		// Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceiveImageSharing.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);		
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_image_sharing);
         Notification notif = new Notification(R.drawable.ri_notif_csh_icon,
@@ -411,15 +416,12 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 	    	public void run() {
 	        	try {
 	                if (sharingSession != null) {
-	                	try {
-	                		sharingSession.removeSessionListener(imageSharingEventListener);
-	                		sharingSession.cancelSession();
-	                	} catch(Exception e) {
-	                	}
-	                	sharingSession = null;
+                		sharingSession.removeSessionListener(imageSharingEventListener);
+                		sharingSession.cancelSession();
 	                }
 	        	} catch(Exception e) {
 	        	}
+            	sharingSession = null;
 	    	}
 	    };
 	    thread.start();

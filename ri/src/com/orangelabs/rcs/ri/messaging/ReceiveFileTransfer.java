@@ -110,6 +110,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	protected void onDestroy() {
 		super.onDestroy();
 		
+		messagingApi.removeImsEventListener(this);
 		messagingApi.removeApiEventListener(this);
 		messagingApi.disconnectApi();
 	}
@@ -124,25 +125,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			}
 		});
     }
-    
-    /**
-     * IMS connected
-     */
-	public void handleImsConnected() {
-	}
-
-    /**
-     * IMS disconnected
-     */
-	public void handleImsDisconnected() {
-    	// IMS has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_ims_disconnected));
-			}
-		});
-	}     
-    
+        
     /**
      * API connected
      */
@@ -174,7 +157,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 			builder.show();			
 		} catch(Exception e) {
-			Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
+			handler.post(new Runnable(){
+				public void run(){
+					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
+				}
+			});
 		}
     }
 
@@ -189,7 +176,25 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			}
 		});
 	}
-	
+
+    /**
+     * IMS connected
+     */
+	public void handleImsConnected() {
+	}
+
+    /**
+     * IMS disconnected
+     */
+	public void handleImsDisconnected() {
+    	// IMS has been disconnected
+		handler.post(new Runnable(){
+			public void run(){
+				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_ims_disconnected));
+			}
+		});
+	}     
+    
     /**
      * Accept button listener
      */
@@ -358,7 +363,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     	// Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceiveFileTransfer.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notif = new Notification(R.drawable.ri_notif_file_transfer_icon,
         		context.getString(R.string.title_recv_file_transfer),
         		System.currentTimeMillis());
@@ -405,15 +411,12 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         	public void run() {
             	try {
                     if (transferSession != null) {
-                    	try {
-                    		transferSession.removeSessionListener(fileTransferSessionListener);
-                    		transferSession.cancelSession();
-                    	} catch(Exception e) {
-                    	}
-                    	transferSession = null;
+                		transferSession.removeSessionListener(fileTransferSessionListener);
+                		transferSession.cancelSession();
                     }
             	} catch(Exception e) {
             	}
+            	transferSession = null;
         	}
         };
         thread.start();

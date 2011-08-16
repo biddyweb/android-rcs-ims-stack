@@ -321,6 +321,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         // Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceiveChat.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_chat);
         Notification notif = new Notification(R.drawable.ri_notif_chat_icon,

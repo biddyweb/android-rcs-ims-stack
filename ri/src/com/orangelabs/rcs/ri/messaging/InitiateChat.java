@@ -173,8 +173,6 @@ public class InitiateChat extends Activity {
             // Display a progress dialog
             progressDialog = Utils.showProgressDialog(InitiateChat.this, getString(R.string.label_command_in_progress));
             progressDialog.setOnCancelListener(new OnCancelListener() {
-				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 					Toast.makeText(InitiateChat.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
 					quitSession();
@@ -312,15 +310,12 @@ public class InitiateChat extends Activity {
         	public void run() {
             	try {
                     if (chatSession != null) {
-                    	try {
-                    		chatSession.removeSessionListener(chatSessionListener);
-                    		chatSession.cancelSession();
-                    	} catch(Exception e) {
-                    	}
-                		chatSession = null;
+                		chatSession.removeSessionListener(chatSessionListener);
+                		chatSession.cancelSession();
                     }
             	} catch(Exception e) {
             	}
+        		chatSession = null;
         	}
         };
         thread.start();

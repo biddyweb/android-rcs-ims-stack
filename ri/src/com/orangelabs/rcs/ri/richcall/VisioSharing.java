@@ -987,11 +987,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         thread.start();
         startOutgoingBtn.setEnabled(false);
         // Display a progress dialog
-        outgoingProgressDialog = Utils.showProgressDialog(VisioSharing.this,
-                getString(R.string.label_command_in_progress));
+        outgoingProgressDialog = Utils.showProgressDialog(VisioSharing.this, getString(R.string.label_command_in_progress));
         outgoingProgressDialog.setOnCancelListener(new OnCancelListener() {
-			
-			@Override
 			public void onCancel(DialogInterface dialog) {
 				Toast.makeText(VisioSharing.this, getString(R.string.label_video_sharing_canceled), Toast.LENGTH_SHORT).show();
 				finish();
@@ -1097,7 +1094,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         // Create notification
         Intent intent = new Intent(invitation);
         intent.setClass(context, VisioSharing.class);
-        intent.putExtra("incoming", true);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.putExtra("incoming", true);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_video_sharing);
         Notification notif = new Notification(R.drawable.ri_notif_csh_icon, notifTitle,

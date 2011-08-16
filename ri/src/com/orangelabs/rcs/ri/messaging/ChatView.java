@@ -231,6 +231,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     protected void onPause() {
     	super.onPause();
     	
+    	// Update background flag
     	isInBackground = true;
     }
     
@@ -238,6 +239,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     protected void onResume() {
     	super.onResume();
     	
+    	// Update background flag
     	isInBackground = false;
     	
     	// Mark all messages that were received while we were in background as "displayed" 
@@ -607,15 +609,12 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         	public void run() {
             	try {
                     if (chatSession != null) {
-                    	try {
-                    		chatSession.removeSessionListener(chatSessionListener);
-                    		chatSession.cancelSession();
-                    	} catch(Exception e) {
-                    	}
-                    	chatSession = null;
+                		chatSession.removeSessionListener(chatSessionListener);
+                		chatSession.cancelSession();
                     }
             	} catch(Exception e) {
             	}
+            	chatSession = null;
         	}
         };
         thread.start();
@@ -691,11 +690,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			break;
 
 		case R.id.menu_add_participant:
-			if (chatGroup) {
-				addParticipants();
-			} else {
-				Utils.showMessage(ChatView.this, getString(R.string.label_note_add_participant));
-			}
+			addParticipants();
 			break;
 			
 		case R.id.menu_close_session:
