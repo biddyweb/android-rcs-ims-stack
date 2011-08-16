@@ -19,8 +19,6 @@
 package com.orangelabs.rcs.service.api.server;
 
 import com.orangelabs.rcs.service.api.client.IImsApi;
-import com.orangelabs.rcs.service.api.server.ServerApiException;
-import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -56,9 +54,6 @@ public class ImsApiService extends IImsApi.Stub {
 		if (logger.isActivated()) {
 			logger.info("Get IMS connection state");
 		}
-
-    	// Check permission
-		ServerApiUtils.testPermission();
 
 		try {
 			// Test IMS connection

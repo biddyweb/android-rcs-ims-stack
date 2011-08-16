@@ -56,15 +56,6 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	}
 	
 	/**
-	 * Returns the event listener
-	 * 
-	 * @return Listener
-	 */
-	public SipSessionListener getListener() {
-		return (SipSessionListener)super.getListener();
-	}	
-	
-	/**
 	 * Returns feature tag of the service
 	 * 
 	 * @return Feature tag

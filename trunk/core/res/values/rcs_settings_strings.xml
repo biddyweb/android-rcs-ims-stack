@@ -63,10 +63,11 @@
 	<string name="rcs_settings_label_default_freetext_3">At work</string>
 	<string name="rcs_settings_label_default_freetext_4">On vacation</string>
 
-	<string name="rcs_settings_label_default_video_format">H263</string><string name="rcs_settings_label_auto_invitation">Auto accept invitations</string>
+	<string name="rcs_settings_label_default_video_format">h263-2000</string>
+	<string name="rcs_settings_label_auto_invitation">Auto accept invitations</string>
     <string-array name="rcs_settings_list_video_format_value">
-        <item>H263</item>
-        <item>H264</item>
+        <item>h263-2000</item>
+        <item>h264</item>
     </string-array>
     <string-array name="rcs_settings_list_video_format_label">
         <item>Low  (H.263)</item>

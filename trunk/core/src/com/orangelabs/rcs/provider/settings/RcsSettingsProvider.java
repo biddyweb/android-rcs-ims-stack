@@ -68,7 +68,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 44;
+        private static final int DATABASE_VERSION = 45;
 
         private Context ctx;
 
@@ -121,6 +121,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_FILE_TRANSFER_SESSIONS, 		"1");
             addParameter(db, RcsSettingsData.SMS_FALLBACK_SERVICE, 				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.WARN_SF_SERVICE,	 				RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.IM_SESSION_START,	 				"1");
 
             // User profile parameters (read only)
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_USERNAME, 			"");

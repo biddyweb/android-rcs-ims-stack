@@ -104,5 +104,5 @@ public class ResourceListParser extends DefaultHandler {
 		if (logger.isActivated()) {
 			logger.debug("End document");
 		}
-	}	
+	}
 }

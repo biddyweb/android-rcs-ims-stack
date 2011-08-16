@@ -165,6 +165,12 @@ public class PhoneUtils {
 				uri = uri.substring(index1+4, index2);
 			}
 			
+			// Remove URI parameters
+			int index2 = uri.indexOf(";"); 
+			if (index2 != -1) {
+				uri = uri.substring(0, index2);
+			}
+			
 			// Format the extracted number (username part of the URI)
 			return formatNumberToInternational(uri);
 		} catch(Exception e) {

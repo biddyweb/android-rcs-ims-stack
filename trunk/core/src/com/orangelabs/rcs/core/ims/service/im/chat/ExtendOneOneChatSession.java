@@ -1,26 +1,6 @@
-/*******************************************************************************
- * Software Name : RCS IMS Stack
- *
- * Copyright © 2010 France Telecom S.A.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.Vector;
-
-import javax.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -42,11 +22,16 @@ import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Originating ad-hoc group chat session
+ * Extends a one-to-one chat session to an ad-hoc session
  * 
  * @author jexa7410
  */
-public class OriginatingAdhocGroupChatSession extends GroupChatSession {
+public class ExtendOneOneChatSession extends GroupChatSession {
+	/**
+	 * One-to-one session
+	 */
+	private OneOneChatSession oneoneSession;
+	
 	/**
 	 * Boundary tag
 	 */
@@ -62,14 +47,17 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
-	 * @param subject Subject of the conference
+	 * @param oneoneSession One-to-one session
 	 * @param participants List of participants
 	 */
-	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String subject, ListOfParticipant participants) {
-		super(parent, conferenceId, subject, participants);
-
+	public ExtendOneOneChatSession(ImsService parent, String conferenceId, OneOneChatSession oneoneSession, ListOfParticipant participants) {
+		super(parent, conferenceId, null, participants);
+	
 		// Create dialog path
 		createOriginatingDialogPath();
+		
+		// Save one-to-one session
+		this.oneoneSession = oneoneSession;
 	}
 	
 	/**
@@ -78,7 +66,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new ad-hoc group chat session as originating");
+	    		logger.info("Extends a 1-1 session");
 	    	}
 
     		// Set setup mode
@@ -105,10 +93,16 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
 
-	        // Generate the resource list for given participants
-	        String resourceList =
-	        	ChatUtils.generateChatResourceList(getParticipants().getList())
-	        	+ SipUtils.CRLF;
+	    	// Generate the resource list for given participants
+	    	String existingParticipant = oneoneSession.getParticipants().getList().get(0);
+	        /* TODO String callId = oneoneSession.getDialogPath().getCallId(); 
+	        String toTag = oneoneSession.getDialogPath().getRemoteTag();
+	        String fromTag = oneoneSession.getDialogPath().getLocalTag();
+			String replaceHeader = ";method=INVITE?Replaces=" + callId + ";to-tag=" + toTag + ";from-tag=" + fromTag;*/
+			String replaceHeader = ";method=INVITE?Session-Replaces=" + oneoneSession.getContributionID();
+			String resourceList = ChatUtils.generateExtendedChatResourceList(existingParticipant,
+					replaceHeader,
+	        		getParticipants().getList()) + SipUtils.CRLF;
 	    	
 	    	// Build multipart
 	    	String multipart =
@@ -133,7 +127,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        	logger.info("Send INVITE");
 	        }
 	        SipRequest invite = createInviteRequest(multipart);
-
+	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
@@ -153,27 +147,22 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	/**
 	 * Create INVITE request
 	 * 
-	 * @param content Content part
+	 * @param content Multipart content
 	 * @return Request
 	 * @throws SipException
 	 */
 	private SipRequest createInviteRequest(String content) throws SipException {
+		// Create multipart INVITE
         SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
         		InstantMessagingService.CHAT_FEATURE_TAGS,
         		content, boundary);
 
-    	// Test if there is a first message
-    	if (getFirstMessage() != null) {
-	        // Add a subject header
-    		invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-    	}
-    	
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID());
-	
-	    return invite;
-	}	
-	
+        
+        return invite;
+	}
+
 	/**
 	 * Send INVITE message
 	 * 
@@ -299,6 +288,14 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
         		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
         	}
 			
+			// Notify 1-1 session listeners
+	    	for(int i=0; i < oneoneSession.getListeners().size(); i++) {
+	    		((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantSuccessful();
+			}
+	        
+			// Notify listener
+			getImsService().getImsModule().getCore().getListener().handleOneOneChatSessionExtended(this, oneoneSession);
+			
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();
@@ -340,6 +337,9 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        }
 	        SipRequest invite = createInviteRequest(getDialogPath().getLocalContent());
 	               
+	        // Add a contribution ID header
+	        invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 
+	        
 	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
@@ -390,7 +390,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        	logger.info("Send new INVITE");
 	        }
 	        SipRequest invite = createInviteRequest(getDialogPath().getLocalContent());
-	        
+
 	    	// Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
@@ -409,5 +409,20 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
 	    }
-	}		
+	}
+	
+	/**
+	 * Handle error 
+	 * 
+	 * @param error Error
+	 */
+	public void handleError(ChatError error) {
+		// Notify 1-1 session listeners
+    	for(int i=0; i < oneoneSession.getListeners().size(); i++) {
+    		((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantFailed(error.getMessage());
+		}
+	    
+	    // Error
+	    super.handleError(error);
+	}	
 }

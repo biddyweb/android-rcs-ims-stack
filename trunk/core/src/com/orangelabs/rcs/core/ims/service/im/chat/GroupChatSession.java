@@ -97,6 +97,25 @@ public abstract class GroupChatSession extends ChatSession {
 	}
 	
 	/**
+	 * Get replaced session ID
+	 * 
+	 * @return Session ID
+	 */
+	public String getReplacedSessionId() {
+		// TODO: use "Replaces" header
+		String content = getDialogPath().getRemoteContent();
+		String result = null;
+		if (content != null) {
+			int index1 = content.indexOf("Session-Replaces=");
+			if (index1 != -1) {
+				int index2 = content.indexOf("\"", index1);
+				result = content.substring(index1+17, index2);
+			}
+		}
+		return result;
+	}
+	
+	/**
 	 * Returns the conference event subscriber
 	 * 
 	 * @return Subscribe manager
@@ -251,9 +270,9 @@ public abstract class GroupChatSession extends ChatSession {
                 		logger.debug("200 OK response received");
                 	}
                 	
-        			// Notify listener
-        	        if (getListener() != null) {
-        	        	getListener().handleAddParticipantSuccessful();
+        			// Notify listeners
+        	    	for(int i=0; i < getListeners().size(); i++) {
+        	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantSuccessful();
         	        }
                 } else {
                     // Error
@@ -261,9 +280,9 @@ public abstract class GroupChatSession extends ChatSession {
                     	logger.debug("REFER has failed (" + ctx.getStatusCode() + ")");
                     }
                     
-        			// Notify listener
-        	        if (getListener() != null) {
-        	        	getListener().handleAddParticipantFailed(ctx.getReasonPhrase());
+        			// Notify listeners
+        	    	for(int i=0; i < getListeners().size(); i++) {
+        	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(ctx.getReasonPhrase());
         	        }
                 }
             } else
@@ -273,9 +292,9 @@ public abstract class GroupChatSession extends ChatSession {
             		logger.debug("200 OK response received");
             	}
             	
-    			// Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleAddParticipantSuccessful();
+    			// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantSuccessful();
     	        }
 	        } else {
 	            // Error responses
@@ -283,9 +302,9 @@ public abstract class GroupChatSession extends ChatSession {
             		logger.debug("No response received");
             	}
             	
-    			// Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleAddParticipantFailed(ctx.getReasonPhrase());
+    			// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(ctx.getReasonPhrase());
     	        }
 	        }
         } catch(Exception e) {
@@ -293,9 +312,9 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.error("REFER request has failed", e);
         	}
         	
-			// Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleAddParticipantFailed(e.getMessage());
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(e.getMessage());
 	        }
         }
 	}
@@ -401,9 +420,9 @@ public abstract class GroupChatSession extends ChatSession {
                 		logger.debug("20x OK response received");
                 	}
                 	
-        			// Notify listener
-        	        if (getListener() != null) {
-        	        	getListener().handleAddParticipantSuccessful();
+        			// Notify listeners
+        	    	for(int i=0; i < getListeners().size(); i++) {
+        	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantSuccessful();
         	        }
                 } else {
                     // Error
@@ -411,9 +430,9 @@ public abstract class GroupChatSession extends ChatSession {
                     	logger.debug("REFER has failed (" + ctx.getStatusCode() + ")");
                     }
                     
-        			// Notify listener
-        	        if (getListener() != null) {
-        	        	getListener().handleAddParticipantFailed(ctx.getReasonPhrase());
+        			// Notify listeners
+        	    	for(int i=0; i < getListeners().size(); i++) {
+        	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(ctx.getReasonPhrase());
         	        }
                 }
             } else
@@ -423,9 +442,9 @@ public abstract class GroupChatSession extends ChatSession {
             		logger.debug("20x OK response received");
             	}
             	
-    			// Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleAddParticipantSuccessful();
+    			// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantSuccessful();
     	        }
 	        } else {
 	            // Error responses
@@ -433,9 +452,9 @@ public abstract class GroupChatSession extends ChatSession {
             		logger.debug("No response received");
             	}
             	
-    			// Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleAddParticipantFailed(ctx.getReasonPhrase());
+    			// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(ctx.getReasonPhrase());
     	        }
 	        }
         } catch(Exception e) {
@@ -443,9 +462,9 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.error("REFER request has failed", e);
         	}
         	
-			// Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleAddParticipantFailed(e.getMessage());
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleAddParticipantFailed(e.getMessage());
 	        }
         }
 	}

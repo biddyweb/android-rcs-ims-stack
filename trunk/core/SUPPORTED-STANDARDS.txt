@@ -26,6 +26,7 @@ RFC 3857 - A Watcher Information Event Template-Package for the Session Initiati
 RFC 3858 - An Extensible Markup Language (XML) Based Format for Watcher Information
 RFC 3862 - Common Presence and Instant Messaging (CPIM): Message Format
 RFC 3863 - Presence Information Data Format (PIDF)
+RFC 3891 - The Session Initiation Protocol (SIP) "Replaces" Header
 RFC 3903 - Session Initiation Protocol (SIP) Extension for Event State Publication
 RFC 3966 - The tel URI for Telephone Numbers
 RFC 3994 - Indication of Message Composition for Instant Messaging

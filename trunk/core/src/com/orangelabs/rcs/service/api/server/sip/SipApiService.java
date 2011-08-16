@@ -19,19 +19,24 @@
 package com.orangelabs.rcs.service.api.server.sip;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
+import android.content.Intent;
 import android.os.IBinder;
 
 import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.service.api.client.sip.ISipApi;
 import com.orangelabs.rcs.service.api.client.sip.ISipSession;
+import com.orangelabs.rcs.service.api.client.sip.SipApiIntents;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -40,10 +45,15 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class SipApiService extends ISipApi.Stub {
-    /**
+	/**
+	 * List of sessions
+	 */
+	private static Hashtable<String, ISipSession> sipSessions = new Hashtable<String, ISipSession>();  
+
+	/**
 	 * The logger
 	 */
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private static Logger logger = Logger.getLogger(SipApiService.class.getName());
 
 	/**
 	 * Constructor
@@ -58,6 +68,55 @@ public class SipApiService extends ISipApi.Stub {
 	 * Close API
 	 */
 	public void close() {
+		// Clear list of sessions
+		sipSessions.clear();
+	}
+	
+	/**
+	 * Add a SIP session in the list
+	 * 
+	 * @param session SIP session
+	 */
+	protected static void addSipSession(SipSession session) {
+		if (logger.isActivated()) {
+			logger.debug("Add a SIP session in the list (size=" + sipSessions.size() + ")");
+		}
+		sipSessions.put(session.getSessionID(), session);
+	}
+
+	/**
+	 * Remove a SIP session from the list
+	 * 
+	 * @param sessionId Session ID
+	 */
+	protected static void removeSipSession(String sessionId) {
+		if (logger.isActivated()) {
+			logger.debug("Remove a SIP session from the list (size=" + sipSessions.size() + ")");
+		}
+		sipSessions.remove(sessionId);
+	}	
+	
+	/**
+	 * Receive a new SIP session invitation
+	 * 
+	 * @param session SIP session
+	 */
+	public void receiveSipSessionInvitation(GenericSipSession session) {
+		// Extract number from contact 
+		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+	
+		// Add session in the list
+		SipSession sessionApi = new SipSession(session);
+		SipApiService.addSipSession(sessionApi);
+		
+		// Broadcast intent related to the received invitation
+		Intent intent = new Intent(SipApiIntents.SESSION_INVITATION);
+		String mime = FeatureTags.FEATURE_RCSE + "/" + session.getFeatureTag(); 
+		intent.setType(mime.toLowerCase());
+		intent.putExtra("contact", number);
+		intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
+		intent.putExtra("sessionId", session.getSessionID());
+		AndroidFactory.getApplicationContext().sendBroadcast(intent);    	
 	}
 	
 	/**
@@ -65,25 +124,28 @@ public class SipApiService extends ISipApi.Stub {
 	 * 
 	 * @param contact Contact
 	 * @param featureTag Feature tag of the service
-	 * @param offer SDP offer
+	 * @param sdpOffer SDP offer
 	 * @throws ServerApiException
 	 */
-	public ISipSession initiateSession(String contact, String featureTag, String offer) throws ServerApiException {
+	public ISipSession initiateSession(String contact, String featureTag, String sdpOffer) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a SIP session with " + contact);
 		}
 
 		// Check permission
-		ServerApiUtils.testPermission();
+		ServerApiUtils.testPermissionForExtensions();
 
 		// Test IMS connection
 		ServerApiUtils.testIms();
 
 		try {
 			// Initiate a new session
-			GenericSipSession session = Core.getInstance().getSipService().initiateSession(contact, featureTag, offer);
+			GenericSipSession session = Core.getInstance().getSipService().initiateSession(contact, featureTag, sdpOffer);
 			
-			return new SipSession(session);
+			// Add session in the list
+			SipSession sessionApi = new SipSession(session);
+			SipApiService.addSipSession(sessionApi);
+			return sessionApi;
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
@@ -102,21 +164,13 @@ public class SipApiService extends ISipApi.Stub {
 		}
 
 		// Check permission
-		ServerApiUtils.testPermission();
+		ServerApiUtils.testPermissionForExtensions();
 
 		// Test core availability
 		ServerApiUtils.testCore();
 		
-		try {
-			ImsServiceSession session = Core.getInstance().getSipService().getSession(id);
-			if ((session != null) && (session instanceof GenericSipSession)) {
-				return new SipSession((GenericSipSession)session);
-			} else {
-				return null;
-			}
-		} catch(Exception e) {
-			throw new ServerApiException(e.getMessage());
-		}
+		// Return a session instance
+		return sipSessions.get(id);
 	}
 	
 	/**
@@ -132,7 +186,7 @@ public class SipApiService extends ISipApi.Stub {
 		}
 
 		// Check permission
-		ServerApiUtils.testPermission();
+		ServerApiUtils.testPermissionForExtensions();
 
 		// Test core availability
 		ServerApiUtils.testCore();
@@ -142,8 +196,10 @@ public class SipApiService extends ISipApi.Stub {
 			ArrayList<IBinder> result = new ArrayList<IBinder>(list.size());
 			for(int i=0; i < list.size(); i++) {
 				GenericSipSession session = list.elementAt(i);
-				SipSession apiSession = new SipSession(session);
-				result.add(apiSession.asBinder());
+				ISipSession sessionApi = sipSessions.get(session.getSessionID());
+				if (sessionApi != null) {
+					result.add(sessionApi.asBinder());
+				}
 			}
 			return result;
 		} catch(Exception e) {
@@ -163,7 +219,7 @@ public class SipApiService extends ISipApi.Stub {
 		}
 
 		// Check permission
-		ServerApiUtils.testPermission();
+		ServerApiUtils.testPermissionForExtensions();
 
 		// Test core availability
 		ServerApiUtils.testCore();
@@ -176,8 +232,10 @@ public class SipApiService extends ISipApi.Stub {
 				SipDialogPath dialog = session.getDialogPath();
 				if ((dialog != null) && (dialog.isSigEstablished())) {
 					// Returns only sessions which are established
-					SipSession apiSession = new SipSession(session);
-					result.add(apiSession.asBinder());
+					ISipSession sessionApi = sipSessions.get(session.getSessionID());
+					if (sessionApi != null) {
+						result.add(sessionApi.asBinder());
+					}
 				}
 			}
 			return result;

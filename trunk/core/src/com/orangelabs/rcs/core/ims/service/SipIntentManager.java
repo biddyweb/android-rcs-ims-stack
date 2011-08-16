@@ -64,7 +64,8 @@ public class SipIntentManager {
 		}		
 
 		// Create the intent associated to the SIP request
-		Intent intent = generateSipIntent(request);
+		String featureTag = tags.get(0);
+		Intent intent = generateSipIntent(request, featureTag);
 		return isSipIntentResolvedByBroadcastReceiver(intent);
 	}	
 
@@ -72,17 +73,17 @@ public class SipIntentManager {
 	 * Generate a SIP Intent
 	 * 
 	 * @param request SIP request
+	 * @param featureTag Feature tag
 	 */
-	private Intent generateSipIntent(SipRequest request) {
+	private Intent generateSipIntent(SipRequest request, String featureTag) {
 		// Create the intent
 		String action = SipApiIntents.SESSION_INVITATION;
 		Intent intent = new Intent(action);
 		intent.addCategory(Intent.CATEGORY_DEFAULT);
 
 		// Set intent parameters
-		List<String> tags = request.getFeatureTags();
-		String featureTag = tags.get(0);
-		intent.setType(FeatureTags.FEATURE_RCSE + "/" + featureTag);
+		String mime = FeatureTags.FEATURE_RCSE + "/" + featureTag; 
+		intent.setType(mime.toLowerCase());
         
 		return intent;
 	}

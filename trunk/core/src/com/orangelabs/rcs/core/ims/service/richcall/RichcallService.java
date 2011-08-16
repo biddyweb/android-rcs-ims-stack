@@ -33,11 +33,13 @@ import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransf
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import android.os.RemoteException;
+
 /**
- * Rich call service has in charge to monitor the GSM call in order to stop the current
- * content sharing when the call terminates, to process capability request from remote
- * and to request remote capabilities.
- *  
+ * Rich call service has in charge to monitor the GSM call in order to stop the
+ * current content sharing when the call terminates, to process capability
+ * request from remote and to request remote capabilities.
+ * 
  * @author jexa7410
  */
 public class RichcallService extends ImsService {
@@ -47,14 +49,14 @@ public class RichcallService extends ImsService {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-	 * Constructor
-	 * 
-	 * @param parent IMS module
-	 * @param activated Activation flag
-	 * @throws CoreException
-	 */
+     * Constructor
+     * 
+     * @param parent IMS module
+     * @param activated Activation flag
+     * @throws CoreException
+     */
 	public RichcallService(ImsModule parent, boolean activated) throws CoreException {
-		super(parent, "richcall_service.xml", activated);
+        super(parent, activated);
 	}
 
 	/**
@@ -68,9 +70,9 @@ public class RichcallService extends ImsService {
 		setServiceStarted(true);
     }
 
-	/**
-	 * Stop the IMS service 
-	 */
+    /**
+     * Stop the IMS service
+     */
 	public synchronized void stop() {
 		if (!isServiceStarted()) {
 			// Already stopped
@@ -78,55 +80,56 @@ public class RichcallService extends ImsService {
 		}
 		setServiceStarted(false);
     }
-    
+
 	/**
-	 * Check the IMS service 
-	 */
+     * Check the IMS service
+     */
 	public void check() {
 	}
-    
+
     /**
-	 * Initiate an image sharing session
-	 * 
-	 * @param contact Remote contact
-	 * @param content Content to be shared 
-	 * @return CSh session 
-	 */
+     * Initiate an image sharing session
+     * 
+     * @param contact Remote contact
+     * @param content Content to be shared
+     * @return CSh session
+     */
 	public ContentSharingTransferSession initiateImageSharingSession(String contact, MmContent content) {
 		// TODO: test we are in call with contact
 		return getImsModule().getContentSharingService().initiateImageSharingSession(contact, content);
 	}
-	
-	/**
-	 * Initiate a pre-recorded video sharing session
-	 * 
-	 * @param contact Remote contact
-	 * @param content Video content to share
-	 * @param player Media player
-	 * @return CSh session
-	 */
+
+    /**
+     * Initiate a pre-recorded video sharing session
+     * 
+     * @param contact Remote contact
+     * @param content Video content to share
+     * @param player Media player
+     * @return CSh session
+     */
 	public ContentSharingStreamingSession initiatePreRecordedVideoSharingSession(String contact, VideoContent content, IMediaPlayer player) {
 		// TODO: test we are in call with contact
 		return getImsModule().getContentSharingService().initiatePreRecordedVideoSharingSession(contact, content, player);
 	}
-	
-	/**
-	 * Initiate a live video sharing session
-	 * 
-	 * @param contact Remote contact
-	 * @param player Media player
-	 * @return CSh session
-	 */
-	public ContentSharingStreamingSession initiateLiveVideoSharingSession(String contact, IMediaPlayer player) {
+
+    /**
+     * Initiate a live video sharing session
+     * 
+     * @param contact Remote contact
+     * @param player Media player
+     * @return CSh session
+     */
+	public ContentSharingStreamingSession initiateLiveVideoSharingSession(String contact,
+            IMediaPlayer player) throws RemoteException {
 		return getImsModule().getContentSharingService().initiateLiveVideoSharingSession(contact, player);
 	}
-	
-	/**
-	 * Receive a video sharing invitation
-	 * 
-	 * @param invite Initial invite
-	 */
-	public void receiveVideoSharingInvitation(SipRequest invite) {	
+
+    /**
+     * Receive a video sharing invitation
+     * 
+     * @param invite Initial invite
+     */
+	public void receiveVideoSharingInvitation(SipRequest invite) {
 		// Test if call is established
 		if (!getImsModule().getCallManager().isConnected()) {
 			if (logger.isActivated()) {
@@ -138,7 +141,7 @@ public class RichcallService extends ImsService {
 		    		logger.info("Send 606 Not Acceptable");
 		    	}
 		        SipResponse resp = SipMessageFactory.createResponse(invite, 606);
-		        
+
 		        // Send response
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
@@ -149,7 +152,7 @@ public class RichcallService extends ImsService {
 			return;
 		}
 
-		// Test number of session 
+        // Test number of session
 		if (getNumberOfSessions() > 0) {
 			if (logger.isActivated()) {
 				logger.debug("The max number of sharing sessions is achieved: reject the invitation");
@@ -170,16 +173,16 @@ public class RichcallService extends ImsService {
 			}
 			return;
 		}
-		
+
 		// Process the session invitation
 		getImsModule().getContentSharingService().receiveVideoSharingInvitation(invite);
 	}
-	
-	/**
-	 * Receive an image sharing invitation
-	 * 
-	 * @param invite Initial invite
-	 */
+
+    /**
+     * Receive an image sharing invitation
+     * 
+     * @param invite Initial invite
+     */
 	public void receiveImageSharingInvitation(SipRequest invite) {
 		if (logger.isActivated()) {
     		logger.info("Receive an image sharing session invitation");
@@ -196,7 +199,7 @@ public class RichcallService extends ImsService {
 		    		logger.info("Send 606 Not Acceptable");
 		    	}
 		        SipResponse resp = SipMessageFactory.createResponse(invite, 606);
-		        
+
 		        // Send response
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
@@ -207,7 +210,7 @@ public class RichcallService extends ImsService {
 			return;
 		}
 
-		// Test number of session 
+        // Test number of session
 		if (getNumberOfSessions() > 0) {
 			if (logger.isActivated()) {
 				logger.debug("The max number of sharing sessions is achieved: reject the invitation");
@@ -218,7 +221,7 @@ public class RichcallService extends ImsService {
 		    		logger.info("Send 486 Busy here");
 		    	}
 		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        
+
 		        // Send response
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
@@ -228,11 +231,11 @@ public class RichcallService extends ImsService {
 			}
 			return;
 		}
-		
+
 		// Process the session invitation
 		getImsModule().getContentSharingService().receiveImageSharingInvitation(invite);
 	}
-	
+
     /**
      * Receive a capability request (options procedure)
      * 
@@ -260,11 +263,11 @@ public class RichcallService extends ImsService {
         		logger.error("Can't send 200 OK for OPTIONS", e);
         	}
 	    }
-	    
+
 	    // Request also capabilities to the remote if it's an outgoing call
 		if (getImsModule().getCallManager().isConnectedWith(contact) && !getImsModule().getCallManager().isIncomingCall()) {
 			// Outgoing call is received: request capabilities
 			getImsModule().getCapabilityService().requestContactCapabilities(contact);
 		}
-    }		
+    }
 }

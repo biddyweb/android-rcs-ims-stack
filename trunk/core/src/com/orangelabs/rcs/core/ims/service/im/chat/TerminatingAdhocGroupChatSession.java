@@ -38,7 +38,6 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -78,9 +77,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	    	// Send a 180 Ringing response
 			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 			
-			// Send message delivery report, if requested
-			sendSipMessageDeliveryStatus(getDialogPath().getInvite(), ImdnDocument.DELIVERY_STATUS_DELIVERED);
-			
 			// Wait invitation answer
 	    	int answer = waitInvitationAnswer();
 			if (answer == ImsServiceSession.INVITATION_REJECTED) {
@@ -91,9 +87,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
 			} else
@@ -108,9 +104,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
-		    	// Notify listener
-		        if (getListener() != null) {
-	        		getListener().handleSessionAborted();
+		    	// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
 			}
@@ -274,9 +270,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
 
-            	// Notify listener
-    	        if (getListener() != null) {
-    	        	getListener().handleSessionStarted();
+            	// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		getListeners().get(i).handleSessionStarted();
     	        }
             } else {
         		if (logger.isActivated()) {

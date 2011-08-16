@@ -102,11 +102,11 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 			logger.info("Reject session invitation");
 		}
 		
-		// Reject invitation
-		session.rejectSession();
-		
 		// Update rich call history
 		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
+
+		// Reject invitation
+		session.rejectSession();
 	}
 
 	/**
@@ -207,7 +207,10 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        RichCallApiService.removeVideoSharingSession(session.getSessionID());
     }
     
     /**
@@ -233,6 +236,9 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
             }
         }
         listeners.finishBroadcast();		
+        
+        // Remove session from the list
+        RichCallApiService.removeVideoSharingSession(session.getSessionID());
     }
 	
     /**
@@ -259,6 +265,9 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        RichCallApiService.removeVideoSharingSession(session.getSessionID());
     }
 }

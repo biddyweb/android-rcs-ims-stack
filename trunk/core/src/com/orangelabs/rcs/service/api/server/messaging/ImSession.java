@@ -119,21 +119,21 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	
 	/**
 	 * Reject the session invitation
-	 */
+	 */ 
 	public void rejectSession() {
 		if (logger.isActivated()) {
 			logger.info("Reject session invitation");
 		}
 
+		// Update rich messaging history
 		if (isChatGroup()){
 			RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-		}else{
+		} else {
 			RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
 		}
 		
         // Reject invitation
 		session.rejectSession();
-
 	}
 
 	/**
@@ -147,7 +147,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		// Abort the session
 		session.abortSession();
 	}
-	
 	
 	/**
 	 * Get list of participants to the session
@@ -197,8 +196,9 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * Send a text message
 	 * 
 	 * @param text Text message
+	 * @return Message ID
 	 */
-	public void sendMessage(String text) {
+	public String sendMessage(String text) {
 		boolean imdnReportsActivated = RcsSettings.getInstance().isImReportsActivated() && !isChatGroup();
 
 		// Generate a message Id
@@ -209,6 +209,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 
 		// Update rich messaging history
 		RichMessaging.getInstance().addChatMessageInitiation(new InstantMessage(msgId, getRemoteContact(), text, imdnReportsActivated), session);
+		
+		return msgId;
 	}
 
 	/**
@@ -323,7 +325,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        MessagingApiService.removeChatSession(session.getSessionID());
     }
     
     /**
@@ -351,7 +356,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
             	}
             }
         }
-        listeners.finishBroadcast();		
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        MessagingApiService.removeChatSession(session.getSessionID());
     }
 
 	/**
@@ -440,7 +448,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
             	}
             }
         }
-        listeners.finishBroadcast();	
+        listeners.finishBroadcast();
+        
+        // Remove session from the list
+        MessagingApiService.removeChatSession(session.getSessionID());
     }
 
     /**
@@ -545,9 +556,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Add participant request is successful");
 		}
 
-		// Update rich messaging history
-		// TODO
-		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {
@@ -572,9 +580,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Add participant request has failed " + reason);
 		}
 
-		// Update rich messaging history
-		// TODO
-		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {

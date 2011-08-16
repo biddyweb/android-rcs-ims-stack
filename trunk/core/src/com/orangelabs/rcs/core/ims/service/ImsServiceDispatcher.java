@@ -151,7 +151,7 @@ public class ImsServiceDispatcher extends Thread {
     			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_VIDEO_SHARE)) {
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
 	    		// Video streaming
 	    		if (logger.isActivated()) {
 	    			logger.debug("Video content sharing streaming invitation");
@@ -161,8 +161,8 @@ public class ImsServiceDispatcher extends Thread {
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_VIDEO_SHARE) &&
-	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IMAGE_SHARE)) {
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
+	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE)) {
 	    		// Image sharing
 	    		if (logger.isActivated()) {
 	    			logger.debug("Image content sharing transfer invitation");

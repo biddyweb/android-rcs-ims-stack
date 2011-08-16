@@ -35,8 +35,8 @@ import com.orangelabs.rcs.core.TerminalInfo;
 import com.orangelabs.rcs.core.UserAccountException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
@@ -54,7 +54,6 @@ import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.sharing.RichCall;
-import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.service.api.client.IImsApi;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
@@ -62,7 +61,6 @@ import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
-import com.orangelabs.rcs.service.api.client.messaging.MessagingApiIntents;
 import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
 import com.orangelabs.rcs.service.api.client.presence.Geoloc;
 import com.orangelabs.rcs.service.api.client.presence.IPresenceApi;
@@ -70,9 +68,7 @@ import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
 import com.orangelabs.rcs.service.api.client.presence.PresenceApiIntents;
 import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
 import com.orangelabs.rcs.service.api.client.richcall.IRichCallApi;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
 import com.orangelabs.rcs.service.api.client.sip.ISipApi;
-import com.orangelabs.rcs.service.api.client.sip.SipApiIntents;
 import com.orangelabs.rcs.service.api.server.ImsApiService;
 import com.orangelabs.rcs.service.api.server.capability.CapabilityApiService;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
@@ -482,7 +478,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		    	// Update contacts database
 				ContactsManager.getInstance().setContactSharingStatus(contact, status, reason);
 	
-				// Send intent
+				// Broadcast intent
 				Intent intent = new Intent(PresenceApiIntents.PRESENCE_SHARING_CHANGED);
 		    	intent.putExtra("contact", contact);
 		    	intent.putExtra("status", status);
@@ -617,7 +613,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	    	// Update EAB provider
 			ContactsManager.getInstance().setMyInfo(currentPresenceInfo);
 
-    		// Send intent
+    		// Broadcast intent
 	    	Intent intent = new Intent(PresenceApiIntents.MY_PRESENCE_INFO_CHANGED);
 	    	getApplicationContext().sendBroadcast(intent);
     	} catch(Exception e) {
@@ -735,7 +731,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	    		// Update contacts database
 	    		ContactsManager.getInstance().setContactPhotoIcon(contact, null);
 				
-	    		// Send intent
+	    		// Broadcast intent
 				Intent intent = new Intent(PresenceApiIntents.CONTACT_PHOTO_CHANGED);
 		    	intent.putExtra("contact", number);
 				AndroidFactory.getApplicationContext().sendBroadcast(intent);
@@ -752,7 +748,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	    		}
 	    	}    	
 	    	   		    		
-    		// Send intent
+	    	// Broadcast intent
 	    	Intent intent = new Intent(PresenceApiIntents.CONTACT_INFO_CHANGED);
 	    	intent.putExtra("contact", number);
 	    	getApplicationContext().sendBroadcast(intent);
@@ -777,7 +773,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Extract number from contact 
 		String number = PhoneUtils.extractNumberFromUri(contact);
 
-		// Send intent
+		// Broadcast intent containing the new capabilities
     	Intent intent = new Intent(CapabilityApiIntents.CONTACT_CAPABILITIES);
     	intent.putExtra("contact", number);
     	intent.putExtra("capabilities", capabilities);
@@ -866,7 +862,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Extract number from contact 
 		String number = PhoneUtils.extractNumberFromUri(contact);
 		
-        // Notify event listeners
+    	// Broadcast intent related to the received invitation
     	Intent intent = new Intent(PresenceApiIntents.PRESENCE_INVITATION);
     	intent.putExtra("contact", number);
     	getApplicationContext().sendBroadcast(intent);
@@ -882,24 +878,8 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Handle event content sharing transfer invitation");
 		}
 
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-		// Update rich call history
-		RichCall.getInstance().addCall(number, session.getSessionID(),
-    			RichCallData.EVENT_INCOMING, 
-    			session.getContent(),
-    			RichCallData.STATUS_STARTED);
-		
-        // Notify event listeners
-    	Intent intent = new Intent(RichCallApiIntents.IMAGE_SHARING_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("filename", session.getContent().getName());
-    	intent.putExtra("filesize", session.getContent().getSize());
-    	intent.putExtra("filetype", session.getContent().getEncoding());
-    	getApplicationContext().sendBroadcast(intent);		
+		// Broadcast the invitation
+		richcallApi.receiveImageSharingInvitation(session);
     }
     
     /**
@@ -912,22 +892,8 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Handle event content sharing streaming invitation");
 		}
 
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-		// Update rich call history
-		RichCall.getInstance().addCall(number, session.getSessionID(),
-    			RichCallData.EVENT_INCOMING, 
-    			session.getContent(),
-    			RichCallData.STATUS_STARTED);
-		
-        // Notify event listeners
-    	Intent intent = new Intent(RichCallApiIntents.VIDEO_SHARING_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("videotype", session.getContent().getEncoding());
-    	getApplicationContext().sendBroadcast(intent);		
+		// Broadcast the invitation
+		richcallApi.receiveVideoSharingInvitation(session);
     }
 
 	/**
@@ -940,30 +906,8 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Handle event file transfer invitation");
 		}
 		
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-		// Set the file transfer session ID from the chat session if a chat already exist
-		String ftSessionId = session.getSessionID();
-		String chatSessionId = ftSessionId;
-		Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(number);
-		if (chatSessions.size() > 0) {
-			ChatSession chatSession = chatSessions.lastElement();
-			chatSessionId = chatSession.getSessionID();
-		}
-		
-		// Update rich messaging history
-    	RichMessaging.getInstance().addFileTransferInvitation(number, chatSessionId, ftSessionId, session.getContent());
-    	
-        // Notify event listeners
-    	Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("filename", session.getContent().getName());
-    	intent.putExtra("filesize", session.getContent().getSize());
-    	intent.putExtra("filetype", session.getContent().getEncoding());
-    	getApplicationContext().sendBroadcast(intent);
+    	// Broadcast the invitation
+    	messagingApi.receiveFileTransferInvitation(session);
 	}
     
 	/**
@@ -975,21 +919,9 @@ public class RcsCoreService extends Service implements CoreListener {
 		if (logger.isActivated()) {
 			logger.debug("Handle event receive 1-1 chat session invitation");
 		}
-
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-		// Update rich messaging history
-		RichMessaging.getInstance().addChatInvitation(session);
-
-    	// Notify event listeners
-    	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("subject", session.getSubject());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("isChatGroup", false);
-    	getApplicationContext().sendBroadcast(intent);
+		
+    	// Broadcast the invitation
+		messagingApi.receiveOneOneChatInvitation(session);
     }
 
     /**
@@ -1002,22 +934,25 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Handle event receive ad-hoc group chat session invitation");
 		}
 
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-		// Update rich messaging history
-		RichMessaging.getInstance().addChatInvitation(session);
-
-    	// Notify event listeners
-    	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("subject", session.getSubject());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("isChatGroup", true);
-    	getApplicationContext().sendBroadcast(intent);
+    	// Broadcast the invitation
+		messagingApi.receiveGroupChatInvitation(session);
 	}
     
+    /**
+     * One-to-one chat session extended to a group chat session
+     * 
+     * @param groupSession Group chat session
+     * @param oneoneSession 1-1 chat session
+     */
+    public void handleOneOneChatSessionExtended(GroupChatSession groupSession, OneOneChatSession oneoneSession) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event 1-1 chat session extended");
+		}
+
+    	// Broadcast the event
+		messagingApi.extendOneOneChatSession(groupSession, oneoneSession);
+    }
+	
     /**
      * New SIP session invitation
      * 
@@ -1028,15 +963,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Handle event receive SIP session invitation");
 		}
 		
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-    	// Notify event listeners
-    	Intent intent = new Intent(SipApiIntents.SESSION_INVITATION);
-		intent.setType(FeatureTags.FEATURE_RCSE + "/" + session.getFeatureTag());
-    	intent.putExtra("contact", number);
-    	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("sessionId", session.getSessionID());
-    	getApplicationContext().sendBroadcast(intent);    	
+		// Broadcast the invitation
+		sipApi.receiveSipSessionInvitation(session);
     }    
 }

@@ -33,4 +33,9 @@ public interface MessagingApiIntents {
      * Intent broadcasted when a new chat invitation has been received
      */
 	public final static String CHAT_INVITATION = "com.orangelabs.rcs.messaging.CHAT_INVITATION";
+
+    /**
+     * Intent broadcasted when a 1-1 chat session has been replaced by a chat group session
+     */
+	public final static String CHAT_SESSION_REPLACED = "com.orangelabs.rcs.messaging.CHAT_SESSION_REPLACED";
 }

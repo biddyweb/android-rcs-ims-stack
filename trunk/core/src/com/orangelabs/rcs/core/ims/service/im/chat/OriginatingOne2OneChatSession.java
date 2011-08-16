@@ -134,16 +134,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		        if (logger.isActivated()) {
 		        	logger.info("Send INVITE");
 		        }
-		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		multipart,
-		        		boundary);
-		        
-		        // Add a subject header
-	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-
-	        	// Add IMDN headers
-		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+		        invite = createMultipartInviteRequest(multipart);
 	    	} else {
 				// Set the local SDP part in the dialog path
 		    	getDialogPath().setLocalContent(sdp);
@@ -152,9 +143,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		        if (logger.isActivated()) {
 		        	logger.info("Send INVITE");
 		        }
-		        invite = SipMessageFactory.createInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		sdp);
+		        invite = createInviteRequest(sdp);
 	    	}
 
 	        // Set initial request in the dialog path
@@ -170,6 +159,49 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
         	// Unexpected error
 			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}		
+	}
+	
+	/**
+	 * Create INVITE request
+	 * 
+	 * @param content Content part
+	 * @return Request
+	 * @throws SipException
+	 */
+	private SipRequest createMultipartInviteRequest(String content) throws SipException {
+        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+        		content,
+        		boundary);
+        
+        // Add a subject header
+    	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+
+    	// Add IMDN headers
+        addImdnHeaders(invite, getFirstMessage().getMessageId());
+        
+        // Add a contribution ID header
+        invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 
+
+        return invite;
+	}
+	
+	/**
+	 * Create INVITE request
+	 * 
+	 * @param content Content part
+	 * @return Request
+	 * @throws SipException
+	 */
+	private SipRequest createInviteRequest(String content) throws SipException {
+        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(), 
+        		InstantMessagingService.CHAT_FEATURE_TAGS, 
+        		content);
+
+	    // Add a contribution ID header
+	    invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 
+	
+	    return invite;
 	}
 	
 	/**
@@ -294,9 +326,9 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
         		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
         	}
         	
-			// Notify listener
-	        if (getListener() != null) {
-	        	getListener().handleSessionStarted();
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		getListeners().get(i).handleSessionStarted();
 	        }
 		} catch(Exception e) {
         	if (logger.isActivated()) {
@@ -337,23 +369,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        // If there is a first message then builds a multipart content else builds a SDP content
 	    	SipRequest invite; 
 	    	if (getFirstMessage() != null) {
-		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent(),
-		        		boundary);
-		        
-		        // Add a subject header
-	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-
-	        	// Add IMDN headers
-		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+		        invite = createMultipartInviteRequest(getDialogPath().getLocalContent());
 	    	} else {
-		        invite = SipMessageFactory.createInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent());
+		        invite = createInviteRequest(getDialogPath().getLocalContent());
 	    	}
 
-	    	// Reset initial request in the dialog path
+	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
 	        // Set the Proxy-Authorization header
@@ -406,23 +427,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        // If there is a first message then builds a multipart content else builds a SDP content
 	    	SipRequest invite; 
 	    	if (getFirstMessage() != null) {
-		        invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent(),
-		        		boundary);
-		        
-		        // Add a subject header
-	        	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-
-	        	// Add IMDN headers
-		        addImdnHeaders(invite, getFirstMessage().getMessageId());
+		        invite = createMultipartInviteRequest(getDialogPath().getLocalContent());
 	    	} else {
-		        invite = SipMessageFactory.createInvite(getDialogPath(), 
-		        		InstantMessagingService.CHAT_FEATURE_TAGS, 
-		        		getDialogPath().getLocalContent());
+		        invite = createInviteRequest(getDialogPath().getLocalContent());
 	    	}
 
-	    	// Reset initial request in the dialog path
+	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        
 	        // Set the Proxy-Authorization header

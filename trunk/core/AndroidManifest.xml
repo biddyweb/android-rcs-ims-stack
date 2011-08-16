@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1"
- android:versionName="2.2.8" package="com.orangelabs.rcs">
+ android:versionName="2.2.9" package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
 
@@ -28,10 +28,15 @@
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
 	 
 	<permission android:name="com.orangelabs.rcs.permission.RCS"
-        android:label="@string/rcs_core_application_title"
-        android:description="@string/rcs_core_rcs_notification_title"
+        android:label="@string/rcs_core_permission"
+        android:description="@string/rcs_core_permission_desc"
         android:protectionLevel="signature" />	 
-	 
+ 
+	<permission android:name="com.orangelabs.rcs.permission.RCS_EXTENSION"
+        android:label="@string/rcs_core_permission_ext"
+        android:description="@string/rcs_core_permission_ext_desc"
+        android:protectionLevel="normal" />	 
+
 	<application android:icon="@drawable/rcs_icon" android:label="@string/rcs_core_application_title">  
 		
 		<!-- RCS service -->	

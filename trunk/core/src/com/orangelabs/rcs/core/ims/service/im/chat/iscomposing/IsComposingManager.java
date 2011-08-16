@@ -25,6 +25,7 @@ import java.util.TimerTask;
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -82,8 +83,8 @@ public class IsComposingManager {
 			IsComposingInfo isComposingInfo = parser.getIsComposingInfo();
 			if ((isComposingInfo != null) && isComposingInfo.isStateActive()) {
 				// Send status message to "active"
-				if (session.getListener() != null) {
-					session.getListener().handleIsComposingEvent(contact, true);
+    	    	for(int j=0; j < session.getListeners().size(); j++) {
+    	    		((ChatSessionListener)session.getListeners().get(j)).handleIsComposingEvent(contact, true);
 				}
 				
 				// Start the expiration timer
@@ -94,8 +95,8 @@ public class IsComposingManager {
 				}
 			} else {
 				// Send status message to "idle"
-				if (session.getListener() != null) {
-					session.getListener().handleIsComposingEvent(contact, false);
+    	    	for(int j=0; j < session.getListeners().size(); j++) {
+    	    		((ChatSessionListener)session.getListeners().get(j)).handleIsComposingEvent(contact, false);
 				}
 
 				// Stop the expiration timer
@@ -117,8 +118,8 @@ public class IsComposingManager {
 	public void receiveIsComposingEvent(String contact, boolean state) {
     	// We just received an instant message, so if composing info was active, it must
 		// be changed to idle. If it was already idle, no need to notify listener again
-		if (session.getListener() != null) {
-			session.getListener().handleIsComposingEvent(contact, state);
+    	for(int j=0; j < session.getListeners().size(); j++) {
+    		((ChatSessionListener)session.getListeners().get(j)).handleIsComposingEvent(contact, state);
 		}
 				
 		// Stop the expiration timer
@@ -182,8 +183,8 @@ public class IsComposingManager {
         	}
         	
 			// Send status message to "idle"
-			if (session.getListener() != null) {
-				session.getListener().handleIsComposingEvent(contact, false);
+	    	for(int j=0; j < session.getListeners().size(); j++) {
+	    		((ChatSessionListener)session.getListeners().get(j)).handleIsComposingEvent(contact, false);
 			}
         	
         	// Terminate the timer thread

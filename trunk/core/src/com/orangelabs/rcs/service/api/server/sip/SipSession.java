@@ -79,23 +79,45 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	}
 
 	/**
-	 * Get feature tags of the service
+	 * Get feature tag of the service
 	 * 
-	 * @return Feature tags
+	 * @return Feature tag
 	 */
-	public String[] getFeatureTags() {
-		// TODO
-		return null;
+	public String getFeatureTag() {
+		return session.getFeatureTag();
 	}	
 	
 	/**
+     * Get SDP answer
+     * 
+     * @return SDP Answer
+     */
+    public String getSdpAnswer() throws RemoteException {
+    	return session.getSdpAnswer();
+    }
+
+    /**
+     * Get SDP offer
+     * 
+     * @return SDP Offer
+     */
+    public String getSdpOffer() throws RemoteException {
+    	return session.getSdpOffer();
+    }
+	
+	/**
 	 * Accept the session invitation
+	 * 
+	 * @param sdpAnswer SDP answer
 	 */
-	public void acceptSession() {
+	public void acceptSession(String sdpAnswer) {
 		if (logger.isActivated()) {
 			logger.info("Accept session invitation");
 		}
 
+		// Set SDP answer
+		session.setSdpAnswer(sdpAnswer);
+		
 		// Accept invitation
 		session.acceptSession();
 	}
@@ -192,6 +214,9 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
             }
         }
         listeners.finishBroadcast();
+        
+        // Remove session from the list
+        SipApiService.removeSipSession(session.getSessionID());
     }
 
     /**
@@ -214,6 +239,9 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
             }
         }
         listeners.finishBroadcast();
+        
+        // Remove session from the list
+        SipApiService.removeSipSession(session.getSessionID());
     }
 
     /**
@@ -238,5 +266,8 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
             }
         }
         listeners.finishBroadcast();
+        
+        // Remove session from the list
+        SipApiService.removeSipSession(session.getSessionID());
     }
 }

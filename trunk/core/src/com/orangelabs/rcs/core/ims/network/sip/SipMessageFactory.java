@@ -1009,7 +1009,7 @@ public class SipMessageFactory {
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
 	        
 	        // Generate the resource list for given participants
-	        String resourceList = ChatUtils.generateResourceListForParticipants(participants);	        
+	        String resourceList = ChatUtils.generateChatResourceList(participants);	        
 	        
 			// Set the message content
 			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "resource-lists+xml");

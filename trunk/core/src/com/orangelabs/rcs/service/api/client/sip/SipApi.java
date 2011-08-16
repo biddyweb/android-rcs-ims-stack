@@ -101,14 +101,14 @@ public class SipApi extends ClientApi {
 	 * 
 	 * @param contact Contact
 	 * @param featureTag Feature tag of the service
-	 * @param sdp SDP offer
+	 * @param sdpOffer SDP offer
 	 * @return Session
 	 * @throws ClientApiException
 	 */
-	public ISipSession initiateSession(String contact, String featureTag, String offer) throws ClientApiException {
+	public ISipSession initiateSession(String contact, String featureTag, String sdpOffer) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateSession(contact, featureTag, offer);
+		    	return coreApi.initiateSession(contact, featureTag, sdpOffer);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

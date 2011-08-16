@@ -25,6 +25,21 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263;
  */
 public class H263Config {
     /**
+     * H263 Codec Name
+     */
+    public final static String CODEC_NAME = "h263-2000";
+
+    /**
+     * Default clock rate
+     */
+    public final static int CLOCK_RATE = 90000;
+
+    /**
+     * Default codec params
+     */
+    public final static String CODEC_PARAMS = "profile=0;level=10";
+
+    /**
      * Default video width
      */
     public final static int VIDEO_WIDTH = 176;

@@ -106,9 +106,6 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	    		logger.info("Initiate a new store & forward session");
 	    	}
 	    	
-	    	// Send a 180 Ringing response
-			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-			
         	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();

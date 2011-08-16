@@ -20,6 +20,7 @@ package com.orangelabs.rcs.service.api.server.richcall;
 
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
 import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
@@ -122,11 +123,11 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 			logger.info("Reject session invitation");
 		}
 
-		// Reject invitation
-		session.rejectSession();
-
 		// Update rich call history
 		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+
+		// Reject invitation
+		session.rejectSession();
 	}
 
 	/**
@@ -215,6 +216,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
             }
         }
         listeners.finishBroadcast();
+        
+        // Remove session from the list
+        RichCallApiService.removeImageSharingSession(session.getSessionID());
     }
 
     /**
@@ -244,6 +248,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 	        }
 	        listeners.finishBroadcast();
   		}
+        
+        // Remove session from the list
+        RichCallApiService.removeImageSharingSession(session.getSessionID());
     }
 
     /**
@@ -271,6 +278,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
             }
         }
         listeners.finishBroadcast();
+        
+        // Remove session from the list
+        RichCallApiService.removeImageSharingSession(session.getSessionID());
     }
 
     /**
