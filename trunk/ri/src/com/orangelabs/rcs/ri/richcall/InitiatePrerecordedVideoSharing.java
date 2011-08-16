@@ -138,7 +138,7 @@ public class InitiatePrerecordedVideoSharing extends Activity {
      * @return Boolean
      */
     public boolean isVideoFormatSupported(Uri uri) {
-    	boolean supported = true;
+    	boolean supported = false;
     	try {
         	// Get video filename
 	    	Cursor cursor = getApplicationContext().getContentResolver().query(uri,
@@ -163,7 +163,6 @@ public class InitiatePrerecordedVideoSharing extends Activity {
 		    		supported = false;
 		    	}
 	    	}
-
     		NativeH263Decoder.DeinitDecoder();
     	} catch(Exception e) {
     		supported = false;

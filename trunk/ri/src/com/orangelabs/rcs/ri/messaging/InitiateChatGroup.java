@@ -151,8 +151,6 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
             // Display a progress dialog
             progressDialog = Utils.showProgressDialog(InitiateChatGroup.this, getString(R.string.label_command_in_progress));
             progressDialog.setOnCancelListener(new OnCancelListener() {
-				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 					Toast.makeText(InitiateChatGroup.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
 					quitSession();
@@ -305,15 +303,12 @@ public class InitiateChatGroup extends Activity implements OnItemClickListener {
         	public void run() {
             	try {
                     if (chatSession != null) {
-                    	try {
-                    		chatSession.removeSessionListener(chatSessionListener);
-                    		chatSession.cancelSession();
-                    	} catch(Exception e) {
-                    	}
-                		chatSession = null;
-                    }
+                		chatSession.removeSessionListener(chatSessionListener);
+                		chatSession.cancelSession();
+                	}
             	} catch(Exception e) {
             	}
+        		chatSession = null;
         	}
         };
         thread.start();

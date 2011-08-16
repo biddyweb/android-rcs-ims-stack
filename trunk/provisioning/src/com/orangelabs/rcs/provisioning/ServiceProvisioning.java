@@ -27,8 +27,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 
@@ -39,6 +41,13 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  */
 public class ServiceProvisioning extends Activity {
 	/**
+	 * IM session start modes
+	 */
+    private static final String[] IM_SESSION_START_MODES = {
+    	"1", "2"
+    };
+    
+    /**
 	 * Content resolver
 	 */
 	private ContentResolver cr;
@@ -99,6 +108,16 @@ public class ServiceProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
         txt.setText(settings.get("MaxFileTransferSessions"));
 
+		Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
+		if (RcsSettings.getInstance().getImSessionStartMode() == 1) {
+			spinner.setSelection(0);
+		} else {
+			spinner.setSelection(1);
+		}
+        
         CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
         check.setChecked(Boolean.parseBoolean(settings.get("SmsFallbackService")));
 
@@ -158,6 +177,13 @@ public class ServiceProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
 				Provisioning.writeParameter(cr, "MaxFileTransferSessions", txt.getText().toString());
 
+				Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
+				if (spinner.getSelectedItemId() == 0) {
+					Provisioning.writeParameter(cr, "ImSessionStart", "1");
+				} else {
+					Provisioning.writeParameter(cr, "ImSessionStart", "2");
+				}
+				
 		        CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
 				Provisioning.writeParameter(cr, "SmsFallbackService", Boolean.toString(check.isChecked()));
 

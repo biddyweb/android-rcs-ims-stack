@@ -185,8 +185,6 @@ public class InitiateImageSharing extends Activity {
             // Display a progress dialog
             progressDialog = Utils.showProgressDialog(InitiateImageSharing.this, getString(R.string.label_command_in_progress));            
             progressDialog.setOnCancelListener(new OnCancelListener() {
-				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 					Toast.makeText(InitiateImageSharing.this, getString(R.string.label_image_sharing_canceled), Toast.LENGTH_SHORT).show();
 					quitSession();
@@ -392,15 +390,12 @@ public class InitiateImageSharing extends Activity {
 	    	public void run() {
 	        	try {
 	                if (sharingSession != null) {
-	                	try {
-	                		sharingSession.cancelSession();
-	                		sharingSession.removeSessionListener(sharingSessionListener);
-	                	} catch(Exception e) {
-	                		sharingSession = null;
-	                	}
+                		sharingSession.cancelSession();
+                		sharingSession.removeSessionListener(sharingSessionListener);
 	                }
 	        	} catch(Exception e) {
 	        	}
+        		sharingSession = null;
 	    	}
 	    };
 	    thread.start();

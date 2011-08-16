@@ -189,8 +189,6 @@ public class InitiateFileTransfer extends Activity {
             // Display a progress dialog
             progressDialog = Utils.showProgressDialog(InitiateFileTransfer.this, getString(R.string.label_command_in_progress));
             progressDialog.setOnCancelListener(new OnCancelListener() {
-				
-				@Override
 				public void onCancel(DialogInterface dialog) {
 					Toast.makeText(InitiateFileTransfer.this, getString(R.string.label_ft_initiation_canceled), Toast.LENGTH_SHORT).show();
 					quitSession();
@@ -394,15 +392,12 @@ public class InitiateFileTransfer extends Activity {
         	public void run() {
             	try {
                     if (transferSession != null) {
-                    	try {
-                    		transferSession.removeSessionListener(cshSessionListener);
-                    		transferSession.cancelSession();
-                    	} catch(Exception e) {
-                    	}
-                    	transferSession = null;
+                		transferSession.removeSessionListener(cshSessionListener);
+                		transferSession.cancelSession();
                     }
             	} catch(Exception e) {
             	}
+            	transferSession = null;
         	}
         };
         thread.start();
