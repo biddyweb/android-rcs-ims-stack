@@ -533,16 +533,17 @@ public class SipInterface implements SipListener {
      */
     public void setServiceRoutePath(ListIterator<Header> routes) {
     	serviceRoutePath.clear();
-    	if ((routes != null) && (routes.hasNext())) {
+		
+    	// Always add the outbound proxy
+    	serviceRoutePath.addElement(getDefaultRoute());
+		
+    	if (routes != null) {
     		// Add the received service route path
     		while(routes.hasNext()) {
     			ExtensionHeader route = (ExtensionHeader)routes.next();
     			serviceRoutePath.addElement(route.getValue());
     		}
-        } else {
-    		// Add the default route path
-    		serviceRoutePath.addElement(getDefaultRoute());
-        }
+    	}    	    	
 	}
 
     /**
