@@ -9,7 +9,7 @@ Rich call API<br>
 Rich messaging API<br>
 Event log API<br>
 RCS Settings API<br>
-
+SIP API<br>
 
 = Details =
 
