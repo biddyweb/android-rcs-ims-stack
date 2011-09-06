@@ -78,6 +78,9 @@ public class PhoneUtils {
 		String phoneNumber = PhoneNumberUtils.stripSeparators(number);		
 
 		// Format into international
+		if (phoneNumber.startsWith("0033")) {
+			phoneNumber = COUNTRY_CODE + phoneNumber.substring(4);
+		} else
 		if (COUNTRY_CODE.equals("+33") && phoneNumber.startsWith("0")) {
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(1);
 		} else

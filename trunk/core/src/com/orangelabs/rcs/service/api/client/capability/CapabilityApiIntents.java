@@ -35,5 +35,5 @@ public interface CapabilityApiIntents {
 	/**
 	 * RCS-e extension prefix
 	 */
-	public final static String RCSE_EXTENSION_ORANGE_PREFIX = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";	    
+	public final static String RCSE_EXTENSION_PREFIX = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";	    
 }

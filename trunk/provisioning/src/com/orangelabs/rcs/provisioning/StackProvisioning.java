@@ -160,10 +160,7 @@ public class StackProvisioning extends Activity {
             Provisioning.writeParameter(cr, "TlsCertificateIntermediate", "");
         }
 
-        EditText txt = (EditText)this.findViewById(R.id.ImsConnectionPollingPeriod);
-        txt.setText(settings.get("ImsConnectionPollingPeriod"));
-
-        txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
+        EditText txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
         txt.setText(settings.get("ImsServicePollingPeriod"));
 
         txt = (EditText)this.findViewById(R.id.SipListeningPort);
@@ -187,7 +184,13 @@ public class StackProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.RegisterExpirePeriod);
         txt.setText(settings.get("RegisterExpirePeriod"));
 
-	    txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
+        txt = (EditText)this.findViewById(R.id.RegisterRetryBaseTime);
+        txt.setText(settings.get("RegisterRetryBaseTime"));
+
+        txt = (EditText)this.findViewById(R.id.RegisterRetryMaxTime);
+        txt.setText(settings.get("RegisterRetryMaxTime"));
+
+        txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
         txt.setText(settings.get("PublishExpirePeriod"));
 
         txt = (EditText)this.findViewById(R.id.RevokeTimeout);
@@ -214,7 +217,7 @@ public class StackProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
         txt.setText(settings.get("CapabilityPollingPeriod"));
 
-    	CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
+        CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
         check.setChecked(Boolean.parseBoolean(settings.get("SipKeepAlive")));
 
         check = (CheckBox)this.findViewById(R.id.PermanentState);
@@ -276,10 +279,7 @@ public class StackProvisioning extends Activity {
 						break;
                 }
 
-				EditText txt = (EditText)this.findViewById(R.id.ImsConnectionPollingPeriod);
-				Provisioning.writeParameter(cr, "ImsConnectionPollingPeriod", txt.getText().toString());
-
-		        txt = (EditText)this.findViewById(R.id.SipListeningPort);
+		        EditText txt = (EditText)this.findViewById(R.id.SipListeningPort);
 				Provisioning.writeParameter(cr, "SipListeningPort", txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
@@ -300,7 +300,13 @@ public class StackProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.RegisterExpirePeriod);
 				Provisioning.writeParameter(cr, "RegisterExpirePeriod", txt.getText().toString());
 
-			    txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
+		        txt = (EditText)this.findViewById(R.id.RegisterRetryBaseTime);
+				Provisioning.writeParameter(cr, "RegisterRetryBaseTime", txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.RegisterRetryMaxTime);
+				Provisioning.writeParameter(cr, "RegisterRetryMaxTime", txt.getText().toString());
+
+				txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
 				Provisioning.writeParameter(cr, "PublishExpirePeriod", txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RevokeTimeout);
@@ -326,7 +332,7 @@ public class StackProvisioning extends Activity {
 
 				txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
 				Provisioning.writeParameter(cr, "CapabilityPollingPeriod", txt.getText().toString());
-
+				
 		    	CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
 				Provisioning.writeParameter(cr, "SipKeepAlive", Boolean.toString(check.isChecked()));
 

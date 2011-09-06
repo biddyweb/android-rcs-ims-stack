@@ -87,6 +87,15 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 	
 	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		return session.getSessionState();
+	}
+	
+	/**
 	 * Is chat group
 	 * 
 	 * @return Boolean
@@ -133,7 +142,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		}
 		
         // Reject invitation
-		session.rejectSession();
+		session.rejectSession(486);
 	}
 
 	/**
@@ -170,8 +179,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Add participant " + participant + " to the session");
 		}
 		
-		// TODO: check max participants
-		
 		// Add a participant to the session
 		session.addParticipant(participant);
 	}
@@ -186,8 +193,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Add " + participants.size() + " participants to the session");
 		}
 		
-		// TODO: check max participants
-
 		// Add a list of participants to the session
 		session.addParticipants(participants);
 	}
@@ -205,7 +210,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		String msgId = ChatUtils.generateMessageId();
 
 		// Send text message
-		session.sendTextMessage(text,msgId,imdnReportsActivated);
+		session.sendTextMessage(text, msgId, imdnReportsActivated);
 
 		// Update rich messaging history
 		RichMessaging.getInstance().addChatMessageInitiation(new InstantMessage(msgId, getRemoteContact(), text, imdnReportsActivated), session);

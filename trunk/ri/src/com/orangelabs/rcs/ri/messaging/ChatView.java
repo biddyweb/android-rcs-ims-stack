@@ -26,6 +26,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,6 +50,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
+import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -81,6 +83,11 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private Handler handler = new Handler();
     
     /**
+     * Progress dialog
+     */
+    private Dialog progressDialog = null;
+    
+    /**
 	 * Message composer
 	 */
     private EditText mUserText;
@@ -111,15 +118,15 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private IChatSession chatSession = null;
 
     /**
-     * Is chat group
+     * Chat type
      */
-    private boolean chatGroup = false;
+    private boolean isGroupChat = false;
     
     /**
-     * Session ID 
+     * Participants
      */
-    private String sessionId;
-    
+     private ArrayList<String> participants;
+       
     /**
      * Utility class to manage IsComposing status
      */
@@ -186,20 +193,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		// Set button listener
         Button btn = (Button)findViewById(R.id.send_button);
         btn.setOnClickListener(this);
-        
-        // Get chat session-ID
-		sessionId = getIntent().getStringExtra("sessionId");
-		// Get subject
-		String subject = getIntent().getStringExtra("subject");
-		if (subject!=null && subject.trim().length()>0){
-			// Add subject to the message history as first message
-			if (getIntent().getBooleanExtra("originating", false)){
-				mAdapter.add("[Me] " + subject);
-			}else{
-				mAdapter.add("["+getIntent().getStringExtra("contact")+"] " + subject);
-			}
-		}
-        
+               
 		// Instanciate messaging API
         messagingApi = new MessagingApi(getApplicationContext());
         messagingApi.addApiEventListener(this);
@@ -285,25 +279,76 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         return false;
     }
     
+	/**
+	 * Hide progress dialog
+	 */
+    public void hideProgressDialog() {
+    	if (progressDialog != null && progressDialog.isShowing()) {
+			progressDialog.dismiss();
+			progressDialog = null;
+		}
+    }        
+    
+    /***
+     * Send message
+     * 
+     * @param msg Message
+     * @throws RemoteException
+     */
+    private void sendMessage(final String msg) throws RemoteException {
+        // Test if the session has been created or not
+		if (chatSession == null) {
+			// Initiate the chat session in background
+	        Thread thread = new Thread() {
+	        	public void run() {
+	            	try {
+	            		if (isGroupChat) {
+	            			chatSession = messagingApi.initiateAdhocGroupChatSession(participants, msg);
+	            		} else {
+	            			chatSession = messagingApi.initiateOne2OneChatSession(participants.get(0), msg);
+	            		}
+	            		chatSession.addSessionListener(chatSessionListener);
+	            	} catch(Exception e) {
+	            		handler.post(new Runnable(){
+	            			public void run(){
+	            				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_invitation_failed));		
+	            			}
+	            		});
+	            	}
+	        	}
+	        };
+	        thread.start();
+
+	        // Display a progress dialog
+	        progressDialog = Utils.showProgressDialog(ChatView.this, getString(R.string.label_command_in_progress));
+	        progressDialog.setOnCancelListener(new OnCancelListener() {
+				public void onCancel(DialogInterface dialog) {
+					Toast.makeText(ChatView.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
+					quitSession();
+				}
+			});
+        } else {
+    		// Send the text to remote
+        	chatSession.sendMessage(msg);
+        }    	
+		
+        // Warn the composing manager that the message was sent
+		composingManager.messageWasSent();
+    }
+    
+    
     /**
      * Send a text and display it
      */
     private void sendText() {
-    	if (chatSession == null) {
-    		return;
-    	}
-    	
-        String text = mUserText.getText().toString();
+        final String text = mUserText.getText().toString();
         if ((text == null) || (text.length() == 0)) {
         	return;
         }
         
-        // Warn the composing manager that the message was sent
-		composingManager.messageWasSent();
-		
         try {
-        	// Send the text to remote
-        	chatSession.sendMessage(text);
+			// Send text message
+        	sendMessage(text);
         	
         	// Add text to the message history
             mAdapter.add("[Me] " + text);
@@ -317,25 +362,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
      * Send a wizz and display it
      */
     private void sendWizz() {
-    	if (chatSession == null) {
-    		return;
-    	}
-    	
-        // Warn the composing manager that the message was sent
-		composingManager.messageWasSent();
-		
         try {
-        	// Send the text to remote
-        	chatSession.sendMessage(WIZZ_MSG);
+			// Send text message
+        	sendMessage(WIZZ_MSG);
         	
-        	// Add text to the message history
+			// Add text to the message history
             mAdapter.add("[Me] " + getString(R.string.label_chat_wizz));
         } catch(Exception e) {
         	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
         }
-    }
-    
-    
+    }    
     /**
      * Mark a message as "displayed"
      * 
@@ -344,7 +380,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private void markMessageAsDisplayed(InstantMessage msg){
     	try {
     		chatSession.setMessageDeliveryStatus(msg.getMessageId(), msg.getRemote(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
-    	}catch(RemoteException e){
+    	} catch(RemoteException e) {
     	}
     }
 
@@ -356,42 +392,41 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     	events.markChatMessageAsRead(msg.getMessageId(), true);
     }
     
-    /**
-     * Receive a text and display it
-     * 
-     * @param msg Instant message
-     */
-    private void receiveText(InstantMessage msg) {
-    	// Add text to the message history
-		String number = PhoneUtils.extractNumberFromUri(msg.getRemote());
-        mAdapter.add("[" + number + "] " + msg.getTextMessage());
-    }
-    
-    /**
-     * Receive a notification and display it
-     * 
-     * @param notif Text
-     */
-    private void receiveNotif(String notif) {
-    	// Add text to the message history
-        mAdapter.add("[CHAT] " + notif);
+	/**
+	 * Display received message
+	 * 
+	 * @param contact Contact
+	 * @param msg Message
+	 */
+    private void displayReceivedMessage(String contact, String msg) {
+		if (msg == null || msg.trim().length() == 0) {
+			return;
+		}
+    	
+		if (msg.equals(WIZZ_MSG)) {
+	    	// Add Wizz to the message history
+			String number = PhoneUtils.extractNumberFromUri(contact);
+	        mAdapter.add("[" + number + "] " + getString(R.string.label_chat_wizz));
+	        
+	        // Vibrate
+	        Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+	        vibrator.vibrate(600);
+		} else {
+			String number = PhoneUtils.extractNumberFromUri(contact);
+	        mAdapter.add("[" + number + "] " + msg);
+		}
     }
 
     /**
-     * Receive a Wizz and play it
+     * Display received notification
      * 
-     * @param msg Instant message
+     * @param notif Notification
      */
-    private void receiveWizz(InstantMessage msg) {
-    	// Add Wizz to the message history
-		String number = PhoneUtils.extractNumberFromUri(msg.getRemote());
-        mAdapter.add("[" + number + "] " + getString(R.string.label_chat_wizz));
-        
-        // Vibrate
-        Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
-        vibrator.vibrate(600);
+    private void displayReceiveNotif(String notif) {
+    	// Add text to the message history
+        mAdapter.add(notif);
     }
-    
+
     /**
      * API disabled
      */
@@ -410,18 +445,43 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		handler.post(new Runnable() { 
 			public void run() {
 	    		try {
-	    			// Register to receive session events
-					chatSession = messagingApi.getChatSession(sessionId);    			
-					chatSession.addSessionListener(chatSessionListener);
-					
-					// Set UI title
-					chatGroup = chatSession.isChatGroup();
-					if (chatGroup) {
-						setTitle(getString(R.string.title_chat_view_group));
-					} else {
-						setTitle(getString(R.string.title_chat_view_oneone) + " " +
-								PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact())); 
-					}		
+	    	        // Test if there is an existing session
+	    	        String sessionId = getIntent().getStringExtra("sessionId");
+	    			if (sessionId != null) {
+		    			// Register to receive session events
+						chatSession = messagingApi.getChatSession(sessionId);    			
+						if (chatSession == null) {
+			    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_session_has_expired));
+			    			return;
+						}
+						chatSession.addSessionListener(chatSessionListener);
+						
+			            // Set list of participants
+						participants = new ArrayList<String>(chatSession.getParticipants());
+
+			            // Set chat type
+						isGroupChat = chatSession.isChatGroup();
+						
+						// Display first message from the subject
+		    			String firstMessage = chatSession.getSubject();
+		    			String contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
+	    				displayReceivedMessage(contact, firstMessage);
+	    			} else {
+		    	        // Set list of participants
+		    	        participants = getIntent().getStringArrayListExtra("participants");
+
+		    	        // Set chat type
+						isGroupChat = getIntent().getBooleanExtra("isChatGroup", false);
+	    			}
+	    			
+	    	        // Set UI title
+	    	        if (isGroupChat) {
+	    				setTitle(getString(R.string.title_chat_view_group));
+	    	        } else {
+	    				setTitle(getString(R.string.title_chat_view_oneone) + " " +
+	    						PhoneUtils.extractNumberFromUri(participants.get(0))); 
+	    			}
+	    			
 	    		} catch(Exception e) {
 	    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_failed));
 	    		}
@@ -464,6 +524,12 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
 		// Session is started
 		public void handleSessionStarted() {
+			handler.post(new Runnable() { 
+				public void run() {
+					// Hide progress dialog
+					hideProgressDialog();
+				}
+			});
 		}
 	
 		// Session has been aborted
@@ -480,27 +546,26 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated));
+					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
 				}
 			});
 		}
 		
 		// New text message received
 		public void handleReceiveMessage(final InstantMessage msg) {
-			
-			if (msg.isImdnDisplayedRequested()){
-				if (!isInBackground){
+			if (msg.isImdnDisplayedRequested()) {
+				if (!isInBackground) {
 					// We received the message, mark it as displayed if the view is not in background
 					markMessageAsDisplayed(msg);
-				}else{
+				} else {
 					// We save this message and will mark it as displayed when the activity resumes
 					imReceivedInBackgroundToBeDisplayed.add(msg);
 				}
-			}else{
-				if (!isInBackground){
+			} else {
+				if (!isInBackground) {
 					// We received the message, mark it as read if the view is not in background
 					markMessageAsRead(msg);
-				}else{
+				} else {
 					// We save this message and will mark it as read when the activity resumes
 					imReceivedInBackgroundToBeRead.add(msg);
 				}
@@ -508,11 +573,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			
 			handler.post(new Runnable() { 
 				public void run() {
-					if (msg.getTextMessage().equals(WIZZ_MSG)) {
-						receiveWizz(msg);
-					} else {
-						receiveText(msg);
-					}
+					displayReceivedMessage(msg.getRemote(), msg.getTextMessage());
 				}
 			});
 		}		
@@ -547,7 +608,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			handler.post(new Runnable() {
 				public void run(){
 					String number = PhoneUtils.extractNumberFromUri(contact);
-					receiveNotif(number + " is " + state);
+					displayReceiveNotif(number + " is " + state);
 				}
 			});
 		}
@@ -559,7 +620,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 					// For now we do not display the messages except if it is "displayed"
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)){
 						String number = PhoneUtils.extractNumberFromUri(contact);
-						receiveNotif(getString(R.string.label_receive_displayed_delivery_status, number));
+						displayReceiveNotif(getString(R.string.label_receive_displayed_delivery_status, number));
 					}
 				}
 			});
@@ -569,7 +630,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleAddParticipantSuccessful() {
 			handler.post(new Runnable() {
 				public void run(){
-					receiveNotif(getString(R.string.label_add_participant_success));
+					displayReceiveNotif(getString(R.string.label_add_participant_success));
 				}
 			});
 		}
@@ -578,7 +639,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleAddParticipantFailed(String reason) {
 			handler.post(new Runnable() {
 				public void run(){
-					receiveNotif(getString(R.string.label_add_participant_failed));
+					displayReceiveNotif(getString(R.string.label_add_participant_failed));
 				}
 			});
 		}
@@ -658,6 +719,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater=new MenuInflater(getApplicationContext());
 		inflater.inflate(R.menu.menu_chat_view, menu);
+		
 		return true;
 	}
     
@@ -690,7 +752,11 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			break;
 
 		case R.id.menu_add_participant:
-			addParticipants();
+			if (chatSession != null) {
+				addParticipants();
+			} else {
+				Utils.showMessage(ChatView.this, getString(R.string.label_session_not_yet_started));
+			}
 			break;
 			
 		case R.id.menu_close_session:
@@ -843,15 +909,21 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}
 		@Override
 		public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+		
 		@Override
 		public void onTextChanged(CharSequence s, int start, int before, int count) {}
     };
     
+    /**
+     * Update the is composing status
+     * 
+     * @param isTyping Is compoing status
+     */
 	public void setTypingStatus(boolean isTyping){
-		if (chatSession!=null){
+		if (chatSession != null) {
 			try {
 				chatSession.setIsComposingStatus(isTyping);
-			} catch (RemoteException e) {
+			} catch(Exception e) {
 			}
 		}
 	}
@@ -878,9 +950,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		private final static int ACTIVE_MESSAGE_NEEDS_REFRESH = 4;
 		private final static int IS_IDLE = 5;
 
-		private class ClockHandler extends Handler{
-
-			//TODO handle when several chat sessions are active
+		private class ClockHandler extends Handler {
 			public void handleMessage(Message msg){
 				switch(msg.what){
 					case IS_STARTING_COMPOSING :{
@@ -939,13 +1009,13 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		/**
 		 * Edit text has activity
 		 */
-		public void hasActivity(){
+		public void hasActivity() {
 			// We have activity on the edit text
 			if (!isComposing){
 				// If we were not already in isComposing state
 				handler.sendEmptyMessage(IS_STARTING_COMPOSING);
 				isComposing = true;
-			}else{
+			} else {
 				// We already were composing
 				handler.sendEmptyMessage(IS_STILL_COMPOSING);
 			}

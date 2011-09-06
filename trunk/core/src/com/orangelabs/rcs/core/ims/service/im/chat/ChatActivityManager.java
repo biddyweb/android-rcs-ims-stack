@@ -18,28 +18,21 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Chat activity manager which manages the idle state of the session. It maintains a timer
- * that is canceled and restarted when the session has activity, ie when MSRP chunks are
+ * that is canceled and restarted when the session has activity, i.e. when MSRP chunks are
  * received or emitted. If the timer expires, the session is aborted.
  */
-public class ChatActivityManager {
+public class ChatActivityManager extends PeriodicRefresher {
     /**
-     * Timer for expiration timeout
+     * Last activity timestamp
      */
-    private Timer timer = new Timer();
-    
-    /**
-     * Expiration timer task
-     */
-    private ExpirationTimer timerTask = null;
+    private long activityTimesamp = 0L;
 
     /**
      * Session timeout (in seconds)
@@ -65,41 +58,64 @@ public class ChatActivityManager {
     	this.session = session;
     	this.timeout = RcsSettings.getInstance().getChatIdleDuration();
     }
-    
-    /**
-     * Restart the inactivity timer
-     */
-    public void restartInactivityTimer() {
-    	// Remove old timer
-		if (timerTask != null) {
-			timerTask.cancel();
-			timerTask = null;
-		}
 
-    	// Start a new one
-    	timerTask = new ExpirationTimer();
-    	timer = new Timer();
-    	timer.schedule(timerTask, timeout*1000);	
+    /**
+     * Update the session activity
+     */
+    public synchronized void updateActivity() {
+    	activityTimesamp = System.currentTimeMillis();
     }
     
     /**
-     * Internal expiration timer
+     * Start manager 
      */
-    private class ExpirationTimer extends TimerTask {
-    	
-    	public ExpirationTimer(){
+    public void start() {
+    	if (logger.isActivated()) {
+    		logger.info("Start the activity manager for " + timeout + "s");
     	}
+
+    	// Reset the inactivity timestamp
+    	updateActivity();
     	
-        public void run() {
+    	// Start a timer to check if the inactivity period has been reach or not each 10seconds
+    	startTimer(timeout, 1.0);
+    }
+    
+    /**
+     * Stop manager 
+     */
+    public void stop() {
+    	if (logger.isActivated()) {
+    		logger.info("Stop the activity manager");
+    	}
+
+    	// Stop timer
+    	stopTimer();
+    }
+    	
+    /**
+     * Periodic processing
+     */
+    public void periodicProcessing() {
+    	long currentTime = System.currentTimeMillis();
+		int inactivityPeriod = (int)((currentTime - activityTimesamp) / 1000) + 1; 
+		int remainingPeriod = timeout - inactivityPeriod; 
+    	if (logger.isActivated()) {
+    		logger.debug("Check inactivity period: inactivity=" + inactivityPeriod + ", remaining=" + remainingPeriod);
+    	}
+
+    	if (inactivityPeriod >= timeout) {
         	if (logger.isActivated()){
-        		logger.debug("Timer has expired: the session is now considered idle");
+        		logger.debug("No activity on the session during " + timeout + "s: abort the session");
         	}
-        	
-			// Abort the session
-			session.abortSession();
-        	
-        	// Terminate the timer thread
-            timer.cancel();
-        }
+	
+        	// Abort the session
+    		if (session != null) {
+    			session.abortSession();
+    		}
+    	} else {
+        	// Restart timer
+        	startTimer(remainingPeriod, 1.0);
+    	}    		
     }    
 }

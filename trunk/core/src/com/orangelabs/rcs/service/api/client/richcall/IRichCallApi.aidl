@@ -26,6 +26,12 @@ interface IRichCallApi {
 
 	// Get an image sharing session from its session ID
 	IImageSharingSession getImageSharingSession(in String id);
+
+	// Set multiparty call
+	void setMultiPartyCall(in boolean flag);
+
+	// Set call hold
+	void setCallHold(in boolean flag);
 }
 
 

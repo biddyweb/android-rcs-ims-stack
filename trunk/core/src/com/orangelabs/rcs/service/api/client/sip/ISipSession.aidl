@@ -12,17 +12,20 @@ interface ISipSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session state
+	int getSessionState();
+
 	// Get feature tag of the service
 	String getFeatureTag();
 
-	// Get SDP answer
-      	String getSdpAnswer();
+	// Get local SDP
+      	String getLocalSdp();
       
-	// Get SDP offer
-      	String getSdpOffer();
+	// Get remote SDP
+      	String getRemoteSdp();
 
 	// Accept the session invitation
-	void acceptSession(in String sdpAnswer);
+	void acceptSession(in String sdp);
 
 	// Reject the session invitation
 	void rejectSession();

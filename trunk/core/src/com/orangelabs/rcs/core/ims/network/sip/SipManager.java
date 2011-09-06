@@ -112,8 +112,7 @@ public class SipManager {
      * @return SIP stack
      * @throws SipException
      */
-    public void initStack(String localAddr, String outboundProxy, String protocol)
-            throws SipException {
+    public synchronized void initStack(String localAddr, String outboundProxy, String protocol) throws SipException {
 		// Close the stack if necessary
 		closeStack();
 
@@ -124,7 +123,7 @@ public class SipManager {
 	/**
 	 * Close the SIP stack
 	 */
-	public void closeStack() {
+	public synchronized void closeStack() {
 		if (sipstack == null) {
 			// Already closed
 			return;
@@ -149,7 +148,11 @@ public class SipManager {
      * @throws SipException
      */
 	public SipTransactionContext sendSipMessageAndWait(SipMessage message) throws SipException {
-		return sipstack.sendSipMessageAndWait(message);
+		if (sipstack != null) {
+			return sipstack.sendSipMessageAndWait(message);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
 	}
 
 	/**
@@ -159,7 +162,11 @@ public class SipManager {
      * @throws SipException
      */
 	public void sendSipResponse(SipResponse response) throws SipException {
-		sipstack.sendSipResponse(response);
+		if (sipstack != null) {
+			sipstack.sendSipResponse(response);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
 	}
 
     /**
@@ -169,7 +176,11 @@ public class SipManager {
      * @throws SipException
      */
 	public void sendSipAck(SipDialogPath dialog) throws SipException {
-		sipstack.sendSipAck(dialog);
+		if (sipstack != null) {
+			sipstack.sendSipAck(dialog);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
 	}
 
     /**
@@ -179,7 +190,11 @@ public class SipManager {
      * @throws SipException
      */
 	public void sendSipBye(SipDialogPath dialog) throws SipException {
-		sipstack.sendSipBye(dialog);
+		if (sipstack != null) {
+			sipstack.sendSipBye(dialog);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
 	}
 
     /**
@@ -189,7 +204,11 @@ public class SipManager {
      * @throws SipException
      */
 	public void sendSipCancel(SipDialogPath dialog) throws SipException {
-		sipstack.sendSipCancel(dialog);
+		if (sipstack != null) {
+			sipstack.sendSipCancel(dialog);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
 	}
 
     /**
@@ -200,6 +219,10 @@ public class SipManager {
      * @throws SipException
      */
 	public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
-		return sipstack.sendSipUpdate(dialog);
+		if (sipstack != null) {
+			return sipstack.sendSipUpdate(dialog);
+		} else {
+			throw new SipException("Stack not initialized");
+		}
     }
 }

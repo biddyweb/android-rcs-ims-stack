@@ -132,7 +132,7 @@ public class IsComposingManager {
      * @param duration Timer period
      * @param contact Contact
      */
-    public void startExpirationTimer(long duration, String contact) {
+    public synchronized void startExpirationTimer(long duration, String contact) {
     	// Remove old timer
 		if (timerTask != null) {
 			timerTask.cancel();
@@ -141,10 +141,10 @@ public class IsComposingManager {
 
     	// Start timer
     	if (logger.isActivated()) {
-    		logger.debug("Start timer: remote contact will be considered idle in " + duration +  "s");
+    		logger.debug("Start is-composing timer for " + duration +  "s");
     	}
     	timerTask = new ExpirationTimer(contact);
-    	timer = new Timer(); // TODO: create a timer each time ?
+    	timer = new Timer();
     	timer.schedule(timerTask, duration*1000);
     }
 
@@ -153,10 +153,10 @@ public class IsComposingManager {
      * 
      * @param contact Contact
      */
-    public void stopExpirationTimer(String contact) {
+    public synchronized void stopExpirationTimer(String contact) {
     	// Stop timer
     	if (logger.isActivated()) {
-    		logger.debug("Stop timer");
+    		logger.debug("Stop is-composing timer");
     	}
     	
         // TODO : stop timer for a given contact
@@ -171,7 +171,7 @@ public class IsComposingManager {
      */
     private class ExpirationTimer extends TimerTask {
     	
-    	private String contact = null;
+    	private String contact;
     	
     	public ExpirationTimer(String contact){
     		this.contact = contact;
@@ -179,17 +179,13 @@ public class IsComposingManager {
     	
         public void run() {
         	if (logger.isActivated()){
-        		logger.debug("Timer has expired: " + contact + " is now considered idle");
+        		logger.debug("Is-composing timer has expired: " + contact + " is now considered idle");
         	}
         	
 			// Send status message to "idle"
 	    	for(int j=0; j < session.getListeners().size(); j++) {
 	    		((ChatSessionListener)session.getListeners().get(j)).handleIsComposingEvent(contact, false);
 			}
-        	
-        	// Terminate the timer thread
-        	// TODO: necessary
-            timer.cancel();
         }
     }    
 }

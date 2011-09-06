@@ -65,6 +65,9 @@ public class PollingManager extends PeriodicRefresher {
 	 * Start polling
 	 */
 	public void start() {
+		if (pollingPeriod == 0) {
+			return;
+		}
 		startTimer(pollingPeriod, 1);
 	}
 	

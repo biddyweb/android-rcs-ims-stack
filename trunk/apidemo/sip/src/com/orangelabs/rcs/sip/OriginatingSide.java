@@ -80,7 +80,7 @@ public class OriginatingSide extends Activity implements ClientApiListener {
 		
 		// Set contact selector
 		Spinner spinner = (Spinner)findViewById(R.id.contact);
-		spinner.setAdapter(Utils.createRcsContactListAdapter(this));
+		spinner.setAdapter(Utils.createContactListAdapter(this));
 
 		// Set buttons callback
 		Button initiateBtn = (Button)findViewById(R.id.initiate_btn);
@@ -185,7 +185,7 @@ public class OriginatingSide extends Activity implements ClientApiListener {
 			thread.start();
 
 			// Display a progress dialog
-			progressDialog = Utils.showProgressDialog(OriginatingSide.this,	getString(R.string.label_command_in_progress));
+			progressDialog = Utils.showProgressDialog(OriginatingSide.this,	getString(R.string.label_session_in_progress));
 			progressDialog.setOnCancelListener(new OnCancelListener() {
 				public void onCancel(DialogInterface dialog) {
 					Toast.makeText(OriginatingSide.this, getString(R.string.label_session_initiation_canceled),	Toast.LENGTH_SHORT).show();

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">RCS extensions demo</string>
     <string name="game_app_name">RCS game</string>
     <string name="wb_app_name">RCS white board</string>
 </resources>

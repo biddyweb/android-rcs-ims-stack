@@ -54,5 +54,5 @@ public class FeatureTags {
 	/**
 	 * RCS-e extension feature tag prefix
 	 */
-	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";
+	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";
 }

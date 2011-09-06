@@ -37,8 +37,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -219,7 +219,7 @@ public class TerminatingContentSharingSession extends ContentSharingTransferSess
         		logger.info("Send 200 OK");
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-            		ContentSharingService.FEATURE_TAGS_IMAGE_SHARE, sdp);
+            		RichcallService.FEATURE_TAGS_IMAGE_SHARE, sdp);
             
 	        // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);

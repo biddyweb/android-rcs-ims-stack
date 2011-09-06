@@ -44,24 +44,19 @@ public abstract class ImsService {
 	public static final int IM_SERVICE = 1;
 
     /**
-     * Content sharing service
-     */
-	public static final int CONTENT_SHARING_SERVICE = 2;
-
-    /**
      * Richcall service
      */
-	public static final int RICHCALL_SERVICE = 3;
+	public static final int RICHCALL_SERVICE = 2;
 
     /**
      * Presence service
      */
-	public static final int PRESENCE_SERVICE = 4;
+	public static final int PRESENCE_SERVICE = 3;
 
     /**
      * SIP service
      */
-	public static final int SIP_SERVICE = 5;
+	public static final int SIP_SERVICE = 4;
 
 	/**
 	 * Activation flag

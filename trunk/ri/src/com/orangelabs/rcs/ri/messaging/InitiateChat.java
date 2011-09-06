@@ -18,33 +18,23 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.ContactsContract.Data;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
-import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
 
 /**
  * Initiate chat
@@ -52,27 +42,6 @@ import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
  * @author jexa7410
  */
 public class InitiateChat extends Activity {
-
-    /**
-     * UI handler
-     */
-    private Handler handler = new Handler();
-
-    /**
-	 * Messaging API
-	 */
-    private MessagingApi messagingApi;
-    
-    /**
-     * Progress dialog
-     */
-    private Dialog progressDialog = null;
-
-    /**
-     * Chat session 
-     */
-    private IChatSession chatSession = null;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,10 +65,6 @@ public class InitiateChat extends Activity {
         if (spinner.getAdapter().getCount() == 0) {
         	inviteBtn.setEnabled(false);
         }
-        
-        // Instanciate messaging API
-        messagingApi = new MessagingApi(getApplicationContext());
-        messagingApi.connectApi();
        
         // Select the corresponding contact from the intent
         Intent intent = getIntent();
@@ -124,215 +89,27 @@ public class InitiateChat extends Activity {
         }        
     }
     
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();
-
-        // Remove session listener
-        if (chatSession != null) {
-        	try {
-        		chatSession.removeSessionListener(chatSessionListener);
-        	} catch(Exception e) {
-        	}
-        }
-
-        // Disconnect messaging API
-        messagingApi.disconnectApi();
-    }
-
     /**
      * Invite button listener
      */
     private OnClickListener btnInviteListener = new OnClickListener() {
         public void onClick(View v) {
-            // Get remote contact
+            // Build participant list
         	Spinner spinner = (Spinner)findViewById(R.id.contact);
         	MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
-            final String remote = cursor.getString(1);
+            String remote = cursor.getString(1);
+            ArrayList<String> participants = new ArrayList<String>();
+            participants.add(remote);
 
-            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
-            final String firstMessage = firstMessageText.getText().toString().trim();
-            
-    		// Initiate the chat session in background
-            Thread thread = new Thread() {
-            	public void run() {
-                	try {
-	            		chatSession = messagingApi.initiateOne2OneChatSession(remote, firstMessage);
-	            		chatSession.addSessionListener(chatSessionListener);
-	            	} catch(Exception e) {
-	            		handler.post(new Runnable(){
-	            			public void run(){
-	            				Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_failed));		
-	            			}
-	            		});
-	            	}
-            	}
-            };
-            thread.start();
-
-            // Display a progress dialog
-            progressDialog = Utils.showProgressDialog(InitiateChat.this, getString(R.string.label_command_in_progress));
-            progressDialog.setOnCancelListener(new OnCancelListener() {
-				public void onCancel(DialogInterface dialog) {
-					Toast.makeText(InitiateChat.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
-					quitSession();
-				}
-			});
+			// Display chat view
+        	Intent intent = new Intent(InitiateChat.this, ChatView.class);
+        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        	intent.putExtra("participants", participants);
+        	intent.putExtra("isChatGroup", false);
+        	startActivity(intent);
+        	
+        	// Exit activity
+        	finish();
         }
     };
-           
-	/**
-	 * Hide progress dialog
-	 */
-    public void hideProgressDialog() {
-    	if (progressDialog != null && progressDialog.isShowing()) {
-			progressDialog.dismiss();
-			progressDialog = null;
-		}
-    }    
-
-    /**
-     * Chat session event listener
-     */
-    private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
-		// Session is started
-		public void handleSessionStarted() {
-			try {
-				handler.post(new Runnable() { 
-					public void run() {
-						// Hide progress dialog
-						hideProgressDialog();
-					}
-				});
-				
-				// Get subject
-	            EditText firstMessageText = (EditText)findViewById(R.id.firstMessage);
-	            final String firstMessage = firstMessageText.getText().toString().trim();
-	            // Get remote contact
-	        	Spinner spinner = (Spinner)findViewById(R.id.contact);
-	        	MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
-	            final String remote = cursor.getString(1);
-
-				// Display chat view
-	        	Intent intent = new Intent(InitiateChat.this, ChatView.class);
-	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	        	intent.putExtra("sessionId", chatSession.getSessionID());
-	        	intent.putExtra("subject", firstMessage);
-	        	intent.putExtra("originating", true);
-	        	intent.putExtra("contact", remote);
-	        	startActivity(intent);
-	        	
-	        	// Exit activity
-	        	finish();
-			} catch(Exception e) {
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_api_failed));
-					}
-				});
-			}
-		}
-	
-		// Session has been aborted
-		public void handleSessionAborted() {
-			handler.post(new Runnable(){
-				public void run(){
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show message
-					Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_declined));
-				}
-			});
-		}
-	    
-		// Session has been terminated by remote
-		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable(){
-				public void run(){
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show message
-					Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_sharing_terminated_by_remote));
-				}
-			});
-		}
-		
-		// New text message received
-		public void handleReceiveMessage(final InstantMessage msg) {
-		}		
-				
-		// Chat error
-		public void handleImError(final int error) {
-			handler.post(new Runnable(){
-				public void run(){
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Show error
-					if (error == ChatError.SESSION_INITIATION_DECLINED) {
-						Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showMessageAndExit(InitiateChat.this, getString(R.string.label_invitation_failed));
-					}
-				}
-			});
-		}		
-		
-		// Is composing event
-		public void handleIsComposingEvent(String contact, boolean isComposing) {
-		}
-
-		// Conference event
-	    public void handleConferenceEvent(String contact,  String contactDisplayname, String state) {
-		}
-	    
-		// Message delivery status
-		public void handleMessageDeliveryStatus(String msgId, String contact, String status) {
-		}
-		
-		// Request to add participant is successful
-		public void handleAddParticipantSuccessful() {
-		}
-	    
-		// Request to add participant has failed
-		public void handleAddParticipantFailed(String reason) {
-		}
-    };
-    
-    /**
-     * Quit the session
-     */
-    private void quitSession() {
-		// Stop session
-        Thread thread = new Thread() {
-        	public void run() {
-            	try {
-                    if (chatSession != null) {
-                		chatSession.removeSessionListener(chatSessionListener);
-                		chatSession.cancelSession();
-                    }
-            	} catch(Exception e) {
-            	}
-        		chatSession = null;
-        	}
-        };
-        thread.start();
-    	
-        // Exit activity
-		finish();
-    }    
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_BACK:
-				// Quit session
-            	quitSession();
-                return true;
-        }
-
-        return super.onKeyDown(keyCode, event);
-    }    
 }    

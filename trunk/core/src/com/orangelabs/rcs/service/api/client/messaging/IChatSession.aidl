@@ -12,6 +12,9 @@ interface IChatSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session state
+	int getSessionState();
+
 	// Is chat group
 	boolean isChatGroup();
 	

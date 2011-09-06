@@ -85,6 +85,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 
     	// Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setContentView(R.layout.richcall_receive_image_sharing);
 
         // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
@@ -202,10 +203,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-        	
-        	// Set layout
-            setContentView(R.layout.richcall_receive_image_sharing);
-            
+        	            
             // Set title
             setTitle(R.string.title_recv_image_sharing);
             
@@ -279,6 +277,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 		public void handleSessionAborted() {
 			handler.post(new Runnable() { 
 				public void run() {
+					// Display session status
 					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
@@ -288,6 +287,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() { 
 				public void run() {
+					// Display session status
 					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
@@ -393,7 +393,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
         // Send notification
 		String sessionId = invitation.getStringExtra("sessionId");
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify((int)Long.parseLong(sessionId), notif);
+        notificationManager.notify(sessionId, Utils.NOTIF_ID_IMAGE_SHARE, notif);
 	}
 	
     /**
@@ -404,7 +404,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      */
 	public static void removeImageSharingNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel((int)Long.parseLong(sessionId));
+		notificationManager.cancel(sessionId, Utils.NOTIF_ID_IMAGE_SHARE);
 	}
 
     /**

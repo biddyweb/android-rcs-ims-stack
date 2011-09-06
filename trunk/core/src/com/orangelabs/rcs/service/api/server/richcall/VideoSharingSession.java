@@ -83,6 +83,15 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 	}
 	
 	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		return session.getSessionState();
+	}
+	
+	/**
 	 * Accept the session invitation
 	 */
 	public void acceptSession() {
@@ -106,7 +115,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
 
 		// Reject invitation
-		session.rejectSession();
+		session.rejectSession(603);
 	}
 
 	/**

@@ -252,7 +252,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         filename = getIntent().getStringExtra("filename");
         isPrerecordedSession = (filename!=null);
 
-        videoFormat = RcsSettings.getInstance().getCShVideoFormat();
+        videoFormat = getIntent().getStringExtra("videotype");
+        if (videoFormat == null)
+            videoFormat = RcsSettings.getInstance().getCShVideoFormat();
         if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
             // QVGA
         	videoWidth = 320;
@@ -1120,7 +1122,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         // Send notification
 		String sessionId = invitation.getStringExtra("sessionId");
         NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify((int)Long.parseLong(sessionId), notif);
+        notificationManager.notify(sessionId, Utils.NOTIF_ID_VIDEO_SHARE, notif);
     }
 
     /**
@@ -1132,7 +1134,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     public static void removeVideoSharingNotification(Context context, String sessionId) {
         NotificationManager notificationManager = (NotificationManager)context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel((int)Long.parseLong(sessionId));
+        notificationManager.cancel(sessionId, Utils.NOTIF_ID_VIDEO_SHARE);
     }
 
     /**

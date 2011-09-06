@@ -81,9 +81,9 @@ public class CpimParser {
 	    Here is the text of my message.
 	    */
 		try {
+			// Read message headers
 			int begin = 0;
 			int end = data.indexOf(CpimMessage.CRLF+CpimMessage.CRLF);
-			// Read message headers
 			end = data.indexOf(CpimMessage.CRLF+CpimMessage.CRLF, begin);
 			String block2 = data.substring(begin, end);
 			StringTokenizer lines = new StringTokenizer(block2, CpimMessage.CRLF); 

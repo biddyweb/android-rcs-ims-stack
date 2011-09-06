@@ -661,7 +661,7 @@ public final class ContactsManager {
 		// May be called from outside the core, so be sure the number format is international before doing the queries 
 		contact= PhoneUtils.extractNumberFromUri(contact);
 		
-		if (!isRCSValidNumber(contact)){
+		if (!isRcsValidNumber(contact)){
 			if (logger.isActivated()){
 				logger.debug(contact +" is not a RCS valid number");
 			}
@@ -1432,17 +1432,17 @@ public final class ContactsManager {
 	/**
 	 * Check if number provided is a valid number for RCS
 	 * <br>It is not valid if :
-	 * <li>it is not well formatted (not digits only or '+')
-	 * <li>it is an emergency number
-	 * <li>it has not at least 12 digits (french numbers in international format) 
+	 * <li>well formatted (not digits only or '+')
+	 * <li>not an emergency number
+	 * <li>minimum length
 	 * 
 	 * @param phoneNumber
 	 * @return true if it is a RCS valid number
 	 */
-    public boolean isRCSValidNumber(String phoneNumber){
+    public boolean isRcsValidNumber(String phoneNumber){
         return android.telephony.PhoneNumberUtils.isGlobalPhoneNumber(phoneNumber) 
         	&& !android.telephony.PhoneNumberUtils.isEmergencyNumber(phoneNumber)
-        	&& phoneNumber.length()>11; //TODO generalize for all international formats
+        	&& (phoneNumber.length()>3);
     }
 	
 	/**
@@ -2123,6 +2123,36 @@ public final class ContactsManager {
 		c.close();
 		
 		return richcallCapableNumbers;
+	}
+	
+	/**
+	 * Get a list of numbers that are available (answered last OPTIONS check)
+	 *  
+	 * @return list containing all contacts that are available 
+	 */
+	public List<String> getAvailableContacts() {
+		List<String> availableNumbers = new ArrayList<String>();
+        String[] projection = {Data.DATA1, Data.DATA2, Data.MIMETYPE};
+        String selection = Data.MIMETYPE + "=?";
+        
+        // Get all registration state entries
+        String[] selectionArgs = { MIMETYPE_REGISTRATION_STATE };
+        Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
+        		projection, 
+        		selection, 
+        		selectionArgs, 
+        		null);
+		while (c.moveToNext()) {
+			String availableNumber = c.getString(0);
+			int registrationState = c.getInt(1);
+			if (registrationState==ContactInfo.REGISTRATION_STATUS_ONLINE && !availableNumbers.contains(availableNumber)){
+				// If the registration status is online, add the number to the list
+				availableNumbers.add(availableNumber);
+			}
+		}
+		c.close();
+		
+		return availableNumbers;
 	}
 	
 	/**
@@ -3386,8 +3416,8 @@ public final class ContactsManager {
 	 * 
 	 * @return list containing all contacts that are "IM blocked" 
 	 */
-	public List<String> getIMBlockedContacts(){
-		List<String> IMBlockedNumbers = new ArrayList<String>();
+	public List<String> getImBlockedContacts(){
+		List<String> imBlockedNumbers = new ArrayList<String>();
         String[] projection = {Data.DATA1, Data.MIMETYPE};
 
         String selection = Data.MIMETYPE + "=?";
@@ -3399,10 +3429,10 @@ public final class ContactsManager {
         		null);
 		
 		while (c.moveToNext()) {
-			IMBlockedNumbers.add(c.getString(0));
+			imBlockedNumbers.add(c.getString(0));
 		}
 		c.close();
-		return IMBlockedNumbers;
+		return imBlockedNumbers;
 	}
     
     /**

@@ -48,16 +48,16 @@ public class OriginatingSipSession extends GenericSipSession {
 	 * @param parent IMS service
 	 * @param contact Remote contact
 	 * @param featureTag Feature tag
-	 * @param offer SDP offer
+	 * @param sdp SDP
 	 */
-	public OriginatingSipSession(ImsService parent, String contact, String featureTag, String offer) {
+	public OriginatingSipSession(ImsService parent, String contact, String featureTag, String sdp) {
 		super(parent, contact, featureTag);
 		
 		// Create dialog path
 		createOriginatingDialogPath();
 		
-		// Set the SDP offer 
-		setSdpOffer(offer);
+		// Set the local SDP
+		setLocalSdp(sdp);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class OriginatingSipSession extends GenericSipSession {
 	    	}
     	
 			// Set the local SDP part in the dialog path
-	        getDialogPath().setLocalContent(getSdpOffer());
+	        getDialogPath().setLocalContent(getLocalSdp());
 
 	        // Create an INVITE request
 	        if (logger.isActivated()) {
@@ -78,7 +78,7 @@ public class OriginatingSipSession extends GenericSipSession {
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
 	        		new String [] { getFeatureTag() },
-	        		getSdpOffer());
+	        		getLocalSdp());
 
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
@@ -173,7 +173,7 @@ public class OriginatingSipSession extends GenericSipSession {
 	        getDialogPath().setRemoteContent(resp.getContent());
 	                      		
 			// Set the SDP answer 
-			setSdpAnswer(resp.getContent());
+			setRemoteSdp(resp.getContent());
 	        
 	        // The session is established
 	        getDialogPath().sessionEstablished();

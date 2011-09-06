@@ -11,13 +11,6 @@
 	 android:layout_marginRight="5dip"
 	 android:id="@+id/invite_btn"/>
 
-	<EditText android:id="@+id/firstMessage"
-		android:layout_marginLeft="5dip"
-		android:layout_marginRight="5dip"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:hint="@string/label_hint_first_message"/>
-
     <TableRow android:paddingTop="5dip">
 	    <TextView android:text="@string/label_contacts"
 			android:layout_marginLeft="5dip"

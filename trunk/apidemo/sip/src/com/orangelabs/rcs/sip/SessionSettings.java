@@ -45,6 +45,11 @@ import com.orangelabs.rcs.sip.utils.Utils;
  */
 public class SessionSettings extends Activity {
 	/**
+	 * CRLF constant
+	 */
+	public final static String CRLF = "\r\n";
+	
+	/**
 	 * Preferences URI
 	 */
 	public static final String APP_PREFERENCES = "SipDemo";
@@ -96,13 +101,13 @@ public class SessionSettings extends Activity {
 		String ntpTime = Utils.constructNTPtime(System.currentTimeMillis());
 		String myIpAddress = Utils.getLocalIpAddress();
 		String sdp =
-    		"v=0" + Utils.CRLF +
-            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + myIpAddress + Utils.CRLF +
-            "s=-" + Utils.CRLF +
-			"c=IN IP4 " + myIpAddress + Utils.CRLF +
-            "t=0 0" + Utils.CRLF +
-            "m=audio 5000 RTP/AVP 96" + Utils.CRLF + 
-            "a=rtpmap:96 AMR" + Utils.CRLF;
+    		"v=0" + CRLF +
+            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + myIpAddress + CRLF +
+            "s=-" + CRLF +
+			"c=IN IP4 " + myIpAddress + CRLF +
+            "t=0 0" + CRLF +
+            "m=audio 5000 RTP/AVP 96" + CRLF + 
+            "a=rtpmap:96 AMR" + CRLF;
 		SharedPreferences preferences =ctx.getSharedPreferences(SessionSettings.APP_PREFERENCES, MODE_PRIVATE);	
 		return preferences.getString(SessionSettings.SETTINGS_SDP, sdp);
 	}
@@ -131,7 +136,7 @@ public class SessionSettings extends Activity {
 	 * @return SDP
 	 */
 	public static String getFeatureTag(Context ctx) {
-		String tag = CapabilityApiIntents.RCSE_EXTENSION_ORANGE_PREFIX + ".sipdemo";
+		String tag = CapabilityApiIntents.RCSE_EXTENSION_PREFIX + ".orange.sipdemo";
 		SharedPreferences preferences = ctx.getSharedPreferences(SessionSettings.APP_PREFERENCES, MODE_PRIVATE);	
 		return preferences.getString(SessionSettings.SETTINGS_FEATURE_TAG, tag);
 	}

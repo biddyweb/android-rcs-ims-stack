@@ -18,6 +18,7 @@
 <string name="label_file_size_unknown">Size: unknown</string>
 <string name="label_command_in_progress">Command in progress...</string>
 <string name="label_session_has_expired">Session has expired (timeout or any other error)</string>
+<string name="label_session_not_yet_started">Session not yet started</string>
 <string name="label_not_implemented">Not yet implemented</string>
 <string name="label_ims_disconnected">Service has been disconnected from the IMS</string>
 <string name="label_api_failed">Call API method has failed</string>
@@ -132,7 +133,7 @@
 <string name="title_recv_file_transfer">New file transfer invitation</string>
 <string name="label_file">Selected file:</string>
 <string name="title_recv_chat">New chat invitation</string>
-<string name="label_subject">Subject:</string>
+<string name="label_msg">Message:</string>
 <string name="label_hint_first_message">Enter first message</string>
 <string name="title_chat_view">Chat</string>
 <string name="title_chat_view_group">Chat group</string>
@@ -158,6 +159,7 @@
 <string name="label_add_participant_failed">Request to add participant(s) has failed</string>
 <string name="label_receive_displayed_delivery_status">%s has displayed the message</string>
 <string name="label_chat_terminated">Chat session terminated</string>
+<string name="label_chat_terminated_by_remote">Chat session terminated by remote</string>
 <string name="label_group_chat">Group chat</string>
 <string name="menu_delete_spam">Delete message</string>
 <string name="menu_unspam">Move to my messages</string>

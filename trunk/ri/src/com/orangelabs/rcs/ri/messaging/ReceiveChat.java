@@ -33,7 +33,6 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -69,9 +68,9 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	private String remoteContact;
 	
 	/**
-	 * Subject
+	 * First message
 	 */
-	private String subject;
+	private String firstMessage;
 	
 	/**
      * Chat session
@@ -88,7 +87,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		// Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
-		subject = getIntent().getStringExtra("subject");
+		firstMessage = getIntent().getStringExtra("subject");
         
 		// Remove the notification
 		ReceiveChat.removeChatNotification(this, sessionId);
@@ -137,7 +136,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.title_recv_chat);
 			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" +
-					getString(R.string.label_subject) + " " + subject);
+					getString(R.string.label_msg) + " " + firstMessage);
 			builder.setCancelable(false);
 			builder.setIcon(R.drawable.ri_notif_chat_icon);
 			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
@@ -235,10 +234,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 				// Display chat view
 	        	Intent intent = new Intent(ReceiveChat.this, ChatView.class);
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	        	intent.putExtra("sessionId", chatSession.getSessionID());
-	        	intent.putExtra("subject", subject);
-	        	intent.putExtra("originating", false);
-	        	intent.putExtra("contact", remoteContact);
+	        	intent.putExtra("sessionId", sessionId);
 	        	startActivity(intent);
 
 	        	// Exit activity
@@ -265,7 +261,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable(){
 				public void run(){
-					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_chat_terminated_by_remote));
 				}
 			});
 		}
@@ -274,11 +270,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		public void handleImError(final int error) {
 			handler.post(new Runnable(){
 				public void run(){
-					if (error == ChatError.SESSION_INITIATION_DECLINED) {
-						Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
-					}
+					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
 				}
 			});
 		}
@@ -318,10 +310,14 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
     	// Instanciate settings
         RcsSettings.createInstance(context);
 
+        // Get session ID
+		String sessionId = invitation.getStringExtra("sessionId");
+
         // Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceiveChat.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(sessionId);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         String notifTitle = context.getString(R.string.title_recv_chat);
         Notification notif = new Notification(R.drawable.ri_notif_chat_icon,
@@ -330,7 +326,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         notif.flags = Notification.FLAG_AUTO_CANCEL;
         notif.setLatestEventInfo(context,
         		notifTitle,
-        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
+        		Utils.formatCallerId(invitation) + ": " + invitation.getStringExtra("subject"),
         		contentIntent);
         
         // Set ringtone
@@ -345,9 +341,8 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         }
         
         // Send notification
-		String sessionId = invitation.getStringExtra("sessionId");
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify((int)Long.parseLong(sessionId), notif);
+        notificationManager.notify(sessionId, Utils.NOTIF_ID_CHAT, notif);
     }
     
     /**
@@ -358,7 +353,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      */
     public static void removeChatNotification(Context context, String sessionId) {
 		NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel((int)Long.parseLong(sessionId));
+		notificationManager.cancel(sessionId, Utils.NOTIF_ID_CHAT);
     }
 }
 

@@ -58,6 +58,11 @@ public class RichMessaging {
 	 * Database URI
 	 */
 	private Uri databaseUri = RichMessagingData.CONTENT_URI;
+
+	/**
+	 * Max log entries
+	 */
+	private int maxLogEntries;
 	
 	/**
 	 * The logger
@@ -94,6 +99,7 @@ public class RichMessaging {
 		super();
 		
         this.cr = ctx.getContentResolver();
+        this.maxLogEntries = RcsSettings.getInstance().getMaxChatLogEntriesPerContact();
 	}
 	
 	/**
@@ -532,7 +538,7 @@ public class RichMessaging {
 			if(logger.isActivated()){
 				logger.debug("Recycler : number of messages for this contact = "+numberOfMessagesForContact);
 			}
-			if(numberOfMessagesForContact < RichMessagingData.MAX_ENTRIES_PER_CONTACT){
+			if(numberOfMessagesForContact < maxLogEntries) {
 				// Enough place for another message... do nothing return
 				if(logger.isActivated()){
 					logger.debug("Recycler : Enough place for another message, do nothing return");

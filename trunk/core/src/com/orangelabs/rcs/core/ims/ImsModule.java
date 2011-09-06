@@ -40,7 +40,6 @@ import com.orangelabs.rcs.core.ims.service.capability.CapabilityService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.core.ims.service.sip.SipService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -119,16 +118,13 @@ public class ImsModule implements SipEventListener {
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
 		// Instanciates the IMS services
-        services = new ImsService[6];
+        services = new ImsService[5];
         
         // Create capability discovery service (mandatory)
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
         
         // Create IM service (mandatory)
-        services[ImsService.IM_SERVICE] = new InstantMessagingService(this);
-
-        // Create content sharing service (mandatory)
-        services[ImsService.CONTENT_SHARING_SERVICE] = new ContentSharingService(this);
+        services[ImsService.IM_SERVICE] = new InstantMessagingService(this, RcsSettings.getInstance().isChatServiceActivated());
         
         // Create richcall service (optional)
         services[ImsService.RICHCALL_SERVICE] = new RichcallService(this, RcsSettings.getInstance().isRichcallServiceActivated());
@@ -137,7 +133,7 @@ public class ImsModule implements SipEventListener {
         services[ImsService.PRESENCE_SERVICE] = new PresenceService(this, RcsSettings.getInstance().isPresenceServiceActivated());
 
         // Create generic SIP service
-        services[ImsService.SIP_SERVICE] = new SipService(this, false);
+        services[ImsService.SIP_SERVICE] = new SipService(this, true);
 
         // Create the service dispatcher
         serviceDispatcher = new ImsServiceDispatcher(this);
@@ -332,6 +328,16 @@ public class ImsModule implements SipEventListener {
     }
 
     /**
+     * Is the chat service activated
+     * 
+     * @return Boolean
+     */
+    public boolean isChatServiceActivated() {
+    	InstantMessagingService service = getInstantMessagingService();
+    	return (service != null) && (service.isActivated());
+    }
+    
+    /**
      * Returns the presence service
      * 
      * @return Presence service
@@ -366,25 +372,6 @@ public class ImsModule implements SipEventListener {
      */
     public boolean isInstantMessagingServiceActivated() {
     	InstantMessagingService service = getInstantMessagingService();
-    	return (service != null) && (service.isActivated());
-    }
-
-    /**
-     * Returns the content sharing service
-     * 
-     * @return Content sharing service
-     */
-    public ContentSharingService getContentSharingService() {
-    	return (ContentSharingService)services[ImsService.CONTENT_SHARING_SERVICE];
-    }
-    
-    /**
-     * Is the content sharing service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isContentSharingServiceActivated() {
-    	ContentSharingService service = getContentSharingService();
     	return (service != null) && (service.isActivated());
     }
    

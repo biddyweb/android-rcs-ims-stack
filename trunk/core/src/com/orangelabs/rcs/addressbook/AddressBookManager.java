@@ -34,7 +34,7 @@ import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Address book manager
+ * Address book manager:<br>
  * <br>This manager is responsible of the synchronization between the native address book and the RCS contacts.
  * <br>It observes the modifications done to the ContactsContract provider and revokes the missing contacts.
  * <br>It also is responsible for creating the contacts if missing at first launch of the service. 

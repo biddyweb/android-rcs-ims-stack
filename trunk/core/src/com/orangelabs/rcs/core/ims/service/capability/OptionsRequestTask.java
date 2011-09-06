@@ -109,11 +109,11 @@ public class OptionsRequestTask implements Runnable {
         	dialogPath = new SipDialogPath(
         			imsModule.getSipManager().getSipStack(),
         			imsModule.getSipManager().getSipStack().generateCallId(),
-            				1,
-            				contactUri,
-            				ImsModule.IMS_USER_PROFILE.getPublicUri(),
-            				contactUri,
-            				imsModule.getSipManager().getSipStack().getServiceRoutePath());        	
+					1,
+					contactUri,
+					ImsModule.IMS_USER_PROFILE.getPublicUri(),
+					contactUri,
+					imsModule.getSipManager().getSipStack().getServiceRoutePath());        	
         	
             // Create OPTIONS request
         	if (logger.isActivated()) {

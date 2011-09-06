@@ -47,11 +47,4 @@ public class RichMessagingData {
 	public static final String KEY_TOTAL_SIZE = "total_size";	
 	
 	public static final String KEY_NUMBER_MESSAGES ="number_of_messages";
-	
-	// Fields for chat group IMDN
-//	public static final String KEY_CHAT_GROUP_IMDN_DELIVERED ="imdn_chat_group_delivered";
-//	public static final String KEY_CHAT_GROUP_IMDN_DISPLAYED ="imdn_chat_group_displayed";
-	
-	// The maximum number of entries per contact in the database
-	public static final int MAX_ENTRIES_PER_CONTACT = 200;
 }

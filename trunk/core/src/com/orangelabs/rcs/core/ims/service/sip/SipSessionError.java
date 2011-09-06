@@ -49,6 +49,11 @@ public class SipSessionError extends ImsServiceError {
 	public final static int SESSION_INITIATION_CANCELLED = 0x04;	
 	
 	/**
+	 * SDP not initialized
+	 */
+	public final static int SDP_NOT_INITIALIZED = 0x05;	
+	
+	/**
 	 * Constructor
 	 * 
 	 * @param code Error code

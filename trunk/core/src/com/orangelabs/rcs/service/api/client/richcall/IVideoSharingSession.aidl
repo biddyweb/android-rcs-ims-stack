@@ -13,6 +13,9 @@ interface IVideoSharingSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session state
+	int getSessionState();
+
 	// Accept the session invitation
 	void acceptSession();
 

@@ -99,7 +99,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 				}
 
 				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 				
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
@@ -274,6 +274,10 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     	    	for(int i=0; i < getListeners().size(); i++) {
     	    		getListeners().get(i).handleSessionStarted();
     	        }
+    	    	
+    			// Start the activity manager
+    			getActivityManager().start();
+    	    	
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

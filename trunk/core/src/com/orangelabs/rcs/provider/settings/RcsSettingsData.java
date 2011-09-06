@@ -266,6 +266,16 @@ public class RcsSettingsData {
 	 */
 	public static final String IM_SESSION_START = "ImSessionStart";
 
+	/**
+	 * Max entries for chat log
+	 */
+	public static final String MAX_CHAT_LOG_ENTRIES = "MaxChatLogEntries";
+
+	/**
+	 * Max entries for richcall log
+	 */
+	public static final String MAX_RICHCALL_LOG_ENTRIES = "MaxRichcallLogEntries";	
+	
 	// ---------------------------------------------------------------------------
 	// Parameters of the end user profile
 	// ---------------------------------------------------------------------------
@@ -336,11 +346,6 @@ public class RcsSettingsData {
 	// ---------------------------------------------------------------------------
 
 	/**
-	 * Polling period used before each IMS connection attempt
-	 */
-	public static final String IMS_CONNECTION_POLLING_PERIOD = "ImsConnectionPollingPeriod";
-
-	/**
 	 * Polling period used before each IMS service check (e.g. test subscription state for presence service)
 	 */
 	public static final String IMS_SERVICE_POLLING_PERIOD = "ImsServicePollingPeriod";
@@ -394,6 +399,16 @@ public class RcsSettingsData {
      * Registration expire period
      */
 	public static final String REGISTER_EXPIRE_PERIOD = "RegisterExpirePeriod";
+
+	/**
+     * Registration retry base time
+     */
+	public static final String REGISTER_RETRY_BASE_TIME = "RegisterRetryBaseTime";
+
+	/**
+     * Registration retry max time
+     */
+	public static final String REGISTER_RETRY_MAX_TIME = "RegisterRetryMaxTime";
 
 	/**
 	 * Publish expire period
@@ -491,6 +506,11 @@ public class RcsSettingsData {
 	public static final String USE_RICHCALL_SERVICE = "UseRichcallService";
 
 	/**
+	 * Activate or not the chat service
+	 */
+	public static final String USE_CHAT_SERVICE = "UseChatService";
+
+	/**
 	 * CS video capability
 	 */
 	public static final String CAPABILITY_CS_VIDEO = "CapabilityCsVideo";
@@ -578,5 +598,5 @@ public class RcsSettingsData {
 	/**
 	 * RCS operator
 	 */
-	public static final String RCS_OPERATOR = "RcsOperator";
+	public static final String RCS_OPERATOR = "RcsOperator";	
 }

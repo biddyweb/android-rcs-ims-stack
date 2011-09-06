@@ -24,6 +24,7 @@ import android.content.Intent;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
@@ -205,8 +206,12 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		ServerApiUtils.testIms();
 
 		try {
-			// Initiate a new session
-			ContentSharingStreamingSession session = Core.getInstance().getRichcallService().initiateLiveVideoSharingSession(contact, player);
+	        // Create a live video content
+	        String codecName = player.getMediaCodec().getCodecName();
+	        LiveVideoContent content = ContentManager.createLiveVideoContent(codecName);
+	        
+		     // Initiate a new session
+			ContentSharingStreamingSession session = Core.getInstance().getRichcallService().initiateLiveVideoSharingSession(contact, content, player);
 			
 			// Update rich call history
 			RichCall.getInstance().addCall(contact, session.getSessionID(),
@@ -243,6 +248,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		ServerApiUtils.testIms();
 
 		try {
+			// Create a video content
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			VideoContent content = (VideoContent)ContentManager.createMmContentFromUrl(file, desc.getSize());
 			ContentSharingStreamingSession session = Core.getInstance().getRichcallService().initiatePreRecordedVideoSharingSession(contact, content, player);
@@ -337,6 +343,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		ServerApiUtils.testIms();
 		
 		try {
+			// Create an image content
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
 			ContentSharingTransferSession session = Core.getInstance().getRichcallService().initiateImageSharingSession(contact, content);
@@ -376,5 +383,51 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		
 		// Return a session instance
 		return imageSharingSessions.get(id);
+	}
+
+	/**
+	 * Set multiparty call
+	 * 
+	 * @param flag Flag
+	 * @throws ServerApiException
+	 */
+	public void setMultiPartyCall(boolean flag) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Set multiparty call to " + flag);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
+		ServerApiUtils.testCore();
+
+		// Abort the content sharing sessions if multiparty call
+	    if (Core.getInstance().getImsModule().isRichcallServiceActivated()) {
+	    	Core.getInstance().getRichcallService().abortAllSessions();
+	    }
+	}
+
+	/**
+	 * Set call hold
+	 * 
+	 * @param flag Flag
+	 * @throws ServerApiException
+	 */
+	public void setCallHold(boolean flag) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Set call hold to " + flag);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
+		ServerApiUtils.testCore();
+		
+		// Abort the content sharing sessions if call hold
+	    if (Core.getInstance().getImsModule().isRichcallServiceActivated()) {
+	    	Core.getInstance().getRichcallService().abortAllSessions();
+	    }
 	}
 }

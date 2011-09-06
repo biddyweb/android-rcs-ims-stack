@@ -99,11 +99,17 @@ public class TerminatingSipSession extends GenericSipSession {
 				return;
 			}
 			
+            // Check if a local SDP has been set
+            if (getLocalSdp() == null) {
+                handleError(new SipSessionError(SipSessionError.SDP_NOT_INITIALIZED));
+                return;
+            }			
+			
 			// Set the local SDP part in the dialog path
-			getDialogPath().setLocalContent(getSdpAnswer());
+			getDialogPath().setLocalContent(getLocalSdp());
 
 			// Set the SDP offer 
-			setSdpOffer(getDialogPath().getInvite().getContent());
+			setRemoteSdp(getDialogPath().getInvite().getContent());
 
 			// Create a 200 OK response
 			if (logger.isActivated()) {
@@ -111,7 +117,7 @@ public class TerminatingSipSession extends GenericSipSession {
 			}
 			SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
 	        		new String [] { getFeatureTag() },
-					getSdpAnswer());
+					getLocalSdp());
 
 	        // Send response
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);

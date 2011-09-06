@@ -77,6 +77,15 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	public String getRemoteContact() {
 		return session.getRemoteContact();
 	}
+	
+	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		return session.getSessionState();
+	}	
 
 	/**
 	 * Get feature tag of the service
@@ -88,35 +97,35 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	}	
 	
 	/**
-     * Get SDP answer
+     * Get local SDP
      * 
-     * @return SDP Answer
+     * @return SDP
      */
-    public String getSdpAnswer() throws RemoteException {
-    	return session.getSdpAnswer();
+    public String getLocalSdp() throws RemoteException {
+    	return session.getLocalSdp();
     }
 
     /**
-     * Get SDP offer
+     * Get remote SDP
      * 
-     * @return SDP Offer
+     * @return SDP
      */
-    public String getSdpOffer() throws RemoteException {
-    	return session.getSdpOffer();
+    public String getRemoteSdp() throws RemoteException {
+    	return session.getRemoteSdp();
     }
 	
 	/**
 	 * Accept the session invitation
 	 * 
-	 * @param sdpAnswer SDP answer
+	 * @param sdp SDP answer
 	 */
-	public void acceptSession(String sdpAnswer) {
+	public void acceptSession(String sdp) {
 		if (logger.isActivated()) {
 			logger.info("Accept session invitation");
 		}
 
-		// Set SDP answer
-		session.setSdpAnswer(sdpAnswer);
+		// Set local SDP
+		session.setLocalSdp(sdp);
 		
 		// Accept invitation
 		session.acceptSession();
@@ -131,7 +140,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 		}
 
 		// Reject invitation
-		session.rejectSession();
+		session.rejectSession(603);
 	}
 
 	/**
