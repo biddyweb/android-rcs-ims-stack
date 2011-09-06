@@ -78,6 +78,15 @@ public class ContactsApi {
     }
     
     /**
+     * Get a list of RCS contacts which are available
+     * 
+     * @return list of available contacts
+     */
+    public List<String> getRcsContactsAvailable(){
+    	return ContactsManager.getInstance().getAvailableContacts();
+    }
+
+    /**
      * Get a list of all RCS blocked contacts
      * 
      * @return list of all RCS contacts
@@ -189,7 +198,7 @@ public class ContactsApi {
 	 * @throws ClientApiException
 	 */
 	public List<String> getBlockedContactsForIm(){
-		return ContactsManager.getInstance().getIMBlockedContacts();
+		return ContactsManager.getInstance().getImBlockedContacts();
 	}
 	
 	/**

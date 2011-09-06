@@ -263,7 +263,6 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 			
 			// Open the MSRP session
 			msrpMgr.openMsrpSession();
-	        
 
         	// Start session timer
         	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
@@ -362,8 +361,8 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
     	}
 
-		// Close MSRP session
-    	closeMsrpSession();
+		// Close media session
+    	closeMediaSession();
     	
     	// Remove the current session
     	getImsService().removeSession(this);

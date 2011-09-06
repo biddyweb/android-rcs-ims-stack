@@ -68,7 +68,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 45;
+        private static final int DATABASE_VERSION = 48;
 
         private Context ctx;
 
@@ -146,7 +146,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
 
             // Stack parameters (read only)
-            addParameter(db, RcsSettingsData.IMS_CONNECTION_POLLING_PERIOD, 	"30");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE,   ListeningPoint.UDP);
@@ -158,6 +157,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RTP_DEFAULT_PORT, 					"10000");
             addParameter(db, RcsSettingsData.MSRP_TRANSACTION_TIMEOUT, 			"5");
             addParameter(db, RcsSettingsData.REGISTER_EXPIRE_PERIOD, 			"3600");
+            addParameter(db, RcsSettingsData.REGISTER_RETRY_BASE_TIME, 			"30");
+            addParameter(db, RcsSettingsData.REGISTER_RETRY_MAX_TIME, 			"1800");
             addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.REVOKE_TIMEOUT, 					"300");
             addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.GIBA_AUTHENT);
@@ -177,6 +178,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
             addParameter(db, RcsSettingsData.USE_PRESENCE_SERVICE,				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.USE_RICHCALL_SERVICE,				RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.USE_CHAT_SERVICE,					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.IM_CAPABILITY_ALWAYS_ON,			RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.IM_USE_REPORTS,					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.NETWORK_ACCESS,					""+RcsSettingsData.ANY_ACCESS);
@@ -187,6 +189,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SIP_KEEP_ALIVE_PERIOD,				"60");
             addParameter(db, RcsSettingsData.RCS_APN,							"");
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
+            addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"300");
+            addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"150");            
         }
 
         /**

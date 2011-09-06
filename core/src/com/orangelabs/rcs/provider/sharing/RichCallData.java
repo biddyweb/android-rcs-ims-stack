@@ -52,7 +52,4 @@ public class RichCallData {
 	public static final int STATUS_STARTED = EventsLogApi.STATUS_STARTED; 
 	public static final int STATUS_TRANSFERED = EventsLogApi.STATUS_TERMINATED;
 	public static final int STATUS_FAILED = EventsLogApi.STATUS_FAILED;
-	
-	// The maximum number of entries per contact in the database
-	public static final int MAX_ENTRIES_PER_CONTACT = 200;
 }

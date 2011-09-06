@@ -211,4 +211,40 @@ public class RichCallApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+	
+	/**
+	 * Set multiparty call
+	 * 
+	 * @param flag Flag
+	 * @throws ClientApiException
+	 */
+	public void setMultiPartyCall(boolean flag) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	coreApi.setMultiPartyCall(flag);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+
+	/**
+	 * Set call hold
+	 * 
+	 * @param flag Flag
+	 * @throws ClientApiException
+	 */
+	public void setCallHold(boolean flag) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	coreApi.setCallHold(flag);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
 }

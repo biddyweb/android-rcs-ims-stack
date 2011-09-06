@@ -92,9 +92,6 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
-		
-		// Start the session idle timer
-		activityMgr.restartInactivityTimer();
 	}
 
 	/**
@@ -214,10 +211,10 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
     				logger.info("ACK request received");
     			}
 
-                // The session is established
+    			// The session is established
     	        getDialogPath().sessionEstablished();
     	                        
-        		// Create the MSRP client session
+    			// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
                 	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
@@ -230,6 +227,10 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	    	        // Send an empty packet
 	            	sendEmptyDataChunk();
                 }
+                
+    			// Start the activity manager
+    			activityMgr.start();
+                
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");
@@ -274,6 +275,9 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	 * Close media session
 	 */
 	public void closeMediaSession() {
+		// Stop the activity manager
+		activityMgr.stop();
+		
 		// Close MSRP session
 		closeMsrpSession();
 	}
@@ -289,8 +293,8 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
     	}
 
-		// Close MSRP session
-    	closeMsrpSession();
+		// Close media session
+    	closeMediaSession();
 
     	// Remove the current session
     	getImsService().removeSession(this);
@@ -324,8 +328,8 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
     		logger.info("Data received (type " + mimeType + ")");
     	}
     	
-		// Restart the session idle timer
-		activityMgr.restartInactivityTimer();
+		// Update the activity manager
+		activityMgr.updateActivity();
     	
     	if ((data == null) || (data.length == 0)) {
     		// By-pass empty data

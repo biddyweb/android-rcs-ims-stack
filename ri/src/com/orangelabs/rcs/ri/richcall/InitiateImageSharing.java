@@ -292,7 +292,7 @@ public class InitiateImageSharing extends Activity {
 					hideProgressDialog();
 					
 					// Display session status
-					Utils.showMessage(InitiateImageSharing.this, getString(R.string.label_sharing_aborted));
+					Utils.showMessageAndExit(InitiateImageSharing.this, getString(R.string.label_sharing_aborted));
 				}
 			});
 		}
@@ -305,9 +305,7 @@ public class InitiateImageSharing extends Activity {
 					hideProgressDialog();
 					
 					// Display session status
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("terminated");
-					Utils.showMessage(InitiateImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
+					Utils.showMessageAndExit(InitiateImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 				}
 			});
 		}

@@ -128,6 +128,9 @@ public abstract class GroupChatSession extends ChatSession {
 	 * Close media session
 	 */
 	public void closeMediaSession() {
+		// Stop the activity manager
+		getActivityManager().stop();		
+
 		// Stop conference subscription
 		conferenceSubscriber.terminate();
 		

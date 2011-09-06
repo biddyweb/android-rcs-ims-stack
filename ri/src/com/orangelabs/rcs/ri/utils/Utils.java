@@ -51,6 +51,26 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  */
 public class Utils {
 	/**
+	 * Notification ID for chat
+	 */
+	public static int NOTIF_ID_CHAT = 1000; 
+	
+	/**
+	 * Notification ID for file transfer
+	 */
+	public static int NOTIF_ID_FT = 1001; 
+
+	/**
+	 * Notification ID for image share
+	 */
+	public static int NOTIF_ID_IMAGE_SHARE = 1002; 
+
+	/**
+	 * Notification ID for video share
+	 */
+	public static int NOTIF_ID_VIDEO_SHARE = 1003; 
+
+	/**
 	 * RCS-e extension feature tag prefix
 	 */
 	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";

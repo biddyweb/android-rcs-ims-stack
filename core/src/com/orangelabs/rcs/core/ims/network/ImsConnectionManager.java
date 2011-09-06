@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.network;
 
+import java.util.Random;
+
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -305,8 +307,7 @@ public class ImsConnectionManager implements Runnable {
 				// Test the default APN configuration
 				ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
 				String currentApn = null;
-				Cursor c = cr.query(
-						Uri.parse("content://telephony/carriers/preferapn"),
+				Cursor c = cr.query(Uri.parse("content://telephony/carriers/preferapn"),
 						new String[] { "apn" }, null, null, null);
 				if (c != null) {
 					final int apnIndex = c.getColumnIndexOrThrow("apn");
@@ -431,8 +432,11 @@ public class ImsConnectionManager implements Runnable {
     		logger.debug("Start polling of the IMS connection");
     	}
     	
-		long registerPollingPeriod = RcsSettings.getInstance().getImsConnectionPollingPeriod();
-		long servicePollingPeriod = RcsSettings.getInstance().getImsServicePollingPeriod();
+		int servicePollingPeriod = RcsSettings.getInstance().getImsServicePollingPeriod();
+		int regBaseTime = RcsSettings.getInstance().getRegisterRetryBaseTime();
+		int regMaxTime = RcsSettings.getInstance().getRegisterRetryMaxTime();
+		Random random = new Random();
+		int nbFailures = 0;
 
 		while(imsActivationFlag) {
 	    	if (logger.isActivated()) {
@@ -452,11 +456,19 @@ public class ImsConnectionManager implements Runnable {
     	            	if (logger.isActivated()) {
     	            		logger.debug("Registered to the IMS with success: start IMS services");
     	            	}
+    	            	
+    	            	// Start IMS services
         	        	imsModule.startImsServices();
+        	        	
+        	        	// Reset number of failures
+        	        	nbFailures = 0;
     	    		} else {
     	            	if (logger.isActivated()) {
     	            		logger.debug("Can't register to the IMS");
     	            	}
+    	            	
+    	            	// Increment number of failures
+    	            	nbFailures++;
     	    		}
     			} else {
     	        	if (logger.isActivated()) {
@@ -474,7 +486,13 @@ public class ImsConnectionManager implements Runnable {
 	    	try {
     			if (!currentNetworkInterface.isRegistered()) {
     				// Pause before the next register attempt
-	    			Thread.sleep(registerPollingPeriod * 1000);
+    				double w = Math.min(regMaxTime, (regBaseTime * Math.pow(2, nbFailures)));
+    				double coeff = (random.nextInt(51) + 50) / 100.0; // Coeff between 50% and 100%
+    				int retryPeriod = (int)(coeff * w);
+    	        	if (logger.isActivated()) {
+    	        		logger.debug("Wait " + retryPeriod + "s before retry registration (failures=" + nbFailures + ", coeff="+ coeff + ")");
+    	        	}
+    				Thread.sleep(retryPeriod * 1000);
 	    		} else {
     				// Pause before the next service check
 	    			Thread.sleep(servicePollingPeriod * 1000);

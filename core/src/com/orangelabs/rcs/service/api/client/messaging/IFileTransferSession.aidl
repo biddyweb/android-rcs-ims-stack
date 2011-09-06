@@ -9,6 +9,12 @@ interface IFileTransferSession {
 	// Get session ID
 	String getSessionID();
 
+	// Get remote contact
+	String getRemoteContact();
+
+	// Get session state
+	int getSessionState();
+
 	// Get filename
 	String getFilename();
 	

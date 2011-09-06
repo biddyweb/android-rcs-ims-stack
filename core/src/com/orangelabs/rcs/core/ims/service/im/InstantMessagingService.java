@@ -92,10 +92,11 @@ public class InstantMessagingService extends ImsService {
      * Constructor
      * 
      * @param parent IMS module
+     * @param activated Activation flag
      * @throws CoreException
      */
-	public InstantMessagingService(ImsModule parent) throws CoreException {
-        super(parent, true);
+	public InstantMessagingService(ImsModule parent, boolean activated) throws CoreException {
+        super(parent, activated);
 
 		this.maxChatSessions = RcsSettings.getInstance().getMaxChatSessions();
         this.maxFtSessions = RcsSettings.getInstance().getMaxFileTransferSessions();
@@ -218,8 +219,9 @@ public class InstantMessagingService extends ImsService {
      * @param contact Remote contact
      * @param content Content to be sent
      * @return CSh session
+     * @throws CoreException
      */
-	public ContentSharingTransferSession initiateFileTransferSession(String contact, MmContent content) {
+	public ContentSharingTransferSession initiateFileTransferSession(String contact, MmContent content) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a file transfer session with contact " + contact + ", file " + content.toString());
 		}
@@ -229,8 +231,7 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("The max number of file transfer sessions is achieved: cancel the initiation");
 			}
-			// TODO: returns an exception or an error code ?
-			return null;
+			throw new CoreException("Max file transfer sessions achieved");
 		}
 
 		// Create a new session
@@ -260,7 +261,6 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the file transfer invitation");
 			}
-
 			try {
 				// Send a 603 Decline response
 		    	if (logger.isActivated()) {
@@ -272,7 +272,7 @@ public class InstantMessagingService extends ImsService {
 				if (logger.isActivated()) {
 					logger.error("Can't send 603 Decline", e);
 				}
-			}
+			}			
 			return;
 	    }
 
@@ -282,22 +282,19 @@ public class InstantMessagingService extends ImsService {
 				logger.debug("The max number of file transfer sessions is achieved: reject the invitation");
 			}
 			try {
-				// Send a 486 Busy response
+				// Send a 603 Decline response
 		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
+		    		logger.info("Send 603 Decline");
 		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
 				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
+					logger.error("Can't send 603 Decline", e);
 				}
-			}
+			}			
 			return;
 		}
-
-		// Test file size
-		// TODO
 
     	// Create a new session
 		ContentSharingTransferSession session = new TerminatingFileTransferSession(
@@ -317,8 +314,9 @@ public class InstantMessagingService extends ImsService {
      * @param contact Remote contact
      * @param subject Subject
      * @return IM session
+     * @throws CoreException
      */
-	public ChatSession initiateOne2OneChatSession(String contact, String subject) {
+	public ChatSession initiateOne2OneChatSession(String contact, String subject) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate 1-1 chat session with " + contact);
 		}
@@ -328,8 +326,7 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("The max number of chat sessions is achieved: cancel the initiation");
 			}
-			// TODO: returns an exception or an error code ?
-			return null;
+			throw new CoreException("Max chat sessions achieved");
 		}
 
 		// Create a new session
@@ -365,15 +362,15 @@ public class InstantMessagingService extends ImsService {
 			RichMessaging.getInstance().addSpamMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
 
 			try {
-				// Send a 603 Decline response
+				// Send a 486 Busy response
 		    	if (logger.isActivated()) {
-		    		logger.info("Send 603 Decline");
+		    		logger.info("Send 486 Busy here");
 		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
 				if (logger.isActivated()) {
-					logger.error("Can't send 603 Decline", e);
+					logger.error("Can't send 486 Busy here", e);
 				}
 			}
 			return;
@@ -422,8 +419,9 @@ public class InstantMessagingService extends ImsService {
      * @param group Group of contacts
      * @param subject Subject of the conference
      * @return IM session
+     * @throws CoreException
      */
-    public ChatSession initiateAdhocGroupChatSession(List<String> group, String subject) {
+    public ChatSession initiateAdhocGroupChatSession(List<String> group, String subject) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -433,8 +431,7 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("The max number of chat sessions is achieved: cancel the initiation");
 			}
-			// TODO: returns an exception or an error code ?
-			return null;
+			throw new CoreException("Max chat sessions achieved");
 		}
 
 		// Create a new session
@@ -466,15 +463,15 @@ public class InstantMessagingService extends ImsService {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
 			}
 			try {
-				// Send a 603 Decline response
+				// Send a 486 Busy response
 		    	if (logger.isActivated()) {
-		    		logger.info("Send 603 Decline");
+		    		logger.info("Send 486 Busy here");
 		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
 				if (logger.isActivated()) {
-					logger.error("Can't send 603 Decline", e);
+					logger.error("Can't send 486 Busy here", e);
 				}
 			}
 			return;
@@ -551,7 +548,6 @@ public class InstantMessagingService extends ImsService {
 
  	    // Get session from the message ID
  	    // TODO: group chat support?
-
 		Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(message.getFromUri());
 		if (sessions.size() > 0) {
 			ChatSession session = sessions.lastElement();
@@ -577,15 +573,15 @@ public class InstantMessagingService extends ImsService {
 			}
 
 			try {
-				// Send a 603 Decline response
+				// Send a 486 Busy response
 		    	if (logger.isActivated()) {
-		    		logger.info("Send 603 Decline");
+		    		logger.info("Send 486 Busy here");
 		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
+		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
 		        getImsModule().getSipManager().sendSipResponse(resp);
 			} catch(Exception e) {
 				if (logger.isActivated()) {
-					logger.error("Can't send 603 Decline", e);
+					logger.error("Can't send 486 Busy here", e);
 				}
 			}
 			return;

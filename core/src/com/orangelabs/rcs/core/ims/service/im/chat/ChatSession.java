@@ -26,11 +26,9 @@ import java.util.List;
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -116,9 +114,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
-		
-		// Start the session idle timer
-		activityMgr.restartInactivityTimer();
 	}
     
     /**
@@ -134,6 +129,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 
 		// Set the session participants
 		setParticipants(participants);
+	}
+	
+	/**
+	 * Returns the session activity manager
+	 * 
+	 * @return Activity manager
+	 */
+	public ChatActivityManager getActivityManager() {
+		return activityMgr;
 	}
 	
 	/**
@@ -226,8 +230,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
     	}
 
-		// Close MSRP session
-    	closeMsrpSession();
+		// Close media session
+    	closeMediaSession();
 
     	// Remove the current session
     	getImsService().removeSession(this);
@@ -246,9 +250,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param currentSize Current transfered size in bytes
 	 * @param totalSize Total size in bytes
 	 */
-	public void msrpTransferProgress(long currentSize, long totalSize){
-		// Restart the session idle timer
-		activityMgr.restartInactivityTimer();
+	public void msrpTransferProgress(long currentSize, long totalSize) {
 	}
 	
 	/**
@@ -259,9 +261,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		logger.info("Data transfered");
     	}
     	
-		// Restart the session idle timer
-		activityMgr.restartInactivityTimer();
-
+		// Update the activity manager
+		activityMgr.updateActivity();
+		
 	    // Notify listeners
     	for(int i=0; i < getListeners().size(); i++) {
     		((ChatSessionListener)getListeners().get(i)).handleMessageTransfered();
@@ -279,9 +281,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		logger.info("Data received (type " + mimeType + ")");
     	}
     	
-		// Restart the session idle timer
-		activityMgr.restartInactivityTimer();
-	
+		// Update the activity manager
+		activityMgr.updateActivity();
+		
     	if ((data == null) || (data.length == 0)) {
     		// By-pass empty data
         	if (logger.isActivated()) {
@@ -324,10 +326,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    	}
 				    	// Check DateTime header
 				    	Date date = new Date();
-//				    	String dateTime = cpimMsg.getHeader(CpimMessage.HEADER_DATETIME);
-//				    	if (dateTime!=null){
-//				    		date.setTime(DateUtils.decodeDate(dateTime));
-//				    	}
+				    	// TODO: use CPIM date instead?
+				    	// String dateTime = cpimMsg.getHeader(CpimMessage.HEADER_DATETIME);
+				    	// if (dateTime!=null){
+				    	//	date.setTime(DateUtils.decodeDate(dateTime));
+			    		//}
 		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
 		    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
 		    			if (imdnDisplayedRequested){
@@ -442,9 +445,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param msgId Id of the message that is sent, to be used in case of error
 	 */
 	public void sendDataChunks(String data, String mime, String msgId) {
-		// Restart the session idle timer
-		activityMgr.restartInactivityTimer();
-
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(data.getBytes()); 
 			msrpMgr.sendChunks(stream, mime, data.getBytes().length);			
@@ -627,46 +627,4 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		}
     	}
     }
-    
-	/**
-	 * Reject the session invitation
-	 */
-	public void rejectSession() {
-		if (logger.isActivated()) {
-			logger.debug("Session invitation has been rejected");
-		}
-		invitationStatus = INVITATION_REJECTED;
-
-		// Unblock semaphore
-		synchronized(waitUserAnswer) {
-			waitUserAnswer.notifyAll();
-		}
-
-		// Decline the invitation
-		send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-			
-		// Remove the session in the session manager
-		getImsService().removeSession(this);
-	}
-	
-    /**
-     * Send a 486 "Busy" to the remote party
-     * 
-     * @param request SIP request
-     * @param localTag Local tag
-     */
-	public void send486Busy(SipRequest request, String localTag) {
-		try {
-	        // Send a 486 Busy error
-	    	if (logger.isActivated()) {
-	    		logger.info("Send 486 Busy");
-	    	}
-	        SipResponse resp = SipMessageFactory.createResponse(request, localTag, 486);
-	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send 486 Busy response", e);
-			}
-		}
-	}
 }

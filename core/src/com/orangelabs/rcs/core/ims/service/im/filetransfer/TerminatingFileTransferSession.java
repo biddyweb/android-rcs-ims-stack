@@ -317,8 +317,8 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
     	}
 
-    	// Close the MSRP session
-    	closeMsrpSession();
+    	// Close media session
+    	closeMediaSession();
 
     	// Remove the current session
     	getImsService().removeSession(this);

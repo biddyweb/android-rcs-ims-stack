@@ -108,7 +108,13 @@ public class ServiceProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
         txt.setText(settings.get("MaxFileTransferSessions"));
 
-		Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
+        txt = (EditText)this.findViewById(R.id.MaxChatLogEntries);
+        txt.setText(settings.get("MaxChatLogEntries"));
+
+        txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
+        txt.setText(settings.get("MaxRichcallLogEntries"));
+
+        Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
@@ -177,6 +183,12 @@ public class ServiceProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
 				Provisioning.writeParameter(cr, "MaxFileTransferSessions", txt.getText().toString());
 
+		        txt = (EditText)this.findViewById(R.id.MaxChatLogEntries);
+				Provisioning.writeParameter(cr, "MaxChatLogEntries", txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
+				Provisioning.writeParameter(cr, "MaxRichcallLogEntries", txt.getText().toString());
+				
 				Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 				if (spinner.getSelectedItemId() == 0) {
 					Provisioning.writeParameter(cr, "ImSessionStart", "1");

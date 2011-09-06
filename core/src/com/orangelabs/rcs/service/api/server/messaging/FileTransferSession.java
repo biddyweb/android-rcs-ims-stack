@@ -77,6 +77,24 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 	}
 	
 	/**
+	 * Get remote contact
+	 * 
+	 * @return Contact
+	 */
+	public String getRemoteContact() {
+		return session.getRemoteContact();
+	}
+	
+	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		return session.getSessionState();
+	}
+	
+	/**
      * Get filename
      *
      * @return Filename
@@ -119,7 +137,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
   		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
 
   		// Reject invitation
-		session.rejectSession();
+		session.rejectSession(603);
 	}
 
 	/**

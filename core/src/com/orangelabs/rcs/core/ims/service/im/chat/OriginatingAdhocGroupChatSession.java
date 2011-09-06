@@ -202,8 +202,8 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 603 || ctx.getStatusCode() == 486) {
-            	// 603 Invitation declined or 486 Busy
+            if (ctx.getStatusCode() == 486) {
+            	// 486 Busy
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
@@ -272,14 +272,6 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
         	// The session is established
 	        getDialogPath().sessionEstablished();
 
-	        // Test if the session should be interrupted
-			if (isInterrupted()) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been interrupted: end of processing");
-				}
-				return;
-			}
-	        
         	// Create the MSRP session
 			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
 			session.setFailureReportOption(false);
@@ -303,6 +295,10 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();
 	        }
+	    	
+			// Start the activity manager
+			getActivityManager().start();
+	    	
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);

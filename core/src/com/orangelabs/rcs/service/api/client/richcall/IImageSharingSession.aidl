@@ -12,6 +12,9 @@ interface IImageSharingSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session state
+	int getSessionState();
+
 	// Get filename
 	String getFilename();
 	

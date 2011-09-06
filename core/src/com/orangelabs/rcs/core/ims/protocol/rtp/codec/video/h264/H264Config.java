@@ -36,11 +36,10 @@ public class H264Config {
 
     /**
      * Default codec params
-     * 42B00B => Profile Baseline / Level 1b
      */
     public final static String CODEC_PARAMS = "";
     // TODO: with value "profile-level-id=42B00B", the native encoder fails to
-    // enncode video frame ?
+    // encode video frame!
 
     /**
      * Default video width

@@ -34,8 +34,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
@@ -120,7 +120,7 @@ public class OriginatingPreRecordedVideoContentSharingSession extends ContentSha
 	        	logger.info("Send INVITE");
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_VIDEO_SHARE, sdp);
+	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
 
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
@@ -219,8 +219,7 @@ public class OriginatingPreRecordedVideoContentSharingSession extends ContentSha
 
 	        // Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-            String remoteHost = SdpUtils
-                    .extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
             MediaDescription mediaVideo = parser.getMediaDescription("video");
             int remotePort = mediaVideo.port;
 
@@ -285,7 +284,7 @@ public class OriginatingPreRecordedVideoContentSharingSession extends ContentSha
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_VIDEO_SHARE,
+	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE,
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path
@@ -364,7 +363,7 @@ public class OriginatingPreRecordedVideoContentSharingSession extends ContentSha
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_VIDEO_SHARE,
+	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE,
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path

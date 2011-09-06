@@ -39,8 +39,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -140,7 +140,7 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	        	logger.info("Send INVITE");
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_IMAGE_SHARE, sdp);
+	        		RichcallService.FEATURE_TAGS_IMAGE_SHARE, sdp);
 
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
@@ -332,7 +332,7 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_IMAGE_SHARE,
+	        		RichcallService.FEATURE_TAGS_IMAGE_SHARE,
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path
@@ -413,7 +413,7 @@ public class OriginatingContentSharingSession extends ContentSharingTransferSess
 	        }
 	        SipRequest invite = SipMessageFactory.createInvite(
 	        		getDialogPath(),
-	        		ContentSharingService.FEATURE_TAGS_IMAGE_SHARE,
+	        		RichcallService.FEATURE_TAGS_IMAGE_SHARE,
 					getDialogPath().getLocalContent());
 
 	        // Reset initial request in the dialog path

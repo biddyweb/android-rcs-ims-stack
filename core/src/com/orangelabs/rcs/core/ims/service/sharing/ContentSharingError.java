@@ -39,7 +39,7 @@ public class ContentSharingError extends ImsServiceError {
 	public final static int SESSION_INITIATION_FAILED = 0x02;
 	
 	/**
-	 * Session initiation has been declines (e.g. 603 Decline)
+	 * Session initiation has been declined (e.g. 603 Decline)
 	 */
 	public final static int SESSION_INITIATION_DECLINED = 0x03;	
 

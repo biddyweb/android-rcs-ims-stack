@@ -103,7 +103,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 				}
 
 				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 				
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
@@ -272,6 +272,10 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
     	    	for(int i=0; i < getListeners().size(); i++) {
     	    		getListeners().get(i).handleSessionStarted();
     	        }
+    	    	
+    			// Start the activity manager
+    			getActivityManager().start();
+    	    	
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

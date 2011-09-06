@@ -19,6 +19,7 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.List;
 
+import javax.sip.header.ContactHeader;
 import javax.sip.header.ExtensionHeader;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -43,6 +44,22 @@ public class ChatUtils {
 	 * Contribution ID header
 	 */
 	public static final String HEADER_CONTRIBUTION_ID = "Contribution-ID";
+	
+	/**
+	 * Is a group chat session invitation
+	 * 
+	 * @param request Request
+	 * @return Boolean
+	 */
+	public static boolean isGroupChatInvitation(SipRequest request) {
+        ContactHeader contactHeader = (ContactHeader)request.getHeader(ContactHeader.NAME);
+		String param = contactHeader.getParameter("isfocus");
+		if (param != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 	/**
 	 * Get asserted identity
@@ -75,7 +92,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isTextPlainType(String mime) {
-    	if ((mime != null) && mime.equalsIgnoreCase(InstantMessage.MIME_TYPE)) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(InstantMessage.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -89,7 +106,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isApplicationIsComposingType(String mime) {
-    	if ((mime != null) && mime.equalsIgnoreCase(IsComposingInfo.MIME_TYPE)) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(IsComposingInfo.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -103,7 +120,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isMessageCpimType(String mime) {
-    	if ((mime != null) && mime.equalsIgnoreCase(CpimMessage.MIME_TYPE)) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(CpimMessage.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -117,7 +134,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isMessageImdnType(String mime) {
-    	if ((mime != null) && mime.equalsIgnoreCase(ImdnDocument.MIME_TYPE)) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(ImdnDocument.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -310,7 +327,6 @@ public class ChatUtils {
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CpimMessage.CRLF + 
 			CpimMessage.CRLF + 
 			content;	
-		   
 		return cpim;
 	}
 	

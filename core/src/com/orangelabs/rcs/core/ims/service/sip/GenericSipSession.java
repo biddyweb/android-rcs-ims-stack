@@ -33,14 +33,14 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	private String featureTag;	
 	
 	/**
-	 * SDP offer
+	 * Local SDP
 	 */
-	private String sdpOffer = null;
+	private String localSdp = null;
 
 	/**
-	 * SDP answer
+	 * Remote SDP
 	 */
-	private String sdpAnswer = null;
+	private String remoteSdp = null;
 	
     /**
 	 * Constructor
@@ -65,38 +65,38 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	}
 
 	/**
-	 * Get SDP offer
+	 * Get local SDP
 	 * 
-	 * @return SDP offer
+	 * @return SDP
 	 */
-	public String getSdpOffer() {
-		return sdpOffer;
+	public String getLocalSdp() {
+		return localSdp;
 	}
 
 	/**
-	 * Set SDP offer
+	 * Set local SDP
 	 * 
-	 * @param offer SDP offer
+	 * @param sdp SDP
 	 */
-	public void setSdpOffer(String offer) {
-		this.sdpOffer = offer;
+	public void setLocalSdp(String sdp) {
+		this.localSdp = sdp;
 	}
 
 	/**
-	 * Get SDP answer
+	 * Get remote SDP
 	 * 
-	 * @return SDP answer
+	 * @return SDP
 	 */
-	public String getSdpAnswer() {
-		return sdpAnswer;
+	public String getRemoteSdp() {
+		return remoteSdp;
 	}
 
 	/**
-	 * Set SDP answer
+	 * Set remote SDP
 	 * 
-	 * @param answer SDP answer
+	 * @param sdp SDP
 	 */
-	public void setSdpAnswer(String answer) {
-		this.sdpAnswer = answer;
+	public void setRemoteSdp(String sdp) {
+		this.remoteSdp = sdp;
 	}
 }

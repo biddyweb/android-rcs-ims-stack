@@ -10,6 +10,7 @@ IETF:
 
 RFC 1321 - The MD5 Message-Digest Algorithm
 RFC 2327 - SDP: Session Description Protocol
+RFC 2392 - Content-ID and Message-ID Uniform Resource Locators
 RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
 RFC 3261 - SIP: Session Initiation Protocol
 RFC 3264 - An Offer/Answer Model with the Session Description Protocol (SDP)

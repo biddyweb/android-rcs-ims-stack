@@ -185,6 +185,9 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
     		logger.debug("Request capabilities to " + contact);
     	}
 
+    	// Extract contact phone number
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
 		// Read capabilities from the database
 		Capabilities capabilities = ContactsManager.getInstance().getContactCapabilities(contact);
 		if (capabilities == null) {
@@ -273,15 +276,14 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		ArrayList<String> alreadyRcsOrInvalidNumbers = new ArrayList<String>();
 
 		// We add "My number" to the numbers that are already RCS, so we don't query it if it is present in the address book
-        alreadyRcsOrInvalidNumbers.add(PhoneUtils.extractNumberFromUri(ImsModule.IMS_USER_PROFILE
-                .getPublicUri()));
+        alreadyRcsOrInvalidNumbers.add(PhoneUtils.extractNumberFromUri(ImsModule.IMS_USER_PROFILE.getPublicUri()));
 
 		while(phonesCursor.moveToNext()) {
 			// Keep a trace of already treated row. Key is (phone number in international format)
 			String phoneNumber = PhoneUtils.formatNumberToInternational(phonesCursor.getString(1));
 			if (!alreadyRcsOrInvalidNumbers.contains(phoneNumber)) {
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
-                if (ContactsManager.getInstance().isRCSValidNumber(phoneNumber)
+                if (ContactsManager.getInstance().isRcsValidNumber(phoneNumber)
 						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
 						&& !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber)) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
@@ -291,19 +293,21 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 				} else {
 					// This entry is either not valid or already RCS, this number is already done
 					alreadyRcsOrInvalidNumbers.add(phoneNumber);
+					
 					// Remove the number from the treated list, if it is in it
 					toBeTreatedNumbers.remove(phoneNumber);
 				}
-			}else{
+			} else {
 				// Remove the number from the treated list, it was already queried for another raw contact on the same number
 				toBeTreatedNumbers.remove(phoneNumber);
+				
 				// Check if the raw contact is associated with a RCS raw contact, if not the case then we have to create a new association for it
 				long rawContactId = phonesCursor.getLong(2);
 
                 if (!ContactsManager.getInstance().isSimAccount(rawContactId)
 						&& (ContactsManager.getInstance().getAssociatedRcsRawContact(rawContactId, phoneNumber)==-1)){
-					ContactInfo currentInfo = ContactsManager.getInstance().getContactInfo(phoneNumber);
 					// Create a new RCS raw contact with the same info and attach it to the raw contact
+					ContactInfo currentInfo = ContactsManager.getInstance().getContactInfo(phoneNumber);
 					ContactsManager.getInstance().createRcsContact(currentInfo, rawContactId);
 				}
 			}

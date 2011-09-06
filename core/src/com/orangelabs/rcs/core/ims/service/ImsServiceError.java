@@ -36,7 +36,7 @@ public class ImsServiceError extends Error {
 	public final static int SESSION_INITIATION_FAILED = 2;
 	
 	/**
-	 * Session initiation has been declines (e.g. 603 Decline)
+	 * Session initiation has been declined (e.g. 603 Decline or 486 Busy)
 	 */
 	public final static int SESSION_INITIATION_DECLINED = 3;	
 

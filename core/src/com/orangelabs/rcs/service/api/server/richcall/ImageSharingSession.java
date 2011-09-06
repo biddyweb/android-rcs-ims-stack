@@ -84,6 +84,15 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 	public String getRemoteContact() {
 		return session.getRemoteContact();
 	}
+	
+	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		return session.getSessionState();
+	}
 
 	/**
      * Get filename
@@ -127,7 +136,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
 
 		// Reject invitation
-		session.rejectSession();
+		session.rejectSession(603);
 	}
 
 	/**

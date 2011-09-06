@@ -19,17 +19,6 @@
 		android:layout_marginRight="5dip"
 		android:drawSelectorOnTop="true"/>
 
-       	<TextView android:text="IMS connection polling period (seconds):"
-	    android:paddingTop="5dip"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"/>
-		<EditText android:id="@+id/ImsConnectionPollingPeriod"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	 	android:layout_marginLeft="5dip"
-	 	android:layout_marginRight="5dip"
-	 	android:maxLength="10" android:inputType="number" android:lines="1"/>
-
        	<TextView android:text="IMS service polling period (seconds):"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
@@ -156,6 +145,28 @@
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
 		<EditText android:id="@+id/RegisterExpirePeriod"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="10" android:inputType="number" android:lines="1"/>
+
+       	<TextView android:text="Registration retry base time (seconds):"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/RegisterRetryBaseTime"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="10" android:inputType="number" android:lines="1"/>
+
+       	<TextView android:text="Registration retry max time (seconds):"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/RegisterRetryMaxTime"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"

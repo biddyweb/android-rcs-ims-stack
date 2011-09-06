@@ -8,7 +8,7 @@ import com.orangelabs.rcs.service.api.client.sip.ISipSession;
 interface ISipApi {
 
 	// Initiate a SIP session
-	ISipSession initiateSession(in String contact, in String featureTag, in String offer);
+	ISipSession initiateSession(in String contact, in String featureTag, in String sdp);
 
 	// Get a SIP session from its session ID
 	ISipSession getSession(in String id);

@@ -153,8 +153,15 @@ public class CallManager {
 					callState = CallManager.DISCONNECTED;
 				    incomingCall = false;
 
+				    // Abort pending richcall sessions
+				    if (imsModule.isRichcallServiceActivated()) {
+				    	imsModule.getRichcallService().abortAllSessions();
+				    }
+				    
 				    // Disable content sharing capabilities
-					resetContentSharingCapabilities(remoteParty);
+					if (remoteParty != null) {
+						imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(remoteParty);
+					}
 				    
 				    // Request capabilities
 					requestCapabilities(remoteParty);
@@ -179,20 +186,6 @@ public class CallManager {
 					break;
 			}
 		}
-		
-		/**
-		 * Callback invoked when connection state changes
-		 * 
-		 * @param state State
-		 */
-		public void onDataConnectionStateChanged(int state) {
-			if ((state == TelephonyManager.DATA_SUSPENDED) || (state == TelephonyManager.DATA_DISCONNECTED)) {
-				if (logger.isActivated()) {
-					logger.debug("Data network has been disconnected: abort all pending sessions");
-				}
-				imsModule.abortAllSessions();
-			}
-		}		
 	};	
 	
 	/**
@@ -264,15 +257,4 @@ public class CallManager {
 			 imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
 	}	
-	
-	/**
-	 * Reset content sharing capabilities of a given contact
-	 * 
-	 * @param contact Contact
-	 */
-	private void resetContentSharingCapabilities(String contact) {
-		if (contact != null) {
-			 imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(contact);
-		}
-	}
 }

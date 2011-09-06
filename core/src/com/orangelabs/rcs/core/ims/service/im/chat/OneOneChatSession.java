@@ -84,6 +84,9 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * Close media session
 	 */
 	public void closeMediaSession() {
+		// Stop the activity manager
+		getActivityManager().stop();		
+
 		// Close MSRP session
 		closeMsrpSession();
 	}

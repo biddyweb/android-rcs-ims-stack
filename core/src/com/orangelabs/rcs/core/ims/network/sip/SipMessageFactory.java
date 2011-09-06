@@ -901,10 +901,6 @@ public class SipMessageFactory {
 	        Header referSub = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFER_SUB, "false");
 	        refer.addHeader(referSub);
 	        
-	        // Set Referred-By header
-	        Header referredBy = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFERRED_BY, dialog.getLocalParty());
-	        refer.addHeader(referredBy);
-	        
 			// Set the Route header
 	        Vector<String> route = dialog.getRoute();
 	        for(int i=0; i < route.size(); i++) {
@@ -990,10 +986,6 @@ public class SipMessageFactory {
 	        Header referSub = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFER_SUB, "false");
 	        refer.addHeader(referSub);
 	        
-	        // Set Referred-By header
-	        Header referredBy = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFERRED_BY, dialog.getLocalParty());
-	        refer.addHeader(referredBy);
-	        
 			// Set the Route header
 	        Vector<String> route = dialog.getRoute();
 	        for(int i=0; i < route.size(); i++) {
@@ -1008,8 +1000,13 @@ public class SipMessageFactory {
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
 	        
+	        // Set the Content-ID header
+			Header contentIdHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_CONTENT_ID,
+					"<" + listID + "@" + ImsModule.IMS_USER_PROFILE.getHomeDomain() + ">");
+			refer.addHeader(contentIdHeader);
+	        
 	        // Generate the resource list for given participants
-	        String resourceList = ChatUtils.generateChatResourceList(participants);	        
+	        String resourceList = ChatUtils.generateChatResourceList(participants);
 	        
 			// Set the message content
 			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "resource-lists+xml");
@@ -1020,14 +1017,9 @@ public class SipMessageFactory {
 			refer.setContentLength(contentLengthHeader);
 
 			// Set the Content-Disposition header
-	        Header contentDispo = SipUtils.HEADER_FACTORY.createHeader(ContentDispositionHeader.NAME, "recipient-list");
-	        refer.addHeader(contentDispo);
+	        Header contentDispoHeader = SipUtils.HEADER_FACTORY.createHeader(ContentDispositionHeader.NAME, "recipient-list");
+	        refer.addHeader(contentDispoHeader);
 
-			// Set the Content-ID header
-	        Header contentId = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_CONTENT_ID,
-	        		"<" + listID + "@" + ImsModule.IMS_USER_PROFILE.getHomeDomain() + ">");
-	        refer.addHeader(contentId);
-	        
 			return new SipRequest(refer);
 		} catch(Exception e) {
 			if (logger.isActivated()) {

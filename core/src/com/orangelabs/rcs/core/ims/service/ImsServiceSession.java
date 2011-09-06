@@ -55,7 +55,7 @@ public abstract class ImsServiceSession extends Thread {
     /**
      * Session ID
      */
-    private String sessionId = "" + System.currentTimeMillis();
+    private String sessionId =  SessionIdGenerator.getNewId();
 
 	/**
 	 * Remote contact
@@ -132,7 +132,7 @@ public abstract class ImsServiceSession extends Thread {
     	// Set the authentication agent in the dialog path 
     	dialogPath.setAuthenticationAgent(getAuthenticationAgent());
 	}
-	
+		
 	/**
 	 * Create terminating dialog path
 	 * 
@@ -285,6 +285,33 @@ public abstract class ImsServiceSession extends Thread {
 	}
 
 	/**
+	 * Get session state
+	 * 
+	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 */
+	public int getSessionState() {
+		int result = -1;
+		if (dialogPath != null) {
+			if (dialogPath.isSessionCancelled()) {
+				// Canceled: CANCEL received
+				result = 1;
+			} else
+			if (dialogPath.isSessionEstablished()) {
+				// Established: ACK exchanged
+				result = 2;
+			} else
+			if (dialogPath.isSessionTerminated()) {
+				// Terminated: BYE received
+				result = 3;
+			} else {
+				// Pending
+				result = 0;
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Get the dialog path of the session
 	 * 
 	 * @return Dialog path object
@@ -313,8 +340,10 @@ public abstract class ImsServiceSession extends Thread {
 	
 	/**
 	 * Reject the session invitation
+	 * 
+	 * @param code Error code
 	 */
-	public void rejectSession() {
+	public void rejectSession(int code) {
 		if (logger.isActivated()) {
 			logger.debug("Session invitation has been rejected");
 		}
@@ -326,7 +355,7 @@ public abstract class ImsServiceSession extends Thread {
 		}
 
 		// Decline the invitation
-		send603Decline(getDialogPath().getInvite(),	getDialogPath().getLocalTag());
+		sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), code);
 			
 		// Remove the session in the session manager
 		imsService.removeSession(this);
@@ -590,7 +619,30 @@ public abstract class ImsServiceSession extends Thread {
     	}
     }
 	
+
     /**
+     * Send an error response to the remote party
+     * 
+     * @param request SIP request
+     * @param localTag Local tag
+     * @param code Response code
+     */
+	public void sendErrorResponse(SipRequest request, String localTag, int code) {
+		try {
+	        // Send  error
+	    	if (logger.isActivated()) {
+	    		logger.info("Send " + code + " error response");
+	    	}
+	        SipResponse resp = SipMessageFactory.createResponse(request, localTag, code);
+	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send error response", e);
+			}
+		}
+	}
+	
+	/**
      * Send a 603 "Decline" to the remote party
      * 
      * @param request SIP request
@@ -610,6 +662,27 @@ public abstract class ImsServiceSession extends Thread {
 			}
 		}
 	}
+	
+    /**
+     * Send a 486 "Busy" to the remote party
+     * 
+     * @param request SIP request
+     * @param localTag Local tag
+     */
+	public void send486Busy(SipRequest request, String localTag) {
+		try {
+	        // Send a 486 Busy error
+	    	if (logger.isActivated()) {
+	    		logger.info("Send 486 Busy");
+	    	}
+	        SipResponse resp = SipMessageFactory.createResponse(request, localTag, 486);
+	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 486 Busy response", e);
+			}
+		}
+	}	
 	
     /**
      * Send a 405 "Method Not Allowed" to the remote party

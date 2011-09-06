@@ -18,13 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
-
-
-
-
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.IOException;
 import java.util.Random;
 import java.util.Vector;
@@ -64,6 +61,11 @@ public class RtcpPacketTransmitter extends Thread {
      * Flag used to determine when to terminate after sending a BYE
      */
     private boolean waitingForByeBackoff = false;
+
+    /**
+     * Flag used to properly close
+     */
+    private boolean closed = false;
 
     /**
      * The logger
@@ -138,6 +140,7 @@ public class RtcpPacketTransmitter extends Thread {
      */
 	public void close() throws IOException {
         rtcpSession.isByeRequested = true;
+        closed = true;
         // Close the datagram connection
 		if (datagramConnection != null) {
 			datagramConnection.close();
@@ -178,13 +181,18 @@ public class RtcpPacketTransmitter extends Thread {
                                 terminate = true;
                             }
                         } else {
-                            transmit(assembleRtcpPacket());
-                            if (rtcpSession.isByeRequested && !waitingForByeBackoff) {
-                                // We have sent a BYE packet, so terminate
-                                terminate = true;
+                            if (!closed) {
+                                transmit(assembleRtcpPacket());
+                                if (rtcpSession.isByeRequested && !waitingForByeBackoff) {
+                                    // We have sent a BYE packet, so terminate
+                                    terminate = true;
+                                } else {
+                                    rtcpSession.timeOfLastRTCPSent = rtcpSession.currentTime();
+                                }
                             } else {
-                                rtcpSession.timeOfLastRTCPSent = rtcpSession.currentTime();
+                                terminate = true;
                             }
+
                         }
                     }
                     waitingForByeBackoff = false;

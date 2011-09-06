@@ -143,59 +143,104 @@ public class ImsServiceDispatcher extends Thread {
 	    	String sdp = request.getContent().toLowerCase();
 
 	    	// New incoming session invitation
-	    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI)) {
+	    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
+	    			imsModule.isChatServiceActivated()) {
     			// Store & Forward session
-	    		if (logger.isActivated()) {
-	    			logger.debug("Store & Forward session invitation");
+	    		if (imsModule.isChatServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Store & Forward session invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
-    			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
 	    		// Video streaming
-	    		if (logger.isActivated()) {
-	    			logger.debug("Video content sharing streaming invitation");
-	    		}
 	    		if (imsModule.isRichcallServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Video content sharing streaming invitation");
+		    		}
 	    			imsModule.getRichcallService().receiveVideoSharingInvitation(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
 	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE)) {
 	    		// Image sharing
-	    		if (logger.isActivated()) {
-	    			logger.debug("Image content sharing transfer invitation");
-	    		}
 	    		if (imsModule.isRichcallServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Image content sharing transfer invitation");
+		    		}
 	    			imsModule.getRichcallService().receiveImageSharingInvitation(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "file-selector")) {
 		        // File transfer
-	    		if (logger.isActivated()) {
-	    			logger.debug("File transfer invitation");
+	    		if (imsModule.isChatServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("File transfer invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
-    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
 	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
-	    				isTagPresent(sdp, "resource-lists+xml")) {
+	    				ChatUtils.isGroupChatInvitation(request)) {
 		        // Ad-hoc group chat session
-	    		if (logger.isActivated()) {
-	    			logger.debug("Ad-hoc group chat session invitation");
+	    		if (imsModule.isChatServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Ad-hoc group chat session invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
-    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
 	    	} else
     		if (isTagPresent(sdp, "msrp") &&
     				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM)) {
 		        // 1-1 chat session
-	    		if (logger.isActivated()) {
-	    			logger.debug("1-1 chat session invitation");
+	    		if (imsModule.isChatServiceActivated()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("1-1 chat session invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
+	    		} else {
+					// Service not activated: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IMS service not activated: automatically reject");
+					}
+					sendFinalResponse(request, 603);
 	    		}
-    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
     		} else {
 	    		if (intentMgr.isSipIntentResolved(request)) {
 	    			// Generic SIP session
@@ -206,7 +251,7 @@ public class ImsServiceDispatcher extends Thread {
 		    	} else {
 					// Unknown service: reject the invitation with a 606 Not Acceptable
 					if (logger.isActivated()) {
-						logger.debug("Unknown invitation: automatically rejected");
+						logger.debug("Unknown IMS service: automatically reject");
 					}
 					sendFinalResponse(request, 606);
 		    	}

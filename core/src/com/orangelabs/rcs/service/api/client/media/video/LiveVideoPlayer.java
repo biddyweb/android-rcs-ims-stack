@@ -137,7 +137,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     public LiveVideoPlayer() {
     	// Set video codec
     	setVideoCodec(RcsSettings.getInstance().getCShVideoFormat());
-    	
+
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
@@ -154,7 +154,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public LiveVideoPlayer(VideoCodec codec) {
         this.mediaVideoCodec = codec;
-        
+
     	// Set video codec
     	setVideoCodec(codec.getCodecName());
 
@@ -174,7 +174,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     public LiveVideoPlayer(String codec) {
     	// Set video codec
     	setVideoCodec(codec);
-    	
+
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
@@ -203,7 +203,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             mediaVideoCodec = new VideoCodec(H263Config.CODEC_NAME, H263Config.CLOCK_RATE,
                     H263Config.CODEC_PARAMS, H263Config.FRAME_RATE, H263Config.BIT_RATE,
                     H263Config.VIDEO_WIDTH, H263Config.VIDEO_HEIGHT);
-            
+
             // Set native video parameters
             params.setEncFrameRate(H263Config.FRAME_RATE);
             params.setBitRate(H263Config.BIT_RATE);
@@ -212,7 +212,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             params.setNoFrameSkipped(false);
         }
     }
-    
+
     /**
      * Returns the local RTP port
      *
@@ -341,7 +341,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             // Already closed
             return;
         }
-
         // Close the RTP layer
         rtpInput.close();
         rtpSender.stopSession();
@@ -671,8 +670,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          * Close the player
          */
         public void close() {
-            fifo.close();
-            fifo = null;
+            if (fifo != null) {
+                fifo.close();
+                fifo = null;
+            }
         }
 
         /**

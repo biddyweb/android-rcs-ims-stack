@@ -232,8 +232,8 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 603 || (ctx.getStatusCode() == 486)) {
-            	// 603 Invitation declined or 486 busy
+            if (ctx.getStatusCode() == 486) {
+            	// 486 busy
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
@@ -301,14 +301,6 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	   		
         	// The session is established
 	        getDialogPath().sessionEstablished();
-
-	        // Test if the session should be interrupted
-			if (isInterrupted()) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been interrupted: end of processing");
-				}
-				return;
-			}
 	        	        
 	        // Create the MSRP client session
 			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
@@ -330,6 +322,9 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();
 	        }
+	    	
+			// Start the activity manager
+			getActivityManager().start();
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);

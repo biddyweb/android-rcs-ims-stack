@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
 import com.orangelabs.rcs.ri.richcall.InitiateImageSharing;
 import com.orangelabs.rcs.ri.richcall.InitiateOutgoingVisioSharing;
 import com.orangelabs.rcs.ri.richcall.InitiatePrerecordedVideoSharing;
@@ -35,7 +36,7 @@ import com.orangelabs.rcs.ri.richcall.InitiatePrerecordedVideoSharing;
  * @author jexa7410
  */
 public class RichCallRI extends ListActivity {
-    @Override
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -46,7 +47,7 @@ public class RichCallRI extends ListActivity {
         String[] items = {
     		getString(R.string.menu_initiate_image_sharing),
     		getString(R.string.menu_initiate_video_sharing),
-    		getString(R.string.menu_initiate_prerecorded_video_sharing)        		
+    		getString(R.string.menu_initiate_prerecorded_video_sharing)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }

@@ -34,8 +34,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingService;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
@@ -117,6 +117,37 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
             // Wait invitation answer
             int answer = waitInvitationAnswer();
 
+            if (answer == ImsServiceSession.INVITATION_REJECTED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been rejected by user");
+                }
+
+                // Remove the current session
+                getImsService().removeSession(this);
+
+                // Notify listeners
+                for (int i = 0; i < getListeners().size(); i++) {
+                    getListeners().get(i).handleSessionAborted();
+                }
+                return;
+            } else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been rejected on timeout");
+                }
+
+                // Ringing period timeout
+                send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+
+                // Remove the current session
+                getImsService().removeSession(this);
+
+                // Notify listeners
+                for (int i = 0; i < getListeners().size(); i++) {
+                    getListeners().get(i).handleSessionAborted();
+                }
+                return;
+            }
+
             // Check that a media renderer has been set
             if (getMediaRenderer() == null) {
                 handleError(new ContentSharingError(
@@ -193,45 +224,6 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 				}
         	}
 
-
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected by user");
-				}
-
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-	        	for(int i=0; i < getListeners().size(); i++) {
-	        		getListeners().get(i).handleSessionAborted();
-	            }
-				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected on timeout");
-				}
-
-				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-	        	for(int i=0; i < getListeners().size(); i++) {
-	        		getListeners().get(i).handleSessionAborted();
-	            }
-				return;
-			}
-
-			// Check that a media renderer has been set
-			if (getMediaRenderer() == null) {
-				handleError(new ContentSharingError(ContentSharingError.MEDIA_RENDERER_NOT_INITIALIZED));
-				return;
-			}
-
         	// Set media renderer event listener
         	getMediaRenderer().addListener(new MediaPlayerEventListener(this));
 
@@ -268,7 +260,7 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 				logger.info("Send 200 OK");
 			}
 			SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-					ContentSharingService.FEATURE_TAGS_VIDEO_SHARE, sdp);
+					RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
 
 	        // Send response
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
@@ -342,7 +334,7 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		((ContentSharingStreamingSessionListener)getListeners().get(i)).handleSharingError(error);
 	        }
-        }    	
+        }
 	}
 
 	/**
@@ -449,7 +441,7 @@ public class TerminatingVideoContentSharingSession extends ContentSharingStreami
 		    	for(int i=0; i < getListeners().size(); i++) {
 		    		((ContentSharingStreamingSessionListener)getListeners().get(i)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_STREAMING_FAILED, error));
 		        }
-	        }	    	
+            }
 		}
 	}
 }

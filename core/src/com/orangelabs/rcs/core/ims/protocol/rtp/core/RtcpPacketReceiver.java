@@ -33,6 +33,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -115,7 +116,7 @@ public class RtcpPacketReceiver extends Thread {
 	 */
 	public void run() {
 		try {
-			while (true) {
+            while (datagramConnection != null) {
 				// Wait a packet
 				byte[] data = datagramConnection.receive();
 

@@ -1100,20 +1100,35 @@ public class RcsSettings {
 	}
 
 	/**
-     * Get polling period used before each IMS connection attempt
-     *
-     * @return Period in seconds
-     */
-	public int getImsConnectionPollingPeriod() {
-		int result = 30;
+	 * Get max number of entries per contact in the chat log
+	 * 
+	 * @return Number
+	 */
+	public int getMaxChatLogEntriesPerContact() {
+		int result = 200;
 		if (instance != null) {
 			try {
-				result = Integer.parseInt(readParameter(RcsSettingsData.IMS_CONNECTION_POLLING_PERIOD));
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_CHAT_LOG_ENTRIES));
 			} catch(Exception e) {}
 		}
 		return result;
 	}
 
+	/**
+	 * Get max number of entries per contact in the richcall log
+	 * 
+	 * @return Number
+	 */
+	public int getMaxRichcallLogEntriesPerContact() {
+		int result = 200;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+	
     /**
      * Get polling period used before each IMS service check (e.g. test subscription state for presence service)
      *
@@ -1266,6 +1281,36 @@ public class RcsSettings {
 		if (instance != null) {
 			try {
 				result = Integer.parseInt(readParameter(RcsSettingsData.REGISTER_EXPIRE_PERIOD));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+
+	/**
+     * Get registration retry base time
+     *
+     * @return Time in seconds
+     */
+	public int getRegisterRetryBaseTime() {
+		int result = 30;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.REGISTER_RETRY_BASE_TIME));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+
+	/**
+     * Get registration retry max time
+     *
+     * @return Time in seconds
+     */
+	public int getRegisterRetryMaxTime() {
+		int result = 1800;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.REGISTER_RETRY_MAX_TIME));
 			} catch(Exception e) {}
 		}
 		return result;
@@ -1532,6 +1577,19 @@ public class RcsSettings {
 		boolean result = false;
     	if (instance != null) {
     		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_RICHCALL_SERVICE));
+    	}
+		return result;
+    }
+    
+    /**
+     * Is chat service activated
+     *
+     * @return Boolean
+     */
+    public boolean isChatServiceActivated() {
+		boolean result = false;
+    	if (instance != null) {
+    		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_CHAT_SERVICE));
     	}
 		return result;
     }

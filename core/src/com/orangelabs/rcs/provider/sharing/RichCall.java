@@ -28,6 +28,7 @@ import android.net.Uri;
 
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -51,6 +52,11 @@ public class RichCall {
 	 * Database URI
 	 */
 	private Uri databaseUri = RichCallData.CONTENT_URI;
+	
+	/**
+	 * Max log entries
+	 */
+	private int maxLogEntries;
 	
 	/**
 	 * The logger
@@ -82,12 +88,12 @@ public class RichCall {
      * 
      * @param ctx Application context
      */
-
 	private RichCall(Context ctx) {
 		super();
 		
         this.cr = ctx.getContentResolver();
-	}
+        this.maxLogEntries = RcsSettings.getInstance().getMaxRichcallLogEntriesPerContact();
+    }
 	
 	/**
 	 * Add a new entry in the call history 
@@ -163,7 +169,7 @@ public class RichCall {
 			if(logger.isActivated()){
 				logger.debug("Recycler : number of messages for this contact = "+numberOfMessagesForContact);
 			}
-			if(numberOfMessagesForContact<RichCallData.MAX_ENTRIES_PER_CONTACT){
+			if(numberOfMessagesForContact<maxLogEntries){
 				/* Enough place for another message... do nothing return */
 				if(logger.isActivated()){
 					logger.debug("Recycler : Enough place for another message, do nothing return");

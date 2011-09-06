@@ -218,20 +218,18 @@ public class CapabilityUtils {
 			// Intent query on current installed activities
 			PackageManager packageManager = context.getPackageManager();
 			Intent intent = new Intent(CapabilityApiIntents.RCS_EXTENSIONS);
-			intent.setType(FeatureTags.FEATURE_RCSE_EXTENSION + "/*");
+			String mime = FeatureTags.FEATURE_RCSE + "/*"; 
+			intent.setType(mime);			
 			List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
-			
 			String extensions = "";
 			for(int i=0; i < list.size(); i++) {
 				ResolveInfo info = list.get(i);
 				for(int j =0; j < info.filter.countDataTypes(); j++) {
 					String value = info.filter.getDataType(j);
-					if (value.startsWith(FeatureTags.FEATURE_RCSE_EXTENSION)) {
-						String[] mime = value.split("/");
-						String mimeType = mime[0] + "." + mime[1];
-						if (extensions.indexOf(mimeType) == -1) {
-							extensions += "," + mimeType;
-						}
+					int index = value.indexOf(FeatureTags.FEATURE_RCSE_EXTENSION);
+					if (index != -1) {
+						String tag = value.substring(index);
+						extensions += "," + tag;
 					}
 				}
 			}
