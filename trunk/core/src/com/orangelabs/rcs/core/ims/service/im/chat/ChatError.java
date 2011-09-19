@@ -49,9 +49,9 @@ public class ChatError extends ImsServiceError {
 	public final static int SESSION_INITIATION_CANCELLED = 0x04;	
 	
 	/**
-	 * Message transfer has failed (e.g. MSRP failure)
+	 * Media session has failed (e.g. MSRP failure)
 	 */
-	public final static int MSG_TRANSFER_FAILED = 0x05;
+	public final static int MEDIA_SESSION_FAILED = 0x05;
 	
 	/**
 	 * Subscription to conference package has failed

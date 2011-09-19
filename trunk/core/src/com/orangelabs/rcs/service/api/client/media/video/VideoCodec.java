@@ -164,4 +164,33 @@ public class VideoCodec {
     public int getHeight() {
         return mediaCodec.getIntParam(CODECHEIGHT, 144);
     }
+
+    /**
+     * Compare codec encodings and resolutions
+     * 
+     * @param codec Codec to compare
+     * @return True if codecs are equals
+     */
+    public boolean equals(VideoCodec codec) {
+        if (getCodecName().equalsIgnoreCase(codec.getCodecName()) &&
+        		getWidth() == codec.getWidth() &&
+        			getHeight() == codec.getHeight())
+            return true;
+        return false;
+    }
+
+    /**
+     * Check if a codec is in a list
+     *
+     * @param supportedCodecs list of supported codec
+     * @param codec selected codec
+     * @return True if the codec is in the list
+     */
+    public static boolean checkVideoCodec(MediaCodec[] supportedCodecs, VideoCodec codec) {
+        for (int i = 0; i < supportedCodecs.length; i++) {
+            if (codec.equals(new VideoCodec(supportedCodecs[i])))
+                return true;
+        }
+        return false;
+    }
 }

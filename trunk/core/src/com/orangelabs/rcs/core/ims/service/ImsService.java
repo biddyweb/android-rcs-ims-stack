@@ -122,7 +122,7 @@ public abstract class ImsService {
 		return imsModule;
 	}
 
-	/**
+    /**
      * Returns a session
      * 
      * @param id Session ID
@@ -132,7 +132,7 @@ public abstract class ImsService {
 		return (ImsServiceSession)sessions.get(id);
     }
 
-	/**
+    /**
      * Returns sessions associated to a contact
      * 
      * @param contact Contact number
@@ -151,6 +151,24 @@ public abstract class ImsService {
 		return result.elements();
     }
 
+    /**
+     * Returns the number of sessions in progress associated to a contact
+     * 
+     * @param contact Contact number
+     * @return number of sessions
+     */
+    public int getNumberOfSessions(String contact) {
+        int result = 0;
+        Enumeration<ImsServiceSession> list = sessions.elements();
+        while (list.hasMoreElements()) {
+            ImsServiceSession session = list.nextElement();
+            if (PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
+                result++;
+            }
+        }
+        return result;
+    }
+
 	/**
      * Returns the list of sessions
      * 
@@ -160,7 +178,7 @@ public abstract class ImsService {
 		return sessions.elements();
     }
 
-	/**
+    /**
      * Returns the number of sessions in progress
      * 
      * @return Number of sessions
@@ -169,7 +187,7 @@ public abstract class ImsService {
 		return sessions.size();
     }
 
-	/**
+    /**
      * Add a session
      * 
      * @param session Session
@@ -181,7 +199,7 @@ public abstract class ImsService {
 		sessions.put(session.getSessionID(), session);
     }
 
-	/**
+    /**
      * Remove a session
      * 
      * @param session Session
@@ -193,7 +211,7 @@ public abstract class ImsService {
 		sessions.remove(session.getSessionID());
     }
 
-	/**
+    /**
      * Remove a session
      * 
      * @param id Session ID
@@ -205,7 +223,7 @@ public abstract class ImsService {
 		sessions.remove(id);
     }
 
-	/**
+    /**
      * Is service started
      * 
      * @return Boolean
@@ -214,7 +232,7 @@ public abstract class ImsService {
 		return started;
 	}
 
-	/**
+    /**
      * Set service state
      * 
      * @param state State

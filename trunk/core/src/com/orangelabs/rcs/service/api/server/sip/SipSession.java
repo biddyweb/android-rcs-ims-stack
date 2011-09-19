@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.ims.service.sip.SipSessionError;
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionListener;
 import com.orangelabs.rcs.service.api.client.sip.ISipSession;
 import com.orangelabs.rcs.service.api.client.sip.ISipSessionEventListener;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -81,10 +82,11 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	/**
 	 * Get session state
 	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 * @return State (see class SessionState) 
+	 * @see SessionState
 	 */
 	public int getSessionState() {
-		return session.getSessionState();
+		return ServerApiUtils.getSessionState(session);
 	}	
 
 	/**

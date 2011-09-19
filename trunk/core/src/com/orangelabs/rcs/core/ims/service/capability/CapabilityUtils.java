@@ -34,7 +34,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
@@ -51,14 +51,14 @@ public class CapabilityUtils {
 	/**
 	 * Get supported feature tags for capability exchange
 	 *
-	 * @param inCall In call flag
+	 * @param richcall Rich call supported
 	 * @return List of tags
 	 */
-	public static List<String> getSupportedFeatureTags(boolean inCall) {
+	public static List<String> getSupportedFeatureTags(boolean richcall) {
 		List<String> tags = new ArrayList<String>();
 
 		// Video share support
-		if (RcsSettings.getInstance().isVideoSharingSupported() && inCall) {
+		if (RcsSettings.getInstance().isVideoSharingSupported() && richcall) {
 			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
 		}
 
@@ -75,7 +75,7 @@ public class CapabilityUtils {
 		}
 
 		// Image share support
-		if (RcsSettings.getInstance().isImageSharingSupported() && inCall) {
+		if (RcsSettings.getInstance().isImageSharingSupported() && richcall) {
 			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
 		}
 
@@ -273,7 +273,7 @@ public class CapabilityUtils {
 			String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
 				"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
 				"a=file-selector" + SipUtils.CRLF +
-				"a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
+				"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
 	    	
 	    	// Build the local SDP
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());

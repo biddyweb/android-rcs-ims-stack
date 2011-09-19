@@ -19,21 +19,21 @@
 package com.orangelabs.rcs.core.ims.protocol.rtp.format;
 
 /**
- * Geoloc format 
+ * Geoloc format
  * 
  * @author jexa7410
  */
 public class GeolocFormat extends Format {
-	
+
 	/**
 	 * Encoding name
 	 */
 	public static final String ENCODING = "geoloc";
-	
+
 	/**
 	 * Payload type
 	 */
-	public static final int PAYLOAD = 98;
+    public static final int PAYLOAD = 101;
 
 	/**
 	 * Constructor
@@ -41,7 +41,7 @@ public class GeolocFormat extends Format {
 	public GeolocFormat() {
 		super(ENCODING, PAYLOAD);
 	}
-	
+
     /**
      * Constructor
      * 
@@ -50,5 +50,5 @@ public class GeolocFormat extends Format {
      */
     public GeolocFormat(String codec, int payload) {
     	super(codec, payload);
-    }	
+    }
 }

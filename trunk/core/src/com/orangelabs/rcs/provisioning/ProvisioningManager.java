@@ -470,25 +470,11 @@ public class ProvisioningManager {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
 				if (value.equals("0")) {
-	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USE_PRESENCE_SERVICE, RcsSettingsData.FALSE);
-				} else {
-	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USE_PRESENCE_SERVICE, RcsSettingsData.TRUE);
-				}
-    		} else	
-    		if (key.equals("/PRESENCE/presenceprfl")) {
-    			// Describes whether the social presence functionality is supported.
-    			// Values:
-    			// - 0, it is not supported.    			
-    			// - 1, it is supported.
-	    		if (logger.isActivated()) {
-	    			logger.debug("Update parameter " + key + ": " + param.getValue());
-	    		}
-				if (value.equals("0")) {
 	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, RcsSettingsData.FALSE);
 				} else {
 	    			RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, RcsSettingsData.TRUE);
 				}
-    		} else
+    		} else	
     		if (key.equals("/PRESENCE/availabilityauth")) {
 				// Authorization for the Presence UA to use Availability status	feature.
     			// Values: 0, 1

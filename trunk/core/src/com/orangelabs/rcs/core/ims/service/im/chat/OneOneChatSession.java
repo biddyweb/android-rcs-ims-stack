@@ -24,7 +24,9 @@ import java.util.List;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 
@@ -39,10 +41,10 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 */
-	public OneOneChatSession(ImsService parent, String contact, String subject) {
-		super(parent, contact, subject);
+	public OneOneChatSession(ImsService parent, String contact, String msg) {
+		super(parent, contact, msg);
 		
 		// Set list of participants
 		ListOfParticipant participants = new ListOfParticipant();
@@ -62,21 +64,40 @@ public abstract class OneOneChatSession extends ChatSession {
 	/**
 	 * Send a text message
 	 * 
+	 * @param id Message-ID
 	 * @param msg Message
-	 * @param id Message-id
-	 * @param imdnActivated If true, add IMDN headers to the request
 	 */
-	public void sendTextMessage(String msg, String msgId, boolean imdnActivated) {
-		String content = StringUtils.encodeUTF8(msg);
-		if (imdnActivated){
-			// Send using CPIM + IMDN headers
+	public void sendTextMessage(String msgId, String msg) {
+		boolean useImdn = getImdnManager().isImdnActivated();
+		String content;
+		String mime;
+		if (useImdn) {
+			// Send message in CPIM + IMDN headers
 			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 			String to = getRemoteContact();
-			String cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
-			sendDataChunks(cpim, CpimMessage.MIME_TYPE, msgId);
-		}else{
-			// Send using plain text
-			sendDataChunks(content, InstantMessage.MIME_TYPE, msgId);
+			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, StringUtils.encodeUTF8(msg), InstantMessage.MIME_TYPE);
+			mime = CpimMessage.MIME_TYPE;
+		} else {
+			// Send message in plain text
+			content = StringUtils.encodeUTF8(msg);
+			mime = InstantMessage.MIME_TYPE;
+		}
+
+		// Send content
+		boolean result = sendDataChunks(msgId, content, mime);
+
+		// Update rich messaging history
+		RichMessaging.getInstance().addOutgoingChatMessage(new InstantMessage(msgId, getRemoteContact(), msg, useImdn), this);
+
+		// Check if message has been sent with success or not
+		if (!result) {
+			// Update rich messaging history
+			RichMessaging.getInstance().markChatMessageFailed(msgId);
+			
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, null, ImdnDocument.DELIVERY_STATUS_FAILED);
+			}
 		}
 	}
 	
@@ -97,8 +118,9 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * @param status Status
 	 */
 	public void sendIsComposingStatus(boolean status) {
-		String msg = IsComposingInfo.buildIsComposingInfo(status);
-		sendDataChunks(msg, IsComposingInfo.MIME_TYPE, null);
+		String content = IsComposingInfo.buildIsComposingInfo(status);
+		String msgId = ChatUtils.generateMessageId();
+		sendDataChunks(msgId, content, IsComposingInfo.MIME_TYPE);
 	}
 	
 	/**

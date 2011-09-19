@@ -301,29 +301,22 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	}
 
 	/**
-	 * MSRP transfer indicator event
-	 * 
-	 * @param currentSize Current transfered size in bytes
-	 * @param totalSize Total size in bytes
-	 */
-	public void msrpTransferProgress(long currentSize, long totalSize){
-		// Nothing to do here
-	}
-	
-	/**
 	 * Data has been transfered
+	 * 
+	 * @param msgId Message ID
 	 */
-	public void msrpDataTransfered() {
-		// Nothing to do here
+	public void msrpDataTransfered(String msgId) {
+		// Not used in terminating side
 	}
 	
 	/**
-	 * Data has been received
+	 * Data transfer has been received
 	 * 
+	 * @param msgId Message ID
 	 * @param data Received data
-	 * @param mimeType Data mime-type
+	 * @param mimeType Data mime-type 
 	 */
-	public void msrpDataReceived(byte[] data, String mimeType) {
+	public void msrpDataReceived(String msgId, byte[] data, String mimeType) {
     	if (logger.isActivated()) {
     		logger.info("Data received (type " + mimeType + ")");
     	}
@@ -372,14 +365,24 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	}
 
 	/**
-	 * MSRP transfer aborted
+	 * Data transfer in progress
+	 * 
+	 * @param currentSize Current transfered size in bytes
+	 * @param totalSize Total size in bytes
+	 */
+	public void msrpTransferProgress(long currentSize, long totalSize) {
+		// Not used by S&F
+	}
+
+	/**
+	 * Data transfer has been aborted
 	 */
 	public void msrpTransferAborted() {
-		// Nothing to do here
+		// Not used by S&F
 	}	
 
 	/**
-	 * MSRP transfer error
+	 * Data transfer error
 	 * 
 	 * @param error Error
 	 */
@@ -387,9 +390,7 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
     	if (logger.isActivated()) {
     		logger.info("Data transfer error: " + error);
     	}
-    	
-    	// TODO
-    }
+	}
 	
 	/**
 	 * Send an empty data chunk
@@ -421,15 +422,15 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 			if ((imdn != null) && (msgId != null) && (status != null)) {
 				// Update rich messaging history
 				if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-					RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DISPLAYED, 1);
+					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
 				} else
 				if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-					RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DELIVERED, 1);			
+					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DELIVERED);			
 				} else
 				if ((status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)) ||
 						(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)) ||
 							(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN))) {
-					RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_FAILED, 1);
+					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_FAILED);
 				}
 			}
     	} catch(Exception e) {

@@ -21,13 +21,15 @@ package com.orangelabs.rcs.service.api.server.messaging;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -35,17 +37,12 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class FileTransferSession extends IFileTransferSession.Stub implements ContentSharingTransferSessionListener {
+public class FileTransferSession extends IFileTransferSession.Stub implements FileSharingSessionListener {
 	
 	/**
 	 * Core session
 	 */
-	private ContentSharingTransferSession session;
-
-	/**
-	 * File has been transfered
-	 */
-	private boolean transfered = false;
+	private FileSharingSession session;
 	
 	/**
 	 * List of listeners
@@ -62,7 +59,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 	 * 
 	 * @param session Session
 	 */
-	public FileTransferSession(ContentSharingTransferSession session) {
+	public FileTransferSession(FileSharingSession session) {
 		this.session = session;
 		session.addListener(this);
 	}
@@ -88,10 +85,11 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 	/**
 	 * Get session state
 	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 * @return State (see class SessionState) 
+	 * @see SessionState
 	 */
 	public int getSessionState() {
-		return session.getSessionState();
+		return ServerApiUtils.getSessionState(session);
 	}
 	
 	/**
@@ -148,11 +146,16 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 			logger.info("Cancel session");
 		}
 		
+		if (session.isFileTransfered()) {
+			// Automatically closed after transfer
+			return;
+		}
+
 		// Abort the session
 		session.abortSession();
 
 		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
 	}
 	
 	/**
@@ -212,7 +215,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 		}
 
 		// Update rich messaging history
- 		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -239,35 +242,37 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
 			logger.info("Session terminated by remote");
 		}
 
-  		// Notify listener only if the transfer has been aborted before the end of transfer 
-  		if (!transfered) {  		
-  			// Update rich messaging history
-  	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-
-  	  		// Notify event listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
+  		if (session.isFileTransfered()) {
+  			// The file has been received, so do nothing
+  			return;
   		}
+  		
+		// Update rich messaging history
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+
+  		// Notify event listeners
+		final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+            } catch (RemoteException e) {
+            	if (logger.isActivated()) {
+            		logger.error("Can't notify listener", e);
+            	}
+            }
+        }
+        listeners.finishBroadcast();
 
         // Remove session from the list
         MessagingApiService.removeFileTransferSession(session.getSessionID());
     }
 	
     /**
-     * Content sharing error
+     * File transfer error
      * 
      * @param error Error
      */
-    public void handleSharingError(ContentSharingError error) {
+    public void handleTransferError(FileSharingError error) {
 		if (logger.isActivated()) {
 			logger.info("Sharing error");
 		}
@@ -293,18 +298,18 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
     }
 
     /**
-	 * Content sharing progress
+	 * File transfer progress
 	 * 
 	 * @param currentSize Data size transfered 
 	 * @param totalSize Total size to be transfered
 	 */
-    public void handleSharingProgress(long currentSize, long totalSize) {
+    public void handleTransferProgress(long currentSize, long totalSize) {
 		if (logger.isActivated()) {
 			logger.debug("Sharing progress");
 		}
 		
 		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferDownloadedSize(session.getSessionID(), currentSize, totalSize);
+  		RichMessaging.getInstance().updateFileTransferProgress(session.getSessionID(), currentSize, totalSize);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -321,18 +326,15 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Co
      }
     
     /**
-     * Content has been transfered
+     * File has been transfered
      * 
      * @param filename Filename associated to the received content
      */
-    public void handleContentTransfered(String filename) {
+    public void handleFileTransfered(String filename) {
 		if (logger.isActivated()) {
 			logger.info("Content transfered");
 		}
 
-		// Update transfer status
-		transfered = true;
-		
 		// Update rich messaging history
 		RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
 

@@ -1556,45 +1556,6 @@ public class RcsSettings {
 	}
 
     /**
-     * Is presence service activated
-     *
-     * @return Boolean
-     */
-    public boolean isPresenceServiceActivated() {
-		boolean result = false;
-    	if (instance != null) {
-    		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_PRESENCE_SERVICE));
-    	}
-		return result;
-    }
-
-    /**
-     * Is rich call service activated
-     *
-     * @return Boolean
-     */
-    public boolean isRichcallServiceActivated() {
-		boolean result = false;
-    	if (instance != null) {
-    		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_RICHCALL_SERVICE));
-    	}
-		return result;
-    }
-    
-    /**
-     * Is chat service activated
-     *
-     * @return Boolean
-     */
-    public boolean isChatServiceActivated() {
-		boolean result = false;
-    	if (instance != null) {
-    		result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_CHAT_SERVICE));
-    	}
-		return result;
-    }
-
-    /**
      * Is CS video supported
      *
      * @return Boolean

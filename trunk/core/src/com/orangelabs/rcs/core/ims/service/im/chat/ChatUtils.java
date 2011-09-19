@@ -306,7 +306,7 @@ public class ChatUtils {
 	}
 	
 	/**
-	 * Build a CPIM message with IMDN disposition-notification headers
+	 * Build a CPIM message with IMDN headers
 	 * 
 	 * @param from From
 	 * @param to To
@@ -315,7 +315,7 @@ public class ChatUtils {
 	 * @param contentType Content type
 	 * @return String
 	 */
-	public static String buildCpimMessageWithIMDN(String from, String to, String messageId, String content, String contentType) {
+	public static String buildCpimMessageWithImdn(String from, String to, String messageId, String content, String contentType) {
 		String cpim = CpimMessage.HEADER_FROM + ": " + from + CpimMessage.CRLF + 
 			CpimMessage.HEADER_TO + ": " + to + CpimMessage.CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CpimMessage.CRLF +
@@ -331,7 +331,7 @@ public class ChatUtils {
 	}
 	
 	/**
-	 * Build a CPIM message with IMDN with content-disposition headers
+	 * Build a CPIM delivery status
 	 * 
 	 * @param from From
 	 * @param to To
@@ -340,7 +340,7 @@ public class ChatUtils {
 	 * @param contentType Content type
 	 * @return String
 	 */
-	public static String buildCpimMessageWithImdnPlusXml(String from, String to, String messageId, String content, String contentType) {
+	public static String buildCpimDeliveryStatus(String from, String to, String messageId, String content, String contentType) {
 		String cpim = CpimMessage.HEADER_FROM + ": " + from + CpimMessage.CRLF + 
 			CpimMessage.HEADER_TO + ": " + to + CpimMessage.CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CpimMessage.CRLF +

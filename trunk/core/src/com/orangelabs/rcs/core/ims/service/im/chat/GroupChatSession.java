@@ -31,7 +31,9 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.event.ConferenceEventSubscribeManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -63,11 +65,11 @@ public abstract class GroupChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 * @param participants List of participants
 	 */
-	public GroupChatSession(ImsService parent, String conferenceId, String subject, ListOfParticipant participants) {
-		super(parent, conferenceId, subject, participants);
+	public GroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
+		super(parent, conferenceId, msg, participants);
 		
 		// Instanciate the subscribe manager for conference event 
 		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
@@ -78,10 +80,10 @@ public abstract class GroupChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 */
-	public GroupChatSession(ImsService parent, String contact, String subject) {
-		super(parent, contact, subject);
+	public GroupChatSession(ImsService parent, String contact, String msg) {
+		super(parent, contact, msg);
 		
 		// Instanciate the subscribe manager for conference event 
 		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
@@ -139,23 +141,33 @@ public abstract class GroupChatSession extends ChatSession {
 	}
 
 	/**
-	 * Send a plain text message with IMDN headers
+	 * Send a text message
 	 * 
+	 * @param msgId Message-ID
 	 * @param msg Message
-	 * @param id Message-id
-	 * @param imdnActivated If true, add IMDN headers to the request
 	 */ 
-	public void sendTextMessage(String msg, String msgId, boolean imdnActivated) {
-		String content = StringUtils.encodeUTF8(msg);
+	public void sendTextMessage(String msgId, String msg) {
+		// Send status in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getImSessionIdentity();
-		String cpim = null;
-		if (imdnActivated){
-			cpim = ChatUtils.buildCpimMessageWithIMDN(from, to, msgId, content, InstantMessage.MIME_TYPE);
-		}else{
-			cpim = ChatUtils.buildCpimMessage(from, to, content, InstantMessage.MIME_TYPE);
+		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(msg), InstantMessage.MIME_TYPE);
+		
+		// Send data
+		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+
+		// Update rich messaging history
+		RichMessaging.getInstance().addOutgoingChatMessage(new InstantMessage(msgId, getRemoteContact(), msg, false), this);
+
+		// Check if message has been sent with success or not
+		if (!result) {
+			// Update rich messaging history
+			RichMessaging.getInstance().markChatMessageFailed(msgId);
+			
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, null, ImdnDocument.DELIVERY_STATUS_FAILED);
+			}
 		}
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE, msgId);
 	}
 	
 	/**
@@ -164,11 +176,11 @@ public abstract class GroupChatSession extends ChatSession {
 	 * @param status Status
 	 */
 	public void sendIsComposingStatus(boolean status) {
-		String content = IsComposingInfo.buildIsComposingInfo(status);
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getImSessionIdentity();
-		String cpim = ChatUtils.buildCpimMessage(from, to, content, IsComposingInfo.MIME_TYPE);
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE, null);	
+		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
+		String msgId = ChatUtils.generateMessageId();
+		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);	
 	}
 	
 	/**

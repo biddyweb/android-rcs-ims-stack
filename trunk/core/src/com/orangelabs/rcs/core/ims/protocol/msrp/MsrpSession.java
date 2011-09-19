@@ -85,9 +85,9 @@ public class MsrpSession {
     /**
      * Random generator
      */
-	private Random random = new Random(System.currentTimeMillis());
+	private static Random random = new Random(System.currentTimeMillis());
     
-    /**
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -237,11 +237,12 @@ public class MsrpSession {
 	 * Send chunks
 	 * 
 	 * @param inputStream Input stream
+	 * @param msgId Message ID
 	 * @param contentType Content type to be sent
 	 * @param totalSize Total size of content
 	 * @throws MsrpException
 	 */
-	public void sendChunks(InputStream inputStream, String contentType, long totalSize) throws MsrpException {
+	public void sendChunks(InputStream inputStream, String msgId, String contentType, long totalSize) throws MsrpException {
 		if (logger.isActivated()) {
 			logger.info("Send content (" + contentType + ")");
 		}
@@ -266,7 +267,6 @@ public class MsrpSession {
 			byte data[] = new byte[MsrpConstants.CHUNK_MAX_SIZE];
 			long firstByte = 1;
 			long lastByte = 0;
-			String msgId = generateId();
 			
 			// Send data chunk by chunk
 			for (int i = inputStream.read(data); (!cancelTransfer) & (i>-1); i=inputStream.read(data)) {
@@ -274,7 +274,7 @@ public class MsrpSession {
 				lastByte += i;
 
 				// Send a chunk
-				sendMsrpSendRequest(generateId(), to, from, msgId, contentType, i, data, firstByte, lastByte, totalSize);
+				sendMsrpSendRequest(generateTransactionId(), to, from, msgId, contentType, i, data, firstByte, lastByte, totalSize);
 
 				// Update lower byte range
 				firstByte += i;
@@ -305,7 +305,7 @@ public class MsrpSession {
 			}
 			
 			// Notify event listener
-			msrpEventListener.msrpDataTransfered();
+			msrpEventListener.msrpDataTransfered(msgId);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Send chunk failed", e);
@@ -338,7 +338,7 @@ public class MsrpSession {
 		
 		// Send an empty chunk
 		try {
-			sendEmptyMsrpSendRequest(generateId(), to, from, generateId());
+			sendEmptyMsrpSendRequest(generateTransactionId(), to, from, generateTransactionId());
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Send chunk failed", e);
@@ -348,11 +348,11 @@ public class MsrpSession {
 	}
 
 	/**
-	 * Generate a unique ID
+	 * Generate a unique ID for transaction
 	 * 
 	 * @return ID
 	 */
-	private String generateId() {
+	private static synchronized String generateTransactionId() {
 		return Long.toHexString(random.nextLong());		
 	}
 	
@@ -639,6 +639,9 @@ public class MsrpSession {
 			}
 			return;
 		}
+
+		// Read message-ID
+		String msgId = headers.get(MsrpConstants.HEADER_MESSAGE_ID);
 		
 		// Test if a failure report is needed
 		boolean failureReportNeeded = true;
@@ -668,7 +671,7 @@ public class MsrpSession {
 
 			// Notify event listener
 			String contentTypeHeader = headers.get(MsrpConstants.HEADER_CONTENT_TYPE);
-			msrpEventListener.msrpDataReceived(dataContent, contentTypeHeader);
+			msrpEventListener.msrpDataReceived(msgId, dataContent, contentTypeHeader);
 
 			// Test if a success report is needed
 			boolean successReportNeeded = false;

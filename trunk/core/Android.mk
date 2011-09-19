@@ -88,7 +88,8 @@ RcsApi: FILES_TO_INCLUDE:= com/orangelabs/rcs/utils/ \
     com/orangelabs/rcs/provider/ \
     com/orangelabs/rcs/platform/ \
     com/orangelabs/rcs/core/ims/protocol/rtp/ \
-    com/orangelabs/rcs/core/ims/service/sharing/ContentSharingError.class \
+    com/orangelabs/rcs/core/ims/service/richcall/ContentSharingError.class \
+    com/orangelabs/rcs/core/ims/service/im/filetransfer/FileSharingError.class\
     com/orangelabs/rcs/core/ims/service/im/chat/ChatError.class \
 	com/orangelabs/rcs/core/ims/service/sip/SipSessionError.class \
     com/orangelabs/rcs/core/ims/service/im/chat/imdn/ImdnDocument.class \

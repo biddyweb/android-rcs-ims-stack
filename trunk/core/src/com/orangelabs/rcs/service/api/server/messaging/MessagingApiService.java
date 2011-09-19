@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.service.api.server.messaging;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
@@ -29,11 +30,10 @@ import android.os.IBinder;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -139,7 +139,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * 
 	 * @param session File transfer session
 	 */
-    public void receiveFileTransferInvitation(ContentSharingTransferSession session) {
+    public void receiveFileTransferInvitation(FileSharingSession session) {
 		if (logger.isActivated()) {
 			logger.info("Receive file transfer invitation from " + session.getRemoteContact());
 		}
@@ -157,7 +157,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		}
 		
 		// Update rich messaging history
-    	RichMessaging.getInstance().addFileTransferInvitation(number, chatSessionId, ftSessionId, session.getContent());
+    	RichMessaging.getInstance().addIncomingFileTransfer(number, chatSessionId, ftSessionId, session.getContent());
     	
 		// Add session in the list
 		FileTransferSession sessionApi = new FileTransferSession(session);
@@ -200,7 +200,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			ContentSharingTransferSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content);
+			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content);
 
 			// Set the file transfer session ID from the chat session if a chat already exist
 			String ftSessionId = session.getSessionID();
@@ -212,7 +212,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			}
 			
 			// Update rich messaging history
-			RichMessaging.getInstance().addFileTransferInitiation(contact, chatSessionId, ftSessionId, file, session.getContent());
+			RichMessaging.getInstance().addOutgoingFileTransfer(contact, chatSessionId, ftSessionId, file, session.getContent());
 
 			// Add session in the list
 			FileTransferSession sessionApi = new FileTransferSession(session);
@@ -264,10 +264,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testCore();
 		
 		try {
-			Vector<ContentSharingTransferSession> list = Core.getInstance().getImService().getFileTransferSessionsWith(contact);
+			Vector<FileSharingSession> list = Core.getInstance().getImService().getFileTransferSessionsWith(contact);
 			ArrayList<IBinder> result = new ArrayList<IBinder>(list.size());
 			for(int i=0; i < list.size(); i++) {
-				ContentSharingTransferSession session = list.elementAt(i);
+				FileSharingSession session = list.elementAt(i);
 				IFileTransferSession sessionApi = ftSessions.get(session.getSessionID());
 				if (sessionApi != null) {
 					result.add(sessionApi.asBinder());
@@ -280,7 +280,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}	
 
 	/**
-	 * Get list of current established file transfer sessions
+	 * Get list of file transfer sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ServerApiException
@@ -297,18 +297,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testCore();
 		
 		try {
-			Vector<ContentSharingTransferSession> list = Core.getInstance().getImService().getFileTransferSessions();
-			ArrayList<IBinder> result = new ArrayList<IBinder>(list.size());
-			for(int i=0; i < list.size(); i++) {
-				ContentSharingTransferSession session = list.elementAt(i);
-				SipDialogPath dialog = session.getDialogPath();
-				if ((dialog != null) && (dialog.isSigEstablished())) {
-					// Returns only sessions which are established
-					IFileTransferSession sessionApi = ftSessions.get(session.getSessionID());
-					if (sessionApi != null) {
-						result.add(sessionApi.asBinder());
-					}
-				}
+			ArrayList<IBinder> result = new ArrayList<IBinder>(ftSessions.size());
+			for (Enumeration<IFileTransferSession> e = ftSessions.elements() ; e.hasMoreElements() ;) {
+				IFileTransferSession sessionApi = (IFileTransferSession)e.nextElement() ;
+				result.add(sessionApi.asBinder());
 			}
 			return result;
 		} catch(Exception e) {
@@ -330,7 +322,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
 		// Update rich messaging history
-		RichMessaging.getInstance().addChatInvitation(session);
+		RichMessaging.getInstance().addIncomingChatSession(session);
 
 		// Add session in the list
 		ImSession sessionApi = new ImSession(session);
@@ -340,9 +332,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("subject", session.getSubject());
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("isChatGroup", false);
+    	intent.putExtra("firstMessage", session.getFirstMessage());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
     
@@ -372,11 +364,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * Initiate a one-to-one chat session
 	 * 
      * @param contact Remote contact
-     * @param subject Subject of the conference
+     * @param firstMsg First message exchanged during the session
 	 * @return Chat session
      * @throws ServerApiException
 	 */
-	public IChatSession initiateOne2OneChatSession(String contact, String subject) throws ServerApiException {
+	public IChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a 1-1 chat session with " + contact);
 		}
@@ -389,10 +381,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		
 		try {
 			// Initiate the session
-			ChatSession session = Core.getInstance().getImService().initiateOne2OneChatSession(contact, subject);
+			ChatSession session = Core.getInstance().getImService().initiateOne2OneChatSession(contact, firstMsg);
 			
 			// Update rich messaging history
-			RichMessaging.getInstance().addChatInitiation(session);
+			RichMessaging.getInstance().addOutgoingChatSession(session);
 			
 			// Add session in the list
 			ImSession sessionApi = new ImSession(session);
@@ -417,7 +409,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
 		// Update rich messaging history
-		RichMessaging.getInstance().addChatInvitation(session);
+		RichMessaging.getInstance().addIncomingChatSession(session);
 
 		// Add session in the list
 		ImSession sessionApi = new ImSession(session);
@@ -427,10 +419,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-    	intent.putExtra("subject", session.getSubject());
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("isChatGroup", true);
     	intent.putExtra("replacedSessionId", session.getReplacedSessionId());
+    	intent.putExtra("firstMessage", session.getFirstMessage());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 	
@@ -438,11 +430,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * Initiate an ad-hoc group chat session
 	 * 
      * @param participants List of participants
-     * @param subject Subject of the conference
+     * @param firstMsg First message exchanged during the session
 	 * @return Chat session
      * @throws ServerApiException
 	 */
-	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String subject) throws ServerApiException {
+	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String firstMsg) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -455,10 +447,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		try {
 			// Initiate the session
-			ChatSession session = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants, subject);
+			ChatSession session = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants, firstMsg);
 
 			// Update rich messaging history
-			RichMessaging.getInstance().addChatInitiation(session);
+			RichMessaging.getInstance().addOutgoingChatSession(session);
 			
 			// Add session in the list
 			ImSession sessionApi = new ImSession(session);
@@ -526,7 +518,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}
 	
 	/**
-	 * Get list of current established chat sessions
+	 * Get list of chat sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ServerApiException
@@ -544,18 +536,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		
 		try {
 			try {
-				Vector<ChatSession> list = Core.getInstance().getImService().getImSessions();
-				ArrayList<IBinder> result = new ArrayList<IBinder>(list.size());
-				for(int i=0; i < list.size(); i++) {
-					ChatSession session = list.elementAt(i);
-					SipDialogPath dialog = session.getDialogPath();
-					if ((dialog != null) && (dialog.isSigEstablished())) {
-						// Returns only sessions which are established
-						IChatSession sessionApi = chatSessions.get(session.getSessionID());
-						if (sessionApi != null) {
-							result.add(sessionApi.asBinder());
-						}
-					}
+				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+					IChatSession sessionApi = (IChatSession)e.nextElement() ;
+					result.add(sessionApi.asBinder());
 				}
 				return result;
 			} catch(Exception e) {

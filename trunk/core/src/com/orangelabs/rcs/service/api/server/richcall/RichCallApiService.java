@@ -18,17 +18,12 @@
 
 package com.orangelabs.rcs.service.api.server.richcall;
 
-import java.util.Hashtable;
-
-import android.content.Intent;
-
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.content.VideoContent;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -44,6 +39,10 @@ import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import android.content.Intent;
+
+import java.util.Hashtable;
+
 /**
  * Rich call API service
  * 
@@ -53,12 +52,12 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	/**
 	 * List of image sharing sessions
 	 */
-	private static Hashtable<String, IImageSharingSession> imageSharingSessions = new Hashtable<String, IImageSharingSession>();  
-	
+    private static Hashtable<String, IImageSharingSession> imageSharingSessions = new Hashtable<String, IImageSharingSession>();
+
 	/**
 	 * List of video sharing sessions
 	 */
-	private static Hashtable<String, IVideoSharingSession> videoSharingSessions = new Hashtable<String, IVideoSharingSession>();  
+    private static Hashtable<String, IVideoSharingSession> videoSharingSessions = new Hashtable<String, IVideoSharingSession>();
 
 	/**
 	 * The logger
@@ -82,12 +81,12 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		imageSharingSessions.clear();
 		videoSharingSessions.clear();
 	}
-    
+
 	/**
-	 * Add an image sharing session in the list
-	 * 
-	 * @param session Image sharing session
-	 */
+     * Add an image sharing session in the list
+     * 
+     * @param session Image sharing session
+     */
 	protected static void addImageSharingSession(ImageSharingSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Add an image sharing session in the list (size=" + imageSharingSessions.size() + ")");
@@ -95,11 +94,11 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		imageSharingSessions.put(session.getSessionID(), session);
 	}
 
-	/**
-	 * Remove an image sharing session from the list
-	 * 
-	 * @param sessionId Session ID
-	 */
+    /**
+     * Remove an image sharing session from the list
+     * 
+     * @param sessionId Session ID
+     */
 	protected static void removeImageSharingSession(String sessionId) {
 		if (logger.isActivated()) {
 			logger.debug("Remove an image sharing session from the list (size=" + imageSharingSessions.size() + ")");
@@ -107,11 +106,11 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		imageSharingSessions.remove(sessionId);
 	}
 
-	/**
-	 * Add a video sharing session in the list
-	 * 
-	 * @param session Video sharing session
-	 */
+    /**
+     * Add a video sharing session in the list
+     * 
+     * @param session Video sharing session
+     */
 	protected static void addVideoSharingSession(VideoSharingSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Add a video sharing session in the list (size=" + videoSharingSessions.size() + ")");
@@ -119,11 +118,11 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		videoSharingSessions.put(session.getSessionID(), session);
 	}
 
-	/**
-	 * Remove a video sharing session from the list
-	 * 
-	 * @param sessionId Session ID
-	 */
+    /**
+     * Remove a video sharing session from the list
+     * 
+     * @param sessionId Session ID
+     */
 	protected static void removeVideoSharingSession(String sessionId) {
 		if (logger.isActivated()) {
 			logger.debug("Remove a video sharing session from the list (size=" + videoSharingSessions.size() + ")");
@@ -131,12 +130,12 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		videoSharingSessions.remove(sessionId);
 	}
 
-	/**
-	 * Get the remote phone number involved in the current call
-	 * 
-	 * @return Phone number or null if there is no call in progress
-	 * @throws ServerApiException
-	 */
+    /**
+     * Get the remote phone number involved in the current call
+     * 
+     * @return Phone number or null if there is no call in progress
+     * @throws ServerApiException
+     */
 	public String getRemotePhoneNumber() throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Get remote phone number");
@@ -154,26 +153,26 @@ public class RichCallApiService extends IRichCallApi.Stub {
 			throw new ServerApiException(e.getMessage());
 		}
 	}
-	
+
 	/**
-	 * Receive a new video sharing invitation
-	 * 
-	 * @param session Video sharing session
-	 */
-    public void receiveVideoSharingInvitation(ContentSharingStreamingSession session) {
+     * Receive a new video sharing invitation
+     * 
+     * @param session Video sharing session
+     */
+    public void receiveVideoSharingInvitation(VideoStreamingSession session) {
 		if (logger.isActivated()) {
 			logger.info("Receive video sharing invitation from " + session.getRemoteContact());
 		}
 
-		// Extract number from contact 
+        // Extract number from contact
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
 		// Update rich call history
 		RichCall.getInstance().addCall(number, session.getSessionID(),
-    			RichCallData.EVENT_INCOMING, 
+ RichCallData.EVENT_INCOMING,
     			session.getContent(),
     			RichCallData.STATUS_STARTED);
-		
+
 		// Add session in the list
 		VideoSharingSession sessionApi = new VideoSharingSession(session);
 		addVideoSharingSession(sessionApi);
@@ -184,16 +183,16 @@ public class RichCallApiService extends IRichCallApi.Stub {
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("videotype", session.getContent().getEncoding());
-    	AndroidFactory.getApplicationContext().sendBroadcast(intent);		
-    }	
-	
+        AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
+
 	/**
-	 * Initiate a live video sharing session
-	 * 
-	 * @param contact Contact
-	 * @param player Media player
-	 * @throws ServerApiException
-	 */
+     * Initiate a live video sharing session
+     * 
+     * @param contact Contact
+     * @param player Media player
+     * @throws ServerApiException
+     */
 	public IVideoSharingSession initiateLiveVideoSharing(String contact, IMediaPlayer player) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a live video session with " + contact);
@@ -206,19 +205,16 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		ServerApiUtils.testIms();
 
 		try {
-	        // Create a live video content
-	        String codecName = player.getMediaCodec().getCodecName();
-	        LiveVideoContent content = ContentManager.createLiveVideoContent(codecName);
-	        
 		     // Initiate a new session
-			ContentSharingStreamingSession session = Core.getInstance().getRichcallService().initiateLiveVideoSharingSession(contact, content, player);
-			
+            VideoStreamingSession session = Core.getInstance().getRichcallService()
+                    .initiateLiveVideoSharingSession(contact, player);
+
 			// Update rich call history
 			RichCall.getInstance().addCall(contact, session.getSessionID(),
-	    			RichCallData.EVENT_OUTGOING, 
+                    RichCallData.EVENT_OUTGOING,
 	    			session.getContent(),
 	    			RichCallData.STATUS_STARTED);
-			
+
 			// Add session in the list
 			VideoSharingSession sessionApi = new VideoSharingSession(session);
 			addVideoSharingSession(sessionApi);
@@ -228,14 +224,14 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		}
 	}
 
-	/**
-	 * Initiate a pre-recorded video sharing session
-	 * 
- 	 * @param contact Contact
- 	 * @param file Video file
-	 * @param player Media player
-	 * @throws ServerApiException
- 	 */
+    /**
+     * Initiate a pre-recorded video sharing session
+     * 
+     * @param contact Contact
+     * @param file Video file
+     * @param player Media player
+     * @throws ServerApiException
+     */
 	public IVideoSharingSession initiateVideoSharing(String contact, String file, IMediaPlayer player) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a pre-recorded video session with " + contact);
@@ -251,14 +247,14 @@ public class RichCallApiService extends IRichCallApi.Stub {
 			// Create a video content
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			VideoContent content = (VideoContent)ContentManager.createMmContentFromUrl(file, desc.getSize());
-			ContentSharingStreamingSession session = Core.getInstance().getRichcallService().initiatePreRecordedVideoSharingSession(contact, content, player);
-			
+			VideoStreamingSession session = Core.getInstance().getRichcallService().initiatePreRecordedVideoSharingSession(contact, content, player);
+
 			// Update rich call history
 			RichCall.getInstance().addCall(contact, session.getSessionID(),
-	    			RichCallData.EVENT_OUTGOING, 
+                    RichCallData.EVENT_OUTGOING,
 	    			session.getContent(),
 	    			RichCallData.STATUS_STARTED);
-			
+
 			// Add session in the list
 			VideoSharingSession sessionApi = new VideoSharingSession(session);
 			addVideoSharingSession(sessionApi);
@@ -285,30 +281,30 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Test core availability
 		ServerApiUtils.testCore();
-		
+
 		// Return a session instance
 		return videoSharingSessions.get(id);
 	}
 
-	/**
-	 * Receive a new image sharing invitation
-	 * 
-	 * @param session Image sharing session
-	 */
-    public void receiveImageSharingInvitation(ContentSharingTransferSession session) {
+    /**
+     * Receive a new image sharing invitation
+     * 
+     * @param session Image sharing session
+     */
+    public void receiveImageSharingInvitation(ImageTransferSession session) {
 		if (logger.isActivated()) {
 			logger.info("Receive image sharing invitation from " + session.getRemoteContact());
 		}
 
-		// Extract number from contact 
+        // Extract number from contact
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-	
+
 		// Update rich call history
 		RichCall.getInstance().addCall(number, session.getSessionID(),
-				RichCallData.EVENT_INCOMING, 
+ RichCallData.EVENT_INCOMING,
 				session.getContent(),
 				RichCallData.STATUS_STARTED);
-		
+
 		// Add session in the list
 		ImageSharingSession sessionApi = new ImageSharingSession(session);
 		addImageSharingSession(sessionApi);
@@ -321,16 +317,16 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		intent.putExtra("filename", session.getContent().getName());
 		intent.putExtra("filesize", session.getContent().getSize());
 		intent.putExtra("filetype", session.getContent().getEncoding());
-		AndroidFactory.getApplicationContext().sendBroadcast(intent);		
-    }	
+        AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
 
     /**
-	 * Initiate an image sharing session
-	 * 
-	 * @param contact Contact
-	 * @param file Image file
-	 * @throws ServerApiException
-	 */
+     * Initiate an image sharing session
+     * 
+     * @param contact Contact
+     * @param file Image file
+     * @throws ServerApiException
+     */
 	public IImageSharingSession initiateImageSharing(String contact, String file) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an image sharing session with " + contact);
@@ -341,19 +337,19 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Test IMS connection
 		ServerApiUtils.testIms();
-		
+
 		try {
 			// Create an image content
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			ContentSharingTransferSession session = Core.getInstance().getRichcallService().initiateImageSharingSession(contact, content);
-			
+			ImageTransferSession session = Core.getInstance().getRichcallService().initiateImageSharingSession(contact, content);
+
 			// Update rich call history
 			RichCall.getInstance().addCall(contact, session.getSessionID(),
-	    			RichCallData.EVENT_OUTGOING, 
+                    RichCallData.EVENT_OUTGOING,
 	    			session.getContent(),
 	    			RichCallData.STATUS_STARTED);
-			
+
 			// Add session in the list
 			ImageSharingSession sessionApi = new ImageSharingSession(session);
 			addImageSharingSession(sessionApi);
@@ -363,13 +359,13 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		}
 	}
 
-	/**
-	 * Get an image sharing session from its session ID
-	 * 
-	 * @param id Session ID
-	 * @return Session
-	 * @throws ServerApiException
-	 */
+    /**
+     * Get an image sharing session from its session ID
+     * 
+     * @param id Session ID
+     * @return Session
+     * @throws ServerApiException
+     */
 	public IImageSharingSession getImageSharingSession(String id) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Get image sharing session " + id);
@@ -380,20 +376,20 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Test core availability
 		ServerApiUtils.testCore();
-		
+
 		// Return a session instance
 		return imageSharingSessions.get(id);
 	}
 
-	/**
-	 * Set multiparty call
-	 * 
-	 * @param flag Flag
-	 * @throws ServerApiException
-	 */
-	public void setMultiPartyCall(boolean flag) throws ServerApiException {
+    /**
+     * Set multiparty call
+     * 
+     * @param state State
+     * @throws ServerApiException
+     */
+	public void setMultiPartyCall(boolean state) throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Set multiparty call to " + flag);
+			logger.info("Set multiparty call to " + state);
 		}
 
 		// Check permission
@@ -402,21 +398,19 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		// Test core availability
 		ServerApiUtils.testCore();
 
-		// Abort the content sharing sessions if multiparty call
-	    if (Core.getInstance().getImsModule().isRichcallServiceActivated()) {
-	    	Core.getInstance().getRichcallService().abortAllSessions();
-	    }
+		// Update call manager
+    	Core.getInstance().getImsModule().getCallManager().setMultiPartyCall(state);
 	}
 
-	/**
-	 * Set call hold
-	 * 
-	 * @param flag Flag
-	 * @throws ServerApiException
-	 */
-	public void setCallHold(boolean flag) throws ServerApiException {
+    /**
+     * Set call hold
+     * 
+     * @param state State
+     * @throws ServerApiException
+     */
+	public void setCallHold(boolean state) throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Set call hold to " + flag);
+			logger.info("Set call hold to " + state);
 		}
 
 		// Check permission
@@ -424,10 +418,8 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Test core availability
 		ServerApiUtils.testCore();
-		
-		// Abort the content sharing sessions if call hold
-	    if (Core.getInstance().getImsModule().isRichcallServiceActivated()) {
-	    	Core.getInstance().getRichcallService().abortAllSessions();
-	    }
+
+		// Update call manager
+    	Core.getInstance().getImsModule().getCallManager().setCallHold(state);
 	}
 }

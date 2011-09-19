@@ -115,7 +115,7 @@ public class SettingsDisplay extends PreferenceActivity {
 		roamingCheckbox.setChecked(RcsSettings.getInstance().isRoamingAuthorized());
 		
 		// Update dynamic menu
-    	if (RcsSettings.getInstance().isPresenceServiceActivated()) {
+    	if (RcsSettings.getInstance().isSocialPresenceSupported()) {
     		getPreferenceScreen().addPreference(presencePref);
     	} else {
     		getPreferenceScreen().removePreference(presencePref);

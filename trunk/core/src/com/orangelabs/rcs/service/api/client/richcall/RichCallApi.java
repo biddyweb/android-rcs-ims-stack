@@ -215,13 +215,13 @@ public class RichCallApi extends ClientApi {
 	/**
 	 * Set multiparty call
 	 * 
-	 * @param flag Flag
+	 * @param state State
 	 * @throws ClientApiException
 	 */
-	public void setMultiPartyCall(boolean flag) throws ClientApiException {
+	public void setMultiPartyCall(boolean state) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	coreApi.setMultiPartyCall(flag);
+		    	coreApi.setMultiPartyCall(state);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -233,13 +233,13 @@ public class RichCallApi extends ClientApi {
 	/**
 	 * Set call hold
 	 * 
-	 * @param flag Flag
+	 * @param state State
 	 * @throws ClientApiException
 	 */
-	public void setCallHold(boolean flag) throws ClientApiException {
+	public void setCallHold(boolean state) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	coreApi.setCallHold(flag);
+		    	coreApi.setCallHold(state);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

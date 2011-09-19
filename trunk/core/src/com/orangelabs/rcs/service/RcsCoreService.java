@@ -39,13 +39,14 @@ import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Person;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -207,7 +208,7 @@ public class RcsCoreService extends Service implements CoreListener {
         		Logger.traceLevel = Logger.FATAL_LEVEL;
     		}    		
             
-            // Instanciate the contacts manager
+			// Instanciate the contacts manager
             ContactsManager.createInstance(getApplicationContext());
 
             // Instanciate the rich messaging history 
@@ -767,7 +768,7 @@ public class RcsCoreService extends Service implements CoreListener {
      */
     public void handleCapabilitiesNotification(String contact, Capabilities capabilities) {
     	if (logger.isActivated()) {
-			logger.debug("Handle capabilities update notification for " + contact);
+			logger.debug("Handle capabilities update notification for " + contact + " (" + capabilities.toString() + ")");
 		}
 
 		// Extract number from contact 
@@ -873,7 +874,7 @@ public class RcsCoreService extends Service implements CoreListener {
      * 
      * @param session Content sharing transfer invitation
      */
-    public void handleContentSharingTransferInvitation(ContentSharingTransferSession session) {
+    public void handleContentSharingTransferInvitation(ImageTransferSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event content sharing transfer invitation");
 		}
@@ -887,7 +888,7 @@ public class RcsCoreService extends Service implements CoreListener {
      * 
      * @param session CSh session
      */
-    public void handleContentSharingStreamingInvitation(ContentSharingStreamingSession session) {
+    public void handleContentSharingStreamingInvitation(VideoStreamingSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event content sharing streaming invitation");
 		}
@@ -901,7 +902,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * 
 	 * @param session File transfer session
 	 */
-	public void handleFileTransferInvitation(ContentSharingTransferSession session) {
+	public void handleFileTransferInvitation(FileSharingSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event file transfer invitation");
 		}

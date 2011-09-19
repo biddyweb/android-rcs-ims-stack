@@ -124,16 +124,16 @@ public class ImsModule implements SipEventListener {
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
         
         // Create IM service (mandatory)
-        services[ImsService.IM_SERVICE] = new InstantMessagingService(this, RcsSettings.getInstance().isChatServiceActivated());
+        services[ImsService.IM_SERVICE] = new InstantMessagingService(this);
         
         // Create richcall service (optional)
-        services[ImsService.RICHCALL_SERVICE] = new RichcallService(this, RcsSettings.getInstance().isRichcallServiceActivated());
+        services[ImsService.RICHCALL_SERVICE] = new RichcallService(this);
 
         // Create presence service (optional)
-        services[ImsService.PRESENCE_SERVICE] = new PresenceService(this, RcsSettings.getInstance().isPresenceServiceActivated());
+        services[ImsService.PRESENCE_SERVICE] = new PresenceService(this);
 
         // Create generic SIP service
-        services[ImsService.SIP_SERVICE] = new SipService(this, true);
+        services[ImsService.SIP_SERVICE] = new SipService(this);
 
         // Create the service dispatcher
         serviceDispatcher = new ImsServiceDispatcher(this);
@@ -299,16 +299,6 @@ public class ImsModule implements SipEventListener {
     }
 
     /**
-     * Is the capability service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isCapabilityServiceActivated() {
-    	CapabilityService service = getCapabilityService();
-    	return (service != null) && (service.isActivated());
-    }
-
-    /**
      * Returns the rich call service
      * 
      * @return Richcall service
@@ -317,26 +307,6 @@ public class ImsModule implements SipEventListener {
     	return (RichcallService)services[ImsService.RICHCALL_SERVICE];
     }
 
-    /**
-     * Is the rich call service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isRichcallServiceActivated() {
-    	RichcallService service = getRichcallService();
-    	return (service != null) && (service.isActivated());
-    }
-
-    /**
-     * Is the chat service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isChatServiceActivated() {
-    	InstantMessagingService service = getInstantMessagingService();
-    	return (service != null) && (service.isActivated());
-    }
-    
     /**
      * Returns the presence service
      * 
@@ -347,16 +317,6 @@ public class ImsModule implements SipEventListener {
     }
     
     /**
-     * Is the presence service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isPresenceServiceActivated() {
-    	PresenceService service = getPresenceService();
-    	return (service != null) && (service.isActivated());
-    }
-
-    /**
      * Returns the Instant Messaging service
      * 
      * @return Instant Messaging service
@@ -365,16 +325,6 @@ public class ImsModule implements SipEventListener {
     	return (InstantMessagingService)services[ImsService.IM_SERVICE];
     }
 
-    /**
-     * Is the Instant Messaging service activated
-     * 
-     * @return Boolean
-     */
-    public boolean isInstantMessagingServiceActivated() {
-    	InstantMessagingService service = getInstantMessagingService();
-    	return (service != null) && (service.isActivated());
-    }
-   
     /**
      * Returns the SIP service
      * 

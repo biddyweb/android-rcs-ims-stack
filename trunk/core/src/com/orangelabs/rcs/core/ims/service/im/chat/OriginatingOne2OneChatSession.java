@@ -62,10 +62,10 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 */
-	public OriginatingOne2OneChatSession(ImsService parent, String contact, String subject) {
-		super(parent, contact, subject);
+	public OriginatingOne2OneChatSession(ImsService parent, String contact, String msg) {
+		super(parent, contact, msg);
 
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -108,10 +108,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	SipRequest invite; 
 	    	if (getFirstMessage() != null) {
 		    	// Build CPIM part
-		        String cpim =
-		        	ChatUtils.buildCpimMessageWithIMDN(getDialogPath().getLocalParty(),
-		        			getDialogPath().getRemoteParty(), getFirstMessage().getMessageId(), getSubject(), "text/plain")
-		        	+ SipUtils.CRLF;
+		        String cpim = ChatUtils.buildCpimMessageWithImdn(
+		        			getDialogPath().getLocalParty(),
+		        			getDialogPath().getRemoteParty(),
+		        			getFirstMessage().getMessageId(),
+		        			getFirstMessage().getTextMessage(),
+		        			InstantMessage.MIME_TYPE) + SipUtils.CRLF;
 		        
 		    	// Build multipart
 		        String multipart = 
@@ -174,11 +176,14 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
         		content,
         		boundary);
         
-        // Add a subject header
-    	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+    	// Test if there is a first message
+    	if (getFirstMessage() != null) {
+	        // Add a subject header
+	    	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
 
-    	// Add IMDN headers
-        addImdnHeaders(invite, getFirstMessage().getMessageId());
+	    	// Add IMDN headers
+	        addImdnHeaders(invite, getFirstMessage().getMessageId());
+    	}
         
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 

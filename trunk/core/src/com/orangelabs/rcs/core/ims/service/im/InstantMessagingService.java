@@ -37,9 +37,9 @@ import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileTransferSession;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileTransferSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -92,11 +92,10 @@ public class InstantMessagingService extends ImsService {
      * Constructor
      * 
      * @param parent IMS module
-     * @param activated Activation flag
      * @throws CoreException
      */
-	public InstantMessagingService(ImsModule parent, boolean activated) throws CoreException {
-        super(parent, activated);
+	public InstantMessagingService(ImsModule parent) throws CoreException {
+        super(parent, true);
 
 		this.maxChatSessions = RcsSettings.getInstance().getMaxChatSessions();
         this.maxFtSessions = RcsSettings.getInstance().getMaxFileTransferSessions();
@@ -182,13 +181,13 @@ public class InstantMessagingService extends ImsService {
      * @param contact Contact
      * @return List of sessions
      */
-	public Vector<ContentSharingTransferSession> getFileTransferSessionsWith(String contact) {
-		Vector<ContentSharingTransferSession> result = new Vector<ContentSharingTransferSession>();
+	public Vector<FileSharingSession> getFileTransferSessionsWith(String contact) {
+		Vector<FileSharingSession> result = new Vector<FileSharingSession>();
 		Enumeration<ImsServiceSession> list = getSessions();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
-			if ((session instanceof ContentSharingTransferSession) && PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
-				result.add((ContentSharingTransferSession)session);
+			if ((session instanceof FileSharingSession) && PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
+				result.add((FileSharingSession)session);
 			}
 		}
 
@@ -200,13 +199,13 @@ public class InstantMessagingService extends ImsService {
      * 
      * @return List of sessions
      */
-	public Vector<ContentSharingTransferSession> getFileTransferSessions() {
-		Vector<ContentSharingTransferSession> result = new Vector<ContentSharingTransferSession>();
+	public Vector<FileSharingSession> getFileTransferSessions() {
+		Vector<FileSharingSession> result = new Vector<FileSharingSession>();
 		Enumeration<ImsServiceSession> list = getSessions();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
-			if (session instanceof ContentSharingTransferSession) {
-				result.add((ContentSharingTransferSession)session);
+			if (session instanceof FileSharingSession) {
+				result.add((FileSharingSession)session);
 			}
 		}
 
@@ -221,7 +220,7 @@ public class InstantMessagingService extends ImsService {
      * @return CSh session
      * @throws CoreException
      */
-	public ContentSharingTransferSession initiateFileTransferSession(String contact, MmContent content) throws CoreException {
+	public FileSharingSession initiateFileTransferSession(String contact, MmContent content) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a file transfer session with contact " + contact + ", file " + content.toString());
 		}
@@ -235,7 +234,7 @@ public class InstantMessagingService extends ImsService {
 		}
 
 		// Create a new session
-		OriginatingFileTransferSession session = new OriginatingFileTransferSession(
+		OriginatingFileSharingSession session = new OriginatingFileSharingSession(
 				this,
 				content,
 				PhoneUtils.formatNumberToSipUri(contact));
@@ -297,9 +296,7 @@ public class InstantMessagingService extends ImsService {
 		}
 
     	// Create a new session
-		ContentSharingTransferSession session = new TerminatingFileTransferSession(
-					this,
-					invite);
+		FileSharingSession session = new TerminatingFileSharingSession(this, invite);
 
 		// Start the session
 		session.startSession();
@@ -312,11 +309,11 @@ public class InstantMessagingService extends ImsService {
      * Initiate a one-to-one chat session
      * 
      * @param contact Remote contact
-     * @param subject Subject
+     * @param firstMsg First message
      * @return IM session
      * @throws CoreException
      */
-	public ChatSession initiateOne2OneChatSession(String contact, String subject) throws CoreException {
+	public ChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate 1-1 chat session with " + contact);
 		}
@@ -333,7 +330,7 @@ public class InstantMessagingService extends ImsService {
 		OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
 				this,
 	        	PhoneUtils.formatNumberToSipUri(contact),
-	        	StringUtils.encodeUTF8(subject));
+	        	StringUtils.encodeUTF8(firstMsg));
 
 		// Start the session
 		session.startSession();
@@ -359,7 +356,8 @@ public class InstantMessagingService extends ImsService {
 
 			// Save the message in the spam folder
 			String msgId = ChatUtils.getMessageId(invite);
-			RichMessaging.getInstance().addSpamMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
+			RichMessaging.getInstance().addSpamMessage(
+					new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
 
 			try {
 				// Send a 486 Busy response
@@ -384,7 +382,10 @@ public class InstantMessagingService extends ImsService {
 
 			// Save the message
 			String msgId = ChatUtils.getMessageId(invite);
-			RichMessaging.getInstance().addMsg(new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), ChatUtils.isImdnDisplayedRequested(invite)));
+			RichMessaging.getInstance().addIncomingChatMessage(
+					new InstantMessage(msgId, remote,
+							StringUtils.decodeUTF8(invite.getSubject()),
+							ChatUtils.isImdnDisplayedRequested(invite)));
 
 			try {
 				// Send a 486 Busy response
@@ -417,11 +418,11 @@ public class InstantMessagingService extends ImsService {
      * Initiate an ad-hoc group chat session
      * 
      * @param group Group of contacts
-     * @param subject Subject of the conference
+     * @param firstMsg First message
      * @return IM session
      * @throws CoreException
      */
-    public ChatSession initiateAdhocGroupChatSession(List<String> group, String subject) throws CoreException {
+    public ChatSession initiateAdhocGroupChatSession(List<String> group, String firstMsg) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -438,7 +439,7 @@ public class InstantMessagingService extends ImsService {
 		OriginatingAdhocGroupChatSession session = new OriginatingAdhocGroupChatSession(
 				this,
 				ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
-				StringUtils.encodeUTF8(subject),
+				StringUtils.encodeUTF8(firstMsg),
 				new ListOfParticipant(group));
 
 		// Start the session
@@ -547,7 +548,8 @@ public class InstantMessagingService extends ImsService {
  	    }
 
  	    // Get session from the message ID
- 	    // TODO: group chat support?
+ 	    // TODO: instead of From use the PAI ?
+ 	    // TODO: manage the SIP MESSAGE independtly of the chat session 
 		Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(message.getFromUri());
 		if (sessions.size() > 0) {
 			ChatSession session = sessions.lastElement();

@@ -107,7 +107,7 @@ public class IdGenerator {
 	 *
 	 * @return Unique identifier
 	 */
-	public static String getIdentifier() {
+	public static synchronized String getIdentifier() {
 		long time = System.currentTimeMillis();
 
 		int counter = -1;
