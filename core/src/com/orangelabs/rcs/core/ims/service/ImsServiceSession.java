@@ -47,7 +47,7 @@ public abstract class ImsServiceSession extends Thread {
 	public final static int INVITATION_ACCEPTED = 1; 
 	public final static int INVITATION_REJECTED = 2; 
 	
-    /**
+	/**
      * IMS service
      */
     private ImsService imsService;
@@ -282,33 +282,6 @@ public abstract class ImsServiceSession extends Thread {
 			displayName = null;
 		}
 		return displayName;
-	}
-
-	/**
-	 * Get session state
-	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
-	 */
-	public int getSessionState() {
-		int result = -1;
-		if (dialogPath != null) {
-			if (dialogPath.isSessionCancelled()) {
-				// Canceled: CANCEL received
-				result = 1;
-			} else
-			if (dialogPath.isSessionEstablished()) {
-				// Established: ACK exchanged
-				result = 2;
-			} else
-			if (dialogPath.isSessionTerminated()) {
-				// Terminated: BYE received
-				result = 3;
-			} else {
-				// Pending
-				result = 0;
-			}
-		}
-		return result;
 	}
 
 	/**

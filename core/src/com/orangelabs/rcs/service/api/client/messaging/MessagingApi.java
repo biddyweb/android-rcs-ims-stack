@@ -157,7 +157,7 @@ public class MessagingApi extends ClientApi {
     }
 	
 	/**
-	 * Get list of current established file transfer sessions
+	 * Get list of file transfer sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ClientApiException
@@ -178,14 +178,14 @@ public class MessagingApi extends ClientApi {
 	 * Initiate a one-to-one chat session
 	 * 
      * @param contact Contact
-     * @param subject Subject of the conference
-	 * @return Chat session
+     * @param firstMsg First message exchanged during the session
+   	 * @return Chat session
 	 * @throws ClientApiException
 	 */
-	public IChatSession initiateOne2OneChatSession(String contact, String subject) throws ClientApiException {
+	public IChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateOne2OneChatSession(contact, subject);
+		    	return coreApi.initiateOne2OneChatSession(contact, firstMsg);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -198,14 +198,14 @@ public class MessagingApi extends ClientApi {
 	 * Initiate an ad-hoc group chat session
 	 * 
      * @param participants List of participants
-     * @param subject Subject of the conference
+     * @param firstMsg First message exchanged during the session
 	 * @return Chat session
 	 * @throws ClientApiException
 	 */
-	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String subject) throws ClientApiException {
+	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String firstMsg) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateAdhocGroupChatSession(participants, subject);
+		    	return coreApi.initiateAdhocGroupChatSession(participants, firstMsg);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -253,7 +253,7 @@ public class MessagingApi extends ClientApi {
 	}
 
 	/**
-	 * Get list of current established chat sessions
+	 * Get list of chat sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ClientApiException

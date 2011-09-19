@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -56,11 +55,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * List of participants
 	 */
 	private ListOfParticipant participants = new ListOfParticipant();
-	
-	/**
-	 * Subject of the conference
-	 */
-	private String subject;
 
 	/**
 	 * First message
@@ -97,17 +91,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 */
-	public ChatSession(ImsService parent, String contact, String subject) {
+	public ChatSession(ImsService parent, String contact, String msg) {
 		super(parent, contact);
 
-		// Set the session subject
-		this.subject = subject;
-		
 		// Set the first message
-		if ((subject != null) && (subject.length() > 0)) {
-			firstMessage = new InstantMessage(ChatUtils.generateMessageId(), contact, StringUtils.decodeUTF8(subject), imdnMgr.isImdnActivated());
+		if ((msg != null) && (msg.length() > 0)) {
+			firstMessage = new InstantMessage(ChatUtils.generateMessageId(),
+					contact, StringUtils.decodeUTF8(msg), imdnMgr.isImdnActivated());
 		}
 		
 		// Create the MSRP manager
@@ -121,14 +113,23 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 * @param participants List of participants
 	 */
-	public ChatSession(ImsService parent, String contact, String subject, ListOfParticipant participants) {
-		this(parent, contact, subject);
+	public ChatSession(ImsService parent, String contact, String msg, ListOfParticipant participants) {
+		this(parent, contact, msg);
 
 		// Set the session participants
 		setParticipants(participants);
+	}
+	
+	/**
+	 * Returns the IMDN manager
+	 * 
+	 * @return IMDN manager
+	 */
+	public ImdnManager getImdnManager() {
+		return imdnMgr;
 	}
 	
 	/**
@@ -138,15 +139,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public ChatActivityManager getActivityManager() {
 		return activityMgr;
-	}
-	
-	/**
-	 * Return the subject of the conference
-	 * 
-	 * @return Subject
-	 */
-	public String getSubject() {
-		return subject;
 	}
 	
 	/**
@@ -161,7 +153,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Return the first message of the session
 	 * 
-	 * @return Subject
+	 * @return Instant message
 	 */
 	public InstantMessage getFirstMessage() {
 		return firstMessage;
@@ -245,38 +237,27 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 
 	/**
-	 * MSRP transfer indicator event
-	 * 
-	 * @param currentSize Current transfered size in bytes
-	 * @param totalSize Total size in bytes
-	 */
-	public void msrpTransferProgress(long currentSize, long totalSize) {
-	}
-	
-	/**
 	 * Data has been transfered
+	 * 
+	 * @param msgId Message ID
 	 */
-	public void msrpDataTransfered() {
+	public void msrpDataTransfered(String msgId) {
     	if (logger.isActivated()) {
     		logger.info("Data transfered");
     	}
     	
 		// Update the activity manager
 		activityMgr.updateActivity();
-		
-	    // Notify listeners
-    	for(int i=0; i < getListeners().size(); i++) {
-    		((ChatSessionListener)getListeners().get(i)).handleMessageTransfered();
-        }
 	}
 	
 	/**
-	 * Data has been received
+	 * Data transfer has been received
 	 * 
+	 * @param msgId Message ID
 	 * @param data Received data
-	 * @param mimeType Data mime-type
+	 * @param mimeType Data mime-type 
 	 */
-	public void msrpDataReceived(byte[] data, String mimeType) {
+	public void msrpDataReceived(String msgId, byte[] data, String mimeType) {
     	if (logger.isActivated()) {
     		logger.info("Data received (type " + mimeType + ")");
     	}
@@ -308,14 +289,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				if (cpimMsg != null) {
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
 			    	String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
-			    	String msgId = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
 		    			boolean imdnDisplayedRequested = false;
 			    		
 				    	// Check if the message contains an IMDN Disposition-Notification header
 				    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
-				    	if (dispositionNotification!=null){
+				    	if (dispositionNotification != null) {
 				    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)){
 				    			// Positive delivery requested, send MSRP message with status "delivered" 
 				    			sendMsrpMessageDeliveryStatus(msgId, from, ImdnDocument.DELIVERY_STATUS_DELIVERED);
@@ -324,17 +304,12 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    			imdnDisplayedRequested = true;
 				    		}			    		
 				    	}
-				    	// Check DateTime header
 				    	Date date = new Date();
-				    	// TODO: use CPIM date instead?
-				    	// String dateTime = cpimMsg.getHeader(CpimMessage.HEADER_DATETIME);
-				    	// if (dateTime!=null){
-				    	//	date.setTime(DateUtils.decodeDate(dateTime));
-			    		//}
 		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
+
 		    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
 		    			if (imdnDisplayedRequested){
-		    				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, from, EventsLogApi.STATUS_REPORT_REQUESTED, getParticipants().getList().size());
+		    				RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_REPORT_REQUESTED);
 		    			}
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
@@ -366,6 +341,39 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
     
 	/**
+	 * Data transfer in progress
+	 * 
+	 * @param currentSize Current transfered size in bytes
+	 * @param totalSize Total size in bytes
+	 */
+	public void msrpTransferProgress(long currentSize, long totalSize) {
+		// Not used by chat
+	}
+
+	/**
+	 * Data transfer has been aborted
+	 */
+	public void msrpTransferAborted() {
+    	// Not used by chat
+	}	
+
+	/**
+	 * Data transfer error
+	 * 
+	 * @param error Error
+	 */
+	public void msrpTransferError(String error) {
+    	if (logger.isActivated()) {
+    		logger.info("Data transfer error: " + error);
+    	}
+    	
+		// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MEDIA_SESSION_FAILED));
+		}
+    }
+
+	/**
 	 * Receive text message
 	 * 
 	 * @param contact Contact
@@ -395,36 +403,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 
 	/**
-	 * MSRP transfer aborted
-	 */
-	public void msrpTransferAborted() {
-    	if (logger.isActivated()) {
-    		logger.info("Data transfer aborted");
-    	}
-    	
-    	// Notify listeners
-    	for(int i=0; i < getListeners().size(); i++) {
-    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED));
-		}
-	}	
-
-	/**
-	 * MSRP transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
-    	if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
-    	}
-    	
-    	// Notify listeners
-    	for(int i=0; i < getListeners().size(); i++) {
-    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, error));
-		}
-    }
-	
-	/**
 	 * Send an empty data chunk
 	 */
 	public void sendEmptyDataChunk() {
@@ -440,26 +418,22 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Send data chunk with a specified MIME type
 	 * 
+	 * @param msgId Message ID
 	 * @param data Data
 	 * @param mime MIME type
-	 * @param msgId Id of the message that is sent, to be used in case of error
+	 * @return Boolean result
 	 */
-	public void sendDataChunks(String data, String mime, String msgId) {
+	public boolean sendDataChunks(String msgId, String data, String mime) {
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(data.getBytes()); 
-			msrpMgr.sendChunks(stream, mime, data.getBytes().length);			
+			msrpMgr.sendChunks(stream, msgId, mime, data.getBytes().length);
+			return true;
 		} catch(Exception e) {
+			// Error
 	   		if (logger.isActivated()) {
 	   			logger.error("Problem while sending data chunks", e);
 	   		}
-	   		
-			// Mark the message that was sent as failed
-			RichMessaging.getInstance().markMessageFailed(msgId);
-	   		
-	    	// Notify listeners
-	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
-			}
+			return false;
 		}
 	}
 	
@@ -471,13 +445,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public abstract boolean isChatGroup();
 	
 	/**
-	 * Send a text
+	 * Send a text message
 	 * 
+	 * @param msgId Message-ID
 	 * @param msg Message
-	 * @param id Message-id
-	 * @param imdnActivated If true, add IMDN headers to the request
+	 * @return Boolean result
 	 */
-	public abstract void sendTextMessage(String msg, String msgId, boolean imdnActivated);
+	public abstract void sendTextMessage(String msgId, String msg);
 	
 	/**
 	 * Send is composing status
@@ -485,28 +459,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param status Status
 	 */
 	public abstract void sendIsComposingStatus(boolean status);
-	
-	/**
-	 * Send a content to the remote contact
-	 * 
-	 * @param data Data stream to transfer
-	 * @param mimeType MIME type of the data
-	 * @param length of the stream
-	 */
-	public void sendContent(InputStream dataStream, String mimeType, long dataLength) {
-		try {
-			msrpMgr.sendChunks(dataStream, mimeType, dataLength);
-		} catch(Exception e) {
-	   		if (logger.isActivated()) {
-	   			logger.error("Problem while sending data", e);
-	   		}
-	   		
-	    	// Notify listeners
-	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MSG_TRANSFER_FAILED, e.getMessage()));
-			}
-		}	
-	}
 	
 	/**
 	 * Add a participant to the session
@@ -538,13 +490,18 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param request Request
 	 * @param status Status
 	 */
-	public void sendSipMessageDeliveryStatus(SipRequest request, String status) {
+	public void sendSipMessageDeliveryStatus(SipRequest request, final String status) {
 		// Check notification disposition
 		if (ChatUtils.isImdnDeliveredRequested(getDialogPath().getInvite())){
-			String msgId = ChatUtils.getMessageId(request);
+			final String msgId = ChatUtils.getMessageId(request);
 			if (msgId != null) {
 				// Send message delivery status via a SIP MESSAGE
-				imdnMgr.sendSipMessageDeliveryStatus(getDialogPath().getRemoteParty(), msgId, status);
+				Thread t = new Thread() {
+					public void run() {
+						imdnMgr.sendSipMessageDeliveryStatus(getDialogPath().getRemoteParty(), msgId, status);
+					}
+				};
+				t.start();
 			}
 		}
 	}
@@ -557,14 +514,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param status Status
 	 */
 	public void sendMsrpMessageDeliveryStatus(String msgId, String contact, String status) {
-   		// Create IDMN document
-		String content = ImdnDocument.buildImdnDocument(msgId, status);
+		// Send status in CPIM + IMDN headers
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = contact;
-		String cpim = ChatUtils.buildCpimMessageWithImdnPlusXml(from, to, msgId, content, ImdnDocument.MIME_TYPE);
+		String content = ChatUtils.buildCpimDeliveryStatus(from, to, msgId, ImdnDocument.buildImdnDocument(msgId, status), ImdnDocument.MIME_TYPE);
 		
-		// Send IMDN
-		sendDataChunks(cpim, CpimMessage.MIME_TYPE, null);
+		// Send data
+		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
 	}
 		
 	/**

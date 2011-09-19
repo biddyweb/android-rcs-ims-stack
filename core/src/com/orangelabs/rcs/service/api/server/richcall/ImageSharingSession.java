@@ -21,13 +21,15 @@ package com.orangelabs.rcs.service.api.server.richcall;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSessionListener;
 import com.orangelabs.rcs.provider.sharing.RichCall;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -35,17 +37,12 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author jexa7410
  */
-public class ImageSharingSession extends IImageSharingSession.Stub implements ContentSharingTransferSessionListener {
+public class ImageSharingSession extends IImageSharingSession.Stub implements ImageTransferSessionListener {
 
 	/**
 	 * Core session
 	 */
-	private ContentSharingTransferSession session;
-
-	/**
-	 * File has been transfered
-	 */
-	private boolean transfered = false;
+	private ImageTransferSession session;
 
 	/**
 	 * List of listeners
@@ -62,7 +59,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
      *
      * @param session Session
      */
-	public ImageSharingSession(ContentSharingTransferSession session) {
+	public ImageSharingSession(ImageTransferSession session) {
 		this.session = session;
 		session.addListener(this);
 	}
@@ -88,10 +85,11 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 	/**
 	 * Get session state
 	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 * @return State (see class SessionState) 
+	 * @see SessionState
 	 */
 	public int getSessionState() {
-		return session.getSessionState();
+		return ServerApiUtils.getSessionState(session);
 	}
 
 	/**
@@ -147,6 +145,11 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 			logger.info("Cancel session");
 		}
 
+		if (session.isImageTransfered()) {
+			// Automatically closed after transfer
+			return;
+		}
+		
 		// Abort the session
 		session.abortSession();
 
@@ -212,7 +215,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 
 		// Update rich call history
 		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-
+		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {
@@ -237,26 +240,27 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 		if (logger.isActivated()) {
 			logger.info("Session terminated by remote");
 		}
-
-        // Notify listener only if the transfer has been aborted before the end
-        // of transfer
-        if (!transfered) {
-			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
-
-	  		// Notify event listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
+		
+  		if (session.isImageTransfered()) {
+  			// The image has been received, so do nothing
+  			return;
   		}
+		
+		// Update rich call history
+		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
+
+  		// Notify event listeners
+		final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+            } catch (RemoteException e) {
+            	if (logger.isActivated()) {
+            		logger.error("Can't notify listener", e);
+            	}
+            }
+        }
+        listeners.finishBroadcast();
         
         // Remove session from the list
         RichCallApiService.removeImageSharingSession(session.getSessionID());
@@ -326,9 +330,6 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Co
 		if (logger.isActivated()) {
 			logger.info("Image transfered");
 		}
-
-        // Update transfer status
-        transfered = true;
 
 		// Update rich call history
 		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);

@@ -1,6 +1,7 @@
 package com.orangelabs.rcs.service.api.client.messaging;
 
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
+import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 
 /**
  * Chat session interface
@@ -18,8 +19,8 @@ interface IChatSession {
 	// Is chat group
 	boolean isChatGroup();
 	
-	// Get subject
-	String getSubject();
+	// Get first message exchanged during the session
+	InstantMessage getFirstMessage();
 
 	// Accept the session invitation
 	void acceptSession();

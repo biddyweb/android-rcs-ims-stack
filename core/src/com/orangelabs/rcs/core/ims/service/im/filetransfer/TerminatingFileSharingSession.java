@@ -38,9 +38,6 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -49,7 +46,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class TerminatingFileTransferSession extends ContentSharingTransferSession implements MsrpEventListener {
+public class TerminatingFileSharingSession extends FileSharingSession implements MsrpEventListener {
 	/**
 	 * MSRP manager
 	 */
@@ -66,7 +63,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	 * @param parent IMS service
 	 * @param invite Initial INVITE request
 	 */
-	public TerminatingFileTransferSession(ImsService parent, SipRequest invite) {
+	public TerminatingFileSharingSession(ImsService parent, SipRequest invite) {
 		super(parent, ContentManager.createMmContentFromSdp(invite.getContent()), SipUtils.getAssertedIdentity(invite));
 
 		// Create dialog path
@@ -79,7 +76,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new sharing session as terminating");
+	    		logger.info("Initiate a new file transfer session as terminating");
 	    	}
 	
 	        // Create a content object
@@ -92,7 +89,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 				send415Error(getDialogPath().getInvite());
 
 				// Unsupported media type
-				handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
+				handleError(new FileSharingError(FileSharingError.UNSUPPORTED_MEDIA_TYPE));
         		return;
         	}
 
@@ -185,7 +182,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
-	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
+	            "a=max-size:" + FileSharingSession.MAX_FILE_SIZE + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
@@ -205,7 +202,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     				public void run(){
     					try {
 							// Open the MSRP session
-    						msrpMgr.openMsrpSession(ContentSharingTransferSession.DEFAULT_SO_TIMEOUT);
+    						msrpMgr.openMsrpSession(FileSharingSession.DEFAULT_SO_TIMEOUT);
     						
 			    	        // Send an empty packet
 			            	sendEmptyDataChunk();
@@ -248,7 +245,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
                 	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
 
 					// Open the MSRP session
-					msrpMgr.openMsrpSession(ContentSharingTransferSession.DEFAULT_SO_TIMEOUT);
+					msrpMgr.openMsrpSession(FileSharingSession.DEFAULT_SO_TIMEOUT);
 					
 	    	        // Send an empty packet
 	            	sendEmptyDataChunk();
@@ -272,7 +269,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
             	}
 
         		// No response received: timeout
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED));
+            	handleError(new FileSharingError(FileSharingError.SESSION_INITIATION_FAILED));
             }
 		} catch(Exception e) {
         	if (logger.isActivated()) {
@@ -280,7 +277,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
         	}
 
         	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
 		}
 		
@@ -307,7 +304,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	 * 
 	 * @param error Error
 	 */
-	public void handleError(ContentSharingError error) {
+	public void handleError(FileSharingError error) {
 		if (isInterrupted()) {
 			return;
 		}
@@ -325,30 +322,33 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 
 		// Notify listeners
     	for(int j=0; j < getListeners().size(); j++) {
-    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(error);
+    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(error);
         }
 	}
 
 	/**
 	 * Data has been transfered
+	 * 
+	 * @param msgId Message ID
 	 */
-	public void msrpDataTransfered() {
-		// Not used
+	public void msrpDataTransfered(String msgId) {
+		// Not used in terminating side
 	}
 	
 	/**
-	 * Data has been received
+	 * Data transfer has been received
 	 * 
+	 * @param msgId Message ID
 	 * @param data Received data
-	 * @param mimeType Data mime-type
+	 * @param mimeType Data mime-type 
 	 */
-	public void msrpDataReceived(byte[] data, String mimeType) {
+	public void msrpDataReceived(String msgId, byte[] data, String mimeType) {
     	if (logger.isActivated()) {
     		logger.info("Data received");
     	}
     	
-    	// Set flag transfered
-    	contentTransferTerminated = true;
+    	// File has been transfered
+    	fileTransfered();
 	
     	try {
 	    	// Update the content with the received data 
@@ -359,36 +359,36 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	    	
 	    	// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleContentTransfered(getContent().getUrl());
+	    		((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
 	        }
 	   	} catch(Exception e) {
 	   		// 	Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_SAVING_FAILED,e.getMessage()));
+	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_SAVING_FAILED,e.getMessage()));
 	        }
 	   		if (logger.isActivated()) {
-	   			logger.error("Can't close correctly the CSh session", e);
+	   			logger.error("Can't save received file", e);
 	   		}
 	   	}
 	}
     
 	/**
-	 * MSRP transfer indicator event
+	 * Data transfer in progress
 	 * 
 	 * @param currentSize Current transfered size in bytes
 	 * @param totalSize Total size in bytes
 	 */
-	public void msrpTransferProgress(long currentSize, long totalSize) {	
+	public void msrpTransferProgress(long currentSize, long totalSize) {
     	// Notify listeners
 		if (!isInterrupted()) {
 	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
+	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
 	        }
 		}
 	}	
 
 	/**
-	 * MSRP transfer aborted
+	 * Data transfer has been aborted
 	 */
 	public void msrpTransferAborted() {
     	if (logger.isActivated()) {
@@ -397,7 +397,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
 	}	
 
 	/**
-	 * MSRP transfer error
+	 * Data transfer error
 	 * 
 	 * @param error Error
 	 */
@@ -424,7 +424,7 @@ public class TerminatingFileTransferSession extends ContentSharingTransferSessio
     	// Notify listeners
 		if (!isInterrupted()) {
 	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
+	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED, error));
 	        }
 		}
 	}

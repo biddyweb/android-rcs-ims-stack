@@ -154,6 +154,11 @@ public class SipInterface implements SipListener {
 	private String tempGruu = null;    
 
 	/**
+	 * Retransmission timer
+	 */
+	private int retransTimer;
+	
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -172,6 +177,7 @@ public class SipInterface implements SipListener {
 		this.localIpAddress = localIpAddress;
         this.defaultProtocol = defaultProtocol;
 		this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
+		this.retransTimer = RcsSettings.getInstance().getSipTimerT1();
 
 		// Get outbound proxy config
         try {
@@ -617,6 +623,9 @@ public class SipInterface implements SipListener {
 					req.setStackTransaction(transaction);
 				}
 
+				// Set retransmission timer
+//				transaction.setRetransmitTimer(retransTimer);
+				
 				// Create a transaction context
 				SipTransactionContext ctx = new SipTransactionContext(transaction);
 				String id = SipTransactionContext.getTransactionContextId(req);
@@ -650,6 +659,9 @@ public class SipInterface implements SipListener {
 					}
 					return null;
 				}
+
+				// Set retransmission timer
+//				transaction.setRetransmitTimer(retransTimer);
 
 				// Create a transaction context
 				SipTransactionContext ctx = new SipTransactionContext(transaction);

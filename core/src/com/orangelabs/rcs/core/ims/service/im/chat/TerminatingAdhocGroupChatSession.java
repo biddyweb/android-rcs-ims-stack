@@ -112,30 +112,37 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 			}
 			
 		    // Extract the SDP part
+			String boundary = getDialogPath().getInvite().getBoundaryContentType();
 			byte[] remoteSdp = null;
-		    String content = getDialogPath().getInvite().getContent();
-    		String boundary = "--" + getDialogPath().getInvite().getBoundaryContentType();
-    		int index  = 0;
-    		while(index != -1) {
-    			int begin = content.indexOf(boundary, index);
-    			int end = content.indexOf(boundary, begin+boundary.length());
-    			if ((begin != -1) && (end != -1)) {
-    				String part = content.substring(begin+boundary.length(), end);
-    				if (part.indexOf("application/sdp") != -1) {
-    	    			// SDP
-        				String contentPart = part.substring(part.indexOf("v=")); // TODO: is v= always in first ?
-    					remoteSdp = contentPart.getBytes();
-    				} else
-    				if (part.indexOf("application/resource-lists+xml") != -1) {
-    					// Resource list
-        				String contentPart = part.substring(part.indexOf("<?xml")); // TODO: is <?xml always in first ?
-        				ListOfParticipant participants = new ListOfParticipant(contentPart);
-    					participants.addParticipant(getRemoteContact());
-    					setParticipants(participants);
-    				}
-    			}
-    			index = end; 
-    		}
+			if (boundary != null) {
+				// Multipart content
+				remoteSdp = null;
+			    String content = getDialogPath().getInvite().getContent();
+	    		boundary = "--" + boundary;
+	    		int index  = 0;
+	    		while(index != -1) {
+	    			int begin = content.indexOf(boundary, index);
+	    			int end = content.indexOf(boundary, begin+boundary.length());
+	    			if ((begin != -1) && (end != -1)) {
+	    				String part = content.substring(begin+boundary.length(), end);
+	    				if (part.indexOf("application/sdp") != -1) {
+	    	    			// SDP
+	        				String contentPart = part.substring(part.indexOf("v=")); // TODO: is v= always in first ?
+	    					remoteSdp = contentPart.getBytes();
+	    				} else
+	    				if (part.indexOf("application/resource-lists+xml") != -1) {
+	    					// Resource list
+	        				String contentPart = part.substring(part.indexOf("<?xml")); // TODO: is <?xml always in first ?
+	        				ListOfParticipant participants = new ListOfParticipant(contentPart);
+	    					participants.addParticipant(getRemoteContact());
+	    					setParticipants(participants);
+	    				}
+	    			}
+	    			index = end; 
+	    		}				
+			} else {
+				remoteSdp = getDialogPath().getInvite().getContent().getBytes();
+			}
 
         	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(remoteSdp);

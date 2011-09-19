@@ -83,12 +83,10 @@ public class OptionsManager implements DiscoveryManager {
     	// Update capability timestamp
     	ContactsManager.getInstance().setContactCapabilitiesTimestamp(contact, System.currentTimeMillis());
     	
-		// Check if we are in call with the contact
-		boolean inCall = imsModule.isRichcallServiceActivated() && imsModule.getCallManager().isConnectedWith(contact);
-		
     	// Start request in background
 		try {
-	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(inCall));
+			boolean richcall = imsModule.getCallManager().isRichcallSupportedWith(contact);
+	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(richcall));
 	    	threadPool.submit(task);
 	    	return true;
 		} catch(Exception e) {

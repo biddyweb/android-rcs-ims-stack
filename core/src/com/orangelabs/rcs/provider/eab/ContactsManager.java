@@ -407,7 +407,7 @@ public final class ContactsManager {
 		if (logger.isActivated()) {
 			logger.info("Get my presence info");
 		}
-		if (!RcsSettings.getInstance().isPresenceServiceActivated()){
+		if (!RcsSettings.getInstance().isSocialPresenceSupported()){
 			return new PresenceInfo();
 		}
 		

@@ -200,19 +200,20 @@ public class MsrpManager {
      * Send data chunks
      * 
      * @param inputStream Input stream
+     * @param msgId Message ID
      * @param contentType Content type
      * @param contentSize Content size
      * @throws MsrpException
      */
-    public void sendChunks(InputStream inputStream, String contentType,	long contentSize) throws MsrpException {
+    public void sendChunks(InputStream inputStream, String msgId, String contentType, long contentSize) throws MsrpException {
         if (msrpSession == null) {
         	throw new MsrpException("MSRP session is null");
         }
 
-        msrpSession.sendChunks(inputStream, contentType, contentSize);
+        msrpSession.sendChunks(inputStream, msgId, contentType, contentSize);
     }
-
-	/**
+    
+    /**
      * Send an empty chunk
      * 
      * @throws MsrpException

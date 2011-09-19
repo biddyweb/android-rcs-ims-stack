@@ -86,7 +86,7 @@ public class ImdnManager {
 			String content = ImdnDocument.buildImdnDocument(msgId, status);
 			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 			String to = contact;
-			String cpim = ChatUtils.buildCpimMessageWithImdnPlusXml(from, to, msgId, content, ImdnDocument.MIME_TYPE);
+			String cpim = ChatUtils.buildCpimDeliveryStatus(from, to, msgId, content, ImdnDocument.MIME_TYPE);
 			
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();

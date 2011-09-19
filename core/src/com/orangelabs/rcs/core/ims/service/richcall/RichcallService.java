@@ -19,7 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.richcall;
 
 import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.core.content.LiveVideoContent;
+import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -31,24 +31,27 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.OriginatingLiveVideoContentSharingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.OriginatingPreRecordedVideoContentSharingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.TerminatingVideoContentSharingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.OriginatingContentSharingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.TerminatingContentSharingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.TerminatingImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingLiveVideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingPreRecordedVideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.TerminatingVideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import android.os.RemoteException;
+
 import java.util.Enumeration;
+import java.util.Vector;
 
 /**
  * Rich call service has in charge to monitor the GSM call in order to stop the
  * current content sharing when the call terminates, to process capability
  * request from remote and to request remote capabilities.
- * 
+ *
  * @author jexa7410
  */
 public class RichcallService extends ImsService {
@@ -69,13 +72,12 @@ public class RichcallService extends ImsService {
 
     /**
      * Constructor
-     * 
+     *
      * @param parent IMS module
-     * @param activated Activation flag
      * @throws CoreException
      */
-	public RichcallService(ImsModule parent, boolean activated) throws CoreException {
-        super(parent, activated);
+	public RichcallService(ImsModule parent) throws CoreException {
+        super(parent, true);
 	}
 
 	/**
@@ -107,30 +109,77 @@ public class RichcallService extends ImsService {
 	}
 
     /**
+     * Returns CSh sessions
+     *
+     * @return List of sessions
+     */
+    public Vector<ContentSharingSession> getCShSessions() {
+        Vector<ContentSharingSession> result = new Vector<ContentSharingSession>();
+        Enumeration<ImsServiceSession> list = getSessions();
+        while (list.hasMoreElements()) {
+            ImsServiceSession session = list.nextElement();
+            result.add((ContentSharingSession) session);
+        }
+        return result;
+    }
+
+    /**
      * Initiate an image sharing session
-     * 
+     *
      * @param contact Remote contact
      * @param content Content to be shared
      * @return CSh session
      * @throws CoreException
      */
-	public ContentSharingTransferSession initiateImageSharingSession(String contact, MmContent content) throws CoreException {
+	public ImageTransferSession initiateImageSharingSession(String contact, MmContent content) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate image sharing session with contact " + contact + ", file " + content.toString());
 		}
 
-        // TODO: authorize 1 session incoming and 1 session outgoing with the
-        // same contact
-        // // Test number of sessions
-        // if (getNumberOfSessions() >= 1) {
-        // if (logger.isActivated()) {
-        // logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
-        // }
-        // throw new CoreException("Max content sharing sessions achieved");
-        // }
+		// Test if call is established
+		if (!getImsModule().getCallManager().isCallConnected()) {
+			if (logger.isActivated()) {
+				logger.debug("Rich call not established: cancel the initiation");
+			}
+            throw new CoreException("Call not established");
+        }
+
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+        	if (!(currentSession instanceof TerminatingImageTransferSession)) {
+        		// Originating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max originating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
+            }
+            throw new CoreException("Max content sharing sessions achieved");
+        }
 
 		// Create a new session
-		OriginatingContentSharingSession session = new OriginatingContentSharingSession(
+		OriginatingImageTransferSession session = new OriginatingImageTransferSession(
 				this,
 				content,
 				PhoneUtils.formatNumberToSipUri(contact));
@@ -142,30 +191,62 @@ public class RichcallService extends ImsService {
 
     /**
      * Initiate a pre-recorded video sharing session
-     * 
+     *
      * @param contact Remote contact
      * @param content Video content to share
      * @param player Media player
      * @return CSh session
      * @throws CoreException
      */
-	public ContentSharingStreamingSession initiatePreRecordedVideoSharingSession(String contact, VideoContent content, IMediaPlayer player) throws CoreException {
+	public VideoStreamingSession initiatePreRecordedVideoSharingSession(String contact, VideoContent content, IMediaPlayer player) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a pre-recorded video sharing session with contact " + contact + ", file " + content.toString());
 		}
 
-        // TODO: authorize 1 session incoming and 1 session outgoing with the
-        // same contact
-        // // Test number of sessions
-        // if (getNumberOfSessions() >= 1) {
-        // if (logger.isActivated()) {
-        // logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
-        // }
-        // throw new CoreException("Max content sharing sessions achieved");
-        // }
+		// Test if call is established
+		if (!getImsModule().getCallManager().isCallConnected()) {
+			if (logger.isActivated()) {
+				logger.debug("Rich call not established: cancel the initiation");
+			}
+            throw new CoreException("Call not established");
+        }
+
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+        	if (!(currentSession instanceof TerminatingVideoStreamingSession)) {
+        		// Originating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max originating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
+            }
+            throw new CoreException("Max content sharing sessions achieved");
+        }
 
 		// Create a new session
-		OriginatingPreRecordedVideoContentSharingSession session = new OriginatingPreRecordedVideoContentSharingSession(
+		OriginatingPreRecordedVideoStreamingSession session = new OriginatingPreRecordedVideoStreamingSession(
 				this,
 				player,
 				content,
@@ -178,33 +259,67 @@ public class RichcallService extends ImsService {
 
     /**
      * Initiate a live video sharing session
-     * 
+     *
      * @param contact Remote contact
      * @param content Video content to share
      * @param player Media player
      * @return CSh session
      * @throws CoreException
+     * @throws RemoteException
      */
-	public ContentSharingStreamingSession initiateLiveVideoSharingSession(String contact, LiveVideoContent content, IMediaPlayer player) throws CoreException {
+    public VideoStreamingSession initiateLiveVideoSharingSession(String contact, IMediaPlayer player)
+            throws CoreException, RemoteException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a live video sharing session");
 		}
 
-        // TODO: authorize 1 session incoming and 1 session outgoing with the
-        // same contact
-        // // Test number of sessions
-        // if (getNumberOfSessions() >= 1) {
-        // if (logger.isActivated()) {
-        // logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
-        // }
-        // throw new CoreException("Max content sharing sessions achieved");
-        // }
+		// Test if call is established
+		if (!getImsModule().getCallManager().isCallConnected()) {
+			if (logger.isActivated()) {
+				logger.debug("Rich call not established: cancel the initiation");
+			}
+            throw new CoreException("Call not established");
+        }
+
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+        	if (!(currentSession instanceof TerminatingVideoStreamingSession)) {
+        		// Originating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max originating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: cancel the initiation");
+            }
+            throw new CoreException("Max content sharing sessions achieved");
+        }
 
 		// Create a new session
-		OriginatingLiveVideoContentSharingSession session = new OriginatingLiveVideoContentSharingSession(
+		OriginatingLiveVideoStreamingSession session = new OriginatingLiveVideoStreamingSession(
 				this,
 				player,
-				content,
+                ContentManager.createGenericLiveVideoContent(),
 				PhoneUtils.formatNumberToSipUri(contact));
 
 		// Start the session
@@ -214,58 +329,57 @@ public class RichcallService extends ImsService {
 
     /**
      * Receive a video sharing invitation
-     * 
+     *
      * @param invite Initial invite
      */
 	public void receiveVideoSharingInvitation(SipRequest invite) {
 		// Test if call is established
-		if (!getImsModule().getCallManager().isConnected()) {
+		if (!getImsModule().getCallManager().isCallConnected()) {
 			if (logger.isActivated()) {
 				logger.debug("Rich call not established: reject the invitation");
 			}
-			try {
-				// Create a 606 Not Acceptable response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 606 Not Acceptable");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 606);
-
-		        // Send response
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 606 Not Acceptable", e);
-				}
-			}
+            send606Response(invite);
 			return;
 		}
 
-        // TODO: authorize 1 session incoming and 1 session outgoing with the
-        // same contact
-        // // Test number of session
-        // if (getNumberOfSessions() > 0) {
-        // if (logger.isActivated()) {
-        // logger.debug("The max number of sharing sessions is achieved: reject the invitation");
-        // }
-        // try {
-        // // Send a 486 Busy response
-        // if (logger.isActivated()) {
-        // logger.info("Send 486 Busy here");
-        // }
-        // SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-        //
-        // // Send response
-        // getImsModule().getSipManager().sendSipResponse(resp);
-        // } catch(Exception e) {
-        // if (logger.isActivated()) {
-        // logger.error("Can't send 486 Busy here", e);
-        // }
-        // }
-        // return;
-        // }
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        String contact = SipUtils.getAssertedIdentity(invite);
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+			if (currentSession instanceof TerminatingVideoStreamingSession) {
+        		// Terminating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max terminating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: reject the invitation");
+            }
+            send486Response(invite);
+            return;
+        }
 
 		// Create a new session
-		ContentSharingStreamingSession session = new TerminatingVideoContentSharingSession(this, invite);
+		VideoStreamingSession session = new TerminatingVideoStreamingSession(this, invite);
 
 		// Start the session
 		session.startSession();
@@ -276,7 +390,7 @@ public class RichcallService extends ImsService {
 
     /**
      * Receive an image sharing invitation
-     * 
+     *
      * @param invite Initial invite
      */
 	public void receiveImageSharingInvitation(SipRequest invite) {
@@ -285,53 +399,52 @@ public class RichcallService extends ImsService {
     	}
 
 		// Test if call is established
-		if (!getImsModule().getCallManager().isConnected()) {
+		if (!getImsModule().getCallManager().isCallConnected()) {
 			if (logger.isActivated()) {
 				logger.debug("Rich call not established: reject the invitation");
 			}
-			try {
-				// Create a 606 Not Acceptable response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 606 Not Acceptable");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 606);
-
-		        // Send response
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 606 Not Acceptable", e);
-				}
-			}
+            send606Response(invite);
 			return;
 		}
 
-        // TODO: authorize 1 session incoming and 1 session outgoing with the
-        // same contact
-        // // Test number of session
-        // if (getNumberOfSessions() > 0) {
-        // if (logger.isActivated()) {
-        // logger.debug("The max number of sharing sessions is achieved: reject the invitation");
-        // }
-        // try {
-        // // Create a 486 Busy response
-        // if (logger.isActivated()) {
-        // logger.info("Send 486 Busy here");
-        // }
-        // SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-        //
-        // // Send response
-        // getImsModule().getSipManager().sendSipResponse(resp);
-        // } catch(Exception e) {
-        // if (logger.isActivated()) {
-        // logger.error("Can't send 486 Busy here", e);
-        // }
-        // }
-        // return;
-        // }
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        String contact = SipUtils.getAssertedIdentity(invite);
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+        	if (currentSession instanceof TerminatingImageTransferSession) {
+        		// Terminating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max terminating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: reject the invitation");
+            }
+            send486Response(invite);
+            return;
+        }
 
 		// Create a new session
-    	ContentSharingTransferSession session = new TerminatingContentSharingSession(this, invite);
+    	ImageTransferSession session = new TerminatingImageTransferSession(this, invite);
 
 		// Start the session
 		session.startSession();
@@ -342,7 +455,7 @@ public class RichcallService extends ImsService {
 
     /**
      * Receive a capability request (options procedure)
-     * 
+     *
      * @param options Received options message
      */
     public void receiveCapabilityRequest(SipRequest options) {
@@ -355,9 +468,10 @@ public class RichcallService extends ImsService {
 	    try {
 	    	// Create 200 OK response
 	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
+			boolean richcall = getImsModule().getCallManager().isRichcallSupportedWith(contact);
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		getImsModule().getSipManager().getSipStack().getLocalContact(),
-	        		CapabilityUtils.getSupportedFeatureTags(true),
+	        		CapabilityUtils.getSupportedFeatureTags(richcall),
 	        		CapabilityUtils.buildSdp(ipAddress));
 
 	        // Send 200 OK response
@@ -369,7 +483,7 @@ public class RichcallService extends ImsService {
 	    }
 
 	    // Request also capabilities to the remote if it's an outgoing call
-		if (getImsModule().getCallManager().isConnectedWith(contact) && !getImsModule().getCallManager().isIncomingCall()) {
+		if (getImsModule().getCallManager().isCallConnectedWith(contact) && !getImsModule().getCallManager().isIncomingCall()) {
 			// Outgoing call is received: request capabilities
 			getImsModule().getCapabilityService().requestContactCapabilities(contact);
 		}
@@ -389,5 +503,49 @@ public class RichcallService extends ImsService {
 			}
 			session.abortSession();
 		}
+    }
+
+    /**
+     * Send a 486 response
+     *
+     * @param invite request
+     */
+    private void send486Response(SipRequest invite) {
+        try {
+            // Send a 486 Busy response
+            if (logger.isActivated()) {
+                logger.info("Send 486 Busy here");
+            }
+            SipResponse resp = SipMessageFactory.createResponse(invite, 486);
+
+            // Send response
+            getImsModule().getSipManager().sendSipResponse(resp);
+        } catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send 486 Busy here", e);
+            }
+        }
+    }
+
+    /**
+     * Send a 606 response
+     *
+     * @param invite request
+     */
+    private void send606Response(SipRequest invite) {
+        try {
+            // Create a 606 Not Acceptable response
+            if (logger.isActivated()) {
+                logger.info("Send 606 Not Acceptable");
+            }
+            SipResponse resp = SipMessageFactory.createResponse(invite, 606);
+
+            // Send response
+            getImsModule().getSipManager().sendSipResponse(resp);
+        } catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send 606 Not Acceptable", e);
+            }
+        }
     }
 }

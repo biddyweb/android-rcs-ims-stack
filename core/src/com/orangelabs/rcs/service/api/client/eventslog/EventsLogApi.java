@@ -239,10 +239,10 @@ public class EventsLogApi extends ClientApi {
     /**
      * Delete a given log entry
      * 
-     * @param item id
+     * @param id Item id
      */
     public void deleteLogEntry(long id){
-    	RichMessaging.getInstance().deleteImItem(id);
+    	RichMessaging.getInstance().deleteEntry(id);
     }
 
     /**
@@ -295,7 +295,7 @@ public class EventsLogApi extends ClientApi {
     	if (RichMessaging.getInstance()==null){
     		RichMessaging.createInstance(ctx);
     	}
-    	RichMessaging.getInstance().deleteImItem(rowId);
+    	RichMessaging.getInstance().deleteEntry(rowId);
     }
     
     /**
@@ -307,7 +307,7 @@ public class EventsLogApi extends ClientApi {
     	if (RichMessaging.getInstance()==null){
     		RichMessaging.createInstance(ctx);
     	}
-    	RichMessaging.getInstance().deleteMessagingLogForContact(contact);
+    	RichMessaging.getInstance().deleteContactHistory(contact);
     }
     
     /**
@@ -319,7 +319,7 @@ public class EventsLogApi extends ClientApi {
     	if (RichMessaging.getInstance()==null){
     		RichMessaging.createInstance(ctx);
     	}
-    	RichMessaging.getInstance().deleteImSession(sessionId);
+    	RichMessaging.getInstance().deleteChatSession(sessionId);
     }
     
     /**

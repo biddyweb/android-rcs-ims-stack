@@ -62,11 +62,11 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
-	 * @param subject Subject of the conference
+	 * @param msg First message of the session
 	 * @param participants List of participants
 	 */
-	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String subject, ListOfParticipant participants) {
-		super(parent, conferenceId, subject, participants);
+	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
+		super(parent, conferenceId, msg, participants);
 
 		// Create dialog path
 		createOriginatingDialogPath();

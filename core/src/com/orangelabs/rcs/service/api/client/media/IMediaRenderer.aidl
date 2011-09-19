@@ -28,6 +28,12 @@ interface IMediaRenderer {
 	// Remove media listeners
 	void removeAllListeners();
 
-	// Get media Codec
+	// Get supported media codecs
+	MediaCodec[] getSupportedMediaCodecs();
+
+    	// Get media codec
 	MediaCodec getMediaCodec();
+
+	// Set media codec
+	void setMediaCodec(in MediaCodec mediaCodec);
 }

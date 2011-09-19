@@ -20,10 +20,10 @@ interface IMessagingApi {
 	List<IBinder> getFileTransferSessions();
 
 	// Initiate a one-to-one chat session
-	IChatSession initiateOne2OneChatSession(in String contact, in String subject);
+	IChatSession initiateOne2OneChatSession(in String contact, in String firstMsg);
 
 	// Initiate an ad-hoc group chat session
-	IChatSession initiateAdhocGroupChatSession(in List<String> participants, in String subject);
+	IChatSession initiateAdhocGroupChatSession(in List<String> participants, in String firstMsg);
 
 	// Get a chat session from its session ID
 	IChatSession getChatSession(in String id);

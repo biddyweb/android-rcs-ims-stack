@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.core.content;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -29,25 +25,29 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.utils.MimeManager;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Vector;
+
 /**
  * Multimedia content manager
  * 
  * @author jexa7410
  */
 public class ContentManager{
-	/**
-	 * Generate an URL for the received content
-	 *
-	 * @param filename Filename
-	 * @param mime MIME type
-	 * @return URL 
-	 */
+    /**
+     * Generate an URL for the received content
+     * 
+     * @param filename Filename
+     * @param mime MIME type
+     * @return URL
+     */
 	public static String generateUrlForReceivedContent(String filename, String mime) {
 		// Generate a file path
 		String path;
     	if (mime.startsWith("image")) {
 			path = FileFactory.getFactory().getPhotoRootDirectory();
-    	} else 
+        } else
     	if (mime.startsWith("video")) {
 			path = FileFactory.getFactory().getVideoRootDirectory();
     	} else {
@@ -69,11 +69,11 @@ public class ContentManager{
     		destination = filename + '_' + i;
     		i++;
     	}
-    	
+
     	// Return free destination url
-		return path + destination + extension;		
+        return path + destination + extension;
 	}
-	
+
 	/**
 	 * Save a content in the local directory of the device
 	 *
@@ -85,19 +85,19 @@ public class ContentManager{
 		OutputStream os = FileFactory.getFactory().openFileOutputStream(content.getUrl());
 		os.write(content.getData());
 		os.flush();
-		os.close();	
-		
+        os.close();
+
 		// Update the media storage
 		FileFactory.getFactory().updateMediaStorage(content.getUrl());
 	}
 
-	/**
-	 * Create a content object from URL description
-	 * 
-	 * @param url Content URL
-	 * @param size Content size
-	 * @return Content instance
-	 */
+    /**
+     * Create a content object from URL description
+     * 
+     * @param url Content URL
+     * @param size Content size
+     * @return Content instance
+     */
 	public static MmContent createMmContentFromUrl(String url, long size) {
 		String ext = MimeManager.getFileExtension(url);
 		String mime = MimeManager.getMimeType(ext);
@@ -108,27 +108,27 @@ public class ContentManager{
 			if (mime.startsWith("video/")) {
 				return new VideoContent(url, mime, size);
 			}
-		} 
+        }
 		return new FileContent(url, size);
 	}
 
-	/**
-	 * Create a content object from MIME type
-	 * 
-	 * @param url Content URL
-	 * @param mime MIME type
-	 * @param size Content size
-	 * @return Content instance
-	 */
+    /**
+     * Create a content object from MIME type
+     * 
+     * @param url Content URL
+     * @param mime MIME type
+     * @param size Content size
+     * @return Content instance
+     */
 	public static MmContent createMmContentFromMime(String url, String mime, long size) {
     	if (mime.startsWith("image/")) {
     		// Photo content
     		return new PhotoContent(url, mime, size);
-    	} 
+        }
     	if (mime.startsWith("video/")) {
     		// Video content
     		return new VideoContent(url, mime, size);
-    	} 
+        }
     	if (mime.startsWith("application/")) {
     		// File content
     		return new FileContent(url, size);
@@ -136,22 +136,31 @@ public class ContentManager{
 		return null;
 	}
 
-	/**
-	 * Create a live video content object
-	 * 
-	 * @param codec Codec
-	 * @return Content instance
-	 */
+    /**
+     * Create a live video content object
+     * 
+     * @param codec Codec
+     * @return Content instance
+     */
 	public static LiveVideoContent createLiveVideoContent(String codec) {
 		return new LiveVideoContent("video/"+codec);
 	}
-	
+
+    /**
+     * Create a generic live video content object
+     * 
+     * @return Content instance
+     */
+    public static LiveVideoContent createGenericLiveVideoContent() {
+        return new LiveVideoContent("video/*");
+    }
+
 	/**
-	 * Create a live video content object
-	 * 
-	 * @param sdp SDP part
-	 * @return Content instance
-	 */
+     * Create a live video content object
+     * 
+     * @param sdp SDP part
+     * @return Content instance
+     */
 	public static LiveVideoContent createLiveVideoContentFromSdp(byte[] sdp) {
 		 // Parse the remote SDP part
         SdpParser parser = new SdpParser(sdp);
@@ -165,16 +174,16 @@ public class ContentManager{
         int index = encoding.indexOf("/");
 		if (index != -1) {
 			codec = encoding.substring(0, index);
-		}	
+        }
 		return createLiveVideoContent(codec);
 	}
-	
+
 	/**
-	 * Create a content object from SDP data
-	 * 
-	 * @param sdp SDP part 
-	 * @return Content instance
-	 */
+     * Create a content object from SDP data
+     * 
+     * @param sdp SDP part
+     * @return Content instance
+     */
 	public static MmContent createMmContentFromSdp(String sdp) {
 		// Set the content
 		try {

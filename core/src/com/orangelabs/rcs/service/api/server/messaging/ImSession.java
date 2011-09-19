@@ -29,11 +29,11 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -89,10 +89,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	/**
 	 * Get session state
 	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 * @return State (see class SessionState) 
 	 */
 	public int getSessionState() {
-		return session.getSessionState();
+		return ServerApiUtils.getSessionState(session);
 	}
 	
 	/**
@@ -105,12 +105,12 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 	
 	/**
-	 * Get subject
+	 * Get first message exchanged during the session
 	 * 
-	 * @return Subject
+	 * @return First message
 	 */
-	public String getSubject() {
-		return session.getSubject();
+	public InstantMessage getFirstMessage() {
+		return session.getFirstMessage();
 	}
 
 	/**
@@ -123,7 +123,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 				
 		// Accept invitation
 		session.acceptSession();
-
 	}
 	
 	/**
@@ -135,11 +134,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		}
 
 		// Update rich messaging history
-		if (isChatGroup()){
-			RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-		} else {
-			RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
-		}
+		RichMessaging.getInstance().addChatSessionTermination(session);
 		
         // Reject invitation
 		session.rejectSession(486);
@@ -204,17 +199,12 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @return Message ID
 	 */
 	public String sendMessage(String text) {
-		boolean imdnReportsActivated = RcsSettings.getInstance().isImReportsActivated() && !isChatGroup();
-
 		// Generate a message Id
 		String msgId = ChatUtils.generateMessageId();
 
 		// Send text message
-		session.sendTextMessage(text, msgId, imdnReportsActivated);
+		session.sendTextMessage(msgId, text);
 
-		// Update rich messaging history
-		RichMessaging.getInstance().addChatMessageInitiation(new InstantMessage(msgId, getRemoteContact(), text, imdnReportsActivated), session);
-		
 		return msgId;
 	}
 
@@ -236,18 +226,18 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 */
 	public void setMessageDeliveryStatus(String msgId, String contact, String status) {
 		// We ignore all status except for "displayed"
-		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)){
-			if (logger.isActivated()){
-				logger.debug("We mark the message "+msgId+ " as reported and send the delivery status to the remote");
+		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+			if (logger.isActivated()) {
+				logger.debug("Set message delivery status " + status + " for " + msgId);
 			}
 			try{
 				// Send MSRP delivery status
 				session.sendMsrpMessageDeliveryStatus(msgId, contact, status);
 
 				// Update rich messaging history
-				RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DISPLAYED, getParticipants().size());
-			}catch(Exception e){
-				if (logger.isActivated()){
+				RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
+			} catch(Exception e) {
+				if (logger.isActivated()) {
 					logger.error("Could not send MSRP delivery status",e);
 				}
 			}
@@ -312,11 +302,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 
 		// Update rich messaging history
 		if (!RichMessaging.getInstance().isSessionTerminated(session.getSessionID())){
-			if (isChatGroup()) {
-				RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-			} else {
-				RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
-			}
+			RichMessaging.getInstance().addChatSessionTermination(session);
 		}
 		
   		// Notify event listeners
@@ -344,11 +330,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Session terminated by remote");
 		}
 
-		if (isChatGroup()){
-			RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-		}else{
-			RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
-		}
+		// Update rich messaging history
+		RichMessaging.getInstance().addChatSessionTermination(session);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -378,7 +361,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		}
 		
 		// Update rich messaging history
-		RichMessaging.getInstance().addChatMessageReception(message, session);
+		RichMessaging.getInstance().addIncomingChatMessage(message, session);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -393,14 +376,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
         }
         listeners.finishBroadcast();		
     }
-    
-    /**
-	 * Message has been transfered
-	 */
-    public void handleMessageTransfered() {
-    	// TODO
-    }
-    
+
     /**
      * IM session error
      * 
@@ -414,31 +390,16 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		// Update rich messaging history
     	switch(error.getErrorCode()){
 	    	case ChatError.SESSION_INITIATION_DECLINED:
-				if (isChatGroup()){
-					RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-				}else{
-					RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
-				}
+				RichMessaging.getInstance().addChatSessionTermination(session);
 	    		break;
 	    	case ChatError.SESSION_INITIATION_FAILED:
 	    	case ChatError.SESSION_INITIATION_CANCELLED:
-				if (isChatGroup()){
-					RichMessaging.getInstance().addGroupChatTermination(session.getParticipants().getList(), session.getSessionID());
-				}else{
-					RichMessaging.getInstance().addOneToOneChatTermination(getRemoteContact(), session.getSessionID());
-				}
+				RichMessaging.getInstance().addChatSessionTermination(session);
 				// Also mark the first message that was sent as failed
-				RichMessaging.getInstance().markMessageFailedForSession(session.getSessionID());
-	    		break;
-	    	case ChatError.MSG_TRANSFER_FAILED:
-	    		// Already done in core service processing
+				RichMessaging.getInstance().markChatSessionFailed(session.getSessionID());
 	    		break;
 	    	default:
-				if (isChatGroup()){
-					RichMessaging.getInstance().addGroupChatError(session.getParticipants().getList(), session.getSessionID());
-				}else{
-					RichMessaging.getInstance().addOneToOneChatError(getRemoteContact(), session.getSessionID());
-				}
+				RichMessaging.getInstance().addChatSessionError(session);
 	    		break;
     	}
     	
@@ -497,7 +458,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		}
 		
 		// Update rich messaging history
-		RichMessaging.getInstance().newConferenceEvent(contact, session.getSessionID(), state);
+		RichMessaging.getInstance().addConferenceEvent(contact, session.getSessionID(), state);
 
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
@@ -522,20 +483,20 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      */
     public void handleMessageDeliveryStatus(String msgId, String contact, String status) {
 		if (logger.isActivated()) {
-			logger.info("New message delivery status for msgId "+msgId+",from "+contact+", status "+status);
+			logger.info("New message delivery status for msgId " + msgId + ", status " + status);
 		}
 
 		// Update rich messaging history
 		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-			RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DISPLAYED, getParticipants().size());
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
 		} else
 		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-			RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_DELIVERED, getParticipants().size());			
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DELIVERED);			
 		} else
 		if ((status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)) ||
 				(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)) ||
 					(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN))) {
-			RichMessaging.getInstance().setMessageDeliveryStatus(msgId, contact, EventsLogApi.STATUS_FAILED, getParticipants().size());
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_FAILED);
 		}
 		
   		// Notify event listeners

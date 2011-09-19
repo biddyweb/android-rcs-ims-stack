@@ -23,9 +23,10 @@ import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
@@ -99,21 +100,21 @@ public interface CoreListener {
      * 
      * @param session CSh session
      */
-    public void handleContentSharingTransferInvitation(ContentSharingTransferSession session);
+    public void handleContentSharingTransferInvitation(ImageTransferSession session);
     
     /**
      * A new content sharing streaming invitation has been received
      * 
      * @param session CSh session
      */
-    public void handleContentSharingStreamingInvitation(ContentSharingStreamingSession session);
+    public void handleContentSharingStreamingInvitation(VideoStreamingSession session);
     
 	/**
 	 * A new file transfer invitation has been received
 	 * 
 	 * @param session File transfer session
 	 */
-	public void handleFileTransferInvitation(ContentSharingTransferSession session);
+	public void handleFileTransferInvitation(FileSharingSession session);
 
     /**
      * New one-to-one chat session invitation

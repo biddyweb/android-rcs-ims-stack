@@ -21,14 +21,16 @@ package com.orangelabs.rcs.service.api.server.richcall;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSessionListener;
-import com.orangelabs.rcs.core.ims.service.sharing.streaming.ContentSharingStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSessionListener;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -36,12 +38,12 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class VideoSharingSession extends IVideoSharingSession.Stub implements ContentSharingStreamingSessionListener {
+public class VideoSharingSession extends IVideoSharingSession.Stub implements VideoStreamingSessionListener {
 	
 	/**
 	 * Core session
 	 */
-	private ContentSharingStreamingSession session;
+	private VideoStreamingSession session;
 	
 	/**
 	 * List of listeners
@@ -58,7 +60,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 	 * 
 	 * @param session Session
 	 */
-	public VideoSharingSession(ContentSharingStreamingSession session) {
+	public VideoSharingSession(VideoStreamingSession session) {
 		this.session = session;
 		
 		session.addListener(this);
@@ -85,10 +87,11 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 	/**
 	 * Get session state
 	 * 
-	 * @return State (-1: not started, 0: pending, 1: canceled, 2: established, 3: terminated) 
+	 * @return State (see class SessionState) 
+	 * @see SessionState
 	 */
 	public int getSessionState() {
-		return session.getSessionState();
+		return ServerApiUtils.getSessionState(session);
 	}
 	
 	/**
@@ -128,9 +131,6 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Co
 
 		// Abort the session
 		session.abortSession();
-		
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
 	}
 
 	/**

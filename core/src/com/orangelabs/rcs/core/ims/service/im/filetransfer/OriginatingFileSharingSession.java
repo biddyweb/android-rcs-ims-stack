@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-	package com.orangelabs.rcs.core.ims.service.im.filetransfer;
+package com.orangelabs.rcs.core.ims.service.im.filetransfer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -40,9 +40,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSession;
-import com.orangelabs.rcs.core.ims.service.sharing.transfer.ContentSharingTransferSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -51,7 +49,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class OriginatingFileTransferSession extends ContentSharingTransferSession implements MsrpEventListener {
+public class OriginatingFileSharingSession extends FileSharingSession implements MsrpEventListener {
 	/**
 	 * MSRP manager
 	 */
@@ -69,7 +67,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	 * @param content Content to be shared
 	 * @param contact Remote contact
 	 */
-	public OriginatingFileTransferSession(ImsService parent, MmContent content, String contact) {
+	public OriginatingFileSharingSession(ImsService parent, MmContent content, String contact) {
 		super(parent, content, contact);
 		
 		// Create dialog path
@@ -82,7 +80,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new sharing session as originating");
+	    		logger.info("Initiate a file transfer session as originating");
 	    	}
 	    	
     		// Set setup mode
@@ -111,7 +109,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=max-size:" + ContentSharingTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
+	            "a=max-size:" + FileSharingSession.MAX_FILE_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
 	    		"a=file-disposition:attachment" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
@@ -149,7 +147,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
         	}
 
         	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
 		}
 		
@@ -188,16 +186,16 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
             } else
             if (ctx.getStatusCode() == 603) {
             	// 603 Invitation declined
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
+            	handleError(new FileSharingError(FileSharingError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
             if (ctx.getStatusCode() == 487) {
             	// 487 Invitation cancelled
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
+            	handleError(new FileSharingError(FileSharingError.SESSION_INITIATION_CANCELLED,
     					ctx.getReasonPhrase()));
             } else {
             	// Other error response
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
+            	handleError(new FileSharingError(FileSharingError.SESSION_INITIATION_FAILED,
             			ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
             }
         } else {
@@ -206,7 +204,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
         	}
     		
     		// No response received: timeout
-        	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED));
+        	handleError(new FileSharingError(FileSharingError.SESSION_INITIATION_FAILED));
         }
 	}	
 
@@ -284,15 +282,14 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 				// Load data from memory
 				stream = new ByteArrayInputStream(data);
 			}
-			msrpMgr.sendChunks(stream, getContent().getEncoding(), getContent().getSize());
-			
+			msrpMgr.sendChunks(stream, ChatUtils.generateMessageId(), getContent().getEncoding(), getContent().getSize());
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);
         	}
 
         	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
         }
 	}
@@ -341,7 +338,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
         	}
 
         	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
         }
 	}
@@ -351,7 +348,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	 * 
 	 * @param error Error
 	 */
-	public void handleError(ContentSharingError error) {
+	public void handleError(FileSharingError error) {
 		if (isInterrupted()) {
 			return;
 		}
@@ -369,7 +366,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 
 		// Notify listeners
     	for(int j=0; j < getListeners().size(); j++) {
-    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(error);
+    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(error);
         }
 	}
 
@@ -391,7 +388,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	            if (logger.isActivated()) {
 	            	logger.error("Can't read the Min-SE value");
 	            }
-	        	handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
+	        	handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
 	        	return;
 	        }
 	        
@@ -422,21 +419,23 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	    	}
 	
 	    	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
 	    }
 	}		
 	
 	/**
 	 * Data has been transfered
+	 * 
+	 * @param msgId Message ID
 	 */
-	public void msrpDataTransfered() {
+	public void msrpDataTransfered(String msgId) {
     	if (logger.isActivated()) {
     		logger.info("Data transfered");
     	}
     	
-    	// Set flag transfered
-    	contentTransferTerminated = true;
+    	// File has been transfered
+    	fileTransfered();
     	
     	// Close the MSRP session
     	closeMsrpSession();
@@ -449,22 +448,23 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 
     	// Notify listeners
     	for(int j=0; j < getListeners().size(); j++) {
-    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleContentTransfered(getContent().getUrl());
+    		((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
         }
 	}
 	
 	/**
-	 * Data has been received
+	 * Data transfer has been received
 	 * 
+	 * @param msgId Message ID
 	 * @param data Received data
-	 * @param mimeType Data mime-type
+	 * @param mimeType Data mime-type 
 	 */
-	public void msrpDataReceived(byte[] data, String mimeType) {
-		// Not used
+	public void msrpDataReceived(String msgId, byte[] data, String mimeType) {
+		// Not used in originating side
 	}
     
 	/**
-	 * MSRP transfer indicator event
+	 * Data transfer in progress
 	 * 
 	 * @param currentSize Current transfered size in bytes
 	 * @param totalSize Total size in bytes
@@ -472,12 +472,12 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	public void msrpTransferProgress(long currentSize, long totalSize) {
 		// Notify listeners
     	for(int j=0; j < getListeners().size(); j++) {
-    		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
+    		((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
         }
 	}	
 
 	/**
-	 * MSRP transfer aborted
+	 * Data transfer has been aborted
 	 */
 	public void msrpTransferAborted() {
     	if (logger.isActivated()) {
@@ -486,7 +486,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
 	}	
 
 	/**
-	 * MSRP transfer error
+	 * Data transfer error
 	 * 
 	 * @param error Error
 	 */
@@ -511,7 +511,7 @@ public class OriginatingFileTransferSession extends ContentSharingTransferSessio
     	// Notify listeners
     	if (!isInterrupted()) {
         	for(int j=0; j < getListeners().size(); j++) {
-        		((ContentSharingTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
+        		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED, error));
 	        }
     	}
 	}

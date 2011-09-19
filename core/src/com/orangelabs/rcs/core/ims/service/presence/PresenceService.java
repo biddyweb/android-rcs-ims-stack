@@ -93,11 +93,10 @@ public class PresenceService extends ImsService implements AddressBookEventListe
      * Constructor
      * 
      * @param parent IMS module
-     * @param activated Activation flag
      * @throws CoreException
      */
-	public PresenceService(ImsModule parent, boolean activated) throws CoreException {
-        super(parent, activated);
+	public PresenceService(ImsModule parent) throws CoreException {
+        super(parent, RcsSettings.getInstance().isSocialPresenceSupported());
 
 		// Set presence service options
 		this.permanentState = RcsSettings.getInstance().isPermanentStateModeActivated();

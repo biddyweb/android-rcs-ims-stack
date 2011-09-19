@@ -68,7 +68,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 48;
+        private static final int DATABASE_VERSION = 50;
 
         private Context ctx;
 
@@ -176,9 +176,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
-            addParameter(db, RcsSettingsData.USE_PRESENCE_SERVICE,				RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.USE_RICHCALL_SERVICE,				RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.USE_CHAT_SERVICE,					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.IM_CAPABILITY_ALWAYS_ON,			RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.IM_USE_REPORTS,					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.NETWORK_ACCESS,					""+RcsSettingsData.ANY_ACCESS);

@@ -496,21 +496,6 @@ public class RcsSettingsData {
 	public static final String CAPABILITY_POLLING_PERIOD = "CapabilityPollingPeriod";
 
 	/**
-	 * Activate or not the presence service
-	 */
-	public static final String USE_PRESENCE_SERVICE = "UsePresenceService";
-
-	/**
-	 * Activate or not the rich call service
-	 */
-	public static final String USE_RICHCALL_SERVICE = "UseRichcallService";
-
-	/**
-	 * Activate or not the chat service
-	 */
-	public static final String USE_CHAT_SERVICE = "UseChatService";
-
-	/**
 	 * CS video capability
 	 */
 	public static final String CAPABILITY_CS_VIDEO = "CapabilityCsVideo";

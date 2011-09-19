@@ -21,8 +21,11 @@ package com.orangelabs.rcs.service.api.server;
 import android.content.pm.PackageManager;
 
 import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.SessionState;
 
 /**
  * Server API utils
@@ -84,4 +87,32 @@ public class ServerApiUtils {
 				(Core.getInstance().getImsModule().getCurrentNetworkInterface() != null) &&
 				(Core.getInstance().getImsModule().getCurrentNetworkInterface().isRegistered()));
 	}
+	
+	/**
+	 * Get session state
+	 * 
+	 * @return State (see class SessionState) 
+	 */
+	public static int getSessionState(ImsServiceSession session) {
+		int result = SessionState.UNKNOWN;
+		SipDialogPath dialogPath = session.getDialogPath();
+		if (dialogPath != null) {
+			if (dialogPath.isSessionCancelled()) {
+				// Canceled: CANCEL received
+				result = SessionState.CANCELLED;
+			} else
+			if (dialogPath.isSessionEstablished()) {
+				// Established: ACK exchanged
+				result = SessionState.ESTABLISHED;
+			} else
+			if (dialogPath.isSessionTerminated()) {
+				// Terminated: BYE received
+				result = SessionState.TERMINATED;
+			} else {
+				// Pending
+				result = SessionState.PENDING;
+			}
+		}
+		return result;
+	}	
 }

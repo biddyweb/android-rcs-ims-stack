@@ -34,11 +34,6 @@ public interface ChatSessionListener extends ImsSessionListener {
 	 */
     public void handleReceiveMessage(InstantMessage message);
     
-	/**
-	 * Message has been transfered
-	 */
-    public void handleMessageTransfered();
-    
     /**
      * IM error
      * 

@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -127,6 +128,16 @@ public class ImsServiceDispatcher extends Thread {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
 
+	    if (request.getMethod().equals(Request.OPTIONS)) {
+	    	// OPTIONS received
+	    	if (imsModule.getCallManager().isCallConnected()) { 
+		    	// Rich call service
+	    		imsModule.getRichcallService().receiveCapabilityRequest(request);
+	    	} else {
+	    		// Capability discovery service
+	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
+	    	}		    	
+	    } else		
 	    if (request.getMethod().equals(Request.INVITE)) {
 	    	// INVITE received
 	    	ImsServiceSession session = searchSession(request.getCallId());
@@ -143,18 +154,17 @@ public class ImsServiceDispatcher extends Thread {
 	    	String sdp = request.getContent().toLowerCase();
 
 	    	// New incoming session invitation
-	    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
-	    			imsModule.isChatServiceActivated()) {
+	    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI)) {
     			// Store & Forward session
-	    		if (imsModule.isChatServiceActivated()) {
+	    		if (RcsSettings.getInstance().isImSessionSupported() && RcsSettings.getInstance().isImAlwaysOn()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("Store & Forward session invitation");
 		    		}
 	    			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -162,15 +172,15 @@ public class ImsServiceDispatcher extends Thread {
 	    	if (isTagPresent(sdp, "rtp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
 	    		// Video streaming
-	    		if (imsModule.isRichcallServiceActivated()) {
+	    		if (RcsSettings.getInstance().isVideoSharingSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("Video content sharing streaming invitation");
 		    		}
 	    			imsModule.getRichcallService().receiveVideoSharingInvitation(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -179,15 +189,15 @@ public class ImsServiceDispatcher extends Thread {
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
 	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE)) {
 	    		// Image sharing
-	    		if (imsModule.isRichcallServiceActivated()) {
+	    		if (RcsSettings.getInstance().isImageSharingSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("Image content sharing transfer invitation");
 		    		}
 	    			imsModule.getRichcallService().receiveImageSharingInvitation(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -196,15 +206,15 @@ public class ImsServiceDispatcher extends Thread {
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "file-selector")) {
 		        // File transfer
-	    		if (imsModule.isChatServiceActivated()) {
+	    		if (RcsSettings.getInstance().isFileTransferSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("File transfer invitation");
 		    		}
 	    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -213,15 +223,15 @@ public class ImsServiceDispatcher extends Thread {
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				ChatUtils.isGroupChatInvitation(request)) {
 		        // Ad-hoc group chat session
-	    		if (imsModule.isChatServiceActivated()) {
+	    		if (RcsSettings.getInstance().isImSessionSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("Ad-hoc group chat session invitation");
 		    		}
 	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -229,15 +239,15 @@ public class ImsServiceDispatcher extends Thread {
     		if (isTagPresent(sdp, "msrp") &&
     				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM)) {
 		        // 1-1 chat session
-	    		if (imsModule.isChatServiceActivated()) {
+	    		if (RcsSettings.getInstance().isImSessionSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("1-1 chat session invitation");
 		    		}
 	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
 	    		} else {
-					// Service not activated: reject the invitation with a 603 Decline
+					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not activated: automatically reject");
+						logger.debug("IMS service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -268,16 +278,6 @@ public class ImsServiceDispatcher extends Thread {
 	    	// NOTIFY received
 	    	dispatchNotify(request);
 	    } else
-	    if (request.getMethod().equals(Request.OPTIONS)) {
-	    	// OPTIONS received
-	    	if (imsModule.isRichcallServiceActivated() && imsModule.getCallManager().isConnected()) { 
-		    	// Rich call service
-	    		imsModule.getRichcallService().receiveCapabilityRequest(request);
-	    	} else {
-	    		// Capability discovery service
-	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
-	    	}		    	
-	    } else		
 		if (request.getMethod().equals(Request.BYE)) {
 	        // BYE received
 			
@@ -364,28 +364,22 @@ public class ImsServiceDispatcher extends Thread {
 	    // Dispatch the notification to the corresponding service
 	    if (eventHeader.getEventType().equalsIgnoreCase("presence.winfo")) {
 	    	// Presence service
-	    	if (imsModule.isPresenceServiceActivated() && imsModule.getPresenceService().isServiceStarted()) {
+	    	if (RcsSettings.getInstance().isSocialPresenceSupported() && imsModule.getPresenceService().isServiceStarted()) {
 	    		imsModule.getPresenceService().getWatcherInfoSubscriber().receiveNotification(notify);
 	    	}
 	    } else
 	    if (eventHeader.getEventType().equalsIgnoreCase("presence")) {
 	    	if (notify.getTo().indexOf("anonymous") != -1) {
 		    	// Capability service
-		    	if (imsModule.isCapabilityServiceActivated() && imsModule.getCapabilityService().isServiceStarted()) {
-		    		imsModule.getCapabilityService().receiveNotification(notify);
-		    	}
+	    		imsModule.getCapabilityService().receiveNotification(notify);
 	    	} else {
 		    	// Presence service
-		    	if (imsModule.isPresenceServiceActivated() && imsModule.getPresenceService().isServiceStarted()) {
-		    		imsModule.getPresenceService().getPresenceSubscriber().receiveNotification(notify);
-		    	}
+	    		imsModule.getPresenceService().getPresenceSubscriber().receiveNotification(notify);
 	    	}
 	    } else
 	    if (eventHeader.getEventType().equalsIgnoreCase("conference")) {
 	    	// IM service
-	    	if (imsModule.isInstantMessagingServiceActivated() && imsModule.getInstantMessagingService().isServiceStarted()) {
-	    		imsModule.getInstantMessagingService().receiveConferenceNotification(notify);
-	    	}
+    		imsModule.getInstantMessagingService().receiveConferenceNotification(notify);
 		} else {
 			// Not supported service
         	if (logger.isActivated()) {

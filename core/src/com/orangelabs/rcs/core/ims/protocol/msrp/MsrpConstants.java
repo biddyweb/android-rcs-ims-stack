@@ -34,6 +34,7 @@ public interface MsrpConstants {
 	
 	public static final byte CHAR_SP = ' ';
 	public static final byte CHAR_LF = '\r';
+	public static final byte CHAR_CR = '\n';
 	public static final byte CHAR_MIN = '-';
 	public static final byte CHAR_DOUBLE_POINT = ':';
 	

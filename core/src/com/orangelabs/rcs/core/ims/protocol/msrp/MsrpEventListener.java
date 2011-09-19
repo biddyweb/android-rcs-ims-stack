@@ -26,19 +26,22 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
 public interface MsrpEventListener {
 	/**
 	 * Data has been transfered
+	 * 
+	 * @param msgId Message ID
 	 */
-	public void msrpDataTransfered();
+	public void msrpDataTransfered(String msgId);
 	
 	/**
 	 * Data has been received
 	 * 
+	 * @param msgId Message ID
 	 * @param data Received data
 	 * @param mimeType Data mime-type 
 	 */
-	public void msrpDataReceived(byte[] data, String mimeType);
+	public void msrpDataReceived(String msgId, byte[] data, String mimeType);
 	
 	/**
-	 * MSRP transfer indicator event
+	 * Data transfer in progress
 	 * 
 	 * @param currentSize Current transfered size in bytes
 	 * @param totalSize Total size in bytes
@@ -46,12 +49,12 @@ public interface MsrpEventListener {
 	public void msrpTransferProgress(long currentSize, long totalSize);	
 	
 	/**
-	 * MSRP transfer aborted
+	 * Data transfer has been aborted
 	 */
 	public void msrpTransferAborted();
 	
 	/**
-	 * MSRP transfer error
+	 * Data transfer error
 	 * 
 	 * @param error Error
 	 */
