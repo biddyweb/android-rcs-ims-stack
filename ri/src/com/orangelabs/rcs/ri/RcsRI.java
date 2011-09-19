@@ -101,7 +101,7 @@ public class RcsRI extends ListActivity {
         		startActivity(new Intent(this, CapabilitiesRI.class));
         		break;
         	case 2:
-                if (RcsSettings.getInstance().isPresenceServiceActivated()){
+                if (RcsSettings.getInstance().isSocialPresenceSupported()){
             		startActivity(new Intent(this, PresenceRI.class));
                 } else {
     				Utils.showMessage(this, getString(R.string.label_presence_service_not_activated));

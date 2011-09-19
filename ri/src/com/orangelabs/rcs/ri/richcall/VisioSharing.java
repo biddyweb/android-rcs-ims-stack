@@ -18,7 +18,7 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.CpuMonitor;
@@ -223,7 +223,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	/**
 	 * Video format
 	 */
-	private String videoFormat;
+    private String incomingVideoFormat;
+
+    private String outgoingVideoFormat;
 
 	/**
 	 * Video width
@@ -252,9 +254,10 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         filename = getIntent().getStringExtra("filename");
         isPrerecordedSession = (filename!=null);
 
-        videoFormat = getIntent().getStringExtra("videotype");
-        if (videoFormat == null)
-            videoFormat = RcsSettings.getInstance().getCShVideoFormat();
+        incomingVideoFormat = getIntent().getStringExtra("videotype");
+        if (incomingVideoFormat == null)
+            incomingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
+        outgoingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
         if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
             // QVGA
         	videoWidth = 320;
@@ -316,7 +319,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
         if (!isPrerecordedSession){
         	// Create the live video player
-        	outgoingPlayer = new LiveVideoPlayer(videoFormat);
+            outgoingPlayer = new LiveVideoPlayer(outgoingVideoFormat);
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
             surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -333,7 +336,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (incomingVideoView == null) {
             incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
             incomingVideoView.setAspectRatio(videoWidth, videoHeight);
-            incomingRenderer = new VideoRenderer(videoFormat);
+            incomingRenderer = new VideoRenderer(incomingVideoFormat);
             incomingRenderer.setVideoSurface(incomingVideoView);
         }
 
@@ -616,7 +619,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 camera.release();
             }
             // open the other camera
-
             Method method = getCameraOpenMethod();
             if (openedCameraId == 0) {
                 try {
@@ -679,7 +681,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     private void recreateVideoPlayer(){
     	if (!isPrerecordedSession){
     		// Create the live video player
-    		outgoingPlayer = new LiveVideoPlayer(videoFormat);
+            outgoingPlayer = new LiveVideoPlayer(outgoingVideoFormat);
             surface = outgoingVideoView.getHolder();
             surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
             surface.addCallback(this);
@@ -690,7 +692,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     		outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
     	}
     }
-
 
     /**
      * Stop incoming session button listener
@@ -820,7 +821,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
     /**
      * Get Camera "open" Method
-     * 
+     *
      * @return Method
      */
     private Method getCameraOpenMethod() {
@@ -842,7 +843,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
     /**
      * Get Camera "numberOfCameras" Method
-     * 
+     *
      * @return Method
      */
     private Method getCameraNumberOfCamerasMethod() {

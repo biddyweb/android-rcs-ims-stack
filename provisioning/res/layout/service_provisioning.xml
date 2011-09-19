@@ -162,13 +162,6 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="4" android:lines="1" android:inputType="numberSigned"/>
 
-        <CheckBox android:id="@+id/UseRichcallService"
-		android:layout_height="wrap_content"
-		android:layout_width="fill_parent"
-		android:layout_marginLeft="5dip"
-		android:layout_marginRight="5dip"
-        android:text="Rich call service"/>	   
-
         <CheckBox android:id="@+id/SmsFallbackService"
 		android:layout_height="wrap_content"
 		android:layout_width="fill_parent"
@@ -182,13 +175,6 @@
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
         android:text="Store and Forward service warning"/>
-        
-        <CheckBox android:id="@+id/UsePresenceService"
-		android:layout_height="wrap_content"
-		android:layout_width="fill_parent"
-		android:layout_marginLeft="5dip"
-		android:layout_marginRight="5dip"
-        android:text="Presence service"/>	   
         
 </LinearLayout>
 	
