@@ -129,12 +129,6 @@ public class ServiceProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
         check.setChecked(Boolean.parseBoolean(settings.get("StoreForwardServiceWarning")));
-        
-		check = (CheckBox)this.findViewById(R.id.UsePresenceService);
-        check.setChecked(Boolean.parseBoolean(settings.get("UsePresenceService")));        
-
-        check = (CheckBox)this.findViewById(R.id.UseRichcallService);
-        check.setChecked(Boolean.parseBoolean(settings.get("UseRichcallService")));        
 	}
 	
     @Override
@@ -196,17 +190,11 @@ public class ServiceProvisioning extends Activity {
 					Provisioning.writeParameter(cr, "ImSessionStart", "2");
 				}
 				
-		        CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
+				CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
 				Provisioning.writeParameter(cr, "SmsFallbackService", Boolean.toString(check.isChecked()));
 
 		        check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
 				Provisioning.writeParameter(cr, "StoreForwardServiceWarning", Boolean.toString(check.isChecked()));
-
-				check = (CheckBox)this.findViewById(R.id.UsePresenceService);
-				Provisioning.writeParameter(cr, "UsePresenceService", Boolean.toString(check.isChecked()));
-				
-				check = (CheckBox)this.findViewById(R.id.UseRichcallService);
-				Provisioning.writeParameter(cr, "UseRichcallService", Boolean.toString(check.isChecked()));
 				
 				break;
 		}

@@ -157,7 +157,9 @@
 <string name="menu_quicktext">Quick text</string>
 <string name="label_add_participant_success">Request to add participant(s) is successful</string>
 <string name="label_add_participant_failed">Request to add participant(s) has failed</string>
-<string name="label_receive_displayed_delivery_status">%s has displayed the message</string>
+<string name="label_receive_delivery_status_displayed">%s has displayed the message</string>
+<string name="label_receive_delivery_status_failed">Message has failed</string>
+<string name="label_receive_delivery_status_delivered">Message has been delivered</string>
 <string name="label_chat_terminated">Chat session terminated</string>
 <string name="label_chat_terminated_by_remote">Chat session terminated by remote</string>
 <string name="label_group_chat">Group chat</string>
@@ -204,6 +206,8 @@
 <string name="label_outgoing_sharing_aborted">Outgoing sharing aborted</string>
 <string name="label_outgoing_sharing_terminated_by_remote">Outgoing sharing terminated by remote</string>
 <string name="label_switch_camera">Switch camera</string>
+<string name="menu_multiparty_call">Multiparty call</string>
+<string name="menu_call_hold">Call hold</string>
 
 <!-- Event Log -->
 <string name="menu_filter">Change filter</string>

@@ -52,6 +52,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
@@ -187,7 +188,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		RcsSettings.createInstance(getApplicationContext());
 		int maxLength = RcsSettings.getInstance().getMaxChatMessageLength();
 		InputFilter[] filterArray = new InputFilter[1];
-		filterArray[0]=new InputFilter.LengthFilter(maxLength);
+		filterArray[0] = new InputFilter.LengthFilter(maxLength);
 		mUserText.setFilters(filterArray);
         
 		// Set button listener
@@ -375,7 +376,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     /**
      * Mark a message as "displayed"
      * 
-     * @param msg
+     * @param msg Message
      */
     private void markMessageAsDisplayed(InstantMessage msg){
     	try {
@@ -448,6 +449,8 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	    	        // Test if there is an existing session
 	    	        String sessionId = getIntent().getStringExtra("sessionId");
 	    			if (sessionId != null) {
+	    				// Ongoing session
+	    				
 		    			// Register to receive session events
 						chatSession = messagingApi.getChatSession(sessionId);    			
 						if (chatSession == null) {
@@ -462,11 +465,14 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			            // Set chat type
 						isGroupChat = chatSession.isChatGroup();
 						
-						// Display first message from the subject
-		    			String firstMessage = chatSession.getSubject();
-		    			String contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
-	    				displayReceivedMessage(contact, firstMessage);
+						// Display first message
+		    			InstantMessage firstMessage = chatSession.getFirstMessage();
+		    			if (firstMessage != null) {
+		    				displayReceivedMessage(firstMessage.getRemote(), firstMessage.getTextMessage());
+		    			}
 	    			} else {
+	    				// Initiate a new session
+	    				
 		    	        // Set list of participants
 		    	        participants = getIntent().getStringArrayListExtra("participants");
 
@@ -474,7 +480,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 						isGroupChat = getIntent().getBooleanExtra("isChatGroup", false);
 	    			}
 	    			
-	    	        // Set UI title
+    				// Set UI title
 	    	        if (isGroupChat) {
 	    				setTitle(getString(R.string.title_chat_view_group));
 	    	        } else {
@@ -579,10 +585,15 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}		
 				
 		// Chat error
-		public void handleImError(int error) {
+		public void handleImError(final int error) {
 			handler.post(new Runnable() {
-				public void run(){
-					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_failed));
+				public void run() {
+					// Display error
+					if (error == ChatError.SESSION_INITIATION_DECLINED) {
+						Utils.showMessageAndExit(ChatView.this, getString(R.string.label_invitation_declined));
+					} else {
+						Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_failed, error));
+					}					
 				}
 			});
 		}	
@@ -617,10 +628,17 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		public void handleMessageDeliveryStatus(final String msgId, final String contact, final String status) {
 			handler.post(new Runnable(){
 				public void run(){
-					// For now we do not display the messages except if it is "displayed"
-					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)){
-						String number = PhoneUtils.extractNumberFromUri(contact);
-						displayReceiveNotif(getString(R.string.label_receive_displayed_delivery_status, number));
+					String number = PhoneUtils.extractNumberFromUri(contact);
+					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) ||
+							status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR) ||
+								status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
+						displayReceiveNotif(getString(R.string.label_receive_delivery_status_failed));
+					} else
+					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+						displayReceiveNotif(getString(R.string.label_receive_delivery_status_displayed, number));
+					} else
+					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+						displayReceiveNotif(getString(R.string.label_receive_delivery_status_delivered, number));
 					}
 				}
 			});

@@ -41,6 +41,7 @@ import android.widget.TextView;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
@@ -286,15 +287,17 @@ public class ChatList extends ListActivity implements ClientApiListener, OnItemC
 			List<IBinder> chatSessionsBinder = messagingApi.getChatSessions();
 			for (IBinder binder : chatSessionsBinder) {
 				IChatSession chatSession = IChatSession.Stub.asInterface(binder);
-				String contact;
-				if (chatSession.isChatGroup()) {
-					contact = getString(R.string.label_group_chat);
-				} else {
-					contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
+				if (chatSession.getSessionState() == SessionState.ESTABLISHED) {
+					String contact;
+					if (chatSession.isChatGroup()) {
+						contact = getString(R.string.label_group_chat);
+					} else {
+						contact = PhoneUtils.extractNumberFromUri(chatSession.getRemoteContact());
+					}
+					String sessionID = chatSession.getSessionID();
+					ImElement imElements=new ImElement(contact, sessionID);
+					activeImSessionsElements.add(imElements);
 				}
-				String sessionID = chatSession.getSessionID();
-				ImElement imElements=new ImElement(contact, sessionID);
-				activeImSessionsElements.add(imElements);
 			}
 		} catch (Exception e) {
 			Utils.showMessageAndExit(ChatList.this, getString(R.string.label_api_failed));

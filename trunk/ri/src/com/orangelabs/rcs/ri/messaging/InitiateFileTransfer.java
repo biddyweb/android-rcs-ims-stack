@@ -21,16 +21,16 @@ package com.orangelabs.rcs.ri.messaging;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.provider.ContactsContract.Data;
+import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,7 +43,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.orangelabs.rcs.core.ims.service.sharing.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.ri.R;
@@ -329,12 +329,12 @@ public class InitiateFileTransfer extends Activity {
 					// Hide progress dialog
 					hideProgressDialog();
 					
-					// Display session status
-					if (error == ContentSharingError.MEDIA_TRANSFER_FAILED) {
+					// Display error
+					if (error == FileSharingError.MEDIA_TRANSFER_FAILED) {
 						TextView statusView = (TextView)findViewById(R.id.progress_status);
 						statusView.setText("error");
 					} else
-					if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
+					if (error == FileSharingError.SESSION_INITIATION_DECLINED) {
 						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
 					} else {
 						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed, error));

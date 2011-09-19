@@ -70,7 +70,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	/**
 	 * First message
 	 */
-	private String firstMessage;
+	private InstantMessage firstMessage;
 	
 	/**
      * Chat session
@@ -87,7 +87,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		// Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
-		firstMessage = getIntent().getStringExtra("subject");
+		firstMessage = getIntent().getParcelableExtra("firstMessage");
         
 		// Remove the notification
 		ReceiveChat.removeChatNotification(this, sessionId);
@@ -135,8 +135,11 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 			
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.title_recv_chat);
-			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" +
-					getString(R.string.label_msg) + " " + firstMessage);
+			String msg = getString(R.string.label_from) + " " + remoteContact;
+			if (firstMessage != null) {
+				msg = msg + "\n" + getString(R.string.label_msg) + " " + firstMessage.getTextMessage();
+			}
+			builder.setMessage(msg);
 			builder.setCancelable(false);
 			builder.setIcon(R.drawable.ri_notif_chat_icon);
 			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
@@ -313,6 +316,9 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         // Get session ID
 		String sessionId = invitation.getStringExtra("sessionId");
 
+		// Get first message
+		InstantMessage firstMessage = invitation.getParcelableExtra("firstMessage");
+		
         // Create notification
 		Intent intent = new Intent(invitation);
 		intent.setClass(context, ReceiveChat.class);
@@ -324,10 +330,11 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         		notifTitle,
         		System.currentTimeMillis());
         notif.flags = Notification.FLAG_AUTO_CANCEL;
-        notif.setLatestEventInfo(context,
-        		notifTitle,
-        		Utils.formatCallerId(invitation) + ": " + invitation.getStringExtra("subject"),
-        		contentIntent);
+        String msg = Utils.formatCallerId(invitation);
+        if (firstMessage != null) {
+        	msg = msg + ": " + firstMessage.getTextMessage();
+        }
+        notif.setLatestEventInfo(context, notifTitle, msg, contentIntent);
         
         // Set ringtone
         String ringtone = RcsSettings.getInstance().getChatInvitationRingtone();

@@ -18,6 +18,12 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
+import com.orangelabs.rcs.platform.file.FileDescription;
+import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -31,12 +37,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
-
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
-import com.orangelabs.rcs.platform.file.FileDescription;
-import com.orangelabs.rcs.platform.file.FileFactory;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.Utils;
 
 /**
  * Initiate pre-recorded video sharing
@@ -138,7 +138,7 @@ public class InitiatePrerecordedVideoSharing extends Activity {
      * @return Boolean
      */
     public boolean isVideoFormatSupported(Uri uri) {
-    	boolean supported = false;
+    	boolean supported = true;
     	try {
         	// Get video filename
 	    	Cursor cursor = getApplicationContext().getContentResolver().query(uri,
@@ -149,7 +149,7 @@ public class InitiatePrerecordedVideoSharing extends Activity {
 
 	    	// Get video properties
     		int result = NativeH263Decoder.InitParser(filename);
-	    	if (result != 0) {
+    		if (result != 0) {
 		    	String encoding = NativeH263Decoder.getVideoCoding();
 		    	int width = NativeH263Decoder.getVideoWidth();
 		    	int height = NativeH263Decoder.getVideoHeight();
