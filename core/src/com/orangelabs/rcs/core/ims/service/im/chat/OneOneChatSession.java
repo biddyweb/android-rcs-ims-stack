@@ -62,6 +62,15 @@ public abstract class OneOneChatSession extends ChatSession {
 	}
 	
 	/**
+	 * Returns the list of participants currently connected to the session
+	 * 
+	 * @return List of participants
+	 */
+    public ListOfParticipant getConnectedParticipants() {
+		return getParticipants();
+	}
+    
+	/**
 	 * Send a text message
 	 * 
 	 * @param id Message-ID
@@ -96,7 +105,7 @@ public abstract class OneOneChatSession extends ChatSession {
 			
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, null, ImdnDocument.DELIVERY_STATUS_FAILED);
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
 	}

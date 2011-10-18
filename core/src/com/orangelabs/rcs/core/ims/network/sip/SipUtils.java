@@ -128,6 +128,11 @@ public class SipUtils {
 	public static final String HEADER_SESSION_EXPIRES = "Session-Expires";
 
 	/**
+	 * Session-Replaces header
+	 */
+	public static final String HEADER_SESSION_REPLACES = "Session-Replaces";
+
+	/**
 	 * Min-SE header
 	 */
 	public static final String HEADER_MIN_SE = "Min-SE";

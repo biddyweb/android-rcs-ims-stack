@@ -425,8 +425,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
 
             // Initialize frame buffer
-            if (frameBuffer == null)
+            if (frameBuffer == null) {
                 frameBuffer = new CameraBuffer();
+            }
         } else {
             notifyPlayerEventError("Codec not supported");
         }
@@ -601,13 +602,16 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
                 frameData = frameBuffer.getFrame();
 
                 // Encode frame
+                int encodeResult;
                 if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
                     encodedFrame = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
+                    encodeResult = NativeH264Encoder.getLastEncodeStatus();
                 } else {
                     encodedFrame = NativeH263Encoder.EncodeFrame(frameData, encoderTs);
+                    encodeResult = 0;
                 }
 
-                if (encodedFrame.length > 0) {
+                if (encodeResult == 0 && encodedFrame.length > 0) {
                     // Send encoded frame
                     rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
                 }

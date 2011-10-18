@@ -32,5 +32,4 @@ public class ImdnUtils {
 	 * IMDN message ID header
 	 */
 	public static final String HEADER_IMDN_MSG_ID = "imdn.Message-ID";
-	
 }

@@ -305,9 +305,22 @@ public class CallManager {
      */
 	private void requestCapabilities(String contact) {
 		 if ((contact != null) && imsModule.getCapabilityService().isServiceStarted()) {
-			 imsModule.getCapabilityService().requestContactCapabilities(contact);
+ 			 imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
     }
+	
+	/**
+	 * Call leg has changed
+	 */
+	private void callLegHasChanged() {
+		if (multipartyCall | callHold) {
+		    // Abort pending richcall sessions if call hold or multiparty call
+	    	imsModule.getRichcallService().abortAllSessions();
+    	}
+		
+		// Request new capabilities
+    	requestCapabilities(remoteParty);
+	}
 	
 	/**
 	 * Set multiparty call
@@ -320,16 +333,7 @@ public class CallManager {
 		}
 		this.multipartyCall = state;
 		
-		if (multipartyCall) {
-		    // Abort pending richcall sessions
-	    	imsModule.getRichcallService().abortAllSessions();
-	    	
-	    	// Reset capabilities
-			imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(remoteParty);
-    	} else {
-    		// Request new capabilities
-	    	requestCapabilities(remoteParty);
-    	}
+		callLegHasChanged();	
 	}
 
 	/**
@@ -343,15 +347,6 @@ public class CallManager {
 		}
 		this.callHold = state;
 		
-		if (callHold) {
-		    // Abort pending richcall sessions
-	    	imsModule.getRichcallService().abortAllSessions();
-    	
-	    	// Reset capabilities
-    		imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(remoteParty);
-    	} else {
-    		// Request new capabilities
-	    	requestCapabilities(remoteParty);
-    	}
+		callLegHasChanged();	
 	}	
 }

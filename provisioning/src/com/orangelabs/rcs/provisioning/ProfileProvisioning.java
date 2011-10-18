@@ -274,7 +274,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Default"
+                        "Brune", "Lannion", "Kamailio1"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -303,17 +303,38 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-                                case 0:
-                                	// Default
-			            			homeDomain = "domain.com";
+	                        	case 0: // Brune
+			            			homeDomain = "rcs.brune.com";
 		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "";
-			            			imsProxyForMobile = "127.0.0.1:5060";
-			            			imsProxyForWifi = "127.0.0.1:5060";
-			            			xdms = "127.0.0.1:8080/services";
-			            			xdmsPwd = "";
+			            			imsPwd = "nsnims2008";
+			            			imsProxyForMobile = "80.12.197.74:5060";
+			            			imsProxyForWifi = "80.12.197.74:5060";
+			            			xdms = "10.194.117.34:8080/services";
+			            			xdmsPwd = "nsnims2008";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "conference-factory";
+			            			chatConfUri  = "Conference-Factory";
+			            			break;
+	                        	case 1: // Lannion
+			            			homeDomain = "sip.osp.com";
+		            				sipUri = number + "@" + homeDomain;
+			            			imsPwd = "nsnims2008";
+			            			imsProxyForMobile = "172.20.84.114:5060";
+			            			imsProxyForWifi = "172.20.84.114:5060";
+			            			xdms = "10.194.117.34:8080/services";
+			            			xdmsPwd = "nsnims2008";
+			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
+			            			chatConfUri  = "Conference-Factory";
+			            			break;
+                                case 2: // Kamailio1
+                                    homeDomain = "rcs.kamailio1.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "nsnims2008";
+                                    imsProxyForMobile = "172.20.14.43:5060";
+                                    imsProxyForWifi = "172.20.14.43:5060";
+                                    xdms = "10.194.117.34:8080/services";
+                                    xdmsPwd = "nsnims2008";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
                                     break;
 			            		default:
 			            			homeDomain = "domain.com";

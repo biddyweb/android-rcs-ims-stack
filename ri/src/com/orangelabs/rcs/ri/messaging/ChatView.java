@@ -380,7 +380,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
      */
     private void markMessageAsDisplayed(InstantMessage msg){
     	try {
-    		chatSession.setMessageDeliveryStatus(msg.getMessageId(), msg.getRemote(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+    		chatSession.setMessageDeliveryStatus(msg.getMessageId(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
     	} catch(RemoteException e) {
     	}
     }
@@ -625,20 +625,19 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(final String msgId, final String contact, final String status) {
+		public void handleMessageDeliveryStatus(final String msgId, final String status) {
 			handler.post(new Runnable(){
 				public void run(){
-					String number = PhoneUtils.extractNumberFromUri(contact);
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) ||
 							status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR) ||
 								status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
 						displayReceiveNotif(getString(R.string.label_receive_delivery_status_failed));
 					} else
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-						displayReceiveNotif(getString(R.string.label_receive_delivery_status_displayed, number));
+						displayReceiveNotif(getString(R.string.label_receive_delivery_status_displayed));
 					} else
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-						displayReceiveNotif(getString(R.string.label_receive_delivery_status_delivered, number));
+						displayReceiveNotif(getString(R.string.label_receive_delivery_status_delivered));
 					}
 				}
 			});

@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.provider.messaging;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -32,6 +33,7 @@ import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.event.User;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -248,7 +250,36 @@ public class RichMessaging {
 	 * @param msgId Message ID
 	 * @param status Status
 	 */
-	public void setChatMessageDeliveryStatus(String msgId, int status) {
+	public void setChatMessageDeliveryStatus(String msgId, String status) {
+		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+			setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
+		} else
+		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+			setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DELIVERED);			
+		} else
+		if ((status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)) ||
+				(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)) ||
+					(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN))) {
+			setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_FAILED);
+		}
+	}
+
+	/**
+	 * A delivery report "displayed" is requested for a given chat message
+	 * 
+	 * @param msgId Message ID
+	 */
+	public void setChatMessageDeliveryRequested(String msgId) {
+		setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_REPORT_REQUESTED);
+	}
+		
+	/**
+	 * Set the delivery status of a chat message
+	 * 
+	 * @param msgId Message ID
+	 * @param status Status
+	 */
+	private void setChatMessageDeliveryStatus(String msgId, int status) {
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_STATUS, status);
 		cr.update(databaseUri, 
@@ -892,5 +923,25 @@ public class RichMessaging {
 		}
 		cursor.close();
 		return false;
+	}
+	
+	/**
+	 * Get all outgoing messages still marked undisplayed for a given contact
+	 * 
+	 * @param contact Contact
+	 * @return list of ids of the undisplayed messages
+	 */
+	public List<String> getAllOutgoingUndisplayedMessages(String contact){
+		List<String> msgIds = new ArrayList<String>();
+		Cursor cursor = cr.query(databaseUri, 
+				new String[]{RichMessagingData.KEY_MESSAGE_ID}, 
+				RichMessagingData.KEY_CONTACT + "=?" + " AND " + RichMessagingData.KEY_TYPE + "=?" + " AND (" + RichMessagingData.KEY_STATUS + "=?" + " OR " + RichMessagingData.KEY_STATUS + "=?)", 
+				new String[]{contact, String.valueOf(EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE), String.valueOf(EventsLogApi.STATUS_SENT), String.valueOf(EventsLogApi.STATUS_DELIVERED)}, 
+				null);
+		while (cursor.moveToNext()){
+			msgIds.add(cursor.getString(0));
+		}
+		cursor.close();
+		return msgIds;
 	}
 }

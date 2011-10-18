@@ -21,9 +21,12 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import java.util.List;
 import java.util.Vector;
 
+import javax.sip.header.ExtensionHeader;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
@@ -53,8 +56,8 @@ public abstract class GroupChatSession extends ChatSession {
 	/**
 	 * Conference event subscribe manager
 	 */
-	private ConferenceEventSubscribeManager conferenceSubscriber; 
-	
+	private ConferenceEventSubscribeManager conferenceSubscriber = new ConferenceEventSubscribeManager(this); 
+		
 	/**
      * The logger
      */
@@ -66,13 +69,10 @@ public abstract class GroupChatSession extends ChatSession {
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
 	 * @param msg First message of the session
-	 * @param participants List of participants
+	 * @param participants List of invited participants
 	 */
 	public GroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
 		super(parent, conferenceId, msg, participants);
-		
-		// Instanciate the subscribe manager for conference event 
-		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
 	}
 
 	/**
@@ -84,9 +84,6 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public GroupChatSession(ImsService parent, String contact, String msg) {
 		super(parent, contact, msg);
-		
-		// Instanciate the subscribe manager for conference event 
-		conferenceSubscriber = new ConferenceEventSubscribeManager(this); 		
 	}
 	
 	/**
@@ -99,19 +96,32 @@ public abstract class GroupChatSession extends ChatSession {
 	}
 	
 	/**
+	 * Returns the list of participants currently connected to the session
+	 * 
+	 * @return List of participants
+	 */
+    public ListOfParticipant getConnectedParticipants() {
+		return conferenceSubscriber.getParticipants();
+	}
+    
+	/**
 	 * Get replaced session ID
 	 * 
 	 * @return Session ID
 	 */
 	public String getReplacedSessionId() {
-		// TODO: use "Replaces" header
-		String content = getDialogPath().getRemoteContent();
 		String result = null;
-		if (content != null) {
-			int index1 = content.indexOf("Session-Replaces=");
-			if (index1 != -1) {
-				int index2 = content.indexOf("\"", index1);
-				result = content.substring(index1+17, index2);
+		ExtensionHeader sessionReplace = (ExtensionHeader)getDialogPath().getInvite().getHeader(SipUtils.HEADER_SESSION_REPLACES);
+		if (sessionReplace != null) {
+			result = sessionReplace.getValue();
+		} else {
+			String content = getDialogPath().getRemoteContent();
+			if (content != null) {
+				int index1 = content.indexOf("Session-Replaces=");
+				if (index1 != -1) {
+					int index2 = content.indexOf("\"", index1);
+					result = content.substring(index1+17, index2);
+				}
 			}
 		}
 		return result;
@@ -124,7 +134,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public ConferenceEventSubscribeManager getConferenceEventSubscriber() {
 		return conferenceSubscriber;
-	}		
+	}	
 
 	/**
 	 * Close media session
@@ -165,7 +175,7 @@ public abstract class GroupChatSession extends ChatSession {
 			
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, null, ImdnDocument.DELIVERY_STATUS_FAILED);
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
 	}

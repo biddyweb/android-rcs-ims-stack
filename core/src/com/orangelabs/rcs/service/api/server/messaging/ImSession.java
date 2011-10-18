@@ -29,7 +29,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -161,7 +160,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		if (logger.isActivated()) {
 			logger.info("Get list of participants in the session");
 		}
-		return session.getParticipants().getList();
+		return session.getConnectedParticipants().getList();
 	}
 	
 	/**
@@ -221,25 +220,19 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * Set message delivery status
 	 * 
 	 * @param msgId Message ID
-	 * @param contact Contact that sent the delivery status
 	 * @param status Delivery status
 	 */
-	public void setMessageDeliveryStatus(String msgId, String contact, String status) {
-		// We ignore all status except for "displayed"
-		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+	public void setMessageDeliveryStatus(String msgId, String status) {
+		try {
 			if (logger.isActivated()) {
 				logger.debug("Set message delivery status " + status + " for " + msgId);
 			}
-			try{
-				// Send MSRP delivery status
-				session.sendMsrpMessageDeliveryStatus(msgId, contact, status);
-
-				// Update rich messaging history
-				RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Could not send MSRP delivery status",e);
-				}
+			
+			// Send MSRP delivery status
+			session.sendMsrpMessageDeliveryStatus(session.getRemoteContact(), msgId, status);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Could not send MSRP delivery status",e);
 			}
 		}
 	}
@@ -290,6 +283,25 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
             }
         }
         listeners.finishBroadcast();		
+
+        if (!isChatGroup()){
+        	// As some displayed IMDN notifications on older messages from this sender may have been never received, we mark
+        	// the old messages from this sender as displayed, see note 10 from RCS-e1.2 specification.
+        	// NOTE 10 (B.7 and B.11): In those scenarios where an IM-AS is not available on both sender and receiver end,
+        	// there is a chance displayed notifications carried via SIP MESSAGE may be lost if the original sender is offline
+        	// when the receiver sends the mentioned displayed notifications (last three messages in the diagram). 
+        	// In order to overcome this limitation, a terminal or client implementation should mark all the previous messages
+        	// as displayed when a new chat message is received from the receiver in the future.
+
+        	// Query the rich messaging history to see if old messages with the contact are still marked as not displayed, and
+        	// get the corresponding message IDs and contact  
+        	List<String> undisplayedMsgIds = RichMessaging.getInstance().getAllOutgoingUndisplayedMessages(getRemoteContact());
+
+        	// Read each message and change its status to "displayed"
+        	for (int i=0;i<undisplayedMsgIds.size();i++) {
+        		handleMessageDeliveryStatus(undisplayedMsgIds.get(0), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+        	}
+        }
     }
 
     /**
@@ -478,32 +490,21 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * New message delivery status
      * 
 	 * @param msgId Message ID
-	 * @param contact Contact who delivers the status
      * @param status Delivery status
      */
-    public void handleMessageDeliveryStatus(String msgId, String contact, String status) {
+    public void handleMessageDeliveryStatus(String msgId, String status) {
 		if (logger.isActivated()) {
-			logger.info("New message delivery status for msgId " + msgId + ", status " + status);
+			logger.info("New message delivery status for message " + msgId + ", status " + status);
 		}
 
 		// Update rich messaging history
-		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
-		} else
-		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DELIVERED);			
-		} else
-		if ((status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)) ||
-				(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)) ||
-					(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN))) {
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_FAILED);
-		}
+		RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
 		
   		// Notify event listeners
 		final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {
             try {
-            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, contact, status);
+            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
             } catch (RemoteException e) {
             	if (logger.isActivated()) {
             		logger.error("Can't notify listener", e);
@@ -512,7 +513,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
         }
         listeners.finishBroadcast();
     }
-    
     
     /**
      * Request to add participant is successful

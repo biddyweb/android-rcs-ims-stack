@@ -17,8 +17,6 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.chat.imdn;
 
-import com.orangelabs.rcs.utils.DateUtils;
-
 /**
  * IMDN document
  * 
@@ -79,11 +77,6 @@ public class ImdnDocument {
 	 * Content-Disposition header notification value
 	 */
 	public static final String NOTIFICATION = "notification";
-	
-	/**
-	 * CRLF constant
-	 */
-	private static final String CRLF = "\r\n";
 
 	/**
 	 * Message ID
@@ -135,21 +128,5 @@ public class ImdnDocument {
 	 */
 	public void setStatus(String status) {
 		this.status = status;
-	}
-
-	/**
-	 * Build IMDN document
-	 * 
-	 * @param msgId Message ID
-	 * @param status Status
-	 * @return XML document
-	 */
-	public static String buildImdnDocument(String msgId, String status) {
-		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
-			"<imdn xmlns=\"urn:ietf:params:xml:ns:imdn\">" + CRLF +
-	        " <message-id>" + msgId + "</message-id>" + CRLF +
-	        " <datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
-	        " <delivery-notification><status><" + status + "/></status></delivery-notification>" + CRLF +
-	        "</imdn>";
 	}
 }

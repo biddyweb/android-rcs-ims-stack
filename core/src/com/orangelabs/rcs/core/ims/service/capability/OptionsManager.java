@@ -137,7 +137,7 @@ public class OptionsManager implements DiscoveryManager {
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		imsModule.getSipManager().getSipStack().getLocalContact(),
 	        		CapabilityUtils.getSupportedFeatureTags(false),
-	        		CapabilityUtils.buildSdp(ipAddress));
+	        		CapabilityUtils.buildSdp(ipAddress, false));
 
 	        // Send 200 OK response
 	        imsModule.getSipManager().sendSipResponse(resp);

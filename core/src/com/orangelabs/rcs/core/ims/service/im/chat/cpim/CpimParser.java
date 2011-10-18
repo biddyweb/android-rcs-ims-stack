@@ -19,8 +19,9 @@
 package com.orangelabs.rcs.core.ims.service.im.chat.cpim;
 
 import java.util.Hashtable;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+
+import com.orangelabs.rcs.utils.StringUtils;
 
 /**
  * CPIM parser (see RFC3862)
@@ -28,6 +29,16 @@ import java.util.StringTokenizer;
  * @author jexa7410
  */
 public class CpimParser {
+	/**
+	 * CRLF constant
+	 */
+	private static final String CRLF = "\r\n";
+
+	/**
+	 * Double CRLF constant
+	 */
+	private static final String DOUBLE_CRLF = CRLF + CRLF;
+
 	/**
 	 * CPIM message
 	 */
@@ -83,10 +94,10 @@ public class CpimParser {
 		try {
 			// Read message headers
 			int begin = 0;
-			int end = data.indexOf(CpimMessage.CRLF+CpimMessage.CRLF);
-			end = data.indexOf(CpimMessage.CRLF+CpimMessage.CRLF, begin);
+			int end = data.indexOf(DOUBLE_CRLF);
+			end = data.indexOf(DOUBLE_CRLF, begin);
 			String block2 = data.substring(begin, end);
-			StringTokenizer lines = new StringTokenizer(block2, CpimMessage.CRLF); 
+			StringTokenizer lines = new StringTokenizer(block2, CRLF); 
 			Hashtable<String, String> headers = new Hashtable<String, String>();
 			while(lines.hasMoreTokens()) {
 				String token = lines.nextToken();
@@ -96,9 +107,9 @@ public class CpimParser {
 			
 			// Read the MIME-encapsulated content header
 			begin = end+4;
-			end = data.indexOf(CpimMessage.CRLF+CpimMessage.CRLF, begin);
+			end = data.indexOf(DOUBLE_CRLF, begin);
 			String block3 = data.substring(begin, end);
-			lines = new StringTokenizer(block3, CpimMessage.CRLF); 
+			lines = new StringTokenizer(block3, CRLF); 
 			Hashtable<String, String> contentHeaders = new Hashtable<String, String>();
 			while(lines.hasMoreTokens()) {
 				String token = lines.nextToken();
@@ -111,8 +122,8 @@ public class CpimParser {
 			String content = data.substring(begin);
 			
 			// Create the CPIM message
-			cpim = new CpimMessage(headers, contentHeaders, content);
-		} catch(NoSuchElementException e) {
+			cpim = new CpimMessage(headers, contentHeaders, StringUtils.decodeUTF8(content));
+		} catch(Exception e) {
 			throw new Exception("Bad CPIM message format");
 		}
 	}

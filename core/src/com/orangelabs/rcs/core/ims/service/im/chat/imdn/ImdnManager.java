@@ -6,11 +6,14 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.FifoBuffer;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -18,18 +21,23 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class ImdnManager {
+public class ImdnManager extends Thread {
+    /**
+     * IMS service
+     */
+    private ImsService imsService;	
+	
+	/**
+	 * Buffer
+	 */
+	private FifoBuffer buffer = new FifoBuffer();
+    
 	/**
 	 * Activation flag
 	 */
 	private boolean activated;
-	
-    /**
-     * IM session
-     */
-    private ImsServiceSession session;
-    
-    /**
+
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -37,12 +45,22 @@ public class ImdnManager {
     /**
      * Constructor
      * 
-     * @param session IM session
+     * @param imsService IMS service
      */    
-    public ImdnManager(ImsServiceSession session) {
-    	this.session = session;
+    public ImdnManager(ImsService imsService) {
+    	this.imsService = imsService;
     	this.activated = RcsSettings.getInstance().isImReportsActivated();
     }    
+    
+    /**
+     * Terminate manager
+     */
+    public void terminate() {
+    	if (logger.isActivated()) {
+    		logger.info("Terminate the IMDN manager");
+    	}
+        buffer.close();
+    }
     
     /**
      * Is IMDN activated
@@ -54,52 +72,95 @@ public class ImdnManager {
     }
     
     /**
-     * Add IMDN headers
-     * 
-     * @param invite INVITE request 
-     * @param msgId Message id
+     * Background processing
      */
-    public void addImdnHeaders(SipRequest invite, String msgId) {
-    	if (!activated) {
-    		return;
-    	}
+    public void run() {
+		if (logger.isActivated()) {
+			logger.info("Start background processing");
+		}
+		DeliveryStatus delivery = null; 
+		while((delivery = (DeliveryStatus)buffer.getObject()) != null) {
+			try {
+				// Send SIP MESSAGE
+				sendSipMessageDeliveryStatus(delivery);
 
-		invite.addHeader(CpimMessage.HEADER_NS, ImdnDocument.IMDN_NAMESPACE);
-	    invite.addHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF, ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY);
-	    invite.addHeader(ImdnUtils.HEADER_IMDN_MSG_ID, msgId);
+				// Update rich messaging history
+				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus());
+			} catch(Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Unexpected exception", e);
+				}
+			}
+		}
+		if (logger.isActivated()) {
+			logger.info("End of background processing");
+		}
     }
-    
+       
 	/**
-	 * Send message delivery status via SIP MESSAGE
+	 * Send a message delivery status
 	 * 
 	 * @param contact Contact
 	 * @param msgId Message ID
-	 * @param status Status
+	 * @param status Delivery status
 	 */
-	public void sendSipMessageDeliveryStatus(String contact, String msgId, String status) {
+	public void sendMessageDeliveryStatus(String contact, String msgId, String status) {
+		// Add request in the buffer for background processing
+		DeliveryStatus delivery = new DeliveryStatus(PhoneUtils.formatNumberToSipUri(contact), msgId, status);
+		buffer.addObject(delivery);
+	}
+	
+	/**
+	 * Send a message delivery status immediately
+	 * 
+	 * @param contact Contact
+	 * @param msgId Message ID
+	 * @param status Delivery status
+	 */
+	public void sendMessageDeliveryStatusImmediately(String contact, String msgId, String status) {
+		// Execute request in background
+		final DeliveryStatus delivery = new DeliveryStatus(PhoneUtils.formatNumberToSipUri(contact), msgId, status);
+		Thread thread = new Thread(){
+			public void run() {
+				// Send SIP MESSAGE
+				sendSipMessageDeliveryStatus(delivery);
+
+				// Update rich messaging history
+				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus());
+			}
+		};
+		thread.start();
+	}
+
+	/**
+	 * Send message delivery status via SIP MESSAGE
+	 * 
+	 * @param deliveryStatus Delivery status
+	 */
+	private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus) {
 		try {
 			if (logger.isActivated()) {
-       			logger.debug("Send delivery status " + status + " for message " + msgId);
+       			logger.debug("Send delivery status " + deliveryStatus.getStatus() + " for message " + deliveryStatus.getMsgId());
        		}
 
 	   		// Create CPIM/IDMN document
-			String content = ImdnDocument.buildImdnDocument(msgId, status);
+			String content = ChatUtils.buildDeliveryReport(deliveryStatus.getMsgId(), deliveryStatus.getStatus());
 			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-			String to = contact;
-			String cpim = ChatUtils.buildCpimDeliveryStatus(from, to, msgId, content, ImdnDocument.MIME_TYPE);
+			String to = deliveryStatus.getContact();
+			String cpim = ChatUtils.buildCpimDeliveryReport(from, to, deliveryStatus.getMsgId(), content, ImdnDocument.MIME_TYPE);
 			
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
        		
        		// Create a dialog path
         	SipDialogPath dialogPath = new SipDialogPath(
-					session.getImsService().getImsModule().getSipManager().getSipStack(),
-					session.getImsService().getImsModule().getSipManager().getSipStack().generateCallId(),
+        			imsService.getImsModule().getSipManager().getSipStack(),
+        			imsService.getImsModule().getSipManager().getSipStack().generateCallId(),
     				1,
-    				session.getRemoteContact(),
+    				deliveryStatus.getContact(),
     				ImsModule.IMS_USER_PROFILE.getPublicUri(),
-    				session.getRemoteContact(),
-    				session.getImsService().getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
+    				deliveryStatus.getContact(),
+    				imsService.getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
         	
 	        // Create MESSAGE request
         	if (logger.isActivated()) {
@@ -107,13 +168,8 @@ public class ImdnManager {
         	}
 	        SipRequest msg = SipMessageFactory.createMessage(dialogPath, CpimMessage.MIME_TYPE, cpim);
 	        
-	        // Add IMDN headers
-	        msg.addHeader(CpimMessage.HEADER_NS, ImdnDocument.IMDN_NAMESPACE);
-	        msg.addHeader(ImdnUtils.HEADER_IMDN_MSG_ID, msgId);
-	        msg.addHeader(CpimMessage.HEADER_CONTENT_DISPOSITION, ImdnDocument.NOTIFICATION);
-	        
 	        // Send MESSAGE request
-	        SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipMessageAndWait(msg);
+	        SipTransactionContext ctx = imsService.getImsModule().getSipManager().sendSipMessageAndWait(msg);
 	
 	        // Wait response
         	if (logger.isActivated()) {
@@ -140,16 +196,11 @@ public class ImdnManager {
                 }
     	        msg = SipMessageFactory.createMessage(dialogPath, CpimMessage.MIME_TYPE, cpim);
     	        
-    	        // Add IMDN headers
-    	        msg.addHeader(CpimMessage.HEADER_NS, ImdnDocument.IMDN_NAMESPACE);
-    	        msg.addHeader(ImdnUtils.HEADER_IMDN_MSG_ID, msgId);
-    	        msg.addHeader(CpimMessage.HEADER_CONTENT_DISPOSITION, ImdnDocument.NOTIFICATION);
-    	        
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(msg);
                 
                 // Send MESSAGE request
-    	        ctx = session.getImsService().getImsModule().getSipManager().sendSipMessageAndWait(msg);
+    	        ctx = imsService.getImsModule().getSipManager().sendSipMessageAndWait(msg);
 
                 // Wait response
                 if (logger.isActivated()) {
@@ -188,4 +239,31 @@ public class ImdnManager {
         	}
         }
 	}
+	
+	/**
+	 * Delivery status
+	 */
+	private class DeliveryStatus {
+		private String contact;
+		private String msgId;
+		private String status;
+		
+		public DeliveryStatus(String contact, String msgId, String status) {
+			this.contact = contact;
+			this.msgId = msgId;
+			this.status = status;
+		}
+		
+		public String getContact() {
+			return contact;
+		}
+
+		public String getMsgId() {
+			return msgId;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+	}	
 }

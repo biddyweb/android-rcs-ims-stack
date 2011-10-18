@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
@@ -86,6 +87,11 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 	 */
 	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
 
+    /**
+	 * List of connected participants
+	 */
+	private ListOfParticipant connectedParticipants = new ListOfParticipant();	
+	
 	/**
      * The logger
      */
@@ -127,6 +133,15 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     	return session.getImSessionIdentity();
     }
 	
+	/**
+	 * Returns the list of participants
+	 * 
+	 * @return List of participants
+	 */
+    public ListOfParticipant getParticipants() {
+		return connectedParticipants;
+	}
+    
     /**
      * Receive a notification
      * 
@@ -162,11 +177,11 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    		// Update the participants list
 			    		if (user.getState().equals(User.STATE_CONNECTED)) {
 			    			// A participant has joined the session
-			    			session.getParticipants().addParticipant(entity);
+			    			connectedParticipants.addParticipant(entity);
 			    		} else
 			    		if (user.getState().equals(User.STATE_DISCONNECTED)) {
 			    			// A participant has quit the session
-			    			session.getParticipants().removeParticipant(entity);
+			    			connectedParticipants.removeParticipant(entity);
 			    		}
 			    		
 			    		// Notify session listeners

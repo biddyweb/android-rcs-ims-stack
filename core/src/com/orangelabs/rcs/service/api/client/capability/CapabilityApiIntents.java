@@ -23,7 +23,14 @@ package com.orangelabs.rcs.service.api.client.capability;
  */
 public interface CapabilityApiIntents {
     /**
-     * Intent broadcasted when contact capabilities has changed
+     * Intent broadcasted when contact capabilities has changed.
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>capabilities</em> - Capabilities object.</li>
+     * </ul>
+     * </ul>
      */
     public final static String CONTACT_CAPABILITIES = "com.orangelabs.rcs.capability.CONTACT_CAPABILITIES";
 

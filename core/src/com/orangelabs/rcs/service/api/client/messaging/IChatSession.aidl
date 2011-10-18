@@ -47,7 +47,7 @@ interface IChatSession {
 	void setIsComposingStatus(in boolean status);
 
 	// Set message delivery status
-	void setMessageDeliveryStatus(in String msgId, in String contact, in String status);
+	void setMessageDeliveryStatus(in String msgId, in String status);
 
 	// Add session listener
 	void addSessionListener(in IChatEventListener listener);

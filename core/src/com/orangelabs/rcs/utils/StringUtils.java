@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.utils;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 
@@ -27,45 +25,75 @@ import java.text.StringCharacterIterator;
  * String utility functions
  */
 public class StringUtils {
+
 	/**
-	 * Encode string into UTF-8
+	 * UTF-8 charset
+	 */
+	private final static String CHARSET_UTF8 = "UTF-8"; 
+		
+	/**
+	 * Encode string into UTF-8 string
 	 * 
-	 * @param text Input text
+	 * @param str Input string
 	 * @return Encoded string
 	 */
-	public static String encodeUTF8(String text) {
-		if (text == null) {
+	public static String encodeUTF8(String str) {
+		if (str == null) {
 			return null;
 		}
-
-		String result;
 		try {
-			result = URLEncoder.encode(text, "UTF-8");
-		} catch(Exception e) {
-			result = text;
+			return new String(str.getBytes(), CHARSET_UTF8);
+		} catch (Exception e){
+		    return null;
 		}
-		return result;		
 	}
 	
 	/**
-	 * Decode UTF-8 string
+	 * Encode UTF-8 bytes to a string
 	 * 
-	 * @param text Input text
+	 * @param b Input bytes
 	 * @return Decoded string
 	 */
-	public static String decodeUTF8(String text) {
-		if (text == null) {
+	public static String encodeUTF8(byte[] b) {
+		if (b == null) {
 			return null;
 		}
-		
-		String result;
 		try {
-			result = URLDecoder.decode(text, "UTF-8");
-		} catch(Exception e) {
-			result = text;
+			return new String(b, CHARSET_UTF8);
+		} catch (Exception e){
+			return null;
 		}
-		return result;		
 	}	
+	
+	/**
+	 * Decode UTF-8 bytes to string
+	 * 
+	 * @param b Input bytes
+	 * @return Decoded string
+	 */
+	public static String decodeUTF8(byte[] b) {
+		if (b == null) {
+			return null;
+		}
+		try {
+			return new String(b, CHARSET_UTF8);
+		} catch(Exception e) {
+			return null;
+		}
+	}	
+
+	/**
+	 * Decode UTF-8 string to a string
+	 * 
+	 * @param str Input string
+	 * @return Decoded string
+	 */
+	public static String decodeUTF8(String str) {
+		if (str == null) {
+			return null;
+		}
+		return decodeUTF8(str.getBytes());
+	}
 	
 	/**
 	 * Escape characters for text appearing as XML data, between tags.

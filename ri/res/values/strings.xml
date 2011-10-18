@@ -157,7 +157,7 @@
 <string name="menu_quicktext">Quick text</string>
 <string name="label_add_participant_success">Request to add participant(s) is successful</string>
 <string name="label_add_participant_failed">Request to add participant(s) has failed</string>
-<string name="label_receive_delivery_status_displayed">%s has displayed the message</string>
+<string name="label_receive_delivery_status_displayed">Message has been displayed</string>
 <string name="label_receive_delivery_status_failed">Message has failed</string>
 <string name="label_receive_delivery_status_delivered">Message has been delivered</string>
 <string name="label_chat_terminated">Chat session terminated</string>

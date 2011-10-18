@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -112,7 +113,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		        			getDialogPath().getLocalParty(),
 		        			getDialogPath().getRemoteParty(),
 		        			getFirstMessage().getMessageId(),
-		        			getFirstMessage().getTextMessage(),
+		        			StringUtils.encodeUTF8(getFirstMessage().getTextMessage()),
 		        			InstantMessage.MIME_TYPE) + SipUtils.CRLF;
 		        
 		    	// Build multipart
@@ -179,10 +180,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
     	// Test if there is a first message
     	if (getFirstMessage() != null) {
 	        // Add a subject header
-	    	invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
-
-	    	// Add IMDN headers
-	        addImdnHeaders(invite, getFirstMessage().getMessageId());
+	    	invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getFirstMessage().getTextMessage()));
     	}
         
         // Add a contribution ID header

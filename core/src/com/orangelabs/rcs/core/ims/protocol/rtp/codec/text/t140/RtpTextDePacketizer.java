@@ -494,32 +494,6 @@ public class RtpTextDePacketizer {
         return extractedData;
     }
 
-
-    /**
-     * Converts received UTF-8 text to the desired format.
-     *
-     * @param utf8Bytes The received text in byte format.
-     * @param encoding The desired format.
-     *
-     * @return Text in the desired format.
-     */
-    /*
-    private byte[] fromUTF8(byte[] utf8Bytes, String encoding) {
-        String utf8 = null;
-        byte[] textBytes = null;
-
-        try {
-            utf8 = new String(utf8Bytes,"UTF-8");
-            textBytes = utf8.getBytes(encoding);
-        } catch (java.io.UnsupportedEncodingException e) {
-            return null;
-        }
-
-        return textBytes;
-    }
-    */
-
-
     /**
      * Function to handle the reception of missingpackets.
      *
@@ -599,31 +573,6 @@ public class RtpTextDePacketizer {
 	 *
          */
         public void run() {
-
-	    //EZ: Removed below. Unessecary to make parseable data.
-	    //    Just add LOSS CHAR to output.
-
-	    // Changed by Andreas Piirimets 2004-03-11
-	    // The LOSS_CHAR has to be sent in UTF-8 format
-            //parent.receivedMissingPacket(sequenceNumber,
-            //                             0,
-            //                             TextConstants.LOSS_CHAR);
-	    //try {
-
-	    //parent.receivedMissingPacket
-	    //    (sequenceNumber,
-	    ///     0,
-	    //     TextConstants.LOSS_CHAR);
-		     //(new String(""+TextConstants.LOSS_CHAR_CHAR)).
-		     //getBytes("UTF-8"));
-		//}
-		//catch (java.io.UnsupportedEncodingException uee) {
-		//parent.receivedMissingPacket
-		//    (sequenceNumber,
-		//     0,
-		//     new byte[0]);
-		//}
-	    // End of change
 
 	    //EZ 041114: Add LOSS CHAR to output.
 	    parent.lostPacket(sequenceNumber);

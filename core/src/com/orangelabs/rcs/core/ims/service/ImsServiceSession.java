@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -532,7 +533,7 @@ public abstract class ImsServiceSession extends Thread {
 	    	if (logger.isActivated()) {
 	    		logger.info("Send 487 Request terminated");
 	    	}
-	        SipResponse terminatedResp = SipMessageFactory.createResponse(getDialogPath().getInvite(), 487);
+	        SipResponse terminatedResp = SipMessageFactory.createResponse(getDialogPath().getInvite(), IdGenerator.getIdentifier(), 487);
 	        getImsService().getImsModule().getSipManager().sendSipResponse(terminatedResp);
 		} catch(Exception e) {
 	    	if (logger.isActivated()) {
@@ -558,7 +559,19 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param reInvite re-INVITE request
 	 */
 	public void receiveReInvite(SipRequest reInvite) {
-		send405Error(reInvite);		
+		try {
+	        // Send a 405 error
+	    	if (logger.isActivated()) {
+	    		logger.info("Send 405 Method Not Allowed");
+	    	}
+	        SipResponse resp = SipMessageFactory.createResponse(reInvite, 405);
+	        SipUtils.buildAllowHeader(resp.getStackMessage());
+	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 405 error response", e);
+			}
+		}
 	}
 
 	/**
@@ -658,34 +671,12 @@ public abstract class ImsServiceSession extends Thread {
 	}	
 	
     /**
-     * Send a 405 "Method Not Allowed" to the remote party
-     * 
-     * @param request SIP request
-     */
-	public void send405Error(SipRequest request) {
-		try {
-	        // Send a 405 error
-	    	if (logger.isActivated()) {
-	    		logger.info("Send 405 Method Not Allowed");
-	    	}
-	        SipResponse resp = SipMessageFactory.createResponse(request, 405);
-	        SipUtils.buildAllowHeader(resp.getStackMessage());
-	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send 405 error response", e);
-			}
-		}
-	}
-	
-    /**
      * Send a 415 "Unsupported Media Type" to the remote party
      * 
      * @param request SIP request
      */
 	public void send415Error(SipRequest request) {
 		try {
-	        // Send a 415 error
 	    	if (logger.isActivated()) {
 	    		logger.info("Send 415 Unsupported Media Type");
 	    	}
@@ -697,7 +688,7 @@ public abstract class ImsServiceSession extends Thread {
 				logger.error("Can't send 405 error response", e);
 			}
 		}
-	}
+	}	
 	
 	/**
 	 * Create SDP setup offer (see RFC6135, RFC4145)

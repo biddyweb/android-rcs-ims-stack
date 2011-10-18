@@ -269,4 +269,60 @@ public class MessagingApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+	
+	/**
+	 * Set message delivery status outside of a chat session
+	 * 
+	 * @param contact Contact requesting a delivery status
+	 * @param msgId Message ID
+	 * @param status Delivery status
+	 * @throws ClientApiException
+	 */
+	public void setMessageDeliveryStatus(String contact, String msgId, String status) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	coreApi.setMessageDeliveryStatus(contact, msgId, status);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}	
+
+	/**
+	 * Add message delivery listener
+	 * 
+	 * @param listener Listener
+	 * @throws ClientApiException
+	 */
+	public void addMessageDeliveryListener(IMessageDeliveryListener listener) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	coreApi.addMessageDeliveryListener(listener);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+	
+	/**
+	 * Remove message delivery listener
+	 * 
+	 * @param listener Listener
+	 * @throws ClientApiException
+	 */
+	public void removeMessageDeliveryListener(IMessageDeliveryListener listener) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	coreApi.removeMessageDeliveryListener(listener);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
 }

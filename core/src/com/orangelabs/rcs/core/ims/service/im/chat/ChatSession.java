@@ -22,26 +22,21 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 
-import org.xml.sax.InputSource;
-
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -77,11 +72,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	private ChatActivityManager activityMgr = new ChatActivityManager(this);
 	
 	/**
-	 * IMDN manager
-	 */
-	private ImdnManager imdnMgr = new ImdnManager(this);
-	
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -99,7 +89,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Set the first message
 		if ((msg != null) && (msg.length() > 0)) {
 			firstMessage = new InstantMessage(ChatUtils.generateMessageId(),
-					contact, StringUtils.decodeUTF8(msg), imdnMgr.isImdnActivated());
+					contact, msg, getImdnManager().isImdnActivated());
 		}
 		
 		// Create the MSRP manager
@@ -129,9 +119,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @return IMDN manager
 	 */
 	public ImdnManager getImdnManager() {
-		return imdnMgr;
+		return ((InstantMessagingService)getImsService()).getImdnManager();		
 	}
-	
+
 	/**
 	 * Returns the session activity manager
 	 * 
@@ -167,8 +157,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     public ListOfParticipant getParticipants() {
 		return participants;
 	}
-    
-	/**
+        
+    /**
 	 * Set the list of participants
 	 * 
 	 * @param participants List of participants
@@ -176,6 +166,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     public void setParticipants(ListOfParticipant participants) {
 		this.participants = participants;
 	}
+    
+	/**
+	 * Returns the list of participants currently connected to the session
+	 * 
+	 * @return List of participants
+	 */
+    public abstract ListOfParticipant getConnectedParticipants();
     
     /**
 	 * Returns the IM session identity
@@ -279,7 +276,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		} else
 		if (ChatUtils.isTextPlainType(mimeType)) {
 	    	// Text message
-			receiveText(getRemoteContact(), StringUtils.decodeUTF8(new String(data)), null, false, new Date());
+			receiveText(getRemoteContact(), StringUtils.decodeUTF8(data), null, false, new Date());
 		} else
 		if (ChatUtils.isMessageCpimType(mimeType)) {
 	    	// Receive a CPIM message
@@ -291,25 +288,27 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
-		    			boolean imdnDisplayedRequested = false;
 			    		
-				    	// Check if the message contains an IMDN Disposition-Notification header
+				    	// Check if the message needs a delivery report
+		    			boolean imdnDisplayedRequested = false;
 				    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
 				    	if (dispositionNotification != null) {
-				    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)){
+				    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
 				    			// Positive delivery requested, send MSRP message with status "delivered" 
-				    			sendMsrpMessageDeliveryStatus(msgId, from, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+				    			sendMsrpMessageDeliveryStatus(from, msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 				    		}
-				    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)){
+				    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
 				    			imdnDisplayedRequested = true;
 				    		}			    		
 				    	}
+				    	
+				    	// Get received text message
 				    	Date date = new Date();
 		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
-
-		    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
-		    			if (imdnDisplayedRequested){
-		    				RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_REPORT_REQUESTED);
+		    			
+		    			// Mark the message as waiting a displayed report if needed 
+		    			if (imdnDisplayedRequested) {
+		    				RichMessaging.getInstance().setChatMessageDeliveryRequested(msgId);
 		    			}
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
@@ -317,14 +316,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		    			receiveIsComposing(from, cpimMsg.getMessageContent().getBytes());
 			    	} else
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
-						// Receive an IMDN report
-				    	String to = cpimMsg.getHeader(CpimMessage.HEADER_TO);
-						String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
-						
-				    	// Check if this IMDN message is for me
-						if (PhoneUtils.compareNumbers(me, to)) {
-							receiveMessageDeliveryStatus(new String(cpimMsg.getMessageContent().getBytes()), from);
-						}
+						// Receive a delivery report
+						receiveMessageDeliveryStatus(cpimMsg.getMessageContent());
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -474,107 +467,53 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public abstract void addParticipants(List<String> participants);
 
-    /**
-     * Add IMDN headers
-     * 
-     * @param invite INVITE request
-     * @param msgId Message 
-     */
-    public void addImdnHeaders(SipRequest invite, String msgId) {
-		imdnMgr.addImdnHeaders(invite, msgId);
-    }
-    
-	/**
-	 * Send message delivery status via SIP MESSAGE
-	 * 
-	 * @param request Request
-	 * @param status Status
-	 */
-	public void sendSipMessageDeliveryStatus(SipRequest request, final String status) {
-		// Check notification disposition
-		if (ChatUtils.isImdnDeliveredRequested(getDialogPath().getInvite())){
-			final String msgId = ChatUtils.getMessageId(request);
-			if (msgId != null) {
-				// Send message delivery status via a SIP MESSAGE
-				Thread t = new Thread() {
-					public void run() {
-						imdnMgr.sendSipMessageDeliveryStatus(getDialogPath().getRemoteParty(), msgId, status);
-					}
-				};
-				t.start();
-			}
-		}
-	}
-	
 	/**
 	 * Send message delivery status via MSRP
 	 * 
-	 * @param msgId Message ID
 	 * @param contact Contact that requested the delivery status
+	 * @param msgId Message ID
 	 * @param status Status
 	 */
-	public void sendMsrpMessageDeliveryStatus(String msgId, String contact, String status) {
+	public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
 		// Send status in CPIM + IMDN headers
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = contact;
-		String content = ChatUtils.buildCpimDeliveryStatus(from, to, msgId, ImdnDocument.buildImdnDocument(msgId, status), ImdnDocument.MIME_TYPE);
+		String imdn = ChatUtils.buildDeliveryReport(msgId, status);
+		String content = ChatUtils.buildCpimDeliveryReport(from, to, msgId, imdn, ImdnDocument.MIME_TYPE);
 		
 		// Send data
-		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+		if (result) {
+			// Update rich messaging history
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+		}
 	}
 		
 	/**
-     * Receive a message delivery status (SIP message)
+     * Receive a message delivery status from a SIP message
      * 
-     * @param message Received message
+   	 * @param msgId Message ID
+     * @param status Delivery status
      */
-    public void receiveMessageDeliveryStatus(SipRequest message) {
-    	try {
-    		// Try to parse the content as CPIM
-    		String content = message.getContent();
-    		CpimParser cpimParser = new CpimParser(content);
-    		CpimMessage cpimMsg = cpimParser.getCpimMessage();
-    		if (cpimMsg != null) {
-    			String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
-    			String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
-
-    			// Check if the content is a IMDN message    		
-    			if (ChatUtils.isMessageImdnType(contentType)) {
-    				// Parse the IMDN document
-    				InputSource input = new InputSource(new ByteArrayInputStream(cpimMsg.getMessageContent().getBytes()));
-    				ImdnParser parser = new ImdnParser(input);
-    				ImdnDocument imdn = parser.getImdnDocument();
-    				if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-    					// Notify listeners
-    			    	for(int i=0; i < getListeners().size(); i++) {
-    			    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(imdn.getMsgId(), from, imdn.getStatus());
-    					}
-    				}
-    			}
-    		}
-    	} catch(Exception e) {
-    		if (logger.isActivated()) {
-    			logger.error("Can't parse SIP message as IMDN document", e);
-    		}
-    	}
+    public void receiveMessageDeliveryStatus(String msgId, String status) {
+		// Notify listeners
+    	for(int i=0; i < getListeners().size(); i++) {
+    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, status);
+		}
     }
     
 	/**
-     * Receive a message delivery status (XML document)
+     * Receive a message delivery status from an XML document
      * 
-     * @param message Received message
-     * @param contact Contact that sent the delivery status
+     * @param xml XML document
      */
-    public void receiveMessageDeliveryStatus(String xml, String contact) {
+    public void receiveMessageDeliveryStatus(String xml) {
     	try {
-	    	// Parse the IMDN document
-			InputSource input = new InputSource(new ByteArrayInputStream(xml.getBytes()));
-			ImdnParser parser = new ImdnParser(input);
-			ImdnDocument imdn = parser.getImdnDocument();
-			if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+			ImdnDocument imdn = ChatUtils.parseDeliveryReport(xml);
+			if (imdn != null) {
 		    	// Notify listeners
 		    	for(int i=0; i < getListeners().size(); i++) {
-		    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(imdn.getMsgId(), contact, imdn.getStatus());
+		    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(imdn.getMsgId(), imdn.getStatus());
 				}
 			}
     	} catch(Exception e) {
