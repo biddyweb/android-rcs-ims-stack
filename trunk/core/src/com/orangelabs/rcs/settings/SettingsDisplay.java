@@ -18,6 +18,12 @@
 
 package com.orangelabs.rcs.settings;
 
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.RcsCoreService;
+import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -36,12 +42,6 @@ import android.preference.PreferenceScreen;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.RcsCoreService;
-import com.orangelabs.rcs.service.api.client.ClientApi;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Settings display
@@ -72,6 +72,11 @@ public class SettingsDisplay extends PreferenceActivity {
      * UI handler
      */
     private Handler handler = new Handler();
+    
+    /**
+     * Id of the current dialog shown, 0 if none.
+     */
+    private int currentDialog = 0;
     
 	/**
      * The logger
@@ -169,7 +174,10 @@ public class SettingsDisplay extends PreferenceActivity {
     		handler.post(new Runnable() {
     			public void run() {
 					rcsCheckbox.setEnabled(false);
-					dismissDialog(SERVICE_DEACTIVATION_CONFIRMATION_DIALOG);
+                    if (currentDialog != 0) {
+                        dismissDialog(currentDialog);
+                        currentDialog = 0;
+                    }
     			}
     		});
     	}
@@ -253,11 +261,16 @@ public class SettingsDisplay extends PreferenceActivity {
 	        		startRcsService();
 				}
 			} else {
-				// Unauthorize roaming. If the service is started and we are in roaming, ask a confirmation. 
-				if (ClientApi.isServiceStarted(getApplicationContext()) &&
-						isMobileRoaming()) {
-					showDialog(ROAMING_DEACTIVATION_CONFIRMATION_DIALOG);
-				}
+                // Unauthorize roaming. If the service is started and we are in
+                // roaming, ask a confirmation.
+                if (ClientApi.isServiceStarted(getApplicationContext()) && isMobileRoaming()) {
+                    showDialog(ROAMING_DEACTIVATION_CONFIRMATION_DIALOG);
+                } else {
+                    if (logger.isActivated()) {
+                        logger.debug("Unauthorize roaming");
+                    }
+                    RcsSettings.getInstance().setRoamingAuthorizationState(false);
+                }
 			}
         	return true;
         } else {
@@ -267,6 +280,7 @@ public class SettingsDisplay extends PreferenceActivity {
     
     @Override
     protected Dialog onCreateDialog(int id) {
+        currentDialog = id;
         switch (id) {
             case SERVICE_DEACTIVATION_CONFIRMATION_DIALOG:
                 return new AlertDialog.Builder(this)
@@ -300,7 +314,7 @@ public class SettingsDisplay extends PreferenceActivity {
                 return new AlertDialog.Builder(this)
                 		.setIcon(android.R.drawable.ic_dialog_info)
                 		.setTitle(R.string.rcs_settings_label_confirm)
-                        .setMessage(R.string.rcs_settings_label_rcs_service_shutdown)
+                        .setMessage(R.string.rcs_settings_label_rcs_service_roaming_shutdown)
                         .setNegativeButton(R.string.rcs_settings_label_cancel, new DialogInterface.OnClickListener() {
 						    public void onClick(DialogInterface dialog, int button) {
 						    	roamingCheckbox.setChecked(!roamingCheckbox.isChecked());

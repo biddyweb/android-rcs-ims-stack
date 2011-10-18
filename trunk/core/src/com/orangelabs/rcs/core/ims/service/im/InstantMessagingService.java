@@ -18,14 +18,16 @@
 
 package com.orangelabs.rcs.core.ims.service.im;
 
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
+
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
@@ -36,6 +38,8 @@ import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSess
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
@@ -47,10 +51,6 @@ import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * Instant messaging services (chat 1-1, chat group and file transfer)
@@ -78,6 +78,11 @@ public class InstantMessagingService extends ImsService {
 	 */
 	private int maxFtSessions;
 
+	/**
+	 * IMDN manager
+	 */
+	private ImdnManager imdnMgr = new ImdnManager(this);	
+	
 	/**
 	 * Store & Forward manager
 	 */
@@ -110,6 +115,9 @@ public class InstantMessagingService extends ImsService {
 			return;
 		}
 		setServiceStarted(true);
+		
+		// Start IMDN manager
+		imdnMgr.start();
 	}
 
     /**
@@ -121,6 +129,9 @@ public class InstantMessagingService extends ImsService {
 			return;
 		}
 		setServiceStarted(false);
+		
+		// Stop IMDN manager
+		imdnMgr.terminate();		
 	}
 
 	/**
@@ -128,6 +139,15 @@ public class InstantMessagingService extends ImsService {
      */
 	public void check() {
 	}
+	
+	/**
+	 * Returns the IMDN manager
+	 * 
+	 * @return IMDN manager
+	 */
+	public ImdnManager getImdnManager() {
+		return imdnMgr;
+	}	
 
 	/**
 	 * Get Store & Forward manager
@@ -260,18 +280,9 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the file transfer invitation");
 			}
-			try {
-				// Send a 603 Decline response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 603 Decline");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 603 Decline", e);
-				}
-			}			
+			
+			// Send a 603 Decline response
+			sendErrorResponse(invite, 603);
 			return;
 	    }
 
@@ -280,18 +291,9 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("The max number of file transfer sessions is achieved: reject the invitation");
 			}
-			try {
-				// Send a 603 Decline response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 603 Decline");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 603);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 603 Decline", e);
-				}
-			}			
+			
+			// Send a 603 Decline response
+			sendErrorResponse(invite, 603);
 			return;
 		}
 
@@ -330,7 +332,7 @@ public class InstantMessagingService extends ImsService {
 		OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
 				this,
 	        	PhoneUtils.formatNumberToSipUri(contact),
-	        	StringUtils.encodeUTF8(firstMsg));
+	        	firstMsg);
 
 		// Start the session
 		session.startSession();
@@ -359,18 +361,9 @@ public class InstantMessagingService extends ImsService {
 			RichMessaging.getInstance().addSpamMessage(
 					new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
 
-			try {
-				// Send a 486 Busy response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
-				}
-			}
+			
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
 			return;
 	    }
 
@@ -387,18 +380,9 @@ public class InstantMessagingService extends ImsService {
 							StringUtils.decodeUTF8(invite.getSubject()),
 							ChatUtils.isImdnDisplayedRequested(invite)));
 
-			try {
-				// Send a 486 Busy response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
-				}
-			}
+			
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
 			return;
 		}
 
@@ -417,12 +401,12 @@ public class InstantMessagingService extends ImsService {
     /**
      * Initiate an ad-hoc group chat session
      * 
-     * @param group Group of contacts
+     * @param contacts List of contacts
      * @param firstMsg First message
      * @return IM session
      * @throws CoreException
      */
-    public ChatSession initiateAdhocGroupChatSession(List<String> group, String firstMsg) throws CoreException {
+    public ChatSession initiateAdhocGroupChatSession(List<String> contacts, String firstMsg) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -439,8 +423,8 @@ public class InstantMessagingService extends ImsService {
 		OriginatingAdhocGroupChatSession session = new OriginatingAdhocGroupChatSession(
 				this,
 				ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
-				StringUtils.encodeUTF8(firstMsg),
-				new ListOfParticipant(group));
+				firstMsg,
+				new ListOfParticipant(contacts));
 
 		// Start the session
 		session.startSession();
@@ -463,18 +447,9 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
 			}
-			try {
-				// Send a 486 Busy response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
-				}
-			}
+			
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
 			return;
 	    }
 
@@ -483,18 +458,9 @@ public class InstantMessagingService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("The max number of chat sessions is achieved: reject the invitation");
 			}
-			try {
-				// Send a 486 Busy response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
-				}
-			}
+			
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
 			return;
 		}
 
@@ -535,57 +501,47 @@ public class InstantMessagingService extends ImsService {
      * @param message Received message
      */
     public void receiveMessageDeliveryStatus(SipRequest message) {
-    	 try {
- 	    	// Create a 200 OK response
- 	        SipResponse resp = SipMessageFactory.createResponse(message, 200);
-
- 	        // Send response
- 	        getImsModule().getSipManager().sendSipResponse(resp);
- 	    } catch(Exception e) {
-         	if (logger.isActivated()) {
-         		logger.error("Can't send 200 OK for MESSAGE", e);
-         	}
- 	    }
-
- 	    // Get session from the message ID
- 	    // TODO: instead of From use the PAI ?
- 	    // TODO: manage the SIP MESSAGE independtly of the chat session 
-		Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(message.getFromUri());
-		if (sessions.size() > 0) {
-			ChatSession session = sessions.lastElement();
-	 	    session.receiveMessageDeliveryStatus(message);
-		}
+    	ImdnDocument imdn = ChatUtils.parseCpimDeliveryReport(message.getContent());
+    	if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+     	    // TODO: instead of From-URI use the PAI ? or CPIM ?
+	    	String contact = message.getFromUri();
+	    	String status = imdn.getStatus();
+	    	String msgId = imdn.getMsgId();
+	    	
+			// Get session associated to the contact
+			Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(contact);
+			if (sessions.size() > 0) {
+				// Notify the message delivery from the chat session
+				for(int i=0; i < sessions.size(); i++) {
+					ChatSession session = sessions.elementAt(i);
+			 	    session.receiveMessageDeliveryStatus(msgId, status);
+				}
+			} else {
+				// Notify the message delivery outside of the chat session
+				getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
+			}
+    	}
     }
 
     /**
-     * Receive a S&F invitation
+     * Receive S&F push notifications
      * 
      * @param invite Received invite
      */
-    public void receiveStoredAndForwardInvitation(SipRequest invite) {
+    public void receiveStoredAndForwardPushNotifications(SipRequest invite) {
     	if (logger.isActivated()) {
-			logger.debug("Receive a S&F invitation");
+			logger.debug("Receive S&F push notifications");
 		}
 
 		// Test if the contact is blocked
-		String remote = invite.getFromUri();
+		String remote = invite.getFromUri(); // TODO: check standard From ?
 	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
 			if (logger.isActivated()) {
-				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
+				logger.debug("Contact " + remote + " is blocked: automatically reject the S&F invitation");
 			}
 
-			try {
-				// Send a 486 Busy response
-		    	if (logger.isActivated()) {
-		    		logger.info("Send 486 Busy here");
-		    	}
-		        SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-		        getImsModule().getSipManager().sendSipResponse(resp);
-			} catch(Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't send 486 Busy here", e);
-				}
-			}
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
 			return;
 	    }
 

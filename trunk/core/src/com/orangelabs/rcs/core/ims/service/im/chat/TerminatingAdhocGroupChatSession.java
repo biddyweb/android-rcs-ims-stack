@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -59,7 +60,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, true), invite.getSubject());
+		super(parent, ChatUtils.getAssertedIdentity(invite, true), StringUtils.decodeUTF8(invite.getSubject()));
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);

@@ -55,12 +55,24 @@ public class ClientApiIntents {
 	public final static String RCS_SETTINGS = "com.orangelabs.rcs.SETTINGS";
 
 	/**
-     * Intent broadcasted when the RCS service status has changed (see constant attribute "status")
+     * Intent broadcasted when the RCS service status has changed (see constant attribute "status").
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>status</em> - Service status.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String SERVICE_STATUS = "com.orangelabs.rcs.SERVICE_STATUS";
 	
 	 /**
-     * Intent broadcasted when the registration state has changed (see boolean attribute "status") 
+     * Intent broadcasted when the registration state has changed (see boolean attribute "status"). 
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>status</em> - Registration status.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String SERVICE_REGISTRATION = "com.orangelabs.rcs.SERVICE_REGISTRATION";
 }

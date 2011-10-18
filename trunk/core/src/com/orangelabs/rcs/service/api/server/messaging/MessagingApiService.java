@@ -26,6 +26,8 @@ import java.util.Vector;
 
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
+import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
@@ -40,6 +42,7 @@ import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
+import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApiIntents;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
@@ -62,6 +65,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * List of file transfer sessions
 	 */
 	private static Hashtable<String, IFileTransferSession> ftSessions = new Hashtable<String, IFileTransferSession>();  
+
+	/**
+	 * List of message delivery listeners
+	 */
+	private RemoteCallbackList<IMessageDeliveryListener> listeners = new RemoteCallbackList<IMessageDeliveryListener>();
 
 	/**
 	 * The logger
@@ -335,6 +343,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("isChatGroup", false);
     	intent.putExtra("firstMessage", session.getFirstMessage());
+    	
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
     
@@ -548,5 +557,87 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
+	}
+	
+	/**
+	 * Set message delivery status outside of a chat session
+	 * 
+	 * @param contact Contact requesting a delivery status
+	 * @param msgId Message ID
+	 * @param status Delivery status
+	 * @throws ServerApiException
+	 */
+	public void setMessageDeliveryStatus(String contact, String msgId, String status) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Set message delivery status " + status + " for message " + msgId);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
+		ServerApiUtils.testIms();
+		
+		try {
+			// Send a delivery status
+			Core.getInstance().getImService().getImdnManager().sendMessageDeliveryStatus(contact, msgId, status);
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
 	}	
+
+	/**
+	 * Add message delivery listener
+	 * 
+	 * @param listener Listener
+	 */
+	public void addMessageDeliveryListener(IMessageDeliveryListener listener) {
+		if (logger.isActivated()) {
+			logger.info("Add a message delivery listener");
+		}
+
+		listeners.register(listener);
+	}
+	
+	/**
+	 * Remove message delivery listener
+	 * 
+	 * @param listener Listener
+	 */
+	public void removeMessageDeliveryListener(IMessageDeliveryListener listener) {
+		if (logger.isActivated()) {
+			logger.info("Remove a message delivery listener");
+		}
+
+		listeners.unregister(listener);
+	}
+
+    /**
+     * New message delivery status
+     * 
+	 * @param contact Contact
+	 * @param msgId Message ID
+     * @param status Delivery status
+     */
+    public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
+		if (logger.isActivated()) {
+			logger.info("New message delivery status for message " + msgId + ", status " + status);
+		}
+
+		// Update rich messaging history
+		RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+		
+  		// Notify message delivery listeners
+		final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
+            } catch (RemoteException e) {
+            	if (logger.isActivated()) {
+            		logger.error("Can't notify listener", e);
+            	}
+            }
+        }
+        listeners.finishBroadcast();
+    }
 }

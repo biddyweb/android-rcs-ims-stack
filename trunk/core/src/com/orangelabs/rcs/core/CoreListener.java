@@ -139,6 +139,15 @@ public interface CoreListener {
     public void handleOneOneChatSessionExtended(GroupChatSession groupSession, OneOneChatSession oneoneSession);
 
     /**
+     * New message delivery status
+     * 
+     * @param contact Contact
+	 * @param msgId Message ID
+     * @param status Delivery status
+     */
+    public void handleMessageDeliveryStatus(String contact, String msgId, String status);
+
+    /**
      * New SIP session invitation
      * 
      * @param session SIP session

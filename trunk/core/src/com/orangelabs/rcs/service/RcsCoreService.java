@@ -955,6 +955,22 @@ public class RcsCoreService extends Service implements CoreListener {
     }
 	
     /**
+     * New message delivery status
+     * 
+     * @param contact Contact
+	 * @param msgId Message ID
+     * @param status Delivery status
+     */
+    public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
+		if (logger.isActivated()) {
+			logger.debug("Handle message delivery status");
+		}
+    	
+		// Notify listeners
+		messagingApi.handleMessageDeliveryStatus(contact, msgId, status);
+    }
+    
+    /**
      * New SIP session invitation
      * 
      * @param session SIP session

@@ -26,6 +26,14 @@ package com.orangelabs.rcs.service.api.client.sip;
 public class SipApiIntents {
 	/**
      * Intent broadcasted when a new session invitation has been received
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String SESSION_INVITATION = "com.orangelabs.rcs.sip.SESSION_INVITATION";
 }

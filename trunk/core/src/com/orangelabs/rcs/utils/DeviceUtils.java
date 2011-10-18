@@ -29,7 +29,9 @@ public class DeviceUtils {
 		if (uuid == null) {
 			TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
 			String id = tm.getDeviceId();
-			uuid = UUID.nameUUIDFromBytes(id.getBytes());
+			if (id != null) { 
+				uuid = UUID.nameUUIDFromBytes(id.getBytes());
+			}
 		}
 		
 		return uuid;

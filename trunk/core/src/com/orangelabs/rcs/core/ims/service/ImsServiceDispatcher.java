@@ -34,6 +34,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -158,9 +159,9 @@ public class ImsServiceDispatcher extends Thread {
     			// Store & Forward session
 	    		if (RcsSettings.getInstance().isImSessionSupported() && RcsSettings.getInstance().isImAlwaysOn()) {
 		    		if (logger.isActivated()) {
-		    			logger.debug("Store & Forward session invitation");
+		    			logger.debug("Store & Forward push notifications");
 		    		}
-	    			imsModule.getInstantMessagingService().receiveStoredAndForwardInvitation(request);
+	    			imsModule.getInstantMessagingService().receiveStoredAndForwardPushNotifications(request);
 	    		} else {
 					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
@@ -269,7 +270,21 @@ public class ImsServiceDispatcher extends Thread {
 		} else
     	if (request.getMethod().equals(Request.MESSAGE)) {
 	        // MESSAGE received
-	    	if (ChatUtils.isImdnService(request)) {
+
+			// Send a 200 OK response
+			try {
+				if (logger.isActivated()) {
+					logger.info("Send 200 OK");
+				}
+		        SipResponse response = SipMessageFactory.createResponse(request, IdGenerator.getIdentifier(), 200);
+				imsModule.getSipManager().sendSipResponse(response);
+			} catch(Exception e) {
+		       	if (logger.isActivated()) {
+		    		logger.error("Can't send 200 OK response", e);
+		    	}
+			}
+    		
+    		if (ChatUtils.isImdnService(request)) {
 	    		// IMDN service
 				imsModule.getInstantMessagingService().receiveMessageDeliveryStatus(request);
 	    	}
@@ -294,6 +309,7 @@ public class ImsServiceDispatcher extends Thread {
 		    	}
 			}
 
+			// Route request to session
     		ImsServiceSession session = searchSession(request.getCallId());
         	if (session != null) {
         		session.receiveBye(request);
@@ -315,6 +331,7 @@ public class ImsServiceDispatcher extends Thread {
 		    	}
 			}
 			
+			// Route request to session
 	    	ImsServiceSession session = searchSession(request.getCallId());
 	    	if (session != null) {
 	    		session.receiveCancel(request);
@@ -448,7 +465,7 @@ public class ImsServiceDispatcher extends Thread {
      */
     private void sendFinalResponse(SipRequest request, int code) {
     	try {
-	    	SipResponse resp = SipMessageFactory.createResponse(request, code);
+	    	SipResponse resp = SipMessageFactory.createResponse(request, IdGenerator.getIdentifier(), code);
 	    	imsModule.getCurrentNetworkInterface().getSipManager().sendSipResponse(resp);
     	} catch(Exception e) {
     		if (logger.isActivated()) {

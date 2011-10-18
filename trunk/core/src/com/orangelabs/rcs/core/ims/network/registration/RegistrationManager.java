@@ -372,7 +372,7 @@ public class RegistrationManager extends PeriodicRefresher {
 		while(contacts.hasNext()) {
 			ContactHeader contact = (ContactHeader)contacts.next();
 			String contactInstanceId = contact.getParameter("+sip.instance");
-			if ((contactInstanceId != null) && (contactInstanceId.contains(instanceId))) {
+			if ((contactInstanceId != null) && (instanceId != null) && (contactInstanceId.contains(instanceId))) {
 				String pubGruu = contact.getParameter("pub-gruu");
 				networkInterface.getSipManager().getSipStack().setPublicGruu(pubGruu);			
 				String tempGruu = contact.getParameter("temp-gruu");

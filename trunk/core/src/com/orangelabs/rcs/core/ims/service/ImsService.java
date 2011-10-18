@@ -20,6 +20,10 @@ package com.orangelabs.rcs.core.ims.service;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -255,4 +259,26 @@ public abstract class ImsService {
      * Check the IMS service
      */
 	public abstract void check();
+	
+    /**
+     * Send an error response to an invitation before to create a service session
+     *
+     * @param invite Invite request
+	 * @param error Error code
+     */
+    public void sendErrorResponse(SipRequest invite, int error) {
+        try {
+            if (logger.isActivated()) {
+                logger.info("Send erreor " + error);
+            }
+            SipResponse resp = SipMessageFactory.createResponse(invite, IdGenerator.getIdentifier(), error);
+
+            // Send response
+            getImsModule().getSipManager().sendSipResponse(resp);
+        } catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send error " + error, e);
+            }
+        }
+    }	
 }

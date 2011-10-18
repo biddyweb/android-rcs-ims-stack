@@ -18,13 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat.standfw;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Vector;
 
-import org.xml.sax.InputSource;
-
-import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -47,12 +43,8 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
-import com.orangelabs.rcs.provider.messaging.RichMessaging;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -338,17 +330,11 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
     			CpimParser cpimParser = new CpimParser(data);
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
-			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
 			    	String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
 						// Receive an IMDN report
-				    	String to = cpimMsg.getHeader(CpimMessage.HEADER_TO);
-						String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
-						
-				    	// Check if this IMDN message is for me
-						if (PhoneUtils.compareNumbers(me, to)) {
-							receiveMessageDeliveryStatus(new String(cpimMsg.getMessageContent().getBytes()), from);
-						}
+						receiveMessageDeliveryStatus(from, cpimMsg.getMessageContent());
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -408,30 +394,17 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	/**
      * Receive a message delivery status (XML document)
      * 
-     * @param message Received message
-     * @param contact Contact that sent the delivery status
+     * @param contact Contact
+     * @param xml XML document
      */
-    public void receiveMessageDeliveryStatus(String xml, String contact) {
+    public void receiveMessageDeliveryStatus(String contact, String xml) {
     	try {
 	    	// Parse the IMDN document
-			InputSource input = new InputSource(new ByteArrayInputStream(xml.getBytes()));
-			ImdnParser parser = new ImdnParser(input);
-			ImdnDocument imdn = parser.getImdnDocument();
-			String status = imdn.getStatus();
-			String msgId = imdn.getMsgId();
-			if ((imdn != null) && (msgId != null) && (status != null)) {
-				// Update rich messaging history
-				if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED);
-				} else
-				if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DELIVERED);			
-				} else
-				if ((status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)) ||
-						(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)) ||
-							(status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN))) {
-					RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_FAILED);
-				}
+    		ImdnDocument imdn = ChatUtils.parseDeliveryReport(xml);
+			if (imdn != null) {
+				// Notify the message delivery outside of the chat session
+				getImsService().getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact,
+						imdn.getMsgId(), imdn.getStatus());
 			}
     	} catch(Exception e) {
     		if (logger.isActivated()) {

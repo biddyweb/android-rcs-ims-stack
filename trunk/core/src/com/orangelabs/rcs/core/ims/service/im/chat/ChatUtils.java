@@ -17,15 +17,20 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ExtensionHeader;
 
+import org.xml.sax.InputSource;
+
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -45,6 +50,11 @@ public class ChatUtils {
 	 */
 	public static final String HEADER_CONTRIBUTION_ID = "Contribution-ID";
 	
+	/**
+	 * CRLF constant
+	 */
+	private static final String CRLF = "\r\n";
+
 	/**
 	 * Is a group chat session invitation
 	 * 
@@ -160,12 +170,12 @@ public class ChatUtils {
 		String uriList = "";
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
-			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + SipUtils.CRLF;
+			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF;
 		}
 		
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
-			"<list>" + SipUtils.CRLF +
+			"<list>" + CRLF +
 			uriList +
 			"</list></resource-lists>";
 		return xml;
@@ -185,15 +195,15 @@ public class ChatUtils {
 			String contact = newParticipants.get(i);
 			if (contact.equals(existingParticipant)) {
 				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
-					StringUtils.encodeXML(replaceHeader) + "\"/>" + SipUtils.CRLF;
+					StringUtils.encodeXML(replaceHeader) + "\"/>" + CRLF;
 			} else {
-				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + SipUtils.CRLF;
+				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF;
 			}
 		}
 		
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + SipUtils.CRLF +
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
-			"<list>" + SipUtils.CRLF +
+			"<list>" + CRLF +
 			uriList +
 			"</list></resource-lists>";
 		return xml;
@@ -206,8 +216,10 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isImdnService(SipRequest request) {
-    	ExtensionHeader hd = (ExtensionHeader)request.getHeader(CpimMessage.HEADER_NS);
-    	if ((hd != null) && hd.getValue().contains("<urn:ietf:params:imdn>")) {
+    	String content = request.getContent();
+    	String contentType = request.getContentType();
+    	if ((content != null) && (content.indexOf(ImdnDocument.IMDN_NAMESPACE) != -1) &&
+    			(contentType != null) && (contentType.indexOf(CpimMessage.MIME_TYPE) != -1)) {
     		return true;
     	} else {
     		return false;
@@ -221,17 +233,21 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isImdnDeliveredRequested(SipRequest request) {
-    	ExtensionHeader hd = (ExtensionHeader)request.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
-    	if (hd != null){
-    		String hdValue = hd.getValue();
-    		if (hdValue!=null && hdValue.contains(ImdnDocument.POSITIVE_DELIVERY)){    		
-    			return true;
-    		}else{
-    			return false;
-    		}
-    	} else {
-    		return false;
-    	}
+		try {
+			// Read ID from multipart content
+		    String content = request.getContent();
+			int index = content.indexOf(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
+			if (index != -1) {
+				index = index+ImdnUtils.HEADER_IMDN_DISPO_NOTIF.length()+1;
+				String part = content.substring(index);
+				String notif = part.substring(0, part.indexOf(CRLF));
+		    	if (notif.indexOf(ImdnDocument.POSITIVE_DELIVERY) != -1) {
+		    		return true;
+		    	}
+			}
+		} catch(Exception e) {
+		}
+		return false;
     }
     
     /**
@@ -241,51 +257,49 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isImdnDisplayedRequested(SipRequest request) {
-    	ExtensionHeader hd = (ExtensionHeader)request.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
-    	if (hd != null){
-    		String hdValue = hd.getValue();
-    		if (hdValue!=null && hdValue.contains(ImdnDocument.DISPLAY)){    		
-    			return true;
-    		}else{
-    			return false;
-    		}
-    	} else {
-    		return false;
-    	}
+		try {
+			// Read ID from multipart content
+		    String content = request.getContent();
+			int index = content.indexOf(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
+			if (index != -1) {
+				index = index+ImdnUtils.HEADER_IMDN_DISPO_NOTIF.length()+1;
+				String part = content.substring(index);
+				String notif = part.substring(0, part.indexOf(CRLF));
+		    	if (notif.indexOf(ImdnDocument.DISPLAY) != -1) {
+		    		return true;
+		    	}
+			}
+		} catch(Exception e) {
+		}
+		return false;
+    	
     }
     
 	/**
-	 * Returns the message id header value of a SIP request
+	 * Returns the message ID from a SIP request
 	 * 
      * @param request Request
-	 * @return String or empty
+	 * @return Message ID
 	 */
 	public static String getMessageId(SipRequest request) {
-		// Read ID from Message-Id header
-		ExtensionHeader messageIdHeader = (ExtensionHeader)request.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
-		if (messageIdHeader != null) {
-			return messageIdHeader.getValue();
-		} 
-		
-		// Read ID from multipart content
+		String result = null;
 		try {
+			// Read ID from multipart content
 		    String content = request.getContent();
 			int index = content.indexOf(ImdnUtils.HEADER_IMDN_MSG_ID);
 			if (index != -1) {
 				index = index+ImdnUtils.HEADER_IMDN_MSG_ID.length()+1;
 				String part = content.substring(index);
-				String msgId = part.substring(0, part.indexOf(SipUtils.CRLF));
-				return msgId.trim();
+				String msgId = part.substring(0, part.indexOf(CRLF));
+				result = msgId.trim();
 			}
 		} catch(Exception e) {
 		}
-		
-		// No message id
-		return null;
+		return result;
 	}
 	
 	/**
-	 * Build a CPIM message in plain text format
+	 * Build a CPIM message
 	 * 
 	 * @param from From
 	 * @param to To
@@ -294,12 +308,13 @@ public class ChatUtils {
 	 * @return String
 	 */
 	public static String buildCpimMessage(String from, String to, String content, String contentType) {
-		String cpim = CpimMessage.HEADER_FROM + ": " + from + CpimMessage.CRLF + 
-			CpimMessage.HEADER_TO + ": " + to + CpimMessage.CRLF + 
-			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CpimMessage.CRLF + 
-			CpimMessage.CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CpimMessage.CRLF + 
-			CpimMessage.CRLF + 
+		String cpim =
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" + CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
+			CRLF +  
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF + 
+			CRLF + 
 			content;	
 		   
 		return cpim;
@@ -310,50 +325,109 @@ public class ChatUtils {
 	 * 
 	 * @param from From
 	 * @param to To
-	 * @param messageId Message id value
+	 * @param messageId Message ID
 	 * @param content Content
 	 * @param contentType Content type
 	 * @return String
 	 */
 	public static String buildCpimMessageWithImdn(String from, String to, String messageId, String content, String contentType) {
-		String cpim = CpimMessage.HEADER_FROM + ": " + from + CpimMessage.CRLF + 
-			CpimMessage.HEADER_TO + ": " + to + CpimMessage.CRLF + 
-			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CpimMessage.CRLF +
-			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CpimMessage.CRLF +
-			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CpimMessage.CRLF + 
-			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CpimMessage.CRLF +
-			CpimMessage.CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CpimMessage.CRLF +
-			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CpimMessage.CRLF + 
-			CpimMessage.CRLF + 
+		String cpim =
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" + CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
+			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
+			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
+			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
+			CRLF +  
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF +
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CRLF + 
+			CRLF + 
 			content;	
 		return cpim;
 	}
 	
 	/**
-	 * Build a CPIM delivery status
+	 * Build a CPIM delivery report
 	 * 
 	 * @param from From
 	 * @param to To
-	 * @param messageId Message id value
+	 * @param messageId Message ID
 	 * @param content Content
 	 * @param contentType Content type
 	 * @return String
 	 */
-	public static String buildCpimDeliveryStatus(String from, String to, String messageId, String content, String contentType) {
-		String cpim = CpimMessage.HEADER_FROM + ": " + from + CpimMessage.CRLF + 
-			CpimMessage.HEADER_TO + ": " + to + CpimMessage.CRLF + 
-			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CpimMessage.CRLF +
-			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CpimMessage.CRLF +
-			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CpimMessage.CRLF + 
-			CpimMessage.HEADER_CONTENT_DISPOSITION + ": " + ImdnDocument.NOTIFICATION + CpimMessage.CRLF +
-			CpimMessage.CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CpimMessage.CRLF +
-			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CpimMessage.CRLF + 
-			CpimMessage.CRLF + 
+	public static String buildCpimDeliveryReport(String from, String to, String messageId, String content, String contentType) {
+		String cpim =
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" +CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
+			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
+			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
+			CpimMessage.HEADER_CONTENT_DISPOSITION + ": " + ImdnDocument.NOTIFICATION + CRLF +
+			CRLF +  
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF +
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CRLF + 
+			CRLF + 
 			content;	
 		   
 		return cpim;
 	}
 	
+	/**
+	 * Parse a CPIM delivery report
+	 * 
+	 * @param cpim CPIM document
+	 * @return IMDN document
+	 */
+	public static ImdnDocument parseCpimDeliveryReport(String cpim) {
+    	try {
+    		// Parse CPIM document
+    		CpimParser cpimParser = new CpimParser(cpim);
+    		CpimMessage cpimMsg = cpimParser.getCpimMessage();
+    		if (cpimMsg != null) {
+    			// Check if the content is a IMDN message    		
+    			String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+    			if ((contentType != null) && ChatUtils.isMessageImdnType(contentType)) {
+    				// Parse the IMDN document
+    				ImdnDocument imdn = parseDeliveryReport(cpimMsg.getMessageContent());
+    				return imdn;
+    			}
+    		}
+    		return null;
+    	} catch(Exception e) {
+    		return null;
+    	}		
+	}
+
+	/**
+	 * Parse a delivery report
+	 * 
+	 * @param xml XML document
+	 * @return IMDN document
+	 */
+	public static ImdnDocument parseDeliveryReport(String xml) {
+		try {
+			InputSource input = new InputSource(new ByteArrayInputStream(xml.getBytes()));
+			ImdnParser parser = new ImdnParser(input);
+			return parser.getImdnDocument();
+    	} catch(Exception e) {
+    		return null;
+    	}		
+	}
+
+	/**
+	 * Build a delivery report
+	 * 
+	 * @param msgId Message ID
+	 * @param status Status
+	 * @return XML document
+	 */
+	public static String buildDeliveryReport(String msgId, String status) {
+		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
+			"<imdn xmlns=\"urn:ietf:params:xml:ns:imdn\">" + CRLF +
+	        " <message-id>" + msgId + "</message-id>" + CRLF +
+	        " <datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
+	        " <delivery-notification><status><" + status + "/></status></delivery-notification>" + CRLF +
+	        "</imdn>";
+	}
 }

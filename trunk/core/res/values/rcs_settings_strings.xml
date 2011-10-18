@@ -53,6 +53,7 @@
     <string name="rcs_settings_label_rcs_roaming">Roaming</string>
 	<string name="rcs_settings_label_confirm">Confirmation</string>
 	<string name="rcs_settings_label_rcs_service_shutdown">RCS service will be terminated</string>
+    <string name="rcs_settings_label_rcs_service_roaming_shutdown">You are currently in roaming, RCS service will be terminated</string>
 	<string name="rcs_settings_label_about">Rich Communication Suite application</string>
 	<string name="rcs_settings_label_copyrights">Copyright © Orange labs\nSoftware certificat IDDN FR.001.020013.000.S.P.2009.000.30810</string>
 	<string name="rcs_settings_label_release">Release</string>

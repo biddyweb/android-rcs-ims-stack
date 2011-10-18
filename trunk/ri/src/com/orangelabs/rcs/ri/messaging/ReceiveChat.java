@@ -291,7 +291,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(String msgId, String contact, String status) {
+		public void handleMessageDeliveryStatus(String msgId, String status) {
 		}
 		
 		// Request to add participant is successful

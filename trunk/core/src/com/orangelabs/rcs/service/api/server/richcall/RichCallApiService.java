@@ -169,7 +169,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Update rich call history
 		RichCall.getInstance().addCall(number, session.getSessionID(),
- RichCallData.EVENT_INCOMING,
+				RichCallData.EVENT_INCOMING,
     			session.getContent(),
     			RichCallData.STATUS_STARTED);
 
@@ -301,7 +301,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		// Update rich call history
 		RichCall.getInstance().addCall(number, session.getSessionID(),
- RichCallData.EVENT_INCOMING,
+				RichCallData.EVENT_INCOMING,
 				session.getContent(),
 				RichCallData.STATUS_STARTED);
 

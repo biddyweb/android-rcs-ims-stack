@@ -248,47 +248,59 @@ public class CapabilityUtils {
      * Build supported SDP part
      * 
      * @param ipAddress Local IP address
-     * @return SDP
+	 * @param richcall Rich call supported
+	 * @return SDP
      */
-    public static String buildSdp(String ipAddress) {
+    public static String buildSdp(String ipAddress, boolean richcall) {
+    	String sdp = null;
 	    try {
-			// Get video config
-			Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
-			String videoSharingConfig = "";
-			for(int i=0; i < videoFormats.size(); i++) {
-				VideoFormat fmt = videoFormats.elementAt(i);
-				videoSharingConfig += "m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF;
-				videoSharingConfig += "a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF;
+			if (richcall) {
+		        boolean video = RcsSettings.getInstance().isVideoSharingSupported();
+		        boolean image = RcsSettings.getInstance().isImageSharingSupported();
+		        if (video | image) {
+					// Build the local SDP
+			    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+			    	sdp = "v=0" + SipUtils.CRLF +
+				        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+				            "s=-" + SipUtils.CRLF +
+				            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
+				            "t=0 0" + SipUtils.CRLF;
+
+			    	// Add video config
+			        if (video) {
+			        	// Get supported video formats
+						Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
+				    	String videoSharingConfig = "";
+						for(int i=0; i < videoFormats.size(); i++) {
+							VideoFormat fmt = videoFormats.elementAt(i);
+							videoSharingConfig += "m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF;
+							videoSharingConfig += "a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF;
+						}
+						
+						// Update SDP
+				    	sdp += videoSharingConfig;
+			        }
+		        
+					// Add image config
+			        if (image) {
+						// Get supported image formats
+						Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
+						String supportedImageFormats = "";
+						for(int i=0; i < mimeTypes.size(); i++) {
+							supportedImageFormats += mimeTypes.elementAt(i) + " ";
+					    }    	    	
+						supportedImageFormats = supportedImageFormats.trim();
+					
+						// Update SDP
+						String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
+							"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
+							"a=file-selector" + SipUtils.CRLF +
+							"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
+				    	sdp += imageSharingConfig;
+			        }
+		        }
 			}
-			
-			// Get supported image MIME types
-			String supportedImageFormats = "";
-			Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
-			for(int i=0; i < mimeTypes.size(); i++) {
-				supportedImageFormats += mimeTypes.elementAt(i) + " ";
-		    }    	    	
-			supportedImageFormats = supportedImageFormats.trim();
-		
-			// Get the image config
-			String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
-				"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
-				"a=file-selector" + SipUtils.CRLF +
-				"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
-	    	
-	    	// Build the local SDP
-	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-	    	String sdp = "v=0" + SipUtils.CRLF +
-		        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
-		            "s=-" + SipUtils.CRLF +
-		            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
-		            "t=0 0" + SipUtils.CRLF;
-	        if (RcsSettings.getInstance().isVideoSharingSupported()) {
-		    	sdp += videoSharingConfig;
-	        }
-	        if (RcsSettings.getInstance().isImageSharingSupported()) {
-		    	sdp += imageSharingConfig;
-	        }
-	        return sdp;
+			return sdp;
 	    } catch(Exception e) {
         	return null;
 	    }

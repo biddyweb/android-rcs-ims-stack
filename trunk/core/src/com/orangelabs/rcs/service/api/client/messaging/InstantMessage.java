@@ -169,7 +169,7 @@ public class InstantMessage implements Parcelable {
 	/**
 	 * Returns true if the IMDN "displayed" has been requested 
 	 * 
-	 * @return imdnDisplayedRequested
+	 * @return Boolean
 	 */
 	public boolean isImdnDisplayedRequested() {
 		return imdnDisplayedRequested;

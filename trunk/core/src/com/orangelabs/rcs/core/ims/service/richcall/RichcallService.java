@@ -18,6 +18,11 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
+import android.os.RemoteException;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -38,14 +43,12 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingLiveVideoSt
 import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingPreRecordedVideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.TerminatingVideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import android.os.RemoteException;
-
-import java.util.Enumeration;
-import java.util.Vector;
 
 /**
  * Rich call service has in charge to monitor the GSM call in order to stop the
@@ -338,7 +341,7 @@ public class RichcallService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Rich call not established: reject the invitation");
 			}
-            send606Response(invite);
+			sendErrorResponse(invite, 606);
 			return;
 		}
 
@@ -374,7 +377,7 @@ public class RichcallService extends ImsService {
             if (logger.isActivated()) {
                 logger.debug("The max number of sharing sessions is achieved: reject the invitation");
             }
-            send486Response(invite);
+            sendErrorResponse(invite, 486);
             return;
         }
 
@@ -403,7 +406,7 @@ public class RichcallService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Rich call not established: reject the invitation");
 			}
-            send606Response(invite);
+			sendErrorResponse(invite, 606);
 			return;
 		}
 
@@ -439,7 +442,7 @@ public class RichcallService extends ImsService {
             if (logger.isActivated()) {
                 logger.debug("The max number of sharing sessions is achieved: reject the invitation");
             }
-            send486Response(invite);
+            sendErrorResponse(invite, 486);
             return;
         }
 
@@ -472,7 +475,7 @@ public class RichcallService extends ImsService {
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		getImsModule().getSipManager().getSipStack().getLocalContact(),
 	        		CapabilityUtils.getSupportedFeatureTags(richcall),
-	        		CapabilityUtils.buildSdp(ipAddress));
+	        		CapabilityUtils.buildSdp(ipAddress, richcall));
 
 	        // Send 200 OK response
 	        getImsModule().getSipManager().sendSipResponse(resp);
@@ -487,6 +490,19 @@ public class RichcallService extends ImsService {
 			// Outgoing call is received: request capabilities
 			getImsModule().getCapabilityService().requestContactCapabilities(contact);
 		}
+		
+		// Extract capabilities from the request
+    	Capabilities capabilities = CapabilityUtils.extractCapabilities(options);
+    	if (capabilities.isImSessionSupported()) {
+    		// The contact is RCS capable
+   			ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.RCS_CAPABLE, ContactInfo.REGISTRATION_STATUS_ONLINE);
+    	} else {
+    		// The contact is not RCS
+    		ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NOT_RCS, ContactInfo.REGISTRATION_STATUS_UNKNOWN);
+    	}
+
+    	// Notify listener
+    	getImsModule().getCore().getListener().handleCapabilitiesNotification(contact, capabilities);
     }
 
 	/**
@@ -503,49 +519,5 @@ public class RichcallService extends ImsService {
 			}
 			session.abortSession();
 		}
-    }
-
-    /**
-     * Send a 486 response
-     *
-     * @param invite request
-     */
-    private void send486Response(SipRequest invite) {
-        try {
-            // Send a 486 Busy response
-            if (logger.isActivated()) {
-                logger.info("Send 486 Busy here");
-            }
-            SipResponse resp = SipMessageFactory.createResponse(invite, 486);
-
-            // Send response
-            getImsModule().getSipManager().sendSipResponse(resp);
-        } catch (Exception e) {
-            if (logger.isActivated()) {
-                logger.error("Can't send 486 Busy here", e);
-            }
-        }
-    }
-
-    /**
-     * Send a 606 response
-     *
-     * @param invite request
-     */
-    private void send606Response(SipRequest invite) {
-        try {
-            // Create a 606 Not Acceptable response
-            if (logger.isActivated()) {
-                logger.info("Send 606 Not Acceptable");
-            }
-            SipResponse resp = SipMessageFactory.createResponse(invite, 606);
-
-            // Send response
-            getImsModule().getSipManager().sendSipResponse(resp);
-        } catch (Exception e) {
-            if (logger.isActivated()) {
-                logger.error("Can't send 606 Not Acceptable", e);
-            }
-        }
     }
 }

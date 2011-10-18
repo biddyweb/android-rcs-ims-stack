@@ -2,8 +2,6 @@ package com.orangelabs.rcs.core.ims.service.im.chat.cpim;
 
 import java.util.Hashtable;
 
-import com.orangelabs.rcs.utils.StringUtils;
-
 /**
  * CPIM message
  * 
@@ -15,11 +13,6 @@ public class CpimMessage {
 	 */
 	public static final String MIME_TYPE = "message/cpim";
 	
-	/**
-	 * CRLF constant
-	 */
-	public static final String CRLF = "\r\n";
-
 	/**
 	 * Header "Content-type"
 	 */
@@ -95,7 +88,7 @@ public class CpimMessage {
 	public CpimMessage(Hashtable<String, String> headers, Hashtable<String, String> contentHeaders, String msgContent) {
 		this.headers = headers;
 		this.contentHeaders = contentHeaders;
-		this.msgContent = StringUtils.decodeUTF8(msgContent);
+		this.msgContent = msgContent;
 	}
 	
     /**

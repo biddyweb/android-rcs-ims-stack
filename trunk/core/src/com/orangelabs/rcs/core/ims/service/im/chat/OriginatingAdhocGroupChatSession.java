@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -63,7 +64,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
 	 * @param msg First message of the session
-	 * @param participants List of participants
+	 * @param participants List of invited participants
 	 */
 	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
 		super(parent, conferenceId, msg, participants);
@@ -165,7 +166,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
     	// Test if there is a first message
     	if (getFirstMessage() != null) {
 	        // Add a subject header
-    		invite.addHeader(SubjectHeader.NAME, getFirstMessage().getTextMessage());
+    		invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getFirstMessage().getTextMessage()));
     	}
     	
         // Add a contribution ID header

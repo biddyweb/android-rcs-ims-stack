@@ -26,16 +26,48 @@ package com.orangelabs.rcs.service.api.client.messaging;
 public interface MessagingApiIntents {
     /**
      * Intent broadcasted when a new file transfer invitation has been received
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     *   <li><em>chatSessionId</em> - Session ID of the chat session associated to the file
+     *    transfer (may be null if the file transfer is outside of a chat).</li>
+     *   <li><em>filename</em> - Name of the file.</li>
+     *   <li><em>filesize</em> - Size of the file in bytes.</li>
+     *   <li><em>filetype</em> - Type of file encoding.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String FILE_TRANSFER_INVITATION = "com.orangelabs.rcs.messaging.FILE_TRANSFER_INVITATION";
 	
     /**
      * Intent broadcasted when a new chat invitation has been received
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     *   <li><em>isChatGroup</em> - Boolean indicating if it's a chat group.</li>
+     *   <li><em>replacedSessionId</em> - Session ID of the session which has been replaced by
+     *    this chat group session (may be null).</li>
+     *   <li><em>firstMessage</em> - First message of the session.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String CHAT_INVITATION = "com.orangelabs.rcs.messaging.CHAT_INVITATION";
-
+	
     /**
      * Intent broadcasted when a 1-1 chat session has been replaced by a chat group session
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     *   <li><em>replacedSessionId</em> - Session ID of the session which has been replaced by this chat group session.</li>
+     * </ul>
+     * </ul>
      */
 	public final static String CHAT_SESSION_REPLACED = "com.orangelabs.rcs.messaging.CHAT_SESSION_REPLACED";
 }

@@ -2,6 +2,7 @@ package com.orangelabs.rcs.service.api.client.messaging;
 
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
 
 /**
  * Messaging API
@@ -33,4 +34,14 @@ interface IMessagingApi {
 
 	// Get list of current established chat sessions
 	List<IBinder> getChatSessions();
+
+	// Set message delivery status
+	void setMessageDeliveryStatus(in String contact, in String msgId, in String status);
+
+	// Add message delivery listener
+	void addMessageDeliveryListener(in IMessageDeliveryListener listener);
+
+	// Remove message delivery listener
+	void removeMessageDeliveryListener(in IMessageDeliveryListener listener);	
+
 }

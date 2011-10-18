@@ -98,8 +98,10 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 if (logger.isActivated()){
                     logger.debug("proposed codecs are not supported");
                 }
+                
                 // Send a 415 Unsupported media type response
                 send415Error(getDialogPath().getInvite());
+                
                 // Unsupported media type
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE, ""));
                 return;

@@ -48,7 +48,7 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
 	 * @param oneoneSession One-to-one session
-	 * @param participants List of participants
+	 * @param participants List of invited participants
 	 */
 	public ExtendOneOneChatSession(ImsService parent, String conferenceId, OneOneChatSession oneoneSession, ListOfParticipant participants) {
 		super(parent, conferenceId, null, participants);
@@ -95,10 +95,6 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 
 	    	// Generate the resource list for given participants
 	    	String existingParticipant = oneoneSession.getParticipants().getList().get(0);
-	        /* TODO String callId = oneoneSession.getDialogPath().getCallId(); 
-	        String toTag = oneoneSession.getDialogPath().getRemoteTag();
-	        String fromTag = oneoneSession.getDialogPath().getLocalTag();
-			String replaceHeader = ";method=INVITE?Replaces=" + callId + ";to-tag=" + toTag + ";from-tag=" + fromTag;*/
 			String replaceHeader = ";method=INVITE?Session-Replaces=" + oneoneSession.getContributionID();
 			String resourceList = ChatUtils.generateExtendedChatResourceList(existingParticipant,
 					replaceHeader,

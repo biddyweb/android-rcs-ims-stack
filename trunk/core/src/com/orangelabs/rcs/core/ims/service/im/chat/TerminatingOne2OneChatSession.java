@@ -40,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -60,7 +61,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, false), invite.getSubject());
+		super(parent, ChatUtils.getAssertedIdentity(invite, false), StringUtils.decodeUTF8(invite.getSubject()));
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -78,8 +79,16 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	    	// Send a 180 Ringing response
 			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 			
-			// Send message delivery report, if requested
-			sendSipMessageDeliveryStatus(getDialogPath().getInvite(), ImdnDocument.DELIVERY_STATUS_DELIVERED);
+			// Send message delivery report if requested
+			if (ChatUtils.isImdnDeliveredRequested(getDialogPath().getInvite())) {
+				// Check notification disposition
+				String msgId = ChatUtils.getMessageId(getDialogPath().getInvite());
+				if (msgId != null) {
+					// Send message delivery status via a SIP MESSAGE
+					getImdnManager().sendMessageDeliveryStatusImmediately(getDialogPath().getRemoteParty(),
+							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+				}
+			}
 			
 			// Wait invitation answer
 	    	int answer = waitInvitationAnswer();
