@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.service.im.chat;
+package com.orangelabs.rcs.core.ims.service.im.chat.standfw;
 
 import java.io.IOException;
 import java.util.Vector;
@@ -37,17 +37,20 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Terminating one-to-one chat session
+ * Terminating Store & Forward session for messages
  * 
  * @author jexa7410
  */
-public class TerminatingOne2OneChatSession extends OneOneChatSession implements MsrpEventListener {
+public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession implements MsrpEventListener {
 	/**
      * The logger
      */
@@ -59,13 +62,13 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param parent IMS service
 	 * @param invite Initial INVITE request
 	 */
-	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, SipUtils.getAssertedIdentity(invite));
+	public TerminatingStoreAndForwardMsgSession(ImsService parent, SipRequest invite) {
+		super(parent, ChatUtils.getReferredIdentity(invite));
 
 		// Set first message
 		InstantMessage firstMessage = extractFirstMessage(invite);
 		setFirstMesssage(firstMessage);
-				
+		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
 	}
@@ -76,7 +79,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new 1-1 chat session as terminating");
+	    		logger.info("Initiate a store & forward session for messages");
 	    	}
 	    	
 	    	// Send a 180 Ringing response
@@ -92,7 +95,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 				}
 			}
-			
+
 			// Wait invitation answer
 	    	int answer = waitInvitationAnswer();
 			if (answer == ImsServiceSession.INVITATION_REJECTED) {
@@ -126,7 +129,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 		        }
 				return;
 			}
-
+			
 			// Extract the SDP part
 			byte[] remoteSdp = null;
 		    String content = getDialogPath().getInvite().getContent();
@@ -279,13 +282,13 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
     	    	for(int i=0; i < getListeners().size(); i++) {
     	    		getListeners().get(i).handleSessionStarted();
     	        }
-
-    	    	// Start session timer
+    	    	
+            	// Start session timer
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
-            	
-    			// Start the activity manager
+
+            	// Start the activity manager
     			getActivityManager().start();
     	    	
             } else {

@@ -475,6 +475,10 @@ public class MsrpSession {
 		String msgIdHeader = MsrpConstants.HEADER_MESSAGE_ID + ": " + msgId + MsrpConstants.NEW_LINE;
 		buffer.write(msgIdHeader.getBytes());
 		
+		// No report
+		String header = MsrpConstants.HEADER_FAILURE_REPORT + ": no" + MsrpConstants.NEW_LINE;
+		buffer.write(header.getBytes());
+		
 		// Write end of request
 		buffer.write(MsrpConstants.END_MSRP_MSG.getBytes());
 		buffer.write(txId.getBytes());

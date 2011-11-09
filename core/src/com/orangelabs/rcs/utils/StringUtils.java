@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.utils;
 
+import java.io.UnsupportedEncodingException;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 
@@ -94,6 +95,23 @@ public class StringUtils {
 		}
 		return decodeUTF8(str.getBytes());
 	}
+	
+    /**
+     * Decode iso string to a string
+     * 
+     * @param str Input string
+     * @return Decoded string
+     */
+    public static String decodeIso(String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            return decodeUTF8(str.getBytes("iso-8859-1"));
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
+    }
 	
 	/**
 	 * Escape characters for text appearing as XML data, between tags.

@@ -44,6 +44,7 @@ LOCAL_SRC_FILES += \
     src/com/orangelabs/rcs/service/api/client/media/IMediaRenderer.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/IChatEventListener.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/IChatSession.aidl \
+    src/com/orangelabs/rcs/service/api/client/messaging/IMessageDeliveryListener.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/IFileTransferEventListener.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/IFileTransferSession.aidl \
     src/com/orangelabs/rcs/service/api/client/messaging/IMessagingApi.aidl \

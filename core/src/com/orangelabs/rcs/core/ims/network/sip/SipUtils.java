@@ -116,6 +116,7 @@ public class SipUtils {
 	 * Referred-By header
 	 */
 	public static final String HEADER_REFERRED_BY = "Referred-By";
+	public static final String HEADER_REFERRED_BY_C = "b";
 	
 	/**
 	 * Content-ID header
@@ -298,10 +299,10 @@ public class SipUtils {
 	 */
 	public static String getAssertedIdentity(SipRequest request) {
 		ExtensionHeader assertedHeader = (ExtensionHeader)request.getHeader(SipUtils.HEADER_P_ASSERTED_IDENTITY);
-		if (assertedHeader == null) {
-			return request.getFromUri();
-		} else {
+		if (assertedHeader != null) {
 			return assertedHeader.getValue();
+		} else {
+			return request.getFromUri();
 		}
 	}
 	
@@ -406,5 +407,41 @@ public class SipUtils {
     	// Update Accept-Contact header
 		Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, acceptTags);
 		message.addHeader(header);
+    }
+    
+    /**
+     * Get the Referred-By header
+     * 
+	 * @param message SIP message
+     * @return Strong or null if not exist
+     */
+    public static String getReferredByHeader(SipMessage message) {
+		// Read Referred-By header
+		ExtensionHeader referredByHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_REFERRED_BY);
+		if (referredByHeader == null) {
+			// Check contracted form
+			referredByHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_REFERRED_BY_C);
+			if (referredByHeader == null) {
+				// Try to extract manually the header in the message
+				// TODO: to be removed when bug fix corrected in native NIST stack
+				String msg = message.getStackMessage().toString();
+				int index = msg.indexOf(SipUtils.CRLF + "b:");
+				if (index != -1) {
+					try {
+						int begin = index+4;
+						int end = msg.indexOf(SipUtils.CRLF, index+2);
+						return msg.substring(begin, end).trim();
+					} catch(Exception e) {
+						return null;
+					}
+				} else {
+					return null;
+				}
+			} else {
+				return referredByHeader.getValue();
+			}
+		} else {
+			return referredByHeader.getValue();
+		}
     }
 }

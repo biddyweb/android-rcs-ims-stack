@@ -62,8 +62,6 @@ public class LoggerProvisioning extends Activity {
         
         // Set database content resolver
         this.cr = getContentResolver();
-        
-		
 	}
 	
 	@Override

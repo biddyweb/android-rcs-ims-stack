@@ -67,8 +67,12 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * @param participants List of invited participants
 	 */
 	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
-		super(parent, conferenceId, msg, participants);
+		super(parent, conferenceId, participants);
 
+		// Set first message
+		InstantMessage firstMessage = generateFirstMessage(msg);
+		setFirstMesssage(firstMessage);		
+		
 		// Create dialog path
 		createOriginatingDialogPath();
 	}
@@ -168,7 +172,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        // Add a subject header
     		invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getFirstMessage().getTextMessage()));
     	}
-    	
+
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID());
 	
@@ -203,8 +207,8 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 486) {
-            	// 486 Busy
+            if ((ctx.getStatusCode() == 486) || (ctx.getStatusCode() == 480)) {
+            	// 486 busy or 480 Temporarily Unavailable 
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
@@ -284,7 +288,12 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        // Send an empty packet
         	sendEmptyDataChunk();
         	
-        	// Subscribe to event package
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		getListeners().get(i).handleSessionStarted();
+	        }
+
+	    	// Subscribe to event package
         	getConferenceEventSubscriber().subscribe();
 
         	// Start session timer
@@ -292,11 +301,6 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
         		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
         	}
 			
-			// Notify listeners
-	    	for(int i=0; i < getListeners().size(); i++) {
-	    		getListeners().get(i).handleSessionStarted();
-	        }
-	    	
 			// Start the activity manager
 			getActivityManager().start();
 	    	

@@ -61,9 +61,7 @@ public class ServiceProvisioning extends Activity {
         setContentView(R.layout.service_provisioning);
         
         // Set database content resolver
-        this.cr = getContentResolver();
-        
-		
+        this.cr = getContentResolver();	
 	}
 
 	@Override

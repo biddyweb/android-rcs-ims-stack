@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright Â© 2010 France Telecom S.A.
+ * Copyright © 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.service.SessionIdGenerator;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.event.User;
@@ -145,13 +146,11 @@ public class RichMessaging {
 		// Set the first message
 		if ((firstMsgTxt != null) && (firstMsgTxt.length() > 0)) {
 			String msgId = ChatUtils.getMessageId(session.getDialogPath().getInvite());
-			addIncomingChatMessage(new InstantMessage(msgId, inviter, firstMsgTxt, RcsSettings.getInstance().isImReportsActivated()), session);
-
-			// Mark the message as "requested for report" if needed
+			boolean reportRequested = false;
 			if ((msgId!=null) && ChatUtils.isImdnDisplayedRequested(session.getDialogPath().getInvite())){
-    			// Mark the message as waiting report, meaning we will have to send a report "displayed" when opening the message
-    			setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_REPORT_REQUESTED);
+				reportRequested = true;
 			}
+			addIncomingChatMessage(new InstantMessage(msgId, inviter, firstMsgTxt, reportRequested), session);
 		}
 	}
 	
@@ -227,7 +226,11 @@ public class RichMessaging {
 		if (session.isChatGroup()) {
 			type = EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE;
 		}
-		addEntry(type, session.getSessionID(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), EventsLogApi.STATUS_RECEIVED);
+		int status = EventsLogApi.STATUS_RECEIVED;
+		if (msg.isImdnDisplayedRequested()){
+			status = EventsLogApi.STATUS_REPORT_REQUESTED;
+		}
+		addEntry(type, session.getSessionID(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), status);
 	}
 	
 	/**
@@ -382,7 +385,7 @@ public class RichMessaging {
 	 * @param msg Chat message
 	 */
 	public void addSpamMessage(InstantMessage msg) {
-		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, ""+System.currentTimeMillis(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), EventsLogApi.STATUS_RECEIVED);
+		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), EventsLogApi.STATUS_RECEIVED);
 		markChatMessageAsSpam(msg.getMessageId(), true);
 	}
 	
@@ -392,7 +395,11 @@ public class RichMessaging {
 	 * @param msg Chat message
 	 */
 	public void addIncomingChatMessage(InstantMessage msg) {
-		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, ""+System.currentTimeMillis(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), EventsLogApi.STATUS_RECEIVED);
+		int status = EventsLogApi.STATUS_RECEIVED;
+		if (msg.isImdnDisplayedRequested()){
+			status = EventsLogApi.STATUS_REPORT_REQUESTED;
+		}
+		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().length(), msg.getDate(), status);
 	}
 	
 	/**

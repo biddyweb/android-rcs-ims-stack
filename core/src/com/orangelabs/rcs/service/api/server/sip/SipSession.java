@@ -46,6 +46,11 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	 */
 	private RemoteCallbackList<ISipSessionEventListener> listeners = new RemoteCallbackList<ISipSessionEventListener>();
 
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+	
     /**
 	 * The logger
 	 */
@@ -187,98 +192,106 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	 * Session is started
 	 */
     public void handleSessionStarted() {
-		if (logger.isActivated()) {
-			logger.info("Session started");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionStarted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionStarted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
-
+    
     /**
      * Session has been aborted
      */
     public void handleSessionAborted() {
-		if (logger.isActivated()) {
-			logger.info("Session aborted");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionAborted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        SipApiService.removeSipSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionAborted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        SipApiService.removeSipSession(session.getSessionID());
+	    }
     }
-
+    
     /**
      * Session has been terminated by remote
      */
     public void handleSessionTerminatedByRemote() {
-		if (logger.isActivated()) {
-			logger.info("Session terminated by remote");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        SipApiService.removeSipSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        SipApiService.removeSipSession(session.getSessionID());
+	    }
     }
-
+    
     /**
      * Session error
      *
      * @param error Error
      */
     public void handleSessionError(SipSessionError error) {
-		if (logger.isActivated()) {
-			logger.info("Session error");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionError(error.getErrorCode());
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        SipApiService.removeSipSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session error");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionError(error.getErrorCode());
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        SipApiService.removeSipSession(session.getSessionID());
+	    }
     }
 }

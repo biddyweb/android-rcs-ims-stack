@@ -13,7 +13,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -106,7 +105,7 @@ public class ImdnManager extends Thread {
 	 */
 	public void sendMessageDeliveryStatus(String contact, String msgId, String status) {
 		// Add request in the buffer for background processing
-		DeliveryStatus delivery = new DeliveryStatus(PhoneUtils.formatNumberToSipUri(contact), msgId, status);
+		DeliveryStatus delivery = new DeliveryStatus(contact, msgId, status);
 		buffer.addObject(delivery);
 	}
 	
@@ -119,14 +118,11 @@ public class ImdnManager extends Thread {
 	 */
 	public void sendMessageDeliveryStatusImmediately(String contact, String msgId, String status) {
 		// Execute request in background
-		final DeliveryStatus delivery = new DeliveryStatus(PhoneUtils.formatNumberToSipUri(contact), msgId, status);
+		final DeliveryStatus delivery = new DeliveryStatus(contact, msgId, status);
 		Thread thread = new Thread(){
 			public void run() {
 				// Send SIP MESSAGE
 				sendSipMessageDeliveryStatus(delivery);
-
-				// Update rich messaging history
-				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus());
 			}
 		};
 		thread.start();
@@ -144,10 +140,10 @@ public class ImdnManager extends Thread {
        		}
 
 	   		// Create CPIM/IDMN document
-			String content = ChatUtils.buildDeliveryReport(deliveryStatus.getMsgId(), deliveryStatus.getStatus());
+			String imdn = ChatUtils.buildDeliveryReport(deliveryStatus.getMsgId(), deliveryStatus.getStatus());
 			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 			String to = deliveryStatus.getContact();
-			String cpim = ChatUtils.buildCpimDeliveryReport(from, to, deliveryStatus.getMsgId(), content, ImdnDocument.MIME_TYPE);
+			String cpim = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
 			
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
@@ -209,10 +205,10 @@ public class ImdnManager extends Thread {
                 ctx.waitResponse(SipManager.TIMEOUT);
 
                 // Analyze received message
-                if (ctx.getStatusCode() == 200) {
+                if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {
                     // 200 OK response
                 	if (logger.isActivated()) {
-                		logger.info("200 OK response received");
+                		logger.info("20x OK response received");
                 	}
                 } else {
                     // Error
@@ -221,10 +217,11 @@ public class ImdnManager extends Thread {
     	                    + " response received");
                 	}
                 }
-            } else if (ctx.getStatusCode() == 200) {
+            } else
+            if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {
 	            // 200 OK received
             	if (logger.isActivated()) {
-            		logger.info("200 OK response received");
+            		logger.info("20x OK response received");
             	}
 	        } else {
 	            // Error responses

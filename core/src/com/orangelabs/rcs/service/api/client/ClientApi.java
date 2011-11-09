@@ -272,4 +272,22 @@ public abstract class ClientApi {
 	     }
 	     return false;
 	}	
+	
+	/**
+	 * Start RCS service
+	 * 
+	 * @param ctx Context
+	 */
+	public static void startRcsService(Context ctx) {
+		ctx.stopService(new Intent("com.orangelabs.rcs.service.RcsCoreService"));
+	}
+
+	/**
+	 * Stop RCS service
+	 * 
+	 * @param ctx Context
+	 */
+	public static void stopRcsService(Context ctx) {
+		ctx.stopService(new Intent("com.orangelabs.rcs.service.RcsCoreService"));
+	}
 }

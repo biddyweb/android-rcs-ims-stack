@@ -48,11 +48,11 @@ import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Terminating Store & forward session
+ * Terminating Store & Forward session for push notifications
  * 
  * @author jexa7410
  */
-public class TerminatingStoreAndForwardSession extends ImsServiceSession implements MsrpEventListener {
+public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession implements MsrpEventListener {
 	/**
 	 * MSRP manager
 	 */
@@ -74,8 +74,8 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	 * @param parent IMS service
 	 * @param invite Initial INVITE request
 	 */
-	public TerminatingStoreAndForwardSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, false));
+	public TerminatingStoreAndForwardNotifSession(ImsService parent, SipRequest invite) {
+		super(parent, ChatUtils.getReferredIdentity(invite));
 
 		// Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
@@ -92,7 +92,7 @@ public class TerminatingStoreAndForwardSession extends ImsServiceSession impleme
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new store & forward session");
+	    		logger.info("Initiate a new store & forward session for notifications");
 	    	}
 	    	
         	// Parse the remote SDP part

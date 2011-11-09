@@ -1,4 +1,4 @@
-package com.orangelabs.rcs.provisioning;
+package com.orangelabs.rcs.ota;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,13 +10,10 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
-import android.content.Context;
-import android.content.Intent;
-
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.service.RcsCoreService;
+import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -129,10 +126,10 @@ public class ProvisioningManager {
     			// Not used
     		} else
     		if (key.equals("/IMS/pdp_contextoperpref")) {
-    			// The PDP_ContextOperPref leaf indicates an operator’s preference to have a dedicated PDP context for SIP signalling.
+    			// The PDP_ContextOperPref leaf indicates an operatorâ€™s preference to have a dedicated PDP context for SIP signalling.
     			// Values: 0, 1
-    			// 0 – Indicates that the operator has no preference for a dedicated PDP context for SIP signalling.
-    			// 1 – Indicates that the operator has preference for a dedicated PDP context for SIP signalling.
+    			// 0 â€“ Indicates that the operator has no preference for a dedicated PDP context for SIP signalling.
+    			// 1 â€“ Indicates that the operator has preference for a dedicated PDP context for SIP signalling.
     			// Not used
     		} else
     		if (key.equals("/IMS/p-cscf_address")) {
@@ -191,7 +188,7 @@ public class ProvisioningManager {
 			} else
 			if (key.startsWith("/IMS/icsi_list")) {
 				// List of IMS communication service identifiers that are supported by a
-				// subscriber‘s network for that subscriber.
+				// subscriberâ€˜s network for that subscriber.
 				// Not used
 			} else
 			if (key.startsWith("/IMS/lbo_p-cscf_address/address")) {
@@ -207,26 +204,26 @@ public class ProvisioningManager {
 				// by IM CN subsystem for all IMS sessions not covered by any "ICSI Resource Allocation Mode",
 				// when both UE and network can initiate resource allocation.
 				// Values: 0, 1
-				// 0 – Indicates that the UE attempts to initiate resource allocation for the media controlled by IM CN subsystem.
-				// 1 – Indicates that the UE does not attempt to initiate resource allocation for the media controlled by IM CN subsystem.
+				// 0 â€“ Indicates that the UE attempts to initiate resource allocation for the media controlled by IM CN subsystem.
+				// 1 â€“ Indicates that the UE does not attempt to initiate resource allocation for the media controlled by IM CN subsystem.
 				// Not used
 			} else
 			if (key.equals("/IMS/voice_domain_preference_e_utran")) {
 				// Indicates network operator's preference for selection of the domain to be used for voice
 				// communication services by the UE.
 				// Values: 1, 2, 3, 4
-				// 1 – Indicates that the UE does not attempt to initiate voice sessions over the IM CN Subsystem
+				// 1 â€“ Indicates that the UE does not attempt to initiate voice sessions over the IM CN Subsystem
 				//	   using an E-UTRAN bearer. This value equates to "CS Voice only" as described in 3GPP TS 23.221.
-				// 2 – Indicates that the UE preferably attempts to use the CS domain to originate voice sessions.
+				// 2 â€“ Indicates that the UE preferably attempts to use the CS domain to originate voice sessions.
 				//     In addition, a UE, in accordance with TS 24.292, upon receiving a request for a session including
 				//     voice, preferably attempts to use the CS domain for the audio media stream. This value equates to
 				//     "CS Voice preferred, IMS PS Voice as secondary" as described in 3GPP TS 23.221.
-				// 3 – Indicates that the UE preferably attempts to use the IM CN Subsystem using an E-UTRAN bearer to
+				// 3 â€“ Indicates that the UE preferably attempts to use the IM CN Subsystem using an E-UTRAN bearer to
 				//     originate sessions including voice. In addition, a UE, in accordance with TS 24.292, upon receiving
 				//     a request for a session including voice, preferably attempts to use an E-UTRAN bearer for the audio
 				//	   media stream. This value equates to "IMS PS Voice preferred, CS Voice as secondary" as described in
 				//     3GPP TS 23.221.
-				// 4 – Indicates that the UE attempts to initiate voice sessions over IM CN Subsystem using an E-UTRAN bearer.
+				// 4 â€“ Indicates that the UE attempts to initiate voice sessions over IM CN Subsystem using an E-UTRAN bearer.
 				//     In addition, a UE, upon receiving a request for a session including voice, attempts to use an E-UTRAN
 				//     bearer for all the the audio media stream(s). This value equates to "IMS PS Voice only" as described
 				//     in 3GPP TS 23.221.
@@ -236,15 +233,15 @@ public class ProvisioningManager {
 				// Indicates network operator's preference for selection of the domain to be used for short message service
 				// (SMS) originated by the UE.
 				// Values: 0, 1
-				// 0 – Indicates that the SMS service is not to be invoked over the IP networks.
-				// 1 – Indicates that the SMS service is preferred to be invoked over the IP networks.
+				// 0 â€“ Indicates that the SMS service is not to be invoked over the IP networks.
+				// 1 â€“ Indicates that the SMS service is preferred to be invoked over the IP networks.
 				// Not used
 			} else
 			if (key.equals("/IMS/keep_alive_enabled")) {
 				// Indicates whether the UE sends keep alives.
 				// Values: 0, 1
-				// 0 – Indicates that the UE does not send keep alives.
-				// 1 – Indicates that the UE is to send keep alives.
+				// 0 â€“ Indicates that the UE does not send keep alives.
+				// 1 â€“ Indicates that the UE is to send keep alives.
 	    		if (logger.isActivated()) {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
@@ -258,13 +255,13 @@ public class ProvisioningManager {
 				// Indicates network operator's preference for selection of the domain to be used for voice communication
 				// services by the UE.
 				// Values: 1, 2, 3
-				// 1 – Indicates that the UE does not attempt to initiate voice sessions over the IM CN Subsystem using an
+				// 1 â€“ Indicates that the UE does not attempt to initiate voice sessions over the IM CN Subsystem using an
 				//     UTRAN PS bearer. This value equates to "CS Voice only" as described in 3GPP TS 23.221.
-				// 2 – Indicates that the UE preferably attempts to use the CS domain to originate voice sessions. In addition,
+				// 2 â€“ Indicates that the UE preferably attempts to use the CS domain to originate voice sessions. In addition,
 				//     a UE, in accordance with 3GPP TS 24.292, upon receiving a request for a session including voice,
 				//     preferably attempts to use the CS domain for the audio media stream. This value equates to
 				//     "CS Voice preferred, IMS PS Voice as secondary" as described in 3GPP TS 23.221.
-				// 3 – Indicates that the UE preferably attempts to use the IM CN Subsystem using an UTRAN PS bearer to originate
+				// 3 â€“ Indicates that the UE preferably attempts to use the IM CN Subsystem using an UTRAN PS bearer to originate
 				//     sessions including voice. In addition, a UE, in accordance with 3GPP TS 24.292, upon receiving a
 				//     request for a session including voice, preferably attempts to use an UTRAN PS bearer for the audio media
 				//     stream. This value equates to "IMS PS Voice preferred, CS Voice as secondary" as described in 3GPP TS 23.221.
@@ -274,8 +271,8 @@ public class ProvisioningManager {
 				// Indicates whether the UE mobility management performs additional procedures as specified in 3GPP TS 24.008
 				// and 3GPP TS 24.301 to support terminating access domain selection by the network.
 				// Values: 0, 1
-				// 0 – Mobility Management for IMS Voice Termination disabled.
-				// 1 – Mobility Management for IMS Voice Termination enabled.
+				// 0 â€“ Mobility Management for IMS Voice Termination disabled.
+				// 1 â€“ Mobility Management for IMS Voice Termination enabled.
 				// Not used
 			} else
 			if (key.equals("/IMS/regretrybasetime")) {
@@ -517,7 +514,7 @@ public class ProvisioningManager {
     			// TODO
     		} else
     		if (key.equals("/PRESENCE/servcappresentity/watcherfetchaut")) {
-    			// Indicates if watchers are authorized to “anonymous” fetch service capabilities of the user
+    			// Indicates if watchers are authorized to â€œanonymousâ€� fetch service capabilities of the user
     			// Values: 0, 1
     			// 0- Indicates that watchers are authorized to fetch user service capabilities
     			// 1- Indicates that watchers are not authorized to fetch user service capabilities
@@ -660,9 +657,8 @@ public class ProvisioningManager {
 		}
 	    Thread t = new Thread() {
 	    	public void run() {
-	    		Context ctx = AndroidFactory.getApplicationContext();
-	    		ctx.stopService(new Intent(RcsCoreService.SERVICE_NAME));
-	    		ctx.startService(new Intent(RcsCoreService.SERVICE_NAME));
+	    		ClientApi.stopRcsService(AndroidFactory.getApplicationContext());
+	    		ClientApi.startRcsService(AndroidFactory.getApplicationContext());
 	    	}
 	    };
 	    t.start();

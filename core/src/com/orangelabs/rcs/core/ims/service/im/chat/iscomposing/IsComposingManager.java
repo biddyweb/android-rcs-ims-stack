@@ -18,16 +18,15 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat.iscomposing;
 
-import java.io.ByteArrayInputStream;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 import org.xml.sax.InputSource;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.ByteArrayInputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Is Composing manager which manages "is composing" events as per RFC3994. It handles the
@@ -47,7 +46,7 @@ public class IsComposingManager {
     /**
      * Is-composing timeout (in seconds)
      */
-    private int timeout;
+    private int timeout = 120;
     
     /**
      * IM session
@@ -66,7 +65,6 @@ public class IsComposingManager {
      */    
     public IsComposingManager(ChatSession session) {
     	this.session = session;
-    	this.timeout = RcsSettings.getInstance().getIsComposingTimeout();
     }
     
     /**

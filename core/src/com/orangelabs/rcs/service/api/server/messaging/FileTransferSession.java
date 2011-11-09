@@ -49,7 +49,12 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 */
 	private RemoteCallbackList<IFileTransferEventListener> listeners = new RemoteCallbackList<IFileTransferEventListener>();
 
-    /**
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -188,115 +193,123 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 * Session is started
 	 */
     public void handleSessionStarted() {
-		if (logger.isActivated()) {
-			logger.info("Session started");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionStarted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionStarted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	    }
     }
-
+    
     /**
      * Session has been aborted
      */
     public void handleSessionAborted() {
-		if (logger.isActivated()) {
-			logger.info("Session aborted");
-		}
-
-		// Update rich messaging history
-		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionAborted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        MessagingApiService.removeFileTransferSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted");
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionAborted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        MessagingApiService.removeFileTransferSession(session.getSessionID());
+	    }
     }
-   
+    
     /**
      * Session has been terminated by remote
      */
     public void handleSessionTerminatedByRemote() {
-		if (logger.isActivated()) {
-			logger.info("Session terminated by remote");
-		}
-
-  		if (session.isFileTransfered()) {
-  			// The file has been received, so do nothing
-  			return;
-  		}
-  		
-		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-
-        // Remove session from the list
-        MessagingApiService.removeFileTransferSession(session.getSessionID());
-    }
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
 	
+	  		if (session.isFileTransfered()) {
+	  			// The file has been received, so do nothing
+	  			return;
+	  		}
+	  		
+			// Update rich messaging history
+	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	
+	        // Remove session from the list
+	        MessagingApiService.removeFileTransferSession(session.getSessionID());
+	    }
+    }
+    
     /**
      * File transfer error
      * 
      * @param error Error
      */
     public void handleTransferError(FileSharingError error) {
-		if (logger.isActivated()) {
-			logger.info("Sharing error");
-		}
-
-		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleTransferError(error.getErrorCode());
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        MessagingApiService.removeFileTransferSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Sharing error");
+			}
+	
+			// Update rich messaging history
+	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleTransferError(error.getErrorCode());
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        MessagingApiService.removeFileTransferSession(session.getSessionID());
+	    }
     }
-
+    
     /**
 	 * File transfer progress
 	 * 
@@ -304,26 +317,28 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 * @param totalSize Total size to be transfered
 	 */
     public void handleTransferProgress(long currentSize, long totalSize) {
-		if (logger.isActivated()) {
-			logger.debug("Sharing progress");
-		}
-		
-		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferProgress(session.getSessionID(), currentSize, totalSize);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleTransferProgress(currentSize, totalSize);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
-     }
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.debug("Sharing progress");
+			}
+			
+			// Update rich messaging history
+	  		RichMessaging.getInstance().updateFileTransferProgress(session.getSessionID(), currentSize, totalSize);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleTransferProgress(currentSize, totalSize);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	     }
+    }
     
     /**
      * File has been transfered
@@ -331,24 +346,26 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
      * @param filename Filename associated to the received content
      */
     public void handleFileTransfered(String filename) {
-		if (logger.isActivated()) {
-			logger.info("Content transfered");
-		}
-
-		// Update rich messaging history
-		RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleFileTransfered(filename);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
-    }	
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Content transfered");
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleFileTransfered(filename);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	    }	
+    }
 }

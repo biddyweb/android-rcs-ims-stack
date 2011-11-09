@@ -72,6 +72,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	private RemoteCallbackList<IMessageDeliveryListener> listeners = new RemoteCallbackList<IMessageDeliveryListener>();
 
 	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+
+	/**
 	 * The logger
 	 */
 	private static Logger logger = Logger.getLogger(MessagingApiService.class.getName());
@@ -342,6 +347,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("isChatGroup", false);
+    	intent.putExtra("isStoreAndForward", session.isStoreAndForward());
     	intent.putExtra("firstMessage", session.getFirstMessage());
     	
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
@@ -620,24 +626,26 @@ public class MessagingApiService extends IMessagingApi.Stub {
      * @param status Delivery status
      */
     public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
-		if (logger.isActivated()) {
-			logger.info("New message delivery status for message " + msgId + ", status " + status);
-		}
-
-		// Update rich messaging history
-		RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-		
-  		// Notify message delivery listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("New message delivery status for message " + msgId + ", status " + status);
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			
+	  		// Notify message delivery listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+    	}
     }
 }
