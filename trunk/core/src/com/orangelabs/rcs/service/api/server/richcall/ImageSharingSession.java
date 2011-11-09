@@ -49,6 +49,11 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	 */
 	private RemoteCallbackList<IImageSharingEventListener> listeners = new RemoteCallbackList<IImageSharingEventListener>();
 
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+	
     /**
 	 * The logger
 	 */
@@ -187,115 +192,123 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	 * Session is started
 	 */
     public void handleSessionStarted() {
-		if (logger.isActivated()) {
-			logger.info("Session started");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionStarted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionStarted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
-
+    
     /**
      * Session has been aborted
      */
     public void handleSessionAborted() {
-		if (logger.isActivated()) {
-			logger.info("Session aborted");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionAborted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        RichCallApiService.removeImageSharingSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted");
+			}
+	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionAborted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeImageSharingSession(session.getSessionID());
+	    }
     }
-
+    
     /**
      * Session has been terminated by remote
      */
     public void handleSessionTerminatedByRemote() {
-		if (logger.isActivated()) {
-			logger.info("Session terminated by remote");
-		}
-		
-  		if (session.isImageTransfered()) {
-  			// The image has been received, so do nothing
-  			return;
-  		}
-		
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        RichCallApiService.removeImageSharingSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
+			
+	  		if (session.isImageTransfered()) {
+	  			// The image has been received, so do nothing
+	  			return;
+	  		}
+			
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeImageSharingSession(session.getSessionID());
+	    }
     }
-
+    
     /**
      * Content sharing error
      *
      * @param error Error
      */
     public void handleSharingError(ContentSharingError error) {
-		if (logger.isActivated()) {
-			logger.info("Sharing error");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSharingError(error.getErrorCode());
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        RichCallApiService.removeImageSharingSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Sharing error");
+			}
+	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSharingError(error.getErrorCode());
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeImageSharingSession(session.getSessionID());
+	    }
     }
-
+    
     /**
      * Content sharing progress
      *
@@ -303,48 +316,52 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
      * @param totalSize Total size to be transfered
      */
     public void handleSharingProgress(long currentSize, long totalSize) {
-		if (logger.isActivated()) {
-			logger.debug("Sharing progress");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSharingProgress(currentSize, totalSize);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-     }
-
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.debug("Sharing progress");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSharingProgress(currentSize, totalSize);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	     }
+    }
+    
     /**
      * Content has been transfered
      *
      * @param filename Filename associated to the received content
      */
     public void handleContentTransfered(String filename) {
-		if (logger.isActivated()) {
-			logger.info("Image transfered");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleImageTransfered(filename);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Image transfered");
+			}
+	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleImageTransfered(filename);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
 }

@@ -40,7 +40,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -61,8 +60,12 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, false), StringUtils.decodeUTF8(invite.getSubject()));
+		super(parent, SipUtils.getAssertedIdentity(invite));
 
+		// Set first message
+		InstantMessage firstMessage = extractFirstMessage(invite);
+		setFirstMesssage(firstMessage);
+				
 		// Create dialog path
 		createTerminatingDialogPath(invite);
 	}
@@ -272,16 +275,16 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	            	sendEmptyDataChunk();
                 }
 
-            	// Start session timer
-            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
-            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
-            	}
-            	
                 // Notify listeners
     	    	for(int i=0; i < getListeners().size(); i++) {
     	    		getListeners().get(i).handleSessionStarted();
     	        }
-    	    	
+
+    	    	// Start session timer
+            	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
+            		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
+            	}
+            	
     			// Start the activity manager
     			getActivityManager().start();
     	    	

@@ -19,6 +19,9 @@ interface IChatSession {
 	// Is chat group
 	boolean isChatGroup();
 	
+	// Is Store & Forward
+	boolean isStoreAndForward();
+
 	// Get first message exchanged during the session
 	InstantMessage getFirstMessage();
 

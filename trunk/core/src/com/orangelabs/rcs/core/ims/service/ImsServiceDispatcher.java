@@ -128,7 +128,7 @@ public class ImsServiceDispatcher extends Thread {
 		if (logger.isActivated()) {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
-
+		
 	    if (request.getMethod().equals(Request.OPTIONS)) {
 	    	// OPTIONS received
 	    	if (imsModule.getCallManager().isCallConnected()) { 
@@ -155,19 +155,62 @@ public class ImsServiceDispatcher extends Thread {
 	    	String sdp = request.getContent().toLowerCase();
 
 	    	// New incoming session invitation
-	    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI)) {
-    			// Store & Forward session
-	    		if (RcsSettings.getInstance().isImSessionSupported() && RcsSettings.getInstance().isImAlwaysOn()) {
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
+	    				isTagPresent(sdp, "file-selector")) {
+		        // File transfer
+	    		if (RcsSettings.getInstance().isFileTransferSupported()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("File transfer invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
+	    		} else {
+					// Service not supported: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("File transfer service not supported: automatically reject");
+					}
+					sendFinalResponse(request, 603);
+	    		}
+	    	} else
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM)) {
+	    		// IM service
+	    		if (!RcsSettings.getInstance().isImSessionSupported()) {
+					// Service not supported: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IM service not supported: automatically reject");
+					}
+					sendFinalResponse(request, 603);
+					return;
+	    		}
+	    		
+		    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
+		    			(!request.getContentType().contains("multipart"))) { // TODO: to be removed when corrected by ALU
+	    			// Store & Forward push notifs session
 		    		if (logger.isActivated()) {
 		    			logger.debug("Store & Forward push notifications");
 		    		}
 	    			imsModule.getInstantMessagingService().receiveStoredAndForwardPushNotifications(request);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
-					}
-					sendFinalResponse(request, 603);
+		    	} else
+		    	if (ChatUtils.isGroupChatInvitation(request)) {
+			        // Ad-hoc group chat session
+		    		if (logger.isActivated()) {
+		    			logger.debug("Ad-hoc group chat session invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
+		    	} else
+		    	if (SipUtils.getReferredByHeader(request) != null) {
+	    			// Store & Forward push messages session
+		    		if (logger.isActivated()) {
+		    			logger.debug("Store & Forward push messages session");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveStoredAndForwardPushMessages(request);
+		    	} else {
+			        // 1-1 chat session
+		    		if (logger.isActivated()) {
+		    			logger.debug("1-1 chat session invitation");
+		    		}
+	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
 	    		}
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
@@ -181,7 +224,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		} else {
 					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
+						logger.debug("Video share service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}
@@ -198,57 +241,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		} else {
 					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
-					}
-					sendFinalResponse(request, 603);
-	    		}
-	    	} else
-	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
-	    				isTagPresent(sdp, "file-selector")) {
-		        // File transfer
-	    		if (RcsSettings.getInstance().isFileTransferSupported()) {
-		    		if (logger.isActivated()) {
-		    			logger.debug("File transfer invitation");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveFileTransferInvitation(request);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
-					}
-					sendFinalResponse(request, 603);
-	    		}
-	    	} else
-	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
-	    				ChatUtils.isGroupChatInvitation(request)) {
-		        // Ad-hoc group chat session
-	    		if (RcsSettings.getInstance().isImSessionSupported()) {
-		    		if (logger.isActivated()) {
-		    			logger.debug("Ad-hoc group chat session invitation");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
-					}
-					sendFinalResponse(request, 603);
-	    		}
-	    	} else
-    		if (isTagPresent(sdp, "msrp") &&
-    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM)) {
-		        // 1-1 chat session
-	    		if (RcsSettings.getInstance().isImSessionSupported()) {
-		    		if (logger.isActivated()) {
-		    			logger.debug("1-1 chat session invitation");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					if (logger.isActivated()) {
-						logger.debug("IMS service not supported: automatically reject");
+						logger.debug("Image share service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}

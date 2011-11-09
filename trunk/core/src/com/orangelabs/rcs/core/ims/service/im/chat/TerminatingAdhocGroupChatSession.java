@@ -39,7 +39,6 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -60,7 +59,11 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
-		super(parent, ChatUtils.getAssertedIdentity(invite, true), StringUtils.decodeUTF8(invite.getSubject()));
+		super(parent, ChatUtils.getReferredIdentity(invite));
+
+		// Set first message
+		InstantMessage firstMessage = extractFirstMessage(invite);
+		setFirstMesssage(firstMessage);
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -270,7 +273,12 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
                 	sendEmptyDataChunk();
                 }
 
-            	// Subscribe to event package
+            	// Notify listeners
+    	    	for(int i=0; i < getListeners().size(); i++) {
+    	    		getListeners().get(i).handleSessionStarted();
+    	        }
+
+    	    	// Subscribe to event package
             	getConferenceEventSubscriber().subscribe();
 
             	// Start session timer
@@ -278,11 +286,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
 
-            	// Notify listeners
-    	    	for(int i=0; i < getListeners().size(); i++) {
-    	    		getListeners().get(i).handleSessionStarted();
-    	        }
-    	    	
     			// Start the activity manager
     			getActivityManager().start();
     	    	

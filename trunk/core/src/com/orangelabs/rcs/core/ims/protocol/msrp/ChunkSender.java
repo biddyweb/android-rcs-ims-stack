@@ -40,6 +40,16 @@ public class ChunkSender extends Thread {
 	private OutputStream stream;
 	
 	/**
+	 * Buffer of chunks
+	 */
+	private FifoBuffer buffer = new FifoBuffer();
+	
+	/**
+	 * Termination flag
+	 */
+	private boolean terminated = false;
+	
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -68,10 +78,50 @@ public class ChunkSender extends Thread {
 	 * Terminate the sender
 	 */
 	public void terminate() {
+		terminated = true; 
+		buffer.unblockRead();
+		try {
+			interrupt();
+		} catch(Exception e) {}		
+		
 		if (logger.isActivated()) {
 			logger.debug("Sender is terminated");
 		}
 	}
+	
+	/**
+	 * Background processing
+	 */
+	public void run() {
+		try {
+			if (logger.isActivated()) {
+				logger.debug("Sender is started");
+			}
+
+			// Read chunk to be sent
+			byte chunk[] = null;
+			while ((chunk = (byte[])buffer.getMessage()) != null) {
+				// Write chunk to the output stream
+				if (MsrpConnection.MSRP_TRACE_ENABLED) {
+					System.out.println(">>> Send MSRP message:\n" + new String(chunk));
+				}
+				stream.write(chunk);
+				stream.flush();
+			}
+		} catch (Exception e) {
+			if (terminated) { 
+				if (logger.isActivated()) {
+					logger.debug("Chunk sender thread terminated");
+				}
+			} else {
+				if (logger.isActivated()) {
+					logger.error("Chunk sender has failed", e);
+				}
+				// Notify the session listener that an error has occurred
+				connection.getSession().getMsrpEventListener().msrpTransferError(e.getMessage());
+			}
+		}
+	}	
 	
 	/**
 	 * Send a chunk
@@ -80,10 +130,6 @@ public class ChunkSender extends Thread {
 	 * @throws IOException
 	 */
 	public void sendChunk(byte chunk[]) throws IOException {
-		if (MsrpConnection.MSRP_TRACE_ENABLED) {
-			System.out.println(">>> Send MSRP message:\n" + new String(chunk));
-		}
-		stream.write(chunk);
-		stream.flush();
+		buffer.putMessage(chunk);
 	}	
 }

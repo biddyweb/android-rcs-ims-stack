@@ -21,8 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import javax.sip.header.ContactHeader;
-import javax.sip.header.ExtensionHeader;
-
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -70,31 +68,24 @@ public class ChatUtils {
 			return false;
 		}
 	}
-	
+
 	/**
-	 * Get asserted identity
+	 * Get referred identity
 	 * 
 	 * @param request SIP request
-	 * @param groupChat Is group chat
 	 * @return SIP URI
 	 */
-	public static String getAssertedIdentity(SipRequest request, boolean groupChat) {
-		// Get from identity
-		if (groupChat) {
-			ExtensionHeader referredBy = (ExtensionHeader)request.getHeader(SipUtils.HEADER_REFERRED_BY);
-			if (referredBy != null) {
-				// Use the Referred-By header
-				return referredBy.getValue();
-			} else {
-				// Use the From header
-				return request.getFromUri();
-			}
+	public static String getReferredIdentity(SipRequest request) {
+		String referredBy = SipUtils.getReferredByHeader(request);
+		if (referredBy != null) {
+			// Use the Referred-By header
+			return referredBy;
 		} else {
-			// Use the P-Asserted-Identity header
-			return SipUtils.getAssertedIdentity(request);
+			// Use the From header
+			return request.getFromUri();
 		}
 	}
-
+	
 	/**
      * Is a plain text type
      * 
@@ -157,7 +148,7 @@ public class ChatUtils {
      * @return Message ID
      */
     public static String generateMessageId() {
-    	return "Msg" + IdGenerator.getIdentifier();
+    	return "Msg" + IdGenerator.getIdentifier().replace('_', '-');
     }
 
     /**
@@ -308,9 +299,11 @@ public class ChatUtils {
 	 * @return String
 	 */
 	public static String buildCpimMessage(String from, String to, String content, String contentType) {
+		String fromNumber = PhoneUtils.extractNumberFromUri(from);
+		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" + CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF + 
@@ -323,17 +316,19 @@ public class ChatUtils {
 	/**
 	 * Build a CPIM message with IMDN headers
 	 * 
-	 * @param from From
-	 * @param to To
+	 * @param from From URI
+	 * @param to To URI
 	 * @param messageId Message ID
 	 * @param content Content
 	 * @param contentType Content type
 	 * @return String
 	 */
 	public static String buildCpimMessageWithImdn(String from, String to, String messageId, String content, String contentType) {
+		String fromNumber = PhoneUtils.extractNumberFromUri(from);
+		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" + CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
@@ -351,24 +346,24 @@ public class ChatUtils {
 	 * 
 	 * @param from From
 	 * @param to To
-	 * @param messageId Message ID
-	 * @param content Content
-	 * @param contentType Content type
+	 * @param imdn IMDN report
 	 * @return String
 	 */
-	public static String buildCpimDeliveryReport(String from, String to, String messageId, String content, String contentType) {
+	public static String buildCpimDeliveryReport(String from, String to, String imdn) {
+		String fromNumber = PhoneUtils.extractNumberFromUri(from);
+		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(from) + ">" +CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(to) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
-			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
+			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + IdGenerator.getIdentifier() + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CpimMessage.HEADER_CONTENT_DISPOSITION + ": " + ImdnDocument.NOTIFICATION + CRLF +
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF +
-			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CRLF + 
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + ImdnDocument.MIME_TYPE + CRLF +
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + imdn.length() + CRLF + 
 			CRLF + 
-			content;	
+			imdn;	
 		   
 		return cpim;
 	}

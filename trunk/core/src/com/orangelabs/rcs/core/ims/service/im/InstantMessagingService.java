@@ -18,15 +18,12 @@
 
 package com.orangelabs.rcs.core.ims.service.im;
 
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
@@ -51,6 +48,10 @@ import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * Instant messaging services (chat 1-1, chat group and file transfer)
@@ -275,7 +276,7 @@ public class InstantMessagingService extends ImsService {
     	}
 
 		// Test if the contact is blocked
-		String remote = ChatUtils.getAssertedIdentity(invite, false);
+		String remote = SipUtils.getAssertedIdentity(invite);
 	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the file transfer invitation");
@@ -350,7 +351,7 @@ public class InstantMessagingService extends ImsService {
 		}
 
 		// Test if the contact is blocked
-		String remote = ChatUtils.getAssertedIdentity(invite, false);
+		String remote = SipUtils.getAssertedIdentity(invite);
 	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
@@ -359,7 +360,7 @@ public class InstantMessagingService extends ImsService {
 			// Save the message in the spam folder
 			String msgId = ChatUtils.getMessageId(invite);
 			RichMessaging.getInstance().addSpamMessage(
-					new InstantMessage(msgId, remote, StringUtils.decodeUTF8(invite.getSubject()), false));
+					new InstantMessage(msgId, remote, StringUtils.decodeIso(invite.getSubject()), false));
 
 			
 			// Send a 486 Busy response
@@ -442,7 +443,7 @@ public class InstantMessagingService extends ImsService {
 		}
 
 		// Test if the contact is blocked
-		String remote = ChatUtils.getAssertedIdentity(invite, false);
+		String remote = ChatUtils.getReferredIdentity(invite);
 	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the chat invitation");
@@ -503,8 +504,7 @@ public class InstantMessagingService extends ImsService {
     public void receiveMessageDeliveryStatus(SipRequest message) {
     	ImdnDocument imdn = ChatUtils.parseCpimDeliveryReport(message.getContent());
     	if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-     	    // TODO: instead of From-URI use the PAI ? or CPIM ?
-	    	String contact = message.getFromUri();
+	    	String contact = SipUtils.getAssertedIdentity(message);
 	    	String status = imdn.getStatus();
 	    	String msgId = imdn.getMsgId();
 	    	
@@ -522,30 +522,60 @@ public class InstantMessagingService extends ImsService {
 			}
     	}
     }
-
+   
     /**
-     * Receive S&F push notifications
+     * Receive S&F push messages
      * 
      * @param invite Received invite
      */
-    public void receiveStoredAndForwardPushNotifications(SipRequest invite) {
+    public void receiveStoredAndForwardPushMessages(SipRequest invite) {
+    	String remote = ChatUtils.getReferredIdentity(invite);
+    	String contact = PhoneUtils.extractNumberFromUri(remote);
+
     	if (logger.isActivated()) {
-			logger.debug("Receive S&F push notifications");
+			logger.debug("Receive S&F push messages from " + contact);
 		}
 
-		// Test if the contact is blocked
-		String remote = invite.getFromUri(); // TODO: check standard From ?
-	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
+    	// Test if the contact is blocked
+	    if (ContactsManager.getInstance().isImBlockedForContact(contact)) {
 			if (logger.isActivated()) {
-				logger.debug("Contact " + remote + " is blocked: automatically reject the S&F invitation");
+				logger.debug("Contact " + contact + " is blocked: automatically reject the S&F invitation");
 			}
 
 			// Send a 486 Busy response
 			sendErrorResponse(invite, 486);
 			return;
 	    }
-
+    	
 		// Create a new session
     	getStoreAndForwardManager().receiveStoredMessages(invite);
+    }
+    	
+    /**
+     * Receive S&F push notifications
+     * 
+     * @param invite Received invite
+     */
+    public void receiveStoredAndForwardPushNotifications(SipRequest invite) {
+    	String remote = ChatUtils.getReferredIdentity(invite);
+    	String contact = PhoneUtils.extractNumberFromUri(remote);
+    	
+    	if (logger.isActivated()) {
+			logger.debug("Receive S&F push notifications from " + contact);
+		}
+    	
+    	// Test if the contact is blocked
+	    if (ContactsManager.getInstance().isImBlockedForContact(contact)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + contact + " is blocked: automatically reject the S&F invitation");
+			}
+
+			// Send a 486 Busy response
+			sendErrorResponse(invite, 486);
+			return;
+	    }
+    	
+		// Create a new session
+    	getStoreAndForwardManager().receiveStoredNotifications(invite);
     }
 }

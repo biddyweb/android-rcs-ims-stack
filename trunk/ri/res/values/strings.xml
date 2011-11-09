@@ -2,7 +2,7 @@
 <resources>
 
 <!-- Application -->
-<string name="app_name">RCS-e 1.1</string>
+<string name="app_name">RCS-e 1.2</string>
 <string name="menu_address_book">Address book</string>
 <string name="menu_eventlog">Event Log</string>
 <string name="menu_spambox">Spam box</string>

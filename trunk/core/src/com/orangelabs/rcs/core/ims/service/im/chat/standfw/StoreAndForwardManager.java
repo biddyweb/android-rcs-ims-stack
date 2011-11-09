@@ -60,7 +60,29 @@ public class StoreAndForwardManager {
 		}    	
     	
 		// Create a new session
-    	TerminatingStoreAndForwardSession session = new TerminatingStoreAndForwardSession(
+    	TerminatingStoreAndForwardMsgSession session = new TerminatingStoreAndForwardMsgSession(
+    			imsService,
+				invite);
+    	
+		// Start the session
+		session.startSession();
+		
+		// Notify listener
+		imsService.getImsModule().getCore().getListener().handleStoreAndForwardMsgSessionInvitation(session);
+    }    
+
+    /**
+     * Receive stored notifications
+     * 
+     * @param invite Received invite
+     */
+    public void receiveStoredNotifications(SipRequest invite) {
+    	if (logger.isActivated()) {
+			logger.debug("Receive stored notifications");
+		}    	
+    	
+		// Create a new session
+    	TerminatingStoreAndForwardNotifSession session = new TerminatingStoreAndForwardNotifSession(
     			imsService,
 				invite);
 		

@@ -27,7 +27,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
@@ -52,6 +51,11 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 */
 	private RemoteCallbackList<IChatEventListener> listeners = new RemoteCallbackList<IChatEventListener>();
 
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+	
     /**
 	 * The logger
 	 */
@@ -101,6 +105,15 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 */
 	public boolean isChatGroup() {
 		return session.isChatGroup();
+	}
+	
+	/**
+	 * Is Store & Forward
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isStoreAndForward() {
+		return session.isStoreAndForward();
 	}
 	
 	/**
@@ -267,171 +280,162 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * Session is started
 	 */
     public void handleSessionStarted() {
-		if (logger.isActivated()) {
-			logger.info("Session started");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionStarted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
-
-        if (!isChatGroup()){
-        	// As some displayed IMDN notifications on older messages from this sender may have been never received, we mark
-        	// the old messages from this sender as displayed, see note 10 from RCS-e1.2 specification.
-        	// NOTE 10 (B.7 and B.11): In those scenarios where an IM-AS is not available on both sender and receiver end,
-        	// there is a chance displayed notifications carried via SIP MESSAGE may be lost if the original sender is offline
-        	// when the receiver sends the mentioned displayed notifications (last three messages in the diagram). 
-        	// In order to overcome this limitation, a terminal or client implementation should mark all the previous messages
-        	// as displayed when a new chat message is received from the receiver in the future.
-
-        	// Query the rich messaging history to see if old messages with the contact are still marked as not displayed, and
-        	// get the corresponding message IDs and contact  
-        	List<String> undisplayedMsgIds = RichMessaging.getInstance().getAllOutgoingUndisplayedMessages(getRemoteContact());
-
-        	// Read each message and change its status to "displayed"
-        	for (int i=0;i<undisplayedMsgIds.size();i++) {
-        		handleMessageDeliveryStatus(undisplayedMsgIds.get(0), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
-        	}
-        }
+    	synchronized(lock) {
+	    	if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionStarted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
-
+    
     /**
      * Session has been aborted
      */
     public void handleSessionAborted() {
-		if (logger.isActivated()) {
-			logger.info("Session aborted");
-		}
-
-		// Update rich messaging history
-		if (!RichMessaging.getInstance().isSessionTerminated(session.getSessionID())){
-			RichMessaging.getInstance().addChatSessionTermination(session);
-		}
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionAborted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        MessagingApiService.removeChatSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted");
+			}
+	
+			// Update rich messaging history
+			if (!RichMessaging.getInstance().isSessionTerminated(session.getSessionID())){
+				RichMessaging.getInstance().addChatSessionTermination(session);
+			}
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionAborted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        MessagingApiService.removeChatSession(session.getSessionID());
+	    }
     }
     
     /**
      * Session has been terminated by remote
      */
     public void handleSessionTerminatedByRemote() {
-		if (logger.isActivated()) {
-			logger.info("Session terminated by remote");
-		}
-
-		// Update rich messaging history
-		RichMessaging.getInstance().addChatSessionTermination(session);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        MessagingApiService.removeChatSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().addChatSessionTermination(session);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        MessagingApiService.removeChatSession(session.getSessionID());
+	    }
     }
-
+    
 	/**
 	 * New text message received
 	 * 
 	 * @param text Text message
 	 */
     public void handleReceiveMessage(InstantMessage message) {
-		if (logger.isActivated()) {
-			logger.info("New IM received");
-		}
-		
-		// Update rich messaging history
-		RichMessaging.getInstance().addIncomingChatMessage(message, session);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleReceiveMessage(message);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("New IM received");
+			}
+			
+			// Update rich messaging history
+			RichMessaging.getInstance().addIncomingChatMessage(message, session);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleReceiveMessage(message);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	    }
     }
-
+    
     /**
      * IM session error
      * 
      * @param error Error
      */
     public void handleImError(ChatError error) {
-		if (logger.isActivated()) {
-			logger.info("IM error received");
-		}
-		
-		// Update rich messaging history
-    	switch(error.getErrorCode()){
-	    	case ChatError.SESSION_INITIATION_DECLINED:
-				RichMessaging.getInstance().addChatSessionTermination(session);
-	    		break;
-	    	case ChatError.SESSION_INITIATION_FAILED:
-	    	case ChatError.SESSION_INITIATION_CANCELLED:
-				RichMessaging.getInstance().addChatSessionTermination(session);
-				// Also mark the first message that was sent as failed
-				RichMessaging.getInstance().markChatSessionFailed(session.getSessionID());
-	    		break;
-	    	default:
-				RichMessaging.getInstance().addChatSessionError(session);
-	    		break;
-    	}
-    	
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        MessagingApiService.removeChatSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("IM error received");
+			}
+			
+			// Update rich messaging history
+	    	switch(error.getErrorCode()){
+		    	case ChatError.SESSION_INITIATION_DECLINED:
+					RichMessaging.getInstance().addChatSessionTermination(session);
+		    		break;
+		    	case ChatError.SESSION_INITIATION_FAILED:
+		    	case ChatError.SESSION_INITIATION_CANCELLED:
+					RichMessaging.getInstance().addChatSessionTermination(session);
+					// Also mark the first message that was sent as failed
+					RichMessaging.getInstance().markChatSessionFailed(session.getSessionID());
+		    		break;
+		    	default:
+					RichMessaging.getInstance().addChatSessionError(session);
+		    		break;
+	    	}
+	    	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        MessagingApiService.removeChatSession(session.getSessionID());
+	    }
     }
-
+    
     /**
 	 * Is composing event
 	 * 
@@ -439,24 +443,26 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @param status Status
 	 */
 	public void handleIsComposingEvent(String contact, boolean status) {
-		if (logger.isActivated()) {
-			logger.info(contact + " is composing status set to " + status);
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info(contact + " is composing status set to " + status);
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleIsComposingEvent(contact, status);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
 		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleIsComposingEvent(contact, status);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
 	}
-
+	
     /**
      * Conference event
      * 
@@ -465,27 +471,29 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * @param state State associated to the contact
      */
     public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
-		if (logger.isActivated()) {
-			logger.info("New conference event " + state + " for " + contact);
-		}
-		
-		// Update rich messaging history
-		RichMessaging.getInstance().addConferenceEvent(contact, session.getSessionID(), state);
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleConferenceEvent(contact, contactDisplayname, state);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("New conference event " + state + " for " + contact);
+			}
+			
+			// Update rich messaging history
+			RichMessaging.getInstance().addConferenceEvent(contact, session.getSessionID(), state);
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleConferenceEvent(contact, contactDisplayname, state);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
-
+    
     /**
      * New message delivery status
      * 
@@ -493,47 +501,51 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * @param status Delivery status
      */
     public void handleMessageDeliveryStatus(String msgId, String status) {
-		if (logger.isActivated()) {
-			logger.info("New message delivery status for message " + msgId + ", status " + status);
-		}
-
-		// Update rich messaging history
-		RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("New message delivery status for message " + msgId + ", status " + status);
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
     
     /**
      * Request to add participant is successful
      */
     public void handleAddParticipantSuccessful() {
-		if (logger.isActivated()) {
-			logger.info("Add participant request is successful");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleAddParticipantSuccessful();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Add participant request is successful");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleAddParticipantSuccessful();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }
     }
     
     /**
@@ -542,21 +554,23 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * @param reason Error reason
      */
     public void handleAddParticipantFailed(String reason) {
-		if (logger.isActivated()) {
-			logger.info("Add participant request has failed " + reason);
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleAddParticipantFailed(reason);
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();    	
-    }  
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Add participant request has failed " + reason);
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleAddParticipantFailed(reason);
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();    	
+	    }  
+    }
 }

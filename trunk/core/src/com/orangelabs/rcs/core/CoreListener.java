@@ -23,6 +23,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
@@ -138,6 +139,13 @@ public interface CoreListener {
      */
     public void handleOneOneChatSessionExtended(GroupChatSession groupSession, OneOneChatSession oneoneSession);
 
+    /**
+     * Store and Forward messages session invitation
+     * 
+     * @param session Chat session
+     */
+    public void handleStoreAndForwardMsgSessionInvitation(TerminatingStoreAndForwardMsgSession session);
+    
     /**
      * New message delivery status
      * 

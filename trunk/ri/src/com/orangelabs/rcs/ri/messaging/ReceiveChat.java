@@ -33,6 +33,7 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -234,6 +235,13 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		// Session is started
 		public void handleSessionStarted() {
 			try {
+				// Display first message
+				InstantMessage firstMessage = chatSession.getFirstMessage();
+				if (firstMessage != null) {
+					chatSession.setMessageDeliveryStatus(chatSession.getFirstMessage().getMessageId(),
+						ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+				}
+				
 				// Display chat view
 	        	Intent intent = new Intent(ReceiveChat.this, ChatView.class);
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

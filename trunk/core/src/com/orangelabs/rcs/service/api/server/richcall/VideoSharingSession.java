@@ -50,7 +50,12 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	 */
 	private RemoteCallbackList<IVideoSharingEventListener> listeners = new RemoteCallbackList<IVideoSharingEventListener>();
 
-    /**
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+
+	/**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -176,107 +181,115 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	 * Session is started
 	 */
     public void handleSessionStarted() {
-		if (logger.isActivated()) {
-			logger.info("Session started");
-		}
-
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionStarted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+	
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionStarted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	    }
     }
-
+    
     /**
      * Session has been aborted
      */
     public void handleSessionAborted() {
-		if (logger.isActivated()) {
-			logger.info("Session aborted");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionAborted();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        RichCallApiService.removeVideoSharingSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted");
+			}
+	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionAborted();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeVideoSharingSession(session.getSessionID());
+	    }
     }
     
     /**
      * Session has been terminated by remote
      */
     public void handleSessionTerminatedByRemote() {
-		if (logger.isActivated()) {
-			logger.info("Session terminated by remote");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TRANSFERED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();		
-        
-        // Remove session from the list
-        RichCallApiService.removeVideoSharingSession(session.getSessionID());
-    }
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
 	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TRANSFERED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeVideoSharingSession(session.getSessionID());
+	    }
+    }
+    
     /**
      * Content sharing error
      * 
      * @param error Error
      */
     public void handleSharingError(ContentSharingError error) {
-		if (logger.isActivated()) {
-			logger.info("Session error");
-		}
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
-		
-  		// Notify event listeners
-		final int N = listeners.beginBroadcast();
-        for (int i=0; i < N; i++) {
-            try {
-            	listeners.getBroadcastItem(i).handleSharingError(error.getErrorCode());
-            } catch (RemoteException e) {
-            	if (logger.isActivated()) {
-            		logger.error("Can't notify listener", e);
-            	}
-            }
-        }
-        listeners.finishBroadcast();
-        
-        // Remove session from the list
-        RichCallApiService.removeVideoSharingSession(session.getSessionID());
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Session error");
+			}
+	
+			// Update rich call history
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleSharingError(error.getErrorCode());
+	            } catch (RemoteException e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	        
+	        // Remove session from the list
+	        RichCallApiService.removeVideoSharingSession(session.getSessionID());
+	    }
     }
 }

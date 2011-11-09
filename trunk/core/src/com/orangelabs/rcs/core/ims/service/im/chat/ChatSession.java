@@ -25,6 +25,7 @@ import java.util.List;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
@@ -34,6 +35,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
@@ -81,17 +83,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param msg First message of the session
 	 */
-	public ChatSession(ImsService parent, String contact, String msg) {
+	public ChatSession(ImsService parent, String contact) {
 		super(parent, contact);
 
-		// Set the first message
-		if ((msg != null) && (msg.length() > 0)) {
-			firstMessage = new InstantMessage(ChatUtils.generateMessageId(),
-					contact, msg, getImdnManager().isImdnActivated());
-		}
-		
 		// Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
@@ -103,15 +98,61 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param msg First message of the session
 	 * @param participants List of participants
 	 */
-	public ChatSession(ImsService parent, String contact, String msg, ListOfParticipant participants) {
-		this(parent, contact, msg);
+	public ChatSession(ImsService parent, String contact, ListOfParticipant participants) {
+		this(parent, contact);
 
 		// Set the session participants
 		setParticipants(participants);
 	}
+	
+	/**
+	 * Set first messgae
+	 * 
+	 * @param firstMessage First message
+	 */
+	protected void setFirstMesssage(InstantMessage firstMessage) {
+		this.firstMessage = firstMessage; 
+	}
+	
+	/**
+	 * Generate a first message
+	 * 
+	 * @param txt Text message
+	 * @return First message
+	 */
+	protected InstantMessage generateFirstMessage(String msg) {
+		if ((msg != null) && (msg.length() > 0)) {
+			String msgId = ChatUtils.generateMessageId();		
+			return new InstantMessage(msgId,
+					getRemoteContact(),
+					StringUtils.encodeUTF8(msg),
+					getImdnManager().isImdnActivated());
+		} else {
+			return null;
+		}	
+	}
+	
+	/**
+	 * Extract the first message
+	 * 
+	 * @param invite Request
+	 * @return First message
+	 */
+	protected InstantMessage extractFirstMessage(SipRequest invite) {
+		String contact = ChatUtils.getReferredIdentity(invite);
+		String msg = invite.getSubject();
+		if ((msg != null) && (msg.length() > 0)) {
+			String msgId = ChatUtils.getMessageId(invite);
+			return new InstantMessage(msgId,
+					contact,
+					StringUtils.decodeIso(msg),
+					getImdnManager().isImdnActivated());
+		} else {
+			return null;
+		}	
+	}	
 	
 	/**
 	 * Returns the IMDN manager
@@ -438,6 +479,19 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public abstract boolean isChatGroup();
 	
 	/**
+	 * Is Store & Forward
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isStoreAndForward() {
+		if (this instanceof TerminatingStoreAndForwardMsgSession) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
 	 * Send a text message
 	 * 
 	 * @param msgId Message-ID
@@ -479,7 +533,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = contact;
 		String imdn = ChatUtils.buildDeliveryReport(msgId, status);
-		String content = ChatUtils.buildCpimDeliveryReport(from, to, msgId, imdn, ImdnDocument.MIME_TYPE);
+		String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
 		
 		// Send data
 		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);

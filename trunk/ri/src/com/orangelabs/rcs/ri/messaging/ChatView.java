@@ -18,8 +18,22 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.SmileyParser;
+import com.orangelabs.rcs.ri.utils.Smileys;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
+import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
+import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -52,22 +66,8 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.SmileyParser;
-import com.orangelabs.rcs.ri.utils.Smileys;
-import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ClientApiListener;
-import com.orangelabs.rcs.service.api.client.ImsEventListener;
-import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
-import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
-import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
-import com.orangelabs.rcs.utils.PhoneUtils;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Chat view
@@ -171,6 +171,9 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         	};
         };
         setListAdapter(mAdapter);
+
+        // Instanciate settings
+		RcsSettings.createInstance(getApplicationContext());
         
         // Smiley resources
 		smileyResources = new Smileys(this);
@@ -185,7 +188,6 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         mUserText.addTextChangedListener(mUserTextWatcher);
         
         // Set the message composer max length
-		RcsSettings.createInstance(getApplicationContext());
 		int maxLength = RcsSettings.getInstance().getMaxChatMessageLength();
 		InputFilter[] filterArray = new InputFilter[1];
 		filterArray[0] = new InputFilter.LengthFilter(maxLength);
@@ -950,22 +952,28 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	 */
 	private class IsComposingManager{
 
-		// Idle time out (in ms)
-		final static int IDLE_TIME_OUT = 5*1000;
+        // Idle time out (in ms)
+        private int idleTimeOut = 0;
 
-		// Active state refresh interval (in ms)
-		final static int ACTIVE_STATE_REFRESH = 60*1000; 
+ 		// Active state refresh interval (in ms)
+		private final static int ACTIVE_STATE_REFRESH = 60*1000; 
 
+		// Clock handler
 		private ClockHandler handler = new ClockHandler();
 
 		// Is composing state
 		public boolean isComposing = false;
 
+		// Event IDs
 		private final static int IS_STARTING_COMPOSING = 1;
 		private final static int IS_STILL_COMPOSING = 2;
 		private final static int MESSAGE_WAS_SENT = 3;
 		private final static int ACTIVE_MESSAGE_NEEDS_REFRESH = 4;
 		private final static int IS_IDLE = 5;
+
+        public IsComposingManager() {
+            idleTimeOut = RcsSettings.getInstance().getIsComposingTimeout() * 1000;
+        }
 
 		private class ClockHandler extends Handler {
 			public void handleMessage(Message msg){
@@ -975,7 +983,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 						ChatView.this.setTypingStatus(true);
 	
 						// In IDLE_TIME_OUT we will need to send a is-idle status message 
-						handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
+						handler.sendEmptyMessageDelayed(IS_IDLE, idleTimeOut);
 	
 						// In ACTIVE_STATE_REFRESH we will need to send an active status message refresh
 						handler.sendEmptyMessageDelayed(ACTIVE_MESSAGE_NEEDS_REFRESH, ACTIVE_STATE_REFRESH);
@@ -986,7 +994,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 						handler.removeMessages(IS_IDLE);
 	
 						// In IDLE_TIME_OUT we will need to send a is-idle status message
-						handler.sendEmptyMessageDelayed(IS_IDLE, IDLE_TIME_OUT);
+						handler.sendEmptyMessageDelayed(IS_IDLE, idleTimeOut);
 						break;
 					}
 					case MESSAGE_WAS_SENT :{

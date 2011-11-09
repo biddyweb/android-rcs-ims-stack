@@ -39,14 +39,15 @@ import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Person;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -954,6 +955,20 @@ public class RcsCoreService extends Service implements CoreListener {
 		messagingApi.extendOneOneChatSession(groupSession, oneoneSession);
     }
 	
+    /**
+     * Store and Forward messages session invitation
+     * 
+     * @param session Chat session
+     */
+    public void handleStoreAndForwardMsgSessionInvitation(TerminatingStoreAndForwardMsgSession session) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event S&F messages session invitation");
+		}
+		
+    	// Broadcast the invitation
+		messagingApi.receiveOneOneChatInvitation(session);
+    }
+    
     /**
      * New message delivery status
      * 

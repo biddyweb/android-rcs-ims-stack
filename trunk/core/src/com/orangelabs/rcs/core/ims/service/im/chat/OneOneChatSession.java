@@ -41,10 +41,9 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param msg First message of the session
 	 */
-	public OneOneChatSession(ImsService parent, String contact, String msg) {
-		super(parent, contact, msg);
+	public OneOneChatSession(ImsService parent, String contact) {
+		super(parent, contact);
 		
 		// Set list of participants
 		ListOfParticipant participants = new ListOfParticipant();

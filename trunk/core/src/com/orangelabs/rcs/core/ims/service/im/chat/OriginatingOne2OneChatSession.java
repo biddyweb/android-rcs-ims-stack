@@ -22,6 +22,7 @@ import java.util.Vector;
 
 import javax.sip.header.SubjectHeader;
 
+import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -66,8 +67,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	 * @param msg First message of the session
 	 */
 	public OriginatingOne2OneChatSession(ImsService parent, String contact, String msg) {
-		super(parent, contact, msg);
+		super(parent, contact);
 
+		// Set first message
+		InstantMessage firstMessage = generateFirstMessage(msg);
+		setFirstMesssage(firstMessage);
+		
 		// Create dialog path
 		createOriginatingDialogPath();
 	}
@@ -109,9 +114,11 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	SipRequest invite; 
 	    	if (getFirstMessage() != null) {
 		    	// Build CPIM part
-		        String cpim = ChatUtils.buildCpimMessageWithImdn(
-		        			getDialogPath().getLocalParty(),
-		        			getDialogPath().getRemoteParty(),
+				String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+				String to = getRemoteContact();
+	    		String cpim = ChatUtils.buildCpimMessageWithImdn(
+	    					from,
+	    					to,
 		        			getFirstMessage().getMessageId(),
 		        			StringUtils.encodeUTF8(getFirstMessage().getTextMessage()),
 		        			InstantMessage.MIME_TYPE) + SipUtils.CRLF;
@@ -235,8 +242,8 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 486) {
-            	// 486 busy
+            if ((ctx.getStatusCode() == 486) || (ctx.getStatusCode() == 480)) {
+            	// 486 busy or 480 Temporarily Unavailable 
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
@@ -316,17 +323,17 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        // Send an empty packet
         	sendEmptyDataChunk();
         	
-        	// Start session timer
-        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
-        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
-        	}
-        	
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();
 	        }
 	    	
-			// Start the activity manager
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+
+        	// Start the activity manager
 			getActivityManager().start();
 		} catch(Exception e) {
         	if (logger.isActivated()) {

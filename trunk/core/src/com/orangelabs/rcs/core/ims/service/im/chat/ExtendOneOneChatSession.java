@@ -51,7 +51,7 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	 * @param participants List of invited participants
 	 */
 	public ExtendOneOneChatSession(ImsService parent, String conferenceId, OneOneChatSession oneoneSession, ListOfParticipant participants) {
-		super(parent, conferenceId, null, participants);
+		super(parent, conferenceId, participants);
 	
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -187,8 +187,8 @@ public class ExtendOneOneChatSession extends GroupChatSession {
             	// 422 Session Interval Too Small
             	handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if (ctx.getStatusCode() == 486) {
-            	// 486 Busy
+            if ((ctx.getStatusCode() == 486) || (ctx.getStatusCode() == 480)) {
+            	// 486 busy or 480 Temporarily Unavailable 
             	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
     					ctx.getReasonPhrase()));
             } else
@@ -268,14 +268,6 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	        // Send an empty packet
         	sendEmptyDataChunk();
         	
-        	// Subscribe to event package
-        	getConferenceEventSubscriber().subscribe();
-
-        	// Start session timer
-        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
-        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
-        	}
-			
 			// Notify 1-1 session listeners
 	    	for(int i=0; i < oneoneSession.getListeners().size(); i++) {
 	    		((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantSuccessful();
@@ -288,7 +280,15 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();
 	        }
-	    	
+
+	    	// Subscribe to event package
+        	getConferenceEventSubscriber().subscribe();
+
+        	// Start session timer
+        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
+        	}
+			
 			// Start the activity manager
 			getActivityManager().start();
 	    	

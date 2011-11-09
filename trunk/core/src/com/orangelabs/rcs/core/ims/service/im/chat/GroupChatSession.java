@@ -68,11 +68,10 @@ public abstract class GroupChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param conferenceId Conference id
-	 * @param msg First message of the session
 	 * @param participants List of invited participants
 	 */
-	public GroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
-		super(parent, conferenceId, msg, participants);
+	public GroupChatSession(ImsService parent, String conferenceId, ListOfParticipant participants) {
+		super(parent, conferenceId, participants);
 	}
 
 	/**
@@ -80,10 +79,9 @@ public abstract class GroupChatSession extends ChatSession {
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
-	 * @param msg First message of the session
 	 */
-	public GroupChatSession(ImsService parent, String contact, String msg) {
-		super(parent, contact, msg);
+	public GroupChatSession(ImsService parent, String contact) {
+		super(parent, contact);
 	}
 	
 	/**
