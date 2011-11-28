@@ -106,7 +106,6 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + FileSharingSession.MAX_FILE_SIZE + SipUtils.CRLF +

@@ -18,17 +18,13 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-import java.util.Map;
-import java.util.TreeMap;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
 /**
  * RCS settings
@@ -50,11 +46,6 @@ public class RcsSettings {
 	 * Database URI
 	 */
 	private Uri databaseUri = RcsSettingsData.CONTENT_URI;
-
-	/**
-     * The logger
-     */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
      * Create instance
@@ -88,41 +79,12 @@ public class RcsSettings {
 	}
 
 	/**
-     * Dump the content provider
-     *
-     * @return List of parameters
-     */
-	public Map<String, String> dump() {
-		TreeMap<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-
-		if (logger.isActivated()) {
-			logger.debug("List of settings:");
-		}
-        Cursor c = cr.query(databaseUri, null, null, null, RcsSettingsData.KEY_KEY);
-        if (c != null) {
-        	if (c.getCount() > 0) {
-		        while(c.moveToNext()) {
-		        	String key = c.getString(1);
-		        	String value = c.getString(2);
-		        	result.put(key, value);
-		    		if (logger.isActivated()) {
-		    			logger.debug(" > " + key + ": " + value);
-		    		}
-		        }
-        	}
-	        c.close();
-        }
-
-        return result;
-	}
-
-	/**
      * Read a parameter
      *
      * @param key Key
      * @return Value
      */
-	private String readParameter(String key) {
+	public String readParameter(String key) {
 		String result = null;
         Cursor c = cr.query(databaseUri, null, RcsSettingsData.KEY_KEY + "='" + key + "'", null, null);
         if ((c != null) && (c.getCount() > 0)) {
@@ -860,6 +822,17 @@ public class RcsSettings {
 			result = readParameter(RcsSettingsData.USERPROFILE_COUNTRY_CODE);
 		}
 		return result;
+    }
+
+	/**
+     * Set country code
+     *
+     * @param code Country code
+     */
+	public void setCountryCode(String code) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.USERPROFILE_COUNTRY_CODE, code);
+		}
     }
 
 	/**
@@ -1660,6 +1633,17 @@ public class RcsSettings {
     }
 
 	/**
+     * Set supported RCS extensions
+     *
+     * @param extensions List of extensions (semicolon separated)
+     */
+	public void setSupportedRcsExtensions(String extensions) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.CAPABILITY_RCS_EXTENSIONS, extensions);
+		}
+    }
+
+	/**
      * Is IM always-on thanks to the Store & Forward functionality
      *
      * @return Boolean
@@ -1798,4 +1782,17 @@ public class RcsSettings {
 		}
 		return result;
     }
+
+	/**
+     * Is GRUU supported
+     *
+     * @return Boolean
+     */
+	public boolean isGruuSupported() {
+		boolean result = true;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.GRUU));
+		}
+		return result;
+	}
 }

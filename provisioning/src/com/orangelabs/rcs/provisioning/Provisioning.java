@@ -19,12 +19,8 @@
 package com.orangelabs.rcs.provisioning;
 
 import android.app.TabActivity;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TabHost;
 
@@ -36,22 +32,6 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * @author jexa7410
  */
 public class Provisioning extends TabActivity {
-
-	/**
-	 * Database URI
-	 */
-	private static final Uri databaseUri = Uri.parse("content://com.orangelabs.rcs.settings/settings"); 
-	
-	/**
-	 * Column name
-	 */
-    private static final String KEY_KEY = "key";
-	
-	/**
-	 * Column name
-	 */
-    private static final String KEY_VALUE = "value";
-	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,37 +57,4 @@ public class Provisioning extends TabActivity {
                 .setIndicator("Logger", getResources().getDrawable(R.drawable.param_icon))
                 .setContent(new Intent(this, LoggerProvisioning.class)));
     }
-	
-	/**
-	 * Write a String parameter
-	 * 
-	 * @param cr Content resolver
-	 * @param key Key
-	 * @param value Value
-	 */
-	public static void writeParameter(ContentResolver cr, String key, String value) {
-        ContentValues values = new ContentValues();
-        values.put(KEY_VALUE, value);
-        String where = KEY_KEY + "='" + key + "'";
-        cr.update(databaseUri, values, where, null);        
-	}
-	
-	/**
-	 * Read a parameter
-	 * 
-	 * @param cr Content resolver
-	 * @param key Key
-	 * @return Value
-	 */
-	public static String readParameter(ContentResolver cr, String key) {
-		String result = null;
-        Cursor c = cr.query(databaseUri, null, KEY_KEY + "='" + key + "'", null, null);
-        if ((c != null) && (c.getCount() > 0)) {
-	        if (c.moveToFirst()) {
-	        	result = c.getString(2);
-	        }
-	        c.close();
-        }
-        return result;
-	}
 }

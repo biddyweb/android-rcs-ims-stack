@@ -18,10 +18,7 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import java.util.Map;
-
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
@@ -33,6 +30,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 /**
  * Service parameters provisioning
@@ -46,11 +44,6 @@ public class ServiceProvisioning extends Activity {
     private static final String[] IM_SESSION_START_MODES = {
     	"1", "2"
     };
-    
-    /**
-	 * Content resolver
-	 */
-	private ContentResolver cr;
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,58 +52,52 @@ public class ServiceProvisioning extends Activity {
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.service_provisioning);
-        
-        // Set database content resolver
-        this.cr = getContentResolver();	
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		
-		// Get settings from database
-        Map<String, String> settings = RcsSettings.getInstance().dump();
-        
         // Display UI parameters
 
         EditText txt = (EditText)this.findViewById(R.id.MaxPhotoIconSize);
-        txt.setText(settings.get("MaxPhotoIconSize"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_PHOTO_ICON_SIZE));
 
         txt = (EditText)this.findViewById(R.id.MaxFreetextLength);
-        txt.setText(settings.get("MaxFreetextLength"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_FREETXT_LENGTH));
 
         txt = (EditText)this.findViewById(R.id.MaxChatParticipants);
-        txt.setText(settings.get("MaxChatParticipants"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_CHAT_PARTICIPANTS));
 
         txt = (EditText)this.findViewById(R.id.MaxChatMessageLength);
-        txt.setText(settings.get("MaxChatMessageLength"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH));
 
         txt = (EditText)this.findViewById(R.id.ChatIdleDuration);
-        txt.setText(settings.get("ChatIdleDuration"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CHAT_IDLE_DURATION));
 
         txt = (EditText)this.findViewById(R.id.MaxFileTransferSize);
-        txt.setText(settings.get("MaxFileTransferSize"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_FILE_TRANSFER_SIZE));
 
         txt = (EditText)this.findViewById(R.id.WarnFileTransferSize);
-        txt.setText(settings.get("WarnFileTransferSize"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.WARN_FILE_TRANSFER_SIZE));
 
         txt = (EditText)this.findViewById(R.id.MaxImageShareSize);
-        txt.setText(settings.get("MaxImageShareSize"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_IMAGE_SHARE_SIZE));
 
         txt = (EditText)this.findViewById(R.id.MaxVideoShareDuration);
-        txt.setText(settings.get("MaxVideoShareDuration"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_VIDEO_SHARE_DURATION));
 
         txt = (EditText)this.findViewById(R.id.MaxChatSessions);
-        txt.setText(settings.get("MaxChatSessions"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_CHAT_SESSIONS));
 
         txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
-        txt.setText(settings.get("MaxFileTransferSessions"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_FILE_TRANSFER_SESSIONS));
 
         txt = (EditText)this.findViewById(R.id.MaxChatLogEntries);
-        txt.setText(settings.get("MaxChatLogEntries"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_CHAT_LOG_ENTRIES));
 
         txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
-        txt.setText(settings.get("MaxRichcallLogEntries"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES));
 
         Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
@@ -123,10 +110,10 @@ public class ServiceProvisioning extends Activity {
 		}
         
         CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
-        check.setChecked(Boolean.parseBoolean(settings.get("SmsFallbackService")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SMS_FALLBACK_SERVICE)));
 
         check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
-        check.setChecked(Boolean.parseBoolean(settings.get("StoreForwardServiceWarning")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.WARN_SF_SERVICE)));
 	}
 	
     @Override
@@ -143,56 +130,56 @@ public class ServiceProvisioning extends Activity {
 		        // Save UI parameters
 		        
 		        EditText txt = (EditText)this.findViewById(R.id.MaxPhotoIconSize);
-				Provisioning.writeParameter(cr, "MaxPhotoIconSize", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_PHOTO_ICON_SIZE, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxFreetextLength);
-				Provisioning.writeParameter(cr, "MaxFreetextLength", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_FREETXT_LENGTH, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxChatParticipants);
-				Provisioning.writeParameter(cr, "MaxChatParticipants", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_PARTICIPANTS, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxChatMessageLength);
-				Provisioning.writeParameter(cr, "MaxChatMessageLength", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ChatIdleDuration);
-				Provisioning.writeParameter(cr, "ChatIdleDuration", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.CHAT_IDLE_DURATION, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxFileTransferSize);
-				Provisioning.writeParameter(cr, "MaxFileTransferSize", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_FILE_TRANSFER_SIZE, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.WarnFileTransferSize);
-				Provisioning.writeParameter(cr, "WarnFileTransferSize", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.WARN_FILE_TRANSFER_SIZE, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.MaxImageShareSize);
-				Provisioning.writeParameter(cr, "MaxImageShareSize", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_IMAGE_SHARE_SIZE, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxVideoShareDuration);
-				Provisioning.writeParameter(cr, "MaxVideoShareDuration", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_VIDEO_SHARE_DURATION, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxChatSessions);
-				Provisioning.writeParameter(cr, "MaxChatSessions", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_SESSIONS, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxFileTransferSessions);
-				Provisioning.writeParameter(cr, "MaxFileTransferSessions", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_FILE_TRANSFER_SESSIONS, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxChatLogEntries);
-				Provisioning.writeParameter(cr, "MaxChatLogEntries", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_LOG_ENTRIES, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
-				Provisioning.writeParameter(cr, "MaxRichcallLogEntries", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES, txt.getText().toString());
 				
 				Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 				if (spinner.getSelectedItemId() == 0) {
-					Provisioning.writeParameter(cr, "ImSessionStart", "1");
+					RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "1");
 				} else {
-					Provisioning.writeParameter(cr, "ImSessionStart", "2");
+					RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "2");
 				}
 				
 				CheckBox check = (CheckBox)this.findViewById(R.id.SmsFallbackService);
-				Provisioning.writeParameter(cr, "SmsFallbackService", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SMS_FALLBACK_SERVICE, Boolean.toString(check.isChecked()));
 
 		        check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
-				Provisioning.writeParameter(cr, "StoreForwardServiceWarning", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.WARN_SF_SERVICE, Boolean.toString(check.isChecked()));
 				
 				break;
 		}

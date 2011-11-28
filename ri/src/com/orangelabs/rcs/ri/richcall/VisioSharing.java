@@ -56,6 +56,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
@@ -179,10 +182,14 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private Boolean isIncoming;
 
-	/** wait API connected to do getIncomingSession **/
+	/**
+	 * Wait API connected to do getIncomingSession
+	 */
 	private Boolean getIncomingSessionWhenApiConnected = false;
 
-	/** wait API connected to do startOutgoingSession **/
+	/**
+	 * Wait API connected to do startOutgoingSession
+	 */
 	private Boolean startOutgoingSessionWhenApiConnected = false;
 
 	/**
@@ -1164,4 +1171,24 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 		public void updateDuration(long progress) {
 		}
     };
+    
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater=new MenuInflater(getApplicationContext());
+		inflater.inflate(R.menu.menu_video_sharing, menu);
+		return true;
+	}
+    
+    @Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.menu_close_session:
+				// Quit sessions
+				stopOutgoingSession();
+                stopIncomingSession();
+                exitActivityIfNoSession(null);
+				break;
+		}
+		return true;
+	}
 }

@@ -18,10 +18,7 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import java.util.Map;
-
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
@@ -33,6 +30,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 /**
  * End user profile parameters provisioning
@@ -46,11 +44,6 @@ public class LoggerProvisioning extends Activity {
     private static final String[] TRACE_LEVEL = {
         "DEBUG", "INFO", "WARN", "ERROR", "FATAL" 
     };
-
-    /**
-	 * Content resolver
-	 */
-	private ContentResolver cr;
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,42 +52,41 @@ public class LoggerProvisioning extends Activity {
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.logger_provisioning);
-        
-        // Set database content resolver
-        this.cr = getContentResolver();
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		
-		// Get settings from database
-        Map<String, String> settings = RcsSettings.getInstance().dump();
-        
         // Display logger parameters
     	CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivated);
-        check.setChecked(Boolean.parseBoolean(settings.get("TraceActivated")));
+        check.setChecked(RcsSettings.getInstance().isTraceActivated());
         
     	check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
-        check.setChecked(Boolean.parseBoolean(settings.get("SipTraceActivated")));
+        check.setChecked(RcsSettings.getInstance().isSipTraceActivated());
 
     	check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
-        check.setChecked(Boolean.parseBoolean(settings.get("MediaTraceActivated")));
+        check.setChecked(RcsSettings.getInstance().isMediaTraceActivated());
 
         Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, TRACE_LEVEL);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        if (RcsSettings.getInstance().getTraceLevel().equals(TRACE_LEVEL[0])) {
+        String level = RcsSettings.getInstance().getTraceLevel();
+        if (level.equals(TRACE_LEVEL[0])) {
             spinner.setSelection(0);
-        } else if (RcsSettings.getInstance().getTraceLevel().equals(TRACE_LEVEL[1])) {
+        } else
+        if (level.equals(TRACE_LEVEL[1])) {
             spinner.setSelection(1);
-        } else if (RcsSettings.getInstance().getTraceLevel().equals(TRACE_LEVEL[2])) {
+        } else
+        if (level.equals(TRACE_LEVEL[2])) {
             spinner.setSelection(2);
-        } else if (RcsSettings.getInstance().getTraceLevel().equals(TRACE_LEVEL[3])) {
+        } else
+        if (level.equals(TRACE_LEVEL[3])) {
             spinner.setSelection(3);
-        } else if (RcsSettings.getInstance().getTraceLevel().equals(TRACE_LEVEL[4])) {
+        } else
+        if (level.equals(TRACE_LEVEL[4])) {
             spinner.setSelection(4);
         }
 	}
@@ -112,17 +104,17 @@ public class LoggerProvisioning extends Activity {
 			case R.id.menu_save:
 		        // Save logger parameters
 		        CheckBox check = (CheckBox)this.findViewById(R.id.TraceActivated);
-				Provisioning.writeParameter(cr, "TraceActivated", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_ACTIVATED, Boolean.toString(check.isChecked()));
 
 		        check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
-				Provisioning.writeParameter(cr, "SipTraceActivated", Boolean.toString(check.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRACE_ACTIVATED, Boolean.toString(check.isChecked()));
 
 		        check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
-				Provisioning.writeParameter(cr, "MediaTraceActivated", Boolean.toString(check.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.MEDIA_TRACE_ACTIVATED, Boolean.toString(check.isChecked()));
 
 				Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
 				String value = (String)spinner.getSelectedItem();
-				Provisioning.writeParameter(cr, "TraceLevel", value);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_LEVEL, value);
 
 		        Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();				
 		        break;

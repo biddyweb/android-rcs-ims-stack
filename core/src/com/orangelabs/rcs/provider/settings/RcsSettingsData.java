@@ -97,8 +97,7 @@ public class RcsSettingsData {
     public static final String CERTIFICATE_FILE_TYPE = ".crt";
 
 	// ---------------------------------------------------------------------------
-	// Parameters which can be modified by the end user. These parameters may be
-	// displayed at UI level (e.g. settings application).
+	// UI settings
 	// ---------------------------------------------------------------------------
 
 	/**
@@ -192,8 +191,7 @@ public class RcsSettingsData {
 	public static final String FREETEXT4 = "Freetext4";
 
 	// ---------------------------------------------------------------------------
-	// Parameters which CAN'T be modified by the end user. These parameters are
-	// mainly used by UI.
+	// Service settings
 	// ---------------------------------------------------------------------------
 
 	/**
@@ -277,7 +275,7 @@ public class RcsSettingsData {
 	public static final String MAX_RICHCALL_LOG_ENTRIES = "MaxRichcallLogEntries";	
 	
 	// ---------------------------------------------------------------------------
-	// Parameters of the end user profile
+	// User profile settings
 	// ---------------------------------------------------------------------------
 
 	/**
@@ -341,8 +339,7 @@ public class RcsSettingsData {
 	public static final String USERPROFILE_COUNTRY_CODE = "CountryCode";
 
 	// ---------------------------------------------------------------------------
-	// Parameters which CAN'T be modified by the end user. These parameters are
-	// used by the stack only.
+	// Stack settings
 	// ---------------------------------------------------------------------------
 
 	/**
@@ -584,4 +581,9 @@ public class RcsSettingsData {
 	 * RCS operator
 	 */
 	public static final String RCS_OPERATOR = "RcsOperator";	
+
+	/**
+	 * GRUU support
+	 */
+	public static final String GRUU = "GRUU";	
 }

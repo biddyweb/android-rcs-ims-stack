@@ -18,6 +18,19 @@
 
 package com.orangelabs.rcs.core.ims.network.sip;
 
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+import gov.nist.javax.sip.Utils;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -42,18 +55,9 @@ import javax.sip.header.RouteHeader;
 import javax.sip.header.SIPIfMatchHeader;
 import javax.sip.header.SupportedHeader;
 import javax.sip.header.ToHeader;
+import javax.sip.header.ViaHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
-
-import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
-import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP message factory
@@ -616,9 +620,57 @@ public class SipMessageFactory {
 	 * @throws SipException
 	 */
 	public static SipRequest createAck(SipDialogPath dialog) throws SipException {
-		try {
-	        long cseq = dialog.getCseq();
-	        Request ack = dialog.getInvite().getStackTransaction().getDialog().createAck(cseq);
+        try {
+            Request ack = null;
+
+            // Set request line header
+            URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
+
+            // Set Call-Id header
+            CallIdHeader callIdHeader = SipUtils.HEADER_FACTORY.createCallIdHeader(dialog.getCallId()); 
+
+            // Set the CSeq header
+            CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.ACK);
+            
+            // Set the From header
+            Address fromAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getLocalParty());
+            FromHeader fromHeader = SipUtils.HEADER_FACTORY.createFromHeader(fromAddress, dialog.getLocalTag());
+
+            // Set the To header
+            Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
+            ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, dialog.getRemoteTag());
+
+            // Set the Via branch
+            ArrayList<ViaHeader> vias = dialog.getSipStack().getViaHeaders();
+            vias.get(0).setBranch(Utils.getInstance().generateBranchId());
+
+            // Create the ACK request
+            ack = SipUtils.MSG_FACTORY.createRequest(requestURI,
+                    Request.ACK,
+                    callIdHeader,
+                    cseqHeader,
+                    fromHeader,
+                    toHeader,
+                    vias,
+                    SipUtils.buildMaxForwardsHeader());
+
+            
+            // Set the Route header
+            Vector<String> route = dialog.getRoute();
+            for(int i=0; i < route.size(); i++) {
+                Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));
+                ack.addHeader(routeHeader);
+            }
+
+            // Set Contact header
+            ack.addHeader(dialog.getSipStack().getContact());
+
+            // Set User-Agent header
+            ack.addHeader(SipUtils.buildUserAgentHeader());
+
+            // Set Allow header
+            SipUtils.buildAllowHeader(ack);
+
 			return new SipRequest(ack);
 		} catch(Exception e) {
 			if (logger.isActivated()) {

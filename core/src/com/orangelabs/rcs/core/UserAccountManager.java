@@ -29,6 +29,8 @@ import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -72,13 +74,13 @@ public class UserAccountManager {
 			logger.info("Last user account is " + lastUserAccount);
 		}
 		
-		// Read the IMSI
+        // Read the IMSI
 		TelephonyManager mgr = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 		String imsi = mgr.getSubscriberId();
 		if (logger.isActivated()) {
 			logger.info("My IMSI is " + imsi);
 		}
-
+		
 		// Check IMSI
 		if (imsi == null) {
 			if (isFirstLaunch()) {
@@ -93,7 +95,12 @@ public class UserAccountManager {
 			currentUserAccount = imsi;
 		}
 
-		if (logger.isActivated()) {
+        // Set the country code on the first launch
+        if (isFirstLaunch()) {
+            setCountryCode();
+        }
+
+        if (logger.isActivated()) {
 			logger.info("My user account is " + currentUserAccount);
 		}
 		
@@ -192,4 +199,21 @@ public class UserAccountManager {
 			}
 		}
 	}
+	
+    /**
+     * Set the country code
+     */
+    private void setCountryCode() {
+        String countryCode = DeviceUtils.getSimCountryCode(AndroidFactory.getApplicationContext());
+        if (countryCode != null) {
+            if (!countryCode.startsWith("+")) {
+                countryCode = "+" + countryCode;
+            }
+            if (logger.isActivated()) {
+                logger.info("Set country code to " + countryCode);
+            }
+            RcsSettings.getInstance().setCountryCode(countryCode);
+        }
+    }
+
 }

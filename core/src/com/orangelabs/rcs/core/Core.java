@@ -118,22 +118,22 @@ public class Core {
 
 		// Set core event listener
 		this.listener = listener;
-
-        // Initialize the phone utils
-    	PhoneUtils.initialize(AndroidFactory.getApplicationContext());        
-        
+       
         // Get UUID
 		if (logger.isActivated()) {
 			logger.info("My device UUID is " + DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()));
 		}
 
-        // Get country code
-		if (logger.isActivated()) {
-			logger.info("My country code is " + PhoneUtils.getCountryCode());
-		}
-		
 		// Create the user account manager
         userAccountManager = new UserAccountManager();
+
+        // Initialize the phone utils
+    	PhoneUtils.initialize(AndroidFactory.getApplicationContext());        
+
+    	// Get country code
+        if (logger.isActivated()) {
+            logger.info("My country code is " + PhoneUtils.getCountryCode());
+        }
 
         // Create the address book manager
         addressBookManager = new AddressBookManager(this);

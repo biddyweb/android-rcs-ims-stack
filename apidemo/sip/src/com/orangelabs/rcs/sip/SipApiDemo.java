@@ -58,9 +58,6 @@ public class SipApiDemo extends ListActivity {
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
        
-        // Instanciate the settings manager
-        RcsSettings.createInstance(getApplicationContext());		
-		
         // Initialize the country code
 		PhoneUtils.initialize(getApplicationContext());
 		

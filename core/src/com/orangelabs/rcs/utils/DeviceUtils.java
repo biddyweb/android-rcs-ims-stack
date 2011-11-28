@@ -1,8 +1,16 @@
 package com.orangelabs.rcs.utils;
 
-import java.util.UUID;
+import com.orangelabs.rcs.R;
+
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 import android.content.Context;
+import android.content.res.XmlResourceParser;
 import android.telephony.TelephonyManager;
+
+import java.io.IOException;
+import java.util.UUID;
 
 /***
  * Device utility functions
@@ -36,4 +44,41 @@ public class DeviceUtils {
 		
 		return uuid;
 	}
+
+    /**
+     * Returns SIM country calling code
+     * 
+     * @param context application context
+     * @return country calling code
+     */
+    public static String getSimCountryCode(Context context) {
+        // Get SIM Country code 
+        TelephonyManager mgr = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        String countryCodeIso = mgr.getSimCountryIso();
+        if (countryCodeIso == null)
+            return null;
+        
+        // Parse country table
+        try {
+            XmlResourceParser parser = context.getResources().getXml(R.xml.country_table);
+            parser.next();
+            int eventType = parser.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    if (parser.getName().equals("Data")) {
+                        if (parser.getAttributeValue(null, "code").equalsIgnoreCase(countryCodeIso)) {
+                            return parser.getAttributeValue(null, "cc");
+                        }
+                    }
+                }
+                eventType = parser.next();
+            }
+        } catch (XmlPullParserException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
+    }
+
 }

@@ -18,13 +18,9 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -39,7 +35,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.util.Map;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 /**
  * End user profile parameters provisioning
@@ -66,11 +63,6 @@ public class ProfileProvisioning extends Activity {
     	RcsSettingsData.DIGEST_AUTHENT
     };
 
-    /**
-	 * Content resolver
-	 */
-	private ContentResolver cr;
-
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,10 +70,6 @@ public class ProfileProvisioning extends Activity {
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.profile_provisioning);
-
-        // Set database content resolver
-        this.cr = getContentResolver();
-
 	}
 
 	@Override
@@ -99,9 +87,6 @@ public class ProfileProvisioning extends Activity {
 			spinner.setSelection(1);
 		}
 
-		// Get settings from database
-		Map<String, String> settings = RcsSettings.getInstance().dump();
-
 		spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, WIFI_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -109,65 +94,61 @@ public class ProfileProvisioning extends Activity {
 		spinner.setSelection(0);
 
 		EditText txt = (EditText)this.findViewById(R.id.ImsUsername);
-		txt.setText(settings.get("ImsUsername"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME));
 
 		txt = (EditText)this.findViewById(R.id.ImsDisplayName);
-		txt.setText(settings.get("ImsDisplayName"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME));
 
 		txt = (EditText)this.findViewById(R.id.ImsPrivateId);
-		txt.setText(settings.get("ImsPrivateId"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID));
 
 		txt = (EditText)this.findViewById(R.id.ImsPassword);
-		txt.setText(settings.get("ImsPassword"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD));
 
 		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
-		txt.setText(settings.get("ImsHomeDomain"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
 
         txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-		txt.setText(settings.get("ImsOutboundProxyAddrForMobile"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE));
 
         txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-        txt.setText(settings.get("ImsOutboundProxyAddrForWifi"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerAddr);
-        txt.setText(settings.get("XdmServerAddr"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_SERVER));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerLogin);
-        txt.setText(settings.get("XdmServerLogin"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerPassword);
-        txt.setText(settings.get("XdmServerPassword"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD));
 
 		txt = (EditText)this.findViewById(R.id.ImConferenceUri);
-		txt.setText(settings.get("ImConferenceUri"));
-
-		txt = (EditText)this.findViewById(R.id.CountryCode);
-		txt.setText(settings.get("CountryCode"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI));
 
 		txt = (EditText)this.findViewById(R.id.RcsApn);
-		txt.setText(settings.get("RcsApn"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RCS_APN));
 
-		// Display capabilities
         CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityImageShare")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IMAGE_SHARING)));
 
         box = (CheckBox)findViewById(R.id.video_sharing);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityVideoShare")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_VIDEO_SHARING)));
 
         box = (CheckBox)findViewById(R.id.file_transfer);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityFileTransfer")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER)));
 
         box = (CheckBox)findViewById(R.id.im);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityImSession")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IM_SESSION)));
 
         box = (CheckBox)findViewById(R.id.cs_video);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityCsVideo")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_CS_VIDEO)));
 
         box = (CheckBox)findViewById(R.id.presence_discovery);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilityPresenceDiscovery")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY)));
 
         box = (CheckBox)findViewById(R.id.social_presence);
-        box.setChecked(Boolean.parseBoolean(settings.get("CapabilitySocialPresence")));
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE)));	
 	}
 
     @Override
@@ -185,77 +166,70 @@ public class ProfileProvisioning extends Activity {
 				break;
 
 			case R.id.menu_save:
-		        // Save UI parameters
+		        // Save profile parameters
 				Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
-				Provisioning.writeParameter(cr, "ImsAuhtenticationProcedureForMobile", (String)spinner.getSelectedItem());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, (String)spinner.getSelectedItem());
 
 				spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
-				Provisioning.writeParameter(cr, "ImsAuhtenticationProcedureForWifi", (String)spinner.getSelectedItem());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, (String)spinner.getSelectedItem());
 
 				EditText txt = (EditText)this.findViewById(R.id.ImsUsername);
-				Provisioning.writeParameter(cr, "ImsUsername", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsDisplayName);
-				Provisioning.writeParameter(cr, "ImsDisplayName", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsPrivateId);
-				Provisioning.writeParameter(cr, "ImsPrivateId", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsPassword);
-				Provisioning.writeParameter(cr, "ImsPassword", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
-				Provisioning.writeParameter(cr, "ImsHomeDomain", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-				Provisioning.writeParameter(cr, "ImsOutboundProxyAddrForMobile", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, txt.getText().toString());
 
                 txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                Provisioning.writeParameter(cr, "ImsOutboundProxyAddrForWifi", txt.getText().toString());
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.XdmServerAddr);
-				Provisioning.writeParameter(cr, "XdmServerAddr", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_SERVER, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.XdmServerLogin);
-				Provisioning.writeParameter(cr, "XdmServerLogin", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.XdmServerPassword);
-				Provisioning.writeParameter(cr, "XdmServerPassword", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImConferenceUri);
-		        Provisioning.writeParameter(cr, "ImConferenceUri", txt.getText().toString());
-
-		        txt = (EditText)this.findViewById(R.id.CountryCode);
-		        String value = txt.getText().toString();
-		        if ((value.length() > 0) && !value.startsWith("+")) {
-		        	value = "+" + value;
-		        }
-		        Provisioning.writeParameter(cr, "CountryCode", value);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RcsApn);
-		        Provisioning.writeParameter(cr, "RcsApn", txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.RCS_APN, txt.getText().toString());
 
 		        // Save capabilities
 		        CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
-		        Provisioning.writeParameter(cr, "CapabilityImageShare", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IMAGE_SHARING, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.video_sharing);
-		        Provisioning.writeParameter(cr, "CapabilityVideoShare", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_VIDEO_SHARING, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.file_transfer);
-		        Provisioning.writeParameter(cr, "CapabilityFileTransfer", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.im);
-		        Provisioning.writeParameter(cr, "CapabilityImSession", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IM_SESSION, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.cs_video);
-		        Provisioning.writeParameter(cr, "CapabilityCsVideo", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_CS_VIDEO, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.presence_discovery);
-	        	Provisioning.writeParameter(cr, "CapabilityPresenceDiscovery", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.social_presence);
-		        Provisioning.writeParameter(cr, "CapabilitySocialPresence", Boolean.toString(box.isChecked()));
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(box.isChecked()));
 
                 Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG)
                         .show();
@@ -274,7 +248,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Brune", "Lannion", "Kamailio1", "VCO2-251", "RCS-251"
+                        "Default"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -303,61 +277,6 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0: // Brune
-			            			homeDomain = "rcs.brune.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsProxyForMobile = "80.12.197.74:5060";
-			            			imsProxyForWifi = "80.12.197.74:5060";
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-	                        	case 1: // Lannion
-			            			homeDomain = "sip.osp.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsProxyForMobile = "172.20.84.114:5060";
-			            			imsProxyForWifi = "172.20.84.114:5060";
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-                                case 2: // Kamailio1
-                                    homeDomain = "rcs.kamailio1.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "";
-                                    imsProxyForMobile = "172.20.14.43:5060";
-                                    imsProxyForWifi = "172.20.14.43:5060";
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 3: // VCO2-251
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-                                    imsProxyForMobile = "172.20.114.42:5060";
-                                    imsProxyForWifi = "172.20.114.42:5060";
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 4: // RCS-251
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-                                    imsProxyForMobile = "172.20.84.114:5060";
-                                    imsProxyForWifi = "172.20.84.114:5060";
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
 			            		default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;

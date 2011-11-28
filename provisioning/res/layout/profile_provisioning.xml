@@ -151,19 +151,6 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="100" android:lines="1"/>
 
-       	<TextView android:text="Country code:"
-	    android:paddingTop="5dip"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"/>
-		<EditText android:id="@+id/CountryCode"
-		android:hint="Type your CC code with '+' prefix"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	 	android:layout_marginLeft="5dip"
-	 	android:layout_marginRight="5dip"
-	 	android:maxLength="4"
-	 	android:lines="1"/>
-
        	<TextView android:text="APN:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"

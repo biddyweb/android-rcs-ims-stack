@@ -206,8 +206,6 @@
 <string name="label_outgoing_sharing_aborted">Outgoing sharing aborted</string>
 <string name="label_outgoing_sharing_terminated_by_remote">Outgoing sharing terminated by remote</string>
 <string name="label_switch_camera">Switch camera</string>
-<string name="menu_multiparty_call">Multiparty call</string>
-<string name="menu_call_hold">Call hold</string>
 
 <!-- Event Log -->
 <string name="menu_filter">Change filter</string>

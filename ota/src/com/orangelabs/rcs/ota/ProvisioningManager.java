@@ -126,7 +126,7 @@ public class ProvisioningManager {
     			// Not used
     		} else
     		if (key.equals("/IMS/pdp_contextoperpref")) {
-    			// The PDP_ContextOperPref leaf indicates an operatorâ€™s preference to have a dedicated PDP context for SIP signalling.
+    			// The PDP_ContextOperPref leaf indicates an operator preference to have a dedicated PDP context for SIP signalling.
     			// Values: 0, 1
     			// 0 â€“ Indicates that the operator has no preference for a dedicated PDP context for SIP signalling.
     			// 1 â€“ Indicates that the operator has preference for a dedicated PDP context for SIP signalling.

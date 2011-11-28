@@ -154,6 +154,7 @@ public class RichAddressBookProvider extends ContentProvider {
 						+ segment
 						+ (!TextUtils.isEmpty(where) ? " AND ("	+ where + ')' : ""),
 						whereArgs);
+				break;
 				
 			case AGGREGATIONS:
 				count = db.delete(AGGREGATION_TABLE, where, whereArgs);

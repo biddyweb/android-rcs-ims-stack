@@ -289,6 +289,38 @@ public class ChatUtils {
 		return result;
 	}
 	
+    /**
+     * Format to a SIP-URI
+     * 
+     * @param input Input
+     * @return SIP-URI
+     */
+    private static String formatSipUri(String input) {
+    	input = input.trim();
+    	
+    	if (input.startsWith("<")) {
+    		// Already a SIP-URI format
+    		return input;    		
+    	}
+
+    	// It's a SIP address: remove display name
+		if (input.startsWith("\"")) {
+			int index1 = input.indexOf("\"", 1);
+			if (index1 > 0) {
+				input = input.substring(index1+2);
+			}
+			return input;
+		}   
+
+    	if (input.startsWith("sip:") || input.startsWith("tel:")) {
+    		// Just add URI delimiter
+    		return "<" + input + ">";
+    	} else {
+    		// It's a number, format it
+    		return "<" + PhoneUtils.formatNumberToSipUri(input) + ">";
+    	}
+    }
+	
 	/**
 	 * Build a CPIM message
 	 * 
@@ -299,11 +331,9 @@ public class ChatUtils {
 	 * @return String
 	 */
 	public static String buildCpimMessage(String from, String to, String content, String contentType) {
-		String fromNumber = PhoneUtils.extractNumberFromUri(from);
-		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF + 
@@ -324,11 +354,9 @@ public class ChatUtils {
 	 * @return String
 	 */
 	public static String buildCpimMessageWithImdn(String from, String to, String messageId, String content, String contentType) {
-		String fromNumber = PhoneUtils.extractNumberFromUri(from);
-		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
@@ -350,11 +378,9 @@ public class ChatUtils {
 	 * @return String
 	 */
 	public static String buildCpimDeliveryReport(String from, String to, String imdn) {
-		String fromNumber = PhoneUtils.extractNumberFromUri(from);
-		String toNumber = PhoneUtils.extractNumberFromUri(to);
 		String cpim =
-			CpimMessage.HEADER_FROM + ": <" + PhoneUtils.formatNumberToSipUri(fromNumber) + ">" + CRLF + 
-			CpimMessage.HEADER_TO + ": <" + PhoneUtils.formatNumberToSipUri(toNumber) + ">" + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + IdGenerator.getIdentifier() + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
