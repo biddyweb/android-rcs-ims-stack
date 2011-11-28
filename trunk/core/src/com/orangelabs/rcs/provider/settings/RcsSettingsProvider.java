@@ -87,9 +87,8 @@ public class RcsSettingsProvider extends ContentProvider {
 
             // Insert default values for parameters
 
-            // UI parameters
             addParameter(db, RcsSettingsData.SERVICE_ACTIVATED, 				RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.ROAMING_AUTHORIZED, RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.ROAMING_AUTHORIZED, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_RINGTONE, 		"");
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_VIBRATE, 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CSH_INVITATION_RINGTONE, 			"");
@@ -106,8 +105,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.FREETEXT2, 						ctx.getString(R.string.rcs_settings_label_default_freetext_2));
             addParameter(db, RcsSettingsData.FREETEXT3,							ctx.getString(R.string.rcs_settings_label_default_freetext_3));
             addParameter(db, RcsSettingsData.FREETEXT4,							ctx.getString(R.string.rcs_settings_label_default_freetext_4));
-
-            // Service parameters (read only)
             addParameter(db, RcsSettingsData.MAX_PHOTO_ICON_SIZE, 				"256");
             addParameter(db, RcsSettingsData.MAX_FREETXT_LENGTH, 				"100");
             addParameter(db, RcsSettingsData.MAX_CHAT_PARTICIPANTS, 			"10");
@@ -122,8 +119,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SMS_FALLBACK_SERVICE, 				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.WARN_SF_SERVICE,	 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.IM_SESSION_START,	 				"1");
-
-            // User profile parameters (read only)
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_USERNAME, 			"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, 		"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, 		"");
@@ -144,8 +139,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
-
-            // Stack parameters (read only)
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE,   ListeningPoint.UDP);
@@ -172,7 +165,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.TRACE_ACTIVATED,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
             addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATED, 				RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATED,			RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATED,				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
@@ -188,6 +181,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
             addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"300");
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"150");            
+            addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);            
         }
 
         /**

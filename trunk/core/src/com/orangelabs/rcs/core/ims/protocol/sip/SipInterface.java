@@ -18,17 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
-import android.text.TextUtils;
-
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import java.io.File;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Properties;
@@ -53,6 +44,16 @@ import javax.sip.header.ContactHeader;
 import javax.sip.header.ExtensionHeader;
 import javax.sip.header.Header;
 import javax.sip.header.ViaHeader;
+
+import android.text.TextUtils;
+
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP interface which manage the SIP stack. The NIST stack is used
@@ -152,6 +153,11 @@ public class SipInterface implements SipListener {
      * Temporary GRUU
      */
 	private String tempGruu = null;    
+	
+	/**
+	 * Instance ID
+	 */
+	private String instanceId = null;
 
 	/**
 	 * Retransmission timer
@@ -171,8 +177,7 @@ public class SipInterface implements SipListener {
      * @param defaultProtocol Default protocol
      * @throws SipException
      */
-    public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol)
-            throws SipException {
+    public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol) throws SipException {
 
 		this.localIpAddress = localIpAddress;
         this.defaultProtocol = defaultProtocol;
@@ -182,7 +187,7 @@ public class SipInterface implements SipListener {
 		// Get outbound proxy config
         try {
             String[] parts = outboundProxy.split(":");
-            this.outboundProxyAddr = parts[0];
+            this.outboundProxyAddr = InetAddress.getByName(parts[0]).getHostAddress();
             this.outboundProxyPort = Integer.parseInt(parts[1]);
         } catch (Exception e) {
             throw new SipException("Bad outbound proxy address");
@@ -343,7 +348,7 @@ public class SipInterface implements SipListener {
 			}
 		}
 	}
-
+	
     /**
      * Return the default SIP provider
      *
@@ -444,6 +449,24 @@ public class SipInterface implements SipListener {
     }
     
     /**
+     * Get instance ID
+     * 
+     * @return ID
+     */
+    public String getInstanceId() {
+    	return instanceId;
+    }
+
+    /**
+     * Set instance ID
+     * 
+     * @param id Instance ID
+     */
+    public void setInstanceId(String id) {
+    	this.instanceId = id;
+    }    
+    
+    /**
      * Returns the local via path
      *
      * @return List of headers
@@ -492,16 +515,22 @@ public class SipInterface implements SipListener {
      * @throws Exception
      */
 	public ContactHeader getContact() throws Exception {
+		ContactHeader contactHeader;
 		if (publicGruu != null) {
-			// Create a contact from the GRUU
+			// Create a contact with GRUU
 			SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(publicGruu);
 			Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
-	        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
-			return contactHeader;
+	        contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+		} else
+		if (instanceId != null) {
+			// Create a local contact with +sip.instance
+			contactHeader = getLocalContact();
+			contactHeader.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
 		} else {
 			// Create a local contact
-			return getLocalContact();
+			contactHeader = getLocalContact();
 		}
+		return contactHeader;
     }	
 	
 	/**
@@ -623,7 +652,7 @@ public class SipInterface implements SipListener {
 					req.setStackTransaction(transaction);
 				}
 
-				// Set retransmission timer
+				// Set retransmission timer.
 //				transaction.setRetransmitTimer(retransTimer);
 				
 				// Create a transaction context

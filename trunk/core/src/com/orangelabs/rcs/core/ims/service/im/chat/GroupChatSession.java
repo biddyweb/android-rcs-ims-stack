@@ -18,16 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.util.List;
-import java.util.Vector;
-
-import javax.sip.header.ExtensionHeader;
-
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
@@ -42,17 +36,16 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import java.util.List;
+
+import javax.sip.header.ExtensionHeader;
+
 /**
  * Abstract Group chat session
  * 
  * @author jexa7410
  */
 public abstract class GroupChatSession extends ChatSession {
-	/**
-	 * SIP REFER uses the same dialog as the SIP INVITE 
-	 */
-	private boolean referUseSameDialog = true;
-
 	/**
 	 * Conference event subscribe manager
 	 */
@@ -157,7 +150,7 @@ public abstract class GroupChatSession extends ChatSession {
 	public void sendTextMessage(String msgId, String msg) {
 		// Send status in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getImSessionIdentity();
+		String to = getRemoteContact();
 		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(msg), InstantMessage.MIME_TYPE);
 		
 		// Send data
@@ -185,7 +178,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public void sendIsComposingStatus(boolean status) {
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getImSessionIdentity();
+		String to = getRemoteContact();
 		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
 		String msgId = ChatUtils.generateMessageId();
 		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);	
@@ -202,51 +195,19 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.debug("Add one participant (" + participant + ") to the session");
         	}
     		
-        	SipDialogPath dialogPath;
-    		SessionAuthenticationAgent authenticationAgent;
-        	if (referUseSameDialog) {
-        		// Re-use INVITE dialog path
-        		dialogPath = getDialogPath();
-        		authenticationAgent = getAuthenticationAgent();
-        		
-                // Increment the Cseq number of the dialog path
-            	dialogPath.incrementCseq();
-        	} else {
-	    		// Create a dialog path if necessary
-	    		authenticationAgent = new SessionAuthenticationAgent();
-	
-	    		// Set Call-Id
-	        	String callId = getImsService().getImsModule().getSipManager().getSipStack().generateCallId();
-	
-	        	// Set target
-	        	String target = getImSessionIdentity();
-	
-	            // Set local party
-	        	String localParty = ImsModule.IMS_USER_PROFILE.getPublicUri();
-	
-	            // Set remote party
-	        	String remoteParty = getImSessionIdentity();
-	
-	        	// Set the route path
-	        	Vector<String> route = getImsService().getImsModule().getSipManager().getSipStack().getServiceRoutePath();
-	
-	        	// Create a dialog path
-	            dialogPath = new SipDialogPath(
-	            		getImsService().getImsModule().getSipManager().getSipStack(),
-	            		callId,
-	            		1,
-	            		target,
-	            		localParty,
-	            		remoteParty,
-	            		route);    		
-        	}
-        	
+    		// Re-use INVITE dialog path
+    		SessionAuthenticationAgent authenticationAgent = getAuthenticationAgent();
+    		
+            // Increment the Cseq number of the dialog path
+            getDialogPath().incrementCseq();
+            getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
+
 	        // Send REFER request
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
     		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
-	        SipRequest refer = SipMessageFactory.createRefer(dialogPath, contactUri);
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
 	
 	        // Wait response
@@ -266,13 +227,14 @@ public abstract class GroupChatSession extends ChatSession {
             	authenticationAgent.readProxyAuthenticateHeader(ctx.getSipResponse());
 
                 // Increment the Cseq number of the dialog path
-            	dialogPath.incrementCseq();
+                getDialogPath().incrementCseq();
+                getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
 
                 // Create a second REFER request with the right token
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(dialogPath, contactUri);
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
@@ -353,50 +315,18 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.debug("Add " + participants.size()+ " participants to the session");
         	}
     		
-        	SipDialogPath dialogPath;
-    		SessionAuthenticationAgent authenticationAgent;
-        	if (referUseSameDialog) {
-        		// Re-use INVITE dialog path
-        		dialogPath = getDialogPath();
-        		authenticationAgent = getAuthenticationAgent();
-        		
-                // Increment the Cseq number of the dialog path
-            	dialogPath.incrementCseq();
-        	} else {
-	    		// Create a dialog path if necessary
-	    		authenticationAgent = new SessionAuthenticationAgent();
-	
-	    		// Set Call-Id
-	        	String callId = getImsService().getImsModule().getSipManager().getSipStack().generateCallId();
-	
-	        	// Set target
-	        	String target = getImSessionIdentity();
-	
-	            // Set local party
-	        	String localParty = ImsModule.IMS_USER_PROFILE.getPublicUri();
-	
-	            // Set remote party
-	        	String remoteParty = getImSessionIdentity();
-	
-	        	// Set the route path
-	        	Vector<String> route = getImsService().getImsModule().getSipManager().getSipStack().getServiceRoutePath();
-	
-	        	// Create a dialog path
-	            dialogPath = new SipDialogPath(
-	            		getImsService().getImsModule().getSipManager().getSipStack(),
-	            		callId,
-	            		1,
-	            		target,
-	            		localParty,
-	            		remoteParty,
-	            		route);    		
-        	}
-        	
+    		// Re-use INVITE dialog path
+    		SessionAuthenticationAgent authenticationAgent = getAuthenticationAgent();
+    		
+            // Increment the Cseq number of the dialog path
+    		getDialogPath().incrementCseq();
+    		getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
+            
 	        // Send REFER request
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
-	        SipRequest refer = SipMessageFactory.createRefer(dialogPath, participants);
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), participants);
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
 	
 	        // Wait response
@@ -416,13 +346,14 @@ public abstract class GroupChatSession extends ChatSession {
             	authenticationAgent.readProxyAuthenticateHeader(ctx.getSipResponse());
 
                 // Increment the Cseq number of the dialog path
-            	dialogPath.incrementCseq();
+            	getDialogPath().incrementCseq();
+            	getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
 
     			// Create a second REFER request with the right token
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(dialogPath, participants);
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), participants);
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);

@@ -18,11 +18,10 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import java.io.File;
+import java.io.FilenameFilter;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
@@ -34,9 +33,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Map;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 /**
  * Stack parameters provisioning
@@ -58,11 +56,6 @@ public class StackProvisioning extends Activity {
     	"All networks", "Mobile only", "Wi-Fi only"
     };
 
-    /**
-	 * Content resolver
-	 */
-	private ContentResolver cr;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,19 +63,11 @@ public class StackProvisioning extends Activity {
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.stack_provisioning);
-
-    	// Set database content resolver
-        this.cr = getContentResolver();
-
-
     }
 
     @Override
     protected void onResume() {
     	super.onResume();
-
-    	// Get settings from database
-        Map<String, String> settings = RcsSettings.getInstance().dump();
 
         // Display stack parameters
         Spinner spinner = (Spinner)findViewById(R.id.NetworkAccess);
@@ -90,10 +75,11 @@ public class StackProvisioning extends Activity {
                 android.R.layout.simple_spinner_item, NETWORK_ACCESS);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        if (RcsSettings.getInstance().getNetworkAccess() == RcsSettingsData.WIFI_ACCESS) {
+        int access = RcsSettings.getInstance().getNetworkAccess();
+        if (access == RcsSettingsData.WIFI_ACCESS) {
             spinner.setSelection(2);
         } else
-        if (RcsSettings.getInstance().getNetworkAccess() == RcsSettingsData.MOBILE_ACCESS) {
+        if (access == RcsSettingsData.MOBILE_ACCESS) {
             spinner.setSelection(1);
         } else {
             spinner.setSelection(0);
@@ -103,9 +89,11 @@ public class StackProvisioning extends Activity {
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, SIP_PROTOCOL);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        if (RcsSettings.getInstance().getSipDefaultProtocolForMobile().equalsIgnoreCase(SIP_PROTOCOL[0])) {
+        String sipMobile = RcsSettings.getInstance().getSipDefaultProtocolForMobile();
+        if (sipMobile.equalsIgnoreCase(SIP_PROTOCOL[0])) {
             spinner.setSelection(0);
-        } else if (RcsSettings.getInstance().getSipDefaultProtocolForMobile().equalsIgnoreCase(SIP_PROTOCOL[1])) {
+        } else
+        if (sipMobile.equalsIgnoreCase(SIP_PROTOCOL[1])) {
             spinner.setSelection(1);
         } else {
             spinner.setSelection(2);
@@ -116,14 +104,15 @@ public class StackProvisioning extends Activity {
                 android.R.layout.simple_spinner_item, SIP_PROTOCOL);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        if (RcsSettings.getInstance().getSipDefaultProtocolForWifi().equalsIgnoreCase(SIP_PROTOCOL[0])) {
+        String sipWifi = RcsSettings.getInstance().getSipDefaultProtocolForWifi();
+        if (sipWifi.equalsIgnoreCase(SIP_PROTOCOL[0])) {
             spinner.setSelection(0);
-        } else if (RcsSettings.getInstance().getSipDefaultProtocolForWifi().equalsIgnoreCase(SIP_PROTOCOL[1])) {
+        } else
+        if (sipWifi.equalsIgnoreCase(SIP_PROTOCOL[1])) {
             spinner.setSelection(1);
         } else {
             spinner.setSelection(2);
         }
-
 
         String[] certificates = loadCertificatesList();
 
@@ -132,15 +121,16 @@ public class StackProvisioning extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         boolean found = false;
+        String certRoot = RcsSettings.getInstance().getTlsCertificateRoot();
         for (int i = 0; i < certificates.length; i++) {
-            if (RcsSettings.getInstance().getTlsCertificateRoot().equals(certificates[i])) {
+            if (certRoot.equals(certificates[i])) {
                 spinner.setSelection(i);
                 found = true;
             }
         }
         if (!found) {
             spinner.setSelection(0);
-            Provisioning.writeParameter(cr, "TlsCertificateRoot", "");
+            RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, "");
         }
 
         spinner = (Spinner) findViewById(R.id.TlsCertificateIntermediate);
@@ -149,88 +139,92 @@ public class StackProvisioning extends Activity {
         spinner.setAdapter(adapter);
         spinner.setSelection(0);
         found = false;
+        String certInt = RcsSettings.getInstance().getTlsCertificateIntermediate();
         for (int i = 0; i < certificates.length; i++) {
-            if (RcsSettings.getInstance().getTlsCertificateIntermediate().equals(certificates[i])) {
+            if (certInt.equals(certificates[i])) {
                 spinner.setSelection(i);
                 found = true;
             }
         }
         if (!found) {
             spinner.setSelection(0);
-            Provisioning.writeParameter(cr, "TlsCertificateIntermediate", "");
+            RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, "");
         }
 
         EditText txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
-        txt.setText(settings.get("ImsServicePollingPeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_SERVICE_POLLING_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.SipListeningPort);
-        txt.setText(settings.get("SipListeningPort"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_DEFAULT_PORT));
 
         txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
-        txt.setText(settings.get("SipTransactionTimeout"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.SipKeepAlivePeriod);
-        txt.setText(settings.get("SipKeepAlivePeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_KEEP_ALIVE_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.DefaultMsrpPort);
-        txt.setText(settings.get("DefaultMsrpPort"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MSRP_DEFAULT_PORT));
 
 	    txt = (EditText)this.findViewById(R.id.DefaultRtpPort);
-	    txt.setText(settings.get("DefaultRtpPort"));
+	    txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RTP_DEFAULT_PORT));
 
 		txt = (EditText)this.findViewById(R.id.MsrpTransactionTimeout);
-		txt.setText(settings.get("MsrpTransactionTimeout"));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MSRP_TRANSACTION_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.RegisterExpirePeriod);
-        txt.setText(settings.get("RegisterExpirePeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.REGISTER_EXPIRE_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.RegisterRetryBaseTime);
-        txt.setText(settings.get("RegisterRetryBaseTime"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.REGISTER_RETRY_BASE_TIME));
 
         txt = (EditText)this.findViewById(R.id.RegisterRetryMaxTime);
-        txt.setText(settings.get("RegisterRetryMaxTime"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.REGISTER_RETRY_MAX_TIME));
 
         txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
-        txt.setText(settings.get("PublishExpirePeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.PUBLISH_EXPIRE_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.RevokeTimeout);
-        txt.setText(settings.get("RevokeTimeout"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.REVOKE_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.RingingPeriod);
-        txt.setText(settings.get("RingingPeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RINGING_SESSION_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.SubscribeExpirePeriod);
-        txt.setText(settings.get("SubscribeExpirePeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.IsComposingTimeout);
-        txt.setText(settings.get("IsComposingTimeout"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IS_COMPOSING_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.SessionRefreshExpirePeriod);
-        txt.setText(settings.get("SessionRefreshExpirePeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.CapabilityRefreshTimeout);
-        txt.setText(settings.get("CapabilityRefreshTimeout"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.CapabilityExpiryTimeout);
-        txt.setText(settings.get("CapabilityExpiryTimeout"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT));
 
         txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
-        txt.setText(settings.get("CapabilityPollingPeriod"));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_POLLING_PERIOD));
 
         CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
-        check.setChecked(Boolean.parseBoolean(settings.get("SipKeepAlive")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_KEEP_ALIVE)));
 
         check = (CheckBox)this.findViewById(R.id.PermanentState);
-        check.setChecked(Boolean.parseBoolean(settings.get("PermanentState")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.PERMANENT_STATE_MODE)));
 
     	check = (CheckBox)this.findViewById(R.id.TelUriFormat);
-        check.setChecked(Boolean.parseBoolean(settings.get("TelUriFormat")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.TEL_URI_FORMAT)));
 
     	check = (CheckBox)this.findViewById(R.id.ImAlwaysOn);
-        check.setChecked(Boolean.parseBoolean(settings.get("ImAlwaysOn")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_CAPABILITY_ALWAYS_ON)));
 
     	check = (CheckBox)this.findViewById(R.id.ImUseReports);
-        check.setChecked(Boolean.parseBoolean(settings.get("ImUseReports")));
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_USE_REPORTS)));
+
+        check = (CheckBox)this.findViewById(R.id.Gruu);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.GRUU)));
     }
 
     @Override
@@ -246,107 +240,110 @@ public class StackProvisioning extends Activity {
 			case R.id.menu_save:
 		        // Save stack parameters
 				Spinner spinner = (Spinner)findViewById(R.id.SipDefaultProtocolForMobile);
-				Provisioning.writeParameter(cr, "SipDefaultProtocolForMobile", (String)spinner.getSelectedItem());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE, (String)spinner.getSelectedItem());
 
 				spinner = (Spinner)findViewById(R.id.SipDefaultProtocolForWifi);
-                Provisioning.writeParameter(cr, "SipDefaultProtocolForWifi", (String)spinner.getSelectedItem());
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_WIFI, (String)spinner.getSelectedItem());
 
                 spinner = (Spinner) findViewById(R.id.TlsCertificateRoot);
-                if (spinner.getSelectedItemPosition() == 0)
-                    Provisioning.writeParameter(cr, "TlsCertificateRoot", "");
-                else
-                    Provisioning.writeParameter(cr, "TlsCertificateRoot",
-                        (String) spinner.getSelectedItem());
+                if (spinner.getSelectedItemPosition() == 0) {
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, "");
+                } else {
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, (String) spinner.getSelectedItem());
+                }
 
                 spinner = (Spinner) findViewById(R.id.TlsCertificateIntermediate);
-                if (spinner.getSelectedItemPosition() == 0)
-                    Provisioning.writeParameter(cr, "TlsCertificateIntermediate", "");
-                else
-                    Provisioning.writeParameter(cr, "TlsCertificateIntermediate",
-                        (String) spinner.getSelectedItem());
-
+                if (spinner.getSelectedItemPosition() == 0) {
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, "");
+                } else {
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, (String) spinner.getSelectedItem());
+                }
+                
 				spinner = (Spinner)findViewById(R.id.NetworkAccess);
 				int index = spinner.getSelectedItemPosition();
 				switch(index) {
 					case 0:
-						Provisioning.writeParameter(cr, "NetworkAccess", ""+RcsSettingsData.ANY_ACCESS);
+						RcsSettings.getInstance().writeParameter(RcsSettingsData.NETWORK_ACCESS, ""+RcsSettingsData.ANY_ACCESS);
 						break;
 					case 1:
-						Provisioning.writeParameter(cr, "NetworkAccess", ""+RcsSettingsData.MOBILE_ACCESS);
+						RcsSettings.getInstance().writeParameter(RcsSettingsData.NETWORK_ACCESS, ""+RcsSettingsData.MOBILE_ACCESS);
 						break;
 					case 2:
-						Provisioning.writeParameter(cr, "NetworkAccess", ""+RcsSettingsData.WIFI_ACCESS);
+						RcsSettings.getInstance().writeParameter(RcsSettingsData.NETWORK_ACCESS, ""+RcsSettingsData.WIFI_ACCESS);
 						break;
                 }
 
 		        EditText txt = (EditText)this.findViewById(R.id.SipListeningPort);
-				Provisioning.writeParameter(cr, "SipListeningPort", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PORT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
-				Provisioning.writeParameter(cr, "SipTransactionTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SipKeepAlivePeriod);
-				Provisioning.writeParameter(cr, "SipKeepAlivePeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_KEEP_ALIVE_PERIOD, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.DefaultMsrpPort);
-				Provisioning.writeParameter(cr, "DefaultMsrpPort", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MSRP_DEFAULT_PORT, txt.getText().toString());
 
 			    txt = (EditText)this.findViewById(R.id.DefaultRtpPort);
-				Provisioning.writeParameter(cr, "DefaultRtpPort", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.RTP_DEFAULT_PORT, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.MsrpTransactionTimeout);
-				Provisioning.writeParameter(cr, "MsrpTransactionTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MSRP_TRANSACTION_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RegisterExpirePeriod);
-				Provisioning.writeParameter(cr, "RegisterExpirePeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.REGISTER_EXPIRE_PERIOD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RegisterRetryBaseTime);
-				Provisioning.writeParameter(cr, "RegisterRetryBaseTime", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.REGISTER_RETRY_BASE_TIME, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RegisterRetryMaxTime);
-				Provisioning.writeParameter(cr, "RegisterRetryMaxTime", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.REGISTER_RETRY_MAX_TIME, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.PublishExpirePeriod);
-				Provisioning.writeParameter(cr, "PublishExpirePeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.PUBLISH_EXPIRE_PERIOD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RevokeTimeout);
-				Provisioning.writeParameter(cr, "RevokeTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.REVOKE_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RingingPeriod);
-				Provisioning.writeParameter(cr, "RingingPeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.RINGING_SESSION_PERIOD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SubscribeExpirePeriod);
-				Provisioning.writeParameter(cr, "SubscribeExpirePeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.IsComposingTimeout);
-				Provisioning.writeParameter(cr, "IsComposingTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.IS_COMPOSING_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SessionRefreshExpirePeriod);
-				Provisioning.writeParameter(cr, "SessionRefreshExpirePeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.CapabilityRefreshTimeout);
-				Provisioning.writeParameter(cr, "CapabilityRefreshTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.CapabilityExpiryTimeout);
-				Provisioning.writeParameter(cr, "CapabilityExpiryTimeout", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
-				Provisioning.writeParameter(cr, "CapabilityPollingPeriod", txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_POLLING_PERIOD, txt.getText().toString());
 				
 		    	CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
-				Provisioning.writeParameter(cr, "SipKeepAlive", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_KEEP_ALIVE, Boolean.toString(check.isChecked()));
 
 				check = (CheckBox)this.findViewById(R.id.PermanentState);
-				Provisioning.writeParameter(cr, "PermanentState", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.PERMANENT_STATE_MODE, Boolean.toString(check.isChecked()));
 
 		    	check = (CheckBox)this.findViewById(R.id.TelUriFormat);
-				Provisioning.writeParameter(cr, "TelUriFormat", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.TEL_URI_FORMAT, Boolean.toString(check.isChecked()));
 
 				check = (CheckBox)this.findViewById(R.id.ImAlwaysOn);
-				Provisioning.writeParameter(cr, "ImAlwaysOn", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_CAPABILITY_ALWAYS_ON, Boolean.toString(check.isChecked()));
 
 		    	check = (CheckBox)this.findViewById(R.id.ImUseReports);
-				Provisioning.writeParameter(cr, "ImUseReports", Boolean.toString(check.isChecked()));
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_USE_REPORTS, Boolean.toString(check.isChecked()));
+
+		    	check = (CheckBox)this.findViewById(R.id.Gruu);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.GRUU, Boolean.toString(check.isChecked()));
 
 				Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 				break;

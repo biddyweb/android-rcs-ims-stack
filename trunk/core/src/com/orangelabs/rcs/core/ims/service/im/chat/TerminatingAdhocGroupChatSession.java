@@ -190,7 +190,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
-	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +

@@ -306,6 +306,13 @@
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
         android:text="Permanent state mode"/>
+
+        <CheckBox android:id="@+id/Gruu"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="GRUU"/>
 </LinearLayout>
 
 </ScrollView>

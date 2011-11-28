@@ -191,9 +191,6 @@ public class RcsCoreService extends Service implements CoreListener {
 			// Instanciate the settings manager
             RcsSettings.createInstance(getApplicationContext());
             
-    		// Dump the settings values
-            RcsSettings.getInstance().dump();
-
             // Set the logger properties
     		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
     		String traceLevel = RcsSettings.getInstance().getTraceLevel();

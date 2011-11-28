@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.service.api.client.eventslog;
 
+import java.util.Date;
+
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -29,6 +31,7 @@ import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
@@ -363,17 +366,28 @@ public class EventsLogApi extends ClientApi {
      * Get the last message from a given chat session
      * 
      * @param sessionId
-     * @return message Last message from this chat
+     * @return Instant message
      */
-    public String getLastChatMessage(String sessionId){
-    	String result = null;
+    public InstantMessage getLastChatMessage(String sessionId) {
+    	InstantMessage result = null;
     	Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
-    			new String[]{RichMessagingData.KEY_DATA},
-    			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'" + " AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND status = "+EventsLogApi.STATUS_TERMINATED+" )", 
+    			new String[] {
+    				RichMessagingData.KEY_MESSAGE_ID,
+    				RichMessagingData.KEY_CONTACT,
+    				RichMessagingData.KEY_DATA,
+    				RichMessagingData.KEY_TIMESTAMP,
+    				RichMessagingData.KEY_STATUS
+    				},
+    			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'", 
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
-    	if (cursor.moveToNext()){
-    		result = cursor.getString(0);
+    	while(cursor.moveToNext()) {
+    		String msg = cursor.getString(2);
+    		if ((msg != null) && (msg.length() > 0)) {
+        		boolean imdnDisplayedRequested = (cursor.getInt(4) == EventsLogApi.STATUS_REPORT_REQUESTED);
+        		result = new InstantMessage(cursor.getString(0), cursor.getString(1), msg, imdnDisplayedRequested, new Date(cursor.getLong(3)));
+        		break;
+    		}
     	}
     	cursor.close();
     	return result;

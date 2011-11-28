@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1"
- android:versionName="2.3.3" package="com.orangelabs.rcs">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+ android:versionCode="1"
+ android:versionName="2.3.4"
+ package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
 
@@ -115,14 +117,14 @@
         
 		<!-- RCS data providers -->	
 
+		<provider android:authorities="com.orangelabs.rcs.settings"
+			android:name="com.orangelabs.rcs.provider.settings.RcsSettingsProvider"/>
+
 		<provider android:authorities="com.orangelabs.rcs.eab"
 			android:name="com.orangelabs.rcs.provider.eab.RichAddressBookProvider"/>
 
 		<provider android:authorities="com.orangelabs.rcs.messaging"
 			android:name="com.orangelabs.rcs.provider.messaging.RichMessagingProvider"/>
-
-		<provider android:authorities="com.orangelabs.rcs.settings"
-			android:name="com.orangelabs.rcs.provider.settings.RcsSettingsProvider"/>
 			
 		<provider android:authorities="com.orangelabs.rcs.csh"
 			android:name="com.orangelabs.rcs.provider.sharing.RichCallProvider"/>

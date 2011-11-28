@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.ota;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 
 import org.xml.sax.InputSource;
 
@@ -29,7 +28,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Appender;

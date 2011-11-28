@@ -106,7 +106,6 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +

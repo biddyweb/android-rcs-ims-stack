@@ -99,6 +99,11 @@ public class RegistrationManager extends PeriodicRefresher {
 	 */
 	private boolean natTraversal = false;
 	
+	/**
+	 * Number of 401 failures
+	 */
+	private int nb401Failures = 0;
+	
     /**
      * The logger
      */
@@ -115,9 +120,11 @@ public class RegistrationManager extends PeriodicRefresher {
         this.registrationProcedure = registrationProcedure;
         this.featureTags = getAllSupportedFeatureTags();
 
-        UUID uuid = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext());
-        if (uuid != null) {
-        	this.instanceId = uuid.toString();
+        if (RcsSettings.getInstance().isGruuSupported()) {
+	        UUID uuid = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext());
+	        if (uuid != null) {
+	        	this.instanceId = uuid.toString();
+	        }
         }
         
     	int defaultExpirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
@@ -154,7 +161,7 @@ public class RegistrationManager extends PeriodicRefresher {
 		
 		return tags;		
 	}		
-    
+	
     /**
      * Init the registration procedure
      */
@@ -326,7 +333,10 @@ public class RegistrationManager extends PeriodicRefresher {
         if (ctx.isSipResponse()) {
         	// A response has been received
             if (ctx.getStatusCode() == 200) {
-            	// 200 OK
+            	// Reset the number of 401 failures
+        		nb401Failures = 0;        		
+
+        		// 200 OK
         		if (register.getExpires() != 0) {
         			handle200OK(ctx);
         		} else {
@@ -334,8 +344,20 @@ public class RegistrationManager extends PeriodicRefresher {
         		}
             } else
             if (ctx.getStatusCode() == 401) {
-            	// 401 Unauthorized
-            	handle401Unauthorized(ctx);
+        		// Increment the number of 401 failures
+        		nb401Failures++;
+
+        		// Check number of failures
+            	if (nb401Failures < 3) {    		
+                	// 401 Unauthorized
+                	handle401Unauthorized(ctx);
+            	} else { 
+                	// We reached 3 successive 401 failures, stop registration retrys
+            		handleError(new ImsError(ImsError.REGISTRATION_FAILED, "too many 401"));
+            		
+                	// Reset the number of 401 failures
+            		nb401Failures = 0;
+            	}
             } else
             if (ctx.getStatusCode() == 423) {
             	// 423 Interval Too Brief
@@ -372,7 +394,8 @@ public class RegistrationManager extends PeriodicRefresher {
 			ImsModule.IMS_USER_PROFILE.setPublicUri(associatedUri);
 		}
 		
-		// Get the GRUU
+		// Set the GRUU
+		networkInterface.getSipManager().getSipStack().setInstanceId(instanceId);			
 		ListIterator<Header> contacts = resp.getHeaders(ContactHeader.NAME);
 		while(contacts.hasNext()) {
 			ContactHeader contact = (ContactHeader)contacts.next();
@@ -390,8 +413,7 @@ public class RegistrationManager extends PeriodicRefresher {
 		networkInterface.getSipManager().getSipStack().setServiceRoutePath(routes);
 		
     	// If the IP address of the Via header in the 200 OK response to the initial
-        // SIP REGISTER request is different than the local IP address then there is
-        // a NAT 
+        // SIP REGISTER request is different than the local IP address then there is a NAT 
     	String localIpAddr = networkInterface.getNetworkAccess().getIpAddress();
     	ViaHeader respViaHeader = ctx.getSipResponse().getViaHeaders().next();
     	String received = respViaHeader.getParameter("received");
@@ -439,32 +461,32 @@ public class RegistrationManager extends PeriodicRefresher {
 	private void handle401Unauthorized(SipTransactionContext ctx) throws Exception {
 		// 401 response received
     	if (logger.isActivated()) {
-    		logger.info("401 response received");
+    		logger.info("401 response received, nbFailures=" + nb401Failures);
     	}
 
-    	SipResponse resp = ctx.getSipResponse();
+		SipResponse resp = ctx.getSipResponse();
 
-        // Read the security header
-    	registrationProcedure.readSecurityHeader(resp);
+		// Read the security header
+		registrationProcedure.readSecurityHeader(resp);
 
-        // Increment the Cseq number of the dialog path
-        dialogPath.incrementCseq();
+		// Increment the Cseq number of the dialog path
+		dialogPath.incrementCseq();
 
-        // Create second REGISTER request with security token
-        if (logger.isActivated()) {
-        	logger.info("Send second REGISTER");
-        }
-        SipRequest register = SipMessageFactory.createRegister(dialogPath,
-        		featureTags,
-        		ctx.getTransaction().getRequest().getExpires().getExpires(),
-        		instanceId,
-        		networkInterface.getAccessInfo());
-        
-        // Set the security header
-        registrationProcedure.writeSecurityHeader(register);
+		// Create REGISTER request with security token
+		if (logger.isActivated()) {
+			logger.info("Send REGISTER with security token");
+		}
+		SipRequest register = SipMessageFactory.createRegister(dialogPath,
+				featureTags,
+				ctx.getTransaction().getRequest().getExpires().getExpires(),
+				instanceId,
+				networkInterface.getAccessInfo());
 
-        // Send REGISTER request
-        sendRegister(register);
+		// Set the security header
+		registrationProcedure.writeSecurityHeader(register);
+
+		// Send REGISTER request
+		sendRegister(register);
 	}	
 
 	/**

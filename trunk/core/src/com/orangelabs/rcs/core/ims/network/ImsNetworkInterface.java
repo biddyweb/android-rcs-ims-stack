@@ -139,6 +139,15 @@ public abstract class ImsNetworkInterface {
 	}
 
 	/**
+     * Returns the registration manager
+     *
+     * @return Registration manager
+     */
+	public RegistrationManager getRegistrationManager() {
+		return registration;
+	}
+	
+	/**
      * Load the registration procedure associated to the network access
      */
 	public void loadRegistrationProcedure() {

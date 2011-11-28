@@ -138,7 +138,6 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=accept-types:" + InstantMessage.MIME_TYPE + SipUtils.CRLF +
-	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;

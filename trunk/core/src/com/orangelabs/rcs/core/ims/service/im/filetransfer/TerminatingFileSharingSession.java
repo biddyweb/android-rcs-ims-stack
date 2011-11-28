@@ -184,7 +184,6 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=max-size:" + FileSharingSession.MAX_FILE_SIZE + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=connection:new" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;

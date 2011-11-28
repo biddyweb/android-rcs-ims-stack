@@ -36,7 +36,6 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
@@ -238,7 +237,7 @@ public class CapabilityUtils {
 			}
 			
 			// Save extensions in database
-			RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_RCS_EXTENSIONS, extensions);
+			RcsSettings.getInstance().setSupportedRcsExtensions(extensions);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

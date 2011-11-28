@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 
@@ -86,128 +85,6 @@ public class ChunkReceiver extends Thread {
 	/**
 	 * Background processing
 	 */
-/*	public void run() {
-		try {
-			if (logger.isActivated()) {
-				logger.debug("Receiver is started");
-			}
-
-			// Background processing
-			while(!terminated) {
-				// Start reading a new chunk
-				StringBuffer firstLine = readLine();
-				String[] firstLineTags = firstLine.toString().split(" ");
-				if (logger.isActivated()) {
-					logger.debug("Read a new chunk");
-				}
-				
-				// Check the MSRP tag
-				if ((firstLineTags.length < 3) || !firstLineTags[0].equals(MsrpConstants.MSRP_PROTOCOL)) {
-					if (logger.isActivated()) {
-						logger.debug("Not a MSRP message");
-					}
-					return;
-				}
-
-				// Get the transaction ID from the first line
-				String txId = firstLineTags[1];
-
-				// Get response code or method name from the first line
-				int responseCode = -1;
-				String method = null;
-				try {
-					responseCode = Integer.parseInt(firstLineTags[2]);
-				} catch(NumberFormatException e) {
-					method = firstLineTags[2];
-				}
-
-				// Data chunk
-				byte[] data = null;
-
-				// Read next lines
-				Hashtable<String, String> headers = new Hashtable<String, String>();
-				char continuationFlag = '\0';
-				long totalSize = 0;
-				while(true) {
-					String line = readLine().toString();
-					if (logger.isActivated()) {
-						logger.debug("Read line: " + line);
-					}						
-					
-					if (line.length() == 0) {
-						// Empty line detected: read data
-						String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
-						if (byteRange != null) { 
-							int chunkSize = getChunkSize(byteRange);
-							totalSize = getTotalSize(byteRange);
-							if (chunkSize == -1) {
-								chunkSize = (int)totalSize;
-							}
-							data = readChunkedData(chunkSize);
-						} else {
-							data = readData();
-							totalSize = data.length;
-						}
-						if (logger.isActivated()) {
-							logger.debug("Read data: " + data.length);
-						}						
-					} else
-					if (line.startsWith(MsrpConstants.END_MSRP_MSG)) {
-						// End of message
-						continuationFlag = line.charAt(line.length()-1);
-						if (logger.isActivated()) {
-							logger.debug("Continuous flag: " + continuationFlag);
-						}						
-						break;
-					} else {
-						// It's an header
-						String[] header = line.split(":");
-						
-						// Add the header in the list
-						headers.put(header[0].trim(), header[1].trim());
-						if (logger.isActivated()) {
-							logger.debug("Header: " + header[0]);
-						}						
-					}
-				}
-				
-				// Process the received MSRP message
-				if (responseCode != -1) {
-					// Process MSRP response
-					connection.getSession().receiveMsrpResponse(responseCode, txId.toString(), headers);
-				} else {
-					// Process MSRP request
-					if (method.toString().equals(MsrpConstants.METHOD_SEND)) {
-						// Process a SEND request
-						connection.getSession().receiveMsrpSend(txId.toString(), headers, continuationFlag, data, totalSize);
-					} else 
-					if (method.toString().equals(MsrpConstants.METHOD_REPORT)) {
-						// Process a REPORT request
-						connection.getSession().receiveMsrpReport(txId.toString(), headers);					
-					} else {
-						// Unknown request
-						if (logger.isActivated()) {
-							logger.debug("Unknown request received: " + method.toString());
-						}
-					}
-				}
-			}
-		} catch(Exception e) {
-			if (terminated) { 
-				if (logger.isActivated()) {
-					logger.debug("Chunk receiver thread terminated");
-				}
-			} else {
-				if (logger.isActivated()) {
-					logger.error("Chunk receiver has failed", e);
-				}
-				
-				// Notify the session listener that an error has occured
-				connection.getSession().getMsrpEventListener().msrpTransferError(e.getMessage());
-			}
-			terminated = true;
-		}
-	}*/
 	public void run() {
 		try {
 			if (logger.isActivated()) {
@@ -376,14 +253,18 @@ public class ChunkReceiver extends Thread {
 						}
 						
 						if (MsrpConnection.MSRP_TRACE_ENABLED) {
-							System.out.println("<<< Receive MSRP SEND request:\n" + chunk.toString() + new String(data));
+							if (chunk!=null && data!=null){
+								System.out.println("<<< Receive MSRP SEND request:\n" + chunk.toString() + new String(data));
+							}
 						}
 						connection.getSession().receiveMsrpSend(txId.toString(), headers, flag, data, totalSize);
 					} else 
 					if (method.toString().equals(MsrpConstants.METHOD_REPORT)) {
 						// Process a REPORT request
 						if (MsrpConnection.MSRP_TRACE_ENABLED) {
-							System.out.println("<<< Receive MSRP REPORT request:\n" + chunk.toString());
+							if (chunk!=null){
+								System.out.println("<<< Receive MSRP REPORT request:\n" + chunk.toString());
+							}
 						}
 						connection.getSession().receiveMsrpReport(txId.toString(), headers);					
 					} else {
@@ -409,62 +290,6 @@ public class ChunkReceiver extends Thread {
 			}
 			terminated = true;
 		}
-	}
-
-	/**
-	 * Read a line
-	 * 
-	 * @return Line
-	 * @throws IOException
-	 */
-	private StringBuffer readLine() throws IOException {
-		StringBuffer line = new StringBuffer();
-		for (int i = stream.read(); (i != MsrpConstants.CHAR_LF) && (i != -1); i = stream.read()) {
-			line.append((char)i);
-		}
-		stream.read(); // Read CR
-		return line;
-	}
-
-	/**
-	 * Read chunked data
-	 *
-	 * @param chunkSize Chunk size
-	 * @return Data
-	 * @throws IOException
-	 */
-	private byte[] readChunkedData(int chunkSize) throws IOException {
-		// Read data until chunk size is reached
-		byte[] result = null;
-		result = new byte[chunkSize];
-		int nbRead = 0;
-		int nbData = -1;
-		while((nbRead < chunkSize) && ((nbData = stream.read(result, nbRead, chunkSize-nbRead)) != -1)) {
-			nbRead += nbData;
-		}		
-		stream.read(); // Read LF
-		stream.read(); // Read CR
-		return result;
-	}
-
-	/**
-	 * Read data
-	 *
-	 * @return Data
-	 * @throws IOException
-	 */
-	private byte[] readData() throws IOException {
-		// Read data
-		byte[] data = new byte[2048];
-		int size = 0;
-		for (int i = stream.read(); (i != MsrpConstants.CHAR_LF) && (i != -1); i = stream.read()) {
-			data[size] = (byte)i;
-		}
-		stream.read(); // Read CR
-		
-		byte[] result = new byte[size];
-		System.arraycopy(data, 0, result, 0, size);		
-		return result;
 	}
 
 	/**

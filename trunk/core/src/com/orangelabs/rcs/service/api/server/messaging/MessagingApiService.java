@@ -586,7 +586,8 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		
 		try {
 			// Send a delivery status
-			Core.getInstance().getImService().getImdnManager().sendMessageDeliveryStatus(contact, msgId, status);
+			Core.getInstance().getImService().getImdnManager().sendMessageDeliveryStatus(PhoneUtils.formatNumberToSipUri(contact),
+					msgId, status);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}

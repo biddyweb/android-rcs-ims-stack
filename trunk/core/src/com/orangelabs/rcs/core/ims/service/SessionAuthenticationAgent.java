@@ -48,7 +48,6 @@ public class SessionAuthenticationAgent {
 	 * Constructor
 	 */
 	public SessionAuthenticationAgent() {
-		super();
 	}
 
 	/**

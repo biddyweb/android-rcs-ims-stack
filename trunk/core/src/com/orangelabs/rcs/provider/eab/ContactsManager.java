@@ -480,7 +480,8 @@ public final class ContactsManager {
 				ops.add(op);
 			}
 			// IM session
-			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IM_SESSION, newInfo.getCapabilities().isImSessionSupported() && isRegistered, oldInfo.getCapabilities().isImSessionSupported());
+			// For IM, also check if the IM capability always on is activated, for RCS contacts
+			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IM_SESSION, (newInfo.getCapabilities().isImSessionSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && (newInfo.getRcsStatus()!=ContactInfo.NO_INFO) && (newInfo.getRcsStatus()!=ContactInfo.NOT_RCS)), oldInfo.getCapabilities().isImSessionSupported());
 			if (op!=null){
 				ops.add(op);
 			}
