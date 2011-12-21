@@ -18,12 +18,12 @@
 
 package com.orangelabs.rcs.platform.file;
 
+import com.orangelabs.rcs.platform.FactoryException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import com.orangelabs.rcs.platform.FactoryException;
 
 /**
  * File factory
@@ -130,11 +130,15 @@ public abstract class FileFactory {
 	 * Create a directory if not already exist
 	 * 
 	 * @param path Directory path
+	 * @return true if the directory exists or is created
 	 */
-	public static void createDirectory(String path) {
+	public static boolean createDirectory(String path) {
 		File dir = new File(path); 
 		if (!dir.exists()) {
-			dir.mkdirs(); 
+			if (!dir.mkdirs()) {
+                return false; 
+			}
 		}
+        return true;
 	}	
 }

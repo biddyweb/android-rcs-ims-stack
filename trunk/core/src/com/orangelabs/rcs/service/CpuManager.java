@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.service;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.content.Context;
@@ -31,14 +32,9 @@ import android.os.PowerManager;
  */
 public class CpuManager {
 	/**
-	 * Always-on flag
+	 * Power lock
 	 */
-	public final static boolean ALWAYS_ON = false; 
-	
-	/**
-	 * Power manager
-	 */
-	private PowerManager.WakeLock powerManager = null;
+	private PowerManager.WakeLock powerLock = null;
 
     /**
      * The logger
@@ -49,32 +45,31 @@ public class CpuManager {
 	 * Constructor
 	 */
 	public CpuManager() {
-		if (logger.isActivated()) {
-			logger.info("CPU always-on state is " + CpuManager.ALWAYS_ON);
-		}
 	}
-	
+
 	/**
 	 * Init
 	 */
 	public void init() {
-		if (CpuManager.ALWAYS_ON) {
-			// Activate the always-on procedure even if the device wakes up
-			PowerManager pm = (PowerManager)AndroidFactory.getApplicationContext().getSystemService(Context.POWER_SERVICE);
-			powerManager = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RcsCore");
-			powerManager.acquire();
-		}
+        if (RcsSettings.getInstance().isCpuAlwaysOn()) {
+            // Activate the always-on procedure even if the device wakes up
+            PowerManager pm = (PowerManager) AndroidFactory.getApplicationContext()
+                    .getSystemService(Context.POWER_SERVICE);
+            powerLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RcsCore");
+            powerLock.acquire();
+    		if (logger.isActivated()) {
+    			logger.info("Always-on CPU activated");
+    		}
+        }
 	}
 
 	/**
 	 * Stop
 	 */
 	public void close() {
-		if (CpuManager.ALWAYS_ON) {
-			// Release power manager wave lock
-			if (powerManager != null) {
-	    		powerManager.release();
-	    	}
-		}		
+        // Release power manager wave lock
+        if (powerLock != null) {
+            powerLock.release();
+        }
 	}
 }

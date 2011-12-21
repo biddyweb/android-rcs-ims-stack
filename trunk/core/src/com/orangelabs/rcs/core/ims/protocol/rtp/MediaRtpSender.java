@@ -92,8 +92,7 @@ public class MediaRtpSender {
 			}
 
             // Create the output stream
-            outputStream = new RtpOutputStream(remoteAddress, remotePort,
-                    localRtpPort);
+            outputStream = new RtpOutputStream(remoteAddress, remotePort, localRtpPort);
             outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());

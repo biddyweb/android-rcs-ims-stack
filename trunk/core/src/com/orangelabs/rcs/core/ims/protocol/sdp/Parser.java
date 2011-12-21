@@ -18,11 +18,11 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sdp;
 
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Vector;
-
-import com.orangelabs.rcs.utils.logger.Logger;
 
 class Parser {
 	private static Vector<Integer> buffer;
@@ -40,7 +40,7 @@ class Parser {
 		byte token[] = tokenStr.getBytes();
 
 		for (int i = 0; i < token.length; i++) {
-			buffer.insertElementAt(new Integer(token[token.length - i - 1]), 0);
+			buffer.insertElementAt(Integer.valueOf(token[token.length - i - 1]), 0);
 		}
 	}
 
@@ -110,7 +110,7 @@ class Parser {
 			ch = readChar(bin);
 		}
 
-		buffer.insertElementAt(new Integer(ch), 0);
+		buffer.insertElementAt(Integer.valueOf(ch), 0);
 	}
 
 	public int readChar(ByteArrayInputStream bin) {

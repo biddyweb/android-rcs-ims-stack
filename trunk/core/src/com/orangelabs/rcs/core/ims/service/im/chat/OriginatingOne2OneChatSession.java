@@ -23,7 +23,6 @@ import java.util.Vector;
 import javax.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
@@ -36,7 +35,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -224,7 +222,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
 		
         // Wait response
-        ctx.waitResponse(ImsServiceSession.RINGING_PERIOD + SipManager.TIMEOUT);
+        ctx.waitResponse(getResponseTimeout());
 
 		// Analyze the received response 
         if (ctx.isSipResponse()) {
@@ -302,15 +300,6 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
     		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
     		int remotePort = mediaDesc.port;
     		
-			// Send ACK request
-	        if (logger.isActivated()) {
-	        	logger.info("Send ACK");
-	        }
-	        getImsService().getImsModule().getSipManager().sendSipAck(getDialogPath());
-	   		
-        	// The session is established
-	        getDialogPath().sessionEstablished();
-	        	        
 	        // Create the MSRP client session
 			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
 			session.setFailureReportOption(false);
@@ -319,9 +308,18 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 			// Open the MSRP session
 			getMsrpMgr().openMsrpSession();
 			
+        	// Send ACK request
+	        if (logger.isActivated()) {
+	        	logger.info("Send ACK");
+	        }
+	        getImsService().getImsModule().getSipManager().sendSipAck(getDialogPath());
+	   		
 	        // Send an empty packet
         	sendEmptyDataChunk();
-        	
+
+        	// The session is established
+	        getDialogPath().sessionEstablished();
+	        	        
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
 	    		getListeners().get(i).handleSessionStarted();

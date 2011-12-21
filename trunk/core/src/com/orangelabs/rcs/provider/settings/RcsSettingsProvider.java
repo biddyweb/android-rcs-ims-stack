@@ -68,7 +68,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 50;
+        private static final int DATABASE_VERSION = 52;
 
         private Context ctx;
 
@@ -165,6 +165,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.TRACE_ACTIVATED,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
             addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATED, 				RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.SIP_TRACE_FILE,                    "/sdcard/sip.txt");
             addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATED,				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
@@ -181,7 +182,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
             addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"300");
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"150");            
-            addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);            
+            addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
         }
 
         /**

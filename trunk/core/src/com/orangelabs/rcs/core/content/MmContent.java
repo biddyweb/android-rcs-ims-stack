@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.core.content;
 
+
 /**
  * Multimedia content
  * 
@@ -188,5 +189,4 @@ public abstract class MmContent {
 	public void setData(byte[] data) {
 		this.data = data;
 	}
-
 }

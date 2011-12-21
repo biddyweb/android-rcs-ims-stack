@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.protocol.rtp;
 
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaRendererStream;
@@ -54,9 +53,6 @@ public class MediaRtpReceiver {
      */
 	public MediaRtpReceiver(int localPort) {
 		this.localPort = localPort;
-
-        // Activate symmetric RTP configuration
-		RtpConfig.SYMETRIC_RTP = true;
 	}
 
     /**

@@ -23,6 +23,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.IOException;
 
 /**
@@ -100,7 +101,7 @@ public class RtpPacketTransmitter {
         this.remoteAddress = address;
         this.remotePort = port;
         this.rtcpSession = rtcpSession;
-        if (datagramConnection != null) {
+        if (connection != null) {
             this.datagramConnection = connection;
         } else {
             this.datagramConnection = NetworkFactory.getFactory().createDatagramConnection();

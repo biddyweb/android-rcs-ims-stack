@@ -26,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -65,10 +66,13 @@ public class LoggerProvisioning extends Activity {
     	check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
         check.setChecked(RcsSettings.getInstance().isSipTraceActivated());
 
-    	check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
+		check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
         check.setChecked(RcsSettings.getInstance().isMediaTraceActivated());
 
-        Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
+		EditText txt = (EditText)this.findViewById(R.id.SipTraceFile);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TRACE_FILE));
+
+		Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, TRACE_LEVEL);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -109,14 +113,17 @@ public class LoggerProvisioning extends Activity {
 		        check = (CheckBox)this.findViewById(R.id.SipTraceActivated);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRACE_ACTIVATED, Boolean.toString(check.isChecked()));
 
-		        check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
+				check = (CheckBox)this.findViewById(R.id.MediaTraceActivated);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.MEDIA_TRACE_ACTIVATED, Boolean.toString(check.isChecked()));
 
 				Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
 				String value = (String)spinner.getSelectedItem();
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_LEVEL, value);
 
-		        Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();				
+				EditText txt = (EditText)this.findViewById(R.id.SipTraceFile);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRACE_FILE, txt.getText().toString());
+
+				Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();				
 		        break;
 		}
 		return true;

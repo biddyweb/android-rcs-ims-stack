@@ -18,17 +18,19 @@
 
 package com.orangelabs.rcs.core.ims.service;
 
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Vector;
 
 /**
  * IMS service session
@@ -36,11 +38,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ImsServiceSession extends Thread {
-	/**
-	 * Ringing period (in seconds)
-	 */
-	public static int RINGING_PERIOD = 30;
-
 	/**
 	 * Session invitation status
 	 */
@@ -92,7 +89,12 @@ public abstract class ImsServiceSession extends Thread {
 	 * Session timer manager
 	 */
 	private SessionTimerManager sessionTimer = new SessionTimerManager(this);
-	
+
+    /**
+     * Ringing period (in seconds)
+     */
+    private int ringingPeriod = 30;
+
 	/**
      * The logger
      */
@@ -107,6 +109,8 @@ public abstract class ImsServiceSession extends Thread {
 	public ImsServiceSession(ImsService imsService, String contact) {
         this.imsService = imsService;
 		this.contact = contact;
+
+        ringingPeriod = RcsSettings.getInstance().getRingingPeriod();
 	}
 
 	/**
@@ -367,7 +371,7 @@ public abstract class ImsServiceSession extends Thread {
 		// Wait until received response or received timeout
 		try {
 			synchronized(waitUserAnswer) {
-				waitUserAnswer.wait(RINGING_PERIOD * 1000);
+				waitUserAnswer.wait(ringingPeriod * 1000);
 			}
 		} catch(InterruptedException e) {
 			// Nothing to do
@@ -727,5 +731,14 @@ public abstract class ImsServiceSession extends Thread {
         	// Passive mode by default
 			return "passive";
         }
-	}	
+	}
+	
+	/**
+	 * Returns the response timeout (in seconds) 
+	 * 
+	 * @return Timeout
+	 */
+	public int getResponseTimeout() {
+		return ringingPeriod + SipManager.TIMEOUT;
+	}
 }

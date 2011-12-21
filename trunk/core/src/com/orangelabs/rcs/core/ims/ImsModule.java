@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.core.ims;
 
-import java.util.Enumeration;
-
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.CoreListener;
@@ -28,10 +26,8 @@ import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.gsm.CallManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpConnection;
-import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpSource;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipEventListener;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipInterface;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceDispatcher;
@@ -44,6 +40,8 @@ import com.orangelabs.rcs.core.ims.service.sip.SipService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Enumeration;
 
 /**
  * IMS module
@@ -110,11 +108,8 @@ public class ImsModule implements SipEventListener {
         }
 
         // Set general parameters
-        ImsServiceSession.RINGING_PERIOD = RcsSettings.getInstance().getRingingPeriod();
 		SipManager.TIMEOUT = RcsSettings.getInstance().getSipTransactionTimeout();
-		SipInterface.SIP_TRACE_ENABLED = RcsSettings.getInstance().isSipTraceActivated();
 		RtpSource.CNAME = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		MsrpManager.TIMEOUT = RcsSettings.getInstance().getMsrpTransactionTimeout();
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
 		// Instanciates the IMS services

@@ -57,21 +57,21 @@ public class VideoCodecManager {
      * @return SDP part
      */
     public static String createCodecSdpPart(VideoCodec[] codecs, int localRtpPort) {
-        String result = "";
+        StringBuffer result = new StringBuffer();
 
-        result += "m=video " + localRtpPort + " RTP/AVP";
+        result.append("m=video " + localRtpPort + " RTP/AVP");
         for (int i = 0; i < codecs.length; i++) {
-            result += " " + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload();
+            result.append(" " + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload());
         }
-        result += SipUtils.CRLF;
+        result.append(SipUtils.CRLF);
         int framerate = 0;
         for (int i = 0; i < codecs.length; i++) {
             if (codecs[i].getFramerate() > framerate)
                 framerate = codecs[i].getFramerate();
         }
-        result += "a=framerate:" + framerate + SipUtils.CRLF;
+        result.append("a=framerate:" + framerate + SipUtils.CRLF);
         for (int i = 0; i < codecs.length; i++) {
-            result += "a=rtpmap:"
+            result.append("a=rtpmap:"
                     + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload() + " "
                     + codecs[i].getCodecName() + "/" + codecs[i].getClockRate() + SipUtils.CRLF
                     + "a=framesize:"
@@ -79,10 +79,10 @@ public class VideoCodecManager {
                     + codecs[i].getWidth() + "-" + codecs[i].getHeight() + SipUtils.CRLF
                     + "a=fmtp:"
                     + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload() + " "
-                    + codecs[i].getCodecParams() + SipUtils.CRLF;
+                    + codecs[i].getCodecParams() + SipUtils.CRLF);
         }
 
-        return result;
+        return result.toString();
     }
 
     /**
@@ -96,7 +96,7 @@ public class VideoCodecManager {
         for (int i = 0; i < proposedCodecs.length; i++) {
             for (int j = 0; j < supportedCodecs.length; j++) {
                 VideoCodec videoCodec = new VideoCodec(supportedCodecs[j]);
-                if (proposedCodecs[i].equals(videoCodec))
+                if (proposedCodecs[i].compare(videoCodec))
                     return videoCodec;
             }
         }

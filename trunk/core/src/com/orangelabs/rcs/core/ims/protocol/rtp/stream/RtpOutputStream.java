@@ -22,15 +22,15 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
 
 
+import java.io.IOException;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
-import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpConfig;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 import com.orangelabs.rcs.utils.logger.Logger;
-import java.io.IOException;
 
 /**
  * RTP output stream
@@ -122,21 +122,20 @@ public class RtpOutputStream implements ProcessorOutputStream {
             rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
             // Create the RTCP receiver
             rtcpReceiver = new RtcpPacketReceiver(localRtpPort + 1, rtcpSession);
+            rtcpReceiver.start();
 
-            if (RtpConfig.SYMETRIC_RTP) {
-                // Create the RTP transmitter
-                rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession,
-                        rtpReceiver.getConnection());
-                // Create the RTCP transmitter
-                rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1,
-                        rtcpSession, rtcpReceiver.getConnection());
-            } else {
-                // Create the RTP transmitter
-                rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);
-                // Create the RTCP transmitter
-                rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1,
-                        rtcpSession);
-            }
+            // Create the RTP transmitter
+            rtpTransmitter = new RtpPacketTransmitter(remoteAddress,
+            		remotePort,
+            		rtcpSession,
+                    rtpReceiver.getConnection());
+            
+            // Create the RTCP transmitter
+            rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress,
+            		remotePort + 1,
+                    rtcpSession,
+                    rtcpReceiver.getConnection());
+            rtcpTransmitter.start();
         } else {
             // Create the RTP transmitter
             rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);

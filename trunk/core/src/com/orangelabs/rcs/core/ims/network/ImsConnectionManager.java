@@ -18,7 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.network;
 
-import java.util.Random;
+import com.orangelabs.rcs.core.CoreException;
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.platform.network.NetworkFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -31,13 +37,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.telephony.TelephonyManager;
 
-import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.network.NetworkFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.util.Random;
 
 /**
  * IMS connection manager
@@ -217,7 +217,7 @@ public class ImsConnectionManager implements Runnable {
 		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
 	    	// Check received network info
 	    	NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
-			if (networkInfo == null) {
+			if ((networkInfo == null) || (currentNetworkInterface == null)) {
 				if (logger.isActivated()) {
 					logger.debug("Disconnect from IMS: no network (e.g. air plane mode)");
 				}
@@ -262,7 +262,7 @@ public class ImsConnectionManager implements Runnable {
 			}   				
 
 			// Check if the IP address has changed
-			if ((localIpAddr != null) && (lastNetworkInterface != null ) &&
+			if ((localIpAddr != null) &&
 					!localIpAddr.equals(lastNetworkInterface.getNetworkAccess().getIpAddress())) {
 				if (logger.isActivated()) {
 					logger.debug("Disconnect from IMS: IP address has changed");

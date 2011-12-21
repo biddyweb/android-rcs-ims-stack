@@ -18,12 +18,6 @@
 
 package com.orangelabs.rcs.provider.eventlogs;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.orangelabs.rcs.provider.RichProviderHelper;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.messaging.RichMessagingProvider;
@@ -46,6 +40,12 @@ import android.net.Uri.Builder;
 import android.provider.BaseColumns;
 import android.provider.CallLog;
 import android.provider.CallLog.Calls;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Virtual provider that enables EventLogs queries to be done in Core with access to SQLiteDatabase object.
@@ -640,6 +640,7 @@ public class EventLogProvider extends ContentProvider {
 		/* Unbuild selection */
 		selection = selection.substring(5,selection.length()-1);
 		String[] numbers;
+		StringBuffer buf = new StringBuffer();
 		if(selection!=null){
 			numbers = selection.split(",");
 			/* Get the threadIds of each number for the contacts */
@@ -660,13 +661,13 @@ public class EventLogProvider extends ContentProvider {
 			}
 
 			/* Get SMS and MMS from those ThreadIds */
-			selection = "thread_id IN (";
+			buf.append("thread_id IN (");
 			for(int i = 0; i <threadIds.size();i++){
-				selection+=threadIds.get(i)+",";
+				buf.append(threadIds.get(i)+",");
 			}
-			selection = selection.substring(0, selection.length()-1)+")";
+			buf.replace(buf.length()-1, buf.length(), ")");
 		}
-		return selection;
+		return buf.toString();
 	}
 	
 	/**

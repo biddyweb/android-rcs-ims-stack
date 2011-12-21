@@ -35,11 +35,6 @@ public class JavaDepacketizer extends VideoCodec {
 	FrameAssemblerCollection assemblersCollection = new FrameAssemblerCollection();
 	
 	/**
-	 * Frame assembler
-	 */
-	FrameAssembler assembler = new FrameAssembler();
-	
-	/**
 	 * Max frame size to give for next module, as some decoder have frame size limits
 	 */
 	private static int MAX_H263P_FRAME_SIZE = 8192;

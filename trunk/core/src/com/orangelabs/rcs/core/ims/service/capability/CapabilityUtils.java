@@ -220,7 +220,7 @@ public class CapabilityUtils {
 			String mime = FeatureTags.FEATURE_RCSE + "/*"; 
 			intent.setType(mime);			
 			List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
-			String extensions = "";
+			StringBuffer extensions = new StringBuffer();
 			for(int i=0; i < list.size(); i++) {
 				ResolveInfo info = list.get(i);
 				for(int j =0; j < info.filter.countDataTypes(); j++) {
@@ -228,16 +228,16 @@ public class CapabilityUtils {
 					int index = value.indexOf(FeatureTags.FEATURE_RCSE_EXTENSION);
 					if (index != -1) {
 						String tag = value.substring(index);
-						extensions += "," + tag;
+						extensions.append("," + tag);
 					}
 				}
 			}
-			if (extensions.startsWith(",")) {
-				extensions = extensions.substring(1);
+			if ((extensions.length() > 0) && (extensions.charAt(0) == ',')) {
+				extensions.deleteCharAt(0);
 			}
-			
+
 			// Save extensions in database
-			RcsSettings.getInstance().setSupportedRcsExtensions(extensions);
+			RcsSettings.getInstance().setSupportedRcsExtensions(extensions.toString());
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -252,56 +252,51 @@ public class CapabilityUtils {
      */
     public static String buildSdp(String ipAddress, boolean richcall) {
     	String sdp = null;
-	    try {
-			if (richcall) {
-		        boolean video = RcsSettings.getInstance().isVideoSharingSupported();
-		        boolean image = RcsSettings.getInstance().isImageSharingSupported();
-		        if (video | image) {
-					// Build the local SDP
-			    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-			    	sdp = "v=0" + SipUtils.CRLF +
-				        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
-				            "s=-" + SipUtils.CRLF +
-				            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
-				            "t=0 0" + SipUtils.CRLF;
+		if (richcall) {
+	        boolean video = RcsSettings.getInstance().isVideoSharingSupported();
+	        boolean image = RcsSettings.getInstance().isImageSharingSupported();
+	        if (video | image) {
+				// Build the local SDP
+		    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+		    	sdp = "v=0" + SipUtils.CRLF +
+			        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+			            "s=-" + SipUtils.CRLF +
+			            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
+			            "t=0 0" + SipUtils.CRLF;
 
-			    	// Add video config
-			        if (video) {
-			        	// Get supported video formats
-						Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
-				    	String videoSharingConfig = "";
-						for(int i=0; i < videoFormats.size(); i++) {
-							VideoFormat fmt = videoFormats.elementAt(i);
-							videoSharingConfig += "m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF;
-							videoSharingConfig += "a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF;
-						}
-						
-						// Update SDP
-				    	sdp += videoSharingConfig;
-			        }
-		        
-					// Add image config
-			        if (image) {
-						// Get supported image formats
-						Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
-						String supportedImageFormats = "";
-						for(int i=0; i < mimeTypes.size(); i++) {
-							supportedImageFormats += mimeTypes.elementAt(i) + " ";
-					    }    	    	
-						supportedImageFormats = supportedImageFormats.trim();
+		    	// Add video config
+		        if (video) {
+		        	// Get supported video formats
+					Vector<VideoFormat> videoFormats = MediaRegistry.getSupportedVideoFormats();
+					StringBuffer videoSharingConfig = new StringBuffer();
+					for(int i=0; i < videoFormats.size(); i++) {
+						VideoFormat fmt = videoFormats.elementAt(i);
+						videoSharingConfig.append("m=video 0 RTP/AVP " + fmt.getPayload() + SipUtils.CRLF);
+						videoSharingConfig.append("a=rtpmap:" + fmt.getPayload() + " " + fmt.getCodec() + SipUtils.CRLF);
+					}
 					
-						// Update SDP
-						String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
-							"a=accept-types:" + supportedImageFormats + SipUtils.CRLF +
-							"a=file-selector" + SipUtils.CRLF +
-							"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
-				    	sdp += imageSharingConfig;
-			        }
+					// Update SDP
+			    	sdp += videoSharingConfig.toString();
 		        }
-			}
-			return sdp;
-	    } catch(Exception e) {
-        	return null;
-	    }
+	        
+				// Add image config
+		        if (image) {
+					// Get supported image formats
+					Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
+					StringBuffer supportedImageFormats = new StringBuffer();
+					for(int i=0; i < mimeTypes.size(); i++) {
+						supportedImageFormats.append(mimeTypes.elementAt(i) + " ");
+				    }    	    	
+				
+					// Update SDP
+					String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
+						"a=accept-types:" + supportedImageFormats.toString().trim() + SipUtils.CRLF +
+						"a=file-selector" + SipUtils.CRLF +
+						"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
+			    	sdp += imageSharingConfig;
+		        }
+	        }
+		}
+		return sdp;
     } 
 }

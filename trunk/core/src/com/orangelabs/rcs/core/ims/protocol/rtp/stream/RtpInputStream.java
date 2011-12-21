@@ -93,6 +93,7 @@ public class RtpInputStream implements ProcessorInputStream {
         rtpReceiver = new RtpPacketReceiver(localPort, rtcpSession);
     	// Create the RTCP receiver
         rtcpReceiver = new RtcpPacketReceiver(localPort + 1, rtcpSession);
+        rtcpReceiver.start();
     }
 
     /**

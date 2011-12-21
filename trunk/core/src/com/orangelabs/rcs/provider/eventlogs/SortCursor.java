@@ -30,7 +30,7 @@ public class SortCursor extends AbstractCursor {
     private Cursor mCursor; // updated in onMove
     private Cursor[] mCursors;
     private int[] mSortColumns;
-    private final int ROWCACHESIZE = 64;
+    private final static int ROWCACHESIZE = 64;
     private int mRowNumCache[] = new int[ROWCACHESIZE];
     private int mCursorCache[] = new int[ROWCACHESIZE];
     private int mCurRowNumCache[][];

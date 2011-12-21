@@ -28,10 +28,37 @@ public class TerminalInfo {
 	/**
 	 * Product name
 	 */
-	public static String PRODUCT_NAME = "OrangeLabs-RCS-client";
+	private static String productName = "OrangeLabs-RCS-client";
 
 	/**
 	 * Product version
 	 */
-	public static String PRODUCT_VERSION = "v2.2";
+	private static String productVersion = "v2.2";
+	
+	/**
+	 * Returns the product name
+	 * 
+	 * @return Name
+	 */
+	public static String getProductName() {
+		return productName;
+	}
+
+	/**
+	 * Returns the product version
+	 * 
+	 * @return Version
+	 */
+	public static String getProductVersion() {
+		return productVersion;
+	}
+
+	/**
+	 * Set the product version
+	 * 
+	 * @param version Version
+	 */
+	public static void setProductVersion(String version) {
+		TerminalInfo.productVersion = version;
+	}
 }

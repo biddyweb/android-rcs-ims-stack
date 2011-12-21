@@ -18,8 +18,8 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import java.io.File;
-import java.io.FilenameFilter;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
@@ -33,8 +33,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import java.io.File;
+import java.io.FilenameFilter;
 
 /**
  * Stack parameters provisioning
@@ -225,6 +225,9 @@ public class StackProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.Gruu);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.GRUU)));
+
+        check = (CheckBox)this.findViewById(R.id.CpuAlwaysOn);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CPU_ALWAYS_ON)));
     }
 
     @Override
@@ -344,6 +347,9 @@ public class StackProvisioning extends Activity {
 
 		    	check = (CheckBox)this.findViewById(R.id.Gruu);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.GRUU, Boolean.toString(check.isChecked()));
+
+                check = (CheckBox)this.findViewById(R.id.CpuAlwaysOn);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.CPU_ALWAYS_ON, Boolean.toString(check.isChecked()));
 
 				Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 				break;

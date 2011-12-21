@@ -22,7 +22,9 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
@@ -70,17 +72,34 @@ public class KeyStoreManager {
      * 
      * @return true if already created.
      */
-    public static boolean isKeystoreExists(String path) {
+    public static boolean isKeystoreExists(String path) throws KeyStoreManagerException {
+        // Test file 
         File file = new File(path);
         if ((file == null) || (!file.exists()))
             return false;
+        
+        // Test keystore
+        FileInputStream fis = null;
+        boolean result = false;
         try {
+            // Try to open the keystore
+            fis = new FileInputStream(path);
             KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
-            ks.load(new FileInputStream(path), KEYSTORE_PASSWORD.toCharArray());
+            ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
+            result = true;
+        } catch (FileNotFoundException e) {
+            throw new KeyStoreManagerException(e.getMessage());
         } catch (Exception e) {
-            return false;
+            result = false;
+        } finally {
+            try {
+                if (fis != null)
+                    fis.close();
+            } catch (IOException e) {
+                // Intentionally blank
+            }
         }
-        return true;
+        return result;
     }
 
     /**
@@ -88,15 +107,27 @@ public class KeyStoreManager {
      * 
      * @throws Exception
      */
-    public static void createKeyStore() throws Exception {
+    public static void createKeyStore() throws KeyStoreManagerException {
         File file = new File(getKeystorePath());
         if ((file == null) || (!file.exists())) {
-            // Build empty keystore
-            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
-            ks.load(null, KEYSTORE_PASSWORD.toCharArray());
-
-            // Export keystore in a file
-            ks.store(new FileOutputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(getKeystorePath());
+                // Build empty keystore
+                KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+                ks.load(null, KEYSTORE_PASSWORD.toCharArray());
+                // Export keystore in a file
+                ks.store(fos, KEYSTORE_PASSWORD.toCharArray());
+            } catch (Exception e) {
+                throw new KeyStoreManagerException(e.getMessage());
+            } finally {
+                try {
+                    if (fos != null)
+                        fos.close();
+                } catch (IOException e) {
+                    // Intentionally blank
+                }
+            }
         }
     }
 
@@ -107,15 +138,29 @@ public class KeyStoreManager {
      * @return true if available
      * @throws Exception
      */
-    public static boolean isCertificateEntry(String path) throws Exception {
+    public static boolean isCertificateEntry(String path) throws KeyStoreManagerException {
+        FileInputStream fis = null;
+        boolean result = false;
         if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
-            // Open the existing keystore
-            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
-            ks.load(new FileInputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
-            // isCertificateEntry
-            return ks.isCertificateEntry(buildCertificateAlias(path));
-        }
-        return false;
+            try {
+                fis = new FileInputStream(getKeystorePath());
+                // Open the existing keystore
+                KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+                ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
+                // isCertificateEntry
+                result = ks.isCertificateEntry(buildCertificateAlias(path));
+            } catch (Exception e) {
+                throw new KeyStoreManagerException(e.getMessage());
+            } finally {
+                try {
+                    if (fis != null)
+                        fis.close();
+                } catch (IOException e) {
+                    // Intentionally blank
+                }
+            }
+        } 
+        return result;
     }
 
     /**
@@ -125,21 +170,42 @@ public class KeyStoreManager {
      * @param path certificate path
      * @throws Exception
      */
-    public static void addCertificate(String path) throws Exception {
+    public static void addCertificate(String path) throws KeyStoreManagerException {
         if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
-            // Open the existing keystore
-            KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
-            ks.load(new FileInputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
-
-            // Get certificate and add in keystore
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            InputStream inStream = new FileInputStream(path);
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
-            inStream.close();
-            ks.setCertificateEntry(buildCertificateAlias(path), cert);
-
-            // save the keystore
-            ks.store(new FileOutputStream(getKeystorePath()), KEYSTORE_PASSWORD.toCharArray());
+            FileInputStream fis = null;
+            FileOutputStream fos = null;
+            try {
+                // Open the existing keystore
+                fis = new FileInputStream(getKeystorePath());
+                KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
+                ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
+    
+                // Get certificate and add in keystore
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream inStream = new FileInputStream(path);
+                X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
+                inStream.close();
+                ks.setCertificateEntry(buildCertificateAlias(path), cert);
+    
+                // save the keystore
+                fos = new FileOutputStream(getKeystorePath());
+                ks.store(fos, KEYSTORE_PASSWORD.toCharArray());
+            } catch (Exception e) {
+                throw new KeyStoreManagerException(e.getMessage());
+            } finally {
+                try {
+                    if (fis != null)
+                        fis.close();
+                } catch (IOException e) {
+                    // Intentionally blank
+                }
+                try {
+                    if (fos != null)
+                        fos.close();
+                } catch (IOException e) {
+                    // Intentionally blank
+                }
+            }
         }
     }
 

@@ -18,13 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Random;
-
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * MSRP session
@@ -86,7 +87,12 @@ public class MsrpSession {
      * Random generator
      */
 	private static Random random = new Random(System.currentTimeMillis());
-    
+
+    /**
+     * MRSP timeout (in seconds)
+     */
+    private int msrp_timeout = 10;
+
 	/**
 	 * The logger
 	 */
@@ -96,6 +102,7 @@ public class MsrpSession {
 	 * Constructor
 	 */
 	public MsrpSession() {
+        msrp_timeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
 	}
 	
 	/**
@@ -439,10 +446,9 @@ public class MsrpSession {
 			if (logger.isActivated()) {
 				logger.debug("Wait request response");
 			}
-
 			synchronized(respSemaphore) {
 				try {
-					respSemaphore.wait(MsrpManager.TIMEOUT * 1000);
+					respSemaphore.wait(msrp_timeout * 1000);
 				} catch (InterruptedException e) {}
 			}
 		}
@@ -475,10 +481,6 @@ public class MsrpSession {
 		String msgIdHeader = MsrpConstants.HEADER_MESSAGE_ID + ": " + msgId + MsrpConstants.NEW_LINE;
 		buffer.write(msgIdHeader.getBytes());
 		
-		// No report
-		String header = MsrpConstants.HEADER_FAILURE_REPORT + ": no" + MsrpConstants.NEW_LINE;
-		buffer.write(header.getBytes());
-		
 		// Write end of request
 		buffer.write(MsrpConstants.END_MSRP_MSG.getBytes());
 		buffer.write(txId.getBytes());
@@ -487,7 +489,17 @@ public class MsrpSession {
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
 		// Send chunk
-		connection.sendChunk(buffer.toByteArray());
+		connection.sendChunkImmediately(buffer.toByteArray());
+		
+		// Waiting response
+		if (logger.isActivated()) {
+			logger.debug("Wait request response");
+		}
+		synchronized(respSemaphore) {
+			try {
+				respSemaphore.wait(msrp_timeout * 1000);
+			} catch (InterruptedException e) {}
+		}
 	}
 
 	/**
@@ -598,25 +610,8 @@ public class MsrpSession {
 		// Wait response
 		synchronized(respSemaphore) {
 			try {
-				respSemaphore.wait(MsrpManager.TIMEOUT * 1000);
+				respSemaphore.wait(msrp_timeout * 1000);
 			} catch (InterruptedException e) {}
-		}
-	}
-	
-	/**
-	 * Receive MSRP REPORT response
-	 * 
-	 * @param txId Transaction ID
-	 * @param headers Request headers
-	 * @throws IOException
-	 */
-	public void sendMsrpReportResponse(String txId, Hashtable<String, String> headers) {
-		try {
-			sendMsrpResponse(MsrpConstants.RESPONSE_OK + " " + MsrpConstants.COMMENT_OK, txId, headers);
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send MSRP REPORT error", e);
-			}
 		}
 	}
 	
@@ -632,16 +627,8 @@ public class MsrpSession {
 	 */
 	public void receiveMsrpSend(String txId, Hashtable<String, String> headers, int flag, byte[] data, long totalSize) throws IOException {
 		// Receive a SEND request
-		if (data != null) {
-			if (logger.isActivated()) {
-				logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + ", data size=" + data.length + ")");
-			}
-		} else {
-			// By-pass empty chunk
-			if (logger.isActivated()) {
-				logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + "), no data");
-			}
-			return;
+		if (logger.isActivated()) {
+			logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + ")");
 		}
 
 		// Read message-ID
@@ -657,6 +644,14 @@ public class MsrpSession {
 		// Send MSRP response if requested
 		if (failureReportNeeded) {
 			sendMsrpResponse(MsrpConstants.RESPONSE_OK + " " + MsrpConstants.COMMENT_OK, txId, headers);
+		}
+		
+		// Test if it's an empty chunk
+		if (data == null) { 
+			if (logger.isActivated()) {
+				logger.debug("Empty chunk");
+			}
+			return;
 		}
 		
 		// Save received data chunk if there is some
@@ -743,9 +738,6 @@ public class MsrpSession {
 		if (logger.isActivated()) {
 			logger.info("REPORT request received (transaction=" + txId + ")");
 		}
-		
-		// Send MSRP report response
-		sendMsrpReportResponse(txId, headers);
 		
 		// Unblock wait report
 		synchronized(reportSemaphore) {

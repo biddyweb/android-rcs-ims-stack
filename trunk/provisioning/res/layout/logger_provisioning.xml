@@ -28,7 +28,18 @@
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
         android:text="Media traces"/>		
-        
+
+       	<TextView android:text="SIP traces file:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/SipTraceFile"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="100" android:lines="1"/>
+       
         <TextView android:text="Trace level:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"

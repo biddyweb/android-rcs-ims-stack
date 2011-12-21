@@ -68,6 +68,11 @@ public class RtcpPacketTransmitter extends Thread {
     private boolean closed = false;
 
     /**
+     * Random value
+     */
+    private Random rand = new Random();
+
+    /**
      * The logger
      */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -95,9 +100,6 @@ public class RtcpPacketTransmitter extends Thread {
         if (logger.isActivated()) {
             logger.debug("RTCP transmitter connected to " + remoteAddress + ":" + remotePort);
         }
-
-        // Start the transmitter
-        start();
     }
 
     /**
@@ -118,7 +120,7 @@ public class RtcpPacketTransmitter extends Thread {
         this.rtcpSession = rtcpSession;
 
         // Open the connection
-        if (datagramConnection != null) {
+        if (connection != null) {
             this.datagramConnection = connection;
         } else {
             this.datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
@@ -128,9 +130,6 @@ public class RtcpPacketTransmitter extends Thread {
         if (logger.isActivated()) {
             logger.debug("RTCP transmitter connected to " + remoteAddress + ":" + remotePort);
         }
-
-        // Start the transmitter
-        start();
     }
 
     /**
@@ -251,7 +250,7 @@ public class RtcpPacketTransmitter extends Thread {
         byte ss[] = RtcpPacketUtils.longToBytes(rtcpSession.SSRC, 4);
         byte PT[] = RtcpPacketUtils.longToBytes((long)RtcpPacket.RTCP_SR, 1);
         byte NTP_TimeStamp[] = RtcpPacketUtils.longToBytes(rtcpSession.currentTime(), 8);
-        short randomOffset = (short)Math.abs(new Random().nextInt() & 0x000000FF);
+        short randomOffset = (short)Math.abs(rand.nextInt() & 0x000000FF);
         byte RTP_TimeStamp[] = RtcpPacketUtils.longToBytes((long)rtcpSession.tc
                 + randomOffset, 4);
         byte SenderPacketCount[] = RtcpPacketUtils.longToBytes(rtcpSession.packetCount, 4);
