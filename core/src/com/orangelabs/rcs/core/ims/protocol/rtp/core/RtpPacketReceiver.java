@@ -18,10 +18,11 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
+import java.io.IOException;
+
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
-import java.io.IOException;
 
 /**
  * RTP packet receiver
@@ -29,6 +30,10 @@ import java.io.IOException;
  * @author jexa7410
  */
 public class RtpPacketReceiver {
+	/**
+	 * Max datagram packet size
+	 */
+	private static int DEFAULT_DATAGRAM_SIZE = 4096;	
 
     /**
      * Statistics
@@ -43,7 +48,7 @@ public class RtpPacketReceiver {
 	/**
      * Buffer size needed to received RTP packet
      */
-	private int bufferSize = RtpConfig.DEFAULT_DATAGRAM_SIZE;
+	private int bufferSize = DEFAULT_DATAGRAM_SIZE;
 
 	/**
 	 * Datagram connection

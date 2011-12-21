@@ -18,16 +18,6 @@
 
 package com.orangelabs.rcs.service;
 
-import java.util.Vector;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
-
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreListener;
@@ -80,6 +70,16 @@ import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Appender;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.IBinder;
+
+import java.util.Vector;
 
 /**
  * RCS core service. This service offers a flat API to any other process (activities)
@@ -150,10 +150,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		Logger.setAppenders(appenders);
 		
 		// Set the terminal version
-		TerminalInfo.PRODUCT_VERSION = getString(R.string.rcs_core_release_number);
-		if (logger.isActivated()) {
-			logger.info("My RCS software release is " + TerminalInfo.PRODUCT_VERSION);
-		}
+		TerminalInfo.setProductVersion(getString(R.string.rcs_core_release_number));
 		
 		// Start the core
 		startCore();
@@ -188,31 +185,36 @@ public class RcsCoreService extends Service implements CoreListener {
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTING);
 			getApplicationContext().sendBroadcast(intent);
 
-			// Instanciate the settings manager
+			// Instantiate the settings manager
             RcsSettings.createInstance(getApplicationContext());
             
             // Set the logger properties
     		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
     		String traceLevel = RcsSettings.getInstance().getTraceLevel();
-    		if (traceLevel.equalsIgnoreCase("DEBUG")){
+    		if (traceLevel.equalsIgnoreCase("DEBUG")) {
         		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
-    		} else if (traceLevel.equalsIgnoreCase("INFO")){
+    		} else if (traceLevel.equalsIgnoreCase("INFO")) {
         		Logger.traceLevel = Logger.INFO_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("WARN")){
+    		} else if (traceLevel.equalsIgnoreCase("WARN")) {
         		Logger.traceLevel = Logger.WARN_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("ERROR")){
+    		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
         		Logger.traceLevel = Logger.ERROR_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("FATAL")){
+    		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
         		Logger.traceLevel = Logger.FATAL_LEVEL;
     		}    		
-            
-			// Instanciate the contacts manager
+
+            // Terminal version
+            if (logger.isActivated()) {
+                logger.info("My RCS software release is " + TerminalInfo.getProductVersion());
+            }
+
+			// Instantiate the contacts manager
             ContactsManager.createInstance(getApplicationContext());
 
-            // Instanciate the rich messaging history 
+            // Instantiate the rich messaging history 
             RichMessaging.createInstance(getApplicationContext());
             
-            // Instanciate the rich call history 
+            // Instantiate the rich call history 
             RichCall.createInstance(getApplicationContext());
 
             // Create the core

@@ -91,7 +91,9 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
     	interrupted = true;
     	try {
     		fifo.close();
-    	} catch(Exception e) {}
+    	} catch(Exception e) {
+            // Intentionally blank
+    	}
 		if (logger.isActivated()) {
 			logger.debug("Dummy source stream closed");
 		}

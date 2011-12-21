@@ -18,8 +18,19 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+import android.text.TextUtils;
+
 import java.io.File;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Properties;
@@ -45,16 +56,6 @@ import javax.sip.header.ExtensionHeader;
 import javax.sip.header.Header;
 import javax.sip.header.ViaHeader;
 
-import android.text.TextUtils;
-
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 /**
  * SIP interface which manage the SIP stack. The NIST stack is used
  * statefully (i.e. messages are sent via a SIP transaction).
@@ -64,110 +65,110 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */
 public class SipInterface implements SipListener {
-	/**
-	 * Trace separator
-	 */
-	private final static String TRACE_SEPARATOR = "-----------------------------------------------------------------------------";
+    /**
+     * Trace separator
+     */
+    private final static String TRACE_SEPARATOR = "-----------------------------------------------------------------------------";
 
     /**
      * Default SIP port
      */
-	public final static int DEFAULT_SIP_PORT = 5060;
+    public final static int DEFAULT_SIP_PORT = 5060;
 
-	/**
-	 * SIP traces
-	 */
-	public static boolean SIP_TRACE_ENABLED = false;
+    /**
+     * SIP traces activation
+     */
+    private boolean sipTraceEnabled = RcsSettings.getInstance().isSipTraceActivated();
 
+    /**
+     * SIP traces filename
+     */
+    private String sipTraceFile = RcsSettings.getInstance().getSipTraceFile();
+        
     /**
      * Local IP address
      */
-	private String localIpAddress;
-
-	/**
-	 * Outbound proxy address
-	 */
-	private String outboundProxyAddr;
-
-	/**
-	 * Outbound proxy port
-	 */
-	private int outboundProxyPort;
-
-	/**
-	 * Default route path
-	 */
-	private Vector<String> defaultRoutePath;
-
-	/**
-	 * Service route path
-	 */
-	private Vector<String> serviceRoutePath;
-
-	/**
-	 * SIP listening port
-	 */
-	private int listeningPort;
-
-	/**
-	 * SIP default protocol
-	 */
-	private String defaultProtocol;
+    private String localIpAddress;
 
     /**
-	 *  List of current SIP transactions
-	 */
-	private SipTransactionList transactions = new SipTransactionList();
+     * Outbound proxy address
+     */
+    private String outboundProxyAddr;
 
-	/**
-	 * SIP interface listeners
-	 */
-	private Vector<SipEventListener> listeners = new Vector<SipEventListener>();
+    /**
+     * Outbound proxy port
+     */
+    private int outboundProxyPort;
 
-	/**
-	 * SIP stack
-	 */
-	private SipStack sipStack;
+    /**
+     * Default route path
+     */
+    private Vector<String> defaultRoutePath;
 
-	/**
-	 * Default SIP stack provider
-	 */
-	private SipProvider defaultSipProvider;
+    /**
+     * Service route path
+     */
+    private Vector<String> serviceRoutePath;
 
-	/**
-	 * SIP stack providers
-	 */
-	private Vector<SipProvider> sipProviders = new Vector<SipProvider>();
+    /**
+     * SIP listening port
+     */
+    private int listeningPort;
+
+    /**
+     * SIP default protocol
+     */
+    private String defaultProtocol;
+
+    /**
+     *  List of current SIP transactions
+     */
+    private SipTransactionList transactions = new SipTransactionList();
+
+    /**
+     * SIP interface listeners
+     */
+    private Vector<SipEventListener> listeners = new Vector<SipEventListener>();
+
+    /**
+     * SIP stack
+     */
+    private SipStack sipStack;
+
+    /**
+     * Default SIP stack provider
+     */
+    private SipProvider defaultSipProvider;
+
+    /**
+     * SIP stack providers
+     */
+    private Vector<SipProvider> sipProviders = new Vector<SipProvider>();
 
     /**
      * Keep-alive manager
      */
     private KeepAliveManager keepAliveManager = new KeepAliveManager(this);
 
-	/**
+    /**
      * Public GRUU
      */
-	private String publicGruu = null;    
-    
-	/**
+    private String publicGruu = null;
+
+    /**
      * Temporary GRUU
      */
-	private String tempGruu = null;    
-	
-	/**
-	 * Instance ID
-	 */
-	private String instanceId = null;
+    private String tempGruu = null;
 
-	/**
-	 * Retransmission timer
-	 */
-	private int retransTimer;
-	
-	/**
-	 * The logger
-	 */
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+    /**
+     * Instance ID
+     */
+    private String instanceId = null;
+
+    /**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
      * Constructor
@@ -179,25 +180,26 @@ public class SipInterface implements SipListener {
      */
     public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol) throws SipException {
 
-		this.localIpAddress = localIpAddress;
+        this.localIpAddress = localIpAddress;
         this.defaultProtocol = defaultProtocol;
-		this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
-		this.retransTimer = RcsSettings.getInstance().getSipTimerT1();
+        this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
 
-		// Get outbound proxy config
+        // Get outbound proxy config
         try {
             String[] parts = outboundProxy.split(":");
             this.outboundProxyAddr = InetAddress.getByName(parts[0]).getHostAddress();
             this.outboundProxyPort = Integer.parseInt(parts[1]);
-        } catch (Exception e) {
+        } catch(UnknownHostException e) {
             throw new SipException("Bad outbound proxy address");
+        } catch(NumberFormatException e) {
+            throw new SipException("Bad outbound proxy port");
         }
         if (logger.isActivated()) {
             logger.debug("SIP outbound proxy set to " + outboundProxyAddr + ":" + outboundProxyPort);
         }
 
-		// Set the default route path
-		defaultRoutePath = new Vector<String>();
+        // Set the default route path
+        defaultRoutePath = new Vector<String>();
         defaultRoutePath.addElement(getDefaultRoute());
 
         // Set the default service route path
@@ -205,34 +207,36 @@ public class SipInterface implements SipListener {
         serviceRoutePath.addElement(getDefaultRoute());
 
         try {
-			// Init SIP factories
-			SipFactory sipFactory = SipFactory.getInstance();
-			SipUtils.HEADER_FACTORY = sipFactory.createHeaderFactory();
-			SipUtils.ADDR_FACTORY = sipFactory.createAddressFactory();
-			SipUtils.MSG_FACTORY = sipFactory.createMessageFactory();
+            // Init SIP factories
+            SipFactory sipFactory = SipFactory.getInstance();
+            SipUtils.HEADER_FACTORY = sipFactory.createHeaderFactory();
+            SipUtils.ADDR_FACTORY = sipFactory.createAddressFactory();
+            SipUtils.MSG_FACTORY = sipFactory.createMessageFactory();
 
             // Create the RCS keystore if not present
             if (!KeyStoreManager.isKeystoreExists(KeyStoreManager.getKeystorePath())) {
                 KeyStoreManager.createKeyStore();
             }
 
-			// Set SIP stack properties
-			Properties properties = new Properties();
-			properties.setProperty("javax.sip.STACK_NAME", localIpAddress);
-			properties.setProperty("gov.nist.javax.sip.THREAD_POOL_SIZE", "1");
-			if (SIP_TRACE_ENABLED) {
-				// Activate SIP stack traces
-				String siplog = "/sdcard/sip.txt";
-
-				// Remove previous log file
-				File fs = new File(siplog);
-				if (fs.exists()) {
-					fs.delete();
+            // Set SIP stack properties
+            Properties properties = new Properties();
+            properties.setProperty("javax.sip.STACK_NAME", localIpAddress);
+            properties.setProperty("gov.nist.javax.sip.THREAD_POOL_SIZE", "1");
+            if (sipTraceEnabled) {
+                // Activate SIP stack traces
+            	boolean cleanLog = true;
+            	
+            	// Remove previous log file
+                File fs = new File(sipTraceFile);
+                if (fs.exists()) {
+                	cleanLog = fs.delete();
                 }
-		        properties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "DEBUG");
-		        properties.setProperty("gov.nist.javax.sip.SERVER_LOG", siplog);
-		        properties.setProperty("gov.nist.javax.sip.LOG_MESSAGE_CONTENT", "true");
-		        properties.setProperty("gov.nist.javax.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
+                if (cleanLog) {
+                	properties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "DEBUG");
+                    properties.setProperty("gov.nist.javax.sip.SERVER_LOG", sipTraceFile);
+                    properties.setProperty("gov.nist.javax.sip.LOG_MESSAGE_CONTENT", "true");
+                    properties.setProperty("gov.nist.javax.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
+                }
             }
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
                 // Set SSL properties
@@ -244,16 +248,16 @@ public class SipInterface implements SipListener {
                         KeyStoreManager.getKeystorePath());
             }
 
-			// Create the SIP stack
-			sipStack = sipFactory.createSipStack(properties);
+            // Create the SIP stack
+            sipStack = sipFactory.createSipStack(properties);
 
-			// Create UDP provider
+            // Create UDP provider
             ListeningPoint udp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.UDP);
             SipProvider udpSipProvider = sipStack.createSipProvider(udp);
             udpSipProvider.addSipListener(this);
             sipProviders.addElement(udpSipProvider);
 
-			// Set the default SIP provider
+            // Set the default SIP provider
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
                 // Add certificates if not present
                 String certPathRoot = RcsSettings.getInstance().getTlsCertificateRoot();
@@ -280,9 +284,9 @@ public class SipInterface implements SipListener {
 
                 // TLS protocol used by default
                 defaultSipProvider = tlsSipProvider;
-			} else
+            } else
             if (defaultProtocol.equals(ListeningPoint.TCP)) {
-    			// Create TCP provider
+                // Create TCP provider
                 ListeningPoint tcp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TCP);
                 SipProvider tcpSipProvider = sipStack.createSipProvider(tcp);
                 tcpSipProvider.addSipListener(this);
@@ -291,7 +295,7 @@ public class SipInterface implements SipListener {
                 // TCP protocol used by default
                 defaultSipProvider = tcpSipProvider;
             } else {
-    			// Create TCP provider
+                // Create TCP provider
                 ListeningPoint tcp = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TCP);
                 SipProvider tcpSipProvider = sipStack.createSipProvider(tcp);
                 tcpSipProvider.addSipListener(this);
@@ -302,245 +306,245 @@ public class SipInterface implements SipListener {
             }
 
             if (logger.isActivated()) {
-				logger.debug("Default SIP provider is " + defaultProtocol);
-			}
+                logger.debug("Default SIP provider is " + defaultProtocol);
+            }
 
-			// Start the stack
-			sipStack.start();
+            // Start the stack
+            sipStack.start();
 
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("SIP stack initialization has failed", e);
-			}
-			throw new SipException("Can't create the SIP stack");
-		}
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("SIP stack initialization has failed", e);
+            }
+            throw new SipException("Can't create the SIP stack");
+        }
 
-		if (logger.isActivated()) {
-			logger.debug("SIP stack started at " + localIpAddress + ":" + listeningPort);
-		}
-	}
+        if (logger.isActivated()) {
+            logger.debug("SIP stack started at " + localIpAddress + ":" + listeningPort);
+        }
+    }
 
     /**
      * Close the SIP stack
      */
-	public void close() {
-		try {
+    public void close() {
+        try {
             // Stop keep alive
-			keepAliveManager.stop();
+            keepAliveManager.stop();
 
             // Remove all application listeners
-			listeners.removeAllElements();
+            listeners.removeAllElements();
 
-			// Delete SIP providers
-			for(int i=0; i < sipProviders.size(); i++) {
-				SipProvider sipProvider = (SipProvider)sipProviders.elementAt(i);
-				sipProvider.removeSipListener(this);
-				sipProvider.removeListeningPoints();
-				sipStack.deleteSipProvider(sipProvider);
-			}
+            // Delete SIP providers
+            for(int i=0; i < sipProviders.size(); i++) {
+                SipProvider sipProvider = (SipProvider)sipProviders.elementAt(i);
+                sipProvider.removeSipListener(this);
+                sipProvider.removeListeningPoints();
+                sipStack.deleteSipProvider(sipProvider);
+            }
 
-			// Stop the stack
-			sipStack.stop();
-			SipFactory.getInstance().resetFactory();
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't stop SIP stack correctly", e);
-			}
-		}
-	}
-	
+            // Stop the stack
+            sipStack.stop();
+            SipFactory.getInstance().resetFactory();
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't stop SIP stack correctly", e);
+            }
+        }
+    }
+
     /**
      * Return the default SIP provider
      *
      * @return SIP provider
      */
-	public SipProvider getDefaultSipProvider() {
-		return defaultSipProvider;
-	}
+    public SipProvider getDefaultSipProvider() {
+        return defaultSipProvider;
+    }
 
-	/**
+    /**
      * Returns the local IP address
      *
      * @return IP address
      */
-	public String getLocalIpAddress() {
-		return localIpAddress;
-	}
+    public String getLocalIpAddress() {
+        return localIpAddress;
+    }
 
-	/**
+    /**
      * Returns the outbound proxy address
      *
      * @return Outbound proxy address
      */
-	public String getOutboundProxyAddr() {
-		return outboundProxyAddr;
-	}
+    public String getOutboundProxyAddr() {
+        return outboundProxyAddr;
+    }
 
     /**
      * Returns the outbound proxy port
      *
      * @return Outbound proxy port
      */
-	public int getOutboundProxyPort() {
-		return outboundProxyPort;
-	}
+    public int getOutboundProxyPort() {
+        return outboundProxyPort;
+    }
 
     /**
      * Returns the proxy protocol
      *
      * @return Outbound proxy protocol
      */
-	public String getProxyProtocol() {
-		return defaultProtocol;
-	}
+    public String getProxyProtocol() {
+        return defaultProtocol;
+    }
 
     /**
      * Returns the listening port
      *
      * @return Port number
      */
-	public int getListeningPort() {
-		return listeningPort;
-	}
+    public int getListeningPort() {
+        return listeningPort;
+    }
 
     /**
      * Returns the keep-alive manager
      *
      * @return Keep-alive manager
      */
-	public KeepAliveManager getKeepAliveManager() {
-		return keepAliveManager;
-	}
-	
+    public KeepAliveManager getKeepAliveManager() {
+        return keepAliveManager;
+    }
+
     /**
      * Get public GRUU
-     * 
+     *
      * @return GRUU
      */
     public String getPublicGruu() {
-    	return publicGruu;
+        return publicGruu;
     }
 
     /**
      * Set public GRUU
-     * 
+     *
      * @param gruu GRUU
      */
     public void setPublicGruu(String gruu) {
-    	this.publicGruu = gruu;
+        this.publicGruu = gruu;
     }
-    
+
     /**
      * Get temporary GRUU
-     * 
+     *
      * @return GRUU
      */
     public String getTemporaryGruu() {
-    	return tempGruu;
+        return tempGruu;
     }
 
     /**
      * Set temporary GRUU
-     * 
+     *
      * @param gruu GRUU
      */
     public void setTemporaryGruu(String gruu) {
-    	this.tempGruu = gruu;
+        this.tempGruu = gruu;
     }
-    
+
     /**
      * Get instance ID
-     * 
+     *
      * @return ID
      */
     public String getInstanceId() {
-    	return instanceId;
+        return instanceId;
     }
 
     /**
      * Set instance ID
-     * 
+     *
      * @param id Instance ID
      */
     public void setInstanceId(String id) {
-    	this.instanceId = id;
-    }    
-    
+        this.instanceId = id;
+    }
+
     /**
      * Returns the local via path
      *
      * @return List of headers
      * @throws Exception
      */
-	public ArrayList<ViaHeader> getViaHeaders() throws Exception {
+    public ArrayList<ViaHeader> getViaHeaders() throws Exception {
         ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
         ViaHeader via = SipUtils.HEADER_FACTORY.createViaHeader(localIpAddress,
-				listeningPort,
-				getProxyProtocol(),
-				null);
+                listeningPort,
+                getProxyProtocol(),
+                null);
         viaHeaders.add(via);
-		return viaHeaders;
+        return viaHeaders;
     }
 
-	/**
+    /**
      * Generate a unique call-ID
      *
      * @return Call-Id
      */
-	public String generateCallId() {
-		return IdGenerator.getIdentifier() + "@" + localIpAddress;
-	}
+    public String generateCallId() {
+        return IdGenerator.getIdentifier() + "@" + localIpAddress;
+    }
 
-	/**
+    /**
      * Get local contact
      *
      * @return Header
      * @throws Exception
      */
-	public ContactHeader getLocalContact() throws Exception {
-    	// Set the contact with the terminal IP address and SIP port
-		SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(null, localIpAddress);
-		contactURI.setPort(listeningPort);
+    public ContactHeader getLocalContact() throws Exception {
+        // Set the contact with the terminal IP address and SIP port
+        SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(null, localIpAddress);
+        contactURI.setPort(listeningPort);
 
-		// Create the Contact header
-		Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
-        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);               
-		return contactHeader;
+        // Create the Contact header
+        Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
+        ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+        return contactHeader;
     }
 
-	/**
+    /**
      * Get contact
      *
      * @return Header
      * @throws Exception
      */
-	public ContactHeader getContact() throws Exception {
-		ContactHeader contactHeader;
-		if (publicGruu != null) {
-			// Create a contact with GRUU
-			SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(publicGruu);
-			Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
-	        contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
-		} else
-		if (instanceId != null) {
-			// Create a local contact with +sip.instance
-			contactHeader = getLocalContact();
-			contactHeader.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
-		} else {
-			// Create a local contact
-			contactHeader = getLocalContact();
-		}
-		return contactHeader;
-    }	
-	
-	/**
+    public ContactHeader getContact() throws Exception {
+        ContactHeader contactHeader;
+        if (publicGruu != null) {
+            // Create a contact with GRUU
+            SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(publicGruu);
+            Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
+            contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+        } else
+        if (instanceId != null) {
+            // Create a local contact with +sip.instance
+            contactHeader = getLocalContact();
+            contactHeader.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
+        } else {
+            // Create a local contact
+            contactHeader = getLocalContact();
+        }
+        return contactHeader;
+    }
+
+    /**
      * Returns the default route
      *
      * @return Route
      */
     public String getDefaultRoute() {
-    	return "<sip:" + outboundProxyAddr + ":" + outboundProxyPort+
-			";lr;transport=" + getProxyProtocol()+ ">";
+        return "<sip:" + outboundProxyAddr + ":" + outboundProxyPort+
+            ";lr;transport=" + getProxyProtocol()+ ">";
     }
 
     /**
@@ -549,7 +553,7 @@ public class SipInterface implements SipListener {
      * @return Route path
      */
     public Vector<String> getDefaultRoutePath() {
-		return defaultRoutePath;
+        return defaultRoutePath;
     }
 
     /**
@@ -558,8 +562,8 @@ public class SipInterface implements SipListener {
      * @return Route path
      */
     public Vector<String> getServiceRoutePath() {
-		return serviceRoutePath;
-	}
+        return serviceRoutePath;
+    }
 
     /**
      * Set the service route path
@@ -567,65 +571,65 @@ public class SipInterface implements SipListener {
      * @param routes List of routes
      */
     public void setServiceRoutePath(ListIterator<Header> routes) {
-    	serviceRoutePath.clear();
-		
-    	// Always add the outbound proxy
-    	serviceRoutePath.addElement(getDefaultRoute());
-		
-    	if (routes != null) {
-    		// Add the received service route path
-    		while(routes.hasNext()) {
-    			ExtensionHeader route = (ExtensionHeader)routes.next();
-    			serviceRoutePath.addElement(route.getValue());
-    		}
-    	}    	    	
-	}
+        serviceRoutePath.clear();
+
+        // Always add the outbound proxy
+        serviceRoutePath.addElement(getDefaultRoute());
+
+        if (routes != null) {
+            // Add the received service route path
+            while(routes.hasNext()) {
+                ExtensionHeader route = (ExtensionHeader)routes.next();
+                serviceRoutePath.addElement(route.getValue());
+            }
+        }
+    }
 
     /**
      * Add a SIP event listener
      *
      * @param listener Listener
      */
-	public void addSipEventListener(SipEventListener listener) {
-		if (logger.isActivated()) {
-			logger.debug("Add a SIP listener");
-		}
-		listeners.addElement(listener);
-	}
+    public void addSipEventListener(SipEventListener listener) {
+        if (logger.isActivated()) {
+            logger.debug("Add a SIP listener");
+        }
+        listeners.addElement(listener);
+    }
 
-	/**
+    /**
      * Remove a SIP event listener
      *
      * @param listener Listener
      */
-	public void removeSipEventListener(SipEventListener listener) {
-		if (logger.isActivated()) {
-			logger.debug("Remove a SIP listener");
-		}
-		listeners.removeElement(listener);
-	}
+    public void removeSipEventListener(SipEventListener listener) {
+        if (logger.isActivated()) {
+            logger.debug("Remove a SIP listener");
+        }
+        listeners.removeElement(listener);
+    }
 
-	/**
+    /**
      * Remove a transaction context from its ID
      *
      * @param id Transaction ID
      */
-	public synchronized void removeTransactionContext(String id) {
-		transactions.remove(id);
+    public synchronized void removeTransactionContext(String id) {
+        transactions.remove(id);
     }
 
-	/**
+    /**
      * Notify the transaction context that a message has been received (response or ACK)
      *
      * @param id Transaction ID
      * @param msg SIP message
      */
-	public void notifyTransactionContext(String transactionId, SipMessage msg) {
-		SipTransactionContext ctx = (SipTransactionContext)transactions.get(transactionId);
+    public void notifyTransactionContext(String transactionId, SipMessage msg) {
+        SipTransactionContext ctx = (SipTransactionContext)transactions.get(transactionId);
         if (ctx != null) {
-        	if (logger.isActivated()) {
-        		logger.debug("Callback object found for transaction " + transactionId);
-        	}
+            if (logger.isActivated()) {
+                logger.debug("Callback object found for transaction " + transactionId);
+            }
             removeTransactionContext(transactionId);
             ctx.responseReceived(msg);
         }
@@ -638,88 +642,82 @@ public class SipInterface implements SipListener {
      * @return Transaction context
      * @throws SipException
      */
-	public SipTransactionContext sendSipMessageAndWait(SipMessage message) throws SipException {
-		try {
-			if (message instanceof SipRequest) {
-				// Send a request
-				SipRequest req = (SipRequest)message;
+    public SipTransactionContext sendSipMessageAndWait(SipMessage message) throws SipException {
+        try {
+            if (message instanceof SipRequest) {
+                // Send a request
+                SipRequest req = (SipRequest)message;
 
-				// Get stack transaction
-				ClientTransaction transaction = (ClientTransaction)req.getStackTransaction();
-				if (transaction == null) {
-					// Create a new transaction
-					transaction = getDefaultSipProvider().getNewClientTransaction(req.getStackMessage());
-					req.setStackTransaction(transaction);
-				}
+                // Get stack transaction
+                ClientTransaction transaction = (ClientTransaction)req.getStackTransaction();
+                if (transaction == null) {
+                    // Create a new transaction
+                    transaction = getDefaultSipProvider().getNewClientTransaction(req.getStackMessage());
+                    req.setStackTransaction(transaction);
+                }
 
-				// Set retransmission timer.
-//				transaction.setRetransmitTimer(retransTimer);
-				
-				// Create a transaction context
-				SipTransactionContext ctx = new SipTransactionContext(transaction);
-				String id = SipTransactionContext.getTransactionContextId(req);
-				transactions.put(id, ctx);
-				if (logger.isActivated()) {
-					logger.debug("Create a transaction context " + id);
-				}
+                // Create a transaction context
+                SipTransactionContext ctx = new SipTransactionContext(transaction);
+                String id = SipTransactionContext.getTransactionContextId(req);
+                transactions.put(id, ctx);
+                if (logger.isActivated()) {
+                    logger.debug("Create a transaction context " + id);
+                }
 
-				// Send the SIP message to the network
-				if (logger.isActivated()) {
-					logger.debug(">>> Send SIP " + req.getMethod());
-				}
-				if (SIP_TRACE_ENABLED) {
-					System.out.println(">>> " + req.getStackMessage().toString());
-					System.out.println(TRACE_SEPARATOR);
-				}
-				transaction.sendRequest();
+                // Send the SIP message to the network
+                if (logger.isActivated()) {
+                    logger.debug(">>> Send SIP " + req.getMethod());
+                }
+                if (sipTraceEnabled) {
+                    System.out.println(">>> " + req.getStackMessage().toString());
+                    System.out.println(TRACE_SEPARATOR);
+                }
+                transaction.sendRequest();
 
-				// Returns the created transaction to wait synchronously the response
-				return ctx;
-			} else {
-				// Send a response
-				SipResponse resp = (SipResponse)message;
+                // Returns the created transaction to wait synchronously the response
+                return ctx;
+            } else {
+                // Send a response
+                SipResponse resp = (SipResponse)message;
 
-				// Get stack transaction
-				ServerTransaction transaction = (ServerTransaction)resp.getStackTransaction();
-				if (transaction == null) {
-					// No transaction exist
-					if (logger.isActivated()) {
-						logger.warn("No transaction exist for " + resp.getCallId() + ": the response can't be sent");
-					}
-					return null;
-				}
+                // Get stack transaction
+                ServerTransaction transaction = (ServerTransaction)resp.getStackTransaction();
+                if (transaction == null) {
+                    // No transaction exist
+                    if (logger.isActivated()) {
+                        logger.warn("No transaction exist for " + resp.getCallId() + ": the response can't be sent");
+                    }
+                    return null;
+                }
 
-				// Set retransmission timer
-//				transaction.setRetransmitTimer(retransTimer);
+                // Create a transaction context
+                SipTransactionContext ctx = new SipTransactionContext(transaction);
+                String id = SipTransactionContext.getTransactionContextId(resp);
+                transactions.put(id, ctx);
+                if (logger.isActivated()) {
+                    logger.debug("Create a transaction context " + id);
+                }
 
-				// Create a transaction context
-				SipTransactionContext ctx = new SipTransactionContext(transaction);
-				String id = SipTransactionContext.getTransactionContextId(resp);
-				transactions.put(id, ctx);
-				if (logger.isActivated()) {
-					logger.debug("Create a transaction context " + id);
-				}
+                // Send the SIP message to the network
+                if (logger.isActivated()) {
+                    logger.debug(">>> Send SIP " + resp.getStatusCode() + " response");
+                }
+                if (sipTraceEnabled) {
+                    System.out.println(">>> " + resp.getStackMessage().toString());
+                    System.out.println(TRACE_SEPARATOR);
+                }
+                transaction.sendResponse(resp.getStackMessage());
 
-				// Send the SIP message to the network
-				if (logger.isActivated()) {
-					logger.debug(">>> Send SIP " + resp.getStatusCode() + " response");
-				}
-				if (RcsSettings.getInstance().isSipTraceActivated()) {
-					System.out.println(">>> " + resp.getStackMessage().toString());
-					System.out.println(TRACE_SEPARATOR);
-				}
-				transaction.sendResponse(resp.getStackMessage());
-
-				// Returns the created transaction to wait synchronously the response
-				return ctx;
-			}
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
-	}
+                // Returns the created transaction to wait synchronously the response
+                return ctx;
+            }
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
+    }
 
     /**
      * Send a SIP response
@@ -727,189 +725,189 @@ public class SipInterface implements SipListener {
      * @param response SIP response
      * @throws SipException
      */
-	public void sendSipResponse(SipResponse response) throws SipException {
-		try {
-			// Get stack transaction
-			ServerTransaction transaction = (ServerTransaction)response.getStackTransaction();
-			if (transaction == null) {
-				// No transaction exist
-				if (logger.isActivated()) {
-					logger.warn("No transaction exist for " + response.getCallId() + ": the response can't be sent");
-				}
-				throw new SipException("No transaction found");
-			}
+    public void sendSipResponse(SipResponse response) throws SipException {
+        try {
+            // Get stack transaction
+            ServerTransaction transaction = (ServerTransaction)response.getStackTransaction();
+            if (transaction == null) {
+                // No transaction exist
+                if (logger.isActivated()) {
+                    logger.warn("No transaction exist for " + response.getCallId() + ": the response can't be sent");
+                }
+                throw new SipException("No transaction found");
+            }
 
-			// Send the SIP message to the network
-			if (logger.isActivated()) {
-				logger.debug(">>> Send SIP " + response.getStatusCode() + " response");
-			}
-			if (SIP_TRACE_ENABLED) {
-				System.out.println(">>> " + response.getStackMessage().toString());
-				System.out.println(TRACE_SEPARATOR);
-			}
-			transaction.sendResponse(response.getStackMessage());
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP " + response.getStatusCode() + " response");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + response.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
+            transaction.sendResponse(response.getStackMessage());
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
     }
 
-	/**
+    /**
      * Send a SIP ACK
      *
      * @param dialog Dialog path
      * @throws SipException
      */
-	public void sendSipAck(SipDialogPath dialog) throws SipException {
-		try {
-			// Create the SIP request
-			SipRequest ack = SipMessageFactory.createAck(dialog);
+    public void sendSipAck(SipDialogPath dialog) throws SipException {
+        try {
+            // Create the SIP request
+            SipRequest ack = SipMessageFactory.createAck(dialog);
 
-			// Send the SIP message to the network
-			if (logger.isActivated()) {
-				logger.debug(">>> Send SIP ACK");
-			}
-			if (SIP_TRACE_ENABLED) {
-				System.out.println(">>> " + ack.getStackMessage().toString());
-				System.out.println(TRACE_SEPARATOR);
-			}
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP ACK");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + ack.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
 
-			// Re-use INVITE transaction
-		    ClientTransaction inviteTransaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
-		    inviteTransaction.getDialog().sendAck(ack.getStackMessage());
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
-	}
+            // Re-use INVITE transaction
+            ClientTransaction inviteTransaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
+            inviteTransaction.getDialog().sendAck(ack.getStackMessage());
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
+    }
 
-	/**
+    /**
      * Send a SIP BYE
      *
      * @param dialog Dialog path
      * @throws SipException
      */
-	public void sendSipBye(SipDialogPath dialog) throws SipException {
-		try {
-			// Create the SIP request
-			SipRequest bye = SipMessageFactory.createBye(dialog);
+    public void sendSipBye(SipDialogPath dialog) throws SipException {
+        try {
+            // Create the SIP request
+            SipRequest bye = SipMessageFactory.createBye(dialog);
 
-			// Set the Proxy-Authorization header
-	        if (dialog.getAuthenticationAgent() != null) {
-	        	dialog.getAuthenticationAgent().setProxyAuthorizationHeader(bye);
-	        }
+            // Set the Proxy-Authorization header
+            if (dialog.getAuthenticationAgent() != null) {
+                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(bye);
+            }
 
-	        // Send the SIP message to the network
-			if (logger.isActivated()) {
-				logger.debug(">>> Send SIP BYE");
-			}
-			if (SIP_TRACE_ENABLED) {
-				System.out.println(">>> " + bye.getStackMessage().toString());
-				System.out.println(TRACE_SEPARATOR);
-			}
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP BYE");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + bye.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
 
-			// Create a new transaction
-		    ClientTransaction byeTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
-		    byeTransaction.getDialog().sendRequest(byeTransaction);
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
+            // Create a new transaction
+            ClientTransaction byeTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
+            byeTransaction.getDialog().sendRequest(byeTransaction);
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
     }
 
-	/**
+    /**
      * Send a SIP CANCEL
      *
      * @param dialog Dialog path
      * @throws SipException
      */
-	public void sendSipCancel(SipDialogPath dialog) throws SipException {
-		try {
-			if (dialog.getInvite().getStackTransaction() instanceof ServerTransaction) {
-				// Server transaction can't send a cancel
-				return;
-			}
+    public void sendSipCancel(SipDialogPath dialog) throws SipException {
+        try {
+            if (dialog.getInvite().getStackTransaction() instanceof ServerTransaction) {
+                // Server transaction can't send a cancel
+                return;
+            }
 
-			// Create the SIP request
-			SipRequest cancel = SipMessageFactory.createCancel(dialog);
+            // Create the SIP request
+            SipRequest cancel = SipMessageFactory.createCancel(dialog);
 
-			// Set the Proxy-Authorization header
-	        if (dialog.getAuthenticationAgent() != null) {
-	        	dialog.getAuthenticationAgent().setProxyAuthorizationHeader(cancel);
-	        }
+            // Set the Proxy-Authorization header
+            if (dialog.getAuthenticationAgent() != null) {
+                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(cancel);
+            }
 
-			// Send the SIP message to the network
-			if (logger.isActivated()) {
-				logger.debug(">>> Send SIP CANCEL");
-			}
-			if (SIP_TRACE_ENABLED) {
-				System.out.println(">>> " + cancel.getStackMessage().toString());
-				System.out.println(TRACE_SEPARATOR);
-			}
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP CANCEL");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + cancel.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
 
-			// Create a new transaction
-		    ClientTransaction cancelTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
-		    cancelTransaction.sendRequest();
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
-	}
+            // Create a new transaction
+            ClientTransaction cancelTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
+            cancelTransaction.sendRequest();
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
+    }
 
-	/**
+    /**
      * Send a SIP UPDATE
      *
      * @param dialog Dialog path
      * @return Transaction context
      * @throws SipException
      */
-	public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
-		try {
-			// Create the SIP request
-	        SipRequest update = SipMessageFactory.createUpdate(dialog);
+    public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
+        try {
+            // Create the SIP request
+            SipRequest update = SipMessageFactory.createUpdate(dialog);
 
-			// Set the Proxy-Authorization header
-	        if (dialog.getAuthenticationAgent() != null) {
-	        	dialog.getAuthenticationAgent().setProxyAuthorizationHeader(update);
-	        }
+            // Set the Proxy-Authorization header
+            if (dialog.getAuthenticationAgent() != null) {
+                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(update);
+            }
 
-	        // Send the SIP message to the network
-			if (logger.isActivated()) {
-				logger.debug(">>> Send SIP UPDATE");
-			}
-			if (SIP_TRACE_ENABLED) {
-				System.out.println(">>> " + update.getStackMessage().toString());
-				System.out.println(TRACE_SEPARATOR);
-			}
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP UPDATE");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + update.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
 
-			// Get stack transaction
-		    ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(update.getStackMessage());
+            // Get stack transaction
+            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(update.getStackMessage());
 
-			// Create a transaction context
-			SipTransactionContext ctx = new SipTransactionContext(transaction);
-			String id = SipTransactionContext.getTransactionContextId(update);
-			transactions.put(id, ctx);
-			if (logger.isActivated()) {
-				logger.debug("Create a transaction context " + id);
-			}
+            // Create a transaction context
+            SipTransactionContext ctx = new SipTransactionContext(transaction);
+            String id = SipTransactionContext.getTransactionContextId(update);
+            transactions.put(id, ctx);
+            if (logger.isActivated()) {
+                logger.debug("Create a transaction context " + id);
+            }
             transaction.sendRequest();
 
-			// Returns the created transaction to wait synchronously the response
-			return ctx;
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Can't send SIP message", e);
-			}
-			throw new SipException("Can't send SIP message");
-		}
+            // Returns the created transaction to wait synchronously the response
+            return ctx;
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
     }
 
     /**
@@ -917,11 +915,11 @@ public class SipInterface implements SipListener {
      *
      * @param dialogTerminatedEvent Event
      */
-	public void processDialogTerminated(DialogTerminatedEvent dialogTerminatedEvent) {
-		if (logger.isActivated()) {
-			logger.debug("Dialog terminated");
-		}
-	}
+    public void processDialogTerminated(DialogTerminatedEvent dialogTerminatedEvent) {
+        if (logger.isActivated()) {
+            logger.debug("Dialog terminated");
+        }
+    }
 
     /**
      * Process an asynchronously reported IO Exception
@@ -929,9 +927,9 @@ public class SipInterface implements SipListener {
      * @param exceptionEvent Event
      */
     public void processIOException(IOExceptionEvent exceptionEvent) {
-		if (logger.isActivated()) {
-			logger.debug("IO Exception on " + exceptionEvent.getTransport() + " transport");
-		}
+        if (logger.isActivated()) {
+            logger.debug("IO Exception on " + exceptionEvent.getTransport() + " transport");
+        }
     }
 
     /**
@@ -941,49 +939,49 @@ public class SipInterface implements SipListener {
      * @param requestEvent Event
      */
     public void processRequest(RequestEvent requestEvent) {
-		if (logger.isActivated()) {
-			logger.debug("<<< Receive SIP " + requestEvent.getRequest().getMethod());
-		}
-		if (SIP_TRACE_ENABLED) {
-			System.out.println("<<< " + requestEvent.getRequest().toString());
-			System.out.println(TRACE_SEPARATOR);
-		}
+        if (logger.isActivated()) {
+            logger.debug("<<< Receive SIP " + requestEvent.getRequest().getMethod());
+        }
+        if (sipTraceEnabled) {
+            System.out.println("<<< " + requestEvent.getRequest().toString());
+            System.out.println(TRACE_SEPARATOR);
+        }
 
-		// Get transaction
-		ServerTransaction transaction = requestEvent.getServerTransaction();
+        // Get transaction
+        ServerTransaction transaction = requestEvent.getServerTransaction();
         if (transaction == null) {
-        	try {
-        		// Create a transaction for this new incoming request
-	            SipProvider srcSipProvider = (SipProvider)requestEvent.getSource();
-	            transaction = srcSipProvider.getNewServerTransaction(requestEvent.getRequest());
-        	} catch(Exception e) {
-        		if (logger.isActivated()) {
-        			logger.error("Unable to create a new server transaction for an incoming request");
-        		}
-        		return;
-        	}
+            try {
+                // Create a transaction for this new incoming request
+                SipProvider srcSipProvider = (SipProvider)requestEvent.getSource();
+                transaction = srcSipProvider.getNewServerTransaction(requestEvent.getRequest());
+            } catch(Exception e) {
+                if (logger.isActivated()) {
+                    logger.error("Unable to create a new server transaction for an incoming request");
+                }
+                return;
+            }
         }
 
         // Create received request with its associated transaction
-		SipRequest req = new SipRequest(requestEvent.getRequest());
-		req.setStackTransaction(transaction);
+        SipRequest req = new SipRequest(requestEvent.getRequest());
+        req.setStackTransaction(transaction);
 
-    	if (req.getMethod().equals("ACK")) {
-			// Search the context associated to the received ACK and notify it
-	        String transactionId = SipTransactionContext.getTransactionContextId(req);
-	        notifyTransactionContext(transactionId, req);
-	        return;
-    	}
+        if (req.getMethod().equals("ACK")) {
+            // Search the context associated to the received ACK and notify it
+            String transactionId = SipTransactionContext.getTransactionContextId(req);
+            notifyTransactionContext(transactionId, req);
+            return;
+        }
 
-		// Notify event listeners
-		for(int i=0; i < listeners.size(); i++) {
-			if (logger.isActivated()) {
-				logger.debug("Notify a SIP listener");
-			}
-			SipEventListener listener = (SipEventListener)listeners.elementAt(i);
-			listener.receiveSipRequest(req);
-		}
-	}
+        // Notify event listeners
+        for(int i=0; i < listeners.size(); i++) {
+            if (logger.isActivated()) {
+                logger.debug("Notify a SIP listener");
+            }
+            SipEventListener listener = (SipEventListener)listeners.elementAt(i);
+            listener.receiveSipRequest(req);
+        }
+    }
 
     /**
      * Processes a Response received on a SipProvider upon which this SipListener
@@ -992,37 +990,37 @@ public class SipInterface implements SipListener {
      * @param responseEvent Event
      */
     public void processResponse(ResponseEvent responseEvent) {
-		if (logger.isActivated()) {
-			logger.debug("<<< Receive SIP " + responseEvent.getResponse().getStatusCode() + " response");
-		}
-		if (SIP_TRACE_ENABLED) {
-			System.out.println("<<< " + responseEvent.getResponse().toString());
-			System.out.println(TRACE_SEPARATOR);
-		}
+        if (logger.isActivated()) {
+            logger.debug("<<< Receive SIP " + responseEvent.getResponse().getStatusCode() + " response");
+        }
+        if (sipTraceEnabled) {
+            System.out.println("<<< " + responseEvent.getResponse().toString());
+            System.out.println(TRACE_SEPARATOR);
+        }
 
-		// Search transaction
-    	ClientTransaction transaction = responseEvent.getClientTransaction();
+        // Search transaction
+        ClientTransaction transaction = responseEvent.getClientTransaction();
         if (transaction == null) {
-    		if (logger.isActivated()) {
-    			logger.debug("No transaction exist for this response: by-pass it");
-    		}
+            if (logger.isActivated()) {
+                logger.debug("No transaction exist for this response: by-pass it");
+            }
             return;
         }
 
-		if (responseEvent.getResponse().getStatusCode() >= 200) {
-	        // Create received response with its associated transaction
-			SipResponse resp = new SipResponse(responseEvent.getResponse());
-			resp.setStackTransaction(transaction);
+        if (responseEvent.getResponse().getStatusCode() >= 200) {
+            // Create received response with its associated transaction
+            SipResponse resp = new SipResponse(responseEvent.getResponse());
+            resp.setStackTransaction(transaction);
 
-			// Search the context associated to the received response and notify it
-			String transactionId = SipTransactionContext.getTransactionContextId(resp);
-			notifyTransactionContext(transactionId, resp);
-		} else {
-    		if (logger.isActivated()) {
-    			logger.debug("By pass provisional response");
-    		}
-		}
-	}
+            // Search the context associated to the received response and notify it
+            String transactionId = SipTransactionContext.getTransactionContextId(resp);
+            notifyTransactionContext(transactionId, resp);
+        } else {
+            if (logger.isActivated()) {
+                logger.debug("By pass provisional response");
+            }
+        }
+    }
 
     /**
      * Processes a retransmit or expiration Timeout of an underlying
@@ -1031,26 +1029,26 @@ public class SipInterface implements SipListener {
      * @param timeoutEvent Event
      */
     public void processTimeout(TimeoutEvent timeoutEvent) {
-		if (logger.isActivated()) {
-			logger.debug("Transaction timeout " + timeoutEvent.getTimeout().toString());
-		}
+        if (logger.isActivated()) {
+            logger.debug("Transaction timeout " + timeoutEvent.getTimeout().toString());
+        }
 
-		if (timeoutEvent.isServerTransaction()) {
-    		if (logger.isActivated()) {
-    			logger.warn("Unexpected timeout for a server transaction: should never arrives");
-    		}
-    		return;
-    	}
-
-    	ClientTransaction transaction = (ClientTransaction)timeoutEvent.getClientTransaction();
-        if (transaction == null) {
-    		if (logger.isActivated()) {
-    			logger.debug("No transaction exist for this transaction: by-pass it");
-    		}
+        if (timeoutEvent.isServerTransaction()) {
+            if (logger.isActivated()) {
+                logger.warn("Unexpected timeout for a server transaction: should never arrives");
+            }
             return;
         }
 
-		// Search the context associated to the received timeout and notify it
+        ClientTransaction transaction = (ClientTransaction)timeoutEvent.getClientTransaction();
+        if (transaction == null) {
+            if (logger.isActivated()) {
+                logger.debug("No transaction exist for this transaction: by-pass it");
+            }
+            return;
+        }
+
+        // Search the context associated to the received timeout and notify it
         String transactionId = SipTransactionContext.getTransactionContextId(transaction.getRequest());
         notifyTransactionContext(transactionId, null);
     }
@@ -1061,8 +1059,8 @@ public class SipInterface implements SipListener {
      * @param transactionTerminatedEvent Event
      */
     public void processTransactionTerminated(TransactionTerminatedEvent transactionTerminatedEvent) {
-		if (logger.isActivated()) {
-			logger.debug("Transaction terminated");
-		}
+        if (logger.isActivated()) {
+            logger.debug("Transaction terminated");
+        }
     }
 }

@@ -174,7 +174,7 @@ public class SipUtils {
      * @param Header
      */
 	public static Header buildUserAgentHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductName() + "/" + TerminalInfo.getProductVersion();
 	    Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
 	    return userAgentHeader;
     }
@@ -186,7 +186,7 @@ public class SipUtils {
      * @throws Exception
      */
 	public static Header buildServerHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.PRODUCT_NAME + "/" + TerminalInfo.PRODUCT_VERSION;
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductName() + "/" + TerminalInfo.getProductVersion();
 		return HEADER_FACTORY.createHeader(ServerHeader.NAME, value);
     }
     
@@ -395,17 +395,17 @@ public class SipUtils {
     	}
     	
     	// Update Contact header
-    	String acceptTags = "*";
+    	StringBuffer acceptTags = new StringBuffer("*");
     	ContactHeader contact = (ContactHeader)message.getHeader(ContactHeader.NAME);
     	for(int i=0; i < tags.size(); i++) {
     		if (contact != null) {
     			contact.setParameter(tags.get(i), null);
     		}
-    		acceptTags = acceptTags + ";" + tags.get(i);
+    		acceptTags.append(";" + tags.get(i));
     	}
     	
     	// Update Accept-Contact header
-		Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, acceptTags);
+		Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, acceptTags.toString());
 		message.addHeader(header);
     }
     

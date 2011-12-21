@@ -34,7 +34,6 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 public class MessagingSettingsDisplay extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
 	private CheckBoxPreference filetransfer_vibrate;
 	private CheckBoxPreference chat_vibrate;
-	private CheckBoxPreference auto_accept_invitation;
 	
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +51,6 @@ public class MessagingSettingsDisplay extends PreferenceActivity implements Pref
         chat_vibrate.setPersistent(false);
         chat_vibrate.setOnPreferenceChangeListener(this);
         chat_vibrate.setChecked(RcsSettings.getInstance().isPhoneVibrateForChatInvitation());        
-        
-        auto_accept_invitation = (CheckBoxPreference)findPreference("chat_invitation_auto_invitation");
-        auto_accept_invitation.setPersistent(false);
-        auto_accept_invitation.setOnPreferenceChangeListener(this);
-        auto_accept_invitation.setChecked(RcsSettings.getInstance().isAutoAcceptModeForChatInvitation());        
 	}
 
     public boolean onPreferenceChange(Preference preference, Object objValue) {

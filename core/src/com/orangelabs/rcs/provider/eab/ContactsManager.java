@@ -18,10 +18,15 @@
 
 package com.orangelabs.rcs.provider.eab;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
+import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
+import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
+import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.accounts.AccountManager;
 import android.content.ContentProviderOperation;
@@ -46,15 +51,10 @@ import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.StatusUpdates;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
-import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
-import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
-import com.orangelabs.rcs.utils.PhoneUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -2031,17 +2031,23 @@ public final class ContactsManager {
 	 * @return true if the string are the same, else false
 	 */
 	private boolean stringsHaveChanged(String newString, String oldString){
-		if((newString!=null && oldString==null)
-				|| (newString==null && oldString!=null)){
-			// One string is null and not the other one
-			return true;
-		}
-		if (newString==null && oldString==null){
-			// Both are null
-			return false;
-		}
-		// Both strings are not null, compare
-		return (!newString.equalsIgnoreCase(oldString));		
+        if (newString == null) {
+            if (oldString == null) {
+                // Both are null
+                return false;
+            } else {
+                // One string is null and not the other one
+                return true;
+            }
+        } else {
+            if (oldString == null) {
+                // One string is null and not the other one
+                return true;
+            } else {
+                // Both strings are not null, compare
+                return (!newString.equalsIgnoreCase(oldString));
+            }
+        }
 	}
 	
 	/**

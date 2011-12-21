@@ -85,12 +85,10 @@ public class RtcpPacketReceiver extends Thread {
 		// Create the UDP server
 		datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
 		datagramConnection.open(port);
-
-		// Start background processing
-		start();
-		if (logger.isActivated()) {
-            logger.debug("RTCP receiver started on port " + port);
-		}
+		
+		if (logger.isActivated()) {	 
+			logger.debug("RTCP receiver created at port " + port);	 
+        }		
 	}
 
 	/**
@@ -342,7 +340,12 @@ public class RtcpPacketReceiver extends Thread {
 							chunk.items = new RtcpSdesItem[items.size()];
 							items.copyInto(chunk.items);
 							if ((sdesoff & 3) != 0) {
-								in.skip(4 - (sdesoff & 3));
+                                if (in.skip(4 - (sdesoff & 3)) != 4 - (sdesoff & 3)) {
+                                    if (logger.isActivated()) {
+                                        logger.error("Bad RTCP SDES packet format");
+                                    }
+                                    return null;
+                                }
 								sdesoff = sdesoff + 3 & -4;
 							}
 						}
@@ -386,7 +389,13 @@ public class RtcpPacketReceiver extends Thread {
 							return null;
 						}
 						in.readFully(byep.reason);
-						in.skip(reasonlen - byep.reason.length);
+                        int skipBye = reasonlen - byep.reason.length;
+                        if (in.skip(skipBye) != skipBye) {
+                            if (logger.isActivated()) {
+                                logger.error("Bad RTCP BYE packet format");
+                            }
+                            return null;
+                        }
 
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpByeEvent(byep));
@@ -407,7 +416,13 @@ public class RtcpPacketReceiver extends Thread {
 						appp.subtype = firstbyte;
 						appp.data = new byte[inlength - 12];
 						in.readFully(appp.data);
-						in.skip(inlength - 12 - appp.data.length);
+                        int skipApp = inlength - 12 - appp.data.length;
+                        if (in.skip(skipApp) != skipApp) {
+                            if (logger.isActivated()) {
+                                logger.error("Bad RTCP APP packet format");
+                            }
+                            return null;
+                        }
 
 						// Notify event listeners
 						notifyRtcpListeners(new RtcpApplicationEvent(appp));
@@ -424,7 +439,12 @@ public class RtcpPacketReceiver extends Thread {
 				subpacket.offset = offset;
 				subpacket.length = length;
 				subpackets.addElement(subpacket);
-				in.skipBytes(padlen);
+                if (in.skipBytes(padlen) != padlen) {
+                    if (logger.isActivated()) {
+                        logger.error("Bad RTCP packet format");
+                    }
+                    return null;
+                }
 			}
 
 		} catch (Exception e) {

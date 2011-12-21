@@ -30,7 +30,6 @@ public class RtcpAppPacket extends RtcpPacket {
 	public int ssrc;
 	public int name;
 	public int subtype;
-	public byte data[];
 
 	public RtcpAppPacket(RtcpPacket parent) {
 		super(parent);

@@ -158,16 +158,16 @@ public class ChatUtils {
      * @return XML document
      */
     public static String generateChatResourceList(List<String> participants) {
-		String uriList = "";
+		StringBuffer uriList = new StringBuffer();
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
-			uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF;
+			uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF);
 		}
 		
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 			"<list>" + CRLF +
-			uriList +
+			uriList.toString() +
 			"</list></resource-lists>";
 		return xml;
     }    
@@ -181,21 +181,21 @@ public class ChatUtils {
      * @return XML document
      */
     public static String generateExtendedChatResourceList(String existingParticipant, String replaceHeader, List<String> newParticipants) {
-		String uriList = "";
+		StringBuffer uriList = new StringBuffer();
 		for(int i=0; i < newParticipants.size(); i++) {
 			String contact = newParticipants.get(i);
 			if (contact.equals(existingParticipant)) {
-				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
-					StringUtils.encodeXML(replaceHeader) + "\"/>" + CRLF;
+				uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
+					StringUtils.encodeXML(replaceHeader) + "\"/>" + CRLF);
 			} else {
-				uriList += " <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF;
+				uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF);
 			}
 		}
 		
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 			"<list>" + CRLF +
-			uriList +
+			uriList.toString() +
 			"</list></resource-lists>";
 		return xml;
     }    
@@ -407,7 +407,7 @@ public class ChatUtils {
     		CpimMessage cpimMsg = cpimParser.getCpimMessage();
     		if (cpimMsg != null) {
     			// Check if the content is a IMDN message    		
-    			String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+    			String contentType = cpimMsg.getContentType();
     			if ((contentType != null) && ChatUtils.isMessageImdnType(contentType)) {
     				// Parse the IMDN document
     				ImdnDocument imdn = parseDeliveryReport(cpimMsg.getMessageContent());

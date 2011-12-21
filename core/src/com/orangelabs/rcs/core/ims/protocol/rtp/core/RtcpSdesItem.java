@@ -32,7 +32,6 @@ public class RtcpSdesItem {
 
 	public RtcpSdesItem(int i, String string) {
 		type = i;
-		data = new byte[string.length()];
 		data = string.getBytes();
 	}
 }

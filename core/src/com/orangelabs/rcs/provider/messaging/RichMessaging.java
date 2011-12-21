@@ -173,17 +173,17 @@ public class RichMessaging {
 	 */
 	public void addOutgoingChatSession(ChatSession session){
 		String sessionId = session.getSessionID();
-		String invited = "";
+		StringBuffer invited = new StringBuffer();
 		int type = EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE;
 		if (session.isChatGroup()){
 			type = EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE;
 			for(String contact : session.getParticipants().getList()){
 				if (contact!=null){
-					invited += PhoneUtils.extractNumberFromUri(contact)+";";
+					invited.append(PhoneUtils.extractNumberFromUri(contact)+";");
 				}
 			}
 		}else{
-			invited = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+			invited.append(PhoneUtils.extractNumberFromUri(session.getRemoteContact()));
 		}
 		
 		InstantMessage firstMsg = session.getFirstMessage();
@@ -193,7 +193,7 @@ public class RichMessaging {
 			firstMsgTxt = firstMsg.getTextMessage();
 			firstMsgTxtLength = firstMsgTxt.length();
 		}
-		addEntry(type, sessionId, null, invited, firstMsgTxt, InstantMessage.MIME_TYPE, null, firstMsgTxtLength, null, EventsLogApi.EVENT_INITIATED);
+		addEntry(type, sessionId, null, invited.toString(), firstMsgTxt, InstantMessage.MIME_TYPE, null, firstMsgTxtLength, null, EventsLogApi.EVENT_INITIATED);
 
 		// Set the first message
 		InstantMessage firstMessage = session.getFirstMessage();
@@ -300,11 +300,11 @@ public class RichMessaging {
 		String sessionId = session.getSessionID();
 		if (session.isChatGroup()) {
 			List<String> participants = session.getParticipants().getList();
-			String contacts = "";
+			StringBuffer contacts = new StringBuffer();
 			for(String contact : participants) {
-				contacts += contact+";";
+				contacts.append(contact+";");
 			}
-			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts, null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
+			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts.toString(), null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
 		} else {
 			String contact = session.getRemoteContact();
 			addEntry(EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE, sessionId, null, contact, null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
@@ -319,12 +319,12 @@ public class RichMessaging {
 	public void addChatSessionError(ChatSession session) {
 		String sessionId = session.getSessionID();
 		if (session.isChatGroup()) {
-			String contacts = "";
+			StringBuffer contacts = new StringBuffer();
 			List<String> participants = session.getParticipants().getList();
 			for(String contact : participants){
-				contacts += contact+";";
+				contacts.append(contact+";");
 			}
-			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts, null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
+			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts.toString(), null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 		} else {
 			String contact = session.getRemoteContact();
 			addEntry(EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE, sessionId, null, contact, null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_FAILED);

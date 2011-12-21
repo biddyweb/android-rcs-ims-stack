@@ -18,10 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * MSRP manager
@@ -29,11 +29,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class MsrpManager {
-	/**
-	 * MRSP timeout (in seconds)
-	 */
-	public static int TIMEOUT = 10;
-
 	/**
      * Local MSRP address
      */
@@ -236,7 +231,9 @@ public class MsrpManager {
         	}
         	try {
 	        	msrpSession.close();
-        	} catch(Exception e) {}
+        	} catch(Exception e) {
+                // Intentionally blank
+        	}
             msrpSession = null;
     	}
     }

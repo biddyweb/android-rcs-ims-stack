@@ -329,7 +329,7 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
     			CpimParser cpimParser = new CpimParser(data);
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
-			    	String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+			    	String contentType = cpimMsg.getContentType();
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
 						// Receive an IMDN report

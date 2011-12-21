@@ -326,7 +326,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
-			    	String contentType = cpimMsg.getContentHeader(CpimMessage.HEADER_CONTENT_TYPE);
+			    	String contentType = cpimMsg.getContentType();
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
 			    		

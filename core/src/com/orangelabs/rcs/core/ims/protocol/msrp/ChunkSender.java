@@ -43,12 +43,12 @@ public class ChunkSender extends Thread {
 	 * Buffer of chunks
 	 */
 	private FifoBuffer buffer = new FifoBuffer();
-	
+
 	/**
 	 * Termination flag
 	 */
 	private boolean terminated = false;
-	
+
 	/**
 	 * The logger
 	 */
@@ -82,8 +82,7 @@ public class ChunkSender extends Thread {
 		buffer.unblockRead();
 		try {
 			interrupt();
-		} catch(Exception e) {}		
-		
+		} catch(Exception e) {}
 		if (logger.isActivated()) {
 			logger.debug("Sender is terminated");
 		}
@@ -117,11 +116,12 @@ public class ChunkSender extends Thread {
 				if (logger.isActivated()) {
 					logger.error("Chunk sender has failed", e);
 				}
-				// Notify the session listener that an error has occurred
+				
+				// Notify the msrp session listener that an error has occured
 				connection.getSession().getMsrpEventListener().msrpTransferError(e.getMessage());
 			}
 		}
-	}	
+	}
 	
 	/**
 	 * Send a chunk
@@ -130,6 +130,24 @@ public class ChunkSender extends Thread {
 	 * @throws IOException
 	 */
 	public void sendChunk(byte chunk[]) throws IOException {
-		buffer.putMessage(chunk);
+		if (connection.getSession().isFailureReportRequested()) {
+			buffer.putMessage(chunk);
+		} else {
+			sendChunkImmediately(chunk);
+		}
 	}	
+
+	/**
+	 * Send a chunk immediately
+	 * 
+	 * @param chunk New chunk
+	 * @throws IOException
+	 */
+	public void sendChunkImmediately(byte chunk[]) throws IOException {
+		if (MsrpConnection.MSRP_TRACE_ENABLED) {
+			System.out.println(">>> Send MSRP message:\n" + new String(chunk));
+		}
+		stream.write(chunk);
+		stream.flush();
+	}
 }

@@ -19,14 +19,14 @@
 	</PreferenceCategory>
 	
 	<PreferenceCategory android:title="@string/rcs_settings_title_chat_invitation">
-		<CheckBoxPreference android:key="chat_invitation_auto_invitation" android:title="@string/rcs_settings_label_auto_invitation" android:summary="@string/rcs_settings_summary_auto_invitation"></CheckBoxPreference><CheckBoxPreference
+		<CheckBoxPreference
 			android:key="chat_invitation_vibration"
 			android:title="@string/rcs_settings_label_vibrate"
 			android:summary="@string/rcs_settings_summary_chat_vibrate"
-		android:showDefault="true"/>
+			android:showDefault="true"/>
 
 		<com.orangelabs.rcs.settings.ChatInvitationRingtone
 			android:showSilent="true" android:summary="@string/rcs_settings_summary_chat_ringtone" android:title="@string/rcs_settings_label_ringtone" android:showDefault="true" android:key="chat_invitation_ringtone"/>
 	
-</PreferenceCategory>
+	</PreferenceCategory>
 </PreferenceScreen>

@@ -240,7 +240,7 @@ public class ImdnManager extends Thread {
 	/**
 	 * Delivery status
 	 */
-	private class DeliveryStatus {
+	private static class DeliveryStatus {
 		private String contact;
 		private String msgId;
 		private String status;

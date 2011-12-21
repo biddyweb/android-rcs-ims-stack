@@ -472,6 +472,11 @@ public class RcsSettingsData {
 	 */
 	public static final String SIP_TRACE_ACTIVATED = "SipTraceActivated";
 
+    /**
+     * SIP trace file
+     */
+    public static final String SIP_TRACE_FILE = "SipTraceFile";
+	
 	/**
 	 * Activate or not the media trace
 	 */
@@ -585,5 +590,10 @@ public class RcsSettingsData {
 	/**
 	 * GRUU support
 	 */
-	public static final String GRUU = "GRUU";	
+	public static final String GRUU = "GRUU";
+
+    /**
+     * CPU always_on support
+     */
+    public static final String CPU_ALWAYS_ON = "CpuAlwaysOn";
 }

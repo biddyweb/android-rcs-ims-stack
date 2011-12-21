@@ -634,7 +634,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Media RTP input
      */
-    private class MediaRtpInput implements MediaInput {
+    private static class MediaRtpInput implements MediaInput {
         /**
          * Received frames
          */

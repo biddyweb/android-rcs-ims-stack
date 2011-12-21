@@ -660,7 +660,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     /**
      * Media RTP input
      */
-    private class MediaRtpInput implements MediaInput {
+    private static class MediaRtpInput implements MediaInput {
         /**
          * Received frames
          */

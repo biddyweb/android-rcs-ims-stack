@@ -17,6 +17,7 @@ public class CpimMessage {
 	 * Header "Content-type"
 	 */
 	public static final String HEADER_CONTENT_TYPE = "Content-type";
+	public static final String HEADER_CONTENT_TYPE2 = "Content-Type";
 
 	/**
 	 * Header "From"
@@ -91,6 +92,20 @@ public class CpimMessage {
 		this.msgContent = msgContent;
 	}
 	
+    /**
+     * Returns content type
+     * 
+     * @return Content type
+     */
+    public String getContentType() {
+    	String type = contentHeaders.get(CpimMessage.HEADER_CONTENT_TYPE);
+    	if (type == null) {
+    		return contentHeaders.get(CpimMessage.HEADER_CONTENT_TYPE2);
+    	} else {
+    		return type;
+    	}
+    }
+    
     /**
      * Returns MIME header
      * 

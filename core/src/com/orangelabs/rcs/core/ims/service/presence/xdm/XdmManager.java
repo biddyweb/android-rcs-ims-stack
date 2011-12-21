@@ -167,7 +167,7 @@ public class XdmManager {
 		String requestUri = serviceRoot + request.getUrl();
 		String httpRequest = request.getMethod() + " " + requestUri + " HTTP/1.1" + HttpUtils.CRLF +
 				"Host: " + host + ":" + port + HttpUtils.CRLF +
-				"User-Agent: " + TerminalInfo.PRODUCT_NAME + " " + TerminalInfo.PRODUCT_VERSION + HttpUtils.CRLF;
+				"User-Agent: " + TerminalInfo.getProductName() + " " + TerminalInfo.getProductVersion() + HttpUtils.CRLF;
 		
 		if (authenticate) {
 			// Set the Authorization header
@@ -217,7 +217,7 @@ public class XdmManager {
 		}
 
 		// Read HTTP headers response
-		String respTrace = "";
+		StringBuffer respTrace = new StringBuffer();
 		HttpResponse response = new HttpResponse();
 		int ch = -1;
 		String line = "";
@@ -231,7 +231,7 @@ public class XdmManager {
 				}
 
 				if (logger.isActivated()) {
-					respTrace += line;
+					respTrace.append(line);
 				}
 
 				// Remove CRLF
@@ -277,13 +277,13 @@ public class XdmManager {
 				}
 			}
 			if (logger.isActivated()) {
-				respTrace = respTrace + HttpUtils.CRLF + new String(content);
+				respTrace.append(HttpUtils.CRLF + new String(content));
 			}
 			response.setContent(content);
 		}
 
 		if (logger.isActivated()){
-			logger.debug("Receive HTTP response:\n" + respTrace);
+			logger.debug("Receive HTTP response:\n" + respTrace.toString());
 		}
 
 		// Close the connection

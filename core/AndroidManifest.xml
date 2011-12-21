@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.3.4"
+ android:versionName="2.3.5"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -31,7 +31,7 @@
 	<permission android:name="com.orangelabs.rcs.permission.RCS"
         android:label="@string/rcs_core_permission"
         android:description="@string/rcs_core_permission_desc"
-        android:protectionLevel="signature" />	 
+        android:protectionLevel="normal" />	 
  
 	<permission android:name="com.orangelabs.rcs.permission.RCS_EXTENSION"
         android:label="@string/rcs_core_permission_ext"

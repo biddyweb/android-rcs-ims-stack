@@ -41,8 +41,8 @@
 	<string name="rcs_settings_summary_edit_freetext">Edit your predefined free text</string>
 	<string name="rcs_settings_summary_csh_available">Beep when a content sharing may be initiated during the voice call</string>
 	<string name="rcs_settings_summary_video_format">Select the video codec</string>
-	<string name="rcs_settings_summary_video_size">Select the video display resolution</string><string name="rcs_settings_summary_auto_invitation">Automatic acceptation for incoming chat invitation</string>
-
+	<string name="rcs_settings_summary_video_size">Select the video display resolution</string>
+	
 	<string name="rcs_settings_label_video_format">Video format</string>
 	<string name="rcs_settings_label_video_size">Video resolution</string>
 	<string name="rcs_settings_label_beep">Phone beep</string>
@@ -65,7 +65,6 @@
 	<string name="rcs_settings_label_default_freetext_4">On vacation</string>
 
 	<string name="rcs_settings_label_default_video_format">h263-2000</string>
-	<string name="rcs_settings_label_auto_invitation">Auto accept invitations</string>
     <string-array name="rcs_settings_list_video_format_value">
         <item>h263-2000</item>
         <item>h264</item>

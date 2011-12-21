@@ -159,7 +159,7 @@ public class RtcpSession {
         appStartupTime = currentTime();
         timeOfLastRTCPSent = appStartupTime;
         tc = appStartupTime;
-        SSRC = Math.abs(rnd.nextInt());
+        SSRC = rnd.nextInt();
         packetCount = 0;
         octetCount = 0;
 

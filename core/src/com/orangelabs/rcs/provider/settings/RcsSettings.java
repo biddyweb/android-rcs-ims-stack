@@ -18,13 +18,13 @@
 
 package com.orangelabs.rcs.provider.settings;
 
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
 /**
  * RCS settings
@@ -488,11 +488,9 @@ public class RcsSettings {
      * @param txt Text
      */
 	public void setPredefinedFreetext2(String txt) {
-		if (instance != null) {
-			if (instance != null) {
-				writeParameter(RcsSettingsData.FREETEXT2, txt);
-			}
-		}
+        if (instance != null) {
+            writeParameter(RcsSettingsData.FREETEXT2, txt);
+        }
 	}
 
     /**
@@ -514,11 +512,9 @@ public class RcsSettings {
      * @param txt Text
      */
 	public void setPredefinedFreetext3(String txt) {
-		if (instance != null) {
-			if (instance != null) {
-				writeParameter(RcsSettingsData.FREETEXT3, txt);
-			}
-		}
+        if (instance != null) {
+            writeParameter(RcsSettingsData.FREETEXT3, txt);
+        }
 	}
 
     /**
@@ -540,11 +536,9 @@ public class RcsSettings {
      * @param txt Text
      */
 	public void setPredefinedFreetext4(String txt) {
-		if (instance != null) {
-			if (instance != null) {
-				writeParameter(RcsSettingsData.FREETEXT4, txt);
-			}
-		}
+        if (instance != null) {
+            writeParameter(RcsSettingsData.FREETEXT4, txt);
+        }
 	}
 
     /**
@@ -1471,6 +1465,21 @@ public class RcsSettings {
 	}
 
     /**
+     * Get SIP trace file
+     *
+     * @return SIP trace file
+     */
+    public String getSipTraceFile() {
+        String result = "/sdcard/sip.txt";
+        if (instance != null) {
+            try {
+                result = readParameter(RcsSettingsData.SIP_TRACE_FILE);
+            } catch(Exception e) {}
+        }
+        return result;
+    }
+	
+    /**
      * Is media trace activated
      *
      * @return Boolean
@@ -1795,4 +1804,18 @@ public class RcsSettings {
 		}
 		return result;
 	}
+	
+    /**
+     * Is CPU Always_on activated
+     *
+     * @return Boolean
+     */
+    public boolean isCpuAlwaysOn() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.CPU_ALWAYS_ON));
+        }
+        return result;
+    }
+
 }

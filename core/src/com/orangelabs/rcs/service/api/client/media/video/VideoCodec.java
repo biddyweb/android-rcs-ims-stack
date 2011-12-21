@@ -171,7 +171,7 @@ public class VideoCodec {
      * @param codec Codec to compare
      * @return True if codecs are equals
      */
-    public boolean equals(VideoCodec codec) {
+    public boolean compare(VideoCodec codec) {
         if (getCodecName().equalsIgnoreCase(codec.getCodecName()) &&
         		getWidth() == codec.getWidth() &&
         			getHeight() == codec.getHeight())
@@ -188,7 +188,7 @@ public class VideoCodec {
      */
     public static boolean checkVideoCodec(MediaCodec[] supportedCodecs, VideoCodec codec) {
         for (int i = 0; i < supportedCodecs.length; i++) {
-            if (codec.equals(new VideoCodec(supportedCodecs[i])))
+            if (codec.compare(new VideoCodec(supportedCodecs[i])))
                 return true;
         }
         return false;

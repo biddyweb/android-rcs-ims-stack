@@ -195,6 +195,16 @@ public abstract class MsrpConnection {
 	}	
 
 	/**
+	 * Send a new data chunk immediately
+	 * 
+	 * @param chunk Data chunk
+	 * @throws IOException
+	 */
+	public void sendChunkImmediately(byte chunk[]) throws IOException {
+		sender.sendChunkImmediately(chunk);
+	}
+	
+	/**
 	 * Returns the socket connection
 	 * 
 	 * @return Socket

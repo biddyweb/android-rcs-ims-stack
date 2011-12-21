@@ -117,17 +117,23 @@ public class SipMessageFactory {
 	        	contact.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
 	        }
 	        register.addHeader(contact);	        
+
+	        // Set Supported header
+	        String supported;
+	        if (instanceId != null) {
+	        	supported = "path, gruu";
+	        } else {
+	        	supported = "path";
+	        }
+	        SupportedHeader supportedHeader = SipUtils.HEADER_FACTORY.createSupportedHeader(supported);
+	        register.addHeader(supportedHeader);	        
 	        
             // Set feature tags
             SipUtils.setFeatureTags(register, featureTags);
 
             // Set Allow header
 	        SipUtils.buildAllowHeader(register);
-
-	        // Set Supported header
-	        SupportedHeader supportedHeader = SipUtils.HEADER_FACTORY.createSupportedHeader("path, gruu");
-	        register.addHeader(supportedHeader);
-	        
+        
 	        // Set the Route header
         	Vector<String> route = dialog.getSipStack().getDefaultRoutePath();
 	        for(int i=0; i < route.size(); i++) {

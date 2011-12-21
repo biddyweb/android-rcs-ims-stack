@@ -18,14 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat.event;
 
-import java.io.ByteArrayInputStream;
-import java.util.Vector;
-
-import javax.sip.header.ExpiresHeader;
-import javax.sip.header.SubscriptionStateHeader;
-
-import org.xml.sax.InputSource;
-
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -45,6 +37,14 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import org.xml.sax.InputSource;
+
+import java.io.ByteArrayInputStream;
+import java.util.Vector;
+
+import javax.sip.header.ExpiresHeader;
+import javax.sip.header.SubscriptionStateHeader;
 
 /**
  * Conference event subscribe manager
@@ -224,7 +224,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     /**
      * Subscription has been terminated by server
      */
-    public void terminatedByServer() {
+    public synchronized void terminatedByServer() {
     	if (!subscribed) {
     		// Already unsubscribed
         	return;

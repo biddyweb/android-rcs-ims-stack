@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.sip;
 
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
@@ -28,7 +27,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -107,7 +105,7 @@ public class OriginatingSipSession extends GenericSipSession {
 		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
 		
         // Wait response
-        ctx.waitResponse(ImsServiceSession.RINGING_PERIOD + SipManager.TIMEOUT);
+        ctx.waitResponse(getResponseTimeout());
         
         // Analyze the received response 
         if (ctx.isSipResponse()) {

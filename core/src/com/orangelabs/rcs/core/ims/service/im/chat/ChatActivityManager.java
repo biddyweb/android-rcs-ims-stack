@@ -62,7 +62,7 @@ public class ChatActivityManager extends PeriodicRefresher {
     /**
      * Update the session activity
      */
-    public synchronized void updateActivity() {
+    public void updateActivity() {
     	activityTimesamp = System.currentTimeMillis();
     }
     

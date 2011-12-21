@@ -18,8 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall.video;
 
+import java.util.Vector;
+
 import com.orangelabs.rcs.core.content.VideoContent;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -30,15 +31,12 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Vector;
 
 /**
  * Originating pre-recorded video content sharing session (streaming)
@@ -144,7 +142,7 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
 
         // Wait response
-        ctx.waitResponse(ImsServiceSession.RINGING_PERIOD + SipManager.TIMEOUT);
+        ctx.waitResponse(getResponseTimeout());
 
         // Analyze the received response
         if (ctx.isSipResponse()) {
