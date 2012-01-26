@@ -18,11 +18,11 @@
 
 package com.orangelabs.rcs.platform.registry;
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.platform.AndroidFactory;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
 
 /**
  * Android registry factory
@@ -33,7 +33,7 @@ public class AndroidRegistryFactory extends RegistryFactory {
 	/**
 	 * RCS registry name
 	 */
-	private static final String RCS_PREFS = "RCS";
+	public static final String RCS_PREFS = "RCS";
 
 	/**
 	 * Shared preference

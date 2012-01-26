@@ -1,7 +1,5 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
@@ -18,6 +16,8 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Vector;
 
 /**
  * Extends a one-to-one chat session to an ad-hoc session
@@ -88,14 +88,14 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
+	    		"a=sendrecv" + SipUtils.CRLF;
 
 	    	// Generate the resource list for given participants
 	    	String existingParticipant = oneoneSession.getParticipants().getList().get(0);
 			String replaceHeader = ";method=INVITE?Session-Replaces=" + oneoneSession.getContributionID();
 			String resourceList = ChatUtils.generateExtendedChatResourceList(existingParticipant,
 					replaceHeader,
-	        		getParticipants().getList()) + SipUtils.CRLF;
+	        		getParticipants().getList());
 	    	
 	    	// Build multipart
 	    	String multipart =
@@ -103,13 +103,13 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	    		"Content-Type: application/sdp" + SipUtils.CRLF +
     			"Content-Length: " + sdp.length() + SipUtils.CRLF +
 	    		SipUtils.CRLF +
-	    		sdp +
+	    		sdp + SipUtils.CRLF +
 	    		"--" + boundary + SipUtils.CRLF +
 	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
     			"Content-Length: " + resourceList.length() + SipUtils.CRLF +
 	    		"Content-Disposition: recipient-list" + SipUtils.CRLF +
 	    		SipUtils.CRLF +
-	    		resourceList +
+	    		resourceList + SipUtils.CRLF +
 	    		"--" + boundary + "--";
 
 			// Set the local SDP part in the dialog path

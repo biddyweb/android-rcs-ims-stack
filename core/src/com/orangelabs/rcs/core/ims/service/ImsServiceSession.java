@@ -93,7 +93,7 @@ public abstract class ImsServiceSession extends Thread {
     /**
      * Ringing period (in seconds)
      */
-    private int ringingPeriod = 30;
+    private int ringingPeriod = RcsSettings.getInstance().getRingingPeriod();
 
 	/**
      * The logger
@@ -109,8 +109,6 @@ public abstract class ImsServiceSession extends Thread {
 	public ImsServiceSession(ImsService imsService, String contact) {
         this.imsService = imsService;
 		this.contact = contact;
-
-        ringingPeriod = RcsSettings.getInstance().getRingingPeriod();
 	}
 
 	/**

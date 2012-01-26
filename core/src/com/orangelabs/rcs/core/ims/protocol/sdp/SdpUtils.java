@@ -25,17 +25,18 @@ package com.orangelabs.rcs.core.ims.protocol.sdp;
  */
 public class SdpUtils {
 	/**
-	 * Extract the remote host address from the connection info item
+	 * Extract the remote host address from the connection info
 	 * 
 	 * @param connectionInfo Connection info
 	 * @return Address
 	 */
 	public static String extractRemoteHost(String connectionInfo) {
 		// c=IN IP4 172.20.138.145
-		int index = connectionInfo.indexOf(" ", 3);
-		if (index != -1)
-			return connectionInfo.substring(index+1);
-		else
+		String[] tokens = connectionInfo.split(" ");
+		if (tokens.length > 2) {
+			return tokens[2];
+		} else {
 			return null;
+		}
 	}
 }

@@ -290,4 +290,5 @@ public abstract class ClientApi {
 	public static void stopRcsService(Context ctx) {
 		ctx.stopService(new Intent("com.orangelabs.rcs.service.RcsCoreService"));
 	}
+
 }

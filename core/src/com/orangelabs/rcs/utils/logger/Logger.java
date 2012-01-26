@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.utils.logger;
 
+import com.orangelabs.rcs.platform.logger.AndroidAppender;
+
 /**
  * Logger
  * 
@@ -72,8 +74,10 @@ public class Logger {
 	/**
 	 * List of appenders
 	 */
-	private static Appender[] appenders = null;
-
+	private static Appender[] appenders = new Appender[] { 
+		new AndroidAppender()
+	};
+	
 	/**
 	 * Classname
 	 */

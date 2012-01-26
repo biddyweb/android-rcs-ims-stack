@@ -37,6 +37,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sip.SipService;
+import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -113,9 +114,12 @@ public class ImsModule implements SipEventListener {
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
 		// Instanciates the IMS services
-        services = new ImsService[5];
+        services = new ImsService[6];
         
-        // Create capability discovery service (mandatory)
+        // Create terms & conditions service
+        services[ImsService.TERMS_SERVICE] = new TermsConditionsService(this);
+
+        // Create capability discovery service
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
         
         // Create IM service (mandatory)
@@ -283,6 +287,15 @@ public class ImsModule implements SipEventListener {
     public ImsService[] getImsServices() {
     	return services; 
     }   
+
+    /**
+     * Returns the terms & conditions service
+     * 
+     * @return Terms & conditions service
+     */
+    public TermsConditionsService getTermsConditionsService() {
+    	return (TermsConditionsService)services[ImsService.TERMS_SERVICE];
+    }
 
     /**
      * Returns the capability service

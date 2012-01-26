@@ -1,5 +1,13 @@
 package com.orangelabs.rcs.widget;
 
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.ClientApiIntents;
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -8,14 +16,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 import android.widget.RemoteViews;
-
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.core.Core;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.RcsCoreService;
-import com.orangelabs.rcs.service.api.client.ClientApi;
-import com.orangelabs.rcs.service.api.client.ClientApiIntents;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Widget provider
@@ -85,7 +85,7 @@ public class RcsWidgetProvider extends AppWidgetProvider{
 				// Service not running, start it and set widget to pending mode
 				setPendingMode(context);
 				RcsSettings.getInstance().setServiceActivationState(true);
-				context.startService(new Intent(RcsCoreService.SERVICE_NAME));
+                LauncherUtils.launchRcsService(context, false);
 			}
 		} else if (intent.getAction().equalsIgnoreCase(WIDGET_DEACTIVATE_SERVICE)) {
 			// Widget was ON and has been clicked
@@ -95,7 +95,7 @@ public class RcsWidgetProvider extends AppWidgetProvider{
 			if (ClientApi.isServiceStarted(context)) {
 				// Service is running, stop it and set widget to pending mode
 				setPendingMode(context);
-				context.stopService(new Intent(RcsCoreService.SERVICE_NAME));
+                LauncherUtils.stopRcsService(context);
 				RcsSettings.getInstance().setServiceActivationState(false);
 			} else {
 				// Service is already stopped, no need to stop it, just set

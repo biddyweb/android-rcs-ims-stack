@@ -434,7 +434,11 @@ public class RegistrationManager extends PeriodicRefresher {
         registered = true;
         
         // Start the periodic registration
-        startTimer(expirePeriod, 0.5);
+        if (expirePeriod <= 1200 ) {
+        	startTimer(expirePeriod, 0.5);
+        } else {
+        	startTimer(expirePeriod-600);
+        }
     	
         // Notify event listener
         networkInterface.getImsModule().getCore().getListener().handleRegistrationSuccessful();

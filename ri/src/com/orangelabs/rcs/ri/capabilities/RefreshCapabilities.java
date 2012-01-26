@@ -1,5 +1,11 @@
 package com.orangelabs.rcs.ri.capabilities;
 
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiException;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.capability.CapabilityApi;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -10,12 +16,6 @@ import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ClientApiException;
-import com.orangelabs.rcs.service.api.client.ClientApiListener;
-import com.orangelabs.rcs.service.api.client.capability.CapabilityApi;
 
 /**
  * Refresh capabilities
@@ -105,14 +105,19 @@ public class RefreshCapabilities extends Activity implements ClientApiListener {
         	tsk.execute();
 
         	// Display a progress dialog
-            progressDialog = Utils.showProgressDialog(RefreshCapabilities.this, getString(R.string.label_refresh_in_progress));
-            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            	public void onCancel(DialogInterface dialog) {
-            		try {
-            			tsk.cancel(true);
-            		} catch(Exception e) {
-            		}
-            	}
+            handler.post(new Runnable() { 
+                public void run() {
+                    progressDialog = Utils.showProgressDialog(RefreshCapabilities.this,
+                            getString(R.string.label_refresh_in_progress));
+                    progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        public void onCancel(DialogInterface dialog) {
+                            try {
+                                tsk.cancel(true);
+                            } catch (Exception e) {
+                            }
+                        }
+                    });
+                }
             });
         }
     };

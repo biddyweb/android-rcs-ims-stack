@@ -27,36 +27,141 @@ import java.util.Vector;
  * @author jexa7410
  */
 public class SdpParser extends Parser {
-	public SessionDescription sessionDescription = null;
+	/**
+	 * Session description
+	 */
+	public SessionDescription sessionDescription = new SessionDescription();
 
-	public Vector<MediaDescription> mediaDescriptions = null;
+	/**
+	 * Media description
+	 */
+	public Vector<MediaDescription> mediaDescriptions = new Vector<MediaDescription>();
 
+	/**
+	 * Input stream
+	 */
+	private ByteArrayInputStream bin = null;
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param data Data
+	 */
 	public SdpParser(byte data[]) {
-		init();
-		ByteArrayInputStream bin = new ByteArrayInputStream(data);
-		parseData(bin);
+		bin = new ByteArrayInputStream(data);
+		if (getToken(bin, "v=")) {
+			parseSessionDescription();
+			parseMediaDescriptions();
+	    }
 	}
 
-	public void parseData(ByteArrayInputStream bin) {
-		if (getToken(bin, "v=", true)) {
-			sessionDescription = new SessionDescription(bin);
-			mediaDescriptions = new Vector<MediaDescription>();
+	/**
+	 * Parse session description
+	 */
+	private void parseSessionDescription() {
+		// Protocol version
+		sessionDescription.version = getLine(bin);
 
-			parseMediaDescriptions(bin);
+		// Origin
+		if (getToken(bin, "o=")) {
+			sessionDescription.origin = getLine(bin);
+		}
+
+		// Session name
+		if (getToken(bin, "s=")) {
+			sessionDescription.sessionName = getLine(bin);
+		}
+
+		// Session and media Information
+		if (getToken(bin, "i=")) {
+			sessionDescription.sessionInfo = getLine(bin);
+		}
+
+		// URI
+		if (getToken(bin, "u=")) {
+			sessionDescription.uri = getLine(bin);
+		}
+
+		// E-Mail
+		if (getToken(bin, "e=")) {
+			sessionDescription.email = getLine(bin);
+		}
+
+		// Phone number
+		if (getToken(bin, "p=")) {
+			sessionDescription.phone = getLine(bin);
+		}
+
+		// Connection information
+		if (getToken(bin, "c=")) {
+			sessionDescription.connectionInfo = getLine(bin);
+		}
+
+		// Bandwidth information
+		if (getToken(bin, "b=")) {
+			sessionDescription.bandwidthInfo = getLine(bin);
+		}
+
+		// Time description
+		sessionDescription.timeDescriptions = new Vector<TimeDescription>();
+		while(getToken(bin, "t=")) {
+			TimeDescription timeDescription = parseTimeDescription();
+			this.sessionDescription.timeDescriptions.addElement(timeDescription);
+		}
+
+		// Time zone adjustments
+		if (getToken(bin, "z=")) {
+			sessionDescription.timezoneAdjustment = getLine(bin);
+		}
+
+		// Encryption key
+		if (getToken(bin, "k=")) {
+			sessionDescription.encryptionKey = getLine(bin);
+		}
+
+		// Session attributes
+		sessionDescription.sessionAttributes = new Vector<MediaAttribute>();
+		while(getToken(bin, "a=")) {
+			String sessionAttribute = getLine(bin);
+			int index = sessionAttribute.indexOf(':');
+			if (index > 0) {
+				String name = sessionAttribute.substring(0, index);
+				String value = sessionAttribute.substring(index + 1);
+				MediaAttribute attribute = new MediaAttribute(name, value);
+				sessionDescription.sessionAttributes.addElement(attribute);
+			}
 		}
 	}
+	
+	/**
+	 * Parse time description
+	 * 
+	 * @return Time description
+	 */
+	private TimeDescription parseTimeDescription() {
+		TimeDescription td = new TimeDescription();
+		
+		// Time the session is active
+		td.timeActive = getLine(bin);
 
-    /**
-     * Parse the media descriptions part
-     * 
-     * @param bin Input stream
-     */
-    private void parseMediaDescriptions(ByteArrayInputStream bin) {
-        boolean found = getToken(bin, "m=", false);
-        while (found) {
+		// Repeat times
+		td.repeatTimes = new Vector<String>();
+		while(getToken(bin, "r=")) {
+			String repeatTime = getLine(bin);
+			td.repeatTimes.addElement(repeatTime);
+		}
+		
+		return td;
+	}
+	
+	/**
+	 * Parse media descriptions
+	 */
+	private void parseMediaDescriptions() {
+        while(getToken(bin, "m=")) {
             Vector<MediaDescription> descs = new Vector<MediaDescription>();
             
-            // Media Name and Transport Address:
+            // Media name and transport address
             String line = getLine(bin);
             int end = line.indexOf(' ');
             String name = line.substring(0, end);
@@ -81,45 +186,40 @@ public class SdpParser extends Parser {
             payload = line.substring(start);
             descs.addElement(new MediaDescription(name, port, protocol, payload));
 
-            // Session and Media Information:
-            if (getToken(bin, "i=", false)) {
+            // Session and media information
+            if (getToken(bin, "i=")) {
                 String mediaTitle = getLine(bin);
                 for (int i = 0; i < descs.size(); i++) {
                     descs.elementAt(i).mediaTitle = mediaTitle;
                 }
             }
             
-            // Connection Information:
-            boolean mandatory = true;
-            if (sessionDescription.connectionIncluded) {
-                mandatory = false;
-            }
-            if (getToken(bin, "c=", mandatory)) {
+            // Connection information
+            if (getToken(bin, "c=")) {
                 String connectionInfo = getLine(bin);
                 for (int i = 0; i < descs.size(); i++) {
                     descs.elementAt(i).connectionInfo = connectionInfo;
                 }
             }
             
-            // Bandwidth Information:
-            if (getToken(bin, "b=", false)) {
+            // Bandwidth information
+            if (getToken(bin, "b=")) {
                 String bandwidthInfo = getLine(bin);
                 for (int i = 0; i < descs.size(); i++) {
                     descs.elementAt(i).bandwidthInfo = bandwidthInfo;
                 }
             }
 
-            // Encryption Key:
-            if (getToken(bin, "k=", false)) {
+            // Encryption key
+            if (getToken(bin, "k=")) {
                 String encryptionKey = getLine(bin);
                 for (int i = 0; i < descs.size(); i++) {
                     descs.elementAt(i).encryptionKey = encryptionKey;
                 }
             }
 
-            // Media Attributes:
-            boolean found2 = getToken(bin, "a=", false);
-            while (found2) {
+            // Media attributes
+            while(getToken(bin, "a=")) {
                 line = getLine(bin);
                 int index = line.indexOf(':');
                 if (index > 0) {
@@ -128,7 +228,7 @@ public class SdpParser extends Parser {
                     MediaAttribute attribute = new MediaAttribute(nameAttribute, valueAttribute);
                     // Dispatch for specific payload
                     if ((nameAttribute.equalsIgnoreCase("rtpmap")) && (valueAttribute.indexOf(' ') != -1)) {
-                        // add the attribute only for same payload
+                        // Add the attribute only for same payload
                         for (int i = 0; i < descs.size(); i++) {
                             if (valueAttribute.startsWith(descs.elementAt(i).payload)) {
                                 descs.elementAt(i).mediaAttributes.addElement(attribute);
@@ -140,25 +240,35 @@ public class SdpParser extends Parser {
                         }
                     }
                 }
-                found2 = getToken(bin, "a=", false);
             }
             
-            // Copy in mediaDescriptions
-            for (int i = 0; i < descs.size(); i++) {
+            // Copy in media descriptions
+            for(int i = 0; i < descs.size(); i++) {
                 mediaDescriptions.addElement((MediaDescription)descs.elementAt(i));
             }
-            found = getToken(bin, "m=", false);
         }
-    }
-    
-	public MediaAttribute getSessionAttribute(String name) {
-		MediaAttribute attribute = null;
-		if (sessionDescription != null) {
-			attribute = sessionDescription.getSessionAttribute(name);
-		}
-		return attribute;
 	}
 
+	/**
+	 * Returns session attribute
+	 * 
+	 * @param name Attribute name
+	 * @return Attribute
+	 */
+	public MediaAttribute getSessionAttribute(String name) {
+		if (sessionDescription != null) {
+			return sessionDescription.getSessionAttribute(name);
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns a media description
+	 * 
+	 * @param name Media name
+	 * @return Media
+	 */
 	public MediaDescription getMediaDescription(String name) {
 		MediaDescription description = null;
 		if (mediaDescriptions != null) {
@@ -173,6 +283,12 @@ public class SdpParser extends Parser {
 		return description;
 	}
 
+	/**
+	 * Returns media descriptions
+	 * 
+	 * @param name Media name
+	 * @return Medias
+	 */
 	public Vector<MediaDescription> getMediaDescriptions(String name) {
 		Vector<MediaDescription> result = new Vector<MediaDescription>();
 		if (mediaDescriptions != null) {
@@ -186,6 +302,11 @@ public class SdpParser extends Parser {
 		return result;
 	}
 
+	/**
+	 * Returns all media descriptions
+	 * 
+	 * @return Medias
+	 */
 	public Vector<MediaDescription> getMediaDescriptions() {
 		return mediaDescriptions;
 	}

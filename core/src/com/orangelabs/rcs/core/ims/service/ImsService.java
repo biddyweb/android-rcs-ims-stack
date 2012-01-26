@@ -38,29 +38,34 @@ import java.util.Vector;
  */
 public abstract class ImsService {
     /**
+     * Terms & conditions service
+     */
+	public static final int TERMS_SERVICE = 0;
+
+	/**
      * Capability service
      */
-	public static final int CAPABILITY_SERVICE = 0;
+	public static final int CAPABILITY_SERVICE = 1;
 
     /**
      * Instant Messaging service
      */
-	public static final int IM_SERVICE = 1;
+	public static final int IM_SERVICE = 2;
 
     /**
      * Richcall service
      */
-	public static final int RICHCALL_SERVICE = 2;
+	public static final int RICHCALL_SERVICE = 3;
 
     /**
      * Presence service
      */
-	public static final int PRESENCE_SERVICE = 3;
+	public static final int PRESENCE_SERVICE = 4;
 
     /**
      * SIP service
      */
-	public static final int SIP_SERVICE = 4;
+	public static final int SIP_SERVICE = 5;
 
 	/**
 	 * Activation flag

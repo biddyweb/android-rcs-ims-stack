@@ -18,27 +18,30 @@
 
 package com.orangelabs.rcs.service;
 
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-
 /**
- * Automatically starts the RCS service at device boot
+ * Device shutdown event receiver: automatically stops the RCS service
  * 
  * @author jexa7410
  */
-public class RcsServiceBoot extends BroadcastReceiver {
+public class DeviceShutdown extends BroadcastReceiver {
+	/**
+	 * The logger
+	 */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
     @Override
 	public void onReceive(Context context, Intent intent) {
-		// Instanciate the settings manager
-    	RcsSettings.createInstance(context);
-    	
-    	// Try to start the RCS service only if service is enabled in settings
-    	if (RcsSettings.getInstance().isServiceActivated()) {
-			// Start the service
-			context.startService(new Intent(RcsCoreService.SERVICE_NAME));
+		if (logger.isActivated()) {
+			logger.debug("Device shutdown");
 		}
+
+		// Stop the RCS service
+        LauncherUtils.stopRcsService(context);
 	}
 }

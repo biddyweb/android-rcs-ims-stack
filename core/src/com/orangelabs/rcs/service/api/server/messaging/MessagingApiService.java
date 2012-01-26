@@ -176,7 +176,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		FileTransferSession sessionApi = new FileTransferSession(session);
 		MessagingApiService.addFileTransferSession(sessionApi);
     	
-        // Notify event listeners
+		// Broadcast intent related to the received invitation
     	Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());

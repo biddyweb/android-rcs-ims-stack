@@ -18,13 +18,12 @@
 
 package com.orangelabs.rcs.addressbook;
 
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.service.LauncherUtils;
+
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
-import android.content.Intent;
 import android.os.Bundle;
-
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.service.RcsCoreService;
 
 /**
  * Setup RCS account activity
@@ -46,7 +45,7 @@ public class SetupRcsAccount extends android.accounts.AccountAuthenticatorActivi
 			response.onResult(result);
 
 			// Start the service
-			startService(new Intent(RcsCoreService.SERVICE_NAME));
+            LauncherUtils.launchRcsService(getApplicationContext(), false);
 		}
 		finish();
 	}

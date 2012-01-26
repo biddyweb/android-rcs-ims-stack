@@ -20,27 +20,61 @@ package com.orangelabs.rcs.core.ims.protocol.sdp;
 
 import java.util.Vector;
 
-public class MediaDescription extends Parser {
-	// Values:
+/**
+ * Media description
+ * 
+ * @author jexa7410
+ */
+public class MediaDescription {
+	/**
+	 * Media name
+	 */
 	public String name;
 
+	/**
+	 * Media port
+	 */
 	public int port;
 
+	/**
+	 * Media protocol
+	 */
 	public String protocol;
 
-	public int payload_type;
+	/**
+	 * Payload type
+	 */
+	public int payloadType;
 
+	/**
+	 * Payload
+	 */
 	public String payload;
 
+	/**
+	 * Media title
+	 */
 	public String mediaTitle;
 
+	/**
+	 * Connection info
+	 */
 	public String connectionInfo;
 
+	/**
+	 * Bandwidth info
+	 */
 	public String bandwidthInfo;
 
+	/**
+	 * Encryption key
+	 */
 	public String encryptionKey;
 
-	public Vector<MediaAttribute> mediaAttributes;
+	/**
+	 * Media attributes
+	 */
+	public Vector<MediaAttribute> mediaAttributes = new Vector<MediaAttribute>();
 
 	/**
 	 * Constructor
@@ -51,17 +85,15 @@ public class MediaDescription extends Parser {
 	 * @param payload Media payload
 	 */
     public MediaDescription(String name, int port, String protocol, String payload) {
-        // Media Name and Transport Address:
         this.name = name;
         this.port = port;
         this.protocol = protocol;
         this.payload = payload;
         try {
-            this.payload_type = Integer.parseInt(payload);
+            this.payloadType = Integer.parseInt(payload);
         } catch (Exception e) {
-            this.payload_type = -1;
+            this.payloadType = -1;
         }
-        this.mediaAttributes = new Vector<MediaAttribute>();
     }
 
 	public MediaAttribute getMediaAttribute(String name) {

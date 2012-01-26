@@ -86,6 +86,15 @@ public abstract class PeriodicRefresher {
      * Start the timer
      * 
      * @param expirePeriod Expiration period in seconds
+     */
+    public void startTimer(int expirePeriod) {
+    	startTimer(expirePeriod, 1.0);
+    }
+    	
+    /**
+     * Start the timer
+     * 
+     * @param expirePeriod Expiration period in seconds
      * @param delta Delta to apply on the expire period in percentage
      */
     public synchronized void startTimer(int expirePeriod, double delta) {

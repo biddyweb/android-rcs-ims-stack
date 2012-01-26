@@ -154,7 +154,11 @@ public class SipMessageFactory {
 		        register.addHeader(accessInfoHeader);
 	    	}
 	        	    	
-			return new SipRequest(register);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)register.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+	        
+	        return new SipRequest(register);	        
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -227,7 +231,11 @@ public class SipMessageFactory {
 		        subscribe.addHeader(accessInfoHeader);
 	    	}
 	    	
-			return new SipRequest(subscribe);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)subscribe.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(subscribe);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -304,7 +312,11 @@ public class SipMessageFactory {
 			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.length());
 			message.setContentLength(contentLengthHeader);
 			
-			return new SipRequest(message);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)message.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(message);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -400,7 +412,11 @@ public class SipMessageFactory {
     		ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(length);
     		publish.setContentLength(contentLengthHeader);
 
-    		return new SipRequest(publish);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)publish.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(publish);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -548,7 +564,11 @@ public class SipMessageFactory {
 			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.length());
 			invite.setContentLength(contentLengthHeader);
 			
-			return new SipRequest(invite);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)invite.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(invite);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -677,7 +697,11 @@ public class SipMessageFactory {
             // Set Allow header
             SipUtils.buildAllowHeader(ack);
 
-			return new SipRequest(ack);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)ack.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(ack);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -751,6 +775,11 @@ public class SipMessageFactory {
 			// Create the request
 			Transaction transaction = dialog.getInvite().getStackTransaction();
 		    Request bye = transaction.getDialog().createRequest(Request.BYE);
+		    
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)bye.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+		    
 	        return new SipRequest(bye);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -772,6 +801,11 @@ public class SipMessageFactory {
 	        // Create the request
 		    ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
 		    Request cancel = transaction.createCancel();
+		    
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)cancel.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+		    
 			return new SipRequest(cancel);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -844,6 +878,10 @@ public class SipMessageFactory {
 
 			// Set User-Agent header
 	        options.addHeader(SipUtils.buildUserAgentHeader());
+
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)options.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
 
 	        return new SipRequest(options);
 		} catch(Exception e) {
@@ -973,7 +1011,11 @@ public class SipMessageFactory {
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
 	        
-			return new SipRequest(refer);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)refer.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(refer);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -1078,7 +1120,11 @@ public class SipMessageFactory {
 	        Header contentDispoHeader = SipUtils.HEADER_FACTORY.createHeader(ContentDispositionHeader.NAME, "recipient-list");
 	        refer.addHeader(contentDispoHeader);
 
-			return new SipRequest(refer);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)refer.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(refer);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -1148,7 +1194,11 @@ public class SipMessageFactory {
 			Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
 			update.addHeader(sessionExpiresHeader);
 			
-			return new SipRequest(update);
+	        // Set "rport" (RFC3581)
+	        ViaHeader viaHeader = (ViaHeader)update.getHeader(ViaHeader.NAME);
+	        viaHeader.setRPort();
+
+	        return new SipRequest(update);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
