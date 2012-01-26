@@ -91,7 +91,7 @@ public class MsrpSession {
     /**
      * MRSP timeout (in seconds)
      */
-    private int msrp_timeout = 10;
+    private int msrpTimeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
 
 	/**
 	 * The logger
@@ -102,7 +102,6 @@ public class MsrpSession {
 	 * Constructor
 	 */
 	public MsrpSession() {
-        msrp_timeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
 	}
 	
 	/**
@@ -448,7 +447,7 @@ public class MsrpSession {
 			}
 			synchronized(respSemaphore) {
 				try {
-					respSemaphore.wait(msrp_timeout * 1000);
+					respSemaphore.wait(msrpTimeout * 1000);
 				} catch (InterruptedException e) {}
 			}
 		}
@@ -497,7 +496,7 @@ public class MsrpSession {
 		}
 		synchronized(respSemaphore) {
 			try {
-				respSemaphore.wait(msrp_timeout * 1000);
+				respSemaphore.wait(msrpTimeout * 1000);
 			} catch (InterruptedException e) {}
 		}
 	}
@@ -610,7 +609,7 @@ public class MsrpSession {
 		// Wait response
 		synchronized(respSemaphore) {
 			try {
-				respSemaphore.wait(msrp_timeout * 1000);
+				respSemaphore.wait(msrpTimeout * 1000);
 			} catch (InterruptedException e) {}
 		}
 	}

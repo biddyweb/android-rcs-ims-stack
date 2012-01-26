@@ -161,4 +161,25 @@ public interface CoreListener {
      * @param session SIP session
      */
     public void handleSipSessionInvitation(TerminatingSipSession session);
+    
+    /**
+     * User terms confirmation request
+     * 
+     * @param id Request ID
+     * @param type Type of request
+     * @param pin PIN number requested
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationRequest(String id, String type, boolean pin, String subject, String text);
+
+    /**
+     * User terms confirmation acknowledge
+     * 
+     * @param id Request ID
+     * @param status Status
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationAck(String id, String status, String subject, String text);
 }

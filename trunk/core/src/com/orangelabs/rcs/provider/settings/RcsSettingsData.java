@@ -96,7 +96,17 @@ public class RcsSettingsData {
      */
     public static final String CERTIFICATE_FILE_TYPE = ".crt";
 
-	// ---------------------------------------------------------------------------
+	/**
+	 * No auto config mode
+	 */
+    public static final int NO_AUTO_CONFIG = 0;
+
+	/**
+	 * HTTPS auto config mode
+	 */
+    public static final int HTTPS_AUTO_CONFIG = 1;
+
+    // ---------------------------------------------------------------------------
 	// UI settings
 	// ---------------------------------------------------------------------------
 
@@ -596,4 +606,9 @@ public class RcsSettingsData {
      * CPU always_on support
      */
     public static final String CPU_ALWAYS_ON = "CpuAlwaysOn";
+
+    /**
+     * Auto configuration mode
+     */
+    public static final String AUTO_CONFIG_MODE = "Autoconfig";
 }

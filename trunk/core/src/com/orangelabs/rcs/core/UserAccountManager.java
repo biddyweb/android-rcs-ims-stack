@@ -18,20 +18,21 @@
 
 package com.orangelabs.rcs.core;
 
-import android.accounts.Account;
-import android.content.Context;
-import android.content.IntentFilter;
-import android.os.Handler;
-import android.telephony.TelephonyManager;
-
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import android.accounts.Account;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.os.Handler;
+import android.telephony.TelephonyManager;
 
 /**
  * User account manager
@@ -42,7 +43,7 @@ public class UserAccountManager {
 	/**
 	 * Last user account used
 	 */
-	private static final String REGISTRY_LAST_USER_ACCOUNT = "LastUserAccount";
+	public static final String REGISTRY_LAST_USER_ACCOUNT = "LastUserAccount";
 	
 	/**
 	 * Current account
@@ -58,7 +59,7 @@ public class UserAccountManager {
 	 * Account changed broadcast receiver
 	 */
 	private AccountChangedReceiver accountChangedReceiver;
-	
+
 	/**
      * The logger
      */
@@ -66,9 +67,11 @@ public class UserAccountManager {
     
     /**
 	 * Constructor
-	 */
-	public UserAccountManager() throws CoreException {
-		// Read the last used end user account
+	 * 
+     * @param core Core
+   	 */
+	public UserAccountManager(Core core) throws CoreException {
+        // Read the last used end user account
 		lastUserAccount = RegistryFactory.getFactory().readString(REGISTRY_LAST_USER_ACCOUNT, null);
 		if (logger.isActivated()) {
 			logger.info("Last user account is " + lastUserAccount);
@@ -95,8 +98,9 @@ public class UserAccountManager {
 			currentUserAccount = imsi;
 		}
 
-        // Set the country code on the first launch
-        if (isFirstLaunch()) {
+        // On the first launch and if SIM card has changed
+        if (isFirstLaunch() || hasChangedAccount()) {
+            // Set the country code
             setCountryCode();
         }
 
@@ -134,7 +138,8 @@ public class UserAccountManager {
 		        if (logger.isActivated()) {
 		        	logger.debug("Deleting the old RCS account for " + lastUserAccount);
 		        }
-		        AuthenticationService.removeRcsAccount(AndroidFactory.getApplicationContext(), lastUserAccount);
+		        ContactsManager.getInstance().deleteRCSEntries();
+		        AuthenticationService.removeRcsAccount(AndroidFactory.getApplicationContext(), null);
 	
 		        if (logger.isActivated()) {
 		        	logger.debug("Creating a new RCS account for " + currentUserAccount);

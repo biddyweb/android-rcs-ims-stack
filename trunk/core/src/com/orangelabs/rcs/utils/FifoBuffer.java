@@ -98,10 +98,8 @@ public class FifoBuffer {
 	/**
 	 * Close the buffer
 	 */
-	public void close() {
-		synchronized(this) {
-			// Free the semaphore
-			this.notifyAll();
-		}
+	public synchronized void close() {
+		// Free the semaphore
+		this.notifyAll();
 	}
 }

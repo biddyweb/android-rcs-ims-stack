@@ -52,7 +52,7 @@ draft-ietf-sip-uri-list-conferencing-01	 - Conference Establishment Using Reques
 draft-ietf-sip-multiple-refer-01	 - Referring to Multiple Resources in the Session Initiation Protocol (SIP)
 draft-ietf-simple-imdn-04		 - Instant Message Disposition Notification
 draft-ietf-mmusic-file-transfer-mech-03	 - A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer
-
+draft-ietf-simple-msrp-sessmatch-10		- Session Matching Update for the Message Session Relay Protocol (MSRP)
 
 3GPP:
 -----

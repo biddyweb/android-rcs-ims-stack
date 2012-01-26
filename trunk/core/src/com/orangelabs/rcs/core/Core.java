@@ -65,8 +65,8 @@ public class Core {
 	 * Address book manager
 	 */
 	private AddressBookManager addressBookManager;
-	
-	/**
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -124,8 +124,8 @@ public class Core {
 			logger.info("My device UUID is " + DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()));
 		}
 
-		// Create the user account manager
-        userAccountManager = new UserAccountManager();
+        // Create the user account manager
+        userAccountManager = new UserAccountManager(this);
 
         // Initialize the phone utils
     	PhoneUtils.initialize(AndroidFactory.getApplicationContext());        
@@ -136,7 +136,7 @@ public class Core {
         }
 
         // Create the address book manager
-        addressBookManager = new AddressBookManager(this);
+        addressBookManager = new AddressBookManager();
 
         // Create the IMS module
         imsModule = new ImsModule(this);

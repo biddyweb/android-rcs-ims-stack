@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.3.5"
+ android:versionName="2.3.6"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -91,6 +91,7 @@
 		  	android:process=":settings" />
 
  		<!-- RCS account: authenticator service for user's account information -->
+
         <service android:exported="true" android:name="com.orangelabs.rcs.addressbook.AuthenticationService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator"/>
@@ -99,6 +100,7 @@
         </service>
 
         <!-- RCS account: sync adapter service -->
+
         <service android:exported="true" android:name="com.orangelabs.rcs.addressbook.SyncAdapterService">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter"/>
@@ -134,25 +136,26 @@
 	
 		<!-- Device events receiver -->	
 
-		<receiver android:name="com.orangelabs.rcs.service.RcsServiceBoot">
+		<receiver android:name="com.orangelabs.rcs.service.DeviceBoot">
 	        <intent-filter>
 	     		<action android:name="android.intent.action.BOOT_COMPLETED"/>
 	        </intent-filter>
 	    </receiver>
 
-		<receiver android:name="com.orangelabs.rcs.service.RcsServiceShutdown">
+		<receiver android:name="com.orangelabs.rcs.service.DeviceShutdown">
 	        <intent-filter>
 	     		<action android:name="android.intent.action.ACTION_SHUTDOWN"/>
 	        </intent-filter>
 	    </receiver>
 			
-		<receiver android:name="com.orangelabs.rcs.service.RcsServiceStartup">
+		<receiver android:name="com.orangelabs.rcs.service.DeviceConnectivity">
 	        <intent-filter>
-				<action android:name="android.net.conn.CONNECTIVITY_CHANGE"></action>
+				<action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
 	        </intent-filter>
 	    </receiver>
 	    
 		<!-- Changing locale -->	
+
 		<receiver android:name="com.orangelabs.rcs.addressbook.LocaleChangedReceiver">  
    			<intent-filter>
    				<action android:name="android.intent.action.LOCALE_CHANGED"/>  
@@ -160,6 +163,7 @@
 		</receiver> 
 
 		<!-- Outgoing call state -->	
+
 		<receiver android:name="com.orangelabs.rcs.core.ims.network.gsm.OutgoingCallReceiver">  
  			<intent-filter>
  				<action android:name="android.intent.action.NEW_OUTGOING_CALL"/>  
@@ -176,6 +180,7 @@
 		</receiver>
 		
 		<!-- Widget --> 
+
 		<receiver android:name="com.orangelabs.rcs.widget.RcsWidgetProvider">
 			<intent-filter>
 		        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -189,6 +194,12 @@
 				android:resource="@xml/rcs_widget_provider" />
 		</receiver>
 
+		<!-- HTTPS provisioning config -->
+		<service android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningService">  
+	        <intent-filter>
+	            <action android:name="com.orangelabs.rcs.provisioning.HTTPS"/>
+	        </intent-filter>
+	    </service>
 </application> 
 
 </manifest>

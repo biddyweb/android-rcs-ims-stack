@@ -43,6 +43,13 @@ import java.io.FilenameFilter;
  */
 public class StackProvisioning extends Activity {
 	/**
+	 * Auto config mode
+	 */
+    private static final String[] AUTO_CONFIG = {
+        "None", "HTTPS"
+    };    
+    
+    /**
 	 * SIP protocol
 	 */
     private static final String[] SIP_PROTOCOL = {
@@ -70,8 +77,20 @@ public class StackProvisioning extends Activity {
     	super.onResume();
 
         // Display stack parameters
-        Spinner spinner = (Spinner)findViewById(R.id.NetworkAccess);
+        Spinner spinner = (Spinner)findViewById(R.id.Autoconfig);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, AUTO_CONFIG);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        int mode = RcsSettings.getInstance().getAutoConfigMode();
+        if (mode == RcsSettingsData.HTTPS_AUTO_CONFIG) {
+            spinner.setSelection(1);
+        } else {
+            spinner.setSelection(0);
+        }
+
+        spinner = (Spinner)findViewById(R.id.NetworkAccess);
+        adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, NETWORK_ACCESS);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
@@ -242,7 +261,18 @@ public class StackProvisioning extends Activity {
 		switch (item.getItemId()) {
 			case R.id.menu_save:
 		        // Save stack parameters
-				Spinner spinner = (Spinner)findViewById(R.id.SipDefaultProtocolForMobile);
+				Spinner spinner = (Spinner)findViewById(R.id.Autoconfig);
+				int index = spinner.getSelectedItemPosition();
+				switch(index) {
+					case 0:
+						RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_CONFIG_MODE, ""+RcsSettingsData.NO_AUTO_CONFIG);
+						break;
+					case 1:
+						RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_CONFIG_MODE, ""+RcsSettingsData.HTTPS_AUTO_CONFIG);
+						break;
+                }
+
+				spinner = (Spinner)findViewById(R.id.SipDefaultProtocolForMobile);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_MOBILE, (String)spinner.getSelectedItem());
 
 				spinner = (Spinner)findViewById(R.id.SipDefaultProtocolForWifi);
@@ -263,7 +293,7 @@ public class StackProvisioning extends Activity {
                 }
                 
 				spinner = (Spinner)findViewById(R.id.NetworkAccess);
-				int index = spinner.getSelectedItemPosition();
+				index = spinner.getSelectedItemPosition();
 				switch(index) {
 					case 0:
 						RcsSettings.getInstance().writeParameter(RcsSettingsData.NETWORK_ACCESS, ""+RcsSettingsData.ANY_ACCESS);

@@ -20,7 +20,7 @@ package com.orangelabs.rcs.settings;
 
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.RcsCoreService;
+import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -183,7 +183,7 @@ public class SettingsDisplay extends PreferenceActivity {
     	}
     	
 		protected Void doInBackground(Void... params) {
-			stopService(new Intent(RcsCoreService.SERVICE_NAME));
+            LauncherUtils.stopRcsService(getApplicationContext());
 			return null;
 		}
     	
@@ -213,7 +213,7 @@ public class SettingsDisplay extends PreferenceActivity {
     	
 		@Override
 		protected Void doInBackground(Void... params) {
-			startService(new Intent(RcsCoreService.SERVICE_NAME));
+            LauncherUtils.launchRcsService(getApplicationContext(), false);
 			return null;
 		}
     	

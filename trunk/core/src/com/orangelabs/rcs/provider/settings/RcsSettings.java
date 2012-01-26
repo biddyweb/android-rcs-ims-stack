@@ -1818,4 +1818,35 @@ public class RcsSettings {
         return result;
     }
 
+	/**
+     * Get auto configuration mode
+     *
+     * @return Mode
+     */
+	public int getAutoConfigMode() {
+		int result = RcsSettingsData.NO_AUTO_CONFIG;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.AUTO_CONFIG_MODE));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+
+    /**
+     * Remove user profile information
+     */
+    public void removeUserProfile() {
+        setServiceActivationState(false);
+        setUserProfileImsUserName("");
+        setUserProfileImsDomain("");
+        setUserProfileImsPassword("");
+        setUserProfileImsProxyForMobile("");
+        setUserProfileImsProxyForWifi("");
+        setUserProfileImsDisplayName("");
+        setUserProfileImsPrivateId("");
+        setUserProfileXdmLogin("");
+        setUserProfileXdmPassword("");
+        setUserProfileXdmServer("");
+    }
 }

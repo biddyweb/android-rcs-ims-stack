@@ -29,11 +29,9 @@
             <!-- Declare the RCS Whiteboard extension -->
 			<intent-filter>
                 <action android:name="com.orangelabs.rcs.capability.EXTENSION"/>
-                <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="+g.3gpp.iari-ref/urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange.whiteboard"/>
             </intent-filter>            
         </activity>
-
 
     </application>
 </manifest>

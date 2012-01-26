@@ -443,7 +443,6 @@ public final class ContactsManager {
 			
 			// Get the associated RCS raw contact id
 			long rcsRawContactId = getAssociatedRcsRawContact(rawContactId, contact);
-			
 			if (rcsRawContactId==INVALID_ID){
 				// If no RCS raw contact id is associated to the raw contact, create one with the right infos
 				rcsRawContactId = createRcsContact(newInfo, rawContactId);
@@ -3840,5 +3839,15 @@ public final class ContactsManager {
     		    MIMETYPE_IM_BLOCKED,MIMETYPE_WEBLINK_UPDATED
 		    };
     }
-    
+
+    /**
+     * Delete all RCS entries in databases
+     */
+    public void deleteRCSEntries() {
+        // Delete Aggregation data
+        ctx.getContentResolver().delete(AggregationData.CONTENT_URI, null, null);
+
+        // Delete presence data
+        ctx.getContentResolver().delete(RichAddressBookData.CONTENT_URI, null, null);
+    }
 }

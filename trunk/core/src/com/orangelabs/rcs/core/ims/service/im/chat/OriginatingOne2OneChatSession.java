@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.util.Vector;
-
-import javax.sip.header.SubjectHeader;
-
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -40,6 +36,10 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.Vector;
+
+import javax.sip.header.SubjectHeader;
 
 /**
  * Originating one-to-one chat session
@@ -105,7 +105,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF + SipUtils.CRLF;
+	    		"a=sendrecv" + SipUtils.CRLF;
 	    	
 	    	// If there is a first message then builds a multipart content else builds a SDP content
 	    	SipRequest invite; 
@@ -118,7 +118,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    					to,
 		        			getFirstMessage().getMessageId(),
 		        			StringUtils.encodeUTF8(getFirstMessage().getTextMessage()),
-		        			InstantMessage.MIME_TYPE) + SipUtils.CRLF;
+		        			InstantMessage.MIME_TYPE);
 		        
 		    	// Build multipart
 		        String multipart = 
@@ -126,12 +126,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    			"Content-Type: application/sdp" + SipUtils.CRLF +
 	    			"Content-Length: " + sdp.length() + SipUtils.CRLF +
 	    			SipUtils.CRLF +
-	    			sdp + 
+	    			sdp + SipUtils.CRLF + 
 	    			"--" + boundary + SipUtils.CRLF +
 	    			"Content-Type: message/cpim" + SipUtils.CRLF +
 	    			"Content-Length: "+ cpim.length() + SipUtils.CRLF +
 	    			SipUtils.CRLF +
-	    			cpim +
+	    			cpim + SipUtils.CRLF +
 	    			"--" + boundary + "--" + SipUtils.CRLF;
 
 				// Set the local SDP part in the dialog path

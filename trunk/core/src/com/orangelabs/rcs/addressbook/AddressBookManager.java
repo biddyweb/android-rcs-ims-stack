@@ -27,7 +27,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 
-import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
@@ -67,8 +66,7 @@ public class AddressBookManager {
     private CheckHandler checkHandler = new CheckHandler();
     
     /**
-     * Check message
-     * <br>When received by handler, triggers the check
+     * Check message ID
      */
     private final static int CHECK_MESSAGE = 5765;
     
@@ -89,10 +87,8 @@ public class AddressBookManager {
     
     /**
      * Constructor
-     * 
-     * @param core Core
      */
-	public AddressBookManager(Core core) throws CoreException {
+	public AddressBookManager() throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Address book manager is created");
 		}

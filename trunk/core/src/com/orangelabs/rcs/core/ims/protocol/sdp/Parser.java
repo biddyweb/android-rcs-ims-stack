@@ -18,54 +18,57 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sdp;
 
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Vector;
 
+/**
+ * Generic parser
+ * 
+ * @author jexa7410
+ */
 class Parser {
-	private static Vector<Integer> buffer;
+	/**
+	 * Buffer
+	 */
+	private Vector<Integer> buffer = new Vector<Integer>();
 
 	/**
-	 * The logger
+	 * Unget a token
+	 * 
+	 * @param tk Token
 	 */
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-
-	public void init() {
-		buffer = new Vector<Integer>();
-	}
-
-	public void ungetToken(String tokenStr) {
-		byte token[] = tokenStr.getBytes();
-
+	public void ungetToken(String tk) {
+		byte token[] = tk.getBytes();
 		for (int i = 0; i < token.length; i++) {
 			buffer.insertElementAt(Integer.valueOf(token[token.length - i - 1]), 0);
 		}
 	}
 
-	public boolean getToken(ByteArrayInputStream bin, String tokenString) {
+	/**
+	 * Get a token
+	 * 
+	 * @param input Input stream
+	 * @param tk Token
+	 * @return Token value
+	 */
+	public boolean getToken(ByteArrayInputStream input, String tk) {
 		boolean found = false;
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		skipWhitespace(input);
 
-		skipWhitespace(bin);
-
-		if (bin.available() > 0) {
-			int ch = readChar(bin);
-
+		if (input.available() > 0) {
+			int ch = readChar(input);
 			while (ch != '=' && ch != '\n' && ch != '\r' && ch != -1) {
 				bout.write(ch);
-
-				ch = readChar(bin);
+				ch = readChar(input);
 			}
-
 			bout.write(ch);
 		}
 
 		String token = new String(bout.toByteArray());
-
-		if (tokenString.equals(token)) {
+		if (tk.equals(token)) {
 			found = true;
 		} else {
 			ungetToken(token);
@@ -74,28 +77,19 @@ class Parser {
 		return found;
 	}
 
-	public boolean getToken(ByteArrayInputStream bin, String tokenString, boolean mandatory) {
-		boolean found = getToken(bin, tokenString);
-		if (!found) {
-			if (mandatory) {
-				if (logger.isActivated()) {
-					logger.warn("Mandatory token missing: " + tokenString);
-				}
-			}
-		}
-		return found;
-	}
-
-	public String getLine(ByteArrayInputStream bin) {
+	/**
+	 * Get a line
+	 * 
+	 * @param input Input stream
+	 * @return Line
+	 */
+	public String getLine(ByteArrayInputStream input) {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-		if (bin.available() > 0) {
-			int ch = readChar(bin);
-
+		if (input.available() > 0) {
+			int ch = readChar(input);
 			while (ch != '\n' && ch != '\r' && ch != -1) {
 				bout.write(ch);
-
-				ch = readChar(bin);
+				ch = readChar(input);
 			}
 		}
 
@@ -103,26 +97,32 @@ class Parser {
 		return line;
 	}
 
-	private void skipWhitespace(ByteArrayInputStream bin) {
-		int ch = readChar(bin);
-
+	/**
+	 * Skip whitespace
+	 * 
+	 * @param input Input stream
+	 */
+	private void skipWhitespace(ByteArrayInputStream input) {
+		int ch = readChar(input);
 		while (ch == ' ' || ch == '\n' || ch == '\r') {
-			ch = readChar(bin);
+			ch = readChar(input);
 		}
-
 		buffer.insertElementAt(Integer.valueOf(ch), 0);
 	}
 
-	public int readChar(ByteArrayInputStream bin) {
+	/**
+	 * Read char
+	 * 
+	 * @param input Input stream
+	 */
+	private int readChar(ByteArrayInputStream input) {
 		int ch;
-
 		if (buffer.size() > 0) {
-			ch = ((Integer) buffer.elementAt(0)).intValue();
+			ch = ((Integer)buffer.elementAt(0)).intValue();
 			buffer.removeElementAt(0);
 		} else {
-			ch = bin.read();
+			ch = input.read();
 		}
-
 		return ch;
 	}
 }

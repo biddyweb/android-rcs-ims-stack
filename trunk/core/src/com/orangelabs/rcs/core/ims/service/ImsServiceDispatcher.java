@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
+import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.IdGenerator;
@@ -280,6 +281,13 @@ public class ImsServiceDispatcher extends Thread {
     		if (ChatUtils.isImdnService(request)) {
 	    		// IMDN service
 				imsModule.getInstantMessagingService().receiveMessageDeliveryStatus(request);
+	    	} else
+	    	if (TermsConditionsService.isTermsRequest(request)) {
+	    		// Terms & conditions service
+	    		imsModule.getTermsConditionsService().receiveMessage(request);
+	    	} else {
+	    		// Broadcast the request
+	    		// TODO
 	    	}
 		} else
 	    if (request.getMethod().equals(Request.NOTIFY)) {

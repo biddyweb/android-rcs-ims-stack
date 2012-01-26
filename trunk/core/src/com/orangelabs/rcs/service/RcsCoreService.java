@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,16 @@
  ******************************************************************************/
 
 package com.orangelabs.rcs.service;
+
+import java.util.Vector;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.IBinder;
 
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
@@ -41,7 +51,6 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
-import com.orangelabs.rcs.platform.logger.AndroidAppender;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -68,18 +77,7 @@ import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
 import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
-import com.orangelabs.rcs.utils.logger.Appender;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
-
-import java.util.Vector;
 
 /**
  * RCS core service. This service offers a flat API to any other process (activities)
@@ -89,10 +87,10 @@ import java.util.Vector;
  */
 public class RcsCoreService extends Service implements CoreListener {
 	/**
-	 * RCS service name
+	 * Service name
 	 */
 	public static final String SERVICE_NAME = "com.orangelabs.rcs.SERVICE";
-	
+
 	/**
 	 * Notification ID
 	 */
@@ -143,19 +141,13 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Set application context
 		AndroidFactory.setApplicationContext(getApplicationContext());
 
-		// Set logger appenders
-		Appender[] appenders = new Appender[] { 
-				new AndroidAppender()
-			};
-		Logger.setAppenders(appenders);
-		
 		// Set the terminal version
 		TerminalInfo.setProductVersion(getString(R.string.rcs_core_release_number));
 		
 		// Start the core
 		startCore();
 	}
-
+	
     @Override
     public void onDestroy() {
     	// Close APIs
@@ -180,7 +172,11 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
         try {
-			// Send service intent 
+    		if (logger.isActivated()) {
+    			logger.debug("Start RCS core service");
+    		}
+    		
+    		// Send service intent 
 			Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTING);
 			getApplicationContext().sendBroadcast(intent);
@@ -283,6 +279,10 @@ public class RcsCoreService extends Service implements CoreListener {
 			return;
 		}
 		
+		if (logger.isActivated()) {
+			logger.debug("Stop RCS core service");
+		}
+
 		// Send service intent 
 		Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 		intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STOPPING);
@@ -997,4 +997,39 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Broadcast the invitation
 		sipApi.receiveSipSessionInvitation(session);
     }    
+
+    /**
+     * User terms confirmation request
+     * 
+     * @param id Request ID
+     * @param type Type of request
+     * @param pin PIN number requested
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationRequest(String id, String type, boolean pin, String subject, String text) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event user confirmation request");
+		}
+
+		// Notify listeners
+		imsApi.handleUserConfirmationRequest(id, type, pin, subject, text);
+    }
+
+    /**
+     * User terms confirmation acknowledge
+     * 
+     * @param id Request ID
+     * @param status Status
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationAck(String id, String status, String subject, String text) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event user confirmation ack");
+		}
+
+		// Notify listeners
+		imsApi.handleUserConfirmationAck(id, status, subject, text);
+    }
 }

@@ -18,6 +18,10 @@
 
 package com.orangelabs.rcs.service.api.server;
 
+import android.content.Intent;
+
+import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.service.api.client.IImsApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -62,4 +66,42 @@ public class ImsApiService extends IImsApi.Stub {
 			throw new ServerApiException(e.getMessage());
 		}
 	}
+    
+    /**
+     * User confirmation request
+     * 
+     * @param id Request ID
+     * @param type Type of request
+     * @param pin PIN number requested
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationRequest(String id, String type, boolean pin, String subject, String text) {
+		// Broadcast intent related to the received request
+    	Intent intent = new Intent(ClientApiIntents.USER_CONFIRMATION_REQUEST);
+    	intent.putExtra("id", id);
+    	intent.putExtra("type", type);
+    	intent.putExtra("pin", pin);
+    	intent.putExtra("subject", subject);
+    	intent.putExtra("text", text);
+    	AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
+
+    /**
+     * User terms confirmation acknowledge
+     * 
+     * @param id Request ID
+     * @param status Status
+     * @param subject Subject
+     * @param text Text
+     */
+    public void handleUserConfirmationAck(String id, String status, String subject, String text) {
+		// Broadcast intent related to the received request
+    	Intent intent = new Intent(ClientApiIntents.USER_CONFIRMATION_REQUEST);
+    	intent.putExtra("id", id);
+    	intent.putExtra("status", status);
+    	intent.putExtra("subject", subject);
+    	intent.putExtra("text", text);
+    	AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
 }
