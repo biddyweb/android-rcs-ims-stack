@@ -288,4 +288,21 @@ public class UserProfile {
 			+ "IM Conference URI=" + imConferenceUri;
 		return result;
 	}	
+
+	/**
+	 * Format conference URI
+	 * 
+	 * @param uri URI
+	 * @param domain Domain name
+	 * @return Formatted URI
+	 */
+	public static String formatConferenceUri(String uri, String domain) {
+		if (!uri.startsWith("sip:")) {
+			uri = "sip:" + uri;
+		}
+		if (uri.indexOf("@") == -1) {
+			uri = uri + "@" + domain;
+		}
+		return uri;		
+	}
 }

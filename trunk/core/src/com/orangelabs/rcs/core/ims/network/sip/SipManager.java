@@ -107,17 +107,19 @@ public class SipManager {
      * Initialize the SIP stack
      *
      * @param localAddr Local IP address
-     * @param outboundProxy Outbound proxy
+     * @param proxyAddr Outbound proxy address
+     * @param proxyPort Outbound proxy port
      * @param isSecure Need secure connection or not
      * @return SIP stack
      * @throws SipException
      */
-    public synchronized void initStack(String localAddr, String outboundProxy, String protocol) throws SipException {
+    public synchronized void initStack(String localAddr, String proxyAddr,
+    		int proxyPort, String protocol) throws SipException {
 		// Close the stack if necessary
 		closeStack();
 
 		// Create the SIP stack
-        sipstack = new SipInterface(localAddr, outboundProxy, protocol);
+        sipstack = new SipInterface(localAddr, proxyAddr, proxyPort, protocol);
     }
 
 	/**

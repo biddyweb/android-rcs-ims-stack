@@ -18,19 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.logger.Logger;
-
-import android.text.TextUtils;
-
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Properties;
@@ -55,6 +43,16 @@ import javax.sip.header.ContactHeader;
 import javax.sip.header.ExtensionHeader;
 import javax.sip.header.Header;
 import javax.sip.header.ViaHeader;
+
+import android.text.TextUtils;
+
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP interface which manage the SIP stack. The NIST stack is used
@@ -174,29 +172,18 @@ public class SipInterface implements SipListener {
      * Constructor
      *
      * @param localIpAddress Local IP address
-     * @param outboundProxy Outbound proxy
+     * @param proxyAddr Outbound proxy address
+     * @param proxyPort Outbound proxy port
      * @param defaultProtocol Default protocol
      * @throws SipException
      */
-    public SipInterface(String localIpAddress, String outboundProxy, String defaultProtocol) throws SipException {
-
+    public SipInterface(String localIpAddress, String proxyAddr,
+    		int proxyPort, String defaultProtocol) throws SipException {
         this.localIpAddress = localIpAddress;
         this.defaultProtocol = defaultProtocol;
         this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
-
-        // Get outbound proxy config
-        try {
-            String[] parts = outboundProxy.split(":");
-            this.outboundProxyAddr = InetAddress.getByName(parts[0]).getHostAddress();
-            this.outboundProxyPort = Integer.parseInt(parts[1]);
-        } catch(UnknownHostException e) {
-            throw new SipException("Bad outbound proxy address");
-        } catch(NumberFormatException e) {
-            throw new SipException("Bad outbound proxy port");
-        }
-        if (logger.isActivated()) {
-            logger.debug("SIP outbound proxy set to " + outboundProxyAddr + ":" + outboundProxyPort);
-        }
+        this.outboundProxyAddr = proxyAddr;
+        this.outboundProxyPort = proxyPort;
 
         // Set the default route path
         defaultRoutePath = new Vector<String>();
@@ -580,7 +567,10 @@ public class SipInterface implements SipListener {
             // Add the received service route path
             while(routes.hasNext()) {
                 ExtensionHeader route = (ExtensionHeader)routes.next();
-                serviceRoutePath.addElement(route.getValue());
+                String rt = route.getValue();
+                if (!serviceRoutePath.contains(rt)) {
+                	serviceRoutePath.addElement(rt);
+                }
             }
         }
     }

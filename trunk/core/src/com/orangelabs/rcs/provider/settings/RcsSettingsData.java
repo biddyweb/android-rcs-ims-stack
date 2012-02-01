@@ -314,14 +314,24 @@ public class RcsSettingsData {
 	public static final String USERPROFILE_IMS_HOME_DOMAIN = "ImsHomeDomain";
 
 	/**
-	 * P-CSCF or outbound proxy address & port for mobile access
+	 * P-CSCF or outbound proxy address for mobile access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_MOBILE = "ImsOutboundProxyAddrForMobile";
+	public static final String USERPROFILE_IMS_PROXY_ADDR_MOBILE = "ImsOutboundProxyAddrForMobile";
 
 	/**
-	 * P-CSCF or outbound proxy address & port for Wi-Fi access
+	 * P-CSCF or outbound proxy port for mobile access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_WIFI = "ImsOutboundProxyAddrForWifi";
+	public static final String USERPROFILE_IMS_PROXY_PORT_MOBILE = "ImsOutboundProxyPortForMobile";
+
+	/**
+	 * P-CSCF or outbound proxy address for Wi-Fi access
+	 */
+	public static final String USERPROFILE_IMS_PROXY_ADDR_WIFI = "ImsOutboundProxyAddrForWifi";
+
+	/**
+	 * P-CSCF or outbound proxy port for Wi-Fi access
+	 */
+	public static final String USERPROFILE_IMS_PROXY_PORT_WIFI = "ImsOutboundProxyPortForWifi";
 
 	/**
 	 * XDM server address & port

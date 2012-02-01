@@ -20,6 +20,18 @@ package com.orangelabs.rcs.core.ims.network;
 
 
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+import javax.sip.ListeningPoint;
+
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.NAPTRRecord;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.access.NetworkAccess;
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -28,6 +40,7 @@ import com.orangelabs.rcs.core.ims.network.registration.HttpDigestRegistrationPr
 import com.orangelabs.rcs.core.ims.network.registration.RegistrationManager;
 import com.orangelabs.rcs.core.ims.network.registration.RegistrationProcedure;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.userprofile.GibaUserProfileInterface;
 import com.orangelabs.rcs.core.ims.userprofile.SettingsUserProfileInterface;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
@@ -65,17 +78,22 @@ public abstract class ImsNetworkInterface {
 	/**
 	 * IMS authentication mode associated to the network interface
 	 */
-	protected String authentMode;
+	protected String imsAuthentMode;
 
     /**
-     * IMS transport protocol
+     * IMS proxy protocol
      */
-    protected String protocol;
+    protected String imsProxyProtocol;
 
     /**
-     * IMS proxy
+     * IMS proxy address
      */
     private String imsProxyAddr;
+
+    /**
+     * IMS proxy port
+     */
+    private int imsProxyPort;
 
     /**
 	 * Registration procedure associated to the network interface
@@ -98,18 +116,21 @@ public abstract class ImsNetworkInterface {
      * @param imsModule IMS module
      * @param type Network interface type
      * @param access Network access
-     * @param imsProxyAddr IMS proxy address
-     * @param authentMode Authentication mode
+     * @param proxyAddr IMS proxy address
+     * @param proxyPort IMS proxy port
+     * @param proxyProtocol IMS proxy protocol
+     * @param authentMode IMS authentication mode
      */
 	public ImsNetworkInterface(ImsModule imsModule, int type, NetworkAccess access,
-            String imsProxyAddr, String authentMode, String protocol) {
+            String proxyAddr, int proxyPort, String proxyProtocol, String authentMode) {
 		this.imsModule = imsModule;
 		this.type = type;
 		this.access = access;
-        this.imsProxyAddr = imsProxyAddr;
-		this.authentMode = authentMode;
-        this.protocol = protocol;
-
+        this.imsProxyAddr = proxyAddr;
+        this.imsProxyPort = proxyPort;
+        this.imsProxyProtocol = proxyProtocol;
+		this.imsAuthentMode = authentMode;
+		
         // Instantiates the SIP manager
         sip = new SipManager(this);
 
@@ -135,7 +156,7 @@ public abstract class ImsNetworkInterface {
      * @return Authentication mode
      */
 	public String getAuthenticationMode() {
-		return authentMode;
+		return imsAuthentMode;
 	}
 
 	/**
@@ -151,13 +172,13 @@ public abstract class ImsNetworkInterface {
      * Load the registration procedure associated to the network access
      */
 	public void loadRegistrationProcedure() {
-		if (authentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
+		if (imsAuthentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
 			if (logger.isActivated()) {
 				logger.debug("Load GIBA authentication procedure");
 			}
 			this.registrationProcedure = new GibaRegistrationProcedure();
 		} else
-		if (authentMode.equals(RcsSettingsData.DIGEST_AUTHENT)) {
+		if (imsAuthentMode.equals(RcsSettingsData.DIGEST_AUTHENT)) {
 			if (logger.isActivated()) {
 				logger.debug("Load HTTP Digest authentication procedure");
 			}
@@ -172,7 +193,7 @@ public abstract class ImsNetworkInterface {
      */
 	public UserProfile getUserProfile() {
 		UserProfileInterface intf;
-		if (authentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
+		if (imsAuthentMode.equals(RcsSettingsData.GIBA_AUTHENT)) {
 			if (logger.isActivated()) {
 				logger.debug("Load user profile derived from IMSI (GIBA)");
 			}
@@ -231,6 +252,184 @@ public abstract class ImsNetworkInterface {
         return registration.isRegistered();
     }
 
+    /**
+     * Get DNS NAPTR records
+     * 
+     * @param domain Domain
+     * @return NAPTR records or null if no record
+     */
+    private Record[] getDnsNAPTR(String domain) {
+		try {
+			if (logger.isActivated()) {
+				logger.debug("DNS NAPTR lookup for " + domain);
+			}
+			return new Lookup(domain, Type.NAPTR).run();
+        } catch(TextParseException e) {
+			if (logger.isActivated()) {
+				logger.debug("Not a valid DNS name");
+			}
+			return null;
+	    } catch(IllegalArgumentException e) {
+			if (logger.isActivated()) {
+				logger.debug("Not a valid DNS type");
+			}
+			return null;
+	    }
+    }
+    
+    /**
+     * Get DNS SRV records
+     * 
+     * @param domain Domain
+     * @return SRV records or null if no record
+     */
+    private Record[] getDnsSRV(String domain) {
+		try {
+			if (logger.isActivated()) {
+				logger.debug("DNS SRV lookup for " + domain);
+			}
+			return new Lookup(domain, Type.SRV).run();
+        } catch(TextParseException e) {
+			if (logger.isActivated()) {
+				logger.debug("Not a valid DNS name");
+			}
+			return null;
+	    } catch(IllegalArgumentException e) {
+			if (logger.isActivated()) {
+				logger.debug("Not a valid DNS type");
+			}
+			return null;
+	    }
+    }
+
+    /**
+     * Get DNS A record
+     * 
+     * @param domain Domain
+     * @return IP address or null if no record
+     */
+    private String getDnsA(String domain) {
+		try {
+			if (logger.isActivated()) {
+				logger.debug("DNS A lookup for " + domain);
+			}
+			return InetAddress.getByName(domain).getHostAddress();
+        } catch(UnknownHostException e) {
+			if (logger.isActivated()) {
+				logger.debug("Unknown host for " + imsProxyAddr);
+			}
+			return null;
+        }
+    }
+    
+    /**
+     * Get best DNS SRV record
+     * 
+     * @param records SRV records
+     * @return IP address
+     */
+	private SRVRecord getBestDnsSRV(Record[] records) {
+		SRVRecord result = null;
+		int weight = -1;
+        for (int i = 0; i < records.length; i++) {
+        	SRVRecord srv = (SRVRecord)records[i];
+			if (logger.isActivated()) {
+				logger.debug("SRV record: " + srv.toString());
+			}
+			if ((result == null) || (srv.getWeight() > weight)) {
+				result = srv;
+				weight = srv.getWeight();
+			}			
+        }
+        return result;
+	}
+	
+    /**
+     * Resolve the IMS proxy configuration
+     * 
+     * @throws SipException
+     */
+    private void resolveImsProxyConfiguration() throws SipException {
+        // First try to resolve via a NAPTR query, then a SRV
+		// query and finally via A query
+		if (logger.isActivated()) {
+			logger.debug("Resolve IMS proxy address...");
+		}
+		String ipAddress = null;
+		
+        // DNS NAPTR lookup
+    	String service;
+    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.UDP)) {
+    		service = "SIP+D2U";
+    	} else
+    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TCP)) {
+    		service = "SIP+D2T";
+    	} else
+    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TLS)) {
+    		service = "SIPS+D2T";
+    	} else {
+			throw new SipException("Unkown SIP protocol");
+    	}
+		Record[] naptrRecords = getDnsNAPTR(imsProxyAddr);
+		if ((naptrRecords != null) && (naptrRecords.length > 0)) {
+			if (logger.isActivated()) {
+				logger.debug("NAPTR records found: " + naptrRecords.length);
+			}
+	        for (int i = 0; i < naptrRecords.length; i++) {
+	        	NAPTRRecord naptr = (NAPTRRecord)naptrRecords[i];
+				if (logger.isActivated()) {
+					logger.debug("NAPTR record: " + naptr.toString());
+				}
+				if ((naptr != null) && naptr.getService().equals(service)) {
+			    	// DNS SRV lookup
+				    Record[] srvRecords = getDnsSRV(naptr.getReplacement().toString());
+					if ((srvRecords != null) && (srvRecords.length > 0)) {
+						SRVRecord srvRecord = getBestDnsSRV(srvRecords);
+						ipAddress = getDnsA(srvRecord.getTarget().toString());
+						imsProxyPort = srvRecord.getPort();
+					} else {
+						// Direct DNS A lookup
+						ipAddress = getDnsA(imsProxyAddr);
+					}
+				}
+	        }
+		} else {
+			// Direct DNS SRV lookup
+			if (logger.isActivated()) {
+				logger.debug("No NAPTR record found: use DNS SRV instead");
+			}
+		    String query;
+		    if (imsProxyAddr.startsWith("_sip.")) {
+		    	query = imsProxyAddr;
+		    } else {
+		    	query = "_sip._" + imsProxyProtocol.toLowerCase() + "." + imsProxyAddr;
+		    }
+		    Record[] srvRecords = getDnsSRV(query);
+			if ((srvRecords != null) && (srvRecords.length > 0)) {
+				SRVRecord srvRecord = getBestDnsSRV(srvRecords);
+				ipAddress = getDnsA(srvRecord.getTarget().toString());
+				imsProxyPort = srvRecord.getPort();
+			} else {
+				// Direct DNS A lookup
+				if (logger.isActivated()) {
+					logger.debug("No SRV record found: use DNS A instead");
+				}
+				ipAddress = getDnsA(imsProxyAddr);
+			}
+		}		
+
+        if (ipAddress == null) {
+	        throw new SipException("Proxy IP address not found");        	
+        }
+        
+    	this.imsProxyAddr = ipAddress;
+        
+		if (logger.isActivated()) {
+			logger.debug("SIP outbound proxy configuration: " +
+					imsProxyAddr + ":" + imsProxyPort + ";" + imsProxyProtocol);
+		}
+	}    
+
 	/**
      * Register to the IMS
      *
@@ -241,9 +440,12 @@ public abstract class ImsNetworkInterface {
 			logger.debug("Register to IMS");
 		}
 
-		// Initialize the SIP stack
 		try {
-            sip.initStack(access.getIpAddress(), imsProxyAddr, protocol);
+			// Resolve the IMS proxy configuration
+			resolveImsProxyConfiguration();
+			
+			// Initialize the SIP stack
+            sip.initStack(access.getIpAddress(), imsProxyAddr, imsProxyPort, imsProxyProtocol);
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {

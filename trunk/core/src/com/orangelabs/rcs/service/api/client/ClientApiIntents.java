@@ -75,14 +75,4 @@ public class ClientApiIntents {
      * </ul>
      */
 	public final static String SERVICE_REGISTRATION = "com.orangelabs.rcs.SERVICE_REGISTRATION";
-	
-	/**
-	 * User confirmation request
-	 */ 
-	public final static String USER_CONFIRMATION_REQUEST = "com.orangelabs.rcs.USER_CONFIRMATION_REQUEST";
-
-	/**
-	 * User confirmation acknowledge
-	 */ 
-	public final static String USER_CONFIRMATION_ACK = "com.orangelabs.rcs.USER_CONFIRMATION_ACK";
 }

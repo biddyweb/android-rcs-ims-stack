@@ -48,11 +48,6 @@ public class OptionsRequestTask implements Runnable {
 	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
 
 	/**
-	 * Counter
-	 */
-	private static int counter = 0;
-	
-	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -71,28 +66,10 @@ public class OptionsRequestTask implements Runnable {
 	}
 	
 	/**
-	 * Increment counter
-	 */
-	private synchronized void incrementCounter() {
-		counter++;
-	}
-	
-	/**
 	 * Background processing
 	 */
 	public void run() {
-		long startAt = System.currentTimeMillis();
-		incrementCounter();
-    	if (logger.isActivated()) {
-    		logger.debug("Request " + counter + " started");
-    	}
-		
     	sendOptions();
-
-		long duration = System.currentTimeMillis() - startAt;
-    	if (logger.isActivated()) {
-    		logger.debug("Request " + counter + " terminated in " + duration + "ms");
-    	}
 	}
 	
 	/**

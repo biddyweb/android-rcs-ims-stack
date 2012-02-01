@@ -22,17 +22,15 @@ import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.accounts.Account;
-import android.content.Context;
 import android.content.IntentFilter;
 import android.os.Handler;
-import android.telephony.TelephonyManager;
 
 /**
  * User account manager
@@ -40,20 +38,7 @@ import android.telephony.TelephonyManager;
  * @author jexa7410
  */
 public class UserAccountManager {
-	/**
-	 * Last user account used
-	 */
-	public static final String REGISTRY_LAST_USER_ACCOUNT = "LastUserAccount";
-	
-	/**
-	 * Current account
-	 */
-	private String currentUserAccount = null;
-	
-	/**
-	 * Last previously used account
-	 */
-	private String lastUserAccount = RegistryFactory.getFactory().readString(REGISTRY_LAST_USER_ACCOUNT, null);
+
 	
 	/**
 	 * Account changed broadcast receiver
@@ -72,21 +57,21 @@ public class UserAccountManager {
    	 */
 	public UserAccountManager(Core core) throws CoreException {
         // Read the last used end user account
-		lastUserAccount = RegistryFactory.getFactory().readString(REGISTRY_LAST_USER_ACCOUNT, null);
+        String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
+        String currentUserAccount = null;
 		if (logger.isActivated()) {
 			logger.info("Last user account is " + lastUserAccount);
 		}
-		
+
         // Read the IMSI
-		TelephonyManager mgr = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-		String imsi = mgr.getSubscriberId();
+        String imsi = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
 		if (logger.isActivated()) {
 			logger.info("My IMSI is " + imsi);
 		}
-		
+
 		// Check IMSI
 		if (imsi == null) {
-			if (isFirstLaunch()) {
+			if (LauncherUtils.isFirstLaunch(AndroidFactory.getApplicationContext())) {
 				// If it's a first launch the IMSI is necessary to initialize the service the first time
 				throw new UserAccountException("IMSI not found");
 			} else {
@@ -99,7 +84,8 @@ public class UserAccountManager {
 		}
 
         // On the first launch and if SIM card has changed
-        if (isFirstLaunch() || hasChangedAccount()) {
+        if (LauncherUtils.isFirstLaunch(AndroidFactory.getApplicationContext()) 
+                || LauncherUtils.hasChangedAccount(AndroidFactory.getApplicationContext())) {
             // Set the country code
             setCountryCode();
         }
@@ -109,7 +95,7 @@ public class UserAccountManager {
 		}
 		
 		// Save the current end user account
-		RegistryFactory.getFactory().writeString(REGISTRY_LAST_USER_ACCOUNT, currentUserAccount);
+        LauncherUtils.setLastUserAccount(AndroidFactory.getApplicationContext(), currentUserAccount);
 
 		// Check if the RCS account exists
 		Account account = AuthenticationService.getAccount(AndroidFactory.getApplicationContext(),
@@ -133,7 +119,7 @@ public class UserAccountManager {
 			}
 		} else {
 			// Account exists: checks if it has changed
-			if (hasChangedAccount()) {
+			if (LauncherUtils.hasChangedAccount(AndroidFactory.getApplicationContext())) {
 				// Account has changed (i.e. new SIM card): delete the current account and create a new one
 		        if (logger.isActivated()) {
 		        	logger.debug("Deleting the old RCS account for " + lastUserAccount);
@@ -148,28 +134,6 @@ public class UserAccountManager {
 		        		AndroidFactory.getApplicationContext().getString(R.string.rcs_core_account_username), true, true);
 			}		
 		}		
-	}
-	
-	/**
-	 * Check if it is the first time we launch the service
-	 * 
-	 * @return Boolean
-	 */
-	public boolean isFirstLaunch() {
-		return (lastUserAccount == null);
-	}
-	
-	/**
-	 * Check if RCS account has changed since the last time we started the service
-	 * 
-	 * @return true if the active account was changed
-	 */
-	public boolean hasChangedAccount() {
-		if (lastUserAccount == null) {
-			return false;
-		} else {
-			return (!currentUserAccount.equalsIgnoreCase(lastUserAccount));
-		}
 	}
 
 	/**

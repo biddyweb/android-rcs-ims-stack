@@ -13,6 +13,7 @@ RFC 2327 - SDP: Session Description Protocol
 RFC 2392 - Content-ID and Message-ID Uniform Resource Locators
 RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
 RFC 3261 - SIP: Session Initiation Protocol
+RFC 3263 - Session Initiation Protocol (SIP): Locating SIP Servers
 RFC 3264 - An Offer/Answer Model with the Session Description Protocol (SDP)
 RFC 3265 - Session Initiation Protocol (SIP) Specific Event Notification
 RFC 3325 - Private Extensions to the Session Initiation Protocol (SIP) forAsserted Identity within Trusted Networks

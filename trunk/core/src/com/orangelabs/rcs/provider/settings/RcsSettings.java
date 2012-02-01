@@ -662,54 +662,106 @@ public class RcsSettings {
 	}
 
     /**
-     * Get user profile IMS proxy for mobile access
+     * Get user profile IMS proxy address for mobile access
      *
-     * @return Address as <host>:<port>
+     * @return Address
      */
-	public String getUserProfileImsProxyForMobile() {
+	public String getUserProfileImsProxyAddrForMobile() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE);
+			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy for mobile access
+     * Set user profile IMS proxy address for mobile access
      *
-     * @param addr Address as <host>:<port>
+     * @param addr Address
      */
-	public void setUserProfileImsProxyForMobile(String addr) {
+	public void setUserProfileImsProxyAddrForMobile(String addr) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, addr);
+			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, addr);
 		}
 	}
 
     /**
-     * Get user profile IMS proxy for Wi-Fi access
+     * Get user profile IMS proxy port for mobile access
      *
-     * @return Address as <host>:<port>
+     * @return Port
      */
-	public String getUserProfileImsProxyForWifi() {
-		String result = null;
+	public int getUserProfileImsProxyPortForMobile() {
+		int result = 5060;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI);
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE));
+			} catch(Exception e) {}
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy for Wi-Fi access
+     * Set user profile IMS proxy port for mobile access
      *
-     * @param addr Address as <host>:<port>
+     * @param port Port number
      */
-	public void setUserProfileImsProxyForWifi(String addr) {
+	public void setUserProfileImsProxyPortForMobile(int port) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, addr);
+			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE, "" + port);
 		}
 	}
 
-    /**
+	/**
+     * Get user profile IMS proxy address for Wi-Fi access
+     *
+     * @return Address
+     */
+	public String getUserProfileImsProxyAddrForWifi() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI);
+		}
+		return result;
+    }
+
+	/**
+     * Set user profile IMS proxy address for Wi-Fi access
+     *
+     * @param addr Address
+     */
+	public void setUserProfileImsProxyAddrForWifi(String addr) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, addr);
+		}
+	}
+
+	/**
+     * Get user profile IMS proxy port for Wi-Fi access
+     *
+     * @return Port
+     */
+	public int getUserProfileImsProxyPortForWifi() {
+		int result = 5060;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI));
+			} catch(Exception e) {}
+		}
+		return result;
+    }
+
+	/**
+     * Set user profile IMS proxy port for Wi-Fi access
+     *
+     * @param port Port number
+     */
+	public void setUserProfileImsProxyPortForWifi(int port) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI, "" + port);
+		}
+	}
+
+	/**
      * Get user profile XDM server address
      *
      * @return Address as <host>:<port>/<root>
@@ -1841,8 +1893,10 @@ public class RcsSettings {
         setUserProfileImsUserName("");
         setUserProfileImsDomain("");
         setUserProfileImsPassword("");
-        setUserProfileImsProxyForMobile("");
-        setUserProfileImsProxyForWifi("");
+        setUserProfileImsProxyAddrForMobile("");
+        setUserProfileImsProxyPortForMobile(5060);
+        setUserProfileImsProxyAddrForWifi("");
+        setUserProfileImsProxyPortForWifi(5060);
         setUserProfileImsDisplayName("");
         setUserProfileImsPrivateId("");
         setUserProfileXdmLogin("");

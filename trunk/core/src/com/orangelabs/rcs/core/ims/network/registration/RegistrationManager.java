@@ -18,18 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.UUID;
-import java.util.Vector;
-
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ExpiresHeader;
-import javax.sip.header.ExtensionHeader;
-import javax.sip.header.Header;
-import javax.sip.header.ViaHeader;
-
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
@@ -47,6 +35,18 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.UUID;
+import java.util.Vector;
+
+import javax.sip.header.ContactHeader;
+import javax.sip.header.ExpiresHeader;
+import javax.sip.header.ExtensionHeader;
+import javax.sip.header.Header;
+import javax.sip.header.ViaHeader;
 
 /**
  * Registration manager (register, re-register, un-register)
@@ -93,6 +93,16 @@ public class RegistrationManager extends PeriodicRefresher {
      * Registration flag
      */
     private boolean registered = false;
+
+    /**
+     * Registration pending flag
+     */
+    private boolean registering = false;
+
+    /**
+     * UnRegistration need flag
+     */
+    private boolean needUnregister = false;
 
 	/**
 	 * NAT traversal
@@ -166,7 +176,7 @@ public class RegistrationManager extends PeriodicRefresher {
      * Init the registration procedure
      */
     public void init() {
-    	// Initialize the registarion procedure
+    	// Initialize the registration procedure
     	registrationProcedure.init();
     }
     
@@ -185,7 +195,9 @@ public class RegistrationManager extends PeriodicRefresher {
      * @return Boolean status
      */
     public synchronized boolean registration() {
+        registering = true;
         try {
+
         	// Init registration procedure
         	registrationProcedure.init();
         	
@@ -236,7 +248,7 @@ public class RegistrationManager extends PeriodicRefresher {
         	}
         	handleError(new ImsError(ImsError.UNEXPECTED_EXCEPTION, e.getMessage()));
         }
-
+        registering = false;
         return registered;
     }
     
@@ -265,7 +277,19 @@ public class RegistrationManager extends PeriodicRefresher {
     /**
      * Unregistration
      */
-    public synchronized void unRegistration() {
+    public void unRegistration() {
+        if (registered) {
+            doUnRegistration();
+        } else if (registering) {
+            needUnregister = true;
+        }
+    }
+
+    /**
+     * Unregistration
+     */
+    private synchronized void doUnRegistration() {
+        needUnregister = false;
     	if (!registered) {
 			// Already unregistered
 			return;
@@ -439,11 +463,16 @@ public class RegistrationManager extends PeriodicRefresher {
         } else {
         	startTimer(expirePeriod-600);
         }
-    	
+
         // Notify event listener
         networkInterface.getImsModule().getCore().getListener().handleRegistrationSuccessful();
-	}	
-	
+
+        // Start unregister procedure if necessary
+        if (needUnregister) {
+            doUnRegistration();
+        }
+    }
+
 	/**
 	 * Handle 200 0K response of UNREGISTER
 	 * 

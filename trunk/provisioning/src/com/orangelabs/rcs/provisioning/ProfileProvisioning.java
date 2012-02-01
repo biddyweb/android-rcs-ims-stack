@@ -108,13 +108,19 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
 
-        txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE));
+        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE));
 
-        txt = (EditText) this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI));
+        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForMobile);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE));
 
-		txt = (EditText)this.findViewById(R.id.XdmServerAddr);
+		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI));
+
+		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForWifi);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI));
+
+        txt = (EditText)this.findViewById(R.id.XdmServerAddr);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_SERVER));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerLogin);
@@ -189,12 +195,18 @@ public class ProfileProvisioning extends Activity {
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, txt.getText().toString());
 
-                txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, txt.getText().toString());
+		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForMobile);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE, txt.getText().toString());
 
-				txt = (EditText)this.findViewById(R.id.XdmServerAddr);
+		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForWifi);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI, txt.getText().toString());
+
+                txt = (EditText)this.findViewById(R.id.XdmServerAddr);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_SERVER, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.XdmServerLogin);
@@ -248,7 +260,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Default"
+                        "Brune", "Lannion", "Margaux", "VCOM1", "VCOM2", "RCS", "Kamailio1"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -270,29 +282,114 @@ public class ProfileProvisioning extends Activity {
 	            			String sipUri;
 	            			String imsPwd;
 	            			String homeDomain;
-	            			String imsProxyForMobile;
-                            String imsProxyForWifi;
+	            			String imsAddrForMobile;
+	            			int imsPortForMobile;
+                            String imsAddrForWifi;
+                            int imsPortForWifi;
 	            			String xdms;
 	            			String xdmsPwd;
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0:
-			            			homeDomain = "domain.com";
+	                        	case 0: // Brune
+			            			homeDomain = "rcs.brune.com";
 		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "";
-			            			imsProxyForMobile = "127.0.0.1:5060";
-			            			imsProxyForWifi = "127.0.0.1:5060";
-			            			xdms = "127.0.0.1:8080/services";
-			            			xdmsPwd = "";
+			            			imsPwd = "nsnims2008";
+			            			imsAddrForMobile = "80.12.197.74";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "80.12.197.74";
+			            			imsPortForWifi = 5060;
+			            			xdms = "10.194.117.34:8080/services";
+			            			xdmsPwd = "nsnims2008";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "conference-factory";
+			            			chatConfUri  = "Conference-Factory";
+			            			break;
+	                        	case 1: // Lannion
+			            			homeDomain = "sip.osp.com";
+		            				sipUri = number + "@" + homeDomain;
+			            			imsPwd = "nsnims2008";
+			            			imsAddrForMobile = "172.20.84.114";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.84.114";
+			            			imsPortForWifi = 5060;
+			            			xdms = "10.194.117.34:8080/services";
+			            			xdmsPwd = "nsnims2008";
+			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
+			            			chatConfUri  = "Conference-Factory";
+			            			break;
+                                case 2: // Margaux
+                                    homeDomain = "sip.mobistar.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "imt30imt30";
+			            			imsAddrForMobile = "172.20.84.114";
+			            			imsPortForMobile = 5080;
+			            			imsAddrForWifi = "172.20.84.114";
+			            			imsPortForWifi = 5080;
+                                    xdms = "127.0.0.1:8080/services";
+                                    xdmsPwd = "";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
+                                case 3: // VCO1
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "imt30imt30";
+			            			imsAddrForMobile = "asbc.sip.france.fr";
+			            			imsPortForMobile = 5080;
+			            			imsAddrForWifi = "asbc.sip.france.fr";
+			            			imsPortForWifi = 5080;
+                                    xdms = "127.0.0.1:8080/services";
+                                    xdmsPwd = "";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
+                                case 4: // VCO2
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "imt30imt30";
+			            			imsAddrForMobile = "172.20.114.42";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.114.42";
+			            			imsPortForWifi = 5060;
+                                    xdms = "127.0.0.1:8080/services";
+                                    xdmsPwd = "";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
+                                case 5: // RCS
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "imt30imt30";
+			            			imsAddrForMobile = "172.20.84.114";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.84.114";
+			            			imsPortForWifi = 5060;
+                                    xdms = "127.0.0.1:8080/services";
+                                    xdmsPwd = "";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
+                                case 6: // Kamailio1
+                                    homeDomain = "rcs.kamailio1.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "";
+			            			imsAddrForMobile = "172.20.14.43";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.14.43";
+			            			imsPortForWifi = 5060;
+                                    xdms = "127.0.0.1:8080/services";
+                                    xdmsPwd = "";
+                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
+                                    chatConfUri = "Conference-Factory";
+                                    break;
 			            		default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 			            			imsPwd = "";
-			            			imsProxyForMobile = "127.0.0.1:5060";
-			            			imsProxyForWifi = "127.0.0.1:5060";
+			            			imsAddrForMobile = "127.0.0.1";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "127.0.0.1";
+			            			imsPortForWifi = 5060;
 			            			xdms = "127.0.0.1:8080/services";
 			            			xdmsPwd = "";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
@@ -311,9 +408,13 @@ public class ProfileProvisioning extends Activity {
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
 	        		        txt.setText(homeDomain);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-                            txt.setText(imsProxyForMobile);
+                            txt.setText(imsAddrForMobile);
+					        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForMobile);
+				            txt.setText(""+imsPortForMobile);
                             txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                            txt.setText(imsProxyForWifi);
+                            txt.setText(imsAddrForWifi);
+                            txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForWifi);
+                            txt.setText(""+imsPortForWifi);
 	        				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
 	        				txt.setText(xdms);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);

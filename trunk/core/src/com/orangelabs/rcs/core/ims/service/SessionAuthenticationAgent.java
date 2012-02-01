@@ -76,13 +76,14 @@ public class SessionAuthenticationAgent {
 					request.getContent());			
 	   		
 			// Build the Authorization header
-			String auth = "Digest username=\"" + ImsModule.IMS_USER_PROFILE.getPrivateID() +
-				"\",uri=\"" + request.getRequestURI() +
-				"\",algorithm=MD5,realm=\"" + digest.getRealm() +
-				"\",nc=" + digest.buildNonceCounter() +
-				",nonce=\"" + digest.getNonce() +
-				"\",response=\"" + response +
-				"\",cnonce=\"" + digest.getCnonce() + "\"";
+			String auth = "Digest username=\"" + ImsModule.IMS_USER_PROFILE.getPrivateID() + "\"" +
+				",uri=\"" + request.getRequestURI() + "\"" +
+				",algorithm=MD5" +
+				",realm=\"" + digest.getRealm() + "\"" +
+				",nc=" + digest.buildNonceCounter() +
+				",nonce=\"" + digest.getNonce() + "\"" +
+				",response=\"" + response +	"\"" +
+				",cnonce=\"" + digest.getCnonce() + "\"";
 			String qop = digest.getQop();
 			if (qop != null) {
 				auth += ",qop=" + qop;

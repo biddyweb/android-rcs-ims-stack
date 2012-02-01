@@ -230,5 +230,10 @@
 <string name="label_quick_me">Details</string>
 <string name="label_quick_extensions">Extensions</string>
 
+<!-- Terms and conditions -->
+
+<string name="label_accept_terms_failed">Accept terms has failed, retry later</string>
+<string name="label_reject_terms_failed">Reject terms has failed, retry later</string>
+
 </resources>
 

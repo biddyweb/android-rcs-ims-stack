@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.3.6"
+ android:versionName="2.3.7"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -46,6 +46,7 @@
 	        <intent-filter>
 	            <action android:name="com.orangelabs.rcs.SERVICE"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.IImsApi"/>
+	            <action android:name="com.orangelabs.rcs.service.api.client.terms.ITermsApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.capability.ICapabilityApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.presence.IPresenceApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.messaging.IMessagingApi"/>
