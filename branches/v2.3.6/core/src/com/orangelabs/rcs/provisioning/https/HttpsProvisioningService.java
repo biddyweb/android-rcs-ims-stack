@@ -1,0 +1,514 @@
+package com.orangelabs.rcs.provisioning.https;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.core.UserAccountManager;
+import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provisioning.ProvisioningInfo;
+import com.orangelabs.rcs.provisioning.ProvisioningParser;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerPNames;
+import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+
+import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.IBinder;
+import android.telephony.TelephonyManager;
+
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.UnknownHostException;
+
+/**
+ * HTTPS auto configuration service
+ * 
+ * @author jexa7410
+ */
+public class HttpsProvisioningService extends Service {
+	/**
+	 * Service name
+	 */
+	public static final String SERVICE_NAME = "com.orangelabs.rcs.provisioning.HTTPS";
+
+	/**
+	 * Unknown value
+	 */
+	private static final String UNKNOWN = "unknown";
+
+	/**
+	 * Connection manager
+	 */
+	private ConnectivityManager connMgr;
+
+	/**
+     * Retry intent
+     */
+    private PendingIntent retryIntent;
+
+    /**
+     * First launch flag
+     */
+    private boolean first = false;
+
+    /**
+     * Check if a provisioning request is already pending
+     */
+    private boolean isPending = false;
+
+    /**
+     * Network state listener
+     */
+    private BroadcastReceiver networkStateListener = null;
+
+	/**
+	 * The logger
+	 */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    @Override
+    public void onCreate() {
+        // Instantiate RcsSettings
+        RcsSettings.createInstance(getApplicationContext());
+
+    	// Get connectivity manager
+		connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Register the retry listener
+        retryIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(this.toString()), 0);
+        registerReceiver(retryReceiver, new IntentFilter(this.toString()));
+	}
+
+    @Override
+    public void onDestroy() {
+		// Unregister network state listener
+        if (networkStateListener != null) {
+            unregisterReceiver(networkStateListener);
+        }
+
+        // Unregister Retry 
+        unregisterReceiver(retryReceiver);
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {    	
+    	return null;
+    }
+    
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+		if (logger.isActivated()) {
+			logger.debug("Start HTTPS provisioning");
+		}
+
+        if (intent != null) {
+            first = intent.getBooleanExtra("first", false);
+        }
+
+        // Send default connection event
+        if (!connectionEvent(ConnectivityManager.CONNECTIVITY_ACTION)) {
+            // If the UpdateConfig has NOT been done: 
+            // Instantiate the network listener
+            networkStateListener = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, final Intent intent) {
+                    Thread t = new Thread() {
+                        public void run() {
+                            connectionEvent(intent.getAction());
+                        }
+                    };
+                    t.start();
+                }
+            };
+
+            // Register network state listener
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            registerReceiver(networkStateListener, intentFilter);
+        }
+		
+    	// We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
+    }
+
+    /**
+     * Connection event
+     * 
+     * @param action Connectivity action
+     * @return true if the updateConfig has been done
+     */
+    private boolean connectionEvent(String action) {
+        if (!isPending) {
+    		if (logger.isActivated()) {
+    			logger.debug("Connection event " + action);
+    		}
+    
+    		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+    			// Check received network info
+    	    	NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+    			if ((networkInfo != null) && networkInfo.isAvailable()) {
+                    isPending = true;
+    				if (logger.isActivated()) {
+    					logger.debug("Connected to data network");
+    				}
+    				updateConfig();
+    				
+                    // Unregister network state listener
+                    if (networkStateListener != null) {
+                        unregisterReceiver(networkStateListener);
+                        networkStateListener = null;
+                    }
+                    isPending = false;
+                    return true;
+    			}
+    		}
+        }
+        return false;
+    }    
+
+    /**
+     * Update provisioning config
+     */
+    private void updateConfig() {
+        // Cancel previous retry alarm 
+        cancelRetryAlarm();
+
+        // Get config via HTTPS
+        HttpsProvisioningResult result = getConfig();
+        if (result != null) {
+            if (result.code == 200) {
+                // Success
+                if (logger.isActivated()) {
+                    logger.debug("Provisioning successful");
+                }
+
+                // Parse the received content
+                ProvisioningParser parser = new ProvisioningParser(result.content);
+                if (parser.parse()) {
+                    ProvisioningInfo info = parser.getProvisioningInfo();
+                    if (logger.isActivated()) {
+                        logger.debug("Version " + info.versionvalue);
+                        logger.debug("Validity " + info.validityvalue);
+                    }
+                    if (info.versionvalue.equals("-1") && info.validityvalue == -1) {
+                        // Forbidden
+                        if (logger.isActivated()) {
+                            logger.debug("Provisioning forbidden: reset account");
+                        }
+
+                        // Reset config
+                        resetRcsConfig();
+                    } else {
+                        // Start retry alarm
+                        if (info.validityvalue > 0) {
+                            if (logger.isActivated()) {
+                                logger.debug("Provisioning retry after valadity " + info.validityvalue);
+                            }
+                            startRetryAlarm(info.validityvalue * 1000);
+                        }
+
+                        // Start the RCS service
+                        LauncherUtils.launchRcsCoreService(getApplicationContext());
+                    }
+                } else {
+                    if (logger.isActivated()) {
+                        logger.debug("Can't parse provisioning document");
+                    }
+                }
+            } else if (result.code == 503) {
+                // Retry after
+                if (logger.isActivated()) {
+                    logger.debug("Provisioning retry after " + result.retryAfter);
+                }
+
+                // Start retry alarm
+                if (result.retryAfter > 0) {
+                    startRetryAlarm(result.retryAfter * 1000);
+                }
+
+                // Start the RCS service
+                if (!first) {
+                    LauncherUtils.launchRcsCoreService(getApplicationContext());
+                }
+            } else if (result.code == 403) {
+                // Forbidden
+                if (logger.isActivated()) {
+                    logger.debug("Provisioning forbidden: reset account");
+                }
+
+                // Reset config
+                resetRcsConfig();
+            } else {
+                // Other error
+                if (logger.isActivated()) {
+                    logger.debug("Provisioning error " + result.code);
+                }
+
+                // Start the RCS service
+                if (!first) {
+                    LauncherUtils.launchRcsCoreService(getApplicationContext());
+                }
+            }
+        } else {
+            // Start the RCS service
+            if (!first) {
+                LauncherUtils.launchRcsCoreService(getApplicationContext());
+            }
+        }
+    }
+
+    /**
+     * Reset RCS config
+     */
+    private void resetRcsConfig() {
+        // Clean the RCS user profile
+        RcsSettings.getInstance().removeUserProfile();
+        
+        // Clean the RCS databases
+        ContactsManager.createInstance(getApplicationContext());
+        ContactsManager.getInstance().deleteRCSEntries();
+        
+        // Remove the RCS account 
+        AuthenticationService.removeRcsAccount(getApplicationContext(), null);
+        
+        // Clean the last user account in Registry
+        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(UserAccountManager.REGISTRY_LAST_USER_ACCOUNT, "");
+        editor.commit();
+    }
+
+    /**
+     * Retry receiver
+     */
+    private BroadcastReceiver retryReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Thread t = new Thread() {
+                public void run() {
+                    updateConfig();
+                }
+            };
+            t.start();
+        }
+    };
+
+    /**
+     * Start retry alarm
+     * 
+     * @param delay (ms)
+     */
+    private void startRetryAlarm(long delay) {
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delay, retryIntent);
+    }
+
+    /**
+     * Cancel retry alarm
+     */
+    private void cancelRetryAlarm() {
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        am.cancel(retryIntent);
+    }
+
+    /**
+	 * Get configuration
+	 * 
+	 * @return Result or null in case of internal exception
+	 */
+	private HttpsProvisioningResult getConfig() {
+		HttpsProvisioningResult result = new HttpsProvisioningResult();
+		try {
+			if (logger.isActivated()) {
+				logger.debug("Request config via HTTPS");
+			}
+
+	    	// Get SIM info
+	    	TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+	    	String ope = tm.getSimOperator();
+	    	String mnc = ope.substring(3);
+	    	String mcc = ope.substring(0, 3);
+	        String requestUri = "config.rcs." + mnc + "." + mcc + ".pub.3gppnetwork.org";
+			String imsi = tm.getSubscriberId();
+			String imei = tm.getDeviceId();
+	    	tm = null;
+
+	    	// Format HTTP request
+			SchemeRegistry schemeRegistry = new SchemeRegistry();
+			schemeRegistry.register(new Scheme("http",
+					PlainSocketFactory.getSocketFactory(), 80));
+			schemeRegistry.register(new Scheme("https",
+					new EasySSLSocketFactory(), 443));
+
+			HttpParams params = new BasicHttpParams();
+			params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
+			params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+					new ConnPerRouteBean(30));
+			params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
+			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+
+			ClientConnectionManager cm = new SingleClientConnManager(params,
+					schemeRegistry);
+			DefaultHttpClient client = new DefaultHttpClient(cm, params);
+
+			// Create a local instance of cookie store
+			CookieStore cookieStore = (CookieStore) new BasicCookieStore();
+
+			// Create local HTTP context
+			HttpContext localContext = new BasicHttpContext();
+
+			// Bind custom cookie store to the local context
+			localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+
+			// Execute first HTTP request
+			HttpGet get1 = new HttpGet();
+			get1.setURI(new URI("http://" + requestUri));
+			if (logger.isActivated()) {
+				logger.debug("HTTP request: " + get1.getURI().toString());
+			}
+			HttpResponse response = client.execute(get1, localContext);
+			if (logger.isActivated()) {
+				logger.debug("HTTP response: " + response.getStatusLine().toString());
+			}
+
+			result.code = response.getStatusLine().getStatusCode(); 
+			if (result.code != 200) {
+			    if (result.code == 503) {
+			        result.retryAfter = getRetryAfter(response);
+			    }
+				return result;
+			}
+
+			// Execute second HTTPS request
+			HttpGet get2 = new HttpGet();
+			get2.setURI(new URI("https://" + requestUri
+					+ "?vers=0&client_vendor=Orange&client_version=" + getStackVersion()
+					+ "&terminal_vendor=" + getProductManufacturer()
+					+ "&terminal_model=" + getDeviceName()
+					+ "&terminal_sw_version=" + getProductVersion()
+					+ "&IMSI=" + imsi
+					+ "&IMEI=" + imei));
+			if (logger.isActivated()) {
+				logger.debug("HTTP request: " + get2.getURI().toString());
+			}
+			response = client.execute(get2, localContext);
+			if (logger.isActivated()) {
+				logger.debug("HTTP response: " + response.getStatusLine().toString());
+			}
+
+			result.code = response.getStatusLine().getStatusCode();
+			if (result.code != 200) {
+                if (result.code == 503) {
+                    result.retryAfter = getRetryAfter(response);
+                }
+				return result;
+			}
+			result.content = EntityUtils.toString(response.getEntity());
+
+			return result;
+		} catch(UnknownHostException e) {
+			if (logger.isActivated()) {
+				logger.warn("Provisioning server not reachable");
+			}
+			return null;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't get config via HTTPS", e);
+			}
+			return null;
+		}
+	}
+
+    /**
+     * Get retry-after value
+     * 
+     * @return retry-after value
+     */
+    private int getRetryAfter(HttpResponse response) {
+        Header[] headers = response.getHeaders("Retry-After");
+        if (headers.length > 0) {
+            try {
+                return Integer.parseInt(headers[0].getValue());
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+
+	private String getStackVersion() {
+		return getString(R.string.rcs_core_release_number);
+	}
+
+	private String getDeviceName() {
+		final String devicename = getSystemProperties("ro.product.device");
+
+		if (devicename != null)
+			return devicename;
+		else
+			return UNKNOWN;
+	}
+
+	private String getProductVersion() {
+		final String productversion = getSystemProperties("ro.product.version");
+
+		if (productversion != null && productversion.length() > 0)
+			return productversion;
+		else
+			return UNKNOWN;
+	}
+
+	private String getProductManufacturer() {
+		final String productmanufacturer = getSystemProperties("ro.product.manufacturer");
+
+		if (productmanufacturer != null)
+			return productmanufacturer;
+		else
+			return UNKNOWN;
+	}
+
+	private String getSystemProperties(String key) {
+		String value = null;
+		try {
+			Class<?> c = Class.forName("android.os.SystemProperties");
+			Method get = c.getMethod("get", String.class);
+			value = (String) get.invoke(c, key);
+			return value;
+		} catch(Exception e) {
+			return UNKNOWN;
+		}
+	}
+}
