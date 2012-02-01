@@ -138,8 +138,8 @@ public class ProvisioningManager {
 	    		if (logger.isActivated()) {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
-    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, param.getValue());
-    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, param.getValue());
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, param.getValue());
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, param.getValue());
 			} else
 			if (key.equals("/IMS/timer_t1")) {
 				// The SIP timer T1 in milliseconds.
@@ -196,8 +196,8 @@ public class ProvisioningManager {
 	    		if (logger.isActivated()) {
 	    			logger.debug("Update parameter " + key + ": " + param.getValue());
 	    		}
-    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_MOBILE, param.getValue());
-    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_WIFI, param.getValue());
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, param.getValue());
+    			RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, param.getValue());
 			} else
 			if (key.equals("/IMS/resource_allocation_mode")) {
 				// indicates whether UE initiates resource allocation for the media controlled
