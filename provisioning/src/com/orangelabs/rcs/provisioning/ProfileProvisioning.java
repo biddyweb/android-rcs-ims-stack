@@ -260,7 +260,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Brune", "Lannion", "Margaux", "VCOM1", "VCOM2", "RCS", "Kamailio1"
+                        "Default"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -291,97 +291,19 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin;
 	            			String chatConfUri;
 	                        switch(index) {
-	                        	case 0: // Brune
-			            			homeDomain = "rcs.brune.com";
+	                        	case 0: // Default
+			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsAddrForMobile = "80.12.197.74";
+			            			imsPwd = "";
+			            			imsAddrForMobile = "127.0.0.1";
 			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "80.12.197.74";
+			            			imsAddrForWifi = "127.0.0.1";
 			            			imsPortForWifi = 5060;
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
+			            			xdms = "127.0.0.1:8080/services";
+			            			xdmsPwd = "";
 			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
+			            			chatConfUri  = "conference-factory";
 			            			break;
-	                        	case 1: // Lannion
-			            			homeDomain = "sip.osp.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5060;
-			            			xdms = "10.194.117.34:8080/services";
-			            			xdmsPwd = "nsnims2008";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "Conference-Factory";
-			            			break;
-                                case 2: // Margaux
-                                    homeDomain = "sip.mobistar.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5080;
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 3: // VCO1
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "asbc.sip.france.fr";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "asbc.sip.france.fr";
-			            			imsPortForWifi = 5080;
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 4: // VCO2
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.114.42";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.114.42";
-			            			imsPortForWifi = 5060;
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 5: // RCS
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5060;
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
-                                case 6: // Kamailio1
-                                    homeDomain = "rcs.kamailio1.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "";
-			            			imsAddrForMobile = "172.20.14.43";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.14.43";
-			            			imsPortForWifi = 5060;
-                                    xdms = "127.0.0.1:8080/services";
-                                    xdmsPwd = "";
-                                    xdmsLogin = "sip:" + number + "@" + homeDomain;
-                                    chatConfUri = "Conference-Factory";
-                                    break;
 			            		default:
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;

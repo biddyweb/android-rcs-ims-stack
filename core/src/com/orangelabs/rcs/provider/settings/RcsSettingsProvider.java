@@ -156,7 +156,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.REGISTER_RETRY_MAX_TIME, 			"1800");
             addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.REVOKE_TIMEOUT, 					"300");
-            addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.GIBA_AUTHENT);
+            addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.DIGEST_AUTHENT);
             addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, 		RcsSettingsData.DIGEST_AUTHENT);
             addParameter(db, RcsSettingsData.TEL_URI_FORMAT, 					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60");
@@ -186,7 +186,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"150");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
         }
 
         /**
