@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.3.6"
+ android:versionName="2.3.7"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"/>
@@ -39,6 +39,23 @@
             </intent-filter>
         </activity>
 
+		<!-- Terms RI -->
+
+        <receiver android:name=".terms.TermsReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.USER_CONFIRMATION_REQUEST"/>
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".terms.TermsRequest"/>
+
+        <receiver android:name=".terms.WelcomeReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.USER_CONFIRMATION_ACK"/>
+            </intent-filter>
+        </receiver>
+
+        <activity android:name=".terms.Welcome"/>
 
 		<!-- Capabilities RI -->
 

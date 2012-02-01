@@ -70,12 +70,14 @@ import com.orangelabs.rcs.service.api.client.presence.PresenceApiIntents;
 import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
 import com.orangelabs.rcs.service.api.client.richcall.IRichCallApi;
 import com.orangelabs.rcs.service.api.client.sip.ISipApi;
+import com.orangelabs.rcs.service.api.client.terms.ITermsApi;
 import com.orangelabs.rcs.service.api.server.ImsApiService;
 import com.orangelabs.rcs.service.api.server.capability.CapabilityApiService;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
 import com.orangelabs.rcs.service.api.server.sip.SipApiService;
+import com.orangelabs.rcs.service.api.server.terms.TermsApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -107,6 +109,11 @@ public class RcsCoreService extends Service implements CoreListener {
 	private ImsApiService imsApi = new ImsApiService(); 
 	
 	/**
+	 * Terms API
+	 */
+    private TermsApiService termsApi = new TermsApiService(); 
+
+    /**
 	 * Presence API
 	 */
     private PresenceApiService presenceApi = new PresenceApiService(); 
@@ -152,6 +159,7 @@ public class RcsCoreService extends Service implements CoreListener {
     public void onDestroy() {
     	// Close APIs
     	imsApi.close();
+    	termsApi.close();
 		presenceApi.close();
 		capabilityApi.close();
 		richcallApi.close();
@@ -311,6 +319,12 @@ public class RcsCoreService extends Service implements CoreListener {
     			logger.debug("IMS API binding");
     		}
             return imsApi;
+        } else
+        if (ITermsApi.class.getName().equals(intent.getAction())) {
+    		if (logger.isActivated()) {
+    			logger.debug("Terms API binding");
+    		}
+            return termsApi;
         } else
         if (IPresenceApi.class.getName().equals(intent.getAction())) {
     		if (logger.isActivated()) {
@@ -1001,35 +1015,37 @@ public class RcsCoreService extends Service implements CoreListener {
     /**
      * User terms confirmation request
      * 
+     * @param remote Remote server
      * @param id Request ID
      * @param type Type of request
      * @param pin PIN number requested
      * @param subject Subject
      * @param text Text
      */
-    public void handleUserConfirmationRequest(String id, String type, boolean pin, String subject, String text) {
+    public void handleUserConfirmationRequest(String remote, String id, String type, boolean pin, String subject, String text) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event user confirmation request");
 		}
 
 		// Notify listeners
-		imsApi.handleUserConfirmationRequest(id, type, pin, subject, text);
+		termsApi.handleUserConfirmationRequest(remote, id, type, pin, subject, text);
     }
 
     /**
      * User terms confirmation acknowledge
      * 
+     * @param remote Remote server
      * @param id Request ID
      * @param status Status
      * @param subject Subject
      * @param text Text
      */
-    public void handleUserConfirmationAck(String id, String status, String subject, String text) {
+    public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event user confirmation ack");
 		}
 
 		// Notify listeners
-		imsApi.handleUserConfirmationAck(id, status, subject, text);
+		termsApi.handleUserConfirmationAck(remote, id, status, subject, text);
     }
 }

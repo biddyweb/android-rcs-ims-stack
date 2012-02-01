@@ -203,7 +203,10 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     					try {
     						// Open the MSRP session
     						msrpMgr.openMsrpSession(ImageTransferSession.DEFAULT_SO_TIMEOUT);
-						} catch (IOException e) {
+
+			    	        // Send an empty packet
+			            	sendEmptyDataChunk();
+    					} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
 				        	}
@@ -246,6 +249,9 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 
 					// Open the MSRP session
 					msrpMgr.openMsrpSession(ImageTransferSession.DEFAULT_SO_TIMEOUT);
+					
+	    	        // Send an empty packet
+	            	sendEmptyDataChunk();
                 }
                 
             	// Start session timer
@@ -279,6 +285,19 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     		logger.debug("End of thread");
     	}
 	}
+
+	/**
+	 * Send an empty data chunk
+	 */
+	public void sendEmptyDataChunk() {
+		try {
+			msrpMgr.sendEmptyChunk();
+		} catch(Exception e) {
+	   		if (logger.isActivated()) {
+	   			logger.error("Problem while sending empty data chunk", e);
+	   		}
+		}
+	}	
 
 	/**
 	 * Handle error 

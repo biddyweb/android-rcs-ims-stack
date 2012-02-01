@@ -81,7 +81,7 @@ public class NetworkRessourceManager {
     private static int generateLocalUdpPort(int portBase) {
     	int resp = -1;
 		int port = portBase;
-		while(resp == -1) {
+		while((resp == -1) && (port < Integer.MAX_VALUE)) {
 			if (isLocalUdpPortFree(port)) {
 				// Free UDP port found
 				resp = port;

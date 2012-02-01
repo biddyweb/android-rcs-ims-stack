@@ -1,9 +1,25 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright (C) 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+
 package com.orangelabs.rcs.provisioning.https;
 
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.core.UserAccountManager;
-import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provisioning.ProvisioningInfo;
@@ -33,7 +49,6 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -41,7 +56,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
@@ -70,7 +84,7 @@ public class HttpsProvisioningService extends Service {
 	/**
 	 * Connection manager
 	 */
-	private ConnectivityManager connMgr;
+	private ConnectivityManager connMgr = null;
 
 	/**
      * Retry intent
@@ -103,7 +117,9 @@ public class HttpsProvisioningService extends Service {
         RcsSettings.createInstance(getApplicationContext());
 
     	// Get connectivity manager
-		connMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connMgr == null) {
+            connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
 
         // Register the retry listener
         retryIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(this.toString()), 0);
@@ -218,16 +234,25 @@ public class HttpsProvisioningService extends Service {
                 ProvisioningParser parser = new ProvisioningParser(result.content);
                 if (parser.parse()) {
                     ProvisioningInfo info = parser.getProvisioningInfo();
+                    // save version
+                    LauncherUtils.setProvisioningVersion(getApplicationContext(), info.versionvalue);
                     if (logger.isActivated()) {
                         logger.debug("Version " + info.versionvalue);
                         logger.debug("Validity " + info.validityvalue);
                     }
+                    
                     if (info.versionvalue.equals("-1") && info.validityvalue == -1) {
-                        // Forbidden
+                        // Forbidden: reset account + version = 0-1 (doesn't restart)
+                        if (logger.isActivated()) {
+                            logger.debug("Provisioning forbidden: reset account and stop RCS");
+                        }
+                        // Reset config
+                        resetRcsConfig();
+                    } else if (info.versionvalue.equals("0") && info.validityvalue == 0) {
+                        // Forbidden: reset account + version = 0
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account");
                         }
-
                         // Reset config
                         resetRcsConfig();
                     } else {
@@ -263,10 +288,13 @@ public class HttpsProvisioningService extends Service {
                     LauncherUtils.launchRcsCoreService(getApplicationContext());
                 }
             } else if (result.code == 403) {
-                // Forbidden
+                // Forbidden: reset account + version = 0
                 if (logger.isActivated()) {
                     logger.debug("Provisioning forbidden: reset account");
                 }
+
+                // Reset version to "0"
+                LauncherUtils.setProvisioningVersion(getApplicationContext(), "0");
 
                 // Reset config
                 resetRcsConfig();
@@ -295,19 +323,13 @@ public class HttpsProvisioningService extends Service {
     private void resetRcsConfig() {
         // Clean the RCS user profile
         RcsSettings.getInstance().removeUserProfile();
-        
+
         // Clean the RCS databases
         ContactsManager.createInstance(getApplicationContext());
         ContactsManager.getInstance().deleteRCSEntries();
-        
+
         // Remove the RCS account 
         AuthenticationService.removeRcsAccount(getApplicationContext(), null);
-        
-        // Clean the last user account in Registry
-        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(UserAccountManager.REGISTRY_LAST_USER_ACCOUNT, "");
-        editor.commit();
     }
 
     /**
@@ -359,8 +381,11 @@ public class HttpsProvisioningService extends Service {
 	    	TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 	    	String ope = tm.getSimOperator();
 	    	String mnc = ope.substring(3);
+            while (mnc.length() < 3) {
+                mnc = "0" + mnc;
+            }
 	    	String mcc = ope.substring(0, 3);
-	        String requestUri = "config.rcs." + mnc + "." + mcc + ".pub.3gppnetwork.org";
+            String requestUri = "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
 			String imsi = tm.getSubscriberId();
 			String imei = tm.getDeviceId();
 	    	tm = null;
@@ -414,7 +439,8 @@ public class HttpsProvisioningService extends Service {
 			// Execute second HTTPS request
 			HttpGet get2 = new HttpGet();
 			get2.setURI(new URI("https://" + requestUri
-					+ "?vers=0&client_vendor=Orange&client_version=" + getStackVersion()
+					+ "?vers=" + LauncherUtils.getProvisioningVersion(getApplicationContext())
+					+ "&client_vendor=Orange&client_version=" + getStackVersion()
 					+ "&terminal_vendor=" + getProductManufacturer()
 					+ "&terminal_model=" + getDeviceName()
 					+ "&terminal_sw_version=" + getProductVersion()

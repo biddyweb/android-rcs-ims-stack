@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceService;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.sip.SipService;
+import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -254,6 +255,15 @@ public class Core {
     		logger.info("RCS core service has been stopped with success");
     	}
     }
+
+	/**
+	 * Returns the terms service
+	 * 
+	 * @return Terms service
+	 */
+	public TermsConditionsService getTermsConditionsService() {
+		return getImsModule().getTermsConditionsService();
+	}
 
 	/**
 	 * Returns the presence service

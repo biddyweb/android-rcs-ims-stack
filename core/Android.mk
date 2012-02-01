@@ -38,6 +38,7 @@ LOCAL_SDK_VERSION := current
 # Add AIDL files (the parcelable must not be added in SRC_FILES, but included in LOCAL_AIDL_INCLUDES)
 LOCAL_SRC_FILES += \
     src/com/orangelabs/rcs/service/api/client/IImsApi.aidl \
+    src/com/orangelabs/rcs/service/api/client/terms/ITermsApi.aidl \
     src/com/orangelabs/rcs/service/api/client/capability/ICapabilityApi.aidl \
     src/com/orangelabs/rcs/service/api/client/media/IMediaEventListener.aidl \
     src/com/orangelabs/rcs/service/api/client/media/IMediaPlayer.aidl \
@@ -92,7 +93,7 @@ RcsApi: FILES_TO_INCLUDE:= com/orangelabs/rcs/utils/ \
     com/orangelabs/rcs/core/ims/service/richcall/ContentSharingError.class \
     com/orangelabs/rcs/core/ims/service/im/filetransfer/FileSharingError.class\
     com/orangelabs/rcs/core/ims/service/im/chat/ChatError.class \
-	com/orangelabs/rcs/core/ims/service/sip/SipSessionError.class \
+    com/orangelabs/rcs/core/ims/service/sip/SipSessionError.class \
     com/orangelabs/rcs/core/ims/service/im/chat/imdn/ImdnDocument.class \
     com/orangelabs/rcs/core/ims/service/im/chat/event/User.class
 RcsApi:

@@ -162,9 +162,6 @@ public class ImsConnectionManager implements Runnable {
 	 */
 	private void resetUserProfile() {
     	ImsModule.IMS_USER_PROFILE = currentNetworkInterface.getUserProfile();
-        if (logger.isActivated()) {
-    		logger.info("IMS user profile: " + ImsModule.IMS_USER_PROFILE.toString());
-    	}
 	}
 	
 	/**

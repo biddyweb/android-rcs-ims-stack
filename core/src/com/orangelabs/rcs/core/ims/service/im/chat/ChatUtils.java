@@ -209,8 +209,8 @@ public class ChatUtils {
     public static boolean isImdnService(SipRequest request) {
     	String content = request.getContent();
     	String contentType = request.getContentType();
-    	if ((content != null) && (content.indexOf(ImdnDocument.IMDN_NAMESPACE) != -1) &&
-    			(contentType != null) && (contentType.indexOf(CpimMessage.MIME_TYPE) != -1)) {
+    	if ((content != null) && (content.contains(ImdnDocument.IMDN_NAMESPACE)) &&
+    			(contentType != null) && (contentType.contains(CpimMessage.MIME_TYPE))) {
     		return true;
     	} else {
     		return false;

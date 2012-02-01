@@ -128,7 +128,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    			SipUtils.CRLF +
 	    			sdp + SipUtils.CRLF + 
 	    			"--" + boundary + SipUtils.CRLF +
-	    			"Content-Type: message/cpim" + SipUtils.CRLF +
+	    			"Content-Type: " + CpimMessage.MIME_TYPE + SipUtils.CRLF +
 	    			"Content-Length: "+ cpim.length() + SipUtils.CRLF +
 	    			SipUtils.CRLF +
 	    			cpim + SipUtils.CRLF +

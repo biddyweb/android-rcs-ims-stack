@@ -11,6 +11,14 @@
     </Match>
 
     <!--
+        Suppress all warnings in the DNSJava,
+        switch has been checked and is intentional.
+    -->
+    <Match>
+        <Package name="~org\..*"/>
+    </Match>
+
+    <!--
         Suppress all warnings in Manifest and R,
         switch has been checked and is intentional.
     -->

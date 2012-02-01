@@ -51,6 +51,11 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  */
 public class Utils {
 	/**
+	 * Notification ID for terms
+	 */
+	public static int NOTIF_ID_TERMS = 999; 
+
+	/**
 	 * Notification ID for chat
 	 */
 	public static int NOTIF_ID_CHAT = 1000; 
@@ -73,7 +78,7 @@ public class Utils {
 	/**
 	 * RCS-e extension feature tag prefix
 	 */
-	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.orange";
+	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";
 
 	/**
 	 * Format caller id

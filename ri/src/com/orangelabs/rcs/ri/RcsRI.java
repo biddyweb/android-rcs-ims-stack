@@ -29,14 +29,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.logger.AndroidAppender;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.eventlog.EventLog;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.utils.PhoneUtils;
-import com.orangelabs.rcs.utils.logger.Appender;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * RCS RI application
@@ -51,12 +48,6 @@ public class RcsRI extends ListActivity {
 		// Set application context
 		AndroidFactory.setApplicationContext(getApplicationContext());
 
-        // Set logger appenders
-		Appender[] appenders = new Appender[] { 
-			new AndroidAppender()
-		};
-		Logger.setAppenders(appenders);
-		
 		// Set title
         setTitle(getString(R.string.app_name));
 

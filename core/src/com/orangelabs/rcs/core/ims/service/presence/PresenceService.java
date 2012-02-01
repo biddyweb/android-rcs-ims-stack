@@ -29,6 +29,7 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.eab.ContactsManagerException;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
@@ -148,8 +149,8 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 		}
 
 		// It may be necessary to initiate the address book first launch or account check procedure
-        if (getImsModule().getCore().getAccountManager().isFirstLaunch()
-				|| getImsModule().getCore().getAccountManager().hasChangedAccount()){
+        if (LauncherUtils.isFirstLaunch(AndroidFactory.getApplicationContext())
+                || LauncherUtils.hasChangedAccount(AndroidFactory.getApplicationContext())) {
 			List<String> blockedContacts = xdm.getBlockedContacts();
 			firstLaunchOrAccountChangedCheck(grantedContacts, blockedContacts);
 		}
