@@ -44,11 +44,10 @@ public class SettingsUserProfileInterface extends UserProfileInterface {
 		String privateID = RcsSettings.getInstance().getUserProfileImsPrivateId();
 		String password = RcsSettings.getInstance().getUserProfileImsPassword();
 		String homeDomain = RcsSettings.getInstance().getUserProfileImsDomain();
-		String xdmServer = RcsSettings.getInstance().getUserProfileXdmServer();
-		String xdmLogin = RcsSettings.getInstance().getUserProfileXdmLogin();
-		String xdmPassword = RcsSettings.getInstance().getUserProfileXdmPassword();
-		String imConfUri = UserProfile.formatConferenceUri(
-				RcsSettings.getInstance().getUserProfileImConferenceUri(), homeDomain);
+		String xdmServer = RcsSettings.getInstance().getXdmServer();
+		String xdmLogin = RcsSettings.getInstance().getXdmLogin();
+		String xdmPassword = RcsSettings.getInstance().getXdmPassword();
+		String imConfUri = RcsSettings.getInstance().getImConferenceUri();
 
 		return new UserProfile(username, privateID, password, homeDomain,
 				xdmServer, xdmLogin, xdmPassword, imConfUri);

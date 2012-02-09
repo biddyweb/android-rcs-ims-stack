@@ -316,47 +316,52 @@ public class RcsSettingsData {
 	/**
 	 * P-CSCF or outbound proxy address for mobile access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_ADDR_MOBILE = "ImsOutboundProxyAddrForMobile";
+	public static final String IMS_PROXY_ADDR_MOBILE = "ImsOutboundProxyAddrForMobile";
 
 	/**
 	 * P-CSCF or outbound proxy port for mobile access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_PORT_MOBILE = "ImsOutboundProxyPortForMobile";
+	public static final String IMS_PROXY_PORT_MOBILE = "ImsOutboundProxyPortForMobile";
 
 	/**
 	 * P-CSCF or outbound proxy address for Wi-Fi access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_ADDR_WIFI = "ImsOutboundProxyAddrForWifi";
+	public static final String IMS_PROXY_ADDR_WIFI = "ImsOutboundProxyAddrForWifi";
 
 	/**
 	 * P-CSCF or outbound proxy port for Wi-Fi access
 	 */
-	public static final String USERPROFILE_IMS_PROXY_PORT_WIFI = "ImsOutboundProxyPortForWifi";
+	public static final String IMS_PROXY_PORT_WIFI = "ImsOutboundProxyPortForWifi";
 
 	/**
 	 * XDM server address & port
 	 */
-	public static final String USERPROFILE_XDM_SERVER = "XdmServerAddr";
+	public static final String XDM_SERVER = "XdmServerAddr";
 
 	/**
 	 * XDM server login (for HTTP Digest only)
 	 */
-	public static final String USERPROFILE_XDM_LOGIN= "XdmServerLogin";
+	public static final String XDM_LOGIN= "XdmServerLogin";
 
 	/**
 	 * XDM server password (for HTTP Digest only)
 	 */
-	public static final String USERPROFILE_XDM_PASSWORD = "XdmServerPassword";
+	public static final String XDM_PASSWORD = "XdmServerPassword";
 
 	/**
 	 * IM conference URI for group chat session
 	 */
-	public static final String USERPROFILE_IM_CONF_URI = "ImConferenceUri";
+	public static final String IM_CONF_URI = "ImConferenceUri";
 
+	/**
+	 * End user confirmation request URI for terms and conditions
+	 */
+	public static final String ENDUSER_CONFIRMATION_URI = "EndUserConfReqUri";
+	
     /**
      * Country code
      */
-	public static final String USERPROFILE_COUNTRY_CODE = "CountryCode";
+	public static final String COUNTRY_CODE = "CountryCode";
 
 	// ---------------------------------------------------------------------------
 	// Stack settings

@@ -57,13 +57,12 @@ public class TermsApiService extends ITermsApi.Stub {
 	/**
 	 * Accept terms
 	 * 
-	 * @param remote Remote server
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
 	 * @throws ServerApiException
 	 */
-	public boolean acceptTerms(String remote, String id, String pin) throws ServerApiException {
+	public boolean acceptTerms(String id, String pin) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Accept terms");
 		}
@@ -76,7 +75,7 @@ public class TermsApiService extends ITermsApi.Stub {
 		
 		try {
 			// Accept terms
-			return Core.getInstance().getTermsConditionsService().acceptTerms(remote, id, pin);
+			return Core.getInstance().getTermsConditionsService().acceptTerms(id, pin);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
@@ -85,13 +84,12 @@ public class TermsApiService extends ITermsApi.Stub {
 	/**
 	 * Reject terms
 	 * 
-	 * @param remote Remote server
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
 	 * @throws ServerApiException
 	 */
-	public boolean rejectTerms(String remote, String id, String pin) throws ServerApiException {
+	public boolean rejectTerms(String id, String pin) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Reject terms");
 		}
@@ -104,7 +102,7 @@ public class TermsApiService extends ITermsApi.Stub {
 		
 		try {
 			// Decline terms
-			return Core.getInstance().getTermsConditionsService().rejectTerms(remote, id, pin);
+			return Core.getInstance().getTermsConditionsService().rejectTerms(id, pin);
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
@@ -123,7 +121,6 @@ public class TermsApiService extends ITermsApi.Stub {
     public void handleUserConfirmationRequest(String remote, String id, String type, boolean pin, String subject, String text) {
 		// Broadcast intent related to the received request
     	Intent intent = new Intent(TermsApiIntents.USER_CONFIRMATION_REQUEST);
-    	intent.putExtra("remote", remote);
     	intent.putExtra("id", id);
     	intent.putExtra("type", type);
     	intent.putExtra("pin", pin);
@@ -144,7 +141,6 @@ public class TermsApiService extends ITermsApi.Stub {
     public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text) {
 		// Broadcast intent related to the received request
     	Intent intent = new Intent(TermsApiIntents.USER_CONFIRMATION_ACK);
-    	intent.putExtra("remote", remote);
     	intent.putExtra("id", id);
     	intent.putExtra("status", status);
     	intent.putExtra("subject", subject);

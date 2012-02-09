@@ -21,7 +21,7 @@ package com.orangelabs.rcs.core.content;
 
 /**
  * Multimedia content
- * 
+ *
  * @author jexa7410
  */
 public abstract class MmContent {
@@ -164,7 +164,7 @@ public abstract class MmContent {
     }
 
 	/**
-     * Returns the string representtaion of a content
+     * Returns the string representation of a content
      * 
      * @return String
      */

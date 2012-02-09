@@ -46,9 +46,6 @@ public class UserprofileSettingsDisplay extends PreferenceActivity implements Pr
         displaynameEdit.setPersistent(false);
         displaynameEdit.setOnPreferenceChangeListener(this);
         String name = RcsSettings.getInstance().getUserProfileImsDisplayName();
-        if ((name == null) || (name.trim().length() == 0)) {
-            name = RcsSettings.getInstance().getUserProfileImsUserName();
-        }        
         displaynameEdit.setText(name);
     	displaynameEdit.setTitle(name);
     }

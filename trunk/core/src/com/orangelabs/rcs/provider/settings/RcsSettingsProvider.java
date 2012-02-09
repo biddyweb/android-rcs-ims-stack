@@ -29,6 +29,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Environment;
 
 import java.util.ArrayList;
 
@@ -68,7 +69,7 @@ public class RcsSettingsProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
         private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 54;
+        private static final int DATABASE_VERSION = 55;
 
         private Context ctx;
 
@@ -124,15 +125,16 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, 		"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PASSWORD, 			"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"");
-		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE,	"80.12.197.74");
-		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE,	"5060");
-		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI,	"80.12.197.74");
-		    addParameter(db, RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI,	"5060");
-		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_SERVER, 			"10.194.117.34:8080/services");
-		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_LOGIN,				"");
-		    addParameter(db, RcsSettingsData.USERPROFILE_XDM_PASSWORD, 			"password");
-            addParameter(db, RcsSettingsData.USERPROFILE_IM_CONF_URI, 			"Conference-Factory");
-            addParameter(db, RcsSettingsData.USERPROFILE_COUNTRY_CODE,			"+33");
+		    addParameter(db, RcsSettingsData.IMS_PROXY_ADDR_MOBILE,				"");
+		    addParameter(db, RcsSettingsData.IMS_PROXY_PORT_MOBILE,				"5060");
+		    addParameter(db, RcsSettingsData.IMS_PROXY_ADDR_WIFI,				"");
+		    addParameter(db, RcsSettingsData.IMS_PROXY_PORT_WIFI,				"5060");
+		    addParameter(db, RcsSettingsData.XDM_SERVER, 						"");
+		    addParameter(db, RcsSettingsData.XDM_LOGIN,							"");
+		    addParameter(db, RcsSettingsData.XDM_PASSWORD, 						"");
+            addParameter(db, RcsSettingsData.IM_CONF_URI, 						"");
+            addParameter(db, RcsSettingsData.ENDUSER_CONFIRMATION_URI,			"");
+            addParameter(db, RcsSettingsData.COUNTRY_CODE,						"+33");
             addParameter(db, RcsSettingsData.CAPABILITY_CS_VIDEO, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_IMAGE_SHARING,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_VIDEO_SHARING,			RcsSettingsData.TRUE);
@@ -156,7 +158,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.REGISTER_RETRY_MAX_TIME, 			"1800");
             addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.REVOKE_TIMEOUT, 					"300");
-            addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.DIGEST_AUTHENT);
+            addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.GIBA_AUTHENT);
             addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, 		RcsSettingsData.DIGEST_AUTHENT);
             addParameter(db, RcsSettingsData.TEL_URI_FORMAT, 					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60");
@@ -167,7 +169,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.TRACE_ACTIVATED,			 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
             addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATED, 				RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.SIP_TRACE_FILE,                    "/sdcard/sip.txt");
+            addParameter(db, RcsSettingsData.SIP_TRACE_FILE,                    Environment.getExternalStorageDirectory() + "/sip.txt");
             addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATED,				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_REFRESH_TIMEOUT, 		"1");
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");

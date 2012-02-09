@@ -166,11 +166,12 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
         // Extract number from contact
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+        VideoContent content = (VideoContent) session.getContent();
 
 		// Update rich call history
 		RichCall.getInstance().addCall(number, session.getSessionID(),
 				RichCallData.EVENT_INCOMING,
-    			session.getContent(),
+				content,
     			RichCallData.STATUS_STARTED);
 
 		// Add session in the list
@@ -182,7 +183,9 @@ public class RichCallApiService extends IRichCallApi.Stub {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("videotype", session.getContent().getEncoding());
+    	intent.putExtra("videotype", content.getEncoding());
+        intent.putExtra("videowidth", content.getWidth());
+        intent.putExtra("videoheight", content.getHeight());
         AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 

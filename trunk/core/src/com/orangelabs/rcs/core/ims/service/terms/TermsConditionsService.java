@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -164,10 +165,11 @@ public class TermsConditionsService extends ImsService {
 	 * @param pin Response value
 	 * @return Boolean result
 	 */
-	public boolean acceptTerms(String remote, String id, String pin) {
+	public boolean acceptTerms(String id, String pin) {
 		if (logger.isActivated()) {
 			logger.debug("Send response for request " + id);
 		}
+		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
 		return sendSipMessage(remote, id, ACCEPT_RESPONSE, pin);
 	}
 
@@ -178,10 +180,11 @@ public class TermsConditionsService extends ImsService {
 	 * @param pin Response value
 	 * @return Boolean result
 	 */
-	public boolean rejectTerms(String remote, String id, String pin) {
+	public boolean rejectTerms(String id, String pin) {
 		if (logger.isActivated()) {
 			logger.debug("Send response for request " + id);
 		}
+		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
 		return sendSipMessage(remote, id, DECLINE_RESPONSE, pin);
 	}
 	

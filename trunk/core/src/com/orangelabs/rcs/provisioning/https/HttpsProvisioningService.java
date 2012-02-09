@@ -18,18 +18,16 @@
 
 package com.orangelabs.rcs.provisioning.https;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provisioning.ProvisioningInfo;
-import com.orangelabs.rcs.provisioning.ProvisioningParser;
-import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.ClientContext;
@@ -61,9 +59,15 @@ import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.UnknownHostException;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.core.ims.service.presence.xdm.HttpUtils;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provisioning.ProvisioningInfo;
+import com.orangelabs.rcs.provisioning.ProvisioningParser;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * HTTPS auto configuration service
@@ -230,25 +234,34 @@ public class HttpsProvisioningService extends Service {
                     logger.debug("Provisioning successful");
                 }
 
+                /* Just for debugging
+                try {
+        		File file = new File(Environment.getExternalStorageDirectory() + "/provisioning.xml");
+        		OutputStream os = new FileOutputStream(file);
+        		os.write(result.content.getBytes());
+        		os.flush();
+                os.close();
+                } catch(Exception e) {}*/
+                
                 // Parse the received content
                 ProvisioningParser parser = new ProvisioningParser(result.content);
                 if (parser.parse()) {
                     ProvisioningInfo info = parser.getProvisioningInfo();
                     // save version
-                    LauncherUtils.setProvisioningVersion(getApplicationContext(), info.versionvalue);
+                    LauncherUtils.setProvisioningVersion(getApplicationContext(), info.version);
                     if (logger.isActivated()) {
-                        logger.debug("Version " + info.versionvalue);
-                        logger.debug("Validity " + info.validityvalue);
+                        logger.debug("Version " + info.version);
+                        logger.debug("Validity " + info.validity);
                     }
                     
-                    if (info.versionvalue.equals("-1") && info.validityvalue == -1) {
+                    if (info.version.equals("-1") && info.validity == -1) {
                         // Forbidden: reset account + version = 0-1 (doesn't restart)
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account and stop RCS");
                         }
                         // Reset config
                         resetRcsConfig();
-                    } else if (info.versionvalue.equals("0") && info.validityvalue == 0) {
+                    } else if (info.version.equals("0") && info.validity == 0) {
                         // Forbidden: reset account + version = 0
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account");
@@ -257,11 +270,11 @@ public class HttpsProvisioningService extends Service {
                         resetRcsConfig();
                     } else {
                         // Start retry alarm
-                        if (info.validityvalue > 0) {
+                        if (info.validity > 0) {
                             if (logger.isActivated()) {
-                                logger.debug("Provisioning retry after valadity " + info.validityvalue);
+                                logger.debug("Provisioning retry after valadity " + info.validity);
                             }
-                            startRetryAlarm(info.validityvalue * 1000);
+                            startRetryAlarm(info.validity * 1000);
                         }
 
                         // Start the RCS service
@@ -380,12 +393,14 @@ public class HttpsProvisioningService extends Service {
 	    	// Get SIM info
 	    	TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 	    	String ope = tm.getSimOperator();
-	    	String mnc = ope.substring(3);
-            while (mnc.length() < 3) {
+            String mnc = ope.substring(3);
+            String mcc = ope.substring(0, 3);
+            String requestUri_old = "config." + mcc + mnc + ".rcse";
+            while (mnc.length() < 3) { // Set mnc on 3 digits
                 mnc = "0" + mnc;
             }
-	    	String mcc = ope.substring(0, 3);
             String requestUri = "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
+
 			String imsi = tm.getSubscriberId();
 			String imei = tm.getDeviceId();
 	    	tm = null;
@@ -418,42 +433,34 @@ public class HttpsProvisioningService extends Service {
 			localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
 			// Execute first HTTP request
-			HttpGet get1 = new HttpGet();
-			get1.setURI(new URI("http://" + requestUri));
-			if (logger.isActivated()) {
-				logger.debug("HTTP request: " + get1.getURI().toString());
-			}
-			HttpResponse response = client.execute(get1, localContext);
-			if (logger.isActivated()) {
-				logger.debug("HTTP response: " + response.getStatusLine().toString());
-			}
-
-			result.code = response.getStatusLine().getStatusCode(); 
-			if (result.code != 200) {
-			    if (result.code == 503) {
-			        result.retryAfter = getRetryAfter(response);
-			    }
-				return result;
-			}
+            HttpResponse response = null;
+            try {
+                response = executeRequest("http", requestUri, client, localContext);
+            } catch (UnknownHostException e) {
+                // If the new URI is not reachable, try the old
+                if (logger.isActivated()) {
+                    logger.debug("The server " + requestUri + " can't be reachable, try with the old URI");
+                }
+                requestUri = requestUri_old;
+                response = executeRequest("http",requestUri, client, localContext);
+            }
+            result.code = response.getStatusLine().getStatusCode(); 
+            if (result.code != 200) {
+                if (result.code == 503) {
+                    result.retryAfter = getRetryAfter(response);
+                }
+                return result;
+            }
 
 			// Execute second HTTPS request
-			HttpGet get2 = new HttpGet();
-			get2.setURI(new URI("https://" + requestUri
-					+ "?vers=" + LauncherUtils.getProvisioningVersion(getApplicationContext())
-					+ "&client_vendor=Orange&client_version=" + getStackVersion()
-					+ "&terminal_vendor=" + getProductManufacturer()
-					+ "&terminal_model=" + getDeviceName()
-					+ "&terminal_sw_version=" + getProductVersion()
-					+ "&IMSI=" + imsi
-					+ "&IMEI=" + imei));
-			if (logger.isActivated()) {
-				logger.debug("HTTP request: " + get2.getURI().toString());
-			}
-			response = client.execute(get2, localContext);
-			if (logger.isActivated()) {
-				logger.debug("HTTP response: " + response.getStatusLine().toString());
-			}
-
+			String args = "?vers=" + LauncherUtils.getProvisioningVersion(getApplicationContext())
+                    + "&client_vendor=Orange&client_version=" + getStackVersion()
+                    + "&terminal_vendor=" + HttpUtils.encodeURL(getProductManufacturer())
+                    + "&terminal_model=" + HttpUtils.encodeURL(getDeviceName())
+                    + "&terminal_sw_version=" + HttpUtils.encodeURL(getProductVersion())
+                    + "&IMSI=" + imsi
+                    + "&IMEI=" + imei;
+            response = executeRequest("https",requestUri + args, client, localContext);
 			result.code = response.getStatusLine().getStatusCode();
 			if (result.code != 200) {
                 if (result.code == 503) {
@@ -476,6 +483,29 @@ public class HttpsProvisioningService extends Service {
 			return null;
 		}
 	}
+
+    /**
+     * Execute an HTTP request
+     *
+     * @param protocol HTTP protocol
+     * @param request HTTP request
+     * @return HTTP response
+     * @throws URISyntaxException 
+     * @throws IOException 
+     * @throws ClientProtocolException 
+     */
+    private HttpResponse executeRequest(String protocol, String request, DefaultHttpClient client, HttpContext localContext) throws URISyntaxException, ClientProtocolException, IOException {
+        HttpGet get = new HttpGet();
+        get.setURI(new URI(protocol + "://" + request));
+        if (logger.isActivated()) {
+            logger.debug("HTTP request: " + get.getURI().toString());
+        }
+        HttpResponse response = client.execute(get, localContext);
+        if (logger.isActivated()) {
+            logger.debug("HTTP response: " + response.getStatusLine().toString());
+        }
+        return response;
+    }
 
     /**
      * Get retry-after value
@@ -531,10 +561,10 @@ public class HttpsProvisioningService extends Service {
 		try {
 			Class<?> c = Class.forName("android.os.SystemProperties");
 			Method get = c.getMethod("get", String.class);
-			value = (String) get.invoke(c, key);
+			value = (String)get.invoke(c, key);
 			return value;
 		} catch(Exception e) {
 			return UNKNOWN;
-		}
+		}		
 	}
 }

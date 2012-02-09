@@ -49,6 +49,8 @@ public class RichCallApiIntents {
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
      *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
      *   <li><em>videotype</em> - Type of video encoding.</li>
+     *   <li><em>videowidth</em> - Width of video.</li>
+     *   <li><em>videoheight</em> - Height of video.</li>
      * </ul>
      * </ul>
      */

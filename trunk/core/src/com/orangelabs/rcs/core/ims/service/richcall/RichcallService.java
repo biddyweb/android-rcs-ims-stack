@@ -18,11 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall;
 
-import java.util.Enumeration;
-import java.util.Vector;
-
-import android.os.RemoteException;
-
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -49,6 +44,11 @@ import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import android.os.RemoteException;
+
+import java.util.Enumeration;
+import java.util.Vector;
 
 /**
  * Rich call service has in charge to monitor the GSM call in order to stop the
@@ -386,9 +386,6 @@ public class RichcallService extends ImsService {
 
 		// Start the session
 		session.startSession();
-
-		// Notify listener
-		getImsModule().getCore().getListener().handleContentSharingStreamingInvitation(session);
 	}
 
     /**

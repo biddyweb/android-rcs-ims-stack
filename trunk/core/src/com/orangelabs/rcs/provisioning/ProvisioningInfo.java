@@ -23,10 +23,33 @@ package com.orangelabs.rcs.provisioning;
  * @author jexa7410
  */
 public class ProvisioningInfo {
-	public String versionvalue = null;
-	public long validityvalue = 0L;
-	public String titlevalue = null;
-	public String messagevalue = null;
-	public String acceptbtnvalue = null;
-	public String rejectbtnvalue = null;
+	/**
+	 * Version of the provisioning document
+	 */
+	public String version = null;
+	
+	/**
+	 * Validity of the provisioning document
+	 */
+	public long validity = 0L;
+	
+	/**
+	 * Title for terms and conditions
+	 */
+	public String title = null;
+	
+	/**
+	 * Message for terms and conditions 
+	 */
+	public String message = null;
+	
+	/**
+	 * Accept button for terms and conditions
+	 */
+	public String acceptBtn = null;
+	
+	/**
+	 * Reject button for terms and conditions
+	 */
+	public String rejectBtn = null;
 }

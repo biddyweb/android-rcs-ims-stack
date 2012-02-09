@@ -542,7 +542,7 @@ public class RcsSettings {
 	}
 
     /**
-     * Get user profile IMS username (i.e. username part of the IMPU)
+     * Get user profile username (i.e. username part of the IMPU)
      *
      * @return Username part of SIP-URI
      */
@@ -662,201 +662,225 @@ public class RcsSettings {
 	}
 
     /**
-     * Get user profile IMS proxy address for mobile access
+     * Get IMS proxy address for mobile access
      *
      * @return Address
      */
-	public String getUserProfileImsProxyAddrForMobile() {
+	public String getImsProxyAddrForMobile() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE);
+			result = readParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy address for mobile access
+     * Set IMS proxy address for mobile access
      *
      * @param addr Address
      */
-	public void setUserProfileImsProxyAddrForMobile(String addr) {
+	public void setImsProxyAddrForMobile(String addr) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, addr);
+			writeParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE, addr);
 		}
 	}
 
     /**
-     * Get user profile IMS proxy port for mobile access
+     * Get IMS proxy port for mobile access
      *
      * @return Port
      */
-	public int getUserProfileImsProxyPortForMobile() {
+	public int getImsProxyPortForMobile() {
 		int result = 5060;
 		if (instance != null) {
 			try {
-				result = Integer.parseInt(readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE));
+				result = Integer.parseInt(readParameter(RcsSettingsData.IMS_PROXY_PORT_MOBILE));
 			} catch(Exception e) {}
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy port for mobile access
+     * Set IMS proxy port for mobile access
      *
      * @param port Port number
      */
-	public void setUserProfileImsProxyPortForMobile(int port) {
+	public void setImsProxyPortForMobile(int port) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE, "" + port);
+			writeParameter(RcsSettingsData.IMS_PROXY_PORT_MOBILE, "" + port);
 		}
 	}
 
 	/**
-     * Get user profile IMS proxy address for Wi-Fi access
+     * Get IMS proxy address for Wi-Fi access
      *
      * @return Address
      */
-	public String getUserProfileImsProxyAddrForWifi() {
+	public String getImsProxyAddrForWifi() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI);
+			result = readParameter(RcsSettingsData.IMS_PROXY_ADDR_WIFI);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy address for Wi-Fi access
+     * Set IMS proxy address for Wi-Fi access
      *
      * @param addr Address
      */
-	public void setUserProfileImsProxyAddrForWifi(String addr) {
+	public void setImsProxyAddrForWifi(String addr) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, addr);
+			writeParameter(RcsSettingsData.IMS_PROXY_ADDR_WIFI, addr);
 		}
 	}
 
 	/**
-     * Get user profile IMS proxy port for Wi-Fi access
+     * Get IMS proxy port for Wi-Fi access
      *
      * @return Port
      */
-	public int getUserProfileImsProxyPortForWifi() {
+	public int getImsProxyPortForWifi() {
 		int result = 5060;
 		if (instance != null) {
 			try {
-				result = Integer.parseInt(readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI));
+				result = Integer.parseInt(readParameter(RcsSettingsData.IMS_PROXY_PORT_WIFI));
 			} catch(Exception e) {}
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IMS proxy port for Wi-Fi access
+     * Set IMS proxy port for Wi-Fi access
      *
      * @param port Port number
      */
-	public void setUserProfileImsProxyPortForWifi(int port) {
+	public void setImsProxyPortForWifi(int port) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI, "" + port);
+			writeParameter(RcsSettingsData.IMS_PROXY_PORT_WIFI, "" + port);
 		}
 	}
 
 	/**
-     * Get user profile XDM server address
+     * Get XDM server address
      *
      * @return Address as <host>:<port>/<root>
      */
-	public String getUserProfileXdmServer() {
+	public String getXdmServer() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_XDM_SERVER);
+			result = readParameter(RcsSettingsData.XDM_SERVER);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile XDM server address
+     * Set XDM server address
      *
      * @param addr Address as <host>:<port>/<root>
      */
-	public void setUserProfileXdmServer(String addr) {
+	public void setXdmServer(String addr) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_XDM_SERVER, addr);
+			writeParameter(RcsSettingsData.XDM_SERVER, addr);
 		}
 	}
 
     /**
-     * Get user profile XDM server login
+     * Get XDM server login
      *
      * @return String value
      */
-	public String getUserProfileXdmLogin() {
+	public String getXdmLogin() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN);
+			result = readParameter(RcsSettingsData.XDM_LOGIN);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile XDM server login
+     * Set XDM server login
      *
      * @param value Value
      */
-	public void setUserProfileXdmLogin(String value) {
+	public void setXdmLogin(String value) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN, value);
+			writeParameter(RcsSettingsData.XDM_LOGIN, value);
 		}
 	}
 
     /**
-     * Get user profile XDM server password
+     * Get XDM server password
      *
      * @return String value
      */
-	public String getUserProfileXdmPassword() {
+	public String getXdmPassword() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD);
+			result = readParameter(RcsSettingsData.XDM_PASSWORD);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile XDM server password
+     * Set XDM server password
      *
      * @param value Value
      */
-	public void setUserProfileXdmPassword(String value) {
+	public void setXdmPassword(String value) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD, value);
+			writeParameter(RcsSettingsData.XDM_PASSWORD, value);
 		}
 	}
 
     /**
-     * Get user profile IM conference URI
+     * Get IM conference URI
      *
      * @return SIP-URI
      */
-	public String getUserProfileImConferenceUri() {
+	public String getImConferenceUri() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI);
+			result = readParameter(RcsSettingsData.IM_CONF_URI);
 		}
 		return result;
     }
 
 	/**
-     * Set user profile IM conference URI
+     * Set IM conference URI
      *
      * @param uri SIP-URI
      */
-	public void setUserProfileImConferenceUri(String uri) {
+	public void setImConferenceUri(String uri) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI, uri);
+			writeParameter(RcsSettingsData.IM_CONF_URI, uri);
 		}
 	}
 
+    /**
+     * Get end user confirmation request URI
+     *
+     * @return SIP-URI
+     */
+	public String getEndUserConfirmationRequestUri() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.ENDUSER_CONFIRMATION_URI);
+		}
+		return result;
+    }
+
+	/**
+     * Set end user confirmation request
+     *
+     * @param uri SIP-URI
+     */
+	public void setEndUserConfirmationRequestUri(String uri) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.ENDUSER_CONFIRMATION_URI, uri);
+		}
+	}
+	
 	/**
      * Get country code
      *
@@ -865,7 +889,7 @@ public class RcsSettings {
 	public String getCountryCode() {
 		String result = null;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.USERPROFILE_COUNTRY_CODE);
+			result = readParameter(RcsSettingsData.COUNTRY_CODE);
 		}
 		return result;
     }
@@ -877,7 +901,7 @@ public class RcsSettings {
      */
 	public void setCountryCode(String code) {
 		if (instance != null) {
-			writeParameter(RcsSettingsData.USERPROFILE_COUNTRY_CODE, code);
+			writeParameter(RcsSettingsData.COUNTRY_CODE, code);
 		}
     }
 
@@ -1893,14 +1917,14 @@ public class RcsSettings {
         setUserProfileImsUserName("");
         setUserProfileImsDomain("");
         setUserProfileImsPassword("");
-        setUserProfileImsProxyAddrForMobile("");
-        setUserProfileImsProxyPortForMobile(5060);
-        setUserProfileImsProxyAddrForWifi("");
-        setUserProfileImsProxyPortForWifi(5060);
+        setImsProxyAddrForMobile("");
+        setImsProxyPortForMobile(5060);
+        setImsProxyAddrForWifi("");
+        setImsProxyPortForWifi(5060);
         setUserProfileImsDisplayName("");
         setUserProfileImsPrivateId("");
-        setUserProfileXdmLogin("");
-        setUserProfileXdmPassword("");
-        setUserProfileXdmServer("");
+        setXdmLogin("");
+        setXdmPassword("");
+        setXdmServer("");
     }
 }

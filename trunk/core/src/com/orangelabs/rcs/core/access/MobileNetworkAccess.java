@@ -94,7 +94,7 @@ public class MobileNetworkAccess extends NetworkAccess {
 			case TelephonyManager.NETWORK_TYPE_HSDPA:
 			case TelephonyManager.NETWORK_TYPE_HSUPA:
 			case TelephonyManager.NETWORK_TYPE_HSPA:
-				return "3GPP-UTRAN-TDD";
+				return "3GPP-UTRAN-FDD";
 			default:
 				return null;
 		}

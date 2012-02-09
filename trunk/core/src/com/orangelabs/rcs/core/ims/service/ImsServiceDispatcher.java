@@ -130,6 +130,18 @@ public class ImsServiceDispatcher extends Thread {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
 		
+		// Check the IP address of the request-URI
+		String localIpAddress = imsModule.getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
+		if (!request.getRequestURI().contains(localIpAddress)) {
+			// Send a 404 error
+			if (logger.isActivated()) {
+				logger.debug("Request-URI IP doesn't match with registered contact: reject the request");
+			}
+			sendFinalResponse(request, 404);			
+			return;
+		}
+		
+		
 	    if (request.getMethod().equals(Request.OPTIONS)) {
 	    	// OPTIONS received
 	    	if (imsModule.getCallManager().isCallConnected()) { 
