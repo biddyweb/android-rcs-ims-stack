@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.3.7
+Release 2.3.8
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,10 +9,6 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- DNS management (NAPTR, SRV and A queries).
-- Terms & conditions API.
-- HTTPS module updated.
-- Bug fixs.
 
 
 
@@ -21,6 +17,13 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.3.8
+- Mantis #0014493	Stack: Bad URL encoding for HTTPS provisioning if space in the vendor name
+- Open source #51	Stack: Bad interpretation of ChatAuth configuration parameter
+- Open source #46	Stack: Content-Leght calculation for non latin characters
+- Mantis #0014438	Stack: Reject requests having a different IP address than the registered IP address
+
 
 v2.3.7
 - Mantis #0014419	Stack: MNC code not well fomatted for HTTPS provisioning

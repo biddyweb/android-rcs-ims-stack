@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.service.presence.xdm;
 
+import android.net.Uri;
+
 
 /**
  * HTTP utility functions
@@ -35,25 +37,6 @@ public class HttpUtils {
 	 * @return Encoded URL
 	 */
 	public static String encodeURL(String url) {
-		StringBuffer res = new StringBuffer(url.length());
-		char readChar;
-		for (int i = 0; i < url.length(); i++) {
-			readChar = url.charAt(i);
-			switch (readChar) {
-			case '+':
-				res.append("%2B");
-				break;
-			case '@':
-				res.append("%40");
-				break;
-			case ':':
-				res.append("%3A");
-				break;
-			default:
-				res.append(readChar);
-				break;
-			}
-		}
-		return res.toString();
+		return Uri.encode(url);
 	}
 }

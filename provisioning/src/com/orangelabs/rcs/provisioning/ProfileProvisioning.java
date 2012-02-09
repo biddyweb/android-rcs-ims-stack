@@ -109,28 +109,31 @@ public class ProfileProvisioning extends Activity {
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
 
         txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE));
 
         txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForMobile);
-		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_PORT_MOBILE));
 
 		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_ADDR_WIFI));
 
 		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForWifi);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_PORT_WIFI));
 
         txt = (EditText)this.findViewById(R.id.XdmServerAddr);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_SERVER));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_SERVER));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerLogin);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN));
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_LOGIN));
 
 		txt = (EditText)this.findViewById(R.id.XdmServerPassword);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD));
-
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_PASSWORD));
+        
 		txt = (EditText)this.findViewById(R.id.ImConferenceUri);
-		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI));
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_CONF_URI));
+
+        txt = (EditText)this.findViewById(R.id.EndUserConfReqUri);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.ENDUSER_CONFIRMATION_URI));
 
 		txt = (EditText)this.findViewById(R.id.RcsApn);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RCS_APN));
@@ -195,28 +198,31 @@ public class ProfileProvisioning extends Activity {
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_MOBILE, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForMobile);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_MOBILE, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_PROXY_PORT_MOBILE, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_ADDR_WIFI, txt.getText().toString());
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_PROXY_ADDR_WIFI, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForWifi);
-                RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PROXY_PORT_WIFI, txt.getText().toString());
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_PROXY_PORT_WIFI, txt.getText().toString());
 
                 txt = (EditText)this.findViewById(R.id.XdmServerAddr);
-				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_SERVER, txt.getText().toString());
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.XDM_SERVER, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.XdmServerLogin);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_LOGIN, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.XDM_LOGIN, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.XdmServerPassword);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_XDM_PASSWORD, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.XDM_PASSWORD, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImConferenceUri);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IM_CONF_URI, txt.getText().toString());
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_CONF_URI, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.EndUserConfReqUri);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.ENDUSER_CONFIRMATION_URI, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.RcsApn);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.RCS_APN, txt.getText().toString());
@@ -279,43 +285,29 @@ public class ProfileProvisioning extends Activity {
 	        	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	        	            int index = spinner.getSelectedItemPosition();
 
-	            			String sipUri;
-	            			String imsPwd;
-	            			String homeDomain;
-	            			String imsAddrForMobile;
-	            			int imsPortForMobile;
-                            String imsAddrForWifi;
-                            int imsPortForWifi;
-	            			String xdms;
-	            			String xdmsPwd;
-	            			String xdmsLogin;
-	            			String chatConfUri;
+	            			String sipUri = "";
+	            			String imsPwd = "";
+	            			String homeDomain = "";
+	            			String imsAddrForMobile = "";
+	            			int imsPortForMobile = 5060;
+                            String imsAddrForWifi = "";
+                            int imsPortForWifi = 5060;
+	            			String xdms = "";
+	            			String xdmsPwd = "";
+	            			String xdmsLogin = "";
+	            			String confUri = "";
+	            			String enduserConfirmUri = "";
 	                        switch(index) {
-	                        	case 0: // Default
-			            			homeDomain = "domain.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "";
+                                case 0:
+                                    homeDomain = "domain.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    imsPwd = "";
 			            			imsAddrForMobile = "127.0.0.1";
 			            			imsPortForMobile = 5060;
 			            			imsAddrForWifi = "127.0.0.1";
 			            			imsPortForWifi = 5060;
-			            			xdms = "127.0.0.1:8080/services";
-			            			xdmsPwd = "";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "conference-factory";
-			            			break;
-			            		default:
-			            			homeDomain = "domain.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "";
-			            			imsAddrForMobile = "127.0.0.1";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "127.0.0.1";
-			            			imsPortForWifi = 5060;
-			            			xdms = "127.0.0.1:8080/services";
-			            			xdmsPwd = "";
-			            			xdmsLogin = "sip:" + number + "@" + homeDomain;
-			            			chatConfUri  = "conference-factory";
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
 	            			}
 
 	            			// Update UI
@@ -344,7 +336,9 @@ public class ProfileProvisioning extends Activity {
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerPassword);
 	        		        txt.setText(xdmsPwd);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImConferenceUri);
-	        		        txt.setText(chatConfUri);
+	        		        txt.setText(confUri);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.EndUserConfReqUri);
+	        		        txt.setText(enduserConfirmUri);
             	        }
 	                })
 	                .setNegativeButton(R.string.label_cancel, null)

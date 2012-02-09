@@ -93,6 +93,11 @@ public class MsrpSession {
      */
     private int msrpTimeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
 
+    /**
+     * Received report flag
+     */
+    private boolean reportReceived = false;
+
 	/**
 	 * The logger
 	 */
@@ -252,7 +257,9 @@ public class MsrpSession {
 		if (logger.isActivated()) {
 			logger.info("Send content (" + contentType + ")");
 		}
-		
+
+        reportReceived = false;
+
 		if (from == null) {
 			throw new MsrpException("From not set");
 		}
@@ -310,8 +317,12 @@ public class MsrpSession {
 				}
 			}
 			
-			// Notify event listener
-			msrpEventListener.msrpDataTransfered(msgId);
+            // Notify event listener
+            if (reportReceived) {
+                msrpEventListener.msrpDataTransfered(msgId);
+            } else {
+                msrpEventListener.msrpTransferAborted();
+            }
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Send chunk failed", e);
@@ -740,6 +751,7 @@ public class MsrpSession {
 		
 		// Unblock wait report
 		synchronized(reportSemaphore) {
+            reportReceived = true;
 			reportSemaphore.notify();
 		}
 	}

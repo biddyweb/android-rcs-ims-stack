@@ -115,12 +115,12 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	    	String multipart =
 	    		"--" + boundary + SipUtils.CRLF +
 	    		"Content-Type: application/sdp" + SipUtils.CRLF +
-    			"Content-Length: " + sdp.length() + SipUtils.CRLF +
+    			"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
 	    		SipUtils.CRLF +
 	    		sdp + SipUtils.CRLF +
 	    		"--" + boundary + SipUtils.CRLF +
 	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
-    			"Content-Length: " + resourceList.length() + SipUtils.CRLF +
+    			"Content-Length: " + resourceList.getBytes().length + SipUtils.CRLF +
 	    		"Content-Disposition: recipient-list" + SipUtils.CRLF +
 	    		SipUtils.CRLF +
 	    		resourceList + SipUtils.CRLF +

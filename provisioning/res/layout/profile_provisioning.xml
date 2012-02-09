@@ -129,7 +129,7 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
 
-	 	<TextView android:text="XDM server address and port:"
+	 	<TextView android:text="XDM server root URI:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
@@ -162,11 +162,22 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="100" android:lines="1"/>
 
-       	<TextView android:text="IM conference URI for group chat:"
+       	<TextView android:text="IM conference URI:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
 		<EditText android:id="@+id/ImConferenceUri"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="100" android:lines="1"/>
+
+       	<TextView android:text="End user confirmation URI:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/EndUserConfReqUri"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"

@@ -277,7 +277,7 @@ public class RegistrationManager extends PeriodicRefresher {
     /**
      * Unregistration
      */
-    public void unRegistration() {
+    public synchronized void unRegistration() {
         if (registered) {
             doUnRegistration();
         } else if (registering) {

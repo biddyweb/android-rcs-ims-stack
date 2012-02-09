@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.richcall.video;
 
 import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -80,16 +81,9 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                     .extractRemoteHost(parser.sessionDescription.connectionInfo);
             MediaDescription mediaVideo = parser.getMediaDescription("video");
             int remotePort = mediaVideo.port;
-            // TODO : parser.getMediaDescriptions must be modified to support
-            // contracted form
-            // Vector<MediaDescription> mediaDescs =
-            // parser.getMediaDescriptions("video");
-            // int remotePort = mediaDescs.firstElement().port;
 
             // Extract video codecs
             VideoCodec[] sdpVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(mediaVideo);
-            // VideoCodec[] sdpVideoCodecs = VideoCodecManager
-            // .ExtractVideoCodecsFromMedias(mediaDescs);
 
             // Codec negotiation
             VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
@@ -106,7 +100,13 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE, ""));
                 return;
             }
-            this.getContent().setEncoding("video/" + selectedVideoCodec.getCodecName());
+            VideoContent content = (VideoContent) getContent();
+            content.setEncoding("video/" + selectedVideoCodec.getCodecName());
+            content.setWidth(selectedVideoCodec.getWidth());
+            content.setHeight(selectedVideoCodec.getHeight());
+
+            // Notify listener
+            getImsService().getImsModule().getCore().getListener().handleContentSharingStreamingInvitation(this);
 
             // Wait invitation answer
             int answer = waitInvitationAnswer();

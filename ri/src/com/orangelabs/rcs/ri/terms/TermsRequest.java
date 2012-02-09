@@ -53,11 +53,6 @@ public class TermsRequest extends Activity implements ClientApiListener {
     private final Handler handler = new Handler();
     
     /**
-     * Remote server
-     */
-    private String remote;
-    
-    /**
      * Request id
      */
     private String id;
@@ -79,7 +74,6 @@ public class TermsRequest extends Activity implements ClientApiListener {
         TextView msg = (TextView)findViewById(R.id.text);
         msg.setText(getIntent().getStringExtra("text"));
 		setTitle(getIntent().getStringExtra("title"));
-		remote = getIntent().getStringExtra("remote");
 		id = getIntent().getStringExtra("id");
 		
 		// Set button callback
@@ -167,7 +161,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Accept terms (no PIN)
-		    	if (termsApi.acceptTerms(remote, id, null)) {
+		    	if (termsApi.acceptTerms(id, null)) {
 			        // Remove notification
 			        TermsRequest.removeNotification(TermsRequest.this, id);
 			        
@@ -190,7 +184,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Reject terms (no PIN)
-		    	if (termsApi.rejectTerms(remote, id, null)) {
+		    	if (termsApi.rejectTerms(id, null)) {
 			        // Remove notification
 			        TermsRequest.removeNotification(TermsRequest.this, id);
 			        

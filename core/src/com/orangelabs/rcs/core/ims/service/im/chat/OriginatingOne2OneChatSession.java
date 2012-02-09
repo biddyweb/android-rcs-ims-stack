@@ -124,12 +124,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		        String multipart = 
 		        	"--" + boundary + SipUtils.CRLF +
 	    			"Content-Type: application/sdp" + SipUtils.CRLF +
-	    			"Content-Length: " + sdp.length() + SipUtils.CRLF +
+	    			"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
 	    			SipUtils.CRLF +
 	    			sdp + SipUtils.CRLF + 
 	    			"--" + boundary + SipUtils.CRLF +
 	    			"Content-Type: " + CpimMessage.MIME_TYPE + SipUtils.CRLF +
-	    			"Content-Length: "+ cpim.length() + SipUtils.CRLF +
+	    			"Content-Length: "+ cpim.getBytes().length + SipUtils.CRLF +
 	    			SipUtils.CRLF +
 	    			cpim + SipUtils.CRLF +
 	    			"--" + boundary + "--" + SipUtils.CRLF;

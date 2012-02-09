@@ -149,7 +149,7 @@ public class XdmManager {
 	 */
 	private HttpResponse sendHttpRequest(HttpRequest request, boolean authenticate) throws IOException, CoreException {
 		// Extract host & port
-		String[] parts = xdmServerAddr.split(":|/");
+		String[] parts = xdmServerAddr.substring(7).split(":|/");
 		String host = parts[0];		
 		int port = Integer.parseInt(parts[1]);
 		String serviceRoot = "";
@@ -458,7 +458,7 @@ public class XdmManager {
 		
 			// Content
 			String user = ImsModule.IMS_USER_PROFILE.getPublicUri();
-			String resList = "http://" + xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(user) + "/index/~~/resource-lists/list%5B@name=%22rcs%22%5D";
+			String resList = xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(user) + "/index/~~/resource-lists/list%5B@name=%22rcs%22%5D";
 			String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + HttpUtils.CRLF +
 				"<rls-services xmlns=\"urn:ietf:params:xml:ns:rls-services\" xmlns:rl=\"urn:ietf:params:xml:ns:resource-lists\">" + HttpUtils.CRLF +
 				"<service uri=\"" + user + ";pres-list=rcs\">" + HttpUtils.CRLF +
@@ -549,7 +549,7 @@ public class XdmManager {
 		
 			// Content
 			String user = ImsModule.IMS_USER_PROFILE.getPublicUri();
-			String resList = "http://" + xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(user) + "/index/~~/resource-lists/list%5B";
+			String resList = xdmServerAddr + "/resource-lists/users/" + HttpUtils.encodeURL(user) + "/index/~~/resource-lists/list%5B";
 			String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + HttpUtils.CRLF +
 				"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" + HttpUtils.CRLF +
 				
@@ -658,8 +658,8 @@ public class XdmManager {
 		
 			// Content
 			String user = ImsModule.IMS_USER_PROFILE.getPublicUri();
-			String blockedList = "http://" + xdmServerAddr + "/resource-lists/users/" + user + "/index/~~/resource-lists/list%5B@name=%22oma_blockedcontacts%22%5D";
-			String grantedList = "http://" + xdmServerAddr + "/resource-lists/users/" + user + "/index/~~/resource-lists/list%5B@name=%22oma_grantedcontacts%22%5D";
+			String blockedList = xdmServerAddr + "/resource-lists/users/" + user + "/index/~~/resource-lists/list%5B@name=%22oma_blockedcontacts%22%5D";
+			String grantedList = xdmServerAddr + "/resource-lists/users/" + user + "/index/~~/resource-lists/list%5B@name=%22oma_grantedcontacts%22%5D";
 			String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + HttpUtils.CRLF +
 				"<cr:ruleset xmlns:ocp=\"urn:oma:xml:xdm:common-policy\" xmlns:pr=\"urn:ietf:params:xml:ns:pres-rules\" xmlns:cr=\"urn:ietf:params:xml:ns:common-policy\">" + HttpUtils.CRLF +
 				
@@ -1132,7 +1132,7 @@ public class XdmManager {
 	 * @return URL
 	 */
 	public String getEndUserPhotoIconUrl() {
-		return "http://" + xdmServerAddr + "/org.openmobilealliance.pres-content/users/" +
+		return xdmServerAddr + "/org.openmobilealliance.pres-content/users/" +
 			HttpUtils.encodeURL(ImsModule.IMS_USER_PROFILE.getPublicUri()) + 
 			"/oma_status-icon/rcs_status_icon";
 	}

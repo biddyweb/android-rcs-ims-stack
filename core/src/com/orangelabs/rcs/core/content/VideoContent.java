@@ -25,6 +25,17 @@ package com.orangelabs.rcs.core.content;
  * @author jexa7410
  */
 public class VideoContent extends MmContent {
+
+    /**
+     * Height
+     */
+    private int height = 0;
+
+    /**
+     * Width
+     */
+    private int width = 0;
+
 	/**
 	 * Constructor
 	 * 
@@ -44,5 +55,41 @@ public class VideoContent extends MmContent {
 	 */
 	public VideoContent(String url, String encoding) {
 		super(url, encoding);
-	}	
+	}
+
+    /**
+     * Set the width
+     *
+     * @param width width
+     */
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    /**
+     * Get the width
+     *
+     * @return width
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * Set the height
+     *
+     * @param height height
+     */
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    /**
+     * Get the height
+     *
+     * @return height
+     */
+    public int getHeight() {
+        return height;
+    }
 }
