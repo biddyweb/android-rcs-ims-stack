@@ -159,7 +159,6 @@ public class PublishManager extends PeriodicRefresher {
 	        SipRequest publish = SipMessageFactory.createPublish(createDialogPath(),
 	        		expirePeriod,
 	        		entityTag,
-	        		imsModule.getCurrentNetworkInterface().getAccessInfo(),
 	        		null);
 	        
 	        // Send PUBLISH request 
@@ -190,7 +189,6 @@ public class PublishManager extends PeriodicRefresher {
             SipRequest publish = SipMessageFactory.createPublish(dialogPath,
             		expirePeriod,
             		entityTag,
-            		imsModule.getCurrentNetworkInterface().getAccessInfo(),
             		info);
             
             // Send PUBLISH request
@@ -224,7 +222,6 @@ public class PublishManager extends PeriodicRefresher {
 	        SipRequest publish = SipMessageFactory.createPublish(dialogPath,
 	        		0,
 	        		entityTag,
-	        		imsModule.getCurrentNetworkInterface().getAccessInfo(),
 	        		null);
             
 	        // Send PUBLISH request
@@ -373,7 +370,6 @@ public class PublishManager extends PeriodicRefresher {
     	SipRequest publish = SipMessageFactory.createPublish(dialogPath,
     			ctx.getTransaction().getRequest().getExpires().getExpires(),
         		entityTag,
-        		imsModule.getCurrentNetworkInterface().getAccessInfo(),
         		dialogPath.getLocalContent());
     	
         // Set the Authorization header
@@ -404,7 +400,6 @@ public class PublishManager extends PeriodicRefresher {
         SipRequest publish = SipMessageFactory.createPublish(dialogPath,
         		expirePeriod,
         		entityTag,
-        		imsModule.getCurrentNetworkInterface().getAccessInfo(),
         		dialogPath.getLocalContent());
 
         // Send PUBLISH request
@@ -448,7 +443,6 @@ public class PublishManager extends PeriodicRefresher {
         SipRequest publish = SipMessageFactory.createPublish(dialogPath,
         		expirePeriod,
         		entityTag,
-        		imsModule.getCurrentNetworkInterface().getAccessInfo(),
         		dialogPath.getLocalContent());
 
         // Send a PUBLISH request

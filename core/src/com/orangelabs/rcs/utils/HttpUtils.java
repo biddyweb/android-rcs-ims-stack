@@ -15,22 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.core;
+
+package com.orangelabs.rcs.utils;
+
+import android.net.Uri;
+
 
 /**
- * User account exception
- * 
- * @author JM. Auffret
+ * HTTP utility functions
  */
-public class UserAccountException extends CoreException {
-	static final long serialVersionUID = 1L;
+public class HttpUtils {
+	/**
+	 * CRLF constant
+	 */
+	public final static String CRLF = "\r\n";
 	
 	/**
-	 * Constructor
-	 *
-	 * @param error Error message
+	 * Encode special characters in URL
+	 * 
+	 * @param url URL to be encoded
+	 * @return Encoded URL
 	 */
-	public UserAccountException(String error) {
-		super(error);
+	public static String encodeURL(String url) {
+		return Uri.encode(url);
 	}
 }

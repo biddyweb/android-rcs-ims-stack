@@ -118,12 +118,21 @@ public class RtpInputStream implements ProcessorInputStream {
 	}
 
     /**
+     * Returns the RTP receiver
+     *
+     * @return RTP receiver
+     */
+    public RtpPacketReceiver getRtpReceiver() {
+    	return rtpReceiver;
+    }
+
+    /**
      * Returns the RTCP receiver
      *
      * @return RTCP receiver
      */
     public RtcpPacketReceiver getRtcpReceiver() {
-    	return rtcpReceiver;
+        return rtcpReceiver;
     }
 
     /**

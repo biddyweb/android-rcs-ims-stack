@@ -18,19 +18,12 @@
 
 package com.orangelabs.rcs.service.api.client.media.video;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Vector;
-
-import android.graphics.Bitmap;
-import android.os.RemoteException;
-import android.os.SystemClock;
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.VideoSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
@@ -44,6 +37,14 @@ import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import android.graphics.Bitmap;
+import android.os.RemoteException;
+import android.os.SystemClock;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Vector;
+
 /**
  * Pre-recorded video RTP player. Supports only H.263 QCIF format.
  * 
@@ -55,7 +56,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
      * List of supported video codecs
      */
     public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H263Config.CODEC_NAME, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
+            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
                     H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
                     H263Config.VIDEO_HEIGHT).getMediaCodec()
     };

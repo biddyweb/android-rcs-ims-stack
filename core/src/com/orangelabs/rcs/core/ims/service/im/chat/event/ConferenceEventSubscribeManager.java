@@ -18,6 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat.event;
 
+import java.io.ByteArrayInputStream;
+import java.util.Vector;
+
+import javax.sip.header.ExpiresHeader;
+import javax.sip.header.SubscriptionStateHeader;
+
+import org.xml.sax.InputSource;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -37,14 +45,6 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import org.xml.sax.InputSource;
-
-import java.io.ByteArrayInputStream;
-import java.util.Vector;
-
-import javax.sip.header.ExpiresHeader;
-import javax.sip.header.SubscriptionStateHeader;
 
 /**
  * Conference event subscribe manager
@@ -271,13 +271,12 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
      * 
 	 * @param dialog SIP dialog path
 	 * @param expirePeriod Expiration period
-	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws Exception
      */
-    private SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod, String accessInfo) throws Exception {
+    private SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod) throws Exception {
     	// Create SUBSCRIBE message
-    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialog, expirePeriod, accessInfo);
+    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialog, expirePeriod);
 
         // Set feature tags
         SipUtils.setFeatureTags(subscribe, InstantMessagingService.CHAT_FEATURE_TAGS);    	
@@ -348,9 +347,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
             }
             
             // Create a SUBSCRIBE request
-	        SipRequest subscribe = createSubscribe(dialogPath,
-	        		expirePeriod,
-	        		imsModule.getCurrentNetworkInterface().getAccessInfo());
+	        SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
 	        
             // Send SUBSCRIBE request
 	        sendSubscribe(subscribe);
@@ -386,8 +383,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 	        dialogPath.incrementCseq();
 
             // Create a SUBSCRIBE with expire 0
-            SipRequest subscribe = createSubscribe(dialogPath, 0,
-            		imsModule.getCurrentNetworkInterface().getAccessInfo());
+            SipRequest subscribe = createSubscribe(dialogPath, 0);
 
             // Send SUBSCRIBE request
 	        sendSubscribe(subscribe);
@@ -556,8 +552,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
         	logger.info("Send second SUBSCRIBE");
         }
     	SipRequest subscribe = createSubscribe(dialogPath,
-    			ctx.getTransaction().getRequest().getExpires().getExpires(),
-    			imsModule.getCurrentNetworkInterface().getAccessInfo());
+    			ctx.getTransaction().getRequest().getExpires().getExpires());
     	
         // Set the Authorization header
         authenticationAgent.setProxyAuthorizationHeader(subscribe);
@@ -600,9 +595,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     	expirePeriod = minExpire;
     	
         // Create a new SUBSCRIBE request with the right expire period
-        SipRequest subscribe = createSubscribe(dialogPath,
-        		expirePeriod,
-        		imsModule.getCurrentNetworkInterface().getAccessInfo());
+        SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
 
 		// Set the Authorization header
 		authenticationAgent.setProxyAuthorizationHeader(subscribe);

@@ -25,6 +25,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263EncoderParams;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
@@ -55,10 +57,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * List of supported video codecs
      */
     public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H264Config.CODEC_NAME, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
+            new VideoCodec(H264Config.CODEC_NAME, H264VideoFormat.PAYLOAD, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
                     H264Config.FRAME_RATE, H264Config.BIT_RATE, H264Config.VIDEO_WIDTH,
                     H264Config.VIDEO_HEIGHT).getMediaCodec(),
-            new VideoCodec(H263Config.CODEC_NAME, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
+            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
                     H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
                     H263Config.VIDEO_HEIGHT).getMediaCodec()
     };

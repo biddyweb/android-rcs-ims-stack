@@ -45,6 +45,8 @@ public class InitiateOutgoingVisioSharing extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        RcsSettings.createInstance(getApplicationContext());
+
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.richcall_initiate_visio_sharing);

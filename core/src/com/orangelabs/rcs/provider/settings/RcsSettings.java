@@ -906,6 +906,30 @@ public class RcsSettings {
     }
 
 	/**
+     * Get country area code
+     *
+     * @return Area code
+     */
+	public String getCountryAreaCode() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.COUNTRY_AREA_CODE);
+		}
+		return result;
+    }
+
+	/**
+     * Set country area code
+     *
+     * @param code Area code
+     */
+	public void setCountryAreaCode(String code) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.COUNTRY_AREA_CODE, code);
+		}
+    }
+
+	/**
      * Get my capabilities
      *
      * @return capability

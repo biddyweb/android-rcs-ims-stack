@@ -228,10 +228,13 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	private Button stopIncomingBtn = null;
 
 	/**
-	 * Video format
+	 * Incoming video format
 	 */
     private String incomingVideoFormat;
 
+	/**
+	 * Outgoing video format
+	 */
     private String outgoingVideoFormat;
 
 	/**
@@ -262,17 +265,25 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         isPrerecordedSession = (filename!=null);
 
         incomingVideoFormat = getIntent().getStringExtra("videotype");
-        if (incomingVideoFormat == null)
+        
+        if (incomingVideoFormat == null) {
             incomingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
+        }
+        
         outgoingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
-        if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
-            // QVGA
-        	videoWidth = 320;
-            videoHeight = 240;
-        } else {
-        	// QCIF
-            videoWidth = 176;
-            videoHeight = 144;
+        
+        videoWidth = getIntent().getIntExtra("videowidth", 0);
+        videoHeight = getIntent().getIntExtra("videoheight", 0);
+        if (videoHeight == 0 || videoWidth == 0) {
+            if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
+                // QVGA
+            	videoWidth = 320;
+                videoHeight = 240;
+            } else {
+            	// QCIF
+                videoWidth = 176;
+                videoHeight = 144;
+            }
         }
 
         // Texts and buttons

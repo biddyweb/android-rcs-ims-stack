@@ -18,6 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.network.sip;
 
+import com.orangelabs.rcs.core.TerminalInfo;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,10 +43,6 @@ import javax.sip.header.UserAgentHeader;
 import javax.sip.message.Message;
 import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
-
-import com.orangelabs.rcs.core.TerminalInfo;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 
 /**
  * SIP utility functions
@@ -349,7 +349,18 @@ public class SipUtils {
     }	
 
     /**
-     * Set feature tags of a message
+     * Set feature tags to a message
+     * 
+     * @param message SIP message
+     * @param tags Table of tags
+     * @throws Exception
+     */
+    public static void setFeatureTags(SipMessage message, String[] tags) throws Exception {
+    	setFeatureTags(message.getStackMessage(), tags);
+    }
+    
+    /**
+     * Set feature tags to a message
      * 
      * @param message SIP stack message
      * @param tags Table of tags
@@ -361,46 +372,32 @@ public class SipUtils {
     }
     
     /**
-     * Set feature tags of a message
-     * 
-     * @param message SIP message
-     * @param tags Table of tags
-     * @throws Exception
-     */
-    public static void setFeatureTags(SipMessage message, String[] tags) throws Exception {
-    	setFeatureTags(message.getStackMessage(), tags);
-    }    
-    
-    /**
-     * Set feature tags of a message
-     * 
-     * @param message SIP message
-     * @param tags List of tags
-     * @throws Exception
-     */
-    public static void setFeatureTags(SipMessage message, List<String> tags) throws Exception {
-        setFeatureTags(message.getStackMessage(), tags);
-    }	
-
-    /**
-     * Set feature tags of a message in Contact header and Accept-Contact header
+     * Set feature tags to a message
      * 
      * @param message SIP stack message
      * @param tags List of tags
      * @throws Exception
      */
     public static void setFeatureTags(Message message, List<String> tags) throws Exception {
+    	setContactFeatureTags(message, tags);
+    	setAcceptContactFeatureTags(message, tags);
+    }
+    
+    /**
+     * Set feature tags to Accept-Contact header
+     * 
+     * @param message SIP stack message
+     * @param tags List of tags
+     * @throws Exception
+     */
+    public static void setAcceptContactFeatureTags(Message message, List<String> tags) throws Exception {
     	if ((tags == null) || (tags.size() == 0)) {
     		return;
     	}
     	
     	// Update Contact header
     	StringBuffer acceptTags = new StringBuffer("*");
-    	ContactHeader contact = (ContactHeader)message.getHeader(ContactHeader.NAME);
     	for(int i=0; i < tags.size(); i++) {
-    		if (contact != null) {
-    			contact.setParameter(tags.get(i), null);
-    		}
     		acceptTags.append(";" + tags.get(i));
     	}
     	
@@ -408,7 +405,28 @@ public class SipUtils {
 		Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, acceptTags.toString());
 		message.addHeader(header);
     }
-    
+
+    /**
+     * Set feature tags to Contact header
+     * 
+     * @param message SIP stack message
+     * @param tags List of tags
+     * @throws Exception
+     */
+    public static void setContactFeatureTags(Message message, List<String> tags) throws Exception {
+        if ((tags == null) || (tags.size() == 0)) {
+            return;
+        }
+        
+        // Update Contact header
+        ContactHeader contact = (ContactHeader)message.getHeader(ContactHeader.NAME);
+        for(int i=0; i < tags.size(); i++) {
+            if (contact != null) {
+                contact.setParameter(tags.get(i), null);
+            }
+        }
+    }
+
     /**
      * Get the Referred-By header
      * 

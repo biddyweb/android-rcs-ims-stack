@@ -33,6 +33,11 @@ public class VideoCodec {
     private MediaCodec mediaCodec;
 
     /**
+     * Payload key
+     */
+    private static final String PAYLOAD = "payload";
+
+    /**
      * Clock rate key
      */
     private static final String CLOCKRATE = "clockRate";
@@ -53,7 +58,7 @@ public class VideoCodec {
     private static final String BITRATE = "bitrate";
 
     /**
-     * Codec with key
+     * Codec width key
      */
     private static final String CODECWIDTH = "codecWidth";
 
@@ -73,9 +78,10 @@ public class VideoCodec {
      * @param width Video width
      * @param height Video height
      */
-    public VideoCodec(String codecName, int clockRate, String codecParams, int framerate,
+    public VideoCodec(String codecName, int payload, int clockRate, String codecParams, int framerate,
             int bitrate, int width, int height) {
         mediaCodec = new MediaCodec(codecName);
+        mediaCodec.setParam(PAYLOAD, "" + payload);
         mediaCodec.setParam(CLOCKRATE, "" + clockRate);
         mediaCodec.setParam(CODECPARAMS, codecParams);
         mediaCodec.setParam(FRAMERATE, "" + framerate);
@@ -109,6 +115,15 @@ public class VideoCodec {
      */
     public String getCodecName() {
         return mediaCodec.getCodecName();
+    }
+
+    /**
+     * Get payload
+     * 
+     * @return payload
+     */
+    public int getPayload() {
+        return mediaCodec.getIntParam(PAYLOAD, 96);
     }
 
     /**

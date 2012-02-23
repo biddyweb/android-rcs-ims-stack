@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.protocol.rtp;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.DummyPacketSourceStream;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpOutputStream;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -60,9 +61,10 @@ public class DummyPacketGenerator extends Thread {
      *
      * @param remoteAddress Remote address
      * @param remotePort Remote port
+     * @param existingInputStream already existing RTP input stream
      * @throws RtpException
      */
-    public void prepareSession(String remoteAddress, int remotePort)
+    public void prepareSession(String remoteAddress, int remotePort, RtpInputStream existingInputStream)
             throws RtpException {
     	try {
     		// Create the input stream
@@ -73,7 +75,7 @@ public class DummyPacketGenerator extends Thread {
 			}
 
             // Create the output stream
-            outputStream = new RtpOutputStream(remoteAddress, remotePort);
+            outputStream = new RtpOutputStream(remoteAddress, remotePort, existingInputStream);
     		outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());

@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.richcall.video;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -41,12 +40,11 @@ public class VideoCodecManager {
      * @return SDP part
      */
     public static String createCodecSdpPart(VideoCodec codec, int localRtpPort) {
-        int payload = MediaRegistry.generateFormat(codec.getCodecName()).getPayload();
-        String result = "m=video " + localRtpPort + " RTP/AVP" + " " + payload + SipUtils.CRLF
-                + "a=rtpmap:" + payload + " " + codec.getCodecName() + "/" + codec.getClockRate() + SipUtils.CRLF
-                + "a=framesize:" + payload + " " + codec.getWidth() + "-" + codec.getHeight() + SipUtils.CRLF
+        String result = "m=video " + localRtpPort + " RTP/AVP" + " " + codec.getPayload() + SipUtils.CRLF
+                + "a=rtpmap:" + codec.getPayload() + " " + codec.getCodecName() + "/" + codec.getClockRate() + SipUtils.CRLF
+                + "a=framesize:" + codec.getPayload() + " " + codec.getWidth() + "-" + codec.getHeight() + SipUtils.CRLF
                 + "a=framerate:" + codec.getFramerate() + SipUtils.CRLF
-                + "a=fmtp:" + payload + " " + codec.getCodecParams() + SipUtils.CRLF;
+                + "a=fmtp:" + codec.getPayload() + " " + codec.getCodecParams() + SipUtils.CRLF;
         return result;
     }
 
@@ -61,7 +59,7 @@ public class VideoCodecManager {
 
         result.append("m=video " + localRtpPort + " RTP/AVP");
         for (int i = 0; i < codecs.length; i++) {
-            result.append(" " + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload());
+            result.append(" " + codecs[i].getPayload());
         }
         result.append(SipUtils.CRLF);
         int framerate = 0;
@@ -72,13 +70,13 @@ public class VideoCodecManager {
         result.append("a=framerate:" + framerate + SipUtils.CRLF);
         for (int i = 0; i < codecs.length; i++) {
             result.append("a=rtpmap:"
-                    + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload() + " "
+                    + codecs[i].getPayload() + " "
                     + codecs[i].getCodecName() + "/" + codecs[i].getClockRate() + SipUtils.CRLF
                     + "a=framesize:"
-                    + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload() + " "
+                    + codecs[i].getPayload() + " "
                     + codecs[i].getWidth() + "-" + codecs[i].getHeight() + SipUtils.CRLF
                     + "a=fmtp:"
-                    + MediaRegistry.generateFormat(codecs[i].getCodecName()).getPayload() + " "
+                    + codecs[i].getPayload() + " "
                     + codecs[i].getCodecParams() + SipUtils.CRLF);
         }
 
@@ -96,8 +94,17 @@ public class VideoCodecManager {
         for (int i = 0; i < proposedCodecs.length; i++) {
             for (int j = 0; j < supportedCodecs.length; j++) {
                 VideoCodec videoCodec = new VideoCodec(supportedCodecs[j]);
-                if (proposedCodecs[i].compare(videoCodec))
-                    return videoCodec;
+                if (proposedCodecs[i].compare(videoCodec)) {
+                    return new VideoCodec(
+                            proposedCodecs[i].getCodecName(),
+                            (proposedCodecs[i].getPayload()==0)?videoCodec.getPayload():proposedCodecs[i].getPayload(),
+                            (proposedCodecs[i].getClockRate()==0)?videoCodec.getClockRate():proposedCodecs[i].getClockRate(),
+                            (proposedCodecs[i].getCodecParams().length()==0)?videoCodec.getCodecParams():proposedCodecs[i].getCodecParams(),
+                            (proposedCodecs[i].getFramerate()==0)?videoCodec.getFramerate():proposedCodecs[i].getFramerate(),
+                            (proposedCodecs[i].getBitrate()==0)?videoCodec.getBitrate():proposedCodecs[i].getBitrate(),
+                            proposedCodecs[i].getWidth(),
+                            proposedCodecs[i].getHeight());
+                }
             }
         }
         return null;
@@ -147,11 +154,13 @@ public class VideoCodecManager {
         MediaAttribute fmtp = mediaVideo.getMediaAttribute("fmtp");
         String codecParameters = "";
         if (fmtp != null) {
-            codecParameters = fmtp.getValue();
+            String value = fmtp.getValue();
+            int index2 = value.indexOf(mediaVideo.payload);
+            codecParameters = value.substring(index2 + mediaVideo.payload.length() + 1);
         }
 
         VideoCodec[] sdpVideoCodecs = new VideoCodec[1];
-        sdpVideoCodecs[0] = new VideoCodec(codecName, clockRate, codecParameters, frameRate, 0,
+        sdpVideoCodecs[0] = new VideoCodec(codecName, Integer.parseInt(mediaVideo.payload), clockRate, codecParameters, frameRate, 0,
                 videoWidth, videoHeight);
 
         return sdpVideoCodecs;

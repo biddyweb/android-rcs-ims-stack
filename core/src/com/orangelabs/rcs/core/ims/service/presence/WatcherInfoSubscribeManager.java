@@ -68,13 +68,12 @@ public class WatcherInfoSubscribeManager extends SubscribeManager {
      * 
 	 * @param dialog SIP dialog path
 	 * @param expirePeriod Expiration period
-	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws SipException
      */
-    public SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod, String accessInfo) throws SipException {
+    public SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod) throws SipException {
     	// Create SUBSCRIBE message
-    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialog, expirePeriod, accessInfo);
+    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialog, expirePeriod);
 
     	// Set the Event header
     	subscribe.addHeader("Event", "presence.winfo");

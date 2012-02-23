@@ -25,6 +25,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
@@ -55,10 +57,10 @@ public class VideoRenderer extends IMediaRenderer.Stub {
      * List of supported video codecs
      */
     public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H264Config.CODEC_NAME, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
+            new VideoCodec(H264Config.CODEC_NAME, H264VideoFormat.PAYLOAD, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
                     H264Config.FRAME_RATE, H264Config.BIT_RATE, H264Config.VIDEO_WIDTH,
                     H264Config.VIDEO_HEIGHT).getMediaCodec(),
-            new VideoCodec(H263Config.CODEC_NAME, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
+            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
                     H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
                     H263Config.VIDEO_HEIGHT).getMediaCodec()
     };
@@ -287,7 +289,8 @@ public class VideoRenderer extends IMediaRenderer.Stub {
             rtpOutput = new MediaRtpOutput();
             rtpOutput.open();
             rtpReceiver.prepareSession(rtpOutput, videoFormat);
-            rtpDummySender.prepareSession(remoteHost, remotePort);
+            rtpDummySender.prepareSession(remoteHost, remotePort, rtpReceiver.getInputStream());
+            rtpDummySender.startSession();
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -346,7 +349,6 @@ public class VideoRenderer extends IMediaRenderer.Stub {
 
         // Start RTP layer
         rtpReceiver.startSession();
-        rtpDummySender.startSession();
 
         // Renderer is started
         videoStartTime = SystemClock.uptimeMillis();

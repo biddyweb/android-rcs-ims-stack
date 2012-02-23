@@ -149,9 +149,7 @@ public class AnonymousFetchRequestTask {
 	 * @throws CoreException
      */
     private SipRequest createSubscribe() throws SipException, CoreException {
-    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialogPath,
-    			0,
-    			imsModule.getCurrentNetworkInterface().getAccessInfo());
+    	SipRequest subscribe = SipMessageFactory.createSubscribe(dialogPath, 0);
     	
     	// Set the Privacy header
     	subscribe.addHeader(SipUtils.HEADER_PRIVACY, "id");

@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.io.IOException;
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -41,6 +38,9 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.io.IOException;
+import java.util.Vector;
 
 /**
  * Terminating one-to-one chat session

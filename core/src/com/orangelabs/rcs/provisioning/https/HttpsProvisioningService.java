@@ -18,11 +18,14 @@
 
 package com.orangelabs.rcs.provisioning.https;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provisioning.ProvisioningInfo;
+import com.orangelabs.rcs.provisioning.ProvisioningParser;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.utils.HttpUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -47,6 +50,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -54,20 +58,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.core.ims.service.presence.xdm.HttpUtils;
-import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provisioning.ProvisioningInfo;
-import com.orangelabs.rcs.provisioning.ProvisioningParser;
-import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 
 /**
  * HTTPS auto configuration service
@@ -79,6 +80,11 @@ public class HttpsProvisioningService extends Service {
 	 * Service name
 	 */
 	public static final String SERVICE_NAME = "com.orangelabs.rcs.provisioning.HTTPS";
+
+    /**
+     * Key for provisioning version 
+     */
+    private static final String REGISTRY_PROVISIONING_VERSION = "ProvisioningVersion";
 
 	/**
 	 * Unknown value
@@ -198,7 +204,7 @@ public class HttpsProvisioningService extends Service {
     		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
     			// Check received network info
     	    	NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-    			if ((networkInfo != null) && networkInfo.isAvailable()) {
+    			if ((networkInfo != null) && networkInfo.isConnected()) {
                     isPending = true;
     				if (logger.isActivated()) {
     					logger.debug("Connected to data network");
@@ -248,7 +254,7 @@ public class HttpsProvisioningService extends Service {
                 if (parser.parse()) {
                     ProvisioningInfo info = parser.getProvisioningInfo();
                     // save version
-                    LauncherUtils.setProvisioningVersion(getApplicationContext(), info.version);
+                    setProvisioningVersion(getApplicationContext(), info.version);
                     if (logger.isActivated()) {
                         logger.debug("Version " + info.version);
                         logger.debug("Validity " + info.validity);
@@ -260,14 +266,14 @@ public class HttpsProvisioningService extends Service {
                             logger.debug("Provisioning forbidden: reset account and stop RCS");
                         }
                         // Reset config
-                        resetRcsConfig();
+                        LauncherUtils.resetRcsConfig(getApplicationContext());
                     } else if (info.version.equals("0") && info.validity == 0) {
                         // Forbidden: reset account + version = 0
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account");
                         }
                         // Reset config
-                        resetRcsConfig();
+                        LauncherUtils.resetRcsConfig(getApplicationContext());
                     } else {
                         // Start retry alarm
                         if (info.validity > 0) {
@@ -278,7 +284,11 @@ public class HttpsProvisioningService extends Service {
                         }
 
                         // Start the RCS service
-                        LauncherUtils.launchRcsCoreService(getApplicationContext());
+                        if (first) {
+                            LauncherUtils.forceLaunchRcsCoreService(getApplicationContext());
+                        } else {
+                            LauncherUtils.launchRcsCoreService(getApplicationContext());
+                        }
                     }
                 } else {
                     if (logger.isActivated()) {
@@ -307,10 +317,10 @@ public class HttpsProvisioningService extends Service {
                 }
 
                 // Reset version to "0"
-                LauncherUtils.setProvisioningVersion(getApplicationContext(), "0");
+                setProvisioningVersion(getApplicationContext(), "0");
 
                 // Reset config
-                resetRcsConfig();
+                LauncherUtils.resetRcsConfig(getApplicationContext());
             } else {
                 // Other error
                 if (logger.isActivated()) {
@@ -328,21 +338,6 @@ public class HttpsProvisioningService extends Service {
                 LauncherUtils.launchRcsCoreService(getApplicationContext());
             }
         }
-    }
-
-    /**
-     * Reset RCS config
-     */
-    private void resetRcsConfig() {
-        // Clean the RCS user profile
-        RcsSettings.getInstance().removeUserProfile();
-
-        // Clean the RCS databases
-        ContactsManager.createInstance(getApplicationContext());
-        ContactsManager.getInstance().deleteRCSEntries();
-
-        // Remove the RCS account 
-        AuthenticationService.removeRcsAccount(getApplicationContext(), null);
     }
 
     /**
@@ -453,7 +448,7 @@ public class HttpsProvisioningService extends Service {
             }
 
 			// Execute second HTTPS request
-			String args = "?vers=" + LauncherUtils.getProvisioningVersion(getApplicationContext())
+			String args = "?vers=" + getProvisioningVersion(getApplicationContext())
                     + "&client_vendor=Orange&client_version=" + getStackVersion()
                     + "&terminal_vendor=" + HttpUtils.encodeURL(getProductManufacturer())
                     + "&terminal_model=" + HttpUtils.encodeURL(getDeviceName())
@@ -567,4 +562,28 @@ public class HttpsProvisioningService extends Service {
 			return UNKNOWN;
 		}		
 	}
+
+    /**
+     * Get the provisioning version from the registry
+     *
+     * @param context application context
+     * @return provisioning version
+     */
+    public static String getProvisioningVersion(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        return preferences.getString(REGISTRY_PROVISIONING_VERSION, "0");
+    }
+
+    /**
+     * Write the provisioning version in the registry
+     *
+     * @param context application context
+     * @param value provisioning version
+     */
+    public static void setProvisioningVersion(Context context, String value) {
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(REGISTRY_PROVISIONING_VERSION, value);
+        editor.commit();
+    }
 }

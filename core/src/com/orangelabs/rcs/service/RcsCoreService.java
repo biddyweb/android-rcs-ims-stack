@@ -18,21 +18,10 @@
 
 package com.orangelabs.rcs.service;
 
-import java.util.Vector;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
-
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreListener;
 import com.orangelabs.rcs.core.TerminalInfo;
-import com.orangelabs.rcs.core.UserAccountException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
@@ -80,6 +69,16 @@ import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.service.api.server.terms.TermsApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.IBinder;
+
+import java.util.Vector;
 
 /**
  * RCS core service. This service offers a flat API to any other process (activities)
@@ -246,19 +245,6 @@ public class RcsCoreService extends Service implements CoreListener {
 			if (logger.isActivated()) {
 				logger.info("RCS core service started with success");
 			}
-        } catch(UserAccountException e){
-			// User account can't be initialized (no radio to read IMSI, .etc)
-			if (logger.isActivated()) {
-				logger.error("Can't create the user account", e);
-			}
-
-			// Send service intent 
-			Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
-			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STOPPED);
-			getApplicationContext().sendBroadcast(intent);
-
-	    	// Exit service
-	    	stopSelf();
 		} catch(Exception e) {
 			// Unexpected error
 			if (logger.isActivated()) {

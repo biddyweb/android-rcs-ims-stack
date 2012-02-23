@@ -363,6 +363,11 @@ public class RcsSettingsData {
      */
 	public static final String COUNTRY_CODE = "CountryCode";
 
+    /**
+     * Country area code
+     */
+	public static final String COUNTRY_AREA_CODE = "CountryAreaCode";
+
 	// ---------------------------------------------------------------------------
 	// Stack settings
 	// ---------------------------------------------------------------------------

@@ -190,11 +190,10 @@ public abstract class SubscribeManager extends PeriodicRefresher {
      * 
 	 * @param dialog SIP dialog path
 	 * @param expirePeriod Expiration period
-	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws SipException
      */
-    public abstract SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod, String accessInfo) throws SipException;
+    public abstract SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod) throws SipException;
     	
 
     /**
@@ -253,9 +252,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
             }
             
             // Create a SUBSCRIBE request
-	        SipRequest subscribe = createSubscribe(dialogPath,
-	        		expirePeriod,
-	        		imsModule.getCurrentNetworkInterface().getAccessInfo());
+	        SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
 	        
             // Send SUBSCRIBE request
 	        sendSubscribe(subscribe);
@@ -291,8 +288,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
 	        dialogPath.incrementCseq();
 
             // Create a SUBSCRIBE with expire 0
-            SipRequest subscribe = createSubscribe(dialogPath, 0,
-            		imsModule.getCurrentNetworkInterface().getAccessInfo());
+            SipRequest subscribe = createSubscribe(dialogPath, 0);
 
             // Send SUBSCRIBE request
 	        sendSubscribe(subscribe);
@@ -461,8 +457,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
         	logger.info("Send second SUBSCRIBE");
         }
     	SipRequest subscribe = createSubscribe(dialogPath,
-    			ctx.getTransaction().getRequest().getExpires().getExpires(),
-        		imsModule.getCurrentNetworkInterface().getAccessInfo());
+    			ctx.getTransaction().getRequest().getExpires().getExpires());
     	
         // Set the Authorization header
         authenticationAgent.setProxyAuthorizationHeader(subscribe);
@@ -505,9 +500,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
     	expirePeriod = minExpire;
     	
         // Create a new SUBSCRIBE request with the right expire period
-        SipRequest subscribe = createSubscribe(dialogPath,
-        		expirePeriod,
-        		imsModule.getCurrentNetworkInterface().getAccessInfo());
+        SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
 
 		// Set the Authorization header
 		authenticationAgent.setProxyAuthorizationHeader(subscribe);

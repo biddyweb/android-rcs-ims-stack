@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.service.api.client;
 
-import java.util.List;
-import java.util.Vector;
-
 import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -30,6 +27,9 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
+
+import java.util.List;
+import java.util.Vector;
 
 /**
  * Client API
@@ -252,7 +252,7 @@ public abstract class ClientApi {
 	
 	/**
 	 * Is service started
-	 * 
+	 *
 	 * @param ctx Context
 	 * @return Boolean
 	 */
@@ -275,20 +275,24 @@ public abstract class ClientApi {
 	
 	/**
 	 * Start RCS service
-	 * 
+	 *
 	 * @param ctx Context
 	 */
 	public static void startRcsService(Context ctx) {
-		ctx.stopService(new Intent("com.orangelabs.rcs.service.RcsCoreService"));
+        ctx.startService(new Intent("com.orangelabs.rcs.service.START"));
+        // Intentional use of string and not class SERVICE_NAME
 	}
 
 	/**
 	 * Stop RCS service
-	 * 
+	 *
 	 * @param ctx Context
 	 */
 	public static void stopRcsService(Context ctx) {
-		ctx.stopService(new Intent("com.orangelabs.rcs.service.RcsCoreService"));
+        ctx.stopService(new Intent("com.orangelabs.rcs.service.START"));
+        ctx.stopService(new Intent("com.orangelabs.rcs.provisioning.HTTPS"));
+        ctx.stopService(new Intent("com.orangelabs.rcs.SERVICE"));
+        // Intentional use of string and not class SERVICE_NAME
 	}
 
 }

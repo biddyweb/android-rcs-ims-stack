@@ -40,6 +40,7 @@ import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.platform.network.SocketConnection;
 import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
 import com.orangelabs.rcs.utils.Base64;
+import com.orangelabs.rcs.utils.HttpUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
