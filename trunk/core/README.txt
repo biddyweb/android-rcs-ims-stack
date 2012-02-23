@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.3.8
+Release 2.3.9
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,7 +9,11 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-
+- Add country area code management.
+- Remove PANI header on SIP REGISTER.
+- Remove feature tags on Accept-Contact header for SIP REGISTER.
+- SIM swap management.
+- Add payload management in media player and renderer.
 
 
 Bugs fixed:
@@ -17,6 +21,12 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.3.9
+- Mantis #0014401	Stack: 500 invalid SDP receive from IMS with special characters in Subject header
+- Mantis #0014016	Chat app: The "display" notifications are not all send by the terminal at screen activation
+
+
 
 v2.3.8
 - Mantis #0014493	Stack: Bad URL encoding for HTTPS provisioning if space in the vendor name

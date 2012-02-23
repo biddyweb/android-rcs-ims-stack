@@ -56,12 +56,7 @@ public class Core {
 	 * IMS module
 	 */
 	private ImsModule imsModule;
-	
-	/**
-	 * User account manager
-	 */
-	private UserAccountManager userAccountManager;
-	
+
 	/**
 	 * Address book manager
 	 */
@@ -125,11 +120,8 @@ public class Core {
 			logger.info("My device UUID is " + DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()));
 		}
 
-        // Create the user account manager
-        userAccountManager = new UserAccountManager(this);
-
         // Initialize the phone utils
-    	PhoneUtils.initialize(AndroidFactory.getApplicationContext());        
+    	PhoneUtils.initialize(AndroidFactory.getApplicationContext());
 
     	// Get country code
         if (logger.isActivated()) {
@@ -166,15 +158,6 @@ public class Core {
 	}
 
 	/**
-	 * Returns the user account manager
-	 * 
-	 * @return User account manager
-	 */
-	public UserAccountManager getAccountManager() {
-		return userAccountManager;
-	}
-	
-	/**
 	 * Returns the address book manager
 	 */
 	public AddressBookManager getAddressBookManager(){
@@ -200,10 +183,7 @@ public class Core {
     		// Already started
     		return;
     	}
-    	   	
-    	// Start the user account manager
-    	userAccountManager.start();
-    	
+
     	// Start the IMS module 
     	imsModule.start();
 
@@ -234,9 +214,6 @@ public class Core {
     	
     	// Stop the address book monitoring
     	addressBookManager.stopAddressBookMonitoring();
-    	   	
-    	// Stop the user account manager
-    	userAccountManager.stop();
 
     	try {
 	    	// Stop the IMS module 

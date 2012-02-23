@@ -77,11 +77,10 @@ public class SipMessageFactory {
      * @param featureTags Feature tags
 	 * @param expirePeriod Expiration period
 	 * @param instanceId UA instance Id
-	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRegister(SipDialogPath dialog, List<String> featureTags, int expirePeriod, String instanceId, String accessInfo) throws SipException {
+    public static SipRequest createRegister(SipDialogPath dialog, List<String> featureTags, int expirePeriod, String instanceId) throws SipException {
 		try {
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -116,7 +115,7 @@ public class SipMessageFactory {
 	        if (instanceId != null) {
 	        	contact.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
 	        }
-	        register.addHeader(contact);	        
+	        register.addHeader(contact);
 
 	        // Set Supported header
 	        String supported;
@@ -126,10 +125,10 @@ public class SipMessageFactory {
 	        	supported = "path";
 	        }
 	        SupportedHeader supportedHeader = SipUtils.HEADER_FACTORY.createSupportedHeader(supported);
-	        register.addHeader(supportedHeader);	        
-	        
+	        register.addHeader(supportedHeader);
+
             // Set feature tags
-            SipUtils.setFeatureTags(register, featureTags);
+            SipUtils.setContactFeatureTags(register, featureTags);
 
             // Set Allow header
 	        SipUtils.buildAllowHeader(register);
@@ -148,12 +147,6 @@ public class SipMessageFactory {
 	        // Set User-Agent header
 	        register.addHeader(SipUtils.buildUserAgentHeader());
 	        
-	        // Set the P-Access-Network-Info header
-	        if (accessInfo != null) {
-		        Header accessInfoHeader = SipUtils.buildAccessNetworkInfo(accessInfo);
-		        register.addHeader(accessInfoHeader);
-	    	}
-	        	    	
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)register.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
@@ -172,11 +165,10 @@ public class SipMessageFactory {
 	 * 
 	 * @param dialog SIP dialog path
 	 * @param expirePeriod Expiration period
-	 * @param accessInfo Access info
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod, String accessInfo) throws SipException {
+    public static SipRequest createSubscribe(SipDialogPath dialog, int expirePeriod) throws SipException {
 		try {
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -225,12 +217,6 @@ public class SipMessageFactory {
 	        // Set Allow header
 	        SipUtils.buildAllowHeader(subscribe);
 	        
-	        // Set the P-Access-Network-Info header
-	    	if (accessInfo != null) {
-		        Header accessInfoHeader = SipUtils.buildAccessNetworkInfo(accessInfo);
-		        subscribe.addHeader(accessInfoHeader);
-	    	}
-	    	
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)subscribe.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
@@ -309,7 +295,7 @@ public class SipMessageFactory {
 	        message.setContent(content, contentTypeHeader);
 	        
 	        // Set the message content length
-			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.length());
+			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.getBytes().length);
 			message.setContentLength(contentLengthHeader);
 			
 	        // Set "rport" (RFC3581)
@@ -331,7 +317,6 @@ public class SipMessageFactory {
 	 * @param dialog SIP dialog path
 	 * @param expirePeriod Expiration period
 	 * @param entityTag Entity tag
-	 * @param accessInfo Access info
 	 * @param sdp SDP part
 	 * @return SIP request
 	 * @throws SipException
@@ -339,7 +324,6 @@ public class SipMessageFactory {
     public static SipRequest createPublish(SipDialogPath dialog,
     		int expirePeriod,
     		String entityTag,
-    		String accessInfo,
     		String sdp) throws SipException {
 		try {
 	        // Set request line header
@@ -389,12 +373,6 @@ public class SipMessageFactory {
 	        // Set User-Agent header
 	        publish.addHeader(SipUtils.buildUserAgentHeader());
 	        
-	        // Set the P-Access-Network-Info header
-	    	if (accessInfo != null) {
-		        Header accessInfoHeader = SipUtils.buildAccessNetworkInfo(accessInfo);
-		        publish.addHeader(accessInfoHeader);
-	    	}
-	        
 	    	// Set the Event header
 	    	publish.addHeader(SipUtils.HEADER_FACTORY.createHeader(EventHeader.NAME, "presence"));
         	
@@ -407,7 +385,7 @@ public class SipMessageFactory {
     		// Set the message content length
 	    	int length = 0;
 	    	if (sdp != null) {
-	    		length = sdp.length();
+	    		length = sdp.getBytes().length;
 	    	}
     		ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(length);
     		publish.setContentLength(contentLengthHeader);
@@ -561,7 +539,7 @@ public class SipMessageFactory {
 	        invite.setContent(content, contentType);
 
 	        // Set the content length
-			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.length());
+			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.getBytes().length);
 			invite.setContentLength(contentLengthHeader);
 			
 	        // Set "rport" (RFC3581)
@@ -624,7 +602,7 @@ public class SipMessageFactory {
 			response.setContent(sdp, contentTypeHeader);
 
 	        // Set the message content length
-			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(sdp.length());
+			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(sdp.getBytes().length);
 			response.setContentLength(contentLengthHeader);
 			
 			SipResponse resp = new SipResponse(response);
@@ -930,7 +908,7 @@ public class SipMessageFactory {
 				response.setContent(sdp, contentTypeHeader);
 				
 			    // Set the content length header
-				ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(sdp.length());
+				ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(sdp.getBytes().length);
 				response.setContentLength(contentLengthHeader);
 			}
 			
@@ -1113,7 +1091,7 @@ public class SipMessageFactory {
 			refer.setContent(resourceList, contentTypeHeader);
 	        
 	        // Set the message content length
-			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(resourceList.length());
+			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(resourceList.getBytes().length);
 			refer.setContentLength(contentLengthHeader);
 
 			// Set the Content-Disposition header

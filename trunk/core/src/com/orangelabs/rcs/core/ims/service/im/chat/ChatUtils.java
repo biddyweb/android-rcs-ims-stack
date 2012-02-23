@@ -17,12 +17,6 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.io.ByteArrayInputStream;
-import java.util.List;
-
-import javax.sip.header.ContactHeader;
-import org.xml.sax.InputSource;
-
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -36,6 +30,13 @@ import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
+
+import org.xml.sax.InputSource;
+
+import java.io.ByteArrayInputStream;
+import java.util.List;
+
+import javax.sip.header.ContactHeader;
 
 /**
  * Chat utility functions
@@ -363,7 +364,7 @@ public class ChatUtils {
 			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF +
-			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.length() + CRLF + 
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
 			CRLF + 
 			content;	
 		return cpim;
@@ -387,7 +388,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_CONTENT_DISPOSITION + ": " + ImdnDocument.NOTIFICATION + CRLF +
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + ImdnDocument.MIME_TYPE + CRLF +
-			CpimMessage.HEADER_CONTENT_LENGTH + ": " + imdn.length() + CRLF + 
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + imdn.getBytes().length + CRLF + 
 			CRLF + 
 			imdn;	
 		   

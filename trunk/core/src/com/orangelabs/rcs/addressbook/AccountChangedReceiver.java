@@ -21,6 +21,7 @@ package com.orangelabs.rcs.addressbook;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -78,8 +79,8 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 					}
 				});
 
-				// Stop the service
-				context.stopService(new Intent("com.orangelabs.rcs.SERVICE"));
+                // Stop the service
+                LauncherUtils.stopRcsService(context);
 			}		
 		} else {
 			// Set the user account manually deleted flag

@@ -22,8 +22,6 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
 
 
-import java.io.IOException;
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
@@ -31,6 +29,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import java.io.IOException;
 
 /**
  * RTP output stream
@@ -79,6 +79,11 @@ public class RtpOutputStream implements ProcessorOutputStream {
     private RtcpSession rtcpSession = null;
 
     /**
+     * RTP Input stream
+     */
+    private RtpInputStream rtpInputStream = null;
+
+    /**
      * The logger
      */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -92,6 +97,21 @@ public class RtpOutputStream implements ProcessorOutputStream {
     public RtpOutputStream(String remoteAddress, int remotePort) {
         this.remoteAddress = remoteAddress;
         this.remotePort = remotePort;
+
+        rtcpSession = new RtcpSession(true, 16000);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param remoteAddress Remote address
+     * @param remotePort Remote port
+     * @param rtpInputStream RTP input stream
+     */
+    public RtpOutputStream(String remoteAddress, int remotePort, RtpInputStream rtpInputStream) {
+        this.remoteAddress = remoteAddress;
+        this.remotePort = remotePort;
+        this.rtpInputStream = rtpInputStream;
 
         rtcpSession = new RtcpSession(true, 16000);
     }
@@ -116,7 +136,6 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * @throws Exception
      */
     public void open() throws Exception {
-
         if (localRtpPort != -1) {
             // Create the RTP receiver
             rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
@@ -136,6 +155,13 @@ public class RtpOutputStream implements ProcessorOutputStream {
                     rtcpSession,
                     rtcpReceiver.getConnection());
             rtcpTransmitter.start();
+        } else if (rtpInputStream != null) { 
+            // Create the RTP transmitter
+            rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession,
+                    rtpInputStream.getRtpReceiver().getConnection());
+            // Create the RTCP transmitter
+            rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1, rtcpSession,
+                    rtpInputStream.getRtpReceiver().getConnection());
         } else {
             // Create the RTP transmitter
             rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);

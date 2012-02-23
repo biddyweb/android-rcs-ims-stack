@@ -41,6 +41,11 @@ public class PhoneUtils {
 	private static String COUNTRY_CODE = "+33";
 	
 	/**
+	 * Country area code
+	 */
+	private static String COUNTRY_AREA_CODE = "0";
+
+	/**
 	 * Set the country code
 	 * 
 	 * @param context Context
@@ -49,6 +54,7 @@ public class PhoneUtils {
 		RcsSettings.createInstance(context);
 		TEL_URI_SUPPORTED = RcsSettings.getInstance().isTelUriFormatUsed();
 		COUNTRY_CODE = RcsSettings.getInstance().getCountryCode();
+		COUNTRY_AREA_CODE = RcsSettings.getInstance().getCountryAreaCode();
 	}
 
 	/**
@@ -81,7 +87,7 @@ public class PhoneUtils {
 		if (phoneNumber.startsWith("00" + COUNTRY_CODE.substring(1))) {
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(4);
 		} else
-		if (COUNTRY_CODE.equals("+33") && phoneNumber.startsWith("0")) {
+		if (phoneNumber.startsWith(COUNTRY_AREA_CODE)) {
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(1);
 		} else
 		if (!phoneNumber.startsWith("+")) {

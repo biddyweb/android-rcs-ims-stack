@@ -236,8 +236,7 @@ public class RegistrationManager extends PeriodicRefresher {
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
             		featureTags,
             		expirePeriod,
-            		instanceId,
-            		networkInterface.getAccessInfo());
+            		instanceId);
 
             // Send REGISTER request
             sendRegister(register);
@@ -306,8 +305,7 @@ public class RegistrationManager extends PeriodicRefresher {
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
             		featureTags,
             		0,
-            		instanceId,
-            		networkInterface.getAccessInfo());
+            		instanceId);
 
             // Send REGISTER request
             sendRegister(register);
@@ -512,8 +510,7 @@ public class RegistrationManager extends PeriodicRefresher {
 		SipRequest register = SipMessageFactory.createRegister(dialogPath,
 				featureTags,
 				ctx.getTransaction().getRequest().getExpires().getExpires(),
-				instanceId,
-				networkInterface.getAccessInfo());
+				instanceId);
 
 		// Set the security header
 		registrationProcedure.writeSecurityHeader(register);
@@ -536,6 +533,9 @@ public class RegistrationManager extends PeriodicRefresher {
 
     	SipResponse resp = ctx.getSipResponse();
 
+		// Increment the Cseq number of the dialog path
+		dialogPath.incrementCseq();
+		
         // Extract the Min-Expire value
         int minExpire = SipUtils.getMinExpiresPeriod(resp);
         if (minExpire == -1) {
@@ -559,8 +559,7 @@ public class RegistrationManager extends PeriodicRefresher {
         SipRequest register = SipMessageFactory.createRegister(dialogPath,
         		featureTags,
         		expirePeriod,
-        		instanceId,
-        		networkInterface.getAccessInfo());
+        		instanceId);
         
         // Set the security header
         registrationProcedure.writeSecurityHeader(register);

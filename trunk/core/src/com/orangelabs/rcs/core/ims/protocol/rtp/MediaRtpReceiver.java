@@ -41,6 +41,11 @@ public class MediaRtpReceiver {
 	 */
 	private int localPort;
 
+    /**
+     * RTP Input Stream
+     */
+    private RtpInputStream inputStream = null;
+
 	/**
 	 * The logger
 	 */
@@ -66,7 +71,7 @@ public class MediaRtpReceiver {
             throws RtpException {
     	try {
 			// Create the input stream
-            RtpInputStream inputStream = new RtpInputStream(localPort, format);
+            inputStream = new RtpInputStream(localPort, format);
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());
@@ -123,4 +128,13 @@ public class MediaRtpReceiver {
 			processor.stopProcessing();
 		}
 	}
+
+    /**
+     * Returns the RTP input stream
+     *
+     * @return RTP input stream
+     */
+    public RtpInputStream getInputStream() {
+        return inputStream;
+    }
 }
