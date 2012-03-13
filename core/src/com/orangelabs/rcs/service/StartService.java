@@ -34,7 +34,6 @@ import android.content.SharedPreferences;
 import android.content.res.XmlResourceParser;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
@@ -87,11 +86,6 @@ public class StartService extends Service {
     private BroadcastReceiver networkStateListener = null;
 
     /**
-     * Account changed broadcast receiver
-     */
-    private AccountChangedReceiver accountChangedReceiver = null;
-
-    /**
      * Last User account
      */
     private String lastUserAccount = null;
@@ -116,41 +110,35 @@ public class StartService extends Service {
         // Instantiate RcsSettings
         RcsSettings.createInstance(getApplicationContext());
 
-        // Get connectivity manager
-        if (connMgr == null) {
-            connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        }
-
-        // Instantiate the network listener
-        networkStateListener = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, final Intent intent) {
-                Thread t = new Thread() {
-                    public void run() {
-                        connectionEvent(intent.getAction());
-                    }
-                };
-                t.start();
+        // Use a network listener to start RCS Core when the data will be ON 
+        if (RcsSettings.getInstance().getAutoConfigMode() == RcsSettingsData.NO_AUTO_CONFIG) {
+            // Get connectivity manager
+            if (connMgr == null) {
+                connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             }
-        };
-
-        // Register network state listener
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(networkStateListener, intentFilter);
+            
+            // Instantiate the network listener
+	        networkStateListener = new BroadcastReceiver() {
+	            @Override
+	            public void onReceive(Context context, final Intent intent) {
+	                Thread t = new Thread() {
+	                    public void run() {
+	                        connectionEvent(intent.getAction());
+	                    }
+	                };
+	                t.start();
+	            }
+	        };
+	
+	        // Register network state listener
+	        IntentFilter intentFilter = new IntentFilter();
+	        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+	        registerReceiver(networkStateListener, intentFilter);
+        }
     }
 
     @Override
     public void onDestroy() {
-        // Unregister account changed broadcast receiver
-        try {
-            unregisterReceiver(accountChangedReceiver);
-        } catch (IllegalArgumentException e) {
-            if (logger.isActivated()){
-                logger.error("Receiver not registered");
-            }
-        }
-
         // Unregister network state listener
         if (networkStateListener != null) {
             unregisterReceiver(networkStateListener);
@@ -171,23 +159,6 @@ public class StartService extends Service {
         // Check boot
         if (intent != null) {
             boot = intent.getBooleanExtra("boot", false);
-        }
-
-        // Create user account change receiver
-        if (accountChangedReceiver != null) {
-            accountChangedReceiver = new AccountChangedReceiver();
-
-            // Register account changed broadcast receiver after a timeout of 2s (This is not done immediately, as we do not want to catch
-            // the removal of the account (creating and removing accounts is done asynchronously). We can reasonably assume that no
-            // RCS account deletion will be done by user during this amount of time, as he just started his service.
-            Handler handler = new Handler();
-            handler.postDelayed(
-                    new Runnable() {
-                        public void run() {
-                            registerReceiver(accountChangedReceiver, new IntentFilter(
-                                    "android.accounts.LOGIN_ACCOUNTS_CHANGED"));
-                        }},
-                    2000);
         }
 
         if (checkAccount()) {
@@ -221,22 +192,23 @@ public class StartService extends Service {
         if (logger.isActivated()) {
             logger.debug("Connection event " + action);
         }
-        if (RcsSettings.getInstance().getAutoConfigMode() != RcsSettingsData.HTTPS_AUTO_CONFIG) {
-            // Try to start the service only if a data connectivity is available
-            if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-                if ((networkInfo != null) && networkInfo.isConnected()) {
-                    if (logger.isActivated()) {
-                        logger.debug("Device connected - Launch RCS service");
-                    }
-                    // Start the RCS service
-                    LauncherUtils.launchRcsCoreService(getApplicationContext());
+        // Try to start the service only if a data connectivity is available
+        if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if ((networkInfo != null) && networkInfo.isConnected()) {
+                if (logger.isActivated()) {
+                    logger.debug("Device connected - Launch RCS service");
+                }
+                // Start the RCS service
+                LauncherUtils.launchRcsCoreService(getApplicationContext());
+                
+                // Stop Network listener
+                if (networkStateListener != null) {
+                	unregisterReceiver(networkStateListener);
+                	networkStateListener = null;
                 }
             }
         }
-        // Stop Network listener
-        unregisterReceiver(networkStateListener);
-        networkStateListener = null;
     }
 
     /**
@@ -331,7 +303,8 @@ public class StartService extends Service {
             
             // Set New user to true
             setNewUserAccount(true);
-        } else if (hasChangedAccount()) {
+        } else
+        if (hasChangedAccount()) {
             // Set the country code
             setCountryCode();
             
@@ -361,6 +334,7 @@ public class StartService extends Service {
                 if (logger.isActivated()) {
                     logger.debug("It was manually destroyed by the user, we do not recreate it");
                 }
+                return false;
             } else {
                 if (logger.isActivated()) {
                     logger.debug("Recreate a new RCS account");

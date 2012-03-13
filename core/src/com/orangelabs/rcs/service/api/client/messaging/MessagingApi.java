@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,6 +206,25 @@ public class MessagingApi extends ClientApi {
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateAdhocGroupChatSession(participants, firstMsg);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+	
+	/**
+	 * Rejoin a chat group session
+	 * 
+     * @param chatId Chat ID
+   	 * @return Chat session
+	 * @throws ClientApiException
+	 */
+	public IChatSession rejoinChatGroupSession(String chatId) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.rejoinChatGroupSession(chatId);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

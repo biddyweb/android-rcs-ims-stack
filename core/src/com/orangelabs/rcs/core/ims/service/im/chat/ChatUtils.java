@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,15 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.io.ByteArrayInputStream;
+import java.util.Date;
+import java.util.List;
+
+import javax2.sip.header.ContactHeader;
+
+import org.xml.sax.InputSource;
+
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -30,13 +39,6 @@ import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
-
-import org.xml.sax.InputSource;
-
-import java.io.ByteArrayInputStream;
-import java.util.List;
-
-import javax.sip.header.ContactHeader;
 
 /**
  * Chat utility functions
@@ -225,6 +227,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isImdnDeliveredRequested(SipRequest request) {
+    	boolean result = false;
 		try {
 			// Read ID from multipart content
 		    String content = request.getContent();
@@ -234,12 +237,13 @@ public class ChatUtils {
 				String part = content.substring(index);
 				String notif = part.substring(0, part.indexOf(CRLF));
 		    	if (notif.indexOf(ImdnDocument.POSITIVE_DELIVERY) != -1) {
-		    		return true;
+		    		result = true;
 		    	}
 			}
 		} catch(Exception e) {
+			result = false;
 		}
-		return false;
+		return result;
     }
     
     /**
@@ -249,6 +253,7 @@ public class ChatUtils {
      * @return Boolean
      */
     public static boolean isImdnDisplayedRequested(SipRequest request) {
+    	boolean result = false;
 		try {
 			// Read ID from multipart content
 		    String content = request.getContent();
@@ -258,13 +263,13 @@ public class ChatUtils {
 				String part = content.substring(index);
 				String notif = part.substring(0, part.indexOf(CRLF));
 		    	if (notif.indexOf(ImdnDocument.DISPLAY) != -1) {
-		    		return true;
+		    		result = true;
 		    	}
 			}
 		} catch(Exception e) {
+			result = false;;
 		}
-		return false;
-    	
+		return result;
     }
     
 	/**
@@ -286,6 +291,7 @@ public class ChatUtils {
 				result = msgId.trim();
 			}
 		} catch(Exception e) {
+			result = null;
 		}
 		return result;
 	}
@@ -402,6 +408,7 @@ public class ChatUtils {
 	 * @return IMDN document
 	 */
 	public static ImdnDocument parseCpimDeliveryReport(String cpim) {
+		ImdnDocument imdn = null;
     	try {
     		// Parse CPIM document
     		CpimParser cpimParser = new CpimParser(cpim);
@@ -411,14 +418,13 @@ public class ChatUtils {
     			String contentType = cpimMsg.getContentType();
     			if ((contentType != null) && ChatUtils.isMessageImdnType(contentType)) {
     				// Parse the IMDN document
-    				ImdnDocument imdn = parseDeliveryReport(cpimMsg.getMessageContent());
-    				return imdn;
+    				imdn = parseDeliveryReport(cpimMsg.getMessageContent());
     			}
     		}
-    		return null;
     	} catch(Exception e) {
-    		return null;
+    		imdn = null;
     	}		
+		return imdn;
 	}
 
 	/**
@@ -452,4 +458,117 @@ public class ChatUtils {
 	        " <delivery-notification><status><" + status + "/></status></delivery-notification>" + CRLF +
 	        "</imdn>";
 	}
+	
+	/**
+	 * Create a first message
+	 * 
+	 * @param remote Remote contact
+	 * @param txt Text message
+	 * @param imdn IMDN flag
+	 * @return First message
+	 */
+	public static InstantMessage createFirstMessage(String remote, String msg, boolean imdn) {
+		if ((msg != null) && (msg.length() > 0)) {
+			String msgId = ChatUtils.generateMessageId();
+			return new InstantMessage(msgId,
+					remote,
+					StringUtils.encodeUTF8(msg),
+					imdn,
+					new Date());
+		} else {
+			return null;
+		}	
+	}
+	
+	/**
+	 * Get the first message
+	 * 
+	 * @param invite Request
+	 * @return First message
+	 */
+	public static InstantMessage getFirstMessage(SipRequest invite) {
+		InstantMessage msg = getFirstMessageFromCpim(invite);
+		if (msg != null) {
+			return msg;
+		} else {
+			return getFirstMessageFromSubject(invite);
+		}
+	}
+
+	/**
+	 * Get the first message from CPIM content
+	 * 
+	 * @param invite Request
+	 * @return First message
+	 */
+	private static InstantMessage getFirstMessageFromCpim(SipRequest invite) {
+		CpimMessage cpimMsg = ChatUtils.extractCpimMessage(invite);
+		if (cpimMsg != null) {
+			String remote = ChatUtils.getReferredIdentity(invite);
+			String msgId = ChatUtils.getMessageId(invite);
+			String txt = cpimMsg.getMessageContent();
+			if ((remote != null) && (msgId != null) && (txt != null)) {
+				return new InstantMessage(msgId,
+						remote,
+						StringUtils.decodeUTF8(txt),
+						ChatUtils.isImdnDisplayedRequested(invite),
+						new Date());
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Get the first message from the Subject header
+	 * 
+	 * @param invite Request
+	 * @return First message
+	 */
+	private static InstantMessage getFirstMessageFromSubject(SipRequest invite) {
+		String subject = invite.getSubject();
+		if ((subject != null) && (subject.length() > 0)) {
+			String remote = ChatUtils.getReferredIdentity(invite);
+			if ((remote != null) && (subject != null)) {
+				return new InstantMessage(ChatUtils.generateMessageId(),
+						remote,
+						StringUtils.decodeUTF8(subject),
+						ChatUtils.isImdnDisplayedRequested(invite),
+						new Date());
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}	
+	
+    /**
+     * Extract CPIM message from incoming INVITE request 
+     * 
+     * @param request Request
+     * @return Boolean
+     */
+    public static CpimMessage extractCpimMessage(SipRequest request) {
+    	CpimMessage message = null;
+		try {
+			// Extract message from content/CPIM
+		    String content = request.getContent();
+		    String boundary = request.getBoundaryContentType();
+			Multipart multi = new Multipart(content, boundary);
+		    if (multi.isMultipart()) {
+		    	String cpimPart = multi.getPart(CpimMessage.MIME_TYPE);
+		    	if (cpimPart != null) {
+					// CPIM part
+	    			CpimParser cpimParser = new CpimParser(cpimPart.getBytes());
+	    			message = cpimParser.getCpimMessage();
+		    	}
+		    }
+		} catch(Exception e) {
+			message = null;
+		}
+		return message;
+    }
 }

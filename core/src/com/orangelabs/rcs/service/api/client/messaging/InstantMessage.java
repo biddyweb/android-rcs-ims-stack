@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,22 +57,6 @@ public class InstantMessage implements Parcelable {
 	 * Flag indicating that an IMDN "displayed" is requested for this message
 	 */
 	private boolean imdnDisplayedRequested = false;
-	
-	/**
-     * Constructor
-     * 
-     * @param messageId Message Id
-     * @param remote Remote user
-     * @param message Text message
-     * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
-     */
-	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested) {
-		this.msgId = messageId;
-		this.remote = remote;
-		this.message = message;
-		this.imdnDisplayedRequested = imdnDisplayedRequested;
-		this.date = new Date();
-	}
 
     /**
      * Constructor
@@ -84,7 +68,10 @@ public class InstantMessage implements Parcelable {
 	 * @param date Date of message
      */
 	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested, Date date) {
-		this(messageId, remote, message, imdnDisplayedRequested);
+		this.msgId = messageId;
+		this.remote = remote;
+		this.message = message;
+		this.imdnDisplayedRequested = imdnDisplayedRequested;
 		this.date = date;
 	}
 

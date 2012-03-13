@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.3.9"
+ android:versionName="2.4.0"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"/>
@@ -173,6 +173,8 @@
         <activity android:name=".messaging.ReceiveChat"/>
 
         <activity android:name=".messaging.ChatView"/>
+
+        <activity android:name=".messaging.RejoinChat"/>
 
         <activity android:name=".messaging.ChatList"/>
         

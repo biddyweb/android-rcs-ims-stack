@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -62,8 +63,8 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		super(parent, ChatUtils.getReferredIdentity(invite));
 
 		// Set first message
-		InstantMessage firstMessage = extractFirstMessage(invite);
-		setFirstMesssage(firstMessage);
+		InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);
+		setFirstMesssage(firstMsg);
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -115,38 +116,26 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 				return;
 			}
 			
-		    // Extract the SDP part
-			String boundary = getDialogPath().getInvite().getBoundaryContentType();
+			// Extract the SDP part
 			byte[] remoteSdp = null;
-			if (boundary != null) {
-				// Multipart content
-				remoteSdp = null;
-			    String content = getDialogPath().getInvite().getContent();
-	    		boundary = "--" + boundary;
-	    		int index  = 0;
-	    		while(index != -1) {
-	    			int begin = content.indexOf(boundary, index);
-	    			int end = content.indexOf(boundary, begin+boundary.length());
-	    			if ((begin != -1) && (end != -1)) {
-	    				String part = content.substring(begin+boundary.length(), end);
-	    				if (part.indexOf("application/sdp") != -1) {
-	    	    			// SDP
-	        				String contentPart = part.substring(part.indexOf("v=")); // TODO: is v= always in first ?
-	    					remoteSdp = contentPart.getBytes();
-	    				} else
-	    				if (part.indexOf("application/resource-lists+xml") != -1) {
-	    					// Resource list
-	        				String contentPart = part.substring(part.indexOf("<?xml")); // TODO: is <?xml always in first ?
-	        				ListOfParticipant participants = new ListOfParticipant(contentPart);
-	    					participants.addParticipant(getRemoteContact());
-	    					setParticipants(participants);
-	    				}
-	    			}
-	    			index = end; 
-	    		}				
-			} else {
-				remoteSdp = getDialogPath().getInvite().getContent().getBytes();
-			}
+		    String content = getDialogPath().getInvite().getContent();
+		    String boundary = getDialogPath().getInvite().getBoundaryContentType();
+			Multipart multi = new Multipart(content, boundary);
+		    if (multi.isMultipart()) {
+		    	// SDP
+		    	remoteSdp = multi.getPart("application/sdp").getBytes(); 
+		    	
+				// Resource list
+		    	String listPart = multi.getPart("application/resource-lists+xml");
+		    	if (listPart != null) {
+					ListOfParticipant participants = new ListOfParticipant(listPart);
+					participants.addParticipant(getRemoteContact());
+					setParticipants(participants);
+		    	}
+		    } else {
+		    	// SDP
+		    	remoteSdp = content.getBytes();
+		    }
 
         	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(remoteSdp);

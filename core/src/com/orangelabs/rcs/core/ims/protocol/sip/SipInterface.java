@@ -24,25 +24,25 @@ import java.util.ListIterator;
 import java.util.Properties;
 import java.util.Vector;
 
-import javax.sip.ClientTransaction;
-import javax.sip.DialogTerminatedEvent;
-import javax.sip.IOExceptionEvent;
-import javax.sip.ListeningPoint;
-import javax.sip.RequestEvent;
-import javax.sip.ResponseEvent;
-import javax.sip.ServerTransaction;
-import javax.sip.SipFactory;
-import javax.sip.SipListener;
-import javax.sip.SipProvider;
-import javax.sip.SipStack;
-import javax.sip.TimeoutEvent;
-import javax.sip.TransactionTerminatedEvent;
-import javax.sip.address.Address;
-import javax.sip.address.SipURI;
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ExtensionHeader;
-import javax.sip.header.Header;
-import javax.sip.header.ViaHeader;
+import javax2.sip.ClientTransaction;
+import javax2.sip.DialogTerminatedEvent;
+import javax2.sip.IOExceptionEvent;
+import javax2.sip.ListeningPoint;
+import javax2.sip.RequestEvent;
+import javax2.sip.ResponseEvent;
+import javax2.sip.ServerTransaction;
+import javax2.sip.SipFactory;
+import javax2.sip.SipListener;
+import javax2.sip.SipProvider;
+import javax2.sip.SipStack;
+import javax2.sip.TimeoutEvent;
+import javax2.sip.TransactionTerminatedEvent;
+import javax2.sip.address.Address;
+import javax2.sip.address.SipURI;
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.ViaHeader;
 
 import android.text.TextUtils;
 
@@ -164,6 +164,11 @@ public class SipInterface implements SipListener {
     private String instanceId = null;
 
     /**
+     * Base timer (in ms)
+     */
+    private int baseTimer = 500;
+    
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -184,6 +189,7 @@ public class SipInterface implements SipListener {
         this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
         this.outboundProxyAddr = proxyAddr;
         this.outboundProxyPort = proxyPort;
+        this.baseTimer = RcsSettings.getInstance().getSipTimerT1();
 
         // Set the default route path
         defaultRoutePath = new Vector<String>();
@@ -207,8 +213,8 @@ public class SipInterface implements SipListener {
 
             // Set SIP stack properties
             Properties properties = new Properties();
-            properties.setProperty("javax.sip.STACK_NAME", localIpAddress);
-            properties.setProperty("gov.nist.javax.sip.THREAD_POOL_SIZE", "1");
+            properties.setProperty("javax2.sip.STACK_NAME", localIpAddress);
+            properties.setProperty("gov2.nist.javax2.sip.THREAD_POOL_SIZE", "1");
             if (sipTraceEnabled) {
                 // Activate SIP stack traces
             	boolean cleanLog = true;
@@ -219,19 +225,19 @@ public class SipInterface implements SipListener {
                 	cleanLog = fs.delete();
                 }
                 if (cleanLog) {
-                	properties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "DEBUG");
-                    properties.setProperty("gov.nist.javax.sip.SERVER_LOG", sipTraceFile);
-                    properties.setProperty("gov.nist.javax.sip.LOG_MESSAGE_CONTENT", "true");
-                    properties.setProperty("gov.nist.javax.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
+                	properties.setProperty("gov2.nist.javax2.sip.TRACE_LEVEL", "DEBUG");
+                    properties.setProperty("gov2.nist.javax2.sip.SERVER_LOG", sipTraceFile);
+                    properties.setProperty("gov2.nist.javax2.sip.LOG_MESSAGE_CONTENT", "true");
+                    properties.setProperty("gov2.nist.javax2.sip.LOG_STACK_TRACE_ON_MESSAGE_SEND", "true");
                 }
             }
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
                 // Set SSL properties
-                properties.setProperty("gov.nist.javax.sip.TLS_CLIENT_PROTOCOLS", "SSLv3, TLSv1");
-                properties.setProperty("javax.net.ssl.keyStoreType", KeyStoreManager.KEYSTORE_TYPE);
-                properties.setProperty("javax.net.ssl.keyStore", KeyStoreManager.getKeystorePath());
-                properties.setProperty("javax.net.ssl.keyStorePassword", KeyStoreManager.KEYSTORE_PASSWORD);
-                properties.setProperty("javax.net.ssl.trustStore",
+                properties.setProperty("gov2.nist.javax2.sip.TLS_CLIENT_PROTOCOLS", "SSLv3, TLSv1");
+                properties.setProperty("javax2.net.ssl.keyStoreType", KeyStoreManager.KEYSTORE_TYPE);
+                properties.setProperty("javax2.net.ssl.keyStore", KeyStoreManager.getKeystorePath());
+                properties.setProperty("javax2.net.ssl.keyStorePassword", KeyStoreManager.KEYSTORE_PASSWORD);
+                properties.setProperty("javax2.net.ssl.trustStore",
                         KeyStoreManager.getKeystorePath());
             }
 
@@ -643,6 +649,7 @@ public class SipInterface implements SipListener {
                 if (transaction == null) {
                     // Create a new transaction
                     transaction = getDefaultSipProvider().getNewClientTransaction(req.getStackMessage());
+                    transaction.setRetransmitTimer(baseTimer);
                     req.setStackTransaction(transaction);
                 }
 
@@ -765,8 +772,8 @@ public class SipInterface implements SipListener {
             }
 
             // Re-use INVITE transaction
-            ClientTransaction inviteTransaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
-            inviteTransaction.getDialog().sendAck(ack.getStackMessage());
+            ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
+            transaction.getDialog().sendAck(ack.getStackMessage());
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Can't send SIP message", e);
@@ -801,8 +808,8 @@ public class SipInterface implements SipListener {
             }
 
             // Create a new transaction
-            ClientTransaction byeTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
-            byeTransaction.getDialog().sendRequest(byeTransaction);
+            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
+            transaction.getDialog().sendRequest(transaction);
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Can't send SIP message", e);
@@ -842,8 +849,8 @@ public class SipInterface implements SipListener {
             }
 
             // Create a new transaction
-            ClientTransaction cancelTransaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
-            cancelTransaction.sendRequest();
+            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
+            transaction.sendRequest();
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Can't send SIP message", e);
@@ -880,6 +887,7 @@ public class SipInterface implements SipListener {
 
             // Get stack transaction
             ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(update.getStackMessage());
+            transaction.setRetransmitTimer(baseTimer);
 
             // Create a transaction context
             SipTransactionContext ctx = new SipTransactionContext(transaction);

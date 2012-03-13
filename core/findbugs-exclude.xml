@@ -4,10 +4,10 @@
         switch has been checked and is intentional.
     -->
     <Match>
-        <Package name="~javax\..*"/>
+        <Package name="~javax2\..*"/>
     </Match>
     <Match>
-        <Package name="~gov\..*"/>
+        <Package name="~gov2\..*"/>
     </Match>
 
     <!--

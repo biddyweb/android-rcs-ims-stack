@@ -126,6 +126,7 @@
 <string name="menu_one_to_one_chat">One-to-one chat</string>
 <string name="menu_adhoc_group_chat">Ad-hoc group chat</string>
 <string name="menu_chat_list">Chat sessions</string>
+<string name="menu_rejoin_chat">Rejoin group chat</string>
 <string name="label_im_capable_contacts_header">Click to Block/Unblock a RCS contact</string>
 <string name="label_contact_blocked">%s has been blocked</string>
 <string name="label_contact_unblocked">%s has been unblocked</string>
@@ -139,6 +140,7 @@
 <string name="title_chat_view_group">Chat group</string>
 <string name="title_chat_view_oneone">Chat with</string>
 <string name="title_chat_exit">Are you sure to close session?</string>
+<string name="title_chat_rejoin">Do you want to rejoin the group chat session?</string>
 <string name="label_chat_aborted">Chat session aborted</string>
 <string name="menu_insert_smiley">Smiley</string>
 <string name="menu_participants">Participants</string>
@@ -167,6 +169,10 @@
 <string name="menu_unspam">Move to my messages</string>
 <string name="menu_clear_all_spams">Clear all spams</string>
 <string name="label_spam_empty">No spam</string>
+<string name="label_session">Last session:</string>
+<string name="label_rejoin">Rejoin</string>
+<string name="label_rejoin_chat_failed">Can\'t rejoin the session (session no more exist or session error)</string>
+<string name="label_rejoin_chat_success">Session has been rejoined with success, you can return to the chat view via the chat list</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>

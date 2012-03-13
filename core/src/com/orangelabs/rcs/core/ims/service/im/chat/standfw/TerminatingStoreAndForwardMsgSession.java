@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.service.im.chat.standfw;
 import java.io.IOException;
 import java.util.Vector;
 
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -66,8 +67,8 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 		super(parent, ChatUtils.getReferredIdentity(invite));
 
 		// Set first message
-		InstantMessage firstMessage = extractFirstMessage(invite);
-		setFirstMesssage(firstMessage);
+    	InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);
+		setFirstMesssage(firstMsg);
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -134,25 +135,15 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 			byte[] remoteSdp = null;
 		    String content = getDialogPath().getInvite().getContent();
 		    String boundary = getDialogPath().getInvite().getBoundaryContentType();
-		    if (boundary != null) {
-	    		int index  = 0;
-	    		while(index != -1) {
-	    			int begin = content.indexOf("--" + boundary, index);
-	    			int end = content.indexOf(boundary, begin+boundary.length());
-	    			if ((begin != -1) && (end != -1)) {
-	    				String part = content.substring(begin+boundary.length(), end);
-	    				if (part.indexOf("application/sdp") != -1) {
-	    	    			// SDP
-	        				String contentPart = part.substring(part.indexOf("v=")); // TODO: is v= always in first ?
-	    					remoteSdp = contentPart.getBytes();
-	    				}
-	    			}
-	    			index = end; 
-	    		}
+			Multipart multi = new Multipart(content, boundary);
+		    if (multi.isMultipart()) {
+		    	// SDP
+		    	remoteSdp = multi.getPart("application/sdp").getBytes(); 
 		    } else {
+		    	// SDP
 		    	remoteSdp = content.getBytes();
 		    }
-			
+		    
         	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(remoteSdp);
     		Vector<MediaDescription> media = parser.getMediaDescriptions();

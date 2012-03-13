@@ -64,8 +64,9 @@ public class VideoCodecManager {
         result.append(SipUtils.CRLF);
         int framerate = 0;
         for (int i = 0; i < codecs.length; i++) {
-            if (codecs[i].getFramerate() > framerate)
+            if (codecs[i].getFramerate() > framerate) {
                 framerate = codecs[i].getFramerate();
+            }
         }
         result.append("a=framerate:" + framerate + SipUtils.CRLF);
         for (int i = 0; i < codecs.length; i++) {
@@ -117,52 +118,71 @@ public class VideoCodecManager {
      * @return List of video codec
      */
     public static VideoCodec[] extractVideoCodecsFromSdp(MediaDescription mediaVideo) {
-        String rtpmap = mediaVideo.getMediaAttribute("rtpmap").getValue();
+    	try {
+	        String rtpmap = mediaVideo.getMediaAttribute("rtpmap").getValue();
+	
+	        // Extract encoding name
+	        String encoding = rtpmap.substring(
+	        		rtpmap.indexOf(mediaVideo.payload) + mediaVideo.payload.length() + 1);
+	        String codecName = encoding.toLowerCase().trim();
+	
+	        // Extract clock rate
+	        int clockRate = 0;
+	        int index = encoding.indexOf("/");
+	        if (index != -1) {
+	            codecName = encoding.substring(0, index);
+	            clockRate = Integer.parseInt(encoding.substring(index + 1));
+	        }
+	
+	        // Extract video size
+	        MediaAttribute frameSize = mediaVideo.getMediaAttribute("framesize");
+	        int videoWidth = H263Config.VIDEO_WIDTH; // default value
+	        int videoHeight = H263Config.VIDEO_HEIGHT; // default value
+	        if (frameSize != null) {
+	        	try {
+		            String value = frameSize.getValue();
+		            int index2 = value.indexOf(mediaVideo.payload);
+		            int separator = value.indexOf('-');
+		            if ((index2 != -1) && (separator != -1)) {
+			            videoWidth = Integer.parseInt(
+			            		value.substring(index2 + mediaVideo.payload.length() + 1,
+			                    separator));
+			            videoHeight = Integer.parseInt(value.substring(separator + 1));
+		            }
+	        	} catch(NumberFormatException e) {
+	        		// Use default value
+	        	}
+	        }
+	        
+	        // Extract frame rate
+	        MediaAttribute attr = mediaVideo.getMediaAttribute("framerate");
+	        int frameRate = H263Config.FRAME_RATE; // default value
+	        if (attr != null) {
+	            frameRate = Integer.parseInt(attr.getValue());
+	        }
+	
+	        // Extract the video codec parameters.
+	        MediaAttribute fmtp = mediaVideo.getMediaAttribute("fmtp");
+	        String codecParameters = "";
+	        if (fmtp != null) {
+	            String value = fmtp.getValue();
+	            int index2 = value.indexOf(mediaVideo.payload);
+	            if ((index2 > 0) && (value.length() > mediaVideo.payload.length())) {
+	            	codecParameters = value.substring(index2 + mediaVideo.payload.length() + 1);
+	            }
+	        }
 
-        // Extract video encoding
-        String encoding = rtpmap.substring(rtpmap.indexOf(mediaVideo.payload)
-                + mediaVideo.payload.length() + 1);
-        String codecName = encoding.toLowerCase().trim();
-        int clockRate = 0;
-        int index = encoding.indexOf("/");
-        if (index != -1) {
-            codecName = encoding.substring(0, index);
-            clockRate = Integer.parseInt(encoding.substring(index + 1));
-        }
-
-        // Extract video size
-        MediaAttribute frameSize = mediaVideo.getMediaAttribute("framesize");
-        int videoWidth = H263Config.VIDEO_WIDTH; // default value
-        int videoHeight = H263Config.VIDEO_HEIGHT; // default value
-        if (frameSize != null) {
-            String value = frameSize.getValue();
-            int index2 = value.indexOf(mediaVideo.payload);
-            int separator = value.indexOf('-');
-            videoWidth = Integer.parseInt(value.substring(index2 + mediaVideo.payload.length() + 1,
-                    separator));
-            videoHeight = Integer.parseInt(value.substring(separator + 1));
-        }
-
-        // Extract frame rate
-        MediaAttribute attr = mediaVideo.getMediaAttribute("framerate");
-        int frameRate = H263Config.FRAME_RATE; // default value
-        if (attr != null) {
-            frameRate = Integer.parseInt(attr.getValue());
-        }
-
-        // Extract the video codec parameters.
-        MediaAttribute fmtp = mediaVideo.getMediaAttribute("fmtp");
-        String codecParameters = "";
-        if (fmtp != null) {
-            String value = fmtp.getValue();
-            int index2 = value.indexOf(mediaVideo.payload);
-            codecParameters = value.substring(index2 + mediaVideo.payload.length() + 1);
-        }
-
-        VideoCodec[] sdpVideoCodecs = new VideoCodec[1];
-        sdpVideoCodecs[0] = new VideoCodec(codecName, Integer.parseInt(mediaVideo.payload), clockRate, codecParameters, frameRate, 0,
-                videoWidth, videoHeight);
-
-        return sdpVideoCodecs;
+	        // Create a video codec
+	        VideoCodec[] sdpVideoCodecs = new VideoCodec[1];
+	        sdpVideoCodecs[0] = new VideoCodec(codecName,
+	        		Integer.parseInt(mediaVideo.payload), clockRate,
+	        		codecParameters, frameRate, 0,
+	                videoWidth, videoHeight);
+	        return sdpVideoCodecs;
+    	} catch(NullPointerException e) {
+        	return new VideoCodec[0];
+		} catch(IndexOutOfBoundsException e) {
+        	return new VideoCodec[0];
+		}
     }
 }

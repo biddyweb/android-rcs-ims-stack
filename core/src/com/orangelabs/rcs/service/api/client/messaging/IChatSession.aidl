@@ -10,6 +10,9 @@ interface IChatSession {
 	// Get session ID
 	String getSessionID();
 
+	// Get chat ID
+	String getChatID();
+
 	// Get remote contact
 	String getRemoteContact();
 	

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.orangelabs.rcs.ri.messaging.ChatList;
 import com.orangelabs.rcs.ri.messaging.InitiateChat;
 import com.orangelabs.rcs.ri.messaging.InitiateChatGroup;
 import com.orangelabs.rcs.ri.messaging.InitiateFileTransfer;
+import com.orangelabs.rcs.ri.messaging.RejoinChat;
 import com.orangelabs.rcs.ri.messaging.SpamBox;
 import com.orangelabs.rcs.ri.utils.Utils;
 
@@ -54,6 +55,7 @@ public class MessagingRI extends ListActivity {
     		getString(R.string.menu_transfer_file),
     		getString(R.string.menu_one_to_one_chat),
     		getString(R.string.menu_adhoc_group_chat),
+    		getString(R.string.menu_rejoin_chat),
     		getString(R.string.menu_chat_list),
     		getString(R.string.menu_spambox)
         };
@@ -81,10 +83,13 @@ public class MessagingRI extends ListActivity {
 	        case 3:
             	startActivity(new Intent(this, InitiateChatGroup.class));
 	            break;
-	        case 4: 
+	        case 4:
+	        	startActivity(new Intent(this, RejoinChat.class));
+	        	break;
+	        case 5: 
 	        	startActivity(new Intent(this, ChatList.class));
 	            break;
-	        case 5:
+	        case 6:
 	        	startActivity(new Intent(this, SpamBox.class));
 	        	break;
         }

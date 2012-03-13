@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,36 +28,36 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-import gov.nist.javax.sip.Utils;
+import gov2.nist.javax2.sip.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import javax.sip.ClientTransaction;
-import javax.sip.Transaction;
-import javax.sip.address.Address;
-import javax.sip.address.URI;
-import javax.sip.header.AcceptHeader;
-import javax.sip.header.CSeqHeader;
-import javax.sip.header.CallIdHeader;
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ContentDispositionHeader;
-import javax.sip.header.ContentLengthHeader;
-import javax.sip.header.ContentTypeHeader;
-import javax.sip.header.EventHeader;
-import javax.sip.header.ExpiresHeader;
-import javax.sip.header.FromHeader;
-import javax.sip.header.Header;
-import javax.sip.header.ReferToHeader;
-import javax.sip.header.RequireHeader;
-import javax.sip.header.RouteHeader;
-import javax.sip.header.SIPIfMatchHeader;
-import javax.sip.header.SupportedHeader;
-import javax.sip.header.ToHeader;
-import javax.sip.header.ViaHeader;
-import javax.sip.message.Request;
-import javax.sip.message.Response;
+import javax2.sip.ClientTransaction;
+import javax2.sip.Transaction;
+import javax2.sip.address.Address;
+import javax2.sip.address.URI;
+import javax2.sip.header.AcceptHeader;
+import javax2.sip.header.CSeqHeader;
+import javax2.sip.header.CallIdHeader;
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ContentDispositionHeader;
+import javax2.sip.header.ContentLengthHeader;
+import javax2.sip.header.ContentTypeHeader;
+import javax2.sip.header.EventHeader;
+import javax2.sip.header.ExpiresHeader;
+import javax2.sip.header.FromHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.ReferToHeader;
+import javax2.sip.header.RequireHeader;
+import javax2.sip.header.RouteHeader;
+import javax2.sip.header.SIPIfMatchHeader;
+import javax2.sip.header.SupportedHeader;
+import javax2.sip.header.ToHeader;
+import javax2.sip.header.ViaHeader;
+import javax2.sip.message.Request;
+import javax2.sip.message.Response;
 
 /**
  * SIP message factory

@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,6 +176,9 @@ public class StackProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.SipListeningPort);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_DEFAULT_PORT));
 
+        txt = (EditText)this.findViewById(R.id.SipTimer);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TIMER_T1));
+
         txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT));
 
@@ -309,7 +312,10 @@ public class StackProvisioning extends Activity {
 		        EditText txt = (EditText)this.findViewById(R.id.SipListeningPort);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PORT, txt.getText().toString());
 
-		        txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
+		        txt = (EditText)this.findViewById(R.id.SipTimer);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TIMER_T1, txt.getText().toString());
+
+				txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SipKeepAlivePeriod);

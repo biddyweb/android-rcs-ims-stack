@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -73,9 +74,9 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * Send a text message
 	 * 
 	 * @param id Message-ID
-	 * @param msg Message
+	 * @param txt Text message
 	 */
-	public void sendTextMessage(String msgId, String msg) {
+	public void sendTextMessage(String msgId, String txt) {
 		boolean useImdn = getImdnManager().isImdnActivated();
 		String content;
 		String mime;
@@ -83,11 +84,11 @@ public abstract class OneOneChatSession extends ChatSession {
 			// Send message in CPIM + IMDN headers
 			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 			String to = getRemoteContact();
-			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, StringUtils.encodeUTF8(msg), InstantMessage.MIME_TYPE);
+			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 			mime = CpimMessage.MIME_TYPE;
 		} else {
 			// Send message in plain text
-			content = StringUtils.encodeUTF8(msg);
+			content = StringUtils.encodeUTF8(txt);
 			mime = InstantMessage.MIME_TYPE;
 		}
 
@@ -95,7 +96,8 @@ public abstract class OneOneChatSession extends ChatSession {
 		boolean result = sendDataChunks(msgId, content, mime);
 
 		// Update rich messaging history
-		RichMessaging.getInstance().addOutgoingChatMessage(new InstantMessage(msgId, getRemoteContact(), msg, useImdn), this);
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn, new Date());
+		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not
 		if (!result) {

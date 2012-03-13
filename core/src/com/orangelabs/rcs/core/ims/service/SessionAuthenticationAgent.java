@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.service;
 
-import javax.sip.header.ProxyAuthenticateHeader;
-import javax.sip.header.ProxyAuthorizationHeader;
+import javax2.sip.header.ProxyAuthenticateHeader;
+import javax2.sip.header.ProxyAuthorizationHeader;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;

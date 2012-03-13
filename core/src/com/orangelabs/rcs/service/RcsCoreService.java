@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.service;
 
 import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreListener;
 import com.orangelabs.rcs.core.TerminalInfo;
@@ -76,6 +77,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Handler;
 import android.os.IBinder;
 
 import java.util.Vector;
@@ -137,6 +140,11 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
 	private SipApiService sipApi = new SipApiService(); 
 
+    /**
+     * Account changed broadcast receiver
+     */
+    private AccountChangedReceiver accountChangedReceiver = null;
+
 	/**
 	 * The logger
 	 */
@@ -156,6 +164,17 @@ public class RcsCoreService extends Service implements CoreListener {
 	
     @Override
     public void onDestroy() {
+        // Unregister account changed broadcast receiver
+        try {
+            if (accountChangedReceiver != null) {
+            	unregisterReceiver(accountChangedReceiver);
+            }
+        } catch (IllegalArgumentException e) {
+            if (logger.isActivated()){
+                logger.error("Receiver not registered");
+            }
+        }
+
     	// Close APIs
     	imsApi.close();
     	termsApi.close();
@@ -233,7 +252,24 @@ public class RcsCoreService extends Service implements CoreListener {
 			
 			// Init CPU manager
 			cpuManager.init();
-			
+
+            // Create user account change receiver
+            if (accountChangedReceiver == null) {
+                accountChangedReceiver = new AccountChangedReceiver();
+
+                // Register account changed broadcast receiver after a timeout of 2s (This is not done immediately, as we do not want to catch
+                // the removal of the account (creating and removing accounts is done asynchronously). We can reasonably assume that no
+                // RCS account deletion will be done by user during this amount of time, as he just started his service.
+                Handler handler = new Handler();
+                handler.postDelayed(
+                        new Runnable() {
+                            public void run() {
+                                registerReceiver(accountChangedReceiver, new IntentFilter(
+                                        "android.accounts.LOGIN_ACCOUNTS_CHANGED"));
+                            }},
+                        2000);
+            }
+
 	        // Show a first notification
 	    	addRcsServiceNotification(false, getString(R.string.rcs_core_loaded));
 

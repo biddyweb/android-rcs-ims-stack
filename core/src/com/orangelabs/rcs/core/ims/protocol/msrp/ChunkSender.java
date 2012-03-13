@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,8 +104,7 @@ public class ChunkSender extends Thread {
 				if (MsrpConnection.MSRP_TRACE_ENABLED) {
 					System.out.println(">>> Send MSRP message:\n" + new String(chunk));
 				}
-				stream.write(chunk);
-				stream.flush();
+				writeData(chunk);
 			}
 		} catch (Exception e) {
 			if (terminated) { 
@@ -147,6 +146,16 @@ public class ChunkSender extends Thread {
 		if (MsrpConnection.MSRP_TRACE_ENABLED) {
 			System.out.println(">>> Send MSRP message:\n" + new String(chunk));
 		}
+		writeData(chunk);
+	}
+	
+	/**
+	 * Write data to the stream
+	 * 
+	 * @param chunk Data chunck
+	 * @throws IOException
+	 */
+	private synchronized void writeData(byte chunk[]) throws IOException {
 		stream.write(chunk);
 		stream.flush();
 	}
