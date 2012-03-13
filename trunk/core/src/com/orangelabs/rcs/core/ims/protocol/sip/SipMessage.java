@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,26 +18,26 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
-import gov.nist.javax.sip.header.extensions.SessionExpiresHeader;
+import gov2.nist.javax2.sip.header.extensions.SessionExpiresHeader;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 
-import javax.sip.Transaction;
-import javax.sip.header.AcceptHeader;
-import javax.sip.header.CSeqHeader;
-import javax.sip.header.CallIdHeader;
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ContentTypeHeader;
-import javax.sip.header.ExtensionHeader;
-import javax.sip.header.FromHeader;
-import javax.sip.header.Header;
-import javax.sip.header.SubjectHeader;
-import javax.sip.header.ToHeader;
-import javax.sip.header.ViaHeader;
-import javax.sip.message.Message;
+import javax2.sip.Transaction;
+import javax2.sip.header.AcceptHeader;
+import javax2.sip.header.CSeqHeader;
+import javax2.sip.header.CallIdHeader;
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ContentTypeHeader;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.FromHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.SubjectHeader;
+import javax2.sip.header.ToHeader;
+import javax2.sip.header.ViaHeader;
+import javax2.sip.message.Message;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 

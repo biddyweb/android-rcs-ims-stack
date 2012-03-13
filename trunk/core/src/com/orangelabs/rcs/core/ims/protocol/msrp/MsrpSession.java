@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,11 +69,6 @@ public class MsrpSession {
 	private Object respSemaphore = new Object();
 
 	/**
-	 * Semaphore object used to wait a report
-	 */
-	private Object reportSemaphore = new Object();
-
-	/**
 	 * Received chunks
 	 */
 	private DataChunks receivedChunks = new DataChunks();	
@@ -92,13 +87,18 @@ public class MsrpSession {
      * MRSP timeout (in seconds)
      */
     private int msrpTimeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
+    
+	/**
+	 * Semaphore object used to wait a report
+	 */
+	private Object reportSemaphore = new Object();
 
     /**
-     * Received report flag
+     * Reported size
      */
-    private boolean reportReceived = false;
+    private long reportedSize = 0L;
 
-	/**
+    /**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -258,7 +258,7 @@ public class MsrpSession {
 			logger.info("Send content (" + contentType + ")");
 		}
 
-        reportReceived = false;
+		reportedSize = 0L;
 
 		if (from == null) {
 			throw new MsrpException("From not set");
@@ -310,15 +310,17 @@ public class MsrpSession {
 				}
 				
 				// Wait report
-				synchronized(reportSemaphore) {
-					try {
-						reportSemaphore.wait();
-					} catch (InterruptedException e) {}
+				while(reportedSize != totalSize) {
+					synchronized(reportSemaphore) {
+						try {
+							reportSemaphore.wait();
+						} catch (InterruptedException e) {}
+					}
 				}
 			}
 			
             // Notify event listener
-            if (reportReceived) {
+            if ((reportedSize == totalSize) || (reportedSize == -1)) {
                 msrpEventListener.msrpDataTransfered(msgId);
             } else {
                 msrpEventListener.msrpTransferAborted();
@@ -749,9 +751,12 @@ public class MsrpSession {
 			logger.info("REPORT request received (transaction=" + txId + ")");
 		}
 		
+		// Update reported size
+		String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
+		reportedSize += MsrpUtils.getChunkSize(byteRange);
+		
 		// Unblock wait report
 		synchronized(reportSemaphore) {
-            reportReceived = true;
 			reportSemaphore.notify();
 		}
 	}

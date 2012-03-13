@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class DateUtils {
 	 * Decode a string date to long value (see RFC 3339)
 	 * 
 	 * @param date Date as string
-	 * @return Milliseconds or -1 in case of error
+	 * @return Milliseconds
 	 */
 	public static long decodeDate(String date) {
 		Time t = new Time(UTC.getID());

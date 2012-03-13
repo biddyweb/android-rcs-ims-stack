@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Registry;
 import com.orangelabs.rcs.ri.utils.SmileyParser;
 import com.orangelabs.rcs.ri.utils.Smileys;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -221,6 +222,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 
         // Disconnect messaging API
         messagingApi.removeApiEventListener(this);
+        messagingApi.removeImsEventListener(this);
         messagingApi.disconnectApi();
     }
     
@@ -489,7 +491,6 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	    				setTitle(getString(R.string.title_chat_view_oneone) + " " +
 	    						PhoneUtils.extractNumberFromUri(participants.get(0))); 
 	    			}
-	    			
 	    		} catch(Exception e) {
 	    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_failed));
 	    		}
@@ -532,6 +533,16 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
 		// Session is started
 		public void handleSessionStarted() {
+			try {
+				// Save chat session ID to rejoin last group chat session
+				if (isGroupChat) {
+					Registry registry = new Registry(ChatView.this);
+					registry.writeString(RejoinChat.REGISTRY_CHAT_ID, chatSession.getChatID());
+				}
+			} catch(RemoteException e) {
+				// Nothing to do here
+			}
+			
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
@@ -679,7 +690,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		}
 		return buf;
 	}
-    
+
     /**
      * Quit the session
      */
@@ -912,6 +923,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     	alert.show();
     }
 
+    
     /**********************************************************************
      ******************	Deals with isComposing feature ********************
      **********************************************************************/

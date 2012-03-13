@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,21 +28,21 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import javax.sip.InvalidArgumentException;
-import javax.sip.address.AddressFactory;
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ExtensionHeader;
-import javax.sip.header.Header;
-import javax.sip.header.HeaderFactory;
-import javax.sip.header.MaxForwardsHeader;
-import javax.sip.header.MinExpiresHeader;
-import javax.sip.header.RecordRouteHeader;
-import javax.sip.header.RouteHeader;
-import javax.sip.header.ServerHeader;
-import javax.sip.header.UserAgentHeader;
-import javax.sip.message.Message;
-import javax.sip.message.MessageFactory;
-import javax.sip.message.Request;
+import javax2.sip.InvalidArgumentException;
+import javax2.sip.address.AddressFactory;
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.HeaderFactory;
+import javax2.sip.header.MaxForwardsHeader;
+import javax2.sip.header.MinExpiresHeader;
+import javax2.sip.header.RecordRouteHeader;
+import javax2.sip.header.RouteHeader;
+import javax2.sip.header.ServerHeader;
+import javax2.sip.header.UserAgentHeader;
+import javax2.sip.message.Message;
+import javax2.sip.message.MessageFactory;
+import javax2.sip.message.Request;
 
 /**
  * SIP utility functions
@@ -54,7 +54,7 @@ public class SipUtils {
 	 * CRLF constant
 	 */
 	public final static String CRLF = "\r\n";
-			
+	
 	/**
 	 * Header factory
 	 */

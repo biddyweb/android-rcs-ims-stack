@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,11 +42,11 @@ import java.util.ListIterator;
 import java.util.UUID;
 import java.util.Vector;
 
-import javax.sip.header.ContactHeader;
-import javax.sip.header.ExpiresHeader;
-import javax.sip.header.ExtensionHeader;
-import javax.sip.header.Header;
-import javax.sip.header.ViaHeader;
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ExpiresHeader;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.ViaHeader;
 
 /**
  * Registration manager (register, re-register, un-register)

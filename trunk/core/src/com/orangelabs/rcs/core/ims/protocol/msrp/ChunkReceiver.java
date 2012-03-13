@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,8 +165,8 @@ public class ChunkReceiver extends Thread {
 						String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
 						int chunkSize = 0;
 						if (byteRange != null) {
-							chunkSize = getChunkSize(byteRange);
-							totalSize = getTotalSize(byteRange);
+							chunkSize = MsrpUtils.getChunkSize(byteRange);
+							totalSize = MsrpUtils.getTotalSize(byteRange);
 						}
 							
 						if (logger.isActivated()) {
@@ -320,50 +320,5 @@ public class ChunkReceiver extends Thread {
 		stream.read(); // Read LF
 		stream.read(); // Read CR
 		return result;
-	}
-
-	/**
-	 * Get the chunk size
-	 * 
-	 * @param header MSRP header
-	 * @return Size in bytes
-	 */
-	private int getChunkSize(String header) {
-		if (header == null) {
-			return -1;
-		}
-		int index1 = header.indexOf("-");
-		int index2 = header.indexOf("/");
-		if ((index1 != -1) && (index2 != -1)) {
-			try {
-				int lowByte = Integer.parseInt(header.substring(0, index1));
-				int highByte = Integer.parseInt(header.substring(index1+1, index2));
-				return (highByte - lowByte) + 1;
-			} catch (NumberFormatException e) {
-				return -1;
-			}
-		}
-		return -1;
-	}
-
-	/**
-	 * Get the total size
-	 * 
-	 * @param header MSRP header
-	 * @return Size in bytes
-	 */
-	private long getTotalSize(String header) {
-		if (header == null) {
-			return -1;
-		}
-		int index = header.indexOf("/");
-		if (index != -1) {
-			try {
-				return Long.parseLong(header.substring(index+1));
-			} catch (NumberFormatException e) {
-				return -1;
-			}
-		}
-		return -1;
 	}
 }

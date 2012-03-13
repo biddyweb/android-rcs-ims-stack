@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,10 @@ import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+import java.util.Date;
 import java.util.List;
 
-import javax.sip.header.ExtensionHeader;
+import javax2.sip.header.ExtensionHeader;
 
 /**
  * Abstract Group chat session
@@ -145,19 +146,20 @@ public abstract class GroupChatSession extends ChatSession {
 	 * Send a text message
 	 * 
 	 * @param msgId Message-ID
-	 * @param msg Message
+	 * @param txt Text message
 	 */ 
-	public void sendTextMessage(String msgId, String msg) {
+	public void sendTextMessage(String msgId, String txt) {
 		// Send status in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getRemoteContact();
-		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(msg), InstantMessage.MIME_TYPE);
+		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		
 		// Send data
 		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
 
 		// Update rich messaging history
-		RichMessaging.getInstance().addOutgoingChatMessage(new InstantMessage(msgId, getRemoteContact(), msg, false), this);
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, false, new Date());
+		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not
 		if (!result) {
@@ -198,18 +200,18 @@ public abstract class GroupChatSession extends ChatSession {
     		// Re-use INVITE dialog path
     		SessionAuthenticationAgent authenticationAgent = getAuthenticationAgent();
     		
-            // Increment the Cseq number of the dialog path
-            getDialogPath().incrementCseq();
-            getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
+    		// Increment the Cseq number of the dialog path   
+            getDialogPath().incrementCseq();   
+            getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber(); 
 
-	        // Send REFER request
+            // Send REFER request
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
     		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
 	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
-	
+    		
 	        // Wait response
         	if (logger.isActivated()) {
         		logger.debug("Wait response");

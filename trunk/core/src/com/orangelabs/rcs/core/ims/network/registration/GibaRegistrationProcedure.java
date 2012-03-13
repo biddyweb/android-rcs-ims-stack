@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
-import javax.sip.address.Address;
-import javax.sip.address.SipURI;
-import javax.sip.address.URI;
-import javax.sip.header.ExtensionHeader;
+import javax2.sip.address.Address;
+import javax2.sip.address.SipURI;
+import javax2.sip.address.URI;
+import javax2.sip.header.ExtensionHeader;
 
 import android.content.Context;
 import android.telephony.TelephonyManager;

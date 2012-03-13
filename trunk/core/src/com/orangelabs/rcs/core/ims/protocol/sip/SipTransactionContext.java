@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
-import javax.sip.Transaction;
-import javax.sip.header.CallIdHeader;
-import javax.sip.message.Message;
+import javax2.sip.Transaction;
+import javax2.sip.header.CallIdHeader;
+import javax2.sip.message.Message;
 
 /**
  * SIP transaction context object composed of a request and of the corresponding

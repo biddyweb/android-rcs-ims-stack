@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.3.9
+Release 2.4.0
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,11 +9,9 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Add country area code management.
-- Remove PANI header on SIP REGISTER.
-- Remove feature tags on Accept-Contact header for SIP REGISTER.
-- SIM swap management.
-- Add payload management in media player and renderer.
+- Bug fixs.
+- Rename package of the NIST SIP stack to avoid concurrency problems with native NIST SIP stack.
+- Update source code copyrights.
 
 
 Bugs fixed:
@@ -22,10 +20,20 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+v2.4.0
+- Mantis #0014674	Stack: IOT with Nokia needs to manage partial MSRP reports
+- Mantis #0014671	Stack: Send chunk not well synchronized
+- Mantis #0014491	Stack: Blocked file transfer is not added in the event log
+- Mantis #0010522	Stack: Bad SIP retransmission timer for 3G
+- Open source #55	Stack: End User Confirmation Request without "pin" attribute fails
+- Open source #54	Stack: 423 Interval Too Brief retry CSeq issue
+- Open source #52	Stack: Group chat issue
+- Open source #50	Stack: Unsupported Media Type in case of lack of 'type' or 'size' selector in file-selector attribute
+- Open source #34	Stack: Trouble processing "javax/sip/address/Address.class"
+
 v2.3.9
 - Mantis #0014401	Stack: 500 invalid SDP receive from IMS with special characters in Subject header
 - Mantis #0014016	Chat app: The "display" notifications are not all send by the terminal at screen activation
-
 
 
 v2.3.8

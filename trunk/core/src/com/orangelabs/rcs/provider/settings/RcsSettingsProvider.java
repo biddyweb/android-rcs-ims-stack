@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import android.os.Environment;
 
 import java.util.ArrayList;
 
-import javax.sip.ListeningPoint;
+import javax2.sip.ListeningPoint;
 
 /**
  * RCS settings provider
@@ -185,11 +185,11 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SIP_KEEP_ALIVE_PERIOD,				"60");
             addParameter(db, RcsSettingsData.RCS_APN,							"");
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
-            addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"300");
-            addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"150");            
+            addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"500");
+            addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
         }
 
         /**

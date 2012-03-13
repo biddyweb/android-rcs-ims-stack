@@ -91,6 +91,16 @@ public class HttpsProvisioningService extends Service {
 	 */
 	private static final String UNKNOWN = "unknown";
 
+    /**
+     * Retry base timeout - 5min 
+     */
+    private static final int RETRY_BASE_TIMEOUT = 300000;
+
+    /**
+     * Retry max count
+     */
+    private static final int RETRY_MAX_COUNT = 5;
+
 	/**
 	 * Connection manager
 	 */
@@ -115,6 +125,11 @@ public class HttpsProvisioningService extends Service {
      * Network state listener
      */
     private BroadcastReceiver networkStateListener = null;
+
+    /**
+     * Retry counter
+     */
+    private int retryCount = 0;
 
 	/**
 	 * The logger
@@ -280,6 +295,7 @@ public class HttpsProvisioningService extends Service {
                             if (logger.isActivated()) {
                                 logger.debug("Provisioning retry after valadity " + info.validity);
                             }
+                            retryCount = 0;
                             startRetryAlarm(info.validity * 1000);
                         }
 
@@ -294,6 +310,7 @@ public class HttpsProvisioningService extends Service {
                     if (logger.isActivated()) {
                         logger.debug("Can't parse provisioning document");
                     }
+                    retry();
                 }
             } else if (result.code == 503) {
                 // Retry after
@@ -303,6 +320,7 @@ public class HttpsProvisioningService extends Service {
 
                 // Start retry alarm
                 if (result.retryAfter > 0) {
+                	retryCount = 0;
                     startRetryAlarm(result.retryAfter * 1000);
                 }
 
@@ -326,17 +344,18 @@ public class HttpsProvisioningService extends Service {
                 if (logger.isActivated()) {
                     logger.debug("Provisioning error " + result.code);
                 }
-
                 // Start the RCS service
                 if (!first) {
                     LauncherUtils.launchRcsCoreService(getApplicationContext());
                 }
+                retry();
             }
         } else {
             // Start the RCS service
             if (!first) {
                 LauncherUtils.launchRcsCoreService(getApplicationContext());
             }
+            retry();
         }
     }
 
@@ -354,6 +373,24 @@ public class HttpsProvisioningService extends Service {
             t.start();
         }
     };
+
+    /**
+     * Retry procedure
+     */
+    private void retry() {
+        if (retryCount < RETRY_MAX_COUNT) {
+            retryCount++;
+            int retryDelay = RETRY_BASE_TIMEOUT + 2 * (retryCount - 1) * RETRY_BASE_TIMEOUT;
+            startRetryAlarm(retryDelay);
+            if (logger.isActivated()) {
+                logger.debug("Retry (" + retryCount +  ") provisionning after " + retryDelay + "ms");
+            }
+        } else {
+            if (logger.isActivated()) {
+                logger.debug("No more retry for provisionning");
+            }
+        }
+    }
 
     /**
      * Start retry alarm

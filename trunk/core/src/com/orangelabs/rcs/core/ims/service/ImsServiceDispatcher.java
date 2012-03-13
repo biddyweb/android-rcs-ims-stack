@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ package com.orangelabs.rcs.core.ims.service;
 
 import java.util.Enumeration;
 
-import javax.sip.header.EventHeader;
-import javax.sip.message.Request;
+import javax2.sip.header.EventHeader;
+import javax2.sip.message.Request;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
@@ -309,6 +309,12 @@ public class ImsServiceDispatcher extends Thread {
 		if (request.getMethod().equals(Request.BYE)) {
 	        // BYE received
 			
+			// Route request to session
+    		ImsServiceSession session = searchSession(request.getCallId());
+        	if (session != null) {
+        		session.receiveBye(request);
+        	}
+        	
 			// Send a 200 OK response
 			try {
 				if (logger.isActivated()) {
@@ -321,16 +327,16 @@ public class ImsServiceDispatcher extends Thread {
 		    		logger.error("Can't send 200 OK response", e);
 		    	}
 			}
-
-			// Route request to session
-    		ImsServiceSession session = searchSession(request.getCallId());
-        	if (session != null) {
-        		session.receiveBye(request);
-        	}
 		} else    	
 		if (request.getMethod().equals(Request.CANCEL)) {
 	        // CANCEL received
 			
+			// Route request to session
+	    	ImsServiceSession session = searchSession(request.getCallId());
+	    	if (session != null) {
+	    		session.receiveCancel(request);
+	    	}
+	    	
 			// Send a 200 OK
 	    	try {
 		    	if (logger.isActivated()) {
@@ -343,12 +349,6 @@ public class ImsServiceDispatcher extends Thread {
 		    		logger.error("Can't send 200 OK response", e);
 		    	}
 			}
-			
-			// Route request to session
-	    	ImsServiceSession session = searchSession(request.getCallId());
-	    	if (session != null) {
-	    		session.receiveCancel(request);
-	    	}
     	} else
     	if (request.getMethod().equals(Request.UPDATE)) {
 	        // UPDATE received

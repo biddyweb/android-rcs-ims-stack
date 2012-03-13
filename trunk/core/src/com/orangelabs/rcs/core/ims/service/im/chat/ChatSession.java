@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Software Name : RCS IMS Stack
  *
- * Copyright © 2010 France Telecom S.A.
+ * Copyright (C) 2010 France Telecom S.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.List;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
@@ -108,52 +107,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Set first messgae
+	 * Set first message
 	 * 
 	 * @param firstMessage First message
 	 */
 	protected void setFirstMesssage(InstantMessage firstMessage) {
 		this.firstMessage = firstMessage; 
 	}
-	
-	/**
-	 * Generate a first message
-	 * 
-	 * @param txt Text message
-	 * @return First message
-	 */
-	protected InstantMessage generateFirstMessage(String msg) {
-		if ((msg != null) && (msg.length() > 0)) {
-			String msgId = ChatUtils.generateMessageId();		
-			return new InstantMessage(msgId,
-					getRemoteContact(),
-					StringUtils.encodeUTF8(msg),
-					getImdnManager().isImdnActivated());
-		} else {
-			return null;
-		}	
-	}
-	
-	/**
-	 * Extract the first message
-	 * 
-	 * @param invite Request
-	 * @return First message
-	 */
-	protected InstantMessage extractFirstMessage(SipRequest invite) {
-		String contact = ChatUtils.getReferredIdentity(invite);
-		String msg = invite.getSubject();
-		if ((msg != null) && (msg.length() > 0)) {
-			String msgId = ChatUtils.getMessageId(invite);
-			return new InstantMessage(msgId,
-					contact,
-					StringUtils.decodeIso(msg),
-					getImdnManager().isImdnActivated());
-		} else {
-			return null;
-		}	
-	}	
-	
+			
 	/**
 	 * Returns the IMDN manager
 	 * 
@@ -325,6 +286,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     			CpimParser cpimParser = new CpimParser(data);
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
+			    	Date date = cpimMsg.getMessageDate();
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
 			    	String contentType = cpimMsg.getContentType();
 			    	if (ChatUtils.isTextPlainType(contentType)) {
@@ -344,7 +306,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    	}
 				    	
 				    	// Get received text message
-				    	Date date = new Date();
 		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
@@ -495,10 +456,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * Send a text message
 	 * 
 	 * @param msgId Message-ID
-	 * @param msg Message
+	 * @param txt Text message
 	 * @return Boolean result
 	 */
-	public abstract void sendTextMessage(String msgId, String msg);
+	public abstract void sendTextMessage(String msgId, String txt);
 	
 	/**
 	 * Send is composing status
