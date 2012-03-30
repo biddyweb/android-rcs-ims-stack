@@ -32,6 +32,7 @@ import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -219,6 +220,12 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
         	} catch(Exception e) {
         	}
         }
+
+        // Remove delivery listener
+    	try {
+    		messagingApi.removeMessageDeliveryListener(deliveryListener);
+    	} catch(Exception e) {
+    	}
 
         // Disconnect messaging API
         messagingApi.removeApiEventListener(this);
@@ -450,7 +457,10 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		handler.post(new Runnable() { 
 			public void run() {
 	    		try {
-	    	        // Test if there is an existing session
+	    			// Add delivery listener 
+	    			messagingApi.addMessageDeliveryListener(deliveryListener);
+	    			
+	    			// Test if there is an existing session
 	    	        String sessionId = getIntent().getStringExtra("sessionId");
 	    			if (sessionId != null) {
 	    				// Ongoing session
@@ -527,6 +537,32 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 		});
 	}
     
+    /**
+     * Chat message delivery event listener
+     */
+    private IMessageDeliveryListener deliveryListener = new IMessageDeliveryListener.Stub() {
+    	// Message delivery status
+    	public void handleMessageDeliveryStatus(String contact, String msgId, final String status) {
+    		if (contact.indexOf(participants.get(0)) != -1) {
+				handler.post(new Runnable(){
+					public void run(){
+						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) ||
+								status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR) ||
+									status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
+							displayReceiveNotif(getString(R.string.label_receive_delivery_status_failed));
+						} else
+						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+							displayReceiveNotif(getString(R.string.label_receive_delivery_status_displayed));
+						} else
+						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+							displayReceiveNotif(getString(R.string.label_receive_delivery_status_delivered));
+						}
+					}
+				});
+    		}
+    	}
+    };
+    	
     /**
      * Chat session event listener
      */
