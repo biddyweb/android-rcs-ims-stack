@@ -41,8 +41,9 @@ public class MimeManager {
 
     	// Video type
     	mimeTable.put("3gp", "video/3gpp");    	
-    	mimeTable.put("mp4", "video/mpeg4");
-    	mimeTable.put("mp4a", "video/mpeg4");
+    	mimeTable.put("mp4", "video/mp4");
+    	mimeTable.put("mp4a", "video/mp4");
+    	mimeTable.put("mpeg4", "video/mp4");
     	mimeTable.put("mpeg", "video/mpeg");
     	mimeTable.put("mpg", "video/mpeg");
     }    

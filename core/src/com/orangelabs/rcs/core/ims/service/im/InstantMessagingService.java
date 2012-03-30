@@ -365,6 +365,17 @@ public class InstantMessagingService extends ImsService {
 				RichMessaging.getInstance().addSpamMessage(firstMsg);
 			}
 
+			// Send message delivery report if requested
+			if (ChatUtils.isImdnDeliveredRequested(invite)) {
+				// Check notification disposition
+				String msgId = ChatUtils.getMessageId(invite);
+				if (msgId != null) {
+					// Send message delivery status via a SIP MESSAGE
+					getImdnManager().sendMessageDeliveryStatusImmediately(SipUtils.getAssertedIdentity(invite),
+							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+				}
+			}
+			
 			// Send a 486 Busy response
 			sendErrorResponse(invite, 486);
 			return;

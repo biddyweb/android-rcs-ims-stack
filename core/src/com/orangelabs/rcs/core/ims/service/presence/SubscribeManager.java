@@ -70,7 +70,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
 	/**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
 	/**
      * The logger
@@ -84,6 +84,7 @@ public abstract class SubscribeManager extends PeriodicRefresher {
      */
     public SubscribeManager(ImsModule parent) {
     	this.imsModule = parent;
+    	authenticationAgent = new SessionAuthenticationAgent(imsModule);
     	
     	int defaultExpirePeriod = RcsSettings.getInstance().getSubscribeExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);

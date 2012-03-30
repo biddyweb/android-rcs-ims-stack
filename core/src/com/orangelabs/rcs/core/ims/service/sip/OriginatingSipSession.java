@@ -78,6 +78,9 @@ public class OriginatingSipSession extends GenericSipSession {
 	        		new String [] { getFeatureTag() },
 	        		getLocalSdp());
 
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        

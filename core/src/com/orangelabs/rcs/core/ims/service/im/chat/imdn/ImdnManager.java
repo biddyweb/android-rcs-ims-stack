@@ -163,7 +163,7 @@ public class ImdnManager extends Thread {
 			String cpim = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
 			
 		    // Create authentication agent 
-       		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+       		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent(imsService.getImsModule());
        		
        		// Create a dialog path
         	SipDialogPath dialogPath = new SipDialogPath(

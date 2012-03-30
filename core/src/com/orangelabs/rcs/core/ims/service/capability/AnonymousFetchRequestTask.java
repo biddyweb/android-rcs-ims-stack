@@ -66,7 +66,7 @@ public class AnonymousFetchRequestTask {
     /**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
 	/**
      * The logger
@@ -82,6 +82,7 @@ public class AnonymousFetchRequestTask {
     public AnonymousFetchRequestTask(ImsModule parent, String contact) {
         this.imsModule = parent;
         this.contact = contact;
+		this.authenticationAgent = new SessionAuthenticationAgent(imsModule);
     }
     
 	/**

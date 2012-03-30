@@ -215,7 +215,7 @@ public class TermsConditionsService extends ImsService {
 				"<NewDataSet>" + responseTag + "</NewDataSet>";				
 			
 		    // Create authentication agent 
-       		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+       		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent(getImsModule());
        		
        		// Create a dialog path
         	SipDialogPath dialogPath = new SipDialogPath(

@@ -111,25 +111,25 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("VERS")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("VERS")) {
                                 parseVersion(childnode);
-                            } else if (typenode.getNodeValue().equals("MSG")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("MSG")) {
                                 parseTermsMessage(childnode);
-                            } else if (typenode.getNodeValue().equals("APPLICATION")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("APPLICATION")) {
                                 parseApplication(childnode);
-                            } else if (typenode.getNodeValue().equals("IMS")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("IMS")) {
                                 parseIMS(childnode);
-                            } else if (typenode.getNodeValue().equals("PRESENCE")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("PRESENCE")) {
                                 parsePresence(childnode);
-                            } else if (typenode.getNodeValue().equals("XDMS")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("XDMS")) {
                                 parseXDMS(childnode);
-                            } else if (typenode.getNodeValue().equals("IM")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("IM")) {
                                 parseIM(childnode);
-                            } else if (typenode.getNodeValue().equals("CAPDISCOVERY")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("CAPDISCOVERY")) {
                                 parseCapabilityDiscovery(childnode);
-                            } else if (typenode.getNodeValue().equals("APN")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("APN")) {
                                 parseAPN(childnode);
-                            } else if (typenode.getNodeValue().equals("OTHER")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("OTHER")) {
                                 parseOther(childnode);
                             }
                         }
@@ -264,11 +264,11 @@ public class ProvisioningParser {
             } while ((childnode = childnode.getNextSibling()) != null);
         }
 
-        if (appRef != null && appRef.equals("IMS-Settings")) {
+        if (appRef != null && appRef.equalsIgnoreCase("IMS-Settings")) {
             parseIMS(node);
         }
 
-        if (appRef != null && appRef.equals("RCSe-Settings")) {
+        if (appRef != null && appRef.equalsIgnoreCase("RCSe-Settings")) {
             parseRCSe(node);
         }
     }
@@ -374,11 +374,11 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("FAVLINK")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("FAVLINK")) {
                                 parseFavoriteLink(childnode);
-                            } else if (typenode.getNodeValue().equals("SERVCAPWATCH")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("SERVCAPWATCH")) {
                                 parsePresenceWatcher(childnode);
-                            } else if (typenode.getNodeValue().equals("ServCapPresentity")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("ServCapPresentity")) {
                                 parsePresentityWatcher(childnode);
                             }
                         }
@@ -694,9 +694,8 @@ public class ProvisioningParser {
 
                 if (maxSizeFileTransfer == null) {
                     if ((maxSizeFileTransfer = getValueByParamName("MaxSizeFileTr", childnode)) != null) {
-        				long kb = Long.parseLong(maxSizeFileTransfer) / 1024;
                         RcsSettings.getInstance().writeParameter(
-                                RcsSettingsData.MAX_FILE_TRANSFER_SIZE, ""+kb);
+                                RcsSettingsData.MAX_FILE_TRANSFER_SIZE, maxSizeFileTransfer);
                         continue;
                     }
                 }
@@ -935,7 +934,7 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("transportProto")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("transportProto")) {
                                 parseTransportProtocol(childnode);
                             }
                         }
@@ -1011,7 +1010,7 @@ public class ProvisioningParser {
                     if ((publicUserIdentity = getValueByParamName("Public_User_Identity",
                             childnode)) != null) {
                     	String username = extractUserNamePart(publicUserIdentity);
-                        RcsSettings.getInstance().writeParameter(
+                    	RcsSettings.getInstance().writeParameter(
                                 RcsSettingsData.USERPROFILE_IMS_USERNAME, username);
                         RcsSettings.getInstance().writeParameter(
                                 RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, username);
@@ -1137,7 +1136,7 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("SecondaryDevicePar")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("SecondaryDevicePar")) {
                                 parseSecondaryDevicePar(childnode);
                             }
                         }
@@ -1173,8 +1172,9 @@ public class ProvisioningParser {
 
                 if (maxSizeImageShare == null) {
                     if ((maxSizeImageShare = getValueByParamName("MaxSizeImageShare", childnode)) != null) {
+                    	long kb = Long.parseLong(maxSizeImageShare) / 1024;
                         RcsSettings.getInstance().writeParameter(
-                                RcsSettingsData.MAX_IMAGE_SHARE_SIZE, maxSizeImageShare);
+                                RcsSettingsData.MAX_IMAGE_SHARE_SIZE, ""+kb);
                         continue;
                     }
                 }
@@ -1380,19 +1380,19 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("IMS")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("IMS")) {
                                 parseIMS(childnode);
-                            } else if (typenode.getNodeValue().equals("PRESENCE")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("PRESENCE")) {
                                 parsePresence(childnode);
-                            } else if (typenode.getNodeValue().equals("XDMS")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("XDMS")) {
                                 parseXDMS(childnode);
-                            } else if (typenode.getNodeValue().equals("IM")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("IM")) {
                                 parseIM(childnode);
-                            } else if (typenode.getNodeValue().equals("CAPDISCOVERY")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("CAPDISCOVERY")) {
                                 parseCapabilityDiscovery(childnode);
-                            } else if (typenode.getNodeValue().equals("APN")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("APN")) {
                                 parseAPN(childnode);
-                            } else if (typenode.getNodeValue().equals("OTHER")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("OTHER")) {
                                 parseOther(childnode);
                             }
                         }
@@ -1437,19 +1437,19 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
-                            if (typenode.getNodeValue().equals("ConRefs")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("ConRefs")) {
                                 parseConRefs(childnode);
-                            } else if (typenode.getNodeValue().equals("Public_user_identity_List")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("Public_user_identity_List")) {
                                 parsePublicUserIdentity(childnode);
-                            } else if (typenode.getNodeValue().equals("Ext")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("Ext")) {
                                 parseExt(childnode);
-                            } else if (typenode.getNodeValue().equals("ICSI_List")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("ICSI_List")) {
                                 parseICSI(childnode);
-                            } else if (typenode.getNodeValue().equals("LBO_P-CSCF_Address")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("LBO_P-CSCF_Address")) {
                                 parsePcscfAddress(childnode);
-                            } else if (typenode.getNodeValue().equals("PhoneContext_List")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("PhoneContext_List")) {
                                 parsePhoneContextList(childnode);
-                            } else if (typenode.getNodeValue().equals("APPAUTH")) {
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("APPAUTH")) {
                                 parseAppAuthent(childnode);
                             }
                         }
@@ -1601,8 +1601,8 @@ public class ProvisioningParser {
             if (nameNode.getNodeValue().equalsIgnoreCase(paramName)) {
             	String value = valueNode.getNodeValue();
                 if (logger.isActivated()) {
-                    logger.debug("Read parameter " + paramName + ": " + value);
-                    // TODO: logger.debug("Read parameter " + paramName);
+                    // For debug only: logger.debug("Read parameter " + paramName + ": " + value);
+                    logger.debug("Read parameter " + paramName);
                 }
                 return value;
             } else {

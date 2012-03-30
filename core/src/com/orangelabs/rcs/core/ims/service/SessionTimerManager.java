@@ -169,11 +169,11 @@ public class SessionTimerManager extends PeriodicRefresher {
 			
 			// Increment the Cseq number of the dialog path
 			session.getDialogPath().incrementCseq();
-			session.getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
 
 	        // Send UPDATE request
-	        SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipUpdate(session.getDialogPath());
-			
+	        SipRequest update = SipMessageFactory.createUpdate(session.getDialogPath());
+    		SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSubsequentRequest(session.getDialogPath(), update);
+	        
 	        // Wait response
 	        ctx.waitResponse(SipManager.TIMEOUT);
 

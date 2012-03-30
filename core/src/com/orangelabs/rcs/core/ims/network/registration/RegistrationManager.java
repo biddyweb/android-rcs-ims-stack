@@ -18,6 +18,18 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.UUID;
+import java.util.Vector;
+
+import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ExpiresHeader;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
+import javax2.sip.header.ViaHeader;
+
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
@@ -35,18 +47,6 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.UUID;
-import java.util.Vector;
-
-import javax2.sip.header.ContactHeader;
-import javax2.sip.header.ExpiresHeader;
-import javax2.sip.header.ExtensionHeader;
-import javax2.sip.header.Header;
-import javax2.sip.header.ViaHeader;
 
 /**
  * Registration manager (register, re-register, un-register)
@@ -178,6 +178,15 @@ public class RegistrationManager extends PeriodicRefresher {
     public void init() {
     	// Initialize the registration procedure
     	registrationProcedure.init();
+    }
+    
+    /**
+     * Returns registration procedure
+     * 
+     * @return Registration procedure
+     */
+    public RegistrationProcedure getRegistrationProcedure() {
+    	return registrationProcedure;
     }
     
     /**
@@ -604,13 +613,18 @@ public class RegistrationManager extends PeriodicRefresher {
      */
     private void retrieveExpirePeriod(SipResponse response) {
     	// Extract expire value from Contact header
-        ContactHeader contactHeader = (ContactHeader)response.getHeader(ContactHeader.NAME);
-	    if (contactHeader != null) {
-	    	int expires = contactHeader.getExpires();
-		    if (expires != -1) {
-	    		expirePeriod = expires;            
+        ListIterator<Header> contacts = response.getHeaders(ContactHeader.NAME);
+	    if (contacts != null) {
+	    	while(contacts.hasNext()) {
+		    	ContactHeader contact = (ContactHeader)contacts.next();
+		    	if (contact.getAddress().getHost().equals(networkInterface.getNetworkAccess().getIpAddress())) {
+			    	int expires = contact.getExpires();
+				    if (expires != -1) {
+			    		expirePeriod = expires;
+			    	}
+				    return;
+		    	}
 	    	}
-		    return;
 	    }
 	    
         // Extract expire value from Expires header

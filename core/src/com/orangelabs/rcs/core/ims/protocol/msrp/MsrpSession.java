@@ -18,14 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Random;
+
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * MSRP session
@@ -64,9 +63,9 @@ public class MsrpSession {
 	private boolean cancelTransfer = false;
 
 	/**
-	 * Semaphore object used to wait a response
+	 * Request transaction
 	 */
-	private Object respSemaphore = new Object();
+	private RequestTransaction requestTransaction = null;
 
 	/**
 	 * Received chunks
@@ -83,20 +82,10 @@ public class MsrpSession {
      */
 	private static Random random = new Random(System.currentTimeMillis());
 
-    /**
-     * MRSP timeout (in seconds)
-     */
-    private int msrpTimeout = RcsSettings.getInstance().getMsrpTransactionTimeout();
-    
 	/**
-	 * Semaphore object used to wait a report
+	 * Report transaction
 	 */
-	private Object reportSemaphore = new Object();
-
-    /**
-     * Reported size
-     */
-    private long reportedSize = 0L;
+	private ReportTransaction reportTransaction = null;
 
     /**
 	 * The logger
@@ -107,6 +96,15 @@ public class MsrpSession {
 	 * Constructor
 	 */
 	public MsrpSession() {
+	}
+	
+	/**
+	 * Generate a unique ID for transaction
+	 * 
+	 * @return ID
+	 */
+	private static synchronized String generateTransactionId() {
+		return Long.toHexString(random.nextLong());		
 	}
 	
 	/**
@@ -233,14 +231,14 @@ public class MsrpSession {
 			connection.close();
 		}
 		
-		// Unblock wait response
-		synchronized(respSemaphore) {
-			respSemaphore.notify();
+		// Unblock request transaction
+		if (requestTransaction != null) {
+			requestTransaction.terminate();
 		}
 
-		// Unblock wait report
-		synchronized(reportSemaphore) {
-			reportSemaphore.notify();
+		// Unblock report transaction
+		if (reportTransaction != null) {
+			reportTransaction.terminate();
 		}
 	}
 
@@ -258,8 +256,6 @@ public class MsrpSession {
 			logger.info("Send content (" + contentType + ")");
 		}
 
-		reportedSize = 0L;
-
 		if (from == null) {
 			throw new MsrpException("From not set");
 		}
@@ -272,14 +268,15 @@ public class MsrpSession {
 			throw new MsrpException("No connection set");
 		}
 		
-		// Reset cancel transfer flag 
-		cancelTransfer = false;
-		
 		// Send content over MSRP 
 		try {
 			byte data[] = new byte[MsrpConstants.CHUNK_MAX_SIZE];
 			long firstByte = 1;
 			long lastByte = 0;
+			cancelTransfer = false;
+			if (successReportOption) {
+				reportTransaction = new ReportTransaction();
+			}
 			
 			// Send data chunk by chunk
 			for (int i = inputStream.read(data); (!cancelTransfer) & (i>-1); i=inputStream.read(data)) {
@@ -304,27 +301,28 @@ public class MsrpSession {
 			}
 
 			// Test if waiting report is needed
-			if (successReportOption) {
-				if (logger.isActivated()) {
-					logger.debug("Wait final report");
+			if (reportTransaction != null) {
+				// Wait until all data have been reported
+				long lastReport = reportTransaction.getReportedSize();
+				while(reportTransaction.getReportedSize() < totalSize) {
+					reportTransaction.waitReport();
+					if (lastReport == reportTransaction.getReportedSize()) {
+						// Timeout
+						break;
+					}					
+					lastReport = reportTransaction.getReportedSize();
 				}
 				
-				// Wait report
-				while(reportedSize != totalSize) {
-					synchronized(reportSemaphore) {
-						try {
-							reportSemaphore.wait();
-						} catch (InterruptedException e) {}
-					}
-				}
-			}
-			
-            // Notify event listener
-            if ((reportedSize == totalSize) || (reportedSize == -1)) {
+	            // Notify event listener
+	            if (reportTransaction.getReportedSize() == totalSize) {
+	                msrpEventListener.msrpDataTransfered(msgId);
+	            } else {
+	                msrpEventListener.msrpTransferError("report timeout");
+	            }
+			} else {
+	            // Notify event listener
                 msrpEventListener.msrpDataTransfered(msgId);
-            } else {
-                msrpEventListener.msrpTransferAborted();
-            }
+			}
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Send chunk failed", e);
@@ -358,23 +356,13 @@ public class MsrpSession {
 		// Send an empty chunk
 		try {
 			sendEmptyMsrpSendRequest(generateTransactionId(), to, from, generateTransactionId());
+		} catch(MsrpException e) {
+			throw e;
 		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Send chunk failed", e);
-			}
 			throw new MsrpException(e.getMessage());
 		}
 	}
 
-	/**
-	 * Generate a unique ID for transaction
-	 * 
-	 * @return ID
-	 */
-	private static synchronized String generateTransactionId() {
-		return Long.toHexString(random.nextLong());		
-	}
-	
 	/**
 	 * Send MSRP SEND request
 	 * 
@@ -388,10 +376,11 @@ public class MsrpSession {
 	 * @param firstByte First byte range
 	 * @param lastByte Last byte range
 	 * @param totalSize Total size
-	 * @throws IOException
+	 * @throws IOException 
+	 * @throws MsrpException
 	 */
 	private void sendMsrpSendRequest(String txId, String to, String from, String msgId, String contentType,
-			int dataSize, byte data[], long firstByte, long lastByte, long totalSize) throws IOException {
+			int dataSize, byte data[], long firstByte, long lastByte, long totalSize) throws MsrpException, IOException {
 
 		boolean isLastChunk = (lastByte == totalSize);
 		
@@ -451,18 +440,17 @@ public class MsrpSession {
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
 		// Send chunk
-		connection.sendChunk(buffer.toByteArray());
-		
-		// Test if waiting response is needed
 		if (failureReportOption) {
-			if (logger.isActivated()) {
-				logger.debug("Wait request response");
+			requestTransaction = new RequestTransaction();
+			connection.sendChunk(buffer.toByteArray());
+			buffer.close();
+			requestTransaction.waitResponse();
+			if (!requestTransaction.isResponseReceived()) {
+				throw new MsrpException("timeout");
 			}
-			synchronized(respSemaphore) {
-				try {
-					respSemaphore.wait(msrpTimeout * 1000);
-				} catch (InterruptedException e) {}
-			}
+		} else {
+			connection.sendChunk(buffer.toByteArray());
+			buffer.close();
 		}
 	}
 	
@@ -473,10 +461,10 @@ public class MsrpSession {
 	 * @param to To header
 	 * @param from From header
 	 * @param msgId Message ID header
+	 * @throws MsrpException
 	 * @throws IOException
 	 */
-	private void sendEmptyMsrpSendRequest(String txId, String to, String from, String msgId) throws IOException {
-
+	private void sendEmptyMsrpSendRequest(String txId, String to, String from, String msgId) throws MsrpException, IOException {
 		// Create request
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
 		buffer.reset();
@@ -501,16 +489,12 @@ public class MsrpSession {
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
 		// Send chunk
+		requestTransaction = new RequestTransaction();
 		connection.sendChunkImmediately(buffer.toByteArray());
-		
-		// Waiting response
-		if (logger.isActivated()) {
-			logger.debug("Wait request response");
-		}
-		synchronized(respSemaphore) {
-			try {
-				respSemaphore.wait(msrpTimeout * 1000);
-			} catch (InterruptedException e) {}
+		buffer.close();
+		requestTransaction.waitResponse();
+		if (!requestTransaction.isResponseReceived()) {
+			throw new MsrpException("timeout");
 		}
 	}
 
@@ -566,9 +550,11 @@ public class MsrpSession {
 	 * 
 	 * @param txId Transaction ID
 	 * @param headers MSRP headers
+	 * @throws MsrpException
 	 * @throws IOException
 	 */
-	private void sendMsrpReportRequest(String txId, Hashtable<String, String> headers, long lastByte, long totalSize) throws IOException {
+	private void sendMsrpReportRequest(String txId, Hashtable<String, String> headers,
+			long lastByte, long totalSize) throws MsrpException, IOException {
 		// Create request
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
 		buffer.reset();
@@ -616,14 +602,12 @@ public class MsrpSession {
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 
 		// Send request
+		requestTransaction = new RequestTransaction();
 		connection.sendChunk(buffer.toByteArray());
 		buffer.close();
-		
-		// Wait response
-		synchronized(respSemaphore) {
-			try {
-				respSemaphore.wait(msrpTimeout * 1000);
-			} catch (InterruptedException e) {}
+		requestTransaction.waitResponse();
+		if (!requestTransaction.isResponseReceived()) {
+			throw new MsrpException("timeout");
 		}
 	}
 	
@@ -693,7 +677,17 @@ public class MsrpSession {
 			
 			// Send MSRP report if requested
 			if (successReportNeeded) {
-				sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
+				try {
+					sendMsrpReportRequest(txId, headers, dataContent.length, totalSize);
+				} catch(MsrpException e) {
+					// Report failed
+					if (logger.isActivated()) {
+						logger.info("Can't send report");
+					}
+					
+					// Notify event listener
+					msrpEventListener.msrpTransferError("report timeout");			
+				}
 			}
 		} else
 		if (flag == MsrpConstants.FLAG_ABORT_CHUNK) {
@@ -728,13 +722,13 @@ public class MsrpSession {
 			logger.info("Response received (code=" + code + ", transaction=" + txId + ")");
 		}
 		
-		// Unblock wait response
-		synchronized(respSemaphore) {
-			respSemaphore.notify();
+		// Notify request transaction
+		if (requestTransaction != null) {
+			requestTransaction.notifyResponse(code, headers);
 		}
 		
+        // Notify event listener
 		if (code != 200) {
-            // Notify event listener
 			msrpEventListener.msrpTransferError(code + " response received");
 		}
 	}
@@ -751,13 +745,9 @@ public class MsrpSession {
 			logger.info("REPORT request received (transaction=" + txId + ")");
 		}
 		
-		// Update reported size
-		String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
-		reportedSize += MsrpUtils.getChunkSize(byteRange);
-		
-		// Unblock wait report
-		synchronized(reportSemaphore) {
-			reportSemaphore.notify();
+		// Notify report transaction
+		if (reportTransaction != null) {
+			reportTransaction.notifyReport(headers);
 		}
 	}
 }

@@ -132,6 +132,9 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
 	        		InstantMessagingService.FT_FEATURE_TAGS, sdp);
 	        
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        

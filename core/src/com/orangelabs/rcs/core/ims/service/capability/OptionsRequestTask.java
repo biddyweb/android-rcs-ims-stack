@@ -62,7 +62,7 @@ public class OptionsRequestTask implements Runnable {
     /**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
 	/**
      * The logger
@@ -80,6 +80,7 @@ public class OptionsRequestTask implements Runnable {
         this.imsModule = parent;
         this.contact = contact;
         this.featureTags = featureTags;
+		this.authenticationAgent = new SessionAuthenticationAgent(imsModule);
 	}
 	
 	/**

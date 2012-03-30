@@ -72,11 +72,6 @@ public class CallManager {
     private static String remoteParty = null;
     
     /**
-     * Incoming call
-     */
-    private boolean incomingCall = false;
-
-    /**
      * Multiparty call
      */
     private boolean multipartyCall = false;
@@ -150,13 +145,10 @@ public class CallManager {
 					
 					// Phone is ringing: this state is only used for incoming call
 					callState = CallManager.RINGING;
-				    incomingCall = true;
 
 					// Set remote party
 				    remoteParty = incomingNumber;
 
-				    // Request capabilities only if not a multiparty call or call hold
-			    	requestCapabilities(remoteParty);
 					break;
 
 				case TelephonyManager.CALL_STATE_IDLE:
@@ -166,7 +158,6 @@ public class CallManager {
 					
 					// No more call in progress
 					callState = CallManager.DISCONNECTED;
-				    incomingCall = false;
 				    multipartyCall = false;
 				    callHold = false;
 
@@ -196,6 +187,10 @@ public class CallManager {
 
 					// Both parties are connected
 					callState = CallManager.CONNECTED;
+					
+				    // Request capabilities only if not a multiparty call or call hold
+			    	requestCapabilities(remoteParty);
+					
 					break;
 
 				default:
@@ -258,15 +253,6 @@ public class CallManager {
 	}
 
 	/**
-     * Is an incoming call
-     * 
-     * @return Boolean
-     */
-	public boolean isIncomingCall() {
-		return incomingCall;
-	}
-
-	/**
 	 * Is richcall supported with a given contact
 	 * 
 	 * @param contact Contact
@@ -304,7 +290,7 @@ public class CallManager {
      * @param contact Contact
      */
 	private void requestCapabilities(String contact) {
-		 if ((contact != null) && imsModule.getCapabilityService().isServiceStarted()) {
+		 if ((contact != null) && (contact.length() > 0) && imsModule.getCapabilityService().isServiceStarted()) {
  			 imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
     }

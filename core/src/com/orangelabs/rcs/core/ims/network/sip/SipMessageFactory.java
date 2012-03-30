@@ -18,16 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.network.sip;
 
-import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
-import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import gov2.nist.javax2.sip.Utils;
 
 import java.util.ArrayList;
@@ -35,7 +25,6 @@ import java.util.List;
 import java.util.Vector;
 
 import javax2.sip.ClientTransaction;
-import javax2.sip.Transaction;
 import javax2.sip.address.Address;
 import javax2.sip.address.URI;
 import javax2.sip.header.AcceptHeader;
@@ -58,6 +47,16 @@ import javax2.sip.header.ToHeader;
 import javax2.sip.header.ViaHeader;
 import javax2.sip.message.Request;
 import javax2.sip.message.Response;
+
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP message factory
@@ -751,9 +750,8 @@ public class SipMessageFactory {
 	public static SipRequest createBye(SipDialogPath dialog) throws SipException {
 		try {
 			// Create the request
-			Transaction transaction = dialog.getInvite().getStackTransaction();
-		    Request bye = transaction.getDialog().createRequest(Request.BYE);
-		    
+			Request bye = dialog.getStackDialog().createRequest(Request.BYE);
+	
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)bye.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
@@ -932,37 +930,10 @@ public class SipMessageFactory {
 	 * @throws SipException
 	 */
     public static SipRequest createRefer(SipDialogPath dialog, String toContact) throws SipException {
-		try {
-	        // Set request line header
-	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
-	        
-	        // Set Call-Id header
-	        CallIdHeader callIdHeader = SipUtils.HEADER_FACTORY.createCallIdHeader(dialog.getCallId()); 
-	        
-	        // Set the CSeq header
-	        CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.REFER);
-	
-	        // Set the From header
-	        Address fromAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getLocalParty());
-	        FromHeader fromHeader = SipUtils.HEADER_FACTORY.createFromHeader(fromAddress, dialog.getLocalTag());
-	
-	        // Set the To header
-	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
-	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, dialog.getRemoteTag());
-	
+		try {			
 			// Create the request
-	        Request refer = SipUtils.MSG_FACTORY.createRequest(requestURI,
-	                Request.REFER,
-	                callIdHeader,
-	                cseqHeader,
-					fromHeader,
-					toHeader,
-					dialog.getSipStack().getViaHeaders(),
-					SipUtils.buildMaxForwardsHeader());       
-	        
-	        // Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContact());	        
-	        
+		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
+		    
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
@@ -974,13 +945,6 @@ public class SipMessageFactory {
 			// Set Refer-Sub header
 	        Header referSub = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFER_SUB, "false");
 	        refer.addHeader(referSub);
-	        
-			// Set the Route header
-	        Vector<String> route = dialog.getRoute();
-	        for(int i=0; i < route.size(); i++) {
-	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));
-	        	refer.addHeader(routeHeader);
-	        }
 	        
 	        // Set the P-Preferred-Identity header
 			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
@@ -1001,7 +965,7 @@ public class SipMessageFactory {
 			throw new SipException("Can't create SIP REFER message");
 		}
     }
-    
+
     /**
 	 * Create a SIP REFER request
 	 * 
@@ -1011,39 +975,12 @@ public class SipMessageFactory {
 	 * @throws SipException
 	 */
     public static SipRequest createRefer(SipDialogPath dialog, List<String> participants) throws SipException {
-		try {
-			// Generate a list URI
-			String listID = "Id_" + System.currentTimeMillis();
-        	
-			// Set request line header
-	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
-	        
-	        // Set Call-Id header
-	        CallIdHeader callIdHeader = SipUtils.HEADER_FACTORY.createCallIdHeader(dialog.getCallId()); 
-	        
-	        // Set the CSeq header
-	        CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.REFER);
-	
-	        // Set the From header
-	        Address fromAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getLocalParty());
-	        FromHeader fromHeader = SipUtils.HEADER_FACTORY.createFromHeader(fromAddress, dialog.getLocalTag());
-	
-	        // Set the To header
-	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
-	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, dialog.getRemoteTag());
-	
+    	try {
 			// Create the request
-	        Request refer = SipUtils.MSG_FACTORY.createRequest(requestURI,
-	                Request.REFER,
-	                callIdHeader,
-	                cseqHeader,
-					fromHeader,
-					toHeader,
-					dialog.getSipStack().getViaHeaders(),
-					SipUtils.buildMaxForwardsHeader());       
-	        
-	        // Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContact());	        
+		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
+		    
+	        // Generate a list URI
+			String listID = "Id_" + System.currentTimeMillis();
 	        
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
@@ -1063,13 +1000,6 @@ public class SipMessageFactory {
 			// Set Refer-Sub header
 	        Header referSub = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_REFER_SUB, "false");
 	        refer.addHeader(referSub);
-	        
-			// Set the Route header
-	        Vector<String> route = dialog.getRoute();
-	        for(int i=0; i < route.size(); i++) {
-	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));
-	        	refer.addHeader(routeHeader);
-	        }
 	        
 	        // Set the P-Preferred-Identity header
 			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
@@ -1120,49 +1050,8 @@ public class SipMessageFactory {
      */
     public static SipRequest createUpdate(SipDialogPath dialog) throws SipException {
 		try {
-	        // Set request line header
-	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
-	        
-	        // Set Call-Id header
-	        CallIdHeader callIdHeader = SipUtils.HEADER_FACTORY.createCallIdHeader(dialog.getCallId()); 
-	        
-	        // Set the CSeq header
-	        CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.UPDATE);
-	
-	        // Set the From header
-	        Address fromAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getLocalParty());
-	        FromHeader fromHeader = SipUtils.HEADER_FACTORY.createFromHeader(fromAddress, dialog.getLocalTag());
-	
-	        // Set the To header
-	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
-	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, dialog.getRemoteTag());
-
-	        // Create the request
-	        Request update = SipUtils.MSG_FACTORY.createRequest(requestURI,
-	                Request.UPDATE,
-	                callIdHeader,
-	                cseqHeader,
-					fromHeader,
-					toHeader,
-					dialog.getSipStack().getViaHeaders(),
-					SipUtils.buildMaxForwardsHeader());       
-
-	        // Set Contact header
-	        update.addHeader(dialog.getSipStack().getContact());
-	
-			// Set the Route header
-	        Vector<String> route = dialog.getRoute();
-	        for(int i=0; i < route.size(); i++) {
-	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));
-	        	update.addHeader(routeHeader);
-	        }
-	        
-	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			update.addHeader(prefHeader);
-
-			// Set User-Agent header
-			update.addHeader(SipUtils.buildUserAgentHeader());
+			// Create the request
+		    Request update = dialog.getStackDialog().createRequest(Request.UPDATE);
 	        
 	        // Set the Supported header
 			Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");

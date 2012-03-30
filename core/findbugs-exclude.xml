@@ -92,6 +92,16 @@
         <Bug pattern="REC_CATCH_EXCEPTION" />
     </Match>
     <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
         <Class name="com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession" />
         <Method name="handle200OK" />
         <Bug pattern="REC_CATCH_EXCEPTION" />
@@ -127,6 +137,11 @@
         <Bug pattern="REC_CATCH_EXCEPTION" />
     </Match>
     <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
         <Class name="com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession" />
         <Method name="run" />
         <Bug pattern="REC_CATCH_EXCEPTION" />
@@ -142,8 +157,33 @@
         <Bug pattern="REC_CATCH_EXCEPTION" />
     </Match>
     <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
         <Class name="com.orangelabs.rcs.core.ims.protocol.sip.SipInterface" />
         <Method name="&lt;init&gt;" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession" />
+        <Method name="handle200OK" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.ExtendOneOneChatSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService"/>
+        <Method name="sendSipMessage" />
         <Bug pattern="REC_CATCH_EXCEPTION" />
     </Match>
 

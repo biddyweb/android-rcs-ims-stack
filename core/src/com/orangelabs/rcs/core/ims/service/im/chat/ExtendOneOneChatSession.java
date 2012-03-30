@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -105,7 +106,7 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
-	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
+	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 
 	    	// Generate the resource list for given participants
@@ -138,6 +139,9 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	        	logger.info("Send INVITE");
 	        }
 	        SipRequest invite = createInviteRequest(multipart);
+	        
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
 	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);

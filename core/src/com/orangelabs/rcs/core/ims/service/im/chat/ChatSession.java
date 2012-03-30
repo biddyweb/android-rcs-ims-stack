@@ -286,9 +286,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     			CpimParser cpimParser = new CpimParser(data);
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
-			    	Date date = cpimMsg.getMessageDate();
-			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
+			    	Date date = new Date();
+			    	String cpimMsgId = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 			    	String contentType = cpimMsg.getContentType();
+			    	
+			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
+			    	if (from.indexOf("anonymous@anonymous.invalid") != -1) {
+			    		from = getRemoteContact();
+			    	}			    	
+			    	
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
 			    		
@@ -298,7 +304,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    	if (dispositionNotification != null) {
 				    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
 				    			// Positive delivery requested, send MSRP message with status "delivered" 
-				    			sendMsrpMessageDeliveryStatus(from, msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+				    			sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 				    		}
 				    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
 				    			imdnDisplayedRequested = true;
@@ -306,11 +312,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				    	}
 				    	
 				    	// Get received text message
-		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), msgId, imdnDisplayedRequested, date);
+		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
 		    			if (imdnDisplayedRequested) {
-		    				RichMessaging.getInstance().setChatMessageDeliveryRequested(msgId);
+		    				RichMessaging.getInstance().setChatMessageDeliveryRequested(cpimMsgId);
 		    			}
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
