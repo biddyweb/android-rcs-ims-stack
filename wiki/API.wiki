@@ -13,4 +13,4 @@ SIP API<br>
 
 = Details =
 
-See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed1.13.pdf]
+See the following document [http://android-rcs-ims-stack.googlecode.com/svn/doc/spec/RCS-e_API_ed2.0.pdf]
