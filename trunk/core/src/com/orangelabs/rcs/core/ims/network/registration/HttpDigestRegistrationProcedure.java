@@ -39,7 +39,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	 * HTTP Digest MD5 agent
 	 */
 	private HttpDigestMd5Authentication digest = new HttpDigestMd5Authentication();
-
+	
 	/**
      * The logger
      */
@@ -171,5 +171,14 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 				throw new CoreException("Can't read the security header");
 			}
 		}
+	}
+	
+	/**
+	 * Returns HTTP digest
+	 * 
+	 * @return HTTP digest
+	 */
+	public HttpDigestMd5Authentication getHttpDigest() {
+		return digest;
 	}
 }

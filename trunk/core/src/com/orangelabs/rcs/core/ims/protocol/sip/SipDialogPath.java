@@ -25,6 +25,8 @@ import com.orangelabs.rcs.utils.IdGenerator;
 
 import java.util.Vector;
 
+import javax2.sip.Dialog;
+
 
 /**
  * SIP dialog path. A dialog path corresponds to a SIP session, for
@@ -246,6 +248,12 @@ public class SipDialogPath {
 	 */
 	public void incrementCseq() {
 		cseq++;
+		
+		// Increment internal stack CSeq if terminating side (NIST stack issue?)
+		Dialog dlg = getStackDialog();
+		if ((dlg != null) && dlg.isServer()) {
+			dlg.incrementLocalSequenceNumber();
+		}
 	}
 
 	/**
@@ -418,5 +426,18 @@ public class SipDialogPath {
 	 */
 	public void setSessionExpireTime(int sessionExpireTime) {
 		this.sessionExpireTime = sessionExpireTime;
+	}
+	
+	/**
+	 * Get stack dialog
+	 * 
+	 * @return Dialog or null
+	 */
+	public Dialog getStackDialog() {
+		if (invite != null) {
+			return invite.getStackTransaction().getDialog();
+		} else {
+			return null;
+		}
 	}
 }

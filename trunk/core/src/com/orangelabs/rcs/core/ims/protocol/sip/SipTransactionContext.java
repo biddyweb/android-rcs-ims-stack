@@ -118,10 +118,11 @@ public class SipTransactionContext extends Object {
 	public boolean isSipAck() {
 		if (recvMsg != null) {
 			SipRequest req = (SipRequest)recvMsg;
-			if (req.getMethod().equals("ACK"))
+			if (req.getMethod().equals("ACK")) {
 				return true;
-			else
+			} else {
 				return false;
+			}
 		} else {
 			return false;
 		}
@@ -133,10 +134,11 @@ public class SipTransactionContext extends Object {
 	 * @return SIP response or null if it's not a response (e.g. ACK message)
 	 */
 	public SipResponse getSipResponse() {
-		if (isSipResponse())
+		if (isSipResponse()) {
 			return (SipResponse)recvMsg;
-		else
+		} else {
 			return null;
+		}
 	}
 
 	/**
@@ -161,8 +163,9 @@ public class SipTransactionContext extends Object {
 	public String getReasonPhrase() {
 	    String ret = null;
 		SipResponse resp = getSipResponse();
-		if (resp != null)
+		if (resp != null) {
 		    ret = resp.getReasonPhrase();
+		}
 		return ret;
 	}
 
@@ -178,9 +181,9 @@ public class SipTransactionContext extends Object {
 				return;
 			}			
 			synchronized(this) {
-				wait(timeout * 1000);
+				super.wait(timeout * 1000);
 			}
-		} catch(java.lang.InterruptedException e) {
+		} catch(InterruptedException e) {
 			// Thread has been interrupted
 			recvMsg = null;
 		}
@@ -193,7 +196,7 @@ public class SipTransactionContext extends Object {
 	 */
 	public void responseReceived(SipMessage msg) {
 		synchronized(this) {
-			this.recvMsg = msg;
+			recvMsg = msg;
 			super.notify();
 		}
 	}
@@ -203,7 +206,7 @@ public class SipTransactionContext extends Object {
 	 */
 	public void resetContext() {
 		synchronized (this) {
-			this.recvMsg = null;
+			recvMsg = null;
 			super.notify();
 		}
 	}

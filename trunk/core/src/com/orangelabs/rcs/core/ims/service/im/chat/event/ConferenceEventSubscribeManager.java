@@ -85,7 +85,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 	/**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
     /**
 	 * List of connected participants
@@ -105,6 +105,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     public ConferenceEventSubscribeManager(ChatSession session) {
     	this.session  = session;
     	this.imsModule = session.getImsService().getImsModule();
+		this.authenticationAgent = new SessionAuthenticationAgent(imsModule);
     	
     	int defaultExpirePeriod = RcsSettings.getInstance().getSubscribeExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);

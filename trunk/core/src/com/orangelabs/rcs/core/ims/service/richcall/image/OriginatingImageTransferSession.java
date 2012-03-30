@@ -139,6 +139,9 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
 	        		RichcallService.FEATURE_TAGS_IMAGE_SHARE, sdp);
 
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
 	        

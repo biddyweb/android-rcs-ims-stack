@@ -482,12 +482,6 @@ public class RichcallService extends ImsService {
         	}
 	    }
 
-	    // Request also capabilities to the remote if it's an outgoing call
-		if (getImsModule().getCallManager().isCallConnectedWith(contact) && !getImsModule().getCallManager().isIncomingCall()) {
-			// Outgoing call is received: request capabilities
-			getImsModule().getCapabilityService().requestContactCapabilities(contact);
-		}
-		
 		// Extract capabilities from the request
     	Capabilities capabilities = CapabilityUtils.extractCapabilities(options);
     	if (capabilities.isImSessionSupported()) {

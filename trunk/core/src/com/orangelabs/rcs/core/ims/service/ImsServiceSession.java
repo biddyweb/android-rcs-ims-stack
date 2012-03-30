@@ -68,7 +68,7 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
 	/**
 	 * Session invitation status
@@ -109,6 +109,7 @@ public abstract class ImsServiceSession extends Thread {
 	public ImsServiceSession(ImsService imsService, String contact) {
         this.imsService = imsService;
 		this.contact = contact;
+		this.authenticationAgent = new SessionAuthenticationAgent(imsService.getImsModule());
 	}
 
 	/**

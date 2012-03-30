@@ -202,7 +202,6 @@ public abstract class GroupChatSession extends ChatSession {
     		
     		// Increment the Cseq number of the dialog path   
             getDialogPath().incrementCseq();   
-            getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber(); 
 
             // Send REFER request
     		if (logger.isActivated()) {
@@ -210,8 +209,8 @@ public abstract class GroupChatSession extends ChatSession {
         	}
     		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
 	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
-	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
-    		
+    		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
+	        
 	        // Wait response
         	if (logger.isActivated()) {
         		logger.debug("Wait response");
@@ -230,7 +229,6 @@ public abstract class GroupChatSession extends ChatSession {
 
                 // Increment the Cseq number of the dialog path
                 getDialogPath().incrementCseq();
-                getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
 
                 // Create a second REFER request with the right token
                 if (logger.isActivated()) {
@@ -242,8 +240,8 @@ public abstract class GroupChatSession extends ChatSession {
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
                 
                 // Send REFER request
-    	        ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
-
+        		ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
+    	        
                 // Wait response
                 if (logger.isActivated()) {
                 	logger.debug("Wait response");
@@ -322,7 +320,6 @@ public abstract class GroupChatSession extends ChatSession {
     		
             // Increment the Cseq number of the dialog path
     		getDialogPath().incrementCseq();
-    		getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
             
 	        // Send REFER request
     		if (logger.isActivated()) {
@@ -349,7 +346,6 @@ public abstract class GroupChatSession extends ChatSession {
 
                 // Increment the Cseq number of the dialog path
             	getDialogPath().incrementCseq();
-            	getDialogPath().getInvite().getStackTransaction().getDialog().incrementLocalSequenceNumber();
 
     			// Create a second REFER request with the right token
                 if (logger.isActivated()) {

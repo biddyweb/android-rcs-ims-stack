@@ -18,7 +18,9 @@
 
 package com.orangelabs.rcs.service;
 
+import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
@@ -112,5 +114,6 @@ public class LauncherUtils {
 
         // Remove the RCS account 
         AuthenticationService.removeRcsAccount(context, null);
+        AccountChangedReceiver.setAccountResetByEndUser(false);
     }
 }

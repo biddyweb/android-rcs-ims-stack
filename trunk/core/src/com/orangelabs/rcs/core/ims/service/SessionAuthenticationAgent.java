@@ -23,6 +23,8 @@ import javax2.sip.header.ProxyAuthorizationHeader;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.registration.HttpDigestRegistrationProcedure;
+import com.orangelabs.rcs.core.ims.network.registration.RegistrationProcedure;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.security.HttpDigestMd5Authentication;
@@ -45,9 +47,26 @@ public class SessionAuthenticationAgent {
 	private HttpDigestMd5Authentication digest = new HttpDigestMd5Authentication();
 
 	/**
-	 * Constructor
+	 * IMS module
 	 */
-	public SessionAuthenticationAgent() {
+	private ImsModule imsModule;
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param imsModule IMS module
+	 */
+	public SessionAuthenticationAgent(ImsModule imsModule) {
+		this.imsModule = imsModule;
+	}
+	
+	/**
+	 * Get IMS module
+	 * 
+	 * @return IMS module
+	 */
+	public ImsModule getImsModule() {
+		return imsModule;
 	}
 
 	/**
@@ -75,7 +94,7 @@ public class SessionAuthenticationAgent {
 					digest.buildNonceCounter(),
 					request.getContent());			
 	   		
-			// Build the Authorization header
+			// Build the Proxy-Authorization header
 			String auth = "Digest username=\"" + ImsModule.IMS_USER_PROFILE.getPrivateID() + "\"" +
 				",uri=\"" + request.getRequestURI() + "\"" +
 				",algorithm=MD5" +
@@ -98,7 +117,7 @@ public class SessionAuthenticationAgent {
 			}
 			throw new CoreException("Can't create the proxy authorization header");
 		}
-    }
+	}
 
 	/**
 	 * Read parameters of the Proxy-Authenticate header
@@ -118,4 +137,57 @@ public class SessionAuthenticationAgent {
 			digest.setNextnonce(header.getNonce());
 		}
 	}	
+
+	/**
+	 * Set the authorization header on the INVITE request
+	 * 
+	 * @param request SIP request
+	 * @throws CoreException
+	 */
+	public void setAuthorizationHeader(SipRequest request) throws CoreException {
+		try {
+			// Re-use the registration authentication (nonce caching)
+			RegistrationProcedure procedure = imsModule.getCurrentNetworkInterface().getRegistrationManager().getRegistrationProcedure();
+			if (!(procedure instanceof HttpDigestRegistrationProcedure)) {
+				return;
+			}
+			HttpDigestMd5Authentication registerDigest = ((HttpDigestRegistrationProcedure)procedure).getHttpDigest();
+			
+	   		// Update nonce parameters
+			registerDigest.updateNonceParameters();
+	
+			// Calculate response
+			String user = ImsModule.IMS_USER_PROFILE.getPrivateID();
+			String password = ImsModule.IMS_USER_PROFILE.getPassword();
+	   		String response = registerDigest.calculateResponse(user,
+	   				password,
+	   				request.getMethod(),
+	   				request.getRequestURI(),
+	   				registerDigest.buildNonceCounter(),
+					request.getContent());			
+	   		
+			// Build the Authorization header
+			String auth = "Digest username=\"" + ImsModule.IMS_USER_PROFILE.getPrivateID() + "\"" +
+				",uri=\"" + request.getRequestURI() + "\"" +
+				",algorithm=MD5" +
+				",realm=\"" + registerDigest.getRealm() + "\"" +
+				",nc=" + registerDigest.buildNonceCounter() +
+				",nonce=\"" + registerDigest.getNextnonce() + "\"" +
+				",response=\"" + response +	"\"" +
+				",cnonce=\"" + registerDigest.getCnonce() + "\"";
+			String qop = registerDigest.getQop();
+			if (qop != null) {
+				auth += ",qop=" + qop;
+			}
+			
+			// Set header in the SIP message 
+			request.addHeader(ProxyAuthorizationHeader.NAME, auth);
+
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create the authorization header", e);
+			}
+			throw new CoreException("Can't create the authorization header");
+		}
+    }
 }

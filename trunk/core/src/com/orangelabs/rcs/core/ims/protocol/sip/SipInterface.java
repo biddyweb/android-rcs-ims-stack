@@ -632,7 +632,7 @@ public class SipInterface implements SipListener {
    }
 
     /**
-     * Send a SIP message and wait a SIP response
+     * Send a SIP message and create a context to wait a response
      *
      * @param message SIP message
      * @return Transaction context
@@ -772,44 +772,7 @@ public class SipInterface implements SipListener {
             }
 
             // Re-use INVITE transaction
-            ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
-            transaction.getDialog().sendAck(ack.getStackMessage());
-        } catch(Exception e) {
-            if (logger.isActivated()) {
-                logger.error("Can't send SIP message", e);
-            }
-            throw new SipException("Can't send SIP message");
-        }
-    }
-
-    /**
-     * Send a SIP BYE
-     *
-     * @param dialog Dialog path
-     * @throws SipException
-     */
-    public void sendSipBye(SipDialogPath dialog) throws SipException {
-        try {
-            // Create the SIP request
-            SipRequest bye = SipMessageFactory.createBye(dialog);
-
-            // Set the Proxy-Authorization header
-            if (dialog.getAuthenticationAgent() != null) {
-                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(bye);
-            }
-
-            // Send the SIP message to the network
-            if (logger.isActivated()) {
-                logger.debug(">>> Send SIP BYE");
-            }
-            if (sipTraceEnabled) {
-                System.out.println(">>> " + bye.getStackMessage().toString());
-                System.out.println(TRACE_SEPARATOR);
-            }
-
-            // Create a new transaction
-            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(bye.getStackMessage());
-            transaction.getDialog().sendRequest(transaction);
+            dialog.getStackDialog().sendAck(ack.getStackMessage());
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Can't send SIP message", e);
@@ -839,6 +802,10 @@ public class SipInterface implements SipListener {
                 dialog.getAuthenticationAgent().setProxyAuthorizationHeader(cancel);
             }
 
+            // Create a new transaction
+            ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(cancel.getStackMessage());
+            transaction.setRetransmitTimer(baseTimer);
+            
             // Send the SIP message to the network
             if (logger.isActivated()) {
                 logger.debug(">>> Send SIP CANCEL");
@@ -847,9 +814,6 @@ public class SipInterface implements SipListener {
                 System.out.println(">>> " + cancel.getStackMessage().toString());
                 System.out.println(TRACE_SEPARATOR);
             }
-
-            // Create a new transaction
-            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(cancel.getStackMessage());
             transaction.sendRequest();
         } catch(Exception e) {
             if (logger.isActivated()) {
@@ -859,6 +823,43 @@ public class SipInterface implements SipListener {
         }
     }
 
+    /**
+     * Send a SIP BYE
+     *
+     * @param dialog Dialog path
+     * @throws SipException
+     */
+    public void sendSipBye(SipDialogPath dialog) throws SipException {
+        try {
+            // Create the SIP request
+            SipRequest bye = SipMessageFactory.createBye(dialog);
+            
+            // Set the Proxy-Authorization header
+            if (dialog.getAuthenticationAgent() != null) {
+                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(bye);
+            }
+
+            // Create a new transaction
+            ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(bye.getStackMessage());
+            transaction.setRetransmitTimer(baseTimer);
+
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP BYE");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + bye.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
+        	dialog.getStackDialog().sendRequest(transaction);        	
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
+    }
+    
     /**
      * Send a SIP UPDATE
      *
@@ -876,17 +877,8 @@ public class SipInterface implements SipListener {
                 dialog.getAuthenticationAgent().setProxyAuthorizationHeader(update);
             }
 
-            // Send the SIP message to the network
-            if (logger.isActivated()) {
-                logger.debug(">>> Send SIP UPDATE");
-            }
-            if (sipTraceEnabled) {
-                System.out.println(">>> " + update.getStackMessage().toString());
-                System.out.println(TRACE_SEPARATOR);
-            }
-
             // Get stack transaction
-            ClientTransaction transaction = dialog.getInvite().getStackTransaction().getSipProvider().getNewClientTransaction(update.getStackMessage());
+            ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(update.getStackMessage());
             transaction.setRetransmitTimer(baseTimer);
 
             // Create a transaction context
@@ -895,6 +887,15 @@ public class SipInterface implements SipListener {
             transactions.put(id, ctx);
             if (logger.isActivated()) {
                 logger.debug("Create a transaction context " + id);
+            }
+
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP UPDATE");
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + update.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
             }
             transaction.sendRequest();
 
@@ -908,6 +909,49 @@ public class SipInterface implements SipListener {
         }
     }
 
+    /**
+     * Send a subsequent SIP request and create a context to wait a response
+     *
+     * @param dialog Dialog path
+     * @param request Request
+     * @throws SipException
+     */
+    public SipTransactionContext sendSubsequentRequest(SipDialogPath dialog, SipRequest request) throws SipException {
+        try {
+            // Set the Proxy-Authorization header
+            if (dialog.getAuthenticationAgent() != null) {
+                dialog.getAuthenticationAgent().setProxyAuthorizationHeader(request);
+            }
+
+            // Get stack transaction
+            ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(request.getStackMessage());
+            transaction.setRetransmitTimer(baseTimer);
+
+            // Send the SIP message to the network
+            if (logger.isActivated()) {
+                logger.debug(">>> Send SIP " + request.getMethod().toUpperCase());
+            }
+            if (sipTraceEnabled) {
+                System.out.println(">>> " + request.getStackMessage().toString());
+                System.out.println(TRACE_SEPARATOR);
+            }
+        	dialog.getStackDialog().sendRequest(transaction);        	
+            
+            // Create a transaction context
+            SipTransactionContext ctx = new SipTransactionContext(transaction);
+            String id = SipTransactionContext.getTransactionContextId(request);
+            transactions.put(id, ctx);
+            
+            // Returns the created transaction to wait synchronously the response
+            return ctx;
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't send SIP message", e);
+            }
+            throw new SipException("Can't send SIP message");
+        }
+    }
+    
     /**
      * Process an asynchronously reported DialogTerminatedEvent
      *

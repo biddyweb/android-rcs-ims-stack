@@ -142,6 +142,7 @@ public class StartService extends Service {
         // Unregister network state listener
         if (networkStateListener != null) {
             unregisterReceiver(networkStateListener);
+            networkStateListener = null;
         }
     }
 

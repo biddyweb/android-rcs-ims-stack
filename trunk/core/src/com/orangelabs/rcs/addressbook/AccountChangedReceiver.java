@@ -96,4 +96,13 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 	public static boolean isAccountResetByEndUser() {
 		return RegistryFactory.getFactory().readBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, false);
 	}
+
+    /**
+     * Set user account reset manually by end user
+     * 
+     * @param Boolean
+     */
+    public static void setAccountResetByEndUser(boolean value) {
+        RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, value);
+    }
 }

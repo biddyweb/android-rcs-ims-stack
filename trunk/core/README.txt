@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.0
+Release 2.4.1
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,9 +9,12 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Bug fixs.
-- Rename package of the NIST SIP stack to avoid concurrency problems with native NIST SIP stack.
-- Update source code copyrights.
+- Bug fixs after IOT session.
+- Bug fixs on provisioning module.
+- Move widget outside of the core stack.
+- Nonce caching for session initiation.
+- GSMA RCS-e Implementation Guidelines.
+- Joyn icons.
 
 
 Bugs fixed:
@@ -19,6 +22,22 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.1
+- Mantis #0015011	Stack: Bad Cseq number for subsequent request sent by terminating side
+- Mantis #0015019	Stack: Bad naming for parameter Private_User_Identity
+- Mantis #0015023	Stack: Send a SIP OPTIONS only when CS call is connected
+- Mantis #0015012	Stack: If remote MSISDN is hidden don't try to send an OPTIONS
+- Mantis #0015010	Stack: GSMA guidelines: for richcall send only one OPTIONS from the terminating side
+- Mantis #0015009	Stack: Blocked contact don't send "delivered" notification in 1-1 chat
+- Mantis #0015008	Stack: Date time reference not the same between first message in SIP and next messages via MSRP
+- Mantis #0015007	Stack: Several contact not supported in 200 OK of REGISTER
+- Mantis #0015006	Stack: Anonymous "From" not taken into account by 1-1 chat
+- Mantis #0015005	Stack: Bad XML grammar for IMDN displayed notification
+- Mantis #0015004	Stack: Bad XML grammar for is-composing document
+- Mantis #0015003	Stack: Mime type should be "video/mp4" instead of "video/mpeg4"
+- GSMA Guidelines 	Stack: ID_1_6 Units employed for the File Transfer and Image Share configuration parameters
+
 
 v2.4.0
 - Mantis #0014674	Stack: IOT with Nokia needs to manage partial MSRP reports
@@ -124,7 +143,7 @@ v2.3.0
 - Mantis #0013151	RI: The received media codec is not taken into account
 - Mantis #0013133	Stack: Capability exchange exception
 - Mantis #0013123	Stack: Internal minor exception on chat activity expiration
-- Mantis #0013105	Stack: Messages from Samsung are not displayed on Orange device
+- Mantis #0013105	Stack: Messages are not displayed
 - Mantis #0012611	Stack: CSeq value not well incremented after a session refresh timer
 - Mantis #0012438	Rich call app: V226_RI_Option to "336" send by terminal but "336" not un adress book
 - Mantis #0012299	Stack: V226-Request capability: 3 options are send by the terminal in a verry short time

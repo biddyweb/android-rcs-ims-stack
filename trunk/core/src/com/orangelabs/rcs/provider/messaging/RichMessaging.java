@@ -276,29 +276,12 @@ public class RichMessaging {
 	 * @param status Status
 	 */
 	private void setChatMessageDeliveryStatus(String msgId, int status) {
-		//Get current status
-		Cursor cursor = cr.query(databaseUri, 
-				new String[]{RichMessagingData.KEY_MESSAGE_ID, RichMessagingData.KEY_STATUS}, 
-				RichMessagingData.KEY_MESSAGE_ID + " = \'" + msgId + "\'", 
-				null, 
-				null);
-		if (cursor!=null){
-			if (cursor.moveToFirst()){
-				int currentStatus = cursor.getInt(1);
-				if (currentStatus==EventsLogApi.STATUS_DISPLAYED){
-					// We do not update a chat message status if it is already in displayed state. This will avoid updating it with a delivered status that arrives later for example
-					cursor.close();
-					return;
-				}
-			}
-			cursor.close();
-		}
-		
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_STATUS, status);
 		cr.update(databaseUri, 
 				values, 
-				RichMessagingData.KEY_MESSAGE_ID + " = \'" + msgId + "\'", 
+				RichMessagingData.KEY_MESSAGE_ID + " = \'" + msgId + "\' and "
+			       + RichMessagingData.KEY_STATUS + " !=  " + EventsLogApi.STATUS_DISPLAYED, 
 				null);
 	}
 	

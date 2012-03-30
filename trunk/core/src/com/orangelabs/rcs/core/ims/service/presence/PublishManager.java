@@ -86,7 +86,7 @@ public class PublishManager extends PeriodicRefresher {
 	/**
 	 * Authentication agent
 	 */
-	private SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent();
+	private SessionAuthenticationAgent authenticationAgent;
 
 	/**
      * The logger
@@ -100,7 +100,8 @@ public class PublishManager extends PeriodicRefresher {
      */
     public PublishManager(ImsModule parent) {
     	this.imsModule = parent;
-    	
+		this.authenticationAgent = new SessionAuthenticationAgent(imsModule);
+
     	int defaultExpirePeriod = RcsSettings.getInstance().getPublishExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
     	if ((minExpireValue != -1) && (defaultExpirePeriod < minExpireValue)) {

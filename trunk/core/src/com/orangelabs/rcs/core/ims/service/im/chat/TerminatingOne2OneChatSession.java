@@ -40,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -183,7 +184,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
-	            "a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +
+	            "a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;

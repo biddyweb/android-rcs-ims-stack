@@ -23,6 +23,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipInterface;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -143,7 +144,7 @@ public class SipManager {
 	}
 
 	/**
-     * Send a SIP message and wait a SIP response
+     * Send a SIP message and create a context to wait a response
      *
      * @param message SIP message
      * @return Transaction context
@@ -214,17 +215,17 @@ public class SipManager {
 	}
 
     /**
-     * Send a SIP UPDATE
+     * Send a subsequent SIP request
      *
      * @param dialog Dialog path
-     * @return Transaction context
+     * @param request Request
      * @throws SipException
      */
-	public SipTransactionContext sendSipUpdate(SipDialogPath dialog) throws SipException {
+	public SipTransactionContext sendSubsequentRequest(SipDialogPath dialog, SipRequest request) throws SipException {
 		if (sipstack != null) {
-			return sipstack.sendSipUpdate(dialog);
+			return sipstack.sendSubsequentRequest(dialog, request);
 		} else {
 			throw new SipException("Stack not initialized");
 		}
-    }
+	}
 }

@@ -343,7 +343,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF + 
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF + 
 			CRLF + 
 			content;	
 		   
@@ -369,7 +369,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + CRLF +
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
 			CRLF + 
 			content;	
@@ -451,11 +451,21 @@ public class ChatUtils {
 	 * @return XML document
 	 */
 	public static String buildDeliveryReport(String msgId, String status) {
+		String method;
+		if (status.equals(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+			method = "display-notification";
+		} else
+		if (status.equals(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+			method = "delivery-notification";
+		} else {
+			method = "processing-notification";
+		}
+		
 		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
 			"<imdn xmlns=\"urn:ietf:params:xml:ns:imdn\">" + CRLF +
-	        " <message-id>" + msgId + "</message-id>" + CRLF +
-	        " <datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
-	        " <delivery-notification><status><" + status + "/></status></delivery-notification>" + CRLF +
+	        "<message-id>" + msgId + "</message-id>" + CRLF +
+	        "<datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
+	        "<" + method + "><status><" + status + "/></status></" + method + ">" + CRLF +
 	        "</imdn>";
 	}
 	

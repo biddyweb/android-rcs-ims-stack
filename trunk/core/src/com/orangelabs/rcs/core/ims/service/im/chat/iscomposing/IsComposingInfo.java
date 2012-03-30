@@ -116,6 +116,7 @@ public class IsComposingInfo {
 			"<state>" + state + "</state>" + CRLF  +
 			"<contenttype>" + InstantMessage.MIME_TYPE + "</contenttype>" + CRLF +
 			"<lastactive>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</lastactive>" + CRLF +
+			"<refresh>60</refresh>" + CRLF +
 		 	"</isComposing>";
 	}
 }

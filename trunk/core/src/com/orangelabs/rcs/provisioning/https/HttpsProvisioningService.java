@@ -28,6 +28,7 @@ import com.orangelabs.rcs.utils.HttpUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import org.apache.http.Header;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.ClientProtocolException;
@@ -37,6 +38,7 @@ import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerPNames;
 import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -61,6 +63,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Proxy;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
@@ -69,6 +72,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 /**
  * HTTPS auto configuration service
@@ -163,7 +167,7 @@ public class HttpsProvisioningService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {    	
+    public IBinder onBind(Intent intent) {
     	return null;
     }
     
@@ -268,6 +272,7 @@ public class HttpsProvisioningService extends Service {
                 ProvisioningParser parser = new ProvisioningParser(result.content);
                 if (parser.parse()) {
                     ProvisioningInfo info = parser.getProvisioningInfo();
+                    
                     // save version
                     setProvisioningVersion(getApplicationContext(), info.version);
                     if (logger.isActivated()) {
@@ -449,10 +454,17 @@ public class HttpsProvisioningService extends Service {
 			params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
 					new ConnPerRouteBean(30));
 			params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+                String proxyHost = Proxy.getDefaultHost();
+                if (proxyHost != null && proxyHost.length() > 1) {
+                    int proxyPort = Proxy.getDefaultPort();
+                    params.setParameter(ConnRoutePNames.DEFAULT_PROXY, new HttpHost(proxyHost, proxyPort));
+                }
+            }
 			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 
-			ClientConnectionManager cm = new SingleClientConnManager(params,
-					schemeRegistry);
+			ClientConnectionManager cm = new SingleClientConnManager(params, schemeRegistry);
 			DefaultHttpClient client = new DefaultHttpClient(cm, params);
 
 			// Create a local instance of cookie store
@@ -477,6 +489,7 @@ public class HttpsProvisioningService extends Service {
                 response = executeRequest("http",requestUri, client, localContext);
             }
             result.code = response.getStatusLine().getStatusCode(); 
+            result.content = EntityUtils.toString(response.getEntity());
             if (result.code != 200) {
                 if (result.code == 503) {
                     result.retryAfter = getRetryAfter(response);
@@ -529,6 +542,7 @@ public class HttpsProvisioningService extends Service {
     private HttpResponse executeRequest(String protocol, String request, DefaultHttpClient client, HttpContext localContext) throws URISyntaxException, ClientProtocolException, IOException {
         HttpGet get = new HttpGet();
         get.setURI(new URI(protocol + "://" + request));
+        get.addHeader("Accept-Language", getUserLanguage());
         if (logger.isActivated()) {
             logger.debug("HTTP request: " + get.getURI().toString());
         }
@@ -599,6 +613,15 @@ public class HttpsProvisioningService extends Service {
 			return UNKNOWN;
 		}		
 	}
+
+    /**
+     * Get the current device language
+     *
+     * @return device language (like fr-FR)
+     */
+    private String getUserLanguage() {
+        return Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
+    }
 
     /**
      * Get the provisioning version from the registry

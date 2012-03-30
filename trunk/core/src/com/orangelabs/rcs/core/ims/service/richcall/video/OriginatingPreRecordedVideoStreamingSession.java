@@ -111,6 +111,9 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
                 SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
                         RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
 
+    	        // Set the Authorization header
+    	        getAuthenticationAgent().setAuthorizationHeader(invite);
+                
                 // Set initial request in the dialog path
                 getDialogPath().setInvite(invite);
 
