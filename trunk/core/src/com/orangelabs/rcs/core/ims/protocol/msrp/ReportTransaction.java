@@ -33,7 +33,7 @@ public class ReportTransaction extends Object {
     /**
      * Reported size
      */
-    private long reportedSize = -1L;
+    private long reportedSize = 0L;
     
     /**
 	 * Constructor
