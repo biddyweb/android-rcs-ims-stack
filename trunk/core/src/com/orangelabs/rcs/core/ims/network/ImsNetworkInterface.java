@@ -330,16 +330,27 @@ public abstract class ImsNetworkInterface {
      */
 	private SRVRecord getBestDnsSRV(Record[] records) {
 		SRVRecord result = null;
-		int weight = -1;
         for (int i = 0; i < records.length; i++) {
         	SRVRecord srv = (SRVRecord)records[i];
 			if (logger.isActivated()) {
 				logger.debug("SRV record: " + srv.toString());
 			}
-			if ((result == null) || (srv.getWeight() > weight)) {
+			if (result == null) {
+				// First record
 				result = srv;
-				weight = srv.getWeight();
-			}			
+			} else {
+				// Next record
+				if (srv.getPriority() < result.getPriority()) {
+					// Lowest priority
+					result = srv;
+				} else
+				if (srv.getPriority() == result.getPriority()) {
+					// Highest weight
+					if (srv.getWeight() > result.getWeight()) {
+						result = srv;
+					}
+				}
+			}
         }
         return result;
 	}
