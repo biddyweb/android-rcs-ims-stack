@@ -276,6 +276,8 @@ public class MsrpSession {
 			cancelTransfer = false;
 			if (successReportOption) {
 				reportTransaction = new ReportTransaction();
+			} else {
+				reportTransaction = null;
 			}
 			
 			// Send data chunk by chunk
@@ -605,10 +607,6 @@ public class MsrpSession {
 		requestTransaction = new RequestTransaction();
 		connection.sendChunk(buffer.toByteArray());
 		buffer.close();
-		requestTransaction.waitResponse();
-		if (!requestTransaction.isResponseReceived()) {
-			throw new MsrpException("timeout");
-		}
 	}
 	
 	/**
@@ -682,7 +680,7 @@ public class MsrpSession {
 				} catch(MsrpException e) {
 					// Report failed
 					if (logger.isActivated()) {
-						logger.info("Can't send report");
+						logger.error("Can't send report", e);
 					}
 					
 					// Notify event listener
