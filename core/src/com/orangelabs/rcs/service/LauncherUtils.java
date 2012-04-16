@@ -18,16 +18,15 @@
 
 package com.orangelabs.rcs.service;
 
-import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
-import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.platform.registry.RegistryFactory;
-import com.orangelabs.rcs.provider.eab.ContactsManager;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.content.Context;
 import android.content.Intent;
+
+import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
+import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Launcher utility functions
@@ -47,7 +46,7 @@ public class LauncherUtils {
      * @param boot indicates if RCS is launched from the device boot
      */
     public static void launchRcsService(Context context, boolean boot) {
-        Intent intent = new Intent(StartService.SERVICE_NAME);
+        Intent intent = new Intent(ClientApiUtils.STARTUP_SERVICE_NAME);
         if (boot) {
             intent.putExtra("boot", true);
         }
@@ -64,7 +63,7 @@ public class LauncherUtils {
             logger.debug("Launch RCS service");
         }
         if (RcsSettings.getInstance().isServiceActivated()) {
-            context.startService(new Intent(RcsCoreService.SERVICE_NAME));
+            context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
         }
     }
 
@@ -78,7 +77,7 @@ public class LauncherUtils {
             logger.debug("Force launch RCS service");
         }
         RcsSettings.getInstance().setServiceActivationState(true);
-        context.startService(new Intent(RcsCoreService.SERVICE_NAME));
+        context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
     }
 
     /**
@@ -90,9 +89,9 @@ public class LauncherUtils {
         if (logger.isActivated()) {
             logger.debug("Stop RCS service");
         }
-        context.stopService(new Intent(StartService.SERVICE_NAME));
-        context.stopService(new Intent(HttpsProvisioningService.SERVICE_NAME));
-        context.stopService(new Intent(RcsCoreService.SERVICE_NAME));
+        context.stopService(new Intent(ClientApiUtils.STARTUP_SERVICE_NAME));
+        context.stopService(new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME));
+        context.stopService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
     }
 
     /**

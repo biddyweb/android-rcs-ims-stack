@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.protocol.sip;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.IdGenerator;
 
@@ -35,6 +36,11 @@ import javax2.sip.Dialog;
  * @author JM. Auffret
  */
 public class SipDialogPath {
+	/**
+	 * Last min session expire period key
+	 */
+	private static final String REGISTRY_MIN_SESSION_EXPIRE_PERIOD = "MinSessionExpirePeriod";
+
 	/**
 	 * SIP stack interface
 	 */
@@ -150,7 +156,14 @@ public class SipDialogPath {
 		this.localParty = localParty;
 		this.remoteParty = remoteParty;
 		this.route = route;
-		this.sessionExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod();
+		
+    	int defaultExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod();
+    	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_SESSION_EXPIRE_PERIOD, -1);
+    	if ((minExpireValue != -1) && (defaultExpireTime < minExpireValue)) {
+        	this.sessionExpireTime = minExpireValue;
+    	} else {
+    		this.sessionExpireTime = defaultExpireTime;
+    	}
 	}
 
 	/**
@@ -420,12 +433,21 @@ public class SipDialogPath {
 	}
 
 	/**
-	 * Returns the session expire value
+	 * Set the session expire value
 	 * 
 	 * @param sessionExpireTime Session expire time in seconds
 	 */
 	public void setSessionExpireTime(int sessionExpireTime) {
 		this.sessionExpireTime = sessionExpireTime;
+	}
+	
+	/**
+	 * Set the min session expire value
+	 * 
+	 * @param sessionExpireTime Session expire time in seconds
+	 */
+	public void setMinSessionExpireTime(int sessionExpireTime) {
+		RegistryFactory.getFactory().writeInteger(REGISTRY_MIN_SESSION_EXPIRE_PERIOD, sessionExpireTime);		
 	}
 	
 	/**

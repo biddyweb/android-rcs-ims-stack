@@ -34,6 +34,11 @@ public class ReportTransaction extends Object {
      * Reported size
      */
     private long reportedSize = 0L;
+
+    /**
+     * Status code
+     */
+    private int statusCode = -1;
     
     /**
 	 * Constructor
@@ -48,10 +53,23 @@ public class ReportTransaction extends Object {
 	 */
 	public void notifyReport(Hashtable<String, String> headers) {
 		synchronized(this) {
-			// Update reported size
+			// Get status code
+			String status = headers.get(MsrpConstants.HEADER_STATUS);
+			if ((status != null) && (status.startsWith("000 "))) {
+				String[] parts = status.split(" "); 
+				if (parts.length > 0) {
+					try {
+						statusCode = Integer.parseInt(parts[1]);
+					} catch(NumberFormatException e) {
+						statusCode = -1;
+					}
+				}
+			}
+			
+			// Get reported size
 			String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
 			if (byteRange != null) {
-				reportedSize += MsrpUtils.getChunkSize(byteRange);
+				reportedSize = MsrpUtils.getChunkSize(byteRange);
 			}
 
 			// Unblock semaphore
@@ -92,5 +110,14 @@ public class ReportTransaction extends Object {
 	 */
 	public long getReportedSize() {
 		return reportedSize;
+	}
+
+	/**
+	 * Returns the status
+	 * 
+	 * @return Status or -1 in case of error
+	 */
+	public int getStatusCode() {
+		return statusCode;
 	}
 }

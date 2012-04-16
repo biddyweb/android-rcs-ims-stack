@@ -18,7 +18,8 @@
 
 package com.orangelabs.rcs.service.api.client;
 
-import android.app.ActivityManager;
+import java.util.Vector;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -28,25 +29,12 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 
-import java.util.List;
-import java.util.Vector;
-
 /**
  * Client API
  * 
  * @author jexa7410
  */
 public abstract class ClientApi {
-	/**
-	 * RCS permission
-	 */
-	public final static String RCS_PERMISSION = "com.orangelabs.rcs.permission.RCS";
-
-	/**
-	 * RCS extensions permission
-	 */
-	public final static String RCS_EXTENSION_PERMISSION = "com.orangelabs.rcs.permission.RCS_EXTENSION";
-
 	/**
 	 * API event listeners
 	 */
@@ -77,14 +65,14 @@ public abstract class ClientApi {
     /**
      * Connect API
      */
-    public void connectApi(){
+    public void connectApi() {
     	// Connect to IMS API
     	ctx.bindService(new Intent(IImsApi.class.getName()), imsApiConnection, 0);
-    	
-		// Register the IMS connection broadcast receiver
-		ctx.registerReceiver(imsConnectionReceiver, new IntentFilter(ClientApiIntents.SERVICE_REGISTRATION));
 
-		if (!ClientApi.isServiceStarted(ctx)) {
+    	// Register the IMS connection broadcast receiver
+		ctx.registerReceiver(imsConnectionReceiver, new IntentFilter(ImsApiIntents.IMS_STATUS));
+
+		if (!ClientApiUtils.isServiceStarted(ctx)) {
         	// Notify event listener
         	notifyEventApiDisabled();
 		}
@@ -93,10 +81,10 @@ public abstract class ClientApi {
     /**
      * Disconnect API
      */
-    public void disconnectApi(){
+    public void disconnectApi() {
 		// Unregister the broadcast receiver
     	ctx.unregisterReceiver(imsConnectionReceiver);
-    	
+
     	// Disconnect from IMS API
     	ctx.unbindService(imsApiConnection);
     }
@@ -122,7 +110,7 @@ public abstract class ClientApi {
         	imsCoreApi = null;
         }
     };
-
+    
     /**
 	 * Add an API event listener
 	 * 
@@ -230,8 +218,8 @@ public abstract class ClientApi {
 			ImsEventListener imsListener = (ImsEventListener)imsListeners.elementAt(i);
 			imsListener.handleImsDisconnected();
 		}
-	}
-	
+	}	
+
 	/**
 	 * Is service connected to the IMS
 	 * 
@@ -249,50 +237,4 @@ public abstract class ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
-	
-	/**
-	 * Is service started
-	 *
-	 * @param ctx Context
-	 * @return Boolean
-	 */
-	public static boolean isServiceStarted(Context ctx) {
-	    ActivityManager activityManager = (ActivityManager)ctx.getSystemService(Context.ACTIVITY_SERVICE);
-	    List<ActivityManager.RunningServiceInfo> serviceList = activityManager.getRunningServices(Integer.MAX_VALUE);
-	     for(int i = 0; i < serviceList.size(); i++) {
-	           ActivityManager.RunningServiceInfo serviceInfo = serviceList.get(i);
-	           ComponentName serviceName = serviceInfo.service;
-	           if (serviceName.getClassName().equals("com.orangelabs.rcs.service.RcsCoreService")) {
-	                 if (serviceInfo.pid != 0) {
-	                      return true;
-	                 } else {
-	                      return false;
-	                 }
-	           }
-	     }
-	     return false;
-	}	
-	
-	/**
-	 * Start RCS service
-	 *
-	 * @param ctx Context
-	 */
-	public static void startRcsService(Context ctx) {
-        ctx.startService(new Intent("com.orangelabs.rcs.service.START"));
-        // Intentional use of string and not class SERVICE_NAME
-	}
-
-	/**
-	 * Stop RCS service
-	 *
-	 * @param ctx Context
-	 */
-	public static void stopRcsService(Context ctx) {
-        ctx.stopService(new Intent("com.orangelabs.rcs.service.START"));
-        ctx.stopService(new Intent("com.orangelabs.rcs.provisioning.HTTPS"));
-        ctx.stopService(new Intent("com.orangelabs.rcs.SERVICE"));
-        // Intentional use of string and not class SERVICE_NAME
-	}
-
 }

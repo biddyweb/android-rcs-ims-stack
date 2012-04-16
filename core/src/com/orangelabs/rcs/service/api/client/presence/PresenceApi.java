@@ -76,15 +76,6 @@ public class PresenceApi extends ClientApi {
     	ctx.unbindService(apiConnection);
     }
 
-    /**
-     * Returns the core service API
-     * 
-     * @return API
-     */
-	public IPresenceApi getCoreServiceApi() {
-		return coreApi;
-	}
-
 	/**
 	 * Core service API connection
 	 */

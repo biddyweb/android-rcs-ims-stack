@@ -42,31 +42,26 @@ public class SessionAuthenticationAgent {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	/**
-	 * HTTP Digest MD5 agent
+	 * HTTP Digest MD5 agent for session
 	 */
 	private HttpDigestMd5Authentication digest = new HttpDigestMd5Authentication();
 
 	/**
-	 * IMS module
+	 * HTTP Digest MD5 agent for register (nonce caching procedure)
 	 */
-	private ImsModule imsModule;
-	
+	private HttpDigestMd5Authentication registerDigest = null;
+
 	/**
 	 * Constructor
 	 * 
 	 * @param imsModule IMS module
 	 */
 	public SessionAuthenticationAgent(ImsModule imsModule) {
-		this.imsModule = imsModule;
-	}
-	
-	/**
-	 * Get IMS module
-	 * 
-	 * @return IMS module
-	 */
-	public ImsModule getImsModule() {
-		return imsModule;
+		// Re-use the registration authentication (nonce caching)
+		RegistrationProcedure procedure = imsModule.getCurrentNetworkInterface().getRegistrationManager().getRegistrationProcedure();
+		if (procedure instanceof HttpDigestRegistrationProcedure) {
+			registerDigest = ((HttpDigestRegistrationProcedure)procedure).getHttpDigest();
+		}
 	}
 
 	/**
@@ -147,11 +142,9 @@ public class SessionAuthenticationAgent {
 	public void setAuthorizationHeader(SipRequest request) throws CoreException {
 		try {
 			// Re-use the registration authentication (nonce caching)
-			RegistrationProcedure procedure = imsModule.getCurrentNetworkInterface().getRegistrationManager().getRegistrationProcedure();
-			if (!(procedure instanceof HttpDigestRegistrationProcedure)) {
+			if ((registerDigest == null) || (registerDigest.getNextnonce() == null)) {
 				return;
 			}
-			HttpDigestMd5Authentication registerDigest = ((HttpDigestRegistrationProcedure)procedure).getHttpDigest();
 			
 	   		// Update nonce parameters
 			registerDigest.updateNonceParameters();

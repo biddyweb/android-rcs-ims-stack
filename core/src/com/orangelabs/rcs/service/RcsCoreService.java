@@ -47,6 +47,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.service.api.client.IImsApi;
+import com.orangelabs.rcs.service.api.client.ImsApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
@@ -90,11 +91,6 @@ import java.util.Vector;
  * @author jexa7410
  */
 public class RcsCoreService extends Service implements CoreListener {
-	/**
-	 * Service name
-	 */
-	public static final String SERVICE_NAME = "com.orangelabs.rcs.SERVICE";
-
 	/**
 	 * Notification ID
 	 */
@@ -447,7 +443,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 		
 		// Send registration intent
-		Intent intent = new Intent(ClientApiIntents.SERVICE_REGISTRATION);
+		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
 		intent.putExtra("status", true);
 		getApplicationContext().sendBroadcast(intent);
 		
@@ -466,7 +462,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Send registration intent
-		Intent intent = new Intent(ClientApiIntents.SERVICE_REGISTRATION);
+		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
 		intent.putExtra("status", false);
 		getApplicationContext().sendBroadcast(intent);
 
@@ -483,7 +479,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Send registration intent
-		Intent intent = new Intent(ClientApiIntents.SERVICE_REGISTRATION);
+		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
 		intent.putExtra("status", false);
 		getApplicationContext().sendBroadcast(intent);
 

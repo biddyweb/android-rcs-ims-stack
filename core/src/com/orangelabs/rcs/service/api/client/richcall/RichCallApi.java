@@ -66,15 +66,6 @@ public class RichCallApi extends ClientApi {
     	
 		ctx.unbindService(apiConnection);
     }
-
-    /**
-     * Returns the core service API
-     * 
-     * @return API
-     */
-	public IRichCallApi getCoreServiceApi() {
-		return coreApi;
-	}
 	
 	/**
 	 * Core service API connection

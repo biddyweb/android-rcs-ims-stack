@@ -18,7 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import com.orangelabs.rcs.core.ims.ImsModule;
+import java.util.Vector;
+
+import javax2.sip.header.SubjectHeader;
+
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -38,10 +41,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Vector;
-
-import javax2.sip.header.SubjectHeader;
 
 /**
  * Originating one-to-one chat session
@@ -70,9 +69,11 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		super(parent, contact);
 
 		// Set first message
-		InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(),
-				msg, getImdnManager().isImdnActivated());
-		setFirstMesssage(firstMessage);
+		if ((msg != null) && (msg.length() > 0)) {
+			InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(),
+					msg, getImdnManager().isImdnActivated());
+			setFirstMesssage(firstMessage);
+		}
 		
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -114,8 +115,8 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	SipRequest invite; 
 	    	if (getFirstMessage() != null) {
 		    	// Build CPIM part
-				String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-				String to = getRemoteContact();
+				String from = ChatUtils.ANOMYNOUS_URI;
+				String to = ChatUtils.ANOMYNOUS_URI;
 	    		String cpim = ChatUtils.buildCpimMessageWithImdn(
 	    					from,
 	    					to,
@@ -423,10 +424,16 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	        	handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
 	        	return;
 	        }
-	        
+	                
+	        // Set the min expire value
+	        getDialogPath().setMinSessionExpireTime(minExpire);
+
 	        // Set the expire value
 	        getDialogPath().setSessionExpireTime(minExpire);
 	
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
+	        
 	        // Create a new INVITE with the right expire period
 	        if (logger.isActivated()) {
 	        	logger.info("Send new INVITE");
@@ -440,12 +447,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		        invite = createInviteRequest(getDialogPath().getLocalContent());
 	    	}
 
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+	        
 	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
-	        
+
 	        // Send INVITE request
 	        sendInvite(invite);
 	        

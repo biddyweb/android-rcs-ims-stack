@@ -68,15 +68,6 @@ public class MessagingApi extends ClientApi {
     	
     	ctx.unbindService(apiConnection);
     }
-
-    /**
-     * Returns the core service API
-     * 
-     * @return API
-     */
-	public IMessagingApi getCoreServiceApi() {
-		return coreApi;
-	}
     
 	/**
 	 * Core service API connection
