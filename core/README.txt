@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.1
+Release 2.4.2
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,12 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Bug fixs after IOT session.
-- Bug fixs on provisioning module.
-- Move widget outside of the core stack.
-- Nonce caching for session initiation.
+- Bug fixs after IOT.
 - GSMA RCS-e Implementation Guidelines.
-- Joyn icons.
 
 
 Bugs fixed:
@@ -22,6 +18,21 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.2
+- Open source #62	Stack: API inconsistency - ImsApi does not follow the same usage pattern as other *Api classes
+- Mantis #0015081	Stack: Content type "message/CPIM" should be not case sensitive for incoming SIP MESSAGE
+- Mantis #0015080	Stack: Message ID header should be after From/To headers in MSRP REPORT request
+- Mantis #0015079	Stack: Partial MSRP REPORT not well aggregated
+- Open source #60	Stack: Partial SRV implementation
+- Mantis #0015068	Stack: There is no response to wait on MSRP REPORT request
+- Mantis #0015067	Stack: Min session expire not saved after 422 error
+- Mantis #0015066	Stack: Bad Cseq after 422 Session Interval Too Small
+- Mantis #0015027	Stack: Profile-level-id=42900B not supported by packet video software codec
+- GSMA Guidelines 	Stack: ID_4_16 Video interoperability: H264 profile 1b encoding
+- GSMA Guidelines 	Stack: ID_4_X Negative IMDN notifications
+- GSMA Guidelines 	Stack: ID_4_4 Hiding identities in CPIM/IMDN
+- GSMA Guidelines 	Stack: ID_2_1 FQDN resolution
 
 v2.4.1
 - Mantis #0015011	Stack: Bad Cseq number for subsequent request sent by terminating side
