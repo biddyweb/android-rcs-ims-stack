@@ -63,16 +63,5 @@ public class ClientApiIntents {
      * </ul>
      * </ul>
      */
-	public final static String SERVICE_STATUS = "com.orangelabs.rcs.SERVICE_STATUS";
-	
-	 /**
-     * Intent broadcasted when the registration state has changed (see boolean attribute "status"). 
-     * 
-     * <p>The intent will have the following extra values:
-     * <ul>
-     *   <li><em>status</em> - Registration status.</li>
-     * </ul>
-     * </ul>
-     */
-	public final static String SERVICE_REGISTRATION = "com.orangelabs.rcs.SERVICE_REGISTRATION";
+	public final static String SERVICE_STATUS = "com.orangelabs.rcs.SERVICE_STATUS";	
 }

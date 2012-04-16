@@ -18,19 +18,19 @@
 
 package com.orangelabs.rcs.addressbook;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.registry.RegistryFactory;
-import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.service.api.client.ClientApi;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.accounts.Account;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.widget.Toast;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * The user changed an account (modify, delete or add)
@@ -63,7 +63,7 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 			// Set the user account manually deleted flag
 			RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, true);
 			
-			if (ClientApi.isServiceStarted(context)){
+			if (ClientApiUtils.isServiceStarted(context)){
 				
 				if (logger.isActivated()){
 					logger.debug("RCS service is running, we stop it");

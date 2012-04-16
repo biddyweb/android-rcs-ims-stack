@@ -302,9 +302,15 @@ public class OriginatingSipSession extends GenericSipSession {
 	        	return;
 	        }
 	        
+	        // Set the min expire value
+	        getDialogPath().setMinSessionExpireTime(minExpire);
+
 	        // Set the expire value
 	        getDialogPath().setSessionExpireTime(minExpire);
 	
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
+
 	        // Create a new INVITE with the right expire period
 	        if (logger.isActivated()) {
 	        	logger.info("Send new INVITE");
@@ -314,11 +320,11 @@ public class OriginatingSipSession extends GenericSipSession {
 	        		new String [] { getFeatureTag() },
 					getDialogPath().getLocalContent());
 
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+
 	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
 	
 	        // Send INVITE request
 	        sendInvite(invite);

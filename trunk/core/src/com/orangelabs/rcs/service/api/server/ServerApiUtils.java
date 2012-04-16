@@ -24,7 +24,7 @@ import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.ClientApiPermission;
 import com.orangelabs.rcs.service.api.client.SessionState;
 
 /**
@@ -39,7 +39,7 @@ public class ServerApiUtils {
 	 * @throws SecurityException
 	 */
 	public static void testPermission() throws SecurityException {
-		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApi.RCS_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApiPermission.RCS_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
 			throw new SecurityException();
 	    }
 	}
@@ -50,7 +50,7 @@ public class ServerApiUtils {
 	 * @throws SecurityException
 	 */
 	public static void testPermissionForExtensions() throws SecurityException {
-		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApi.RCS_EXTENSION_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+		if (AndroidFactory.getApplicationContext().checkCallingOrSelfPermission(ClientApiPermission.RCS_EXTENSION_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
 			throw new SecurityException();
 	    }
 	}

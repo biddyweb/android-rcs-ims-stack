@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
 
-import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.service.ImsService;
@@ -47,16 +46,16 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ChatSession extends ImsServiceSession implements MsrpEventListener {
-    /**
-	 * List of participants
-	 */
-	private ListOfParticipant participants = new ListOfParticipant();
-
 	/**
 	 * First message
 	 */
 	private InstantMessage firstMessage = null;
-	
+
+	/**
+	 * List of participants
+	 */
+	private ListOfParticipant participants = new ListOfParticipant();
+
 	/**
 	 * MSRP manager
 	 */
@@ -105,6 +104,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Set the session participants
 		setParticipants(participants);
 	}
+		
+	/**
+	 * Return the first message of the session
+	 * 
+	 * @return Instant message
+	 */
+	public InstantMessage getFirstMessage() {
+		return firstMessage;
+	}	
 	
 	/**
 	 * Set first message
@@ -113,8 +121,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	protected void setFirstMesssage(InstantMessage firstMessage) {
 		this.firstMessage = firstMessage; 
-	}
-			
+	}	
+
 	/**
 	 * Returns the IMDN manager
 	 * 
@@ -141,15 +149,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public String getContributionID() {
 		return getSessionID();
 	}	
-	
-	/**
-	 * Return the first message of the session
-	 * 
-	 * @return Instant message
-	 */
-	public InstantMessage getFirstMessage() {
-		return firstMessage;
-	}
 	
 	/**
 	 * Returns the list of participants
@@ -468,6 +467,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public abstract void sendTextMessage(String msgId, String txt);
 	
 	/**
+	 * Send message delivery status via MSRP
+	 * 
+	 * @param contact Contact that requested the delivery status
+	 * @param msgId Message ID
+	 * @param status Status
+	 */
+	public abstract void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status);
+		
+	/**
 	 * Send is composing status
 	 * 
 	 * @param status Status
@@ -488,28 +496,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public abstract void addParticipants(List<String> participants);
 
-	/**
-	 * Send message delivery status via MSRP
-	 * 
-	 * @param contact Contact that requested the delivery status
-	 * @param msgId Message ID
-	 * @param status Status
-	 */
-	public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
-		// Send status in CPIM + IMDN headers
-		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = contact;
-		String imdn = ChatUtils.buildDeliveryReport(msgId, status);
-		String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
-		
-		// Send data
-		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
-		if (result) {
-			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-		}
-	}
-		
 	/**
      * Receive a message delivery status from a SIP message
      * 

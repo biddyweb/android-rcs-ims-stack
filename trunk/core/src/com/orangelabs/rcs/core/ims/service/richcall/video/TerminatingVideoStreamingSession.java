@@ -97,7 +97,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 send415Error(getDialogPath().getInvite());
                 
                 // Unsupported media type
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE, ""));
+                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
             VideoContent content = (VideoContent) getContent();

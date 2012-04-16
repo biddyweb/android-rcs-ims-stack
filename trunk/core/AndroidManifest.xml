@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.1"
+ android:versionName="2.4.2"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -177,14 +177,14 @@
 		<!-- HTTPS provisioning service -->
 		<service android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningService">  
 	        <intent-filter>
-	            <action android:name="com.orangelabs.rcs.provisioning.HTTPS"/>
+	            <action android:name="com.orangelabs.rcs.PROVISIONING"/>
 	        </intent-filter>
 	    </service>
 
         <!-- RCS Start service -->
         <service android:name="com.orangelabs.rcs.service.StartService">  
             <intent-filter>
-                <action android:name="com.orangelabs.rcs.service.START"/>
+                <action android:name="com.orangelabs.rcs.STARTUP"/>
             </intent-filter>
         </service>
 

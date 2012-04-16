@@ -234,7 +234,7 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
                 send415Error(getDialogPath().getInvite());
                 
                 // Unsupported media type
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE, ""));
+                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
             getContent().setEncoding("video/" + selectedVideoCodec.getCodecName());
@@ -374,21 +374,27 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
                 return;
             }
 
-            // Set the expire value
+	        // Set the min expire value
+	        getDialogPath().setMinSessionExpireTime(minExpire);
+
+	        // Set the expire value
             getDialogPath().setSessionExpireTime(minExpire);
 
-            // Create a new INVITE with the right expire period
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
+
+	        // Create a new INVITE with the right expire period
             if (logger.isActivated()) {
                 logger.info("Send new INVITE");
             }
             SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
                     RichcallService.FEATURE_TAGS_VIDEO_SHARE, getDialogPath().getLocalContent());
 
-            // Reset initial request in the dialog path
-            getDialogPath().setInvite(invite);
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
 
-            // Set the Proxy-Authorization header
-            getAuthenticationAgent().setProxyAuthorizationHeader(invite);
+	        // Reset initial request in the dialog path
+            getDialogPath().setInvite(invite);
 
             // Send INVITE request
             sendInvite(invite);

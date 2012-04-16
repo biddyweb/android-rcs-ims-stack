@@ -383,7 +383,7 @@ public class RegistrationManager extends PeriodicRefresher {
                 	// 401 Unauthorized
                 	handle401Unauthorized(ctx);
             	} else { 
-                	// We reached 3 successive 401 failures, stop registration retrys
+                	// We reached 3 successive 401 failures, stop registration retries
             		handleError(new ImsError(ImsError.REGISTRATION_FAILED, "too many 401"));
             		
                 	// Reset the number of 401 failures

@@ -229,7 +229,7 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
                 }
                 // Terminate session
                 terminateSession();
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE, ""));
+                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
 
@@ -367,8 +367,14 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 	        	return;
 	        }
 
+	        // Set the min expire value
+	        getDialogPath().setMinSessionExpireTime(minExpire);
+
 	        // Set the expire value
 	        getDialogPath().setSessionExpireTime(minExpire);
+
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
 
 	        // Create a new INVITE with the right expire period
 	        if (logger.isActivated()) {
@@ -379,11 +385,11 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE,
 					getDialogPath().getLocalContent());
 
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+
 	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
-
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
 
 	        // Send INVITE request
 	        sendInvite(invite);

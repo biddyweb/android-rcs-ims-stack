@@ -80,11 +80,6 @@ import java.util.Locale;
  * @author jexa7410
  */
 public class HttpsProvisioningService extends Service {
-	/**
-	 * Service name
-	 */
-	public static final String SERVICE_NAME = "com.orangelabs.rcs.provisioning.HTTPS";
-
     /**
      * Key for provisioning version 
      */

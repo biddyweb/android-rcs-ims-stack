@@ -68,15 +68,6 @@ public class SipApi extends ClientApi {
 		ctx.unbindService(apiConnection);
     }
 
-    /**
-     * Returns the core service API
-     * 
-     * @return API
-     */
-	public ISipApi getCoreServiceApi() {
-		return coreApi;
-	}
-	
 	/**
 	 * Core service API connection
 	 */

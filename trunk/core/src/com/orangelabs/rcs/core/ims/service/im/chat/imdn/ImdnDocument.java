@@ -62,12 +62,7 @@ public class ImdnDocument {
 	 * Disposition notification header positive delivery value
 	 */
 	public static final String POSITIVE_DELIVERY = "positive-delivery";
-	
-	/**
-	 * Disposition notification header negative delivery value
-	 */
-	public static final String NEGATIVE_DELIVERY = "negative-delivery";
-	
+		
 	/**
 	 * Disposition notification header display value
 	 */

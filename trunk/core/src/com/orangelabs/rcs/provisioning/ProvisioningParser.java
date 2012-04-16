@@ -207,13 +207,21 @@ public class ProvisioningParser {
                 }
                 if (acceptBtn == null) {
                     if ((acceptBtn = getValueByParamName("Accept_btn", childnode)) != null) {
-                        provisioningInfo.acceptBtn = acceptBtn;
+                        if (acceptBtn.equals("1")) {
+                            provisioningInfo.acceptBtn = true;
+                        } else {
+                            provisioningInfo.acceptBtn = false;
+                        }
                         continue;
                     }
                 }
                 if (rejectBtn == null) {
                     if ((rejectBtn = getValueByParamName("Reject_btn", childnode)) != null) {
-                        provisioningInfo.rejectBtn = rejectBtn;
+                        if (rejectBtn.equals("1")) {
+                            provisioningInfo.rejectBtn = true;
+                        } else {
+                            provisioningInfo.rejectBtn = false;
+                        }
                         continue;
                     }
                 }

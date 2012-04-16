@@ -420,4 +420,15 @@ public abstract class GroupChatSession extends ChatSession {
 	        }
         }
 	}
+
+	/**
+	 * Send message delivery status via MSRP
+	 * 
+	 * @param contact Contact that requested the delivery status
+	 * @param msgId Message ID
+	 * @param status Status
+	 */
+	public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
+		// NO IMDN for chat group
+	}
 }

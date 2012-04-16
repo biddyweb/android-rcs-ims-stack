@@ -71,8 +71,10 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 		super(parent, conferenceId, participants);
 
 		// Set first message
-		InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(), msg, false);
-		setFirstMesssage(firstMessage);		
+		if ((msg != null) && (msg.length() > 0)) {
+			InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(), msg, false);
+			setFirstMesssage(firstMessage);		
+		}
 		
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -388,20 +390,26 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	        	return;
 	        }
 	        
+	        // Set the min expire value
+	        getDialogPath().setMinSessionExpireTime(minExpire);
+
 	        // Set the expire value
 	        getDialogPath().setSessionExpireTime(minExpire);
 	
+	        // Increment the Cseq number of the dialog path
+	        getDialogPath().incrementCseq();
+	        
 	        // Create a new INVITE with the right expire period
 	        if (logger.isActivated()) {
 	        	logger.info("Send new INVITE");
 	        }
 	        SipRequest invite = createInviteRequest(getDialogPath().getLocalContent());
 	        
-	    	// Reset initial request in the dialog path
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+
+	        // Reset initial request in the dialog path
 	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
 	        
 	        // Send INVITE request
 	        sendInvite(invite);

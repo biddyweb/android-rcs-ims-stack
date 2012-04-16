@@ -47,6 +47,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -55,11 +56,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author hlxn7157
  */
 public class StartService extends Service {
-    /**
-     * Service name
-     */
-    public static final String SERVICE_NAME = "com.orangelabs.rcs.service.START";
-
     /**
      * Last user account used
      */
@@ -390,7 +386,7 @@ public class StartService extends Service {
                     // Reset provisioning version
                     HttpsProvisioningService.setProvisioningVersion(getApplicationContext(), "0");
                     // Start provisioning as a first launch
-                    Intent intent = new Intent(HttpsProvisioningService.SERVICE_NAME);
+                    Intent intent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
                     intent.putExtra("first", true);
                     startService(intent);
                 } else {
@@ -401,12 +397,12 @@ public class StartService extends Service {
             } else {
                 if (isFirstLaunch() || hasChangedAccount()) {
                     // First launch: start the auto config service with special tag
-                    Intent intent = new Intent(HttpsProvisioningService.SERVICE_NAME);
+                    Intent intent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
                     intent.putExtra("first", true);
                     startService(intent);
                 } else if (boot) {
                     // Boot: start the auto config service
-                    startService(new Intent(HttpsProvisioningService.SERVICE_NAME));
+                    startService(new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME));
                 } else {
                     // Start the RCS service
                     LauncherUtils.launchRcsCoreService(getApplicationContext());

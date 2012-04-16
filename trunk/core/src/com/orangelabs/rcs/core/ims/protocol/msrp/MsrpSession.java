@@ -312,11 +312,16 @@ public class MsrpSession {
 						// Timeout
 						break;
 					}					
+					if (reportTransaction.getStatusCode() != 200) {
+						// Error
+						break;
+					}					
 					lastReport = reportTransaction.getReportedSize();
 				}
 				
 	            // Notify event listener
-	            if (reportTransaction.getReportedSize() == totalSize) {
+	            if ((reportTransaction.getStatusCode() == 200) &&
+	            		(reportTransaction.getReportedSize() == totalSize)) {
 	                msrpEventListener.msrpDataTransfered(msgId);
 	            } else {
 	                msrpEventListener.msrpTransferError("report timeout");
@@ -566,12 +571,6 @@ public class MsrpSession {
 		buffer.write((" " + MsrpConstants.METHOD_REPORT).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 
-		buffer.write(MsrpConstants.HEADER_MESSAGE_ID.getBytes());
-		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
-		buffer.write(MsrpConstants.CHAR_SP);
-		buffer.write((headers.get(MsrpConstants.HEADER_MESSAGE_ID)).getBytes());
-		buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		
 		buffer.write(MsrpConstants.HEADER_TO_PATH.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);
@@ -584,6 +583,12 @@ public class MsrpSession {
 		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 		
+		buffer.write(MsrpConstants.HEADER_MESSAGE_ID.getBytes());
+		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
+		buffer.write(MsrpConstants.CHAR_SP);
+		buffer.write((headers.get(MsrpConstants.HEADER_MESSAGE_ID)).getBytes());
+		buffer.write(MsrpConstants.NEW_LINE.getBytes());
+
 		buffer.write(MsrpConstants.HEADER_BYTE_RANGE.getBytes());
 		buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
 		buffer.write(MsrpConstants.CHAR_SP);

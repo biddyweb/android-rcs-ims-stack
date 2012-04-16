@@ -15,41 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package com.orangelabs.rcs.provisioning;
+package com.orangelabs.rcs.service.api.client;
 
 /**
- * Provisioning info
+ * IMS API intents
  *  
  * @author jexa7410
  */
-public class ProvisioningInfo {
-	/**
-	 * Version of the provisioning document
-	 */
-	public String version = null;
-	
-	/**
-	 * Validity of the provisioning document
-	 */
-	public long validity = 0L;
-	
-	/**
-	 * Title for terms and conditions
-	 */
-	public String title = null;
-	
-	/**
-	 * Message for terms and conditions 
-	 */
-	public String message = null;
-	
-	/**
-	 * Accept button for terms and conditions
-	 */
-	public boolean acceptBtn = false;
-	
-	/**
-	 * Reject button for terms and conditions
-	 */
-	public boolean rejectBtn = false;
+public class ImsApiIntents {
+	 /**
+     * Intent broadcasted when the IMS registration status has changed (see boolean attribute "status"). 
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>status</em> - Registration status.</li>
+     * </ul>
+     * </ul>
+     */
+	public final static String IMS_STATUS = "com.orangelabs.rcs.IMS_STATUS";
 }

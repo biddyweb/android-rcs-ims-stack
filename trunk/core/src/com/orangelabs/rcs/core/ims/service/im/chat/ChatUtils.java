@@ -47,6 +47,11 @@ import com.orangelabs.rcs.utils.StringUtils;
  */
 public class ChatUtils {
 	/**
+	 * Anonymous URI
+	 */
+	public final static String ANOMYNOUS_URI = "sip:anonymous@anonymous.invalid";
+	
+	/**
 	 * Contribution ID header
 	 */
 	public static final String HEADER_CONTRIBUTION_ID = "Contribution-ID";
@@ -213,7 +218,7 @@ public class ChatUtils {
     	String content = request.getContent();
     	String contentType = request.getContentType();
     	if ((content != null) && (content.contains(ImdnDocument.IMDN_NAMESPACE)) &&
-    			(contentType != null) && (contentType.contains(CpimMessage.MIME_TYPE))) {
+    			(contentType != null) && (contentType.equalsIgnoreCase(CpimMessage.MIME_TYPE))) {
     		return true;
     	} else {
     		return false;
@@ -297,12 +302,12 @@ public class ChatUtils {
 	}
 	
     /**
-     * Format to a SIP-URI
+     * Format to a SIP-URI for CPIM message
      * 
      * @param input Input
      * @return SIP-URI
      */
-    private static String formatSipUri(String input) {
+    private static String formatCpimSipUri(String input) {
     	input = input.trim();
     	
     	if (input.startsWith("<")) {
@@ -339,8 +344,8 @@ public class ChatUtils {
 	 */
 	public static String buildCpimMessage(String from, String to, String content, String contentType) {
 		String cpim =
-			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
-			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatCpimSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF + 
@@ -362,12 +367,12 @@ public class ChatUtils {
 	 */
 	public static String buildCpimMessageWithImdn(String from, String to, String messageId, String content, String contentType) {
 		String cpim =
-			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
-			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatCpimSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
-			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.NEGATIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
+			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
@@ -386,8 +391,8 @@ public class ChatUtils {
 	 */
 	public static String buildCpimDeliveryReport(String from, String to, String imdn) {
 		String cpim =
-			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatSipUri(from) + CRLF + 
-			CpimMessage.HEADER_TO + ": " + ChatUtils.formatSipUri(to) + CRLF + 
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatCpimSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + IdGenerator.getIdentifier() + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 

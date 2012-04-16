@@ -18,12 +18,6 @@
 
 package com.orangelabs.rcs.settings;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.service.api.client.ClientApi;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -42,6 +36,13 @@ import android.preference.PreferenceScreen;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.ClientApiUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Settings display
@@ -239,7 +240,7 @@ public class SettingsDisplay extends PreferenceActivity {
 	        	startRcsService();
         	} else {
         		// Activate service. If service is running, ask a confirmation 
-        		if (ClientApi.isServiceStarted(getApplicationContext())) {
+        		if (ClientApiUtils.isServiceStarted(getApplicationContext())) {
         			showDialog(SERVICE_DEACTIVATION_CONFIRMATION_DIALOG);
 				}
         	}
@@ -254,7 +255,7 @@ public class SettingsDisplay extends PreferenceActivity {
 				RcsSettings.getInstance().setRoamingAuthorizationState(true);
 				
 				// Start the service if necessary 
-				if (rcsCheckbox.isChecked() && !ClientApi.isServiceStarted(getApplicationContext())) {
+				if (rcsCheckbox.isChecked() && !ClientApiUtils.isServiceStarted(getApplicationContext())) {
 	        		if (logger.isActivated()) {
 	        			logger.debug("Start the service");
 	        		}
@@ -263,7 +264,7 @@ public class SettingsDisplay extends PreferenceActivity {
 			} else {
                 // Unauthorize roaming. If the service is started and we are in
                 // roaming, ask a confirmation.
-                if (ClientApi.isServiceStarted(getApplicationContext()) && isMobileRoaming()) {
+                if (ClientApiUtils.isServiceStarted(getApplicationContext()) && isMobileRoaming()) {
                     showDialog(ROAMING_DEACTIVATION_CONFIRMATION_DIALOG);
                 } else {
                     if (logger.isActivated()) {
