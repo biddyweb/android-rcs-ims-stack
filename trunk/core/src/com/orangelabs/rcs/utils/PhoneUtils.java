@@ -38,7 +38,7 @@ public class PhoneUtils {
 	/**
 	 * Country code
 	 */
-	private static String COUNTRY_CODE = "+58";
+	private static String COUNTRY_CODE = "+33";
 	
 	/**
 	 * Country area code
