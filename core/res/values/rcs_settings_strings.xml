@@ -64,7 +64,7 @@
 	<string name="rcs_settings_label_default_freetext_3">At work</string>
 	<string name="rcs_settings_label_default_freetext_4">On vacation</string>
 
-	<string name="rcs_settings_label_default_video_format">h263-2000</string>
+	<string name="rcs_settings_label_default_video_format">h264</string>
     <string-array name="rcs_settings_list_video_format_value">
         <item>h263-2000</item>
         <item>h264</item>

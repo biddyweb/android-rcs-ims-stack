@@ -173,7 +173,9 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			logger.info("Add an event listener");
 		}
 
-		listeners.register(listener);
+    	synchronized(lock) {
+    		listeners.register(listener);
+    	}
 	}
 	
 	/**
@@ -186,7 +188,9 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			logger.info("Remove an event listener");
 		}
 
-		listeners.unregister(listener);
+    	synchronized(lock) {
+    		listeners.unregister(listener);
+    	}
 	}
 	
 	/**

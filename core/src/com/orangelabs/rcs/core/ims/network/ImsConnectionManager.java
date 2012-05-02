@@ -325,7 +325,15 @@ public class ImsConnectionManager implements Runnable {
 					}
 					return;
 				}
-									
+
+				// Test the configuration
+				if (!currentNetworkInterface.isInterfaceConfigured()) {
+					if (logger.isActivated()) {
+						logger.warn("IMS network interface not well configured");
+					}
+					return;
+				}
+
 				// Connect to IMS network interface
 				if (logger.isActivated()) {
 					logger.debug("Connect to IMS");

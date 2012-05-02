@@ -26,30 +26,138 @@ public class ProvisioningInfo {
 	/**
 	 * Version of the provisioning document
 	 */
-	public String version = null;
+    private String version = null;
 	
 	/**
 	 * Validity of the provisioning document
 	 */
-	public long validity = 0L;
+    private long validity = 0L;
 	
 	/**
 	 * Title for terms and conditions
 	 */
-	public String title = null;
+    private String title = null;
 	
 	/**
 	 * Message for terms and conditions 
 	 */
-	public String message = null;
+    private String message = null;
 	
 	/**
 	 * Accept button for terms and conditions
 	 */
-	public boolean acceptBtn = false;
+    private boolean acceptBtn = false;
 	
 	/**
 	 * Reject button for terms and conditions
 	 */
-	public boolean rejectBtn = false;
+    private boolean rejectBtn = false;
+
+    /**
+     * Set version
+     *
+     * @param version
+     */
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    /**
+     * Set valaidity
+     *
+     * @param validity
+     */
+    public void setValidity(long validity) {
+        this.validity = validity;
+    }
+
+    /**
+     * Set title
+     *
+     * @param title
+     */
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
+     * Set message
+     *
+     * @param message
+     */
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    /**
+     * Set AcceptBtn
+     *
+     * @param acceptBtn
+     */
+    public void setAcceptBtn(boolean acceptBtn) {
+        this.acceptBtn = acceptBtn;
+    }
+
+    /**
+     * Set RejectBtn
+     *
+     * @param rejectBtn
+     */
+    public void setRejectBtn(boolean rejectBtn) {
+        this.rejectBtn = rejectBtn;
+    }
+
+    /**
+     * Get version
+     *
+     * @return version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * Get validity
+     *
+     * @return validity
+     */
+    public long getValidity() {
+        return validity;
+    }
+
+    /**
+     * Get title
+     *
+     * @return title
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * Get message
+     *
+     * @return message
+     */
+    public String getMessage() {
+        return message;
+    }
+
+    /**
+     * Get acceptBtn
+     *
+     * @return acceptBtn
+     */
+    public boolean getAcceptBtn() {
+        return acceptBtn;
+    }
+
+    /**
+     * Get rejectBtn
+     *
+     * @return rejectBtn
+     */
+    public boolean getRejectBtn() {
+        return rejectBtn;
+    }
 }

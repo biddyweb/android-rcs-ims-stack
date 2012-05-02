@@ -29,7 +29,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author jexa7410
  */
-public class DummyPacketGenerator extends Thread {
+public class DummyPacketGenerator {
     /**
      * Media processor
      */
@@ -61,10 +61,10 @@ public class DummyPacketGenerator extends Thread {
      *
      * @param remoteAddress Remote address
      * @param remotePort Remote port
-     * @param existingInputStream already existing RTP input stream
+     * @param rtpStream already existing RTP input stream
      * @throws RtpException
      */
-    public void prepareSession(String remoteAddress, int remotePort, RtpInputStream existingInputStream)
+    public void prepareSession(String remoteAddress, int remotePort, RtpInputStream rtpStream)
             throws RtpException {
     	try {
     		// Create the input stream
@@ -75,7 +75,7 @@ public class DummyPacketGenerator extends Thread {
 			}
 
             // Create the output stream
-            outputStream = new RtpOutputStream(remoteAddress, remotePort, existingInputStream);
+            outputStream = new RtpOutputStream(remoteAddress, remotePort, rtpStream);
     		outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());

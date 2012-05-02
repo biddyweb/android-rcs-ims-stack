@@ -82,47 +82,43 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
                 logger.info("Initiate a new live video sharing session as originating");
             }
 
-            // Build SDP part
-            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-            if (player.getMediaCodec() != null) {
-                String videoSdp = VideoCodecManager.createCodecSdpPart(
-                        new VideoCodec(player.getMediaCodec()), player.getLocalRtpPort());
-                String sdp =
-                	"v=0" + SipUtils.CRLF +
-                	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
-                	"s=-" + SipUtils.CRLF + "c=IN IP4 "+ getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
-                	"t=0 0" + SipUtils.CRLF +
-                	videoSdp +
-                	"a=sendonly" + SipUtils.CRLF;
-
-                // Set X-Type attribute
-                String xType = getXTypeAttribute();
-                if (xType != null) {
-                    sdp += "a=X-type:" + xType + SipUtils.CRLF;
-                }
-
-                // Set the local SDP part in the dialog path
-                getDialogPath().setLocalContent(sdp);
-
-                // Create an INVITE request
-                if (logger.isActivated()) {
-                    logger.info("Send INVITE");
-                }
-                SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-                        RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
-
-    	        // Set the Authorization header
-    	        getAuthenticationAgent().setAuthorizationHeader(invite);
-
-    	        // Set initial request in the dialog path
-                getDialogPath().setInvite(invite);
-
-                // Send INVITE request
-                sendInvite(invite);
-            } else {
+            // Check player 
+            if ((player == null) || (player.getMediaCodec() == null)) {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE,
                         "Video codec not selected"));
+                return;
             }
+
+            // Build SDP part
+            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
+            String videoSdp = VideoCodecManager.createCodecSdpPart(player.getSupportedMediaCodecs(), player.getLocalRtpPort());
+	    	String sdp =
+            	"v=0" + SipUtils.CRLF +
+            	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+            	"s=-" + SipUtils.CRLF + "c=IN IP4 "+ ipAddress + SipUtils.CRLF +
+            	"t=0 0" + SipUtils.CRLF +
+            	videoSdp +
+            	"a=sendonly" + SipUtils.CRLF;
+
+            // Set the local SDP part in the dialog path
+            getDialogPath().setLocalContent(sdp);
+
+            // Create an INVITE request
+            if (logger.isActivated()) {
+                logger.info("Send INVITE");
+            }
+            SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
+                    RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
+
+	        // Set the Authorization header
+	        getAuthenticationAgent().setAuthorizationHeader(invite);
+
+	        // Set initial request in the dialog path
+            getDialogPath().setInvite(invite);
+
+            // Send INVITE request
+            sendInvite(invite);
         } catch (Exception e) {
             if (logger.isActivated()) {
                 logger.error("Session initiation has failed", e);
@@ -221,19 +217,20 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
             MediaDescription mediaVideo = parser.getMediaDescription("video");
             int remotePort = mediaVideo.port;
 
-            // Extract video codecs
-            VideoCodec[] sdpVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(mediaVideo);
+            // Extract video codecs from SDP
+            Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
+            Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
+
+            // Codec negotiation
             VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    player.getSupportedMediaCodecs(), sdpVideoCodecs);
+                    player.getSupportedMediaCodecs(), proposedCodecs);
             if (selectedVideoCodec == null) {
                 if (logger.isActivated()) {
                     logger.debug("Proposed codecs are not supported");
                 }
                 
-                // Send a 415 Unsupported media type response
-                send415Error(getDialogPath().getInvite());
-                
-                // Unsupported media type
+                // Terminate session
+                terminateSession();
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
@@ -346,7 +343,7 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
         // Notify listeners
         if (!isInterrupted()) {
             for (int i = 0; i < getListeners().size(); i++) {
-                ((VideoStreamingSessionListener) getListeners().get(i)).handleSharingError(error);
+                ((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(error);
             }
         }
     }

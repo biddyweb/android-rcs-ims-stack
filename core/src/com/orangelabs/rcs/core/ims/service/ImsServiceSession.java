@@ -688,7 +688,7 @@ public abstract class ImsServiceSession extends Thread {
 	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
-				logger.error("Can't send 405 error response", e);
+				logger.error("Can't send 415 error response", e);
 			}
 		}
 	}	

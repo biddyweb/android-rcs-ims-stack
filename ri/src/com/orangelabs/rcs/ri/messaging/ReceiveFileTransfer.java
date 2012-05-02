@@ -111,6 +111,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	protected void onDestroy() {
 		super.onDestroy();
 		
+		// Disconnect messaging API
 		messagingApi.removeImsEventListener(this);
 		messagingApi.removeApiEventListener(this);
 		messagingApi.disconnectApi();

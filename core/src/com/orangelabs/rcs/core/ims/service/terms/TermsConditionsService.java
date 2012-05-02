@@ -110,18 +110,18 @@ public class TermsConditionsService extends ImsService {
 	}
 
 	/**
-     * Receive a message
+     * Receive a SIP message
      * 
      * @param message Received message
      */
     public void receiveMessage(SipRequest message) {
     	if (logger.isActivated()) {
-    		logger.debug("Receive end user confirmation message");
+    		logger.debug("Receive terms message");
     	}
     	
     	try {
 	    	if (message.getContentType().equals(REQUEST_MIME_TYPE)) {
-		    	// Parse content
+		    	// Parse terms request
 				InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
 				TermsRequestParser parser = new TermsRequestParser(input);
 
@@ -135,7 +135,7 @@ public class TermsConditionsService extends ImsService {
 	    				parser.getText());
 	    	} else
 	    	if (message.getContentType().equals(ACK_MIME_TYPE)) {
-		    	// Parse content
+		    	// Parse terms ack
 				InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
 				TermsAckParser parser = new TermsAckParser(input);
 
@@ -148,12 +148,12 @@ public class TermsConditionsService extends ImsService {
 	    				parser.getText());
 	    	} else {
 	    		if (logger.isActivated()) {
-	    			logger.debug("Unknown user confirmation request");
+	    			logger.debug("Unknown terms request");
 	    		}
 	    	}
     	} catch(Exception e) {
     		if (logger.isActivated()) {
-    			logger.error("Can't parse user confirmation message", e);
+    			logger.error("Can't parse terms request", e);
     		}
     	}
     }
@@ -169,6 +169,8 @@ public class TermsConditionsService extends ImsService {
 		if (logger.isActivated()) {
 			logger.debug("Send response for request " + id);
 		}
+		
+		// Send SIP MESSAGE
 		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
 		return sendSipMessage(remote, id, ACCEPT_RESPONSE, pin);
 	}
@@ -184,10 +186,12 @@ public class TermsConditionsService extends ImsService {
 		if (logger.isActivated()) {
 			logger.debug("Send response for request " + id);
 		}
+
+		// Send SIP MESSAGE
 		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
 		return sendSipMessage(remote, id, DECLINE_RESPONSE, pin);
 	}
-	
+
 	/**
 	 * Send SIP MESSAGE
 	 * 
@@ -198,6 +202,20 @@ public class TermsConditionsService extends ImsService {
 	 * @return Boolean result
 	 */
 	private boolean sendSipMessage(String remote, String id, String value, String pin) {
+		if (remote == null) {
+			if (logger.isActivated()) {
+       			logger.error("Remote URI not set");
+       		}
+			return false;
+		}
+		
+		if (id == null) {
+			if (logger.isActivated()) {
+       			logger.error("Request ID not set");
+       		}
+			return false;
+		}
+
 		boolean result = false;
 		try {
 			if (logger.isActivated()) {
@@ -324,7 +342,8 @@ public class TermsConditionsService extends ImsService {
 			// Use the From header
 			return request.getFromUri();
 		}
-	}		
+	}
+
 	/**
 	 * Is a terms & conditions request
 	 * 

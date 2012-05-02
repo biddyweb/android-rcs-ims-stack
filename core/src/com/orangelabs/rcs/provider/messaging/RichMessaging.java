@@ -499,7 +499,7 @@ public class RichMessaging {
 		}
 		
 		Cursor c = cr.query(databaseUri, 
-				new String[] { RichMessagingData.KEY_NUMBER_MESSAGES, RichMessagingData.KEY_CHAT_SESSION_ID,	RichMessagingData.KEY_TIMESTAMP },
+				new String[] { RichMessagingData.KEY_NUMBER_MESSAGES, RichMessagingData.KEY_CHAT_SESSION_ID, RichMessagingData.KEY_TIMESTAMP },
 				RichMessagingData.KEY_CONTACT + " = \'" + contact + "\'"+
 						" AND (" + RichMessagingData.KEY_TIMESTAMP+ " = " + minDate + 
 						" OR "+ RichMessagingData.KEY_TIMESTAMP + " = " + maxDate+ ")",

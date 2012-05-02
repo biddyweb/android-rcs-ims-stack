@@ -37,7 +37,7 @@ public class H263Config {
     /**
      * Default codec params
      */
-    public final static String CODEC_PARAMS = "profile=0;level=10";
+    public final static String CODEC_PARAMS = "profile=0;level=45";
 
     /**
      * Default video width

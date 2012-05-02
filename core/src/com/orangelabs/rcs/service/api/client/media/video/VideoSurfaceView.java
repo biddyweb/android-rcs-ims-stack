@@ -34,7 +34,7 @@ public class VideoSurfaceView extends SurfaceView {
 	/**
      * No aspect ratio
      */
-    public static float NO_RATIO = 0.0f;
+    public static final float NO_RATIO = 0.0f;
 
     /**
 	 * Display area aspect ratio

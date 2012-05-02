@@ -631,4 +631,10 @@ public class RcsSettingsData {
      * Auto configuration mode
      */
     public static final String AUTO_CONFIG_MODE = "Autoconfig";
+
+    /**
+     * Provisioning terms accepted
+     */
+    public static final String PROVISIONING_TERMS_ACCEPTED = "ProvisioningTermsAccepted";
+
 }

@@ -104,7 +104,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	protected void onDestroy() {
 		super.onDestroy();
 
-        // Remove the listener and disconnect from the API
+		// Disconnect messaging API
 		messagingApi.removeApiEventListener(this);
 		messagingApi.disconnectApi();
 	}

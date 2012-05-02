@@ -22,14 +22,14 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Terms & conditions receiver
+ * SIP terms request receiver
  * 
  * @author jexa7410
  */
-public class TermsReceiver extends BroadcastReceiver {
+public class SipTermsRequestReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
         // Display notification
-		TermsRequest.addNotification(context, intent);
+		SipTermsRequest.addNotification(context, intent);
 	}
 }

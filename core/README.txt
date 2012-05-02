@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.2
+Release 2.4.3
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,7 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Bug fixs after IOT.
+- Terms and conditions API via provisioning.
+- IOT tests.
 - GSMA RCS-e Implementation Guidelines.
 
 
@@ -18,6 +19,15 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.3
+- Mantis #0015155	Stack: If airplane mode the RCS provisioning doesn't start after activating the network
+- Mantis #0015030	Stack: Block the RCS service until terms & conditions are accepted
+- Mantis #0015208	Stack: Media codec offer propose only the preferred codec instead of all the supported codecs
+- Open source #57	Stack: MESSAGE (IMDN) response failed with 404 on S&F session message
+- Mantis #0015173	Stack: Deprecated image sharing feature tag	
+- Mantis #0015165	Stack: Media codec negociation analyzes only the first proposition on terminating side
+- GSMA Guidelines 	Stack: ID_4_16 Video interoperability: H264 profile 1b encoding
 
 v2.4.2
 - Open source #62	Stack: API inconsistency - ImsApi does not follow the same usage pattern as other *Api classes
@@ -29,7 +39,6 @@ v2.4.2
 - Mantis #0015067	Stack: Min session expire not saved after 422 error
 - Mantis #0015066	Stack: Bad Cseq after 422 Session Interval Too Small
 - Mantis #0015027	Stack: Profile-level-id=42900B not supported by packet video software codec
-- GSMA Guidelines 	Stack: ID_4_16 Video interoperability: H264 profile 1b encoding
 - GSMA Guidelines 	Stack: ID_4_X Negative IMDN notifications
 - GSMA Guidelines 	Stack: ID_4_4 Hiding identities in CPIM/IMDN
 - GSMA Guidelines 	Stack: ID_2_1 FQDN resolution

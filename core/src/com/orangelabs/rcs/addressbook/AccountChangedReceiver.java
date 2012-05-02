@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -59,10 +60,13 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 			if (logger.isActivated()){
 				logger.debug("RCS account has been deleted");
 			}
-			
+
 			// Set the user account manually deleted flag
-			RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, true);
-			
+            RcsSettings.createInstance(context);
+            if (RcsSettings.getInstance().checkUserProfile()) {
+                RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, true);
+            }
+
 			if (ClientApiUtils.isServiceStarted(context)){
 				
 				if (logger.isActivated()){

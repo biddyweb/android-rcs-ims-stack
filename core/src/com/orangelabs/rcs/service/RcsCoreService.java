@@ -18,6 +18,18 @@
 
 package com.orangelabs.rcs.service;
 
+import java.util.Vector;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Handler;
+import android.os.IBinder;
+
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.core.Core;
@@ -71,18 +83,6 @@ import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.service.api.server.terms.TermsApiService;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Handler;
-import android.os.IBinder;
-
-import java.util.Vector;
 
 /**
  * RCS core service. This service offers a flat API to any other process (activities)
@@ -154,10 +154,10 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Set the terminal version
 		TerminalInfo.setProductVersion(getString(R.string.rcs_core_release_number));
 		
-		// Start the core
-		startCore();
-	}
-	
+    	// Start the core
+    	startCore();
+    }
+
     @Override
     public void onDestroy() {
         // Unregister account changed broadcast receiver
@@ -1046,7 +1046,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Notify listeners
-		termsApi.handleUserConfirmationRequest(remote, id, type, pin, subject, text);
+		termsApi.receiveTermsRequestViaSip(remote, id, type, pin, subject, text);
     }
 
     /**
@@ -1064,6 +1064,6 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Notify listeners
-		termsApi.handleUserConfirmationAck(remote, id, status, subject, text);
+		termsApi.receiveTermsAckViaSip(remote, id, status, subject, text);
     }
 }

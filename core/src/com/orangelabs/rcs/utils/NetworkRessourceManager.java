@@ -33,17 +33,17 @@ public class NetworkRessourceManager {
     /**
      * Default SIP port base
      */
-    public static int DEFAULT_LOCAL_SIP_PORT_BASE = RcsSettings.getInstance().getSipListeningPort();
+    public static final int DEFAULT_LOCAL_SIP_PORT_BASE = RcsSettings.getInstance().getSipListeningPort();
 
     /**
      * Default RTP port base
      */
-    public static int DEFAULT_LOCAL_RTP_PORT_BASE = RcsSettings.getInstance().getDefaultRtpPort();
+    public static final int DEFAULT_LOCAL_RTP_PORT_BASE = RcsSettings.getInstance().getDefaultRtpPort();
 
     /**
      * Default MSRP port base
      */
-    public static int DEFAULT_LOCAL_MSRP_PORT_BASE = RcsSettings.getInstance().getDefaultMsrpPort();
+    public static final int DEFAULT_LOCAL_MSRP_PORT_BASE = RcsSettings.getInstance().getDefaultMsrpPort();
 
     /**
      * Generate a default free SIP port number

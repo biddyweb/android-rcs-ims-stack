@@ -274,7 +274,7 @@ public abstract class ImsService {
     public void sendErrorResponse(SipRequest invite, int error) {
         try {
             if (logger.isActivated()) {
-                logger.info("Send erreor " + error);
+                logger.info("Send error " + error);
             }
             SipResponse resp = SipMessageFactory.createResponse(invite, IdGenerator.getIdentifier(), error);
 

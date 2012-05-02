@@ -66,15 +66,6 @@ public class TermsApi extends ClientApi {
     	ctx.unbindService(apiConnection);
     }
 
-    /**
-     * Returns the core service API
-     * 
-     * @return API
-     */
-	public ITermsApi getCoreServiceApi() {
-		return coreApi;
-	}
-    
 	/**
 	 * Core service API connection
 	 */
@@ -93,19 +84,19 @@ public class TermsApi extends ClientApi {
         	coreApi = null;
         }
     };
-    
+
 	/**
-     * Accept terms
+     * Accept terms and conditions via SIP
      *
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean acceptTerms(String id, String pin) throws ClientApiException {	
+    public boolean acceptTermsViaSip(String id, String pin) throws ClientApiException {	
     	if (coreApi != null) {
 			try {
-				return coreApi.acceptTerms(id, pin);
+				return coreApi.acceptTermsViaSip(id, pin);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -115,17 +106,17 @@ public class TermsApi extends ClientApi {
     }
 
 	/**
-     * Reject terms
+     * Reject terms and conditions via SIP
      *
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean rejectTerms(String id, String pin) throws ClientApiException {	
+    public boolean rejectTermsViaSip(String id, String pin) throws ClientApiException {	
     	if (coreApi != null) {
 			try {
-				return coreApi.rejectTerms(id, pin);
+				return coreApi.rejectTermsViaSip(id, pin);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

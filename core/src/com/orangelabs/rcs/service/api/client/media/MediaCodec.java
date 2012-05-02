@@ -144,6 +144,16 @@ public class MediaCodec implements Parcelable {
     }
 
     /**
+     * Set a codec parameter as string
+     * 
+     * @param key Parameter key
+     * @param value Parameter value
+     */
+    public void setStringParam(String key, String value) {
+        parameters.put(key, value);
+    }
+
+    /**
      * Get a codec parameter as integer
      * 
      * @param key Parameter key
@@ -160,12 +170,12 @@ public class MediaCodec implements Parcelable {
     }
 
     /**
-     * Set a codec parameter
+     * Set a codec parameter as integer
      * 
      * @param key Parameter key
      * @param value Parameter value
      */
-    public void setParam(String key, String value) {
-        parameters.put(key, value);
+    public void setIntParam(String key, int value) {
+        parameters.put(key, ""+value);
     }
 }

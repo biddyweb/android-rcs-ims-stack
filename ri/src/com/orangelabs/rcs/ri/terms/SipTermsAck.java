@@ -26,11 +26,11 @@ import android.widget.TextView;
 import com.orangelabs.rcs.ri.R;
 
 /**
- * Welcome message
+ * SIP terms ack
  * 
  * @author jexa7410
  */
-public class Welcome extends Activity {
+public class SipTermsAck extends Activity {
     
 	@Override
     public void onCreate(Bundle savedInstanceState) {

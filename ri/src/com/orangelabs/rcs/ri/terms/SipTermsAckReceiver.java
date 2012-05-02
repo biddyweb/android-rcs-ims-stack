@@ -22,15 +22,15 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Welcome receiver 
+ * SIP terms ack receiver 
  * 
  * @author jexa7410
  */
-public class WelcomeReceiver extends BroadcastReceiver {
+public class SipTermsAckReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Intent welcome = new Intent(intent);
-		welcome.setClass(context, Welcome.class);
+		welcome.setClass(context, SipTermsAck.class);
 		welcome.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		context.startActivity(welcome);
 	}

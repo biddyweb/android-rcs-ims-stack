@@ -18,18 +18,18 @@
 package com.orangelabs.rcs.service.api.client.terms;
 
 /**
- * Terms API intent
+ * Terms API intents
  * 
  * @author jexa7410
  */
 public class TermsApiIntents {
-	/**
-	 * User confirmation request
+    /**
+     * Terms and conditions request via SIP
 	 */ 
-	public final static String USER_CONFIRMATION_REQUEST = "com.orangelabs.rcs.USER_CONFIRMATION_REQUEST";
+	public final static String TERMS_SIP_REQUEST = "com.orangelabs.rcs.TERMS_SIP_REQUEST";
 
 	/**
-	 * User confirmation acknowledge
+     * Terms and conditions ack via SIP
 	 */ 
-	public final static String USER_CONFIRMATION_ACK = "com.orangelabs.rcs.USER_CONFIRMATION_ACK";
+	public final static String TERMS_SIP_ACK = "com.orangelabs.rcs.TERMS_SIP_ACK";
 }

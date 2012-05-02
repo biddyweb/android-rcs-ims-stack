@@ -172,7 +172,9 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 			logger.info("Add an event listener");
 		}
 
-		listeners.register(listener);
+    	synchronized(lock) {
+    		listeners.register(listener);
+    	}
 	}
 
 	/**
@@ -185,7 +187,9 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 			logger.info("Remove an event listener");
 		}
 
-		listeners.unregister(listener);
+    	synchronized(lock) {
+    		listeners.unregister(listener);
+    	}
 	}
 
 	/**

@@ -36,7 +36,7 @@ public class AndroidNetworkFactory extends NetworkFactory {
 	 */
 	public String getLocalIpAddress() {
 		try {
-	        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+	        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); (en != null) && en.hasMoreElements();) {
 	            NetworkInterface intf = (NetworkInterface)en.nextElement();
 	            for (Enumeration<InetAddress> addr = intf.getInetAddresses(); addr.hasMoreElements();) {
 	                InetAddress inetAddress = (InetAddress)addr.nextElement();

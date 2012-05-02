@@ -18,14 +18,12 @@
 
 package com.orangelabs.rcs.provisioning.https;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provisioning.ProvisioningInfo;
-import com.orangelabs.rcs.provisioning.ProvisioningParser;
-import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.utils.HttpUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.Locale;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -64,15 +62,19 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Proxy;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
-import java.util.Locale;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provisioning.ProvisioningInfo;
+import com.orangelabs.rcs.provisioning.ProvisioningParser;
+import com.orangelabs.rcs.provisioning.TermsAndConditionsRequest;
+import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.utils.HttpUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * HTTPS auto configuration service
@@ -85,7 +87,7 @@ public class HttpsProvisioningService extends Service {
      */
     private static final String REGISTRY_PROVISIONING_VERSION = "ProvisioningVersion";
 
-	/**
+    /**
 	 * Unknown value
 	 */
 	private static final String UNKNOWN = "unknown";
@@ -214,11 +216,11 @@ public class HttpsProvisioningService extends Service {
     		if (logger.isActivated()) {
     			logger.debug("Connection event " + action);
     		}
-    
+
     		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
     			// Check received network info
     	    	NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-    			if ((networkInfo != null) && networkInfo.isConnected()) {
+    			if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && networkInfo.isConnected()) {
                     isPending = true;
     				if (logger.isActivated()) {
     					logger.debug("Connected to data network");
@@ -267,22 +269,24 @@ public class HttpsProvisioningService extends Service {
                 ProvisioningParser parser = new ProvisioningParser(result.content);
                 if (parser.parse()) {
                     ProvisioningInfo info = parser.getProvisioningInfo();
-                    
-                    // save version
-                    setProvisioningVersion(getApplicationContext(), info.version);
+
+                    // Save version
+                    String version = info.getVersion();
+                    long validity = info.getValidity();
+                    setProvisioningVersion(getApplicationContext(), version);
                     if (logger.isActivated()) {
-                        logger.debug("Version " + info.version);
-                        logger.debug("Validity " + info.validity);
+                        logger.debug("Version " + version);
+                        logger.debug("Validity " + validity);
                     }
                     
-                    if (info.version.equals("-1") && info.validity == -1) {
+                    if (version.equals("-1") && validity == -1) {
                         // Forbidden: reset account + version = 0-1 (doesn't restart)
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account and stop RCS");
                         }
                         // Reset config
                         LauncherUtils.resetRcsConfig(getApplicationContext());
-                    } else if (info.version.equals("0") && info.validity == 0) {
+                    } else if (version.equals("0") && validity == 0) {
                         // Forbidden: reset account + version = 0
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account");
@@ -291,12 +295,18 @@ public class HttpsProvisioningService extends Service {
                         LauncherUtils.resetRcsConfig(getApplicationContext());
                     } else {
                         // Start retry alarm
-                        if (info.validity > 0) {
+                        if (validity > 0) {
                             if (logger.isActivated()) {
-                                logger.debug("Provisioning retry after valadity " + info.validity);
+                                logger.debug("Provisioning retry after valadity " + validity);
                             }
                             retryCount = 0;
-                            startRetryAlarm(info.validity * 1000);
+                            startRetryAlarm(validity * 1000);
+                        }
+
+                        // Terms request
+                        if (info.getMessage() != null && !RcsSettings.getInstance().isProvisioningTermsAccepted()) {
+                            showTermsAndConditions(info.getTitle(), info.getMessage(),
+                                    info.getAcceptBtn(), info.getRejectBtn());
                         }
 
                         // Start the RCS service
@@ -358,6 +368,34 @@ public class HttpsProvisioningService extends Service {
             retry();
         }
     }
+
+    /**
+     * Show the terms and conditions reqest
+     *
+     * @param title of the End user confirmation
+     * @param message to be displayed to the end user
+     * @param acceptButton true if set in configuration xml
+     * @param rejectButton true if set in configuration xml
+     */
+    private void showTermsAndConditions(String title, String message,
+            boolean acceptButton, boolean rejectButton) {
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setClass(getApplicationContext(), TermsAndConditionsRequest.class);
+
+        Bundle savedInstance = new Bundle();
+        savedInstance.putBoolean(TermsAndConditionsRequest.ACCEPT_BTN_KEY, acceptButton);
+        savedInstance.putBoolean(TermsAndConditionsRequest.REJECT_BTN_KEY, rejectButton);
+        savedInstance.putString(TermsAndConditionsRequest.TITLE_KEY, title);
+        savedInstance.putString(TermsAndConditionsRequest.MESSAGE_KEY, message);
+        intent.putExtra(TermsAndConditionsRequest.TERMS_OBJECT, savedInstance);
+
+        // Required as the activity is started outside of an Activity context
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+
+        getApplicationContext().startActivity(intent);
+    }
+
 
     /**
      * Retry receiver

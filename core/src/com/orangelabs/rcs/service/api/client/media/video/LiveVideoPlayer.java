@@ -604,18 +604,22 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
                 frameData = frameBuffer.getFrame();
 
                 // Encode frame
-                int encodeResult;
+                int encodeResult = 0;
                 if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
                     encodedFrame = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
                     encodeResult = NativeH264Encoder.getLastEncodeStatus();
                 } else {
-                    encodedFrame = NativeH263Encoder.EncodeFrame(frameData, encoderTs);
-                    encodeResult = 0;
+                	encodedFrame = NativeH263Encoder.EncodeFrame(frameData, encoderTs);
                 }
 
-                if (encodeResult == 0 && encodedFrame.length > 0) {
+                if ((encodeResult == 0) && (encodedFrame.length > 0)) {
                     // Send encoded frame
-                    rtpInput.addFrame(encodedFrame, timeStamp += timestampInc);
+                    rtpInput.addFrame(encodedFrame, timeStamp);
+                    timeStamp += timestampInc;
+                } else {
+                	if (logger.isActivated()) {
+                		logger.error("Encoding error");
+                	}
                 }
 
                 // Sleep between frames if necessary

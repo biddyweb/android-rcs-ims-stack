@@ -161,7 +161,9 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 			logger.info("Add an event listener");
 		}
 
-		listeners.register(listener);
+    	synchronized(lock) {
+    		listeners.register(listener);
+    	}
 	}
 
 	/**
@@ -174,7 +176,9 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 			logger.info("Remove an event listener");
 		}
 
-		listeners.unregister(listener);
+    	synchronized(lock) {
+    		listeners.unregister(listener);
+    	}
 	}
 
 	/**

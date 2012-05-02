@@ -134,7 +134,7 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	 * @throws IOException
 	 */
 	public String getLocalAddress() throws IOException {
-		if (connection != null) {
+		if ((connection != null) && (connection.getLocalAddress() != null)) {
 			return connection.getLocalAddress().getHostAddress();
 		} else {
 			throw new IOException("Connection not openned");

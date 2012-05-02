@@ -96,11 +96,12 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 	    	String sdp =
 				"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
-				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+				"c=IN IP4 " + ipAddress + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
@@ -110,12 +111,6 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
 	    		"a=file-disposition:render" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
-	    	
-	    	// Set X-Type attribute
-	    	String xType = getXTypeAttribute();
-	    	if (xType != null) {
-	    		sdp += "a=X-type:" + xType + SipUtils.CRLF;
-	    	}
 
 	    	// Set File-selector attribute
 	    	String selector = getFileSelectorAttribute();

@@ -228,6 +228,9 @@ public class EventsLogApi extends ClientApi {
      */
     public EventsLogApi(Context ctx) {
     	super(ctx);
+
+    	RichCall.createInstance(ctx);
+    	RichMessaging.createInstance(ctx);
     }
 
     /**
@@ -282,12 +285,8 @@ public class EventsLogApi extends ClientApi {
      * @param date
      */
     public void deleteRichCallEntry(String contact, long date){
-		if (RichCall.getInstance()==null){
-			RichCall.createInstance(ctx);
-		}
 		RichCall.getInstance().removeCall(contact, date);
     }
-
     
     /**
      * Delete an IM entry
@@ -295,9 +294,6 @@ public class EventsLogApi extends ClientApi {
      * @param item id
      */
     public void deleteImEntry(long rowId){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().deleteEntry(rowId);
     }
     
@@ -307,9 +303,6 @@ public class EventsLogApi extends ClientApi {
      * @param contact
      */
     public void deleteMessagingLogForContact(String contact){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().deleteContactHistory(contact);
     }
     
@@ -319,9 +312,6 @@ public class EventsLogApi extends ClientApi {
      * @param sessionId
      */
     public void deleteImSessionEntry(String sessionId){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().deleteChatSession(sessionId);
     }
     
@@ -429,9 +419,6 @@ public class EventsLogApi extends ClientApi {
      * @param isSpam
      */
     public void markChatMessageAsSpam(String msgId, boolean isSpam){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().markChatMessageAsSpam(msgId, isSpam);
     }
     
@@ -442,9 +429,6 @@ public class EventsLogApi extends ClientApi {
      * @param isRead
      */
     public void markChatMessageAsRead(String msgId, boolean isRead){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().markChatMessageAsRead(msgId, isRead);
     }
     
@@ -487,9 +471,6 @@ public class EventsLogApi extends ClientApi {
      * Delete all spams
      */
     public void deleteAllSpams(){
-    	if (RichMessaging.getInstance()==null){
-    		RichMessaging.createInstance(ctx);
-    	}
     	RichMessaging.getInstance().deleteAllSpams();
     }
     
@@ -501,5 +482,4 @@ public class EventsLogApi extends ClientApi {
     public Uri getSpamBoxLogContentProviderUri(){
     	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_SPAM_BOX);
     }
-    
 }

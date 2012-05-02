@@ -42,11 +42,11 @@ import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.terms.TermsApi;
 
 /**
- * Received terms request
+ * SIP terms request
  * 
  * @author jexa7410
  */
-public class TermsRequest extends Activity implements ClientApiListener {
+public class SipTermsRequest extends Activity implements ClientApiListener {
     /**
      * UI handler
      */
@@ -105,7 +105,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
     public void handleApiDisabled() {
 		handler.post(new Runnable() { 
 			public void run() {
-				Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_api_disabled));
+				Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_api_disabled));
 			}
 		});
     }
@@ -131,7 +131,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
     	// Service has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_api_disconnected));
+				Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_api_disconnected));
 			}
 		});
 	}
@@ -149,7 +149,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
     	// IMS has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
-				Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_ims_disconnected));
+				Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_ims_disconnected));
 			}
 		});
 	}     
@@ -161,18 +161,18 @@ public class TermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Accept terms (no PIN)
-		    	if (termsApi.acceptTerms(id, null)) {
+		    	if (termsApi.acceptTermsViaSip(id, null)) {
 			        // Remove notification
-			        TermsRequest.removeNotification(TermsRequest.this, id);
+		    		SipTermsRequest.removeNotification(SipTermsRequest.this, id);
 			        
 			        // Exit activity
 			        finish();
 		    	} else {
 		    		// Retry later
-					Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_accept_terms_failed));
+					Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_accept_terms_failed));
 		    	}
         	} catch(Exception e) {
-				Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_accept_terms_failed));
+				Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_accept_terms_failed));
         	}
         }
     };
@@ -184,18 +184,18 @@ public class TermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Reject terms (no PIN)
-		    	if (termsApi.rejectTerms(id, null)) {
+		    	if (termsApi.rejectTermsViaSip(id, null)) {
 			        // Remove notification
-			        TermsRequest.removeNotification(TermsRequest.this, id);
+		    		SipTermsRequest.removeNotification(SipTermsRequest.this, id);
 			        
 			        // Exit activity
 			        finish();
 		    	} else {
 		    		// Retry later
-					Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_accept_terms_failed));
+					Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_accept_terms_failed));
 		    	}
         	} catch(Exception e) {
-				Utils.showMessageAndExit(TermsRequest.this, getString(R.string.label_reject_terms_failed));
+				Utils.showMessageAndExit(SipTermsRequest.this, getString(R.string.label_reject_terms_failed));
         	}
         }
     };
@@ -240,7 +240,7 @@ public class TermsRequest extends Activity implements ClientApiListener {
 		
 		// Create notification
 		Intent intent = new Intent(incoming);
-		intent.setClass(context, TermsRequest.class);
+		intent.setClass(context, SipTermsRequest.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(requestId);
 		PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);

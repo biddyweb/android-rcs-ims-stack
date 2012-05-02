@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall.video;
 
+import java.util.Vector;
+
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
@@ -77,20 +79,20 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
 
             // Parse the remote SDP part
             SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-            String remoteHost = SdpUtils
-                    .extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
             MediaDescription mediaVideo = parser.getMediaDescription("video");
             int remotePort = mediaVideo.port;
 
-            // Extract video codecs
-            VideoCodec[] sdpVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(mediaVideo);
+            // Extract video codecs from SDP
+            Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
+            Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
 
             // Codec negotiation
             VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    VideoRenderer.supportedMediaCodecs, sdpVideoCodecs);
+                    VideoRenderer.supportedMediaCodecs, proposedCodecs);
             if (selectedVideoCodec == null) {
                 if (logger.isActivated()){
-                    logger.debug("proposed codecs are not supported");
+                    logger.debug("Proposed codecs are not supported");
                 }
                 
                 // Send a 415 Unsupported media type response
@@ -100,7 +102,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
-            VideoContent content = (VideoContent) getContent();
+            VideoContent content = (VideoContent)getContent();
             content.setEncoding("video/" + selectedVideoCodec.getCodecName());
             content.setWidth(selectedVideoCodec.getWidth());
             content.setHeight(selectedVideoCodec.getHeight());
@@ -123,7 +125,8 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                     getListeners().get(i).handleSessionAborted();
                 }
                 return;
-            } else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+            } else
+            if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
                 if (logger.isActivated()) {
                     logger.debug("Session has been rejected on timeout");
                 }
@@ -148,7 +151,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 return;
             }
 
-            // Set the media codec in media rendrer
+            // Set the media codec in media renderer
             getMediaRenderer().setMediaCodec(selectedVideoCodec.getMediaCodec());
 
             // Set media renderer event listener
@@ -159,22 +162,17 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
 
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-            String videoSdp = VideoCodecManager.createCodecSdpPart(selectedVideoCodec,
-            		getMediaRenderer().getLocalRtpPort()); 
+	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
+            String videoSdp = VideoCodecManager.createCodecSdpPart(selectedVideoCodec.getMediaCodec(), getMediaRenderer().getLocalRtpPort()); 
             String sdp =
             	"v=0" + SipUtils.CRLF +
-            	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+            	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
             	"s=-" + SipUtils.CRLF +
-            	"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+            	"c=IN IP4 " + ipAddress + SipUtils.CRLF +
                 "t=0 0" + SipUtils.CRLF +
                 videoSdp +
+                "b=AS:128" + SipUtils.CRLF +
                 "a=recvonly" + SipUtils.CRLF;
-
-            // Set X-Type attribute
-            String xType = getXTypeAttribute();
-            if (xType != null) {
-                sdp += "a=X-type:" + xType + SipUtils.CRLF;
-            }
 
             // Set the local SDP part in the dialog path
             getDialogPath().setLocalContent(sdp);
@@ -259,15 +257,6 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 ((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(error);
             }
         }
-    }
-
-    /**
-     * Returns the "X-type" attribute
-     *
-     * @return String
-     */
-    public String getXTypeAttribute() {
-        return "videolive";
     }
 
     /**
