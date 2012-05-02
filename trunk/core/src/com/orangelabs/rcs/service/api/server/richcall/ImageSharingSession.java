@@ -172,7 +172,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			logger.info("Add an event listener");
 		}
 
-		listeners.register(listener);
+    	synchronized(lock) {
+    		listeners.register(listener);
+    	}
 	}
 
 	/**
@@ -185,7 +187,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			logger.info("Remove an event listener");
 		}
 
-		listeners.unregister(listener);
+    	synchronized(lock) {
+    		listeners.unregister(listener);
+    	}
 	}
 
 	/**

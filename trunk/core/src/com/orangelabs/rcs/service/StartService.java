@@ -298,7 +298,7 @@ public class StartService extends Service {
             // Set the country code
             setCountryCode();
             
-            // Set New user to true
+            // Set new user flag
             setNewUserAccount(true);
         } else
         if (hasChangedAccount()) {
@@ -311,10 +311,10 @@ public class StartService extends Service {
             // Activate service if new account
             RcsSettings.getInstance().setServiceActivationState(true);
             
-            // Set New user to true
+            // Set new user flag
             setNewUserAccount(true);
         } else {
-            // Set New user to false
+            // Set new user flag
             setNewUserAccount(false);
         }
         
@@ -385,6 +385,7 @@ public class StartService extends Service {
                 if (hasChangedAccount()) {
                     // Reset provisioning version
                     HttpsProvisioningService.setProvisioningVersion(getApplicationContext(), "0");
+                    
                     // Start provisioning as a first launch
                     Intent intent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
                     intent.putExtra("first", true);

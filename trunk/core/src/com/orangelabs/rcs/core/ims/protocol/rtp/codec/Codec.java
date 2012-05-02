@@ -151,18 +151,6 @@ public abstract class Codec {
 	}
 
 	/**
-	 * Check the input buffer
-	 * 
-	 * @param inputBuffer Input buffer
-	 * @return Boolean
-	 */
-	protected boolean checkInputBuffer(Buffer inputBuffer) {
-		boolean fError = !isEOM(inputBuffer)
-				&& (inputBuffer == null || inputBuffer.getFormat() == null);
-		return !fError;
-	}
-
-	/**
 	 * Validate that the Buffer's data size is at least newSize
 	 * 
 	 * @return Array with sufficient capacity

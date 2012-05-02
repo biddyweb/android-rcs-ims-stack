@@ -269,7 +269,9 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Add an event listener");
 		}
 
-		listeners.register(listener);
+    	synchronized(lock) {
+    		listeners.register(listener);
+    	}
 	}
 	
 	/**
@@ -282,7 +284,9 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Remove an event listener");
 		}
 
-		listeners.unregister(listener);
+    	synchronized(lock) {
+    		listeners.unregister(listener);
+    	}
 	}
 	
 	/**

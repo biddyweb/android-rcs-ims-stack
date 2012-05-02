@@ -111,7 +111,7 @@ public class RtpPacketReceiver {
 
 			// Parse the RTP packet
 			RtpPacket pkt = parseRtpPacket(data);
-			if (pkt.payloadType != 12) {
+			if ((pkt != null) && (pkt.payloadType != 12)) {
 				// Update statistics
 				stats.numPackets++;
                 stats.numBytes += data.length;

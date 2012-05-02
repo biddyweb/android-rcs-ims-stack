@@ -29,37 +29,37 @@ public class Logger {
 	/**
 	 * Trace ON
 	 */
-	public static boolean TRACE_ON = true;
+	public static final boolean TRACE_ON = true;
 
 	/**
 	 * Trace OFF
 	 */
-	public static boolean TRACE_OFF = false;
+	public static final boolean TRACE_OFF = false;
 
 	/**
 	 * DEBUG level
 	 */
-	public static int DEBUG_LEVEL = 0;
+	public static final int DEBUG_LEVEL = 0;
 
 	/**
 	 * INFO level
 	 */
-	public static int INFO_LEVEL = 1;
+	public static final int INFO_LEVEL = 1;
 	
 	/**
 	 * WARN level
 	 */
-	public static int WARN_LEVEL = 2;
+	public static final int WARN_LEVEL = 2;
 
 	/**
 	 * ERROR level
 	 */
-	public static int ERROR_LEVEL = 3;
+	public static final int ERROR_LEVEL = 3;
 
 	/**
 	 * FATAL level
 	 */
-	public static int FATAL_LEVEL = 4;
+	public static final int FATAL_LEVEL = 4;
 	
 	/**
 	 * Trace flag

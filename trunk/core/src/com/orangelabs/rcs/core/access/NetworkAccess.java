@@ -66,7 +66,7 @@ public abstract class NetworkAccess {
 	/**
      * Connect to the network access
      * 
-     * @param ipAddress IP address
+     * @param ipAddress Local IP address
      */
     public abstract void connect(String ipAddress);
     

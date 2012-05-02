@@ -1934,6 +1934,32 @@ public class RcsSettings {
 	}
 
     /**
+     * Is Terms and conditions via provisioning is accepted
+     * 
+     * @return Boolean
+     */
+    public boolean isProvisioningTermsAccepted() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean
+                    .parseBoolean(readParameter(RcsSettingsData.PROVISIONING_TERMS_ACCEPTED));
+        }
+        return result;
+    }
+
+    /**
+     * Set Terms and conditions via provisioning accepted
+     * 
+     * @param state State
+     */
+    public void setProvisioningTermsAccepted(boolean state) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,
+                    Boolean.toString(state));
+        }
+    }
+
+    /**
      * Remove user profile information
      */
     public void removeUserProfile() {
@@ -1950,5 +1976,18 @@ public class RcsSettings {
         setXdmLogin("");
         setXdmPassword("");
         setXdmServer("");
+    }
+
+    /**
+     * Check if there is a user profile
+     *
+     * @return true if a user profile exists
+     */
+    public boolean checkUserProfile() {
+        String imsProxyAddrForMobile = getImsProxyAddrForMobile();
+        if (imsProxyAddrForMobile != null && imsProxyAddrForMobile.length() > 0) {
+            return true;
+        }
+        return false;
     }
 }

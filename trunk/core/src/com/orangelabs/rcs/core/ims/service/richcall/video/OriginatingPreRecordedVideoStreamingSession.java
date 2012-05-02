@@ -81,25 +81,25 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 	    		logger.info("Initiate a new pre-recorded video sharing session as originating");
 	    	}
 
-			// Build SDP part
-            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-            if (player.getMediaCodec() != null) {
-                String videoSdp = VideoCodecManager.createCodecSdpPart(
-                        new VideoCodec(player.getMediaCodec()), player.getLocalRtpPort());
-                String sdp =
-                	"v=0" + SipUtils.CRLF +
-                	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
-                	"s=-" + SipUtils.CRLF +
-                	"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
-                	"t=0 0" + SipUtils.CRLF +
-                	videoSdp +
-                	"a=sendonly" + SipUtils.CRLF;
+            // Check player 
+            if ((player == null) || (player.getMediaCodec() == null)) {
+                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE,
+                        "Video codec not selected"));
+                return;
+            }
 
-                // Set X-Type attribute
-                String xType = getXTypeAttribute();
-                if (xType != null) {
-                    sdp += "a=X-type:" + xType + SipUtils.CRLF;
-                }
+            // Build SDP part
+            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
+            String videoSdp = VideoCodecManager.createCodecSdpPart(player.getMediaCodec(), player.getLocalRtpPort());
+            String sdp =
+            	"v=0" + SipUtils.CRLF +
+            	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+            	"s=-" + SipUtils.CRLF +
+            	"c=IN IP4 " + ipAddress + SipUtils.CRLF +
+            	"t=0 0" + SipUtils.CRLF +
+            	videoSdp +
+            	"a=sendonly" + SipUtils.CRLF;
 
                 // Set the local SDP part in the dialog path
                 getDialogPath().setLocalContent(sdp);
@@ -119,10 +119,6 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 
                 // Send INVITE request
                 sendInvite(invite);
-            } else {
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE,
-                        "Video codec not selected"));
-            }
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Session initiation has failed", e);
@@ -219,14 +215,18 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
             MediaDescription mediaVideo = parser.getMediaDescription("video");
             int remotePort = mediaVideo.port;
 
-            // Extract video codecs
-            VideoCodec[] sdpVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(mediaVideo);
+            // Extract video codecs from SDP
+            Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
+            Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
+
+            // Codec negotiation
             VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    player.getSupportedMediaCodecs(), sdpVideoCodecs);
+                    player.getSupportedMediaCodecs(), proposedCodecs);
             if (selectedVideoCodec == null) {
                 if (logger.isActivated()) {
-                    logger.debug("proposed codecs are not supported");
+                    logger.debug("Proposed codecs are not supported");
                 }
+                
                 // Terminate session
                 terminateSession();
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));

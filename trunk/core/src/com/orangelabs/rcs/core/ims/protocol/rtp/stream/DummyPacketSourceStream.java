@@ -34,7 +34,7 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
 	/**
 	 * Source period (in seconds)
 	 */
-	public static int DUMMY_SOURCE_PERIOD = 15;
+	public final static int DUMMY_SOURCE_PERIOD = 5;
 	
 	/**
 	 * Input format
@@ -74,10 +74,8 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
     
     /**
 	 * Open the input stream
-	 * 
-     * @throws Exception
 	 */	
-    public void open() throws Exception {
+    public void open() {
     	start();
 		if (logger.isActivated()) {
 			logger.debug("Dummy source stream openned");

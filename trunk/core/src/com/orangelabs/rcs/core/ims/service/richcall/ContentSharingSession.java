@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall;
 
-import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
@@ -64,19 +63,6 @@ public abstract class ContentSharingSession extends ImsServiceSession {
 	 */
 	public void setContent(MmContent content) {
 		this.content = content;
-	}
-
-	/**
-	 * Returns the "X-type" attribute
-	 * 
-	 * @return String
-	 */
-	public String getXTypeAttribute() {
-		if (content instanceof LiveVideoContent) {
-			return "videolive";
-		} else {
-			return null;
-		}
 	}
 
 	/**

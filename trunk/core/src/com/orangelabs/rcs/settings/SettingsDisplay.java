@@ -40,7 +40,6 @@ import android.view.MenuItem;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.LauncherUtils;
-import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 

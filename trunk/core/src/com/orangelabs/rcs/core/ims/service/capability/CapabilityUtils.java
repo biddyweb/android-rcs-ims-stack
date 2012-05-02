@@ -235,7 +235,7 @@ public class CapabilityUtils {
 			if ((extensions.length() > 0) && (extensions.charAt(0) == ',')) {
 				extensions.deleteCharAt(0);
 			}
-
+	
 			// Save extensions in database
 			RcsSettings.getInstance().setSupportedRcsExtensions(extensions.toString());
 		} catch(Exception e) {

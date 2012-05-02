@@ -35,8 +35,8 @@ public class EventLogData {
 	public static final String SMS_MIMETYPE = "sms/text";
 	public static final String MMS_MIMETYPE = "mms/text";
 	
-	public static Uri SMS_URI = Uri.parse("content://sms");
-	public static Uri MMS_URI = Uri.parse("content://mms");
+	public static final Uri SMS_URI = Uri.parse("content://sms");
+	public static final Uri MMS_URI = Uri.parse("content://mms");
 	
 	/**
 	 * Metadata of the event cursor. 

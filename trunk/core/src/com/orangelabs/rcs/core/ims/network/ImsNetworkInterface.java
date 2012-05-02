@@ -150,6 +150,15 @@ public abstract class ImsNetworkInterface {
 		return registration.isBehindNat();
     }
 	
+    /**
+     * Is network interface configured
+     *
+     * @return Boolean
+     */
+    public boolean isInterfaceConfigured() {
+    	return (imsProxyAddr != null) && (imsProxyAddr.length() > 0);
+    }
+    
 	/**
      * Returns the IMS authentication mode
      *

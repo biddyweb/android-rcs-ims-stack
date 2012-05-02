@@ -139,6 +139,7 @@ public class RtpOutputStream implements ProcessorOutputStream {
         if (localRtpPort != -1) {
             // Create the RTP receiver
             rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
+            
             // Create the RTCP receiver
             rtcpReceiver = new RtcpPacketReceiver(localRtpPort + 1, rtcpSession);
             rtcpReceiver.start();
@@ -159,12 +160,14 @@ public class RtpOutputStream implements ProcessorOutputStream {
             // Create the RTP transmitter
             rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession,
                     rtpInputStream.getRtpReceiver().getConnection());
+            
             // Create the RTCP transmitter
             rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1, rtcpSession,
                     rtpInputStream.getRtpReceiver().getConnection());
         } else {
             // Create the RTP transmitter
             rtpTransmitter = new RtpPacketTransmitter(remoteAddress, remotePort, rtcpSession);
+            
             // Create the RTCP transmitter
             rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress, remotePort + 1, rtcpSession);
         }

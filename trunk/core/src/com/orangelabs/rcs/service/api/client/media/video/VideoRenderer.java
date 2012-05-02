@@ -162,6 +162,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
+        
         // Set the media codec
         for (int i = 0; i < supportedMediaCodecs.length; i++) {
             if (codec.toLowerCase().contains(supportedMediaCodecs[i].getCodecName().toLowerCase())) {
@@ -579,11 +580,15 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         public void writeSample(MediaSample sample) {
             if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
                 if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
-                    rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
+                	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
                             selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
                     if (surface != null) {
                         surface.setImage(rgbFrame);
                     }
+                } else {
+                	if (logger.isActivated()) {
+                		logger.error("Decoding error");
+                	}
                 }
             } else { // default H263
                 if (NativeH263Decoder.DecodeAndConvert(sample.getData(), decodedFrame,
@@ -593,6 +598,10 @@ public class VideoRenderer extends IMediaRenderer.Stub {
                     if (surface != null) {
                         surface.setImage(rgbFrame);
                     }
+                } else {
+                	if (logger.isActivated()) {
+                		logger.error("Decoding error");
+                	}
                 }
             }
         }

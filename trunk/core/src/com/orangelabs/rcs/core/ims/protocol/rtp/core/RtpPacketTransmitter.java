@@ -73,6 +73,7 @@ public class RtpPacketTransmitter {
      *
      * @param address Remote address
      * @param port Remote port
+     * @param rtcpSession RTCP session
      * @throws IOException
      */
     public RtpPacketTransmitter(String address, int port, RtcpSession rtcpSession)
@@ -80,19 +81,22 @@ public class RtpPacketTransmitter {
 		this.remoteAddress = address;
 		this.remotePort = port;
         this.rtcpSession = rtcpSession;
+        
         datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
         datagramConnection.open();
+        
 		if (logger.isActivated()) {
             logger.debug("RTP transmitter connected to " + remoteAddress + ":" + remotePort);
 		}
 	}
 
     /**
-     * Constructor - used for SYMETRIC_RTP
+     * Constructor used for symetric RTP
      *
      * @param address Remote address
      * @param port Remote port
-     * @param DatagramConnection datagram connection of the RtpPacketReceiver
+     * @param rtcpSession RTCP session
+     * @param connection Connection from RTP receiver
      * @throws IOException
      */
     public RtpPacketTransmitter(String address, int port, RtcpSession rtcpSession,
@@ -101,6 +105,7 @@ public class RtpPacketTransmitter {
         this.remoteAddress = address;
         this.remotePort = port;
         this.rtcpSession = rtcpSession;
+        
         if (connection != null) {
             this.datagramConnection = connection;
         } else {

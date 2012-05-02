@@ -113,7 +113,6 @@ public class EasySSLSocketFactory implements LayeredSocketFactory {
          */
         public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
         throws IOException, UnknownHostException {
-        	//return getSSLContext().getSocketFactory().createSocket();
         	return getSSLContext().getSocketFactory().createSocket(socket, host, port, autoClose);
         }
 

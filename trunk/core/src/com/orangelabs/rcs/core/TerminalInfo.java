@@ -28,7 +28,7 @@ public class TerminalInfo {
 	/**
 	 * Product name
 	 */
-	private static String productName = "OrangeLabs-RCS-client";
+	private static final String productName = "OrangeLabs-RCS-client";
 
 	/**
 	 * Product version

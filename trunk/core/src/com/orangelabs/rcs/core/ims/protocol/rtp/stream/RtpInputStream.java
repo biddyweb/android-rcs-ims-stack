@@ -88,9 +88,9 @@ public class RtpInputStream implements ProcessorInputStream {
      * @throws Exception
      */
     public void open() throws Exception {
-
     	// Create the RTP receiver
         rtpReceiver = new RtpPacketReceiver(localPort, rtcpSession);
+        
     	// Create the RTCP receiver
         rtcpReceiver = new RtcpPacketReceiver(localPort + 1, rtcpSession);
         rtcpReceiver.start();

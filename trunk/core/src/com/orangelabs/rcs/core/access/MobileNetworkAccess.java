@@ -60,7 +60,7 @@ public class MobileNetworkAccess extends NetworkAccess {
 	/**
      * Connect to the network access
      * 
-     * @param ipAddress IP address
+     * @param ipAddress Local IP address
      */
     public void connect(String ipAddress) {
     	if (logger.isActivated()) {

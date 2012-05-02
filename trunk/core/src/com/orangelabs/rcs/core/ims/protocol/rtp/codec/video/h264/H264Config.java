@@ -37,7 +37,7 @@ public class H264Config {
     /**
      * Default codec params
      */
-    public final static String CODEC_PARAMS = "profile-level-id=42900B";
+    public final static String CODEC_PARAMS = "profile-level-id=42900B;packetization-mode=1";
 
     /**
      * Default video width

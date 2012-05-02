@@ -81,13 +81,13 @@ public class VideoCodec {
     public VideoCodec(String codecName, int payload, int clockRate, String codecParams, int framerate,
             int bitrate, int width, int height) {
         mediaCodec = new MediaCodec(codecName);
-        mediaCodec.setParam(PAYLOAD, "" + payload);
-        mediaCodec.setParam(CLOCKRATE, "" + clockRate);
-        mediaCodec.setParam(CODECPARAMS, codecParams);
-        mediaCodec.setParam(FRAMERATE, "" + framerate);
-        mediaCodec.setParam(BITRATE, "" + bitrate);
-        mediaCodec.setParam(CODECWIDTH, "" + width);
-        mediaCodec.setParam(CODECHEIGHT, "" + height);
+        mediaCodec.setIntParam(PAYLOAD, payload);
+        mediaCodec.setIntParam(CLOCKRATE, clockRate);
+        mediaCodec.setStringParam(CODECPARAMS, codecParams);
+        mediaCodec.setIntParam(FRAMERATE, framerate);
+        mediaCodec.setIntParam(BITRATE, bitrate);
+        mediaCodec.setIntParam(CODECWIDTH, width);
+        mediaCodec.setIntParam(CODECHEIGHT, height);
     }
 
     /**
@@ -189,9 +189,11 @@ public class VideoCodec {
     public boolean compare(VideoCodec codec) {
         if (getCodecName().equalsIgnoreCase(codec.getCodecName()) &&
         		getWidth() == codec.getWidth() &&
-        			getHeight() == codec.getHeight())
+        			getHeight() == codec.getHeight()) {
             return true;
-        return false;
+        } else {
+        	return false;
+        }
     }
 
     /**
@@ -203,8 +205,9 @@ public class VideoCodec {
      */
     public static boolean checkVideoCodec(MediaCodec[] supportedCodecs, VideoCodec codec) {
         for (int i = 0; i < supportedCodecs.length; i++) {
-            if (codec.compare(new VideoCodec(supportedCodecs[i])))
+            if (codec.compare(new VideoCodec(supportedCodecs[i]))) {
                 return true;
+            }
         }
         return false;
     }

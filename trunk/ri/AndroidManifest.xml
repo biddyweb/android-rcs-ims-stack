@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.2"
+ android:versionName="2.4.3"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"/>
@@ -41,21 +41,19 @@
 
 		<!-- Terms RI -->
 
-        <receiver android:name=".terms.TermsReceiver">
+        <receiver android:name=".terms.SipTermsRequestReceiver">
             <intent-filter>
-		    	<action android:name="com.orangelabs.rcs.USER_CONFIRMATION_REQUEST"/>
+		    	<action android:name="com.orangelabs.rcs.TERMS_SIP_REQUEST"/>
             </intent-filter>
         </receiver>
+        <activity android:name=".terms.SipTermsRequest"/>
 
-        <activity android:name=".terms.TermsRequest"/>
-
-        <receiver android:name=".terms.WelcomeReceiver">
+        <receiver android:name=".terms.SipTermsAckReceiver">
             <intent-filter>
-		    	<action android:name="com.orangelabs.rcs.USER_CONFIRMATION_ACK"/>
+		    	<action android:name="com.orangelabs.rcs.TERMS_SIP_ACK"/>
             </intent-filter>
         </receiver>
-
-        <activity android:name=".terms.Welcome"/>
+        <activity android:name=".terms.SipTermsAck"/>
 
 		<!-- Capabilities RI -->
 

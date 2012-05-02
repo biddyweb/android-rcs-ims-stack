@@ -33,7 +33,7 @@ public class DummyFormat extends Format {
 	/**
 	 * Payload type
 	 */
-	public static final int PAYLOAD = 12;
+	public static final int PAYLOAD = 20;
 
 	/**
 	 * Constructor

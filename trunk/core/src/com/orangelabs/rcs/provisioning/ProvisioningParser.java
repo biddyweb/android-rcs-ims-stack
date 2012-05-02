@@ -162,13 +162,13 @@ public class ProvisioningParser {
             do {
                 if (version == null) {
                     if ((version = getValueByParamName("version", versionchild)) != null) {
-                        provisioningInfo.version = version;
+                        provisioningInfo.setVersion(version);
                         continue;
                     }
                 }
                 if (validity == null) {
                     if ((validity = getValueByParamName("validity", versionchild)) != null) {
-                        provisioningInfo.validity = Long.parseLong(validity);
+                        provisioningInfo.setValidity(Long.parseLong(validity));
                         continue;
                     }
                 }
@@ -195,22 +195,22 @@ public class ProvisioningParser {
             do {
                 if (title == null) {
                     if ((title = getValueByParamName("title", childnode)) != null) {
-                        provisioningInfo.title = title;
+                        provisioningInfo.setTitle(title);
                         continue;
                     }
                 }
                 if (message == null) {
                     if ((message = getValueByParamName("message", childnode)) != null) {
-                        provisioningInfo.message = message;
+                        provisioningInfo.setMessage(message);
                         continue;
                     }
                 }
                 if (acceptBtn == null) {
                     if ((acceptBtn = getValueByParamName("Accept_btn", childnode)) != null) {
                         if (acceptBtn.equals("1")) {
-                            provisioningInfo.acceptBtn = true;
+                            provisioningInfo.setAcceptBtn(true);
                         } else {
-                            provisioningInfo.acceptBtn = false;
+                            provisioningInfo.setAcceptBtn(false);
                         }
                         continue;
                     }
@@ -218,9 +218,9 @@ public class ProvisioningParser {
                 if (rejectBtn == null) {
                     if ((rejectBtn = getValueByParamName("Reject_btn", childnode)) != null) {
                         if (rejectBtn.equals("1")) {
-                            provisioningInfo.rejectBtn = true;
+                            provisioningInfo.setRejectBtn(true);
                         } else {
-                            provisioningInfo.rejectBtn = false;
+                            provisioningInfo.setRejectBtn(false);
                         }
                         continue;
                     }

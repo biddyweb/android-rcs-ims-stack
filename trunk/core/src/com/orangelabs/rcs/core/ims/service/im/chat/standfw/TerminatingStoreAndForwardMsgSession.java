@@ -92,7 +92,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 				String msgId = ChatUtils.getMessageId(getDialogPath().getInvite());
 				if (msgId != null) {
 					// Send message delivery status via a SIP MESSAGE
-					getImdnManager().sendMessageDeliveryStatusImmediately(getDialogPath().getRemoteParty(),
+					getImdnManager().sendMessageDeliveryStatusImmediately(getRemoteContact(),
 							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 				}
 			}
@@ -179,11 +179,12 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
             
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 	    	String sdp =
 	    		"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
-				"c=IN IP4 " + getDialogPath().getSipStack().getLocalIpAddress() + SipUtils.CRLF +
+				"c=IN IP4 " + ipAddress + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=accept-types:" + CpimMessage.MIME_TYPE + " " + InstantMessage.MIME_TYPE + SipUtils.CRLF +

@@ -32,11 +32,16 @@ public class FeatureTags {
 	 * 3GPP video share feature tag
 	 */
 	public final static String FEATURE_3GPP_VIDEO_SHARE = "+g.3gpp.cs-voice";
-
+	
 	/**
      * 3GPP image share feature tag
      */
-    public final static String FEATURE_3GPP_IMAGE_SHARE = "+g.3gpp.app_ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is\"";	
+    public final static String FEATURE_3GPP_IMAGE_SHARE = "+g.3gpp.iari-ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is\"";
+											
+	/**
+	 * 3GPP image share feature tag for RCS 2.0
+	 */
+	public final static String FEATURE_3GPP_IMAGE_SHARE_RCS2 = "+g.3gpp.app_ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is\"";
 	
 	/**
 	 * RCS-e feature tag prefix

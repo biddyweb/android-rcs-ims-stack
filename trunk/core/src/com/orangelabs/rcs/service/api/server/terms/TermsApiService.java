@@ -53,18 +53,18 @@ public class TermsApiService extends ITermsApi.Stub {
 	 */
 	public void close() {
 	}
-	
+   
 	/**
-	 * Accept terms
-	 * 
+     * Accept terms and conditions via SIP
+     *
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
-	 * @throws ServerApiException
-	 */
-	public boolean acceptTerms(String id, String pin) throws ServerApiException {
+     * @throws ServerApiException
+     */
+    public boolean acceptTermsViaSip(String id, String pin) throws ServerApiException {	
 		if (logger.isActivated()) {
-			logger.info("Accept terms");
+			logger.info("Accept terms via SIP");
 		}
 
     	// Check permission
@@ -82,16 +82,16 @@ public class TermsApiService extends ITermsApi.Stub {
 	}
 
 	/**
-	 * Reject terms
-	 * 
+     * Reject terms and conditions via SIP
+     *
 	 * @param id Request id
 	 * @param pin PIN
 	 * @return Boolean result
-	 * @throws ServerApiException
-	 */
-	public boolean rejectTerms(String id, String pin) throws ServerApiException {
+     * @throws ServerApiException
+     */
+    public boolean rejectTermsViaSip(String id, String pin) throws ServerApiException {	
 		if (logger.isActivated()) {
-			logger.info("Reject terms");
+			logger.info("Reject terms via SIP");
 		}
 
     	// Check permission
@@ -109,7 +109,7 @@ public class TermsApiService extends ITermsApi.Stub {
 	}
 
     /**
-     * User confirmation request
+     * Receive terms and conditions request via SIP
      * 
      * @param remote Remote server
      * @param id Request ID
@@ -118,9 +118,9 @@ public class TermsApiService extends ITermsApi.Stub {
      * @param subject Subject
      * @param text Text
      */
-    public void handleUserConfirmationRequest(String remote, String id, String type, boolean pin, String subject, String text) {
+    public void receiveTermsRequestViaSip(String remote, String id, String type, boolean pin, String subject, String text) {
 		// Broadcast intent related to the received request
-    	Intent intent = new Intent(TermsApiIntents.USER_CONFIRMATION_REQUEST);
+    	Intent intent = new Intent(TermsApiIntents.TERMS_SIP_REQUEST);
     	intent.putExtra("id", id);
     	intent.putExtra("type", type);
     	intent.putExtra("pin", pin);
@@ -130,7 +130,7 @@ public class TermsApiService extends ITermsApi.Stub {
     }
 
     /**
-     * User terms confirmation acknowledge
+     * Receive terms and conditions ack via SIP
      * 
      * @param remote Remote server
      * @param id Request ID
@@ -138,9 +138,9 @@ public class TermsApiService extends ITermsApi.Stub {
      * @param subject Subject
      * @param text Text
      */
-    public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text) {
+    public void receiveTermsAckViaSip(String remote, String id, String status, String subject, String text) {
 		// Broadcast intent related to the received request
-    	Intent intent = new Intent(TermsApiIntents.USER_CONFIRMATION_ACK);
+    	Intent intent = new Intent(TermsApiIntents.TERMS_SIP_ACK);
     	intent.putExtra("id", id);
     	intent.putExtra("status", status);
     	intent.putExtra("subject", subject);
