@@ -86,42 +86,47 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
   switch (state){
     case SPS:
       if (decoder->DecodeSPS(aInputBuf,size)==AVCDEC_SUCCESS){
-	state = PPS;
+		state = PPS;
       } else {
-	return 0;
+		return 0;
       }
       break;
     case PPS:
       if (decoder->DecodePPS(aInputBuf,size)==AVCDEC_SUCCESS){
-	state = SLICE;
+		state = SLICE;
       } else {
-	return 0;
+		return 0;
       }
       break;
     case SLICE:
       if ((status=decoder->DecodeAVCSlice(aInputBuf,&size))>AVCDEC_FAIL){
-	  decoder->GetDecOutput(&indexFrame,&releaseFrame,&outVid);
-
-	  if (releaseFrame == 1){
-	    decoder->AVC_FrameUnbind(indexFrame);
-	  }
-
-	  /* Copy result to YUV  array ! */
-	  memcpy(aOutBuffer,outVid.YCbCr[0],176*144);
-	  memcpy(aOutBuffer+(176*144),outVid.YCbCr[1],(176*144)/4);
-	  memcpy(aOutBuffer+(176*144)+((176*144)/4),outVid.YCbCr[2],(176*144)/4);
-	  /* Create the output buffer */
-	  uint32* resultBuffer= (uint32*) malloc(176*144*sizeof(uint32));
-	  if (resultBuffer == NULL) return 0;
-	  /**********  Convert to rgb  ***********/
-	  convert(176,144,aOutBuffer,resultBuffer);
-	  /* Return Bitmap image */
-	  (env)->SetIntArrayRegion(decoded, 0, 176*144, (const jint*)resultBuffer);
-	  free(resultBuffer);
+		  decoder->GetDecOutput(&indexFrame,&releaseFrame,&outVid);
+	
+		  if (releaseFrame == 1){
+		    decoder->AVC_FrameUnbind(indexFrame);
+		  }
+	
+		  /* Copy result to YUV  array ! */
+		  memcpy(aOutBuffer,outVid.YCbCr[0],176*144);
+		  memcpy(aOutBuffer+(176*144),outVid.YCbCr[1],(176*144)/4);
+		  memcpy(aOutBuffer+(176*144)+((176*144)/4),outVid.YCbCr[2],(176*144)/4);
+		  /* Create the output buffer */
+		  uint32* resultBuffer= (uint32*) malloc(176*144*sizeof(uint32));
+		  if (resultBuffer == NULL) return 0;
+		  
+		  /**********  Convert to rgb  ***********/
+		  convert(176,144,aOutBuffer,resultBuffer);
+		  /* Return Bitmap image */
+		  (env)->SetIntArrayRegion(decoded, 0, 176*144, (const jint*)resultBuffer);
+		  free(resultBuffer);
       } else {
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "status: %ld",status);
+		__android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "status: %ld",status);
+		  return 0;
       }
       break;
+    default:
+		__android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "unknown state %d", state);
+        return 0;
   }
   return 1;
 }
