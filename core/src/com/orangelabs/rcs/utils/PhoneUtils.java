@@ -81,16 +81,19 @@ public class PhoneUtils {
 		number = number.trim();
 
 		// Strip all non digits
-		String phoneNumber = PhoneNumberUtils.stripSeparators(number);		
+		String phoneNumber = PhoneNumberUtils.stripSeparators(number);
 
 		// Format into international
 		if (phoneNumber.startsWith("00" + COUNTRY_CODE.substring(1))) {
+			// International format
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(4);
 		} else
-		if (phoneNumber.startsWith(COUNTRY_AREA_CODE)) {
-			phoneNumber = COUNTRY_CODE + phoneNumber.substring(1);
+		if ((COUNTRY_AREA_CODE.length() > 0) && phoneNumber.startsWith(COUNTRY_AREA_CODE)) {
+			// National number with area code
+			phoneNumber = COUNTRY_CODE + phoneNumber.substring(COUNTRY_AREA_CODE.length());
 		} else
 		if (!phoneNumber.startsWith("+")) {
+			// National number
 			phoneNumber = COUNTRY_CODE + phoneNumber;
 		}
 		return phoneNumber;
