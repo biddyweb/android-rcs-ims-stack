@@ -13,9 +13,11 @@
 	        <TextView android:text="@string/label_session"
  			 android:layout_marginLeft="5dip"
 	         android:gravity="right"/>
-	        <TextView android:id="@+id/session"
- 			 android:layout_marginLeft="5dip"
-	         android:gravity="right"/>
+			<Spinner android:id="@+id/session"
+				android:layout_marginLeft="5dip"
+				android:layout_marginRight="5dip"
+	            android:layout_width="fill_parent"
+	            android:layout_height="wrap_content"/>	         
 	    </TableRow>
 	    	
 	    <TableRow android:padding="5dip"></TableRow>

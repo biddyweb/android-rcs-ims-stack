@@ -18,13 +18,21 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
+import android.text.TextUtils;
+
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
 /**
  * RCS settings
@@ -36,7 +44,7 @@ public class RcsSettings {
 	 * Current instance
 	 */
 	private static RcsSettings instance = null;
-
+	
 	/**
 	 * Content resolver
 	 */
@@ -107,6 +115,19 @@ public class RcsSettings {
         values.put(RcsSettingsData.KEY_VALUE, value);
         String where = RcsSettingsData.KEY_KEY + "='" + key + "'";
         cr.update(databaseUri, values, where, null);
+	}
+
+	/**
+     * Insert a parameter
+     *
+     * @param key Key
+     * @param value Value
+     */
+	public void insertParameter(String key, String value) {
+        ContentValues values = new ContentValues();
+        values.put(RcsSettingsData.KEY_KEY, key);
+        values.put(RcsSettingsData.KEY_VALUE, value);
+        cr.insert(databaseUri, values);
 	}
 
 	/**
@@ -1941,10 +1962,33 @@ public class RcsSettings {
     public boolean isProvisioningTermsAccepted() {
         boolean result = false;
         if (instance != null) {
-            result = Boolean
-                    .parseBoolean(readParameter(RcsSettingsData.PROVISIONING_TERMS_ACCEPTED));
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.PROVISIONING_TERMS_ACCEPTED));
         }
         return result;
+    }
+
+    /**
+     * Get provisioning version
+     * 
+     * @return Version
+     */
+    public String getProvisioningVersion() {
+        String result = "0";
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.PROVISIONING_VERSION);
+        }
+        return result;
+    }
+
+    /**
+     * Set provisioning version
+     * 
+     * @param version Version
+     */
+    public void setProvisioningVersion(String version) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.PROVISIONING_VERSION, version);
+        }
     }
 
     /**
@@ -1960,34 +2004,107 @@ public class RcsSettings {
     }
 
     /**
-     * Remove user profile information
+     * Reset user profile settings
      */
-    public void removeUserProfile() {
-        setServiceActivationState(false);
-        setUserProfileImsUserName("");
-        setUserProfileImsDomain("");
-        setUserProfileImsPassword("");
-        setImsProxyAddrForMobile("");
-        setImsProxyPortForMobile(5060);
+    public void resetUserProfile() {
+    	setUserProfileImsUserName("");
+    	setUserProfileImsDomain("");
+    	setUserProfileImsPassword("");
+    	setImsProxyAddrForMobile("");
         setImsProxyAddrForWifi("");
-        setImsProxyPortForWifi(5060);
         setUserProfileImsDisplayName("");
         setUserProfileImsPrivateId("");
         setXdmLogin("");
         setXdmPassword("");
         setXdmServer("");
+        setProvisioningVersion("0");
     }
 
     /**
-     * Check if there is a user profile
+     * Is user profile configured
      *
-     * @return true if a user profile exists
+     * @return Returns true if the configuration is valid
      */
-    public boolean checkUserProfile() {
-        String imsProxyAddrForMobile = getImsProxyAddrForMobile();
-        if (imsProxyAddrForMobile != null && imsProxyAddrForMobile.length() > 0) {
-            return true;
-        }
-        return false;
+    public boolean isUserProfileConfigured() {
+    	// Check platform settings
+         if (TextUtils.isEmpty(getImsProxyAddrForMobile())) {
+             return false;
+         }
+         
+    	 // Check user profile settings
+         if (TextUtils.isEmpty(getUserProfileImsDomain())) {
+        	 return false;
+         }
+         String mode = RcsSettings.getInstance().getImsAuhtenticationProcedureForMobile();
+		 if (mode.equals(RcsSettingsData.DIGEST_AUTHENT)) {
+	         if (TextUtils.isEmpty(getUserProfileImsUserName())) {
+	        	 return false;
+	         }
+	         if (TextUtils.isEmpty(getUserProfileImsPassword())) {
+	        	 return false;
+	         }
+	         if (TextUtils.isEmpty(this.getUserProfileImsPrivateId())) {
+	        	 return false;
+	         }			
+		}
+    	
+        return true;
+    }
+    
+    /**
+     * Backup account settings
+     * 
+     * @param account Account
+     */
+    public void backupAccountSettings(String account) {
+    	try {
+	    	String packageName = "com.orangelabs.rcs";
+	    	String dbFile = Environment.getDataDirectory() + "/data/" + packageName + "/databases/" + RcsSettingsProvider.DATABASE_NAME;
+	    	String backupFile = Environment.getDataDirectory() + "/data/" + packageName + "/databases/" + account + ".db";
+	    	
+	    	OutputStream outStream = new FileOutputStream(backupFile);
+	    	InputStream inStream = new FileInputStream(dbFile);
+ 		    byte[] buffer = new byte[1024];
+		    int length;
+		    while ((length = inStream.read(buffer))>0) {
+				outStream.write(buffer, 0, length);
+		    }
+		    outStream.flush();
+		    outStream.close();
+		    inStream.close();		    	
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
+    }
+
+    /**
+     * Restore account settings
+     * 
+     * @param account Account
+     */
+    public void restoreAccountSettings(String account) {
+    	try {
+	    	String packageName = "com.orangelabs.rcs";
+	    	String dbFile = Environment.getDataDirectory() + "/data/" + packageName + "/databases/" + RcsSettingsProvider.DATABASE_NAME;
+	    	String restoreFile = Environment.getDataDirectory() + "/data/" + packageName + "/databases/" + account + ".db";
+	    	
+	    	File file = new File(restoreFile);
+	    	if (!file.exists()) {
+	    		return;
+	    	}
+	    	
+	    	OutputStream outStream = new FileOutputStream(dbFile);
+	    	InputStream inStream = new FileInputStream(file);
+ 		    byte[] buffer = new byte[1024];
+		    int length;
+		    while ((length = inStream.read(buffer))>0) {
+				outStream.write(buffer, 0, length);
+		    }
+		    outStream.flush();
+		    outStream.close();
+		    inStream.close();		    	
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
     }
 }

@@ -24,6 +24,7 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import android.content.BroadcastReceiver;
@@ -121,8 +122,8 @@ public class ImsConnectionManager implements Runnable {
         // Set the mobile network interface by default
 		currentNetworkInterface = getMobileNetworkInterface();
 
-		// Reset the user profile
-		resetUserProfile();
+		// Load the user profile
+		loadUserProfile();
 		
 		// Register network state listener
 		IntentFilter intentFilter = new IntentFilter();
@@ -158,9 +159,9 @@ public class ImsConnectionManager implements Runnable {
 	}
 	
 	/**
-	 * Reset the user profile associated to the network interface
+	 * Load the user profile associated to the network interface
 	 */
-	private void resetUserProfile() {
+	private void loadUserProfile() {
     	ImsModule.IMS_USER_PROFILE = currentNetworkInterface.getUserProfile();
 	}
 	
@@ -222,7 +223,17 @@ public class ImsConnectionManager implements Runnable {
 				disconnectFromIms();
 				return;
 			}
-			
+
+            // Check if SIM account has changed
+            String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
+            String currentUserAccount = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
+            if (lastUserAccount != null) {
+                if ((currentUserAccount == null) || !currentUserAccount.equalsIgnoreCase(lastUserAccount)) {
+                    imsModule.getCoreListener().handleSimHasChanged();
+                    return;
+                }
+            }
+
 			// Get the current local IP address
 			String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress();
 			if (logger.isActivated()) {
@@ -242,8 +253,8 @@ public class ImsConnectionManager implements Runnable {
 				}
 				disconnectFromIms();
 
-				// Reset the user profile
-				resetUserProfile();
+				// Load the user profile
+				loadUserProfile();
 				if (logger.isActivated()) {
 					logger.debug("User profile has been reloaded");
 				}

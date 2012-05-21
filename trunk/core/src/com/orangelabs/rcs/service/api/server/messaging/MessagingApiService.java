@@ -479,13 +479,13 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	/**
 	 * Rejoin a chat group session
 	 * 
-     * @param chatId Chat ID
+	 * @param sessionId Session ID
 	 * @return Chat session
      * @throws ServerApiException
 	 */
-	public IChatSession rejoinChatGroupSession(String chatId) throws ServerApiException {
+	public IChatSession rejoinChatGroupSession(String sessionId) throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Rejoin chat group session");
+			logger.info("Rejoin chat group session " + sessionId);
 		}
 		
     	// Check permission
@@ -495,6 +495,15 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testIms();
 
 		try {
+			// Get the chat ID from database
+			String chatId = RichMessaging.getInstance().getGroupChatIdFromSessionId(sessionId); 
+			if (chatId == null) {
+				if (logger.isActivated()) {
+					logger.warn("Session " + sessionId + " can't be rejoined");
+				}
+				throw new ServerApiException("Chat ID not found in database");
+			}
+			
 			// Initiate the session
 			ChatSession session = Core.getInstance().getImService().rejoinChatGroupSession(chatId);
 

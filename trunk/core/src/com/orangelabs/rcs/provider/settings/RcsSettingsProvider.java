@@ -18,7 +18,9 @@
 
 package com.orangelabs.rcs.provider.settings;
 
-import com.orangelabs.rcs.R;
+import java.util.ArrayList;
+
+import javax2.sip.ListeningPoint;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -31,9 +33,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Environment;
 
-import java.util.ArrayList;
-
-import javax2.sip.ListeningPoint;
+import com.orangelabs.rcs.R;
 
 /**
  * RCS settings provider
@@ -63,13 +63,17 @@ public class RcsSettingsProvider extends ContentProvider {
      * Database helper class
      */
     private SQLiteOpenHelper openHelper;
+    
+    /**
+     * Database name
+     */
+    public static final String DATABASE_NAME = "rcs_settings.db";
 
     /**
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final String DATABASE_NAME = "rcs_settings.db";
-        private static final int DATABASE_VERSION = 57;
+        private static final int DATABASE_VERSION = 58;
 
         private Context ctx;
 
@@ -189,8 +193,9 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
         }
 
         /**
@@ -326,7 +331,7 @@ public class RcsSettingsProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues initialValues) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Cannot insert URI " + uri);
     }
 
     @Override

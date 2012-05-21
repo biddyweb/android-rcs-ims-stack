@@ -82,7 +82,7 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	public byte[] receive(int bufferSize) throws IOException {
 		if (connection != null) {
 			byte[] buf = new byte[bufferSize];
-			DatagramPacket packet = new DatagramPacket(buf, buf.length);
+			DatagramPacket packet = new DatagramPacket(buf, bufferSize);
 			connection.receive(packet);
 			
 			int packetLength = packet.getLength();

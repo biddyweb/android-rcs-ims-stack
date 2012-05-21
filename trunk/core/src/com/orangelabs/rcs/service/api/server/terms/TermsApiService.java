@@ -62,9 +62,9 @@ public class TermsApiService extends ITermsApi.Stub {
 	 * @return Boolean result
      * @throws ServerApiException
      */
-    public boolean acceptTermsViaSip(String id, String pin) throws ServerApiException {	
+    public boolean acceptTerms(String id, String pin) throws ServerApiException {	
 		if (logger.isActivated()) {
-			logger.info("Accept terms via SIP");
+			logger.info("Accept terms");
 		}
 
     	// Check permission
@@ -89,9 +89,9 @@ public class TermsApiService extends ITermsApi.Stub {
 	 * @return Boolean result
      * @throws ServerApiException
      */
-    public boolean rejectTermsViaSip(String id, String pin) throws ServerApiException {	
+    public boolean rejectTerms(String id, String pin) throws ServerApiException {	
 		if (logger.isActivated()) {
-			logger.info("Reject terms via SIP");
+			logger.info("Reject terms");
 		}
 
     	// Check permission
@@ -118,7 +118,7 @@ public class TermsApiService extends ITermsApi.Stub {
      * @param subject Subject
      * @param text Text
      */
-    public void receiveTermsRequestViaSip(String remote, String id, String type, boolean pin, String subject, String text) {
+    public void receiveTermsRequest(String remote, String id, String type, boolean pin, String subject, String text) {
 		// Broadcast intent related to the received request
     	Intent intent = new Intent(TermsApiIntents.TERMS_SIP_REQUEST);
     	intent.putExtra("id", id);
@@ -138,7 +138,7 @@ public class TermsApiService extends ITermsApi.Stub {
      * @param subject Subject
      * @param text Text
      */
-    public void receiveTermsAckViaSip(String remote, String id, String status, String subject, String text) {
+    public void receiveTermsAck(String remote, String id, String status, String subject, String text) {
 		// Broadcast intent related to the received request
     	Intent intent = new Intent(TermsApiIntents.TERMS_SIP_ACK);
     	intent.putExtra("id", id);

@@ -30,11 +30,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 6;
+	private static final int DATABASE_VERSION = 7;
 
 	@Override
 	public void onCreate(SQLiteDatabase db){
 		db.execSQL("create table " + RichMessagingProvider.TABLE + " ("
+				// Fields for chat
 				+ RichMessagingData.KEY_ID + " integer primary key, "
 				+ RichMessagingData.KEY_TYPE + " integer, "
 				+ RichMessagingData.KEY_CHAT_SESSION_ID + " TEXT, "
@@ -44,18 +45,15 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ RichMessagingData.KEY_DATA + " TEXT, "
 				+ RichMessagingData.KEY_MESSAGE_ID + " TEXT, "
 				+ RichMessagingData.KEY_IS_SPAM + " integer, "
-
-				// fields for file transfer
+				// Fields for file transfer
 				+ RichMessagingData.KEY_MIME_TYPE + " TEXT, "
 				+ RichMessagingData.KEY_NAME + " TEXT, "
 				+ RichMessagingData.KEY_SIZE + " long, "
 				+ RichMessagingData.KEY_TOTAL_SIZE + " long, "
-				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer);"
-				
-//				// fields for IMDN in chat group
-//				+ RichMessagingData.KEY_CHAT_GROUP_IMDN_DELIVERED + " TEXT, "
-//				+ RichMessagingData.KEY_CHAT_GROUP_IMDN_DISPLAYED + " TEXT);"
-				
+				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer, "
+
+				// Additional fields for chat
+				+ RichMessagingData.KEY_CHAT_ID + " TEXT);"
 				);
 		
 		db.execSQL("create table " + RichCallProvider.TABLE + " ("

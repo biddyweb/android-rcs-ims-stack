@@ -30,25 +30,15 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class RtpPacketReceiver {
-	/**
-	 * Max datagram packet size
-	 */
-	private static int DEFAULT_DATAGRAM_SIZE = 4096;	
-
     /**
      * Statistics
      */
 	private RtpStatisticsReceiver stats = new RtpStatisticsReceiver();
 
 	/**
-     * Flag that indicates if the received buffer size has been set or not
-     */
-	private boolean recvBufSizeSet = false;
-
-	/**
      * Buffer size needed to received RTP packet
      */
-	private int bufferSize = DEFAULT_DATAGRAM_SIZE;
+	private int bufferSize = 64000;
 
 	/**
 	 * Datagram connection
@@ -111,7 +101,9 @@ public class RtpPacketReceiver {
 
 			// Parse the RTP packet
 			RtpPacket pkt = parseRtpPacket(data);
-			if ((pkt != null) && (pkt.payloadType != 12)) {
+
+			// Drop the keep-alive packets
+			if ((pkt != null) && (pkt.payloadType != 20)) {
 				// Update statistics
 				stats.numPackets++;
                 stats.numBytes += data.length;
@@ -126,7 +118,6 @@ public class RtpPacketReceiver {
 
 				return pkt;
 			} else {
-				// Drop the keep-alive packets (payload 12)
 				return readRtpPacket();
 			}
 
@@ -138,15 +129,6 @@ public class RtpPacketReceiver {
 			return null;
 		}
 	}
-
-    /**
-     * Set the size of the received buffer
-     *
-     * @param size New buffer size
-     */
-    public void setRecvBufSize(int size) {
-    	this.bufferSize = size;
-    }
 
     /**
      * Parse the RTP packet
@@ -189,31 +171,6 @@ public class RtpPacketReceiver {
 			packet.payloadlength = packet.length - packet.payloadoffset;
 			packet.data = new byte[packet.payloadlength];
 			System.arraycopy(data, packet.payloadoffset, packet.data, 0, packet.payloadlength);
-
-			// Update the buffer size
-			if (!recvBufSizeSet) {
-				recvBufSizeSet = true;
-				switch (packet.payloadType) {
-					case 14:
-					case 26:
-					case 34:
-					case 42:
-						setRecvBufSize(64000);
-						break;
-					case 31:
-						setRecvBufSize(0x1f400);
-                        break;
-					case 32:
-						setRecvBufSize(0x1f400);
-						break;
-
-					default:
-						if ((packet.payloadType >= 96) && (packet.payloadType <= 127)) {
-							setRecvBufSize(64000);
-						}
-						break;
-				}
-            }
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("RTP packet parsing error", e);

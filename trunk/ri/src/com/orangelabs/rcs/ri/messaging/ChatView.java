@@ -18,24 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
-import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.Registry;
-import com.orangelabs.rcs.ri.utils.SmileyParser;
-import com.orangelabs.rcs.ri.utils.Smileys;
-import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ClientApiListener;
-import com.orangelabs.rcs.service.api.client.ImsEventListener;
-import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
-import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
-import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
-import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
-import com.orangelabs.rcs.utils.PhoneUtils;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -68,8 +52,23 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.SmileyParser;
+import com.orangelabs.rcs.ri.utils.Smileys;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
+import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
+import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
+import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * Chat view
@@ -407,25 +406,22 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 	/**
 	 * Display received message
 	 * 
-	 * @param contact Contact
-	 * @param msg Message
+	 * @param msg Instant message
 	 */
-    private void displayReceivedMessage(String contact, String msg) {
-		if (msg == null || msg.trim().length() == 0) {
-			return;
-		}
-    	
+    private void displayReceivedMessage(InstantMessage msg) {
+		String contact = msg.getRemote();
+		String number = PhoneUtils.extractNumberFromUri(contact);
+		String txt = msg.getTextMessage();
+		String line = "[" + number + "] ";
 		if (msg.equals(WIZZ_MSG)) {
 	    	// Add Wizz to the message history
-			String number = PhoneUtils.extractNumberFromUri(contact);
-	        mAdapter.add("[" + number + "] " + getString(R.string.label_chat_wizz));
+	        mAdapter.add(line + getString(R.string.label_chat_wizz));
 	        
 	        // Vibrate
 	        Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
 	        vibrator.vibrate(600);
 		} else {
-			String number = PhoneUtils.extractNumberFromUri(contact);
-	        mAdapter.add("[" + number + "] " + msg);
+	        mAdapter.add(line + txt);
 		}
     }
 
@@ -482,7 +478,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 						// Display first message
 		    			InstantMessage firstMessage = chatSession.getFirstMessage();
 		    			if (firstMessage != null) {
-		    				displayReceivedMessage(firstMessage.getRemote(), firstMessage.getTextMessage());
+		    				displayReceivedMessage(firstMessage);
 		    			}
 	    			} else {
 	    				// Initiate a new session
@@ -569,16 +565,6 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
     private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
 		// Session is started
 		public void handleSessionStarted() {
-			try {
-				// Save chat session ID to rejoin last group chat session
-				if (isGroupChat) {
-					Registry registry = new Registry(ChatView.this);
-					registry.writeString(RejoinChat.REGISTRY_CHAT_ID, chatSession.getChatID());
-				}
-			} catch(RemoteException e) {
-				// Nothing to do here
-			}
-			
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
@@ -628,7 +614,7 @@ public class ChatView extends ListActivity implements OnClickListener, OnKeyList
 			
 			handler.post(new Runnable() { 
 				public void run() {
-					displayReceivedMessage(msg.getRemote(), msg.getTextMessage());
+					displayReceivedMessage(msg);
 				}
 			});
 		}		

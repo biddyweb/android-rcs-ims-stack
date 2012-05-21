@@ -18,11 +18,15 @@
 
 package com.orangelabs.rcs.service;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.telephony.TelephonyManager;
 
 import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.ClientApiUtils;
@@ -35,6 +39,11 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class LauncherUtils {
     /**
+     * Last user account used
+     */
+    public static final String REGISTRY_LAST_USER_ACCOUNT = "LastUserAccount";
+
+    /**
      * Logger
      */
     private static Logger logger = Logger.getLogger(LauncherUtils.class.getName());
@@ -43,7 +52,7 @@ public class LauncherUtils {
      * Launch the RCS service
      *
      * @param context application context
-     * @param boot indicates if RCS is launched from the device boot
+     * @param boot Boot flag
      */
     public static void launchRcsService(Context context, boolean boot) {
         if (logger.isActivated()) {
@@ -61,25 +70,39 @@ public class LauncherUtils {
      */
     public static void launchRcsCoreService(Context context) {
         if (logger.isActivated()) {
-            logger.debug("Launch RCS core service");
+            logger.debug("Launch core service");
         }
-        if (RcsSettings.getInstance().isServiceActivated() && RcsSettings.getInstance().checkUserProfile()) {
-        	context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+        if (RcsSettings.getInstance().isServiceActivated()) {
+        	if (RcsSettings.getInstance().isUserProfileConfigured()) {
+	        	context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+	        } else {
+		        if (logger.isActivated()) {
+		            logger.debug("RCS service not configured");
+		        }
+	        }
+        } else {
+	        if (logger.isActivated()) {
+	            logger.debug("RCS service is disabled");
+	        }        	
         }
     }
 
     /**
-     * Force a launch the RCS core service
+     * Force launch the RCS core service
      *
-     * @param context application context
+     * @param context Application context
      */
     public static void forceLaunchRcsCoreService(Context context) {
         if (logger.isActivated()) {
-            logger.debug("Force launch RCS core service");
+            logger.debug("Force launch core service");
         }
-        if (RcsSettings.getInstance().checkUserProfile()) {
+    	if (RcsSettings.getInstance().isUserProfileConfigured()) {
             RcsSettings.getInstance().setServiceActivationState(true);
             context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+        } else {
+            if (logger.isActivated()) {
+                logger.debug("RCS service not configured");
+            }
         }
     }
 
@@ -110,9 +133,9 @@ public class LauncherUtils {
         // Stop the Core service
         context.stopService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
 
-        // Clean the RCS user profile
+        // Reset user profile
         RcsSettings.createInstance(context);
-        RcsSettings.getInstance().removeUserProfile();
+        RcsSettings.getInstance().resetUserProfile();
 
         // Clean the RCS database
         ContactsManager.createInstance(context);
@@ -125,4 +148,42 @@ public class LauncherUtils {
         // Clean terms status
         RcsSettings.getInstance().setProvisioningTermsAccepted(false);
     }
+
+    /**
+     * Get the last user account
+     *
+     * @param context Application context
+     * @return last user account
+     */
+    public static String getLastUserAccount(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        return preferences.getString(REGISTRY_LAST_USER_ACCOUNT, null);
+    }
+
+    /**
+     * Set the last user account
+     *
+     * @param context Application context
+     * @param value last user account
+     */
+    public static void setLastUserAccount(Context context, String value) {
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(REGISTRY_LAST_USER_ACCOUNT, value);
+        editor.commit();
+    }
+
+    /**
+     * Get current user account
+     *
+     * @param context Application context
+     * @return current user account
+     */
+    public static String getCurrentUserAccount(Context context) {
+        TelephonyManager mgr = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        String currentUserAccount = mgr.getSubscriberId();
+        mgr = null;
+        return currentUserAccount;
+    }
+
 }

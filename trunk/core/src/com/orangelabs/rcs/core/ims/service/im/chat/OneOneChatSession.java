@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
@@ -96,7 +95,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		boolean result = sendDataChunks(msgId, content, mime);
 
 		// Update rich messaging history
-		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn, new Date());
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn);
 		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not

@@ -561,6 +561,7 @@ public class EventLogProvider extends ContentProvider {
 		};
 	
 	private static Set<String> columnsPresentInRichMessagingTable = new HashSet<String>(Arrays.asList(new String[]{
+			// Fields for chat
 			RichMessagingData.KEY_ID,
 			RichMessagingData.KEY_TYPE,
 			RichMessagingData.KEY_CHAT_SESSION_ID,
@@ -569,12 +570,14 @@ public class EventLogProvider extends ContentProvider {
 			RichMessagingData.KEY_STATUS,
 			RichMessagingData.KEY_DATA,
 			RichMessagingData.KEY_MESSAGE_ID,
-			// Fields for file transfers
+			// Fields for file transfer
 			RichMessagingData.KEY_MIME_TYPE,
 			RichMessagingData.KEY_NAME,
 			RichMessagingData.KEY_SIZE,
 			RichMessagingData.KEY_TOTAL_SIZE,		
-			RichMessagingData.KEY_IS_SPAM
+			RichMessagingData.KEY_IS_SPAM,
+			// Additional fields for chat
+			RichMessagingData.KEY_CHAT_ID
 	}));
 	
 	private static String [] unionRichCallColumns = new String[]{

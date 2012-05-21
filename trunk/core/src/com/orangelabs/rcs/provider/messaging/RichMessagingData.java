@@ -29,7 +29,7 @@ public class RichMessagingData {
 	// Database URI
 	public static final Uri CONTENT_URI = Uri.parse("content://com.orangelabs.rcs.messaging/messaging");
 	
-	// Column names
+	// Fields for chat
 	public static final String KEY_ID = "_id";
 	public static final String KEY_TYPE = "type";
 	public static final String KEY_CHAT_SESSION_ID = "chat_session_id";
@@ -39,8 +39,9 @@ public class RichMessagingData {
 	public static final String KEY_DATA = "_data";
 	public static final String KEY_MESSAGE_ID = "message_id";
 	public static final String KEY_IS_SPAM = "is_spam";
+	public static final String KEY_CHAT_ID = "chat_id";
 	
-	// Fields for file transfers
+	// Fields for file transfer
 	public static final String KEY_MIME_TYPE = "mime_type";
 	public static final String KEY_NAME = "name";
 	public static final String KEY_SIZE = "size";

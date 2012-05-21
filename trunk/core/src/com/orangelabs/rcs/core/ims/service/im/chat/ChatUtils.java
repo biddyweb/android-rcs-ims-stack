@@ -488,8 +488,7 @@ public class ChatUtils {
 			return new InstantMessage(msgId,
 					remote,
 					StringUtils.encodeUTF8(msg),
-					imdn,
-					new Date());
+					imdn);
 		} else {
 			return null;
 		}	
@@ -522,12 +521,13 @@ public class ChatUtils {
 			String remote = ChatUtils.getReferredIdentity(invite);
 			String msgId = ChatUtils.getMessageId(invite);
 			String txt = cpimMsg.getMessageContent();
+			Date date = cpimMsg.getMessageDate();
 			if ((remote != null) && (msgId != null) && (txt != null)) {
 				return new InstantMessage(msgId,
 						remote,
 						StringUtils.decodeUTF8(txt),
 						ChatUtils.isImdnDisplayedRequested(invite),
-						new Date());
+						date);
 			} else {
 				return null;
 			}

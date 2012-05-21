@@ -637,4 +637,8 @@ public class RcsSettingsData {
      */
     public static final String PROVISIONING_TERMS_ACCEPTED = "ProvisioningTermsAccepted";
 
+    /**
+     * Provisioning version
+     */
+    public static final String PROVISIONING_VERSION = "ProvisioningVersion";
 }

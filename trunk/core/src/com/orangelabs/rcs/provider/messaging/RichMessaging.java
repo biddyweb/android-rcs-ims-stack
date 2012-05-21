@@ -293,11 +293,7 @@ public class RichMessaging {
 	public void addChatSessionTermination(ChatSession session) {
 		String sessionId = session.getSessionID();
 		if (session.isChatGroup()) {
-			List<String> participants = session.getParticipants().getList();
-			StringBuffer contacts = new StringBuffer();
-			for(String contact : participants) {
-				contacts.append(contact+";");
-			}
+			List<String> contacts = session.getParticipants().getList();
 			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts.toString(), null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
 		} else {
 			String contact = session.getRemoteContact();
@@ -313,11 +309,7 @@ public class RichMessaging {
 	public void addChatSessionError(ChatSession session) {
 		String sessionId = session.getSessionID();
 		if (session.isChatGroup()) {
-			StringBuffer contacts = new StringBuffer();
-			List<String> participants = session.getParticipants().getList();
-			for(String contact : participants){
-				contacts.append(contact+";");
-			}
+			List<String> contacts = session.getParticipants().getList();
 			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, sessionId, null, contacts.toString(), null, InstantMessage.MIME_TYPE, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 		} else {
 			String contact = session.getRemoteContact();
@@ -325,6 +317,22 @@ public class RichMessaging {
 		}
 	}
 	
+	/**
+	 * Mark a chat session as started
+	 * 
+	 * @param sessionId Session ID
+	 * @param chatId Chat ID
+	 */
+	public void markChatSessionStarted(String sessionId, String chatId) {
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_CHAT_ID, chatId);
+		cr.update(databaseUri, 
+				values, 
+				"(" + RichMessagingData.KEY_CHAT_SESSION_ID +" = \""+sessionId+"\") AND (" +
+				RichMessagingData.KEY_TYPE + " =" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ")", 
+				null);
+	}	
+
 	/**
 	 * Mark a chat session as failed
 	 * 
@@ -436,7 +444,7 @@ public class RichMessaging {
 	 * 
 	 * @param type Type of entry (RichData.FILETRANSFER or RichData.INSTANTMESSAGING)
 	 * @param sessionId Session Id of a chat session or a file transfer session
-	 * @param messageId Message Id of a chat message or of a file transfer 
+	 * @param messageId Message Id of a chat message 
 	 * @param contact Contact phone number
 	 * @param data Content of the message (an URI for FT or a simple text for IM)
 	 * @param mimeType MIME type for a file transfer
@@ -945,4 +953,28 @@ public class RichMessaging {
 		cursor.close();
 		return msgIds;
 	}
+	
+	/**
+	 * Get the group chat ID associated to a session
+	 * 
+	 * @param sessionId Session ID
+	 * @result Chat ID or null
+	 */
+	public String getGroupChatIdFromSessionId(String sessionId) {
+		String result = null;
+    	Cursor cursor = cr.query(databaseUri, 
+    			new String[] {
+    				RichMessagingData.KEY_CHAT_ID
+    			},
+    			"(" + RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "') AND (" + 
+    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
+    				RichMessagingData.KEY_CHAT_ID + " NOT NULL)", 
+    			null, 
+    			RichMessagingData.KEY_TIMESTAMP + " DESC");
+    	if (cursor.moveToFirst()) {
+    		result = cursor.getString(0);
+    	}
+    	cursor.close();
+    	return result;
+	}	
 }

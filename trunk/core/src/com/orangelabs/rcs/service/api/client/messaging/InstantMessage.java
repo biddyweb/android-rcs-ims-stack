@@ -23,7 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Instant message (text only)
+ * Instant message
  * 
  * @author jexa7410
  */
@@ -44,9 +44,14 @@ public class InstantMessage implements Parcelable {
 	private String message;
 	
 	/**
-	 * Date of message
+	 * Receipt date of the message
 	 */
-	private Date date;
+	private Date receiptAt;
+	
+	/**
+	 * Receipt date of the message on the server (i.e. CPIM date)
+	 */
+	private Date serverReceiptAt;
 
 	/**
 	 * Message Id
@@ -59,20 +64,39 @@ public class InstantMessage implements Parcelable {
 	private boolean imdnDisplayedRequested = false;
 
     /**
-     * Constructor
+     * Constructor for outgoing message
      * 
      * @param messageId Message Id
      * @param remote Remote user
      * @param message Text message
      * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
-	 * @param date Date of message
-     */
-	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested, Date date) {
+	 */
+	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested) {
 		this.msgId = messageId;
 		this.remote = remote;
 		this.message = message;
 		this.imdnDisplayedRequested = imdnDisplayedRequested;
-		this.date = date;
+		Date date = new Date();
+		this.receiptAt = date;
+		this.serverReceiptAt = date;		
+	}
+	
+	/**
+     * Constructor for incoming message
+     * 
+     * @param messageId Message Id
+     * @param remote Remote user
+     * @param message Text message
+     * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
+	 * @param serverReceiptAt Receipt date of the message on the server
+	 */
+	public InstantMessage(String messageId, String remote, String message, boolean imdnDisplayedRequested, Date serverReceiptAt) {
+		this.msgId = messageId;
+		this.remote = remote;
+		this.message = message;
+		this.imdnDisplayedRequested = imdnDisplayedRequested;
+		this.receiptAt = new Date();
+		this.serverReceiptAt = serverReceiptAt;
 	}
 
 	/**
@@ -85,7 +109,8 @@ public class InstantMessage implements Parcelable {
 		this.message = source.readString();
 		this.msgId = source.readString();
 		this.imdnDisplayedRequested = source.readInt() != 0;
-		this.date = new Date(source.readLong());
+		this.receiptAt = new Date(source.readLong());
+		this.serverReceiptAt = new Date(source.readLong());
     }
 	
 	/**
@@ -109,7 +134,8 @@ public class InstantMessage implements Parcelable {
     	dest.writeString(message);
     	dest.writeString(msgId);
     	dest.writeInt(imdnDisplayedRequested ? 1 : 0);
-    	dest.writeLong(date.getTime());    	
+    	dest.writeLong(receiptAt.getTime());
+    	dest.writeLong(serverReceiptAt.getTime());
     }
 
     /**
@@ -163,20 +189,20 @@ public class InstantMessage implements Parcelable {
 	}
 	
 	/**
-	 * Returns the date of message
+	 * Returns the receipt date of the message
 	 * 
 	 * @return Date
 	 */
 	public Date getDate() {
-		return date;
+		return receiptAt;
 	}
 
 	/**
-	 * Set the remote name
+	 * Returns the receipt date of the message on the server
 	 * 
-	 * @param name Remote user name
+	 * @return Date
 	 */
-	public void setRemoteName(String name){
-		this.remote = name;
+	public Date getServerDate() {
+		return serverReceiptAt;
 	}
 }

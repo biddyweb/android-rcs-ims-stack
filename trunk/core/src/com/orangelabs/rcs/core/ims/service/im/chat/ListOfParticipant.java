@@ -129,4 +129,17 @@ public class ListOfParticipant {
 	public List<String> getList() {
 		return list;
 	}
+	
+	/**
+	 * Get list of participants as a string
+	 * 
+	 *  @return String
+	 */
+	public String toString() {
+		StringBuffer result = new StringBuffer();
+		for(String contact : getList()) {
+			result.append(contact + ";");
+		}
+		return result.toString();
+	}
 }
