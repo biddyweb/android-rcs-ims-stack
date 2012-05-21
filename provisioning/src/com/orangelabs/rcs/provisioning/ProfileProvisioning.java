@@ -264,16 +264,16 @@ public class ProfileProvisioning extends Activity {
 	            final View view = factory.inflate(R.layout.generate_profile_layout, null);
 				EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
-
+	
 	            final String[] platforms = {
-                        "NSN Brune", "NSN Lannion", "Margaux", "VCOM1", "VCOM2", "RCS", "Kamailio1"
+	                    "Default"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
 	                    android.R.layout.simple_spinner_item, platforms);
 	            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	            spinner.setAdapter(adapter);
-
+	
 	            return new AlertDialog.Builder(this)
 	                .setTitle(R.string.label_generate_profile)
 	                .setView(view)
@@ -284,111 +284,51 @@ public class ProfileProvisioning extends Activity {
 	            			String number = textEdit.getText().toString();
 	        	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	        	            int index = spinner.getSelectedItemPosition();
-
+	
 	            			String sipUri = "";
 	            			String imsPwd = "";
 	            			String homeDomain = "";
 	            			String imsAddrForMobile = "";
 	            			int imsPortForMobile = 5060;
-                            String imsAddrForWifi = "";
-                            int imsPortForWifi = 5060;
+	                        String imsAddrForWifi = "";
+	                        int imsPortForWifi = 5060;
 	            			String xdms = "";
 	            			String xdmsPwd = "";
 	            			String xdmsLogin = "";
 	            			String confUri = "";
 	            			String enduserConfirmUri = "";
 	                        switch(index) {
-	                        	case 0: // NSN Brune
-			            			homeDomain = "rcs.brune.com";
-		            				sipUri = number + "@" + homeDomain;
-			            			imsPwd = "nsnims2008";
-			            			imsAddrForMobile = "80.12.197.74";
+	                            case 0:
+	                                homeDomain = "domain.com";
+	                                sipUri = number + "@" + homeDomain;
+	                                imsPwd = "";
+			            			imsAddrForMobile = "127.0.0.1";
 			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "80.12.197.74";
-			            			imsPortForWifi = 5060;
-			            			confUri = "sip:Conference-Factory@" + homeDomain;
-			            			break;
-	                        	case 1: // NSN Lannion
-			            			homeDomain = "rcs.lannion.com";
-			            			sipUri = number + "@" + homeDomain;
-			            			imsPwd = "alu2012";
-			            			imsAddrForMobile = "80.12.197.184";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "80.12.197.184";
-			            			imsPortForWifi = 5060;
-			            			confUri = "sip:Conference-Factory@" + homeDomain;
-			            			break;
-                                case 2: // Margaux
-                                    homeDomain = "sip.mobistar.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5080;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 3: // VCO1
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "asbc.sip.france.fr";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "asbc.sip.france.fr";
-			            			imsPortForWifi = 5080;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 4: // VCO2
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.114.42";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.114.42";
+			            			imsAddrForWifi = "127.0.0.1";
 			            			imsPortForWifi = 5060;
 			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 5: // RCS
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5060;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 6: // Kamailio1
-                                    homeDomain = "rcs.kamailio1.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    imsPwd = "";
-			            			imsAddrForMobile = "172.20.14.43";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.14.43";
-			            			imsPortForWifi = 5060;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
+	                                break;
 	            			}
-
+	
 	            			// Update UI
 	        				EditText txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsUsername);
 	        				txt.setText(number);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsDisplayName);
 	        				txt.setText(number);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPrivateId);
-                            txt.setText(sipUri);
+	                        txt.setText(sipUri);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPassword);
 	        		        txt.setText(imsPwd);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
 	        		        txt.setText(homeDomain);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-                            txt.setText(imsAddrForMobile);
+	                        txt.setText(imsAddrForMobile);
 					        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForMobile);
 				            txt.setText(""+imsPortForMobile);
-                            txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                            txt.setText(imsAddrForWifi);
-                            txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForWifi);
-                            txt.setText(""+imsPortForWifi);
+	                        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
+	                        txt.setText(imsAddrForWifi);
+	                        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForWifi);
+	                        txt.setText(""+imsPortForWifi);
 	        				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
 	        				txt.setText(xdms);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);
@@ -399,11 +339,11 @@ public class ProfileProvisioning extends Activity {
 	        		        txt.setText(confUri);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.EndUserConfReqUri);
 	        		        txt.setText(enduserConfirmUri);
-            	        }
+	        	        }
 	                })
 	                .setNegativeButton(R.string.label_cancel, null)
 	                .create();
-        }
-        return null;
+	    }
+	    return null;
     }
 }
