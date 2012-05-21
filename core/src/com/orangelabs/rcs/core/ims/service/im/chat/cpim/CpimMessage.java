@@ -161,11 +161,11 @@ public class CpimMessage {
      * @return Date
      */
     public Date getMessageDate() {
-    	long date = System.currentTimeMillis();
     	String header = getHeader(CpimMessage.HEADER_DATETIME);
     	if (header != null) {
-    		date = DateUtils.decodeDate(header);
+    		return new Date(DateUtils.decodeDate(header));
+    	} else {
+    		return null;
     	}
-    	return new Date(date);
 	}
 }

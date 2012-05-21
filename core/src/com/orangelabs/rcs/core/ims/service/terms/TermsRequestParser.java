@@ -34,12 +34,10 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class TermsRequestParser extends DefaultHandler {
 	/* SAMPLE:
 	 * <?xml version="1.0" standalone="yes"?>
-	 * <NewDataSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	 * <EndUserConfirmationRequest id="xxxxxxx" type="xxxxxxx" pin="xxxxxx">
 	 *   <Subject>xxxxxxxxxxxxxxxx</Subject>
 	 *   <Text>xxxxxxxxx</Text>
 	 * </EndUserConfirmationRequest>
-	 * </NewDataSet>
 	 */
 
 	private StringBuffer accumulator;

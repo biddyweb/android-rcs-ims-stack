@@ -184,4 +184,9 @@ public interface CoreListener {
      * @param text Text
      */
     public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text);
+
+    /**
+     * SIM has changed
+     */
+    public void handleSimHasChanged();
 }

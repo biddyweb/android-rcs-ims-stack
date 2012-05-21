@@ -34,12 +34,10 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class TermsAckParser extends DefaultHandler {
 	/* SAMPLE:
 	 * <?xml version="1.0" standalone="yes"?>
-	 * <NewDataSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	 * <EndUserConfirmationAck id="xxxxxxxxx" status="xxxxxxxxxxx">
 	 *   <Subject>xxxxxxxxxx</Subject>
 	 *   <Text>xxxxxxxxxx</Text>
 	 * </EndUserConfirmationAck>
-	 * </NewDataSet>
 	 */
 
 	private StringBuffer accumulator;

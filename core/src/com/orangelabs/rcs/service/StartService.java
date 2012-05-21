@@ -56,15 +56,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author hlxn7157
  */
 public class StartService extends Service {
-    /**
-     * Last user account used
-     */
-    public static final String REGISTRY_LAST_USER_ACCOUNT = "LastUserAccount";
-
-    /**
-     * Current user account used
-     */
-    public static final String REGISTRY_CURRENT_USER_ACCOUNT = "CurrentUserAccount";
 
     /**
      * RCS new user account
@@ -196,7 +187,8 @@ public class StartService extends Service {
                 if (logger.isActivated()) {
                     logger.debug("Device connected - Launch RCS service");
                 }
-                // Start the RCS service
+                
+                // Start the RCS core service
                 LauncherUtils.launchRcsCoreService(getApplicationContext());
                 
                 // Stop Network listener
@@ -275,14 +267,14 @@ public class StartService extends Service {
         AndroidFactory.setApplicationContext(getApplicationContext());
         
         // Read the current and last end user account
-        initCurrentUserAccount();
-        lastUserAccount = getLastUserAccount();
+        currentUserAccount = LauncherUtils.getCurrentUserAccount(getApplicationContext());
+        lastUserAccount = LauncherUtils.getLastUserAccount(getApplicationContext());
         if (logger.isActivated()) {
             logger.info("Last user account is " + lastUserAccount);
             logger.info("Current user account is " + currentUserAccount);
         }
 
-        // Check the current sim
+        // Check the current SIM
         if (currentUserAccount == null) {
             if (isFirstLaunch()) {
                 // If it's a first launch the IMSI is necessary to initialize the service the first time
@@ -297,20 +289,34 @@ public class StartService extends Service {
         if (isFirstLaunch()) {
             // Set the country code
             setCountryCode();
-            
+
             // Set new user flag
             setNewUserAccount(true);
         } else
         if (hasChangedAccount()) {
+        	// Backup last account settings
+        	if (lastUserAccount != null) {
+        		if (logger.isActivated()) {
+        			logger.info("Backup " + lastUserAccount);
+        		}
+        		RcsSettings.getInstance().backupAccountSettings(lastUserAccount);
+        	}
+        	
             // Set the country code
             setCountryCode();
-            
+
             // Reset RCS account 
             LauncherUtils.resetRcsConfig(getApplicationContext());
+
+            // Restore current account settings
+    		if (logger.isActivated()) {
+    			logger.info("Restore " + currentUserAccount);
+    		}
+            RcsSettings.getInstance().restoreAccountSettings(currentUserAccount);
             
             // Activate service if new account
             RcsSettings.getInstance().setServiceActivationState(true);
-            
+
             // Set new user flag
             setNewUserAccount(true);
         } else {
@@ -359,7 +365,7 @@ public class StartService extends Service {
         }
 
         // Save the current end user account
-        setLastUserAccount(currentUserAccount);
+        LauncherUtils.setLastUserAccount(getApplicationContext(), currentUserAccount);
 
         return true;
     }
@@ -370,26 +376,24 @@ public class StartService extends Service {
      * @param boot indicates if RCS is launched from the device boot
      */
     private void launchRcsService(boolean boot) {
-    	int mode = RcsSettings.getInstance().getAutoConfigMode();
-    	
+        int mode = RcsSettings.getInstance().getAutoConfigMode();
+
         if (logger.isActivated()) {
             logger.debug("Launch RCS service: HTTPS="
                 + (mode == RcsSettingsData.HTTPS_AUTO_CONFIG)
                 + ", boot=" + boot);
         }
-        
+
         if (mode == RcsSettingsData.HTTPS_AUTO_CONFIG) {
             // HTTPS auto config
-            // Check the last provisioning version
-            if (HttpsProvisioningService.getProvisioningVersion(getApplicationContext()).equals("-1")) {
+
+        	// Check the last provisioning version
+            if (RcsSettings.getInstance().getProvisioningVersion().equals("-1")) {
                 if (hasChangedAccount()) {
-                    // Reset provisioning version
-                    HttpsProvisioningService.setProvisioningVersion(getApplicationContext(), "0");
-                    
                     // Start provisioning as a first launch
-                    Intent intent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
-                    intent.putExtra("first", true);
-                    startService(intent);
+                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, true);
+                    startService(provisioningIntent);
                 } else {
                     if (logger.isActivated()) {
                         logger.debug("Provisioning is blocked with this account");
@@ -398,52 +402,24 @@ public class StartService extends Service {
             } else {
                 if (isFirstLaunch() || hasChangedAccount()) {
                     // First launch: start the auto config service with special tag
-                    Intent intent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
-                    intent.putExtra("first", true);
-                    startService(intent);
-                } else if (boot) {
+                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, true);
+                    startService(provisioningIntent);
+                } else
+                if (boot) {
                     // Boot: start the auto config service
-                    startService(new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME));
+                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, false);
+                    startService(provisioningIntent);
                 } else {
-                    // Start the RCS service
+                    // Start the RCS core service
                     LauncherUtils.launchRcsCoreService(getApplicationContext());
                 }
             }
         } else {
-            // No auto config: directly start the RCS service
+            // No auto config: directly start the RCS core service
             LauncherUtils.launchRcsCoreService(getApplicationContext());
         }
-    }
-
-    /**
-     * Get the last user account
-     *
-     * @return last user account
-     */
-    private String getLastUserAccount() {
-        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
-        return preferences.getString(REGISTRY_LAST_USER_ACCOUNT, null);
-    }
-
-    /**
-     * Set the last user account
-     *
-     * @param value last user account
-     */
-    private void setLastUserAccount(String value) {
-        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(REGISTRY_LAST_USER_ACCOUNT, value);
-        editor.commit();
-    }
-
-    /**
-     * Initiate the current user account from the imsi
-     */
-    private void initCurrentUserAccount() {
-        TelephonyManager mgr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        currentUserAccount = mgr.getSubscriberId();
-        mgr = null;
     }
 
     /**
@@ -463,7 +439,8 @@ public class StartService extends Service {
     private boolean hasChangedAccount() {
         if (lastUserAccount == null) {
             return true;
-        } else if (currentUserAccount == null) {
+        } else
+        if (currentUserAccount == null) {
             return false;
         } else {
             return (!currentUserAccount.equalsIgnoreCase(lastUserAccount));

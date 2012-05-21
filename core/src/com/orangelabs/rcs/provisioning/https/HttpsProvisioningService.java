@@ -50,7 +50,6 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -58,16 +57,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Proxy;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 
 import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provisioning.ProvisioningInfo;
 import com.orangelabs.rcs.provisioning.ProvisioningParser;
@@ -79,13 +75,13 @@ import com.orangelabs.rcs.utils.logger.Logger;
 /**
  * HTTPS auto configuration service
  * 
- * @author jexa7410
+ * @author hlxn7157
  */
 public class HttpsProvisioningService extends Service {
     /**
-     * Key for provisioning version 
+     * Intent key
      */
-    private static final String REGISTRY_PROVISIONING_VERSION = "ProvisioningVersion";
+    public static final String FIRST_KEY = "first";
 
     /**
 	 * Unknown value
@@ -174,8 +170,11 @@ public class HttpsProvisioningService extends Service {
 			logger.debug("Start HTTPS provisioning");
 		}
 
-        if (intent != null) {
-            first = intent.getBooleanExtra("first", false);
+		// Get intent parameter
+        first = intent.getBooleanExtra(HttpsProvisioningService.FIRST_KEY, false);
+    	String version = RcsSettings.getInstance().getProvisioningVersion();
+        if (logger.isActivated()) {
+        	logger.debug("Provisioning parameter: first=" + first + ", version= " + version);
         }
 
         // Send default connection event
@@ -220,12 +219,19 @@ public class HttpsProvisioningService extends Service {
     		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
     			// Check received network info
     	    	NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-    			if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_MOBILE && networkInfo.isConnected()) {
+    			if ((networkInfo != null) &&
+					 (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) &&
+						 networkInfo.isConnected()) {
                     isPending = true;
     				if (logger.isActivated()) {
     					logger.debug("Connected to data network");
     				}
-    				updateConfig();
+    	            Thread t = new Thread() {
+    	                public void run() {
+    	                    updateConfig();
+    	                }
+    	            };
+    	            t.start();
     				
                     // Unregister network state listener
                     if (networkStateListener != null) {
@@ -273,31 +279,34 @@ public class HttpsProvisioningService extends Service {
                     // Save version
                     String version = info.getVersion();
                     long validity = info.getValidity();
-                    setProvisioningVersion(getApplicationContext(), version);
                     if (logger.isActivated()) {
-                        logger.debug("Version " + version);
-                        logger.debug("Validity " + validity);
+                        logger.debug("Provisioning version " + version + ", validity " + validity);
                     }
-                    
+                    RcsSettings.getInstance().setProvisioningVersion(version);
+
                     if (version.equals("-1") && validity == -1) {
                         // Forbidden: reset account + version = 0-1 (doesn't restart)
                         if (logger.isActivated()) {
-                            logger.debug("Provisioning forbidden: reset account and stop RCS");
+                            logger.debug("Provisioning forbidden: reset account");
                         }
+
                         // Reset config
                         LauncherUtils.resetRcsConfig(getApplicationContext());
+                        // Force version to "-1" (resetRcs set version to "0")
+                        RcsSettings.getInstance().setProvisioningVersion(version);
                     } else if (version.equals("0") && validity == 0) {
                         // Forbidden: reset account + version = 0
                         if (logger.isActivated()) {
                             logger.debug("Provisioning forbidden: reset account");
                         }
+
                         // Reset config
                         LauncherUtils.resetRcsConfig(getApplicationContext());
                     } else {
                         // Start retry alarm
                         if (validity > 0) {
                             if (logger.isActivated()) {
-                                logger.debug("Provisioning retry after valadity " + validity);
+                                logger.debug("Provisioning retry after validity " + validity);
                             }
                             retryCount = 0;
                             startRetryAlarm(validity * 1000);
@@ -305,11 +314,10 @@ public class HttpsProvisioningService extends Service {
 
                         // Terms request
                         if (info.getMessage() != null && !RcsSettings.getInstance().isProvisioningTermsAccepted()) {
-                            showTermsAndConditions(info.getTitle(), info.getMessage(),
-                                    info.getAcceptBtn(), info.getRejectBtn());
+                            showTermsAndConditions(info);
                         }
 
-                        // Start the RCS service
+                        // Start the RCS core service
                         if (first) {
                             LauncherUtils.forceLaunchRcsCoreService(getApplicationContext());
                         } else {
@@ -345,7 +353,7 @@ public class HttpsProvisioningService extends Service {
                 }
 
                 // Reset version to "0"
-                setProvisioningVersion(getApplicationContext(), "0");
+                RcsSettings.getInstance().setProvisioningVersion("0");
 
                 // Reset config
                 LauncherUtils.resetRcsConfig(getApplicationContext());
@@ -370,28 +378,23 @@ public class HttpsProvisioningService extends Service {
     }
 
     /**
-     * Show the terms and conditions reqest
+     * Show the terms and conditions request
      *
-     * @param title of the End user confirmation
-     * @param message to be displayed to the end user
-     * @param acceptButton true if set in configuration xml
-     * @param rejectButton true if set in configuration xml
+     * @param info Provisioning info
      */
-    private void showTermsAndConditions(String title, String message,
-            boolean acceptButton, boolean rejectButton) {
+    private void showTermsAndConditions(ProvisioningInfo info) {
         final Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setClass(getApplicationContext(), TermsAndConditionsRequest.class);
-
-        Bundle savedInstance = new Bundle();
-        savedInstance.putBoolean(TermsAndConditionsRequest.ACCEPT_BTN_KEY, acceptButton);
-        savedInstance.putBoolean(TermsAndConditionsRequest.REJECT_BTN_KEY, rejectButton);
-        savedInstance.putString(TermsAndConditionsRequest.TITLE_KEY, title);
-        savedInstance.putString(TermsAndConditionsRequest.MESSAGE_KEY, message);
-        intent.putExtra(TermsAndConditionsRequest.TERMS_OBJECT, savedInstance);
 
         // Required as the activity is started outside of an Activity context
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+
+        // Add intent parameters
+        intent.putExtra(TermsAndConditionsRequest.ACCEPT_BTN_KEY, info.getAcceptBtn());
+        intent.putExtra(TermsAndConditionsRequest.REJECT_BTN_KEY, info.getRejectBtn());
+        intent.putExtra(TermsAndConditionsRequest.TITLE_KEY, info.getTitle());
+        intent.putExtra(TermsAndConditionsRequest.MESSAGE_KEY, info.getMessage());
 
         getApplicationContext().startActivity(intent);
     }
@@ -531,7 +534,7 @@ public class HttpsProvisioningService extends Service {
             }
 
 			// Execute second HTTPS request
-			String args = "?vers=" + getProvisioningVersion(getApplicationContext())
+			String args = "?vers=" + RcsSettings.getInstance().getProvisioningVersion()
                     + "&client_vendor=Orange&client_version=" + getStackVersion()
                     + "&terminal_vendor=" + HttpUtils.encodeURL(getProductManufacturer())
                     + "&terminal_model=" + HttpUtils.encodeURL(getDeviceName())
@@ -654,29 +657,5 @@ public class HttpsProvisioningService extends Service {
      */
     private String getUserLanguage() {
         return Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
-    }
-
-    /**
-     * Get the provisioning version from the registry
-     *
-     * @param context application context
-     * @return provisioning version
-     */
-    public static String getProvisioningVersion(Context context) {
-        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
-        return preferences.getString(REGISTRY_PROVISIONING_VERSION, "0");
-    }
-
-    /**
-     * Write the provisioning version in the registry
-     *
-     * @param context application context
-     * @param value provisioning version
-     */
-    public static void setProvisioningVersion(Context context, String value) {
-        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(REGISTRY_PROVISIONING_VERSION, value);
-        editor.commit();
     }
 }

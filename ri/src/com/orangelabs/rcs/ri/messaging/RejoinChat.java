@@ -18,20 +18,26 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import java.util.Vector;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.Spinner;
 
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.Registry;
 import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -40,21 +46,11 @@ import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
 /**
  * Rejoin a group chat session
  */
-public class RejoinChat extends Activity implements ImsEventListener {
-	/**
-	 * Last group chat session id
-	 */
-	public final static String REGISTRY_CHAT_ID = "ChatID";
-	
+public class RejoinChat extends Activity {
     /**
      * UI handler
      */
     private Handler handler = new Handler();
-
-    /**
-     * Registry
-     */
-	private Registry registry;
 
     /**
      * Progress dialog
@@ -62,12 +58,12 @@ public class RejoinChat extends Activity implements ImsEventListener {
     private Dialog progressDialog = null;
 
     /**
-	 * Chat ID to rejoin
+	 * Session ID to rejoin
 	 */
-	private String chatId = null;
+	private String sessionId = null;
 	
 	/**
-	 * Rejoined chta session
+	 * Rejoined chat session
 	 */
 	private IChatSession chatSession = null; 
 	
@@ -80,9 +76,6 @@ public class RejoinChat extends Activity implements ImsEventListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-	    // Instanciate registry
-		registry = new Registry(this);
-
 		// Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.messaging_rejoin);
@@ -90,15 +83,20 @@ public class RejoinChat extends Activity implements ImsEventListener {
         // Set title
         setTitle(R.string.menu_rejoin_chat);
         
-        // Display chat ID to rejoin
-		chatId = registry.readString(REGISTRY_CHAT_ID, null);
-    	TextView idEdit = (TextView)findViewById(R.id.session);
-    	idEdit.setText(chatId);
-
+        // Get chat ID to rejoin
+        Vector<String> list = getLastGroupChatSessions();
+        Spinner spinner = (Spinner)findViewById(R.id.session);
+        ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        for(int i=0; i < list.size(); i++) {
+        	adapter.add(list.elementAt(i));
+        }
+        spinner.setOnItemSelectedListener(listenerChatId);        
+    	
     	// Instanciate messaging API
         messagingApi = new MessagingApi(getApplicationContext());
         messagingApi.connectApi();
-        messagingApi.addImsEventListener(this);
 
         // Get IMS connection status
         boolean connected = false;
@@ -111,7 +109,7 @@ public class RejoinChat extends Activity implements ImsEventListener {
         // Set button callback
         Button rejoinBtn = (Button)findViewById(R.id.rejoin_btn);
         rejoinBtn.setOnClickListener(btnRejoinListener);
-    	if ((!connected) || (chatId == null) || (chatId.length() == 0)) {
+    	if ((!connected) || (sessionId == null) || (sessionId.length() == 0)) {
     		rejoinBtn.setEnabled(false);
     	} else {
     		rejoinBtn.setEnabled(true);
@@ -135,33 +133,26 @@ public class RejoinChat extends Activity implements ImsEventListener {
     }
 
     /**
-     * IMS connected
+     * Spinner chat ID listener
      */
-	public void handleImsConnected() {
-		handler.post(new Runnable(){
-			public void run(){
-		        Button rejoinBtn = (Button)findViewById(R.id.rejoin_btn);
-		    	if ((chatId == null) || (chatId.length() == 0)) {
-		    		rejoinBtn.setEnabled(false);
-		    	} else {
-		    		rejoinBtn.setEnabled(true);
-		    	}
-			}
-		});
-	}
+    private OnItemSelectedListener listenerChatId = new OnItemSelectedListener() {
+		@Override
+		public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+	        Spinner spinner = (Spinner)findViewById(R.id.session);
+	        sessionId = (String)spinner.getSelectedItem();
+	        Button rejoinBtn = (Button)findViewById(R.id.rejoin_btn);
+	    	if ((sessionId == null) || (sessionId.length() == 0)) {
+	    		rejoinBtn.setEnabled(false);
+	    	} else {
+	    		rejoinBtn.setEnabled(true);
+	    	}
+		}
 
-    /**
-     * IMS disconnected
-     */
-	public void handleImsDisconnected() {
-		handler.post(new Runnable(){
-			public void run(){
-		        Button rejoinBtn = (Button)findViewById(R.id.rejoin_btn);
-		        rejoinBtn.setEnabled(false);
-			}
-		});
-	}
-	
+		@Override
+		public void onNothingSelected(AdapterView<?> arg0) {
+		}
+	};
+
 	/**
      * Request button callback
      */
@@ -180,7 +171,7 @@ public class RejoinChat extends Activity implements ImsEventListener {
         Thread thread = new Thread() {
         	public void run() {
             	try {
-            		chatSession = messagingApi.rejoinChatGroupSession(chatId);
+            		chatSession = messagingApi.rejoinChatGroupSession(sessionId);
             		chatSession.addSessionListener(chatSessionListener);
             	} catch(Exception e) {
             		handler.post(new Runnable(){
@@ -217,9 +208,6 @@ public class RejoinChat extends Activity implements ImsEventListener {
 				public void run() {
 					// Display error
 					Utils.showMessageAndExit(RejoinChat.this, getString(R.string.label_rejoin_chat_failed, error));
-					
-					// Reset the chat ID
-					registry.writeString(REGISTRY_CHAT_ID, "");
 				}
 			});
 		}	
@@ -273,5 +261,27 @@ public class RejoinChat extends Activity implements ImsEventListener {
 			progressDialog.dismiss();
 			progressDialog = null;
 		}
-    }        
+    }
+    
+    /**
+     * Returns the list of last group chat session
+     * 
+     * @return List of session ID
+     */
+    private Vector<String> getLastGroupChatSessions() {
+    	Vector<String> result = new Vector<String>();
+    	Cursor cursor = getContentResolver().query(RichMessagingData.CONTENT_URI, 
+    			new String[] {
+    				RichMessagingData.KEY_CHAT_SESSION_ID
+    			},
+    			"(" + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
+    				RichMessagingData.KEY_CHAT_ID + " NOT NULL)", 
+    			null, 
+    			RichMessagingData.KEY_TIMESTAMP + " DESC");
+    	while(cursor.moveToNext()) {
+    		result.addElement(cursor.getString(0));
+    	}
+    	cursor.close();
+    	return result;
+    }
 }

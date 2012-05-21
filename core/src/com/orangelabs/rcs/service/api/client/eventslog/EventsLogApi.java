@@ -140,6 +140,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_TERMINATED = 1;
 	public static final int STATUS_FAILED = 2;
 	public static final int STATUS_IN_PROGRESS = 3;
+	
 	// Messages
 	public static final int STATUS_SENT = 4;
 	public static final int STATUS_RECEIVED = 5;

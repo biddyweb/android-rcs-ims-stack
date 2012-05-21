@@ -93,10 +93,10 @@ public class TermsApi extends ClientApi {
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean acceptTermsViaSip(String id, String pin) throws ClientApiException {	
+    public boolean acceptTerms(String id, String pin) throws ClientApiException {	
     	if (coreApi != null) {
 			try {
-				return coreApi.acceptTermsViaSip(id, pin);
+				return coreApi.acceptTerms(id, pin);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -113,10 +113,10 @@ public class TermsApi extends ClientApi {
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean rejectTermsViaSip(String id, String pin) throws ClientApiException {	
+    public boolean rejectTerms(String id, String pin) throws ClientApiException {	
     	if (coreApi != null) {
 			try {
-				return coreApi.rejectTermsViaSip(id, pin);
+				return coreApi.rejectTerms(id, pin);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

@@ -208,14 +208,14 @@ public class MessagingApi extends ClientApi {
 	/**
 	 * Rejoin a chat group session
 	 * 
-     * @param chatId Chat ID
-   	 * @return Chat session
+	 * @param sessionId Session ID
+	 * @return Chat session
 	 * @throws ClientApiException
 	 */
-	public IChatSession rejoinChatGroupSession(String chatId) throws ClientApiException {
+	public IChatSession rejoinChatGroupSession(String sessionId) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.rejoinChatGroupSession(chatId);
+		    	return coreApi.rejoinChatGroupSession(sessionId);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

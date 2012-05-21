@@ -18,18 +18,18 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
-import com.orangelabs.rcs.service.LauncherUtils;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.util.Linkify;
 import android.widget.TextView;
+
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.LauncherUtils;
 
 /**
  * Show the request for terms and conditions
@@ -41,23 +41,22 @@ public class TermsAndConditionsRequest extends Activity {
     /**
      * Intent keys
      */
-    public static final String TERMS_OBJECT = "com.orangelabs.rcs.provisioning.TERMS_OBJECT";
-    public static final String MESSAGE_KEY = "message_key";
-    public static final String TITLE_KEY = "title_key";
-    public static final String ACCEPT_BTN_KEY = "accept_btn_key";
-    public static final String REJECT_BTN_KEY = "reject_btn_key";
+    public static final String MESSAGE_KEY = "message";
+    public static final String TITLE_KEY = "title";
+    public static final String ACCEPT_BTN_KEY = "accept_btn";
+    public static final String REJECT_BTN_KEY = "reject_btn";
 
     @Override
     public void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
-        Bundle bundle = getIntent().getBundleExtra(TERMS_OBJECT);
 
-        if (bundle != null) {
-            String title = bundle.getString(TITLE_KEY);
-            String message = bundle.getString(MESSAGE_KEY);
-            boolean accept_btn = bundle.getBoolean(ACCEPT_BTN_KEY);
-            boolean reject_btn = bundle.getBoolean(REJECT_BTN_KEY);
-
+        Intent intent = getIntent();
+        if (intent != null) {
+            String title = intent.getStringExtra(TITLE_KEY);
+            String message = intent.getStringExtra(MESSAGE_KEY);
+            boolean accept_btn = intent.getBooleanExtra(ACCEPT_BTN_KEY, false);
+            boolean reject_btn = intent.getBooleanExtra(REJECT_BTN_KEY, false);
+            
             if (!TextUtils.isEmpty(message)) {
                 // Add text
                 TextView textView = new TextView(this);
@@ -83,10 +82,11 @@ public class TermsAndConditionsRequest extends Activity {
                     builder.setNegativeButton(R.string.rcs_core_terms_decline,
                             new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
-                                    // If the user declines the terms, the RCS service is stopped and the RCS config is reset
+                                    // If the user declines the terms, the RCS service is stopped
+                                	// and the RCS config is reset
                                     LauncherUtils.stopRcsService(getApplicationContext());
                                     LauncherUtils.resetRcsConfig(getApplicationContext());
-                                    HttpsProvisioningService.setProvisioningVersion(getApplicationContext(), "0");
+                                    RcsSettings.getInstance().setProvisioningVersion("0");
                                     finish();
                                 }
                             });

@@ -546,7 +546,7 @@
         <Data code="qa" name="Qatar" cc="974" mcc="427"/>
     </Country>
     <Country>
-        <Data code="re" name="RÉUNION" cc="262" mcc="647"/>
+        <Data code="re" name="RÉUNION" cc="262" mcc="647" tc="0"/>
     </Country>
     <Country>
         <Data code="ro" name="Romania" cc="40" mcc="226" tc="0"/>

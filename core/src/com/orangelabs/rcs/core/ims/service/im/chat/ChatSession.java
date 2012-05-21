@@ -285,7 +285,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     			CpimParser cpimParser = new CpimParser(data);
 				CpimMessage cpimMsg = cpimParser.getCpimMessage();
 				if (cpimMsg != null) {
-			    	Date date = new Date();
+			    	Date date = cpimMsg.getMessageDate();
 			    	String cpimMsgId = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
 			    	String contentType = cpimMsg.getContentType();
 			    	
@@ -380,7 +380,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param txt Text message
 	 * @param msgId Message Id
 	 * @param flag indicating that an IMDN "displayed" is requested for this message
-	 * @param date Date at which the message was emitted
+	 * @param date Date of the message
 	 */
 	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested, Date date) {
 		// Is composing event is reset

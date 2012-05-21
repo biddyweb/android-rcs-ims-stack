@@ -297,7 +297,10 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	    	if (logger.isActivated()) {
 				logger.info("Session started");
 			}
-	
+
+			// Update rich messaging history
+			RichMessaging.getInstance().markChatSessionStarted(session.getSessionID(), session.getImSessionIdentity());
+	    	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {

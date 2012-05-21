@@ -161,7 +161,7 @@ public class SipTermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Accept terms (no PIN)
-		    	if (termsApi.acceptTermsViaSip(id, null)) {
+		    	if (termsApi.acceptTerms(id, null)) {
 			        // Remove notification
 		    		SipTermsRequest.removeNotification(SipTermsRequest.this, id);
 			        
@@ -184,7 +184,7 @@ public class SipTermsRequest extends Activity implements ClientApiListener {
         public void onClick(View v) {
         	try {
 		    	// Reject terms (no PIN)
-		    	if (termsApi.rejectTermsViaSip(id, null)) {
+		    	if (termsApi.rejectTerms(id, null)) {
 			        // Remove notification
 		    		SipTermsRequest.removeNotification(SipTermsRequest.this, id);
 			        

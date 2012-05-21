@@ -18,6 +18,10 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.util.List;
+
+import javax2.sip.header.ExtensionHeader;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -35,11 +39,6 @@ import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Date;
-import java.util.List;
-
-import javax2.sip.header.ExtensionHeader;
 
 /**
  * Abstract Group chat session
@@ -158,7 +157,7 @@ public abstract class GroupChatSession extends ChatSession {
 		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
 
 		// Update rich messaging history
-		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, false, new Date());
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, false);
 		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not

@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.3
+Release 2.4.4
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,9 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Terms and conditions API via provisioning.
-- IOT tests.
-- GSMA RCS-e Implementation Guidelines.
+- Backup & restore RCS settings.
+- Bug fixs.
 
 
 Bugs fixed:
@@ -19,6 +18,18 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.4
+- Mantis #0015350	Stack: Hot SIM swap don't reset the user account
+- Open source #66	Stack: EndUserConfirmationResponse document - unexpected element NewDataSet
+- GSMA Guidelines 	Stack: ID_4_5 Network time for chat
+- Mantis #0015303	Stack: Phone number not well formated into international format if the area code is null
+- DEV #12	 Provisioning: Config Deletion - (Version 0)
+- DEV #16	 Provisioning: SIM2 uses the XML configuration of SIM1
+- DEV #17	 Provisioning: SIM2 uses the XML configuration of SIM1
+- DEV #21	 Provisioning: Missing parameters in HTTP request (403 error)
+- DEV #22	 Provisioning: Missing parameters in HTTPS request (403 error)
+
 
 v2.4.3
 - Mantis #0015155	Stack: If airplane mode the RCS provisioning doesn't start after activating the network

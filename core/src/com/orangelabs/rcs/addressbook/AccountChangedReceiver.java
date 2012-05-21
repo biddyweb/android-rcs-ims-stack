@@ -40,9 +40,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class AccountChangedReceiver extends BroadcastReceiver {
 	/**
-	 * Account has been manually deleted
+	 * Account has been manualy deleted
 	 */
-	private static final String REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED = "RcsAccountManuallyDeleted";
+	private static final String REGISTRY_RCS_ACCOUNT_MANUALY_DELETED = "RcsAccountManualyDeleted";
 	
 	/**
      * The logger
@@ -63,8 +63,8 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 
 			// Set the user account manually deleted flag
             RcsSettings.createInstance(context);
-            if (RcsSettings.getInstance().checkUserProfile()) {
-                RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, true);
+            if (RcsSettings.getInstance().isUserProfileConfigured()) {
+            	setAccountResetByEndUser(true);
             }
 
 			if (ClientApiUtils.isServiceStarted(context)){
@@ -88,25 +88,25 @@ public class AccountChangedReceiver extends BroadcastReceiver {
 			}		
 		} else {
 			// Set the user account manually deleted flag
-			RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, false);
+			setAccountResetByEndUser(false);
 		}
 	}
 	
 	/**
-	 * Is user account reset manually by end user
+	 * Is user account reset by end user
 	 * 
 	 * @return Boolean
 	 */
 	public static boolean isAccountResetByEndUser() {
-		return RegistryFactory.getFactory().readBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, false);
+		return RegistryFactory.getFactory().readBoolean(REGISTRY_RCS_ACCOUNT_MANUALY_DELETED, false);
 	}
 
     /**
-     * Set user account reset manually by end user
+     * Set user account reset by end user
      * 
      * @param Boolean
      */
     public static void setAccountResetByEndUser(boolean value) {
-        RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALLY_DELETED, value);
+        RegistryFactory.getFactory().writeBoolean(REGISTRY_RCS_ACCOUNT_MANUALY_DELETED, value);
     }
 }

@@ -223,14 +223,12 @@ public class TermsConditionsService extends ImsService {
        		}
 
 			// Build response
-			String responseTag = "<EndUserConfirmationResponse id=\"" + id + "\" value=\"" + value + "\"";
+			String response = "<?xml version=\"1.0\" standalone=\"yes\"?>" +
+					"<EndUserConfirmationResponse id=\"" + id + "\" value=\"" + value + "\"";
 			if (pin != null) {
-				responseTag += " pin=\"";
+				response += " pin=\"";
 			}
-			responseTag += "/>";
-			String response =
-				"<?xml version=\"1.0\" standalone=\"yes\"?>" +
-				"<NewDataSet>" + responseTag + "</NewDataSet>";				
+			response += "/>";
 			
 		    // Create authentication agent 
        		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent(getImsModule());

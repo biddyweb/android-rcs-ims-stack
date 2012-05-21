@@ -1046,7 +1046,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Notify listeners
-		termsApi.receiveTermsRequestViaSip(remote, id, type, pin, subject, text);
+		termsApi.receiveTermsRequest(remote, id, type, pin, subject, text);
     }
 
     /**
@@ -1064,6 +1064,19 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Notify listeners
-		termsApi.receiveTermsAckViaSip(remote, id, status, subject, text);
+		termsApi.receiveTermsAck(remote, id, status, subject, text);
+    }
+
+    /**
+	 * SIM has changed
+	 */
+    public void handleSimHasChanged() {
+        if (logger.isActivated()) {
+            logger.debug("Handle SIM has changed");
+        }
+
+		// Restart the RCS service
+        LauncherUtils.stopRcsService(getApplicationContext());
+        LauncherUtils.launchRcsService(getApplicationContext(), true);
     }
 }
