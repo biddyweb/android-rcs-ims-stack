@@ -88,9 +88,11 @@ public class RcsRI extends ListActivity {
         			}
         		}
         		break;
+        		
         	case 1:
         		startActivity(new Intent(this, CapabilitiesRI.class));
         		break;
+        		
         	case 2:
                 if (RcsSettings.getInstance().isSocialPresenceSupported()){
             		startActivity(new Intent(this, PresenceRI.class));
@@ -98,18 +100,23 @@ public class RcsRI extends ListActivity {
     				Utils.showMessage(this, getString(R.string.label_presence_service_not_activated));
                 }
         		break;
+        		
         	case 3:
         		startActivity(new Intent(this, MessagingRI.class));
         		break;
+        		
         	case 4:
         		startActivity(new Intent(this, RichCallRI.class));
         		break;
+        		
         	case 5:
         		startActivity(new Intent(this, EventLog.class));
         		break;
+        		
         	case 6:
         		startActivity(new Intent(ClientApiIntents.RCS_SETTINGS));
         		break;
+        		
         	case 7:
         		startActivity(new Intent(this, AboutRI.class));
         		break;

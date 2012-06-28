@@ -67,6 +67,11 @@ public class TermsConditionsService extends ImsService {
 	private final static String DECLINE_RESPONSE = "decline";
 
 	/**
+	 * Remote server
+	 */
+	private String remoteServer;
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -79,6 +84,9 @@ public class TermsConditionsService extends ImsService {
      */
 	public TermsConditionsService(ImsModule parent) throws CoreException {
         super(parent, true);
+        
+        // Get remote server URI
+		remoteServer = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
 	}
 
 	/**
@@ -171,8 +179,7 @@ public class TermsConditionsService extends ImsService {
 		}
 		
 		// Send SIP MESSAGE
-		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
-		return sendSipMessage(remote, id, ACCEPT_RESPONSE, pin);
+		return sendSipMessage(remoteServer, id, ACCEPT_RESPONSE, pin);
 	}
 
 	/**
@@ -188,8 +195,7 @@ public class TermsConditionsService extends ImsService {
 		}
 
 		// Send SIP MESSAGE
-		String remote = RcsSettings.getInstance().getEndUserConfirmationRequestUri();
-		return sendSipMessage(remote, id, DECLINE_RESPONSE, pin);
+		return sendSipMessage(remoteServer, id, DECLINE_RESPONSE, pin);
 	}
 
 	/**
@@ -202,14 +208,14 @@ public class TermsConditionsService extends ImsService {
 	 * @return Boolean result
 	 */
 	private boolean sendSipMessage(String remote, String id, String value, String pin) {
-		if (remote == null) {
+		if ((remote == null) || (remote.length() == 0)) {
 			if (logger.isActivated()) {
        			logger.error("Remote URI not set");
        		}
 			return false;
 		}
 		
-		if (id == null) {
+		if ((id == null) || (id.length() == 0)) {
 			if (logger.isActivated()) {
        			logger.error("Request ID not set");
        		}
@@ -319,7 +325,7 @@ public class TermsConditionsService extends ImsService {
 	        }
         } catch(Exception e) {
         	if (logger.isActivated()) {
-        		logger.error("Delivery report has failed", e);
+        		logger.error("Can't send MESSAGE request", e);
         	}
         }
         return result;
@@ -332,14 +338,8 @@ public class TermsConditionsService extends ImsService {
      * @return ID
 	 */
 	private String getRemoteIdentity(SipRequest request) {
-		String referredBy = SipUtils.getReferredByHeader(request);
-		if (referredBy != null) {
-			// Use the Referred-By header
-			return referredBy;
-		} else {
-			// Use the From header
-			return request.getFromUri();
-		}
+		// Use the Asserted-Identity header
+		return SipUtils.getAssertedIdentity(request);
 	}
 
 	/**

@@ -89,8 +89,8 @@ public class ChatUtils {
 			// Use the Referred-By header
 			return referredBy;
 		} else {
-			// Use the From header
-			return request.getFromUri();
+			// Use the Asserted-Identity header
+			return SipUtils.getAssertedIdentity(request);
 		}
 	}
 	

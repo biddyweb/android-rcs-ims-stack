@@ -10,6 +10,7 @@ IETF:
 
 RFC 1321 - The MD5 Message-Digest Algorithm
 RFC 2327 - SDP: Session Description Protocol
+RFC 2373 - IP Version 6 Addressing Architecture
 RFC 2392 - Content-ID and Message-ID Uniform Resource Locators
 RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication
 RFC 3261 - SIP: Session Initiation Protocol
@@ -32,6 +33,7 @@ RFC 3891 - The Session Initiation Protocol (SIP) "Replaces" Header
 RFC 3903 - Session Initiation Protocol (SIP) Extension for Event State Publication
 RFC 3966 - The tel URI for Telephone Numbers
 RFC 3994 - Indication of Message Composition for Instant Messaging
+RFC 4007 - IPv6 Scoped Address Architecture
 RFC 4028 - The Session Timers in the Session Initiation Protocol (SIP)
 RFC 4145 - TCP-Based Media Transport in the Session Description Protocol (SDP)
 RFC 4566 - SDP: Session Description Protocol
@@ -53,7 +55,7 @@ draft-ietf-sip-uri-list-conferencing-01	 - Conference Establishment Using Reques
 draft-ietf-sip-multiple-refer-01	 - Referring to Multiple Resources in the Session Initiation Protocol (SIP)
 draft-ietf-simple-imdn-04		 - Instant Message Disposition Notification
 draft-ietf-mmusic-file-transfer-mech-03	 - A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer
-draft-ietf-simple-msrp-sessmatch-10		- Session Matching Update for the Message Session Relay Protocol (MSRP)
+draft-ietf-simple-msrp-sessmatch-10	 - Session Matching Update for the Message Session Relay Protocol (MSRP)
 
 3GPP:
 -----

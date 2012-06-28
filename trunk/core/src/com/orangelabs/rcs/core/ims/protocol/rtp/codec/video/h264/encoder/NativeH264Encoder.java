@@ -30,6 +30,8 @@ public class NativeH264Encoder
 
     public static native byte[] EncodeFrame(byte abyte0[], long l);
 
+    public static native byte[] getNAL();
+
     public static native int DeinitEncoder();
 
     public static native int getLastEncodeStatus();

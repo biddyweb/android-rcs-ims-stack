@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.4
+Release 2.4.5
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,8 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Backup & restore RCS settings.
-- Bug fixs.
+- GSMA UI Connector API 1.0.
+- Video share IOT tests.
 
 
 Bugs fixed:
@@ -18,6 +18,12 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.5
+- Mantis #0015507	Stack: Multipart parser exception if no Content-Length header
+- Mantis #0015457	Stack: Bad nonce count value in REGISTER after having change of bearer
+- GSMA Guidelines 	Stack: ID_5_4 FT chunk size
+- Open source #70	Stack: Failure to send response to End User Confirmation request
 
 v2.4.4
 - Mantis #0015350	Stack: Hot SIM swap don't reset the user account

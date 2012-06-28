@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.4"
+ android:versionName="2.4.5"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -195,6 +195,26 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
+
+		<!-- GSMA UI connectors -->
+
+		<receiver android:name="com.orangelabs.rcs.service.api.server.gsma.GetRcsStatusReceiver">  
+ 			<intent-filter>
+ 				<action android:name="android.net.rcs.GET_RCS_STATUS"/>  
+ 			</intent-filter>  
+		</receiver> 
+
+		<receiver android:name="com.orangelabs.rcs.service.api.server.gsma.GetMyCapabilitiesReceiver">  
+ 			<intent-filter>
+ 				<action android:name="android.net.rcs.GET_MY_CAPABILITIES"/>  
+ 			</intent-filter>  
+		</receiver> 
+
+		<receiver android:name="com.orangelabs.rcs.service.api.server.gsma.GetContactCapabilitiesReceiver">  
+ 			<intent-filter>
+ 				<action android:name="android.net.rcs.GET_CONTACT_CAPABILITIES"/>  
+ 			</intent-filter>  
+		</receiver> 
 
     </application> 
 

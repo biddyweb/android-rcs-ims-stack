@@ -162,7 +162,7 @@ public class JavaDepacketizer extends VideoCodec {
 				bDest.setOffset(0);
 				bDest.setTimeStamp(timeStamp);
 				bDest.setFormat(format);
-				bDest.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
+				bDest.setFlags(Buffer.FLAG_RTP_MARKER);
 			}
 			// Set reassembledData to null
 			reassembledData = null;

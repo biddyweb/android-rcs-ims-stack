@@ -176,8 +176,6 @@ public class RegistrationManager extends PeriodicRefresher {
      * Init the registration procedure
      */
     public void init() {
-    	// Initialize the registration procedure
-    	registrationProcedure.init();
     }
     
     /**
@@ -206,13 +204,12 @@ public class RegistrationManager extends PeriodicRefresher {
     public synchronized boolean registration() {
         registering = true;
         try {
-
-        	// Init registration procedure
-        	registrationProcedure.init();
-        	
             // Create a dialog path if necessary
             if (dialogPath == null) {
-                // Set Call-Id
+            	// Reset the registration authentication procedure
+            	registrationProcedure.init();
+
+        		// Set Call-Id
             	String callId = networkInterface.getSipManager().getSipStack().generateCallId();
 
             	// Set target

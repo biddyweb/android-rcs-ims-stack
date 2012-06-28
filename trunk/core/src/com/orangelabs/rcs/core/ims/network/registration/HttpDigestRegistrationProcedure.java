@@ -38,7 +38,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	/**
 	 * HTTP Digest MD5 agent
 	 */
-	private HttpDigestMd5Authentication digest = new HttpDigestMd5Authentication();
+	private HttpDigestMd5Authentication digest = null;
 	
 	/**
      * The logger
@@ -55,6 +55,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	 * Initialize procedure
 	 */
 	public void init() {
+		digest = new HttpDigestMd5Authentication();
 	}
 	
 	/**
@@ -82,7 +83,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	 * @throws CoreException
 	 */
 	public void writeSecurityHeader(SipRequest request) throws CoreException {
-		if ((digest.getRealm() == null) || (digest.getNextnonce() == null)) {
+		if ((digest == null) || (digest.getRealm() == null) || (digest.getNextnonce() == null)) {
 			return;
 		}
 		
@@ -135,6 +136,10 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	 * @throws CoreException
 	 */
 	public void readSecurityHeader(SipResponse response) throws CoreException {
+		if (digest == null) {
+			return;
+		}
+
 		WWWAuthenticateHeader wwwHeader = (WWWAuthenticateHeader)response.getHeader(WWWAuthenticateHeader.NAME);
 		AuthenticationInfoHeader infoHeader =  (AuthenticationInfoHeader)response.getHeader(AuthenticationInfoHeader.NAME);
 

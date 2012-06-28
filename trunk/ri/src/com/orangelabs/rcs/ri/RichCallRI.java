@@ -58,9 +58,11 @@ public class RichCallRI extends ListActivity {
 	        case 0:
             	startActivity(new Intent(this, InitiateImageSharing.class));
                 break;
+                
 	        case 1:
 	        	startActivity(new Intent(this, InitiateOutgoingVisioSharing.class));
                 break;
+                
 	        case 2:
 	        	startActivity(new Intent(this, InitiatePrerecordedVideoSharing.class));
 	            break;

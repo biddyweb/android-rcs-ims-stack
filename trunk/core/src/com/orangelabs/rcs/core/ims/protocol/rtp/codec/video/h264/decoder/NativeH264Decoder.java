@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder;
 
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.VideoSample;
-
 public class NativeH264Decoder
 {
 
@@ -27,25 +25,11 @@ public class NativeH264Decoder
     {
     }
 
-    public static native int InitDecoder();
+    public static native int InitDecoder(int width, int height);
 
     public static native int DeinitDecoder();
 
     public static synchronized native int DecodeAndConvert(byte abyte0[], int ai[]);
-
-    public static native int InitParser(String s);
-
-    public static native int DeinitParser();
-
-    public static native int getVideoLength();
-
-    public static native int getVideoWidth();
-
-    public static native int getVideoHeight();
-
-    public static native String getVideoCoding();
-
-    public static native VideoSample getVideoSample(int ai[]);
 
     static 
     {

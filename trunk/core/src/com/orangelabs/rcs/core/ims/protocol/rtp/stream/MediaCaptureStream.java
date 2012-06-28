@@ -123,7 +123,9 @@ public class MediaCaptureStream implements ProcessorInputStream {
 	    buffer.setLength(sample.getLength());
     	buffer.setFormat(format);
     	buffer.setSequenceNumber(seqNo++);
-    	buffer.setFlags(Buffer.FLAG_SYSTEM_TIME | Buffer.FLAG_LIVE_DATA);
+    	if (sample.isMarker()) {
+    		buffer.setFlags(Buffer.FLAG_RTP_MARKER);
+    	}
     	buffer.setTimeStamp(sample.getTimeStamp());
     	return buffer;  
     }    

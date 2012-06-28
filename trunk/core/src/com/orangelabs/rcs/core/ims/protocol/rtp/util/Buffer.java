@@ -38,27 +38,9 @@ public class Buffer {
 	public final static int FLAG_DISCARD = (1 << 1);
 
 	/**
-	 * Indicates that the buffer carries a time stamp that's relative to
-	 * the SystemTimeBase. This flag is generally set for data transferred
-	 * from hardware capture source that uses the system clock.
-	 */
-	public final static int FLAG_SYSTEM_TIME = (1 << 7);
-
-	/**
 	 * This is a marker bit for RTP
 	 */
-	public final static int FLAG_RTP_MARKER = (1 << 11);
-
-	/**
-	 * Indicates that the buffer carries a time stamp that's in RTP (NTP)
-	 * time units
-	 */
-	public final static int FLAG_RTP_TIME = (1 << 12);
-
-	/**
-	 * Indicates that the data is arriving from a live (real-time) source.
-	 */
-	public final static int FLAG_LIVE_DATA = (1 << 15);
+	public final static int FLAG_RTP_MARKER = (1 << 2);
 
 	/**
 	 * Default value if the time stamp of the media is not known
