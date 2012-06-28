@@ -186,7 +186,7 @@ public class ChunkReceiver extends Thread {
 							StringBuffer buffer = new StringBuffer();
 							StringBuffer dataline;
 							boolean endchunk = false; 
-							while((!endchunk) && (buffer.length() < 2048)) {
+							while((!endchunk) && (buffer.length() < MsrpConstants.CHUNK_MAX_SIZE)) {
 								dataline = readLine();
 								if ((dataline.length()-1 == end.length()) && (dataline.toString().startsWith(end))) {
 									continuationFlag = dataline.charAt(dataline.length()-1);

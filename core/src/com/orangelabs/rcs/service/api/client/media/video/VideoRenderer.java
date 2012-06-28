@@ -18,14 +18,19 @@
 
 package com.orangelabs.rcs.service.api.client.media.video;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Vector;
+
+import android.graphics.Bitmap;
+import android.os.RemoteException;
+import android.os.SystemClock;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.decoder.NativeH263Decoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
@@ -35,19 +40,13 @@ import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
+import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
+import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-import android.graphics.Bitmap;
-import android.os.RemoteException;
-import android.os.SystemClock;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Vector;
-
 /**
- * Video RTP renderer. Supports only H.263 and H264 QCIF formats.
+ * Video RTP renderer based on H264 QCIF format
  *
  * @author jexa7410
  */
@@ -59,10 +58,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     public static MediaCodec[] supportedMediaCodecs = {
             new VideoCodec(H264Config.CODEC_NAME, H264VideoFormat.PAYLOAD, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
                     H264Config.FRAME_RATE, H264Config.BIT_RATE, H264Config.VIDEO_WIDTH,
-                    H264Config.VIDEO_HEIGHT).getMediaCodec(),
-            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
-                    H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
-                    H263Config.VIDEO_HEIGHT).getMediaCodec()
+                    H264Config.VIDEO_HEIGHT).getMediaCodec()
     };
 
     /**
@@ -266,13 +262,8 @@ public class VideoRenderer extends IMediaRenderer.Stub {
 
         try {
             // Init the video decoder
-            int result;
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                result = NativeH264Decoder.InitDecoder();
-            } else { // default H263
-                result = NativeH263Decoder.InitDecoder(selectedVideoCodec.getWidth(),
-                        selectedVideoCodec.getHeight());
-            }
+            int result = NativeH264Decoder.InitDecoder(selectedVideoCodec.getWidth(),
+                    selectedVideoCodec.getHeight());
             if (result == 0) {
                 notifyPlayerEventError("Decoder init failed with error code " + result);
                 return;
@@ -318,11 +309,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
 
         try {
             // Close the video decoder
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                NativeH264Decoder.DeinitDecoder();
-            } else { // default H263
-                NativeH263Decoder.DeinitDecoder();
-            }
+            NativeH264Decoder.DeinitDecoder();
         } catch (UnsatisfiedLinkError e) {
             if (logger.isActivated()) {
                 logger.error("Can't close correctly the video decoder", e);
@@ -578,31 +565,12 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          * @param sample Sample
          */
         public void writeSample(MediaSample sample) {
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
-                	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
-                            selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
-                    if (surface != null) {
-                        surface.setImage(rgbFrame);
-                    }
-                } else {
-                	if (logger.isActivated()) {
-                		logger.error("Decoding error");
-                	}
-                }
-            } else { // default H263
-                if (NativeH263Decoder.DecodeAndConvert(sample.getData(), decodedFrame,
-                        sample.getTimeStamp()) == 1) {
-                    rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
-                            selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
-                    if (surface != null) {
-                        surface.setImage(rgbFrame);
-                    }
-                } else {
-                	if (logger.isActivated()) {
-                		logger.error("Decoding error");
-                	}
-                }
+            if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
+            	if ((surface != null) && (decodedFrame.length > 0)) {
+	            	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
+	                        selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
+                    surface.setImage(rgbFrame);
+            	}
             }
         }
     }

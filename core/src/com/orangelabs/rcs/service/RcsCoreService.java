@@ -64,6 +64,7 @@ import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
+import com.orangelabs.rcs.service.api.client.gsma.GsmaUiConnector;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
 import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
 import com.orangelabs.rcs.service.api.client.presence.Geoloc;
@@ -432,6 +433,25 @@ public class RcsCoreService extends Service implements CoreListener {
 		addRcsServiceNotification(false, getString(R.string.rcs_core_stopped));
     }
     
+    /**
+     * Send registration status event
+     * 
+     * @param status Status
+     */
+    private void sendRegistrationStatusIntent(boolean status) {
+		// TODO keep only one intent here
+
+		// Send registration intent
+		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
+		intent.putExtra("status", status);
+		getApplicationContext().sendBroadcast(intent);
+		
+		// Send GSMA UI Connector intent
+		Intent intentGsma = new Intent(GsmaUiConnector.ACTION_REGISTRATION_CHANGED);
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_REGISTRATION_STATUS, status);
+		getApplicationContext().sendBroadcast(intentGsma);    	
+    }
+    
 	/**
 	 * Handle "registration successful" event
 	 * 
@@ -443,9 +463,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 		
 		// Send registration intent
-		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
-		intent.putExtra("status", true);
-		getApplicationContext().sendBroadcast(intent);
+		sendRegistrationStatusIntent(true);
 		
 		// Display a notification
 		addRcsServiceNotification(true, getString(R.string.rcs_core_ims_connected));
@@ -462,9 +480,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Send registration intent
-		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
-		intent.putExtra("status", false);
-		getApplicationContext().sendBroadcast(intent);
+		sendRegistrationStatusIntent(false);
 
 		// Display a notification
 		addRcsServiceNotification(false, getString(R.string.rcs_core_ims_connection_failed));
@@ -479,9 +495,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Send registration intent
-		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
-		intent.putExtra("status", false);
-		getApplicationContext().sendBroadcast(intent);
+		sendRegistrationStatusIntent(false);
 
 		// Display a notification
 		addRcsServiceNotification(false, getString(R.string.rcs_core_ims_disconnected));
@@ -811,6 +825,20 @@ public class RcsCoreService extends Service implements CoreListener {
     	intent.putExtra("contact", number);
     	intent.putExtra("capabilities", capabilities);
     	getApplicationContext().sendBroadcast(intent);
+		// TODO keep only one intent here
+    	
+		// Send GSMA UI Connector intent
+		Intent intentGsma = new Intent(GsmaUiConnector.ACTION_CAPABILITIES_CHANGED);
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CONTACT, number);
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_CHAT, capabilities.isImSessionSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_FT, capabilities.isFileTransferSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_IMAGE_SHARE, capabilities.isImageSharingSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_VIDEO_SHARE, capabilities.isVideoSharingSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_SOCIAL_PRESENCE, capabilities.isSocialPresenceSupported());
+		intentGsma.putStringArrayListExtra(GsmaUiConnector.EXTRA_CAPABILITY_EXTENSIONS, capabilities.getSupportedExtensions());
+		getApplicationContext().sendBroadcast(intentGsma);       	
     }
     
     /**

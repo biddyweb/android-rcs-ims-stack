@@ -171,7 +171,7 @@ public class RtpPacketTransmitter {
 		packet.length = buffer.getLength();
 
 		RtpPacket rtppacket = new RtpPacket(packet);
-		if ((buffer.getFlags() & 0x800) != 0) {
+		if (buffer.isRTPMarkerSet()) {
 			rtppacket.marker = 1;
 		} else {
 			rtppacket.marker = 0;

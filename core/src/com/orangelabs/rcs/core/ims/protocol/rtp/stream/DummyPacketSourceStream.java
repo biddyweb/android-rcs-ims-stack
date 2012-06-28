@@ -118,7 +118,6 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
 	    	    packet.setLength(0);
 	    	    packet.setFormat(format);
 	    	    packet.setSequenceNumber(seqNo++);
-	    	    packet.setFlags(Buffer.FLAG_SYSTEM_TIME | Buffer.FLAG_LIVE_DATA);
 	        	packet.setTimeStamp(systemTimeBase.getTime());    	    	
 
 	        	// Post the packet in the FIFO

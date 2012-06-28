@@ -52,6 +52,6 @@ public interface MsrpConstants {
 	
 	public static final int RESPONSE_OK = 200;
 	
-	public static final int CHUNK_MAX_SIZE = 2048;
+	public static final int CHUNK_MAX_SIZE = 10 * 1024;
 	public static final String COMMENT_OK = "OK";
 }

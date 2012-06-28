@@ -18,14 +18,18 @@
 
 package com.orangelabs.rcs.service.api.client.media.video;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Vector;
+
+import android.hardware.Camera;
+import android.os.RemoteException;
+import android.os.SystemClock;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.H263Config;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263EncoderParams;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
@@ -36,20 +40,13 @@ import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
+import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-import android.hardware.Camera;
-import android.os.RemoteException;
-import android.os.SystemClock;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Vector;
-
 /**
- * Live RTP video player. Supports only H.263 and H264 QCIF formats.
+ * Live RTP video player based on H264 QCIF format
  */
 public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback {
 
@@ -59,10 +56,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     public static MediaCodec[] supportedMediaCodecs = {
             new VideoCodec(H264Config.CODEC_NAME, H264VideoFormat.PAYLOAD, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
                     H264Config.FRAME_RATE, H264Config.BIT_RATE, H264Config.VIDEO_WIDTH,
-                    H264Config.VIDEO_HEIGHT).getMediaCodec(),
-            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
-                    H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
-                    H263Config.VIDEO_HEIGHT).getMediaCodec()
+                    H264Config.VIDEO_HEIGHT).getMediaCodec()
     };
 
     /**
@@ -91,11 +85,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     private MediaRtpInput rtpInput = null;
 
     /**
-     * Last video frame
-     */
-    private CameraBuffer frameBuffer = null;
-
-    /**
      * Is player opened
      */
     private boolean opened = false;
@@ -121,6 +110,36 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     private DatagramConnection temporaryConnection = null;
 
     /**
+     * NAL SPS
+     */
+    private byte[] sps = new byte[0];
+    
+    /**
+     * NAL PPS
+     */
+    private byte[] pps = new byte[0];
+
+    /**
+     * Timestamp increment
+     */
+    private int timestampInc;
+    
+    /***
+     * Current time stamp
+     */
+    private long timeStamp = 0;
+    
+    /**
+     * Start at
+     */
+	private long startTime = System.currentTimeMillis();
+	
+	/**
+	 * NAL initialization
+	 */
+	private boolean nalInit = false;
+    
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -129,7 +148,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Constructor
      */
     public LiveVideoPlayer() {
-        // Set the local RTP port
+    	// Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
     }
@@ -252,28 +271,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Init video encoder
         try {
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                // H264
-                NativeH264Encoder.InitEncoder(selectedVideoCodec.getWidth(),
-                        selectedVideoCodec.getHeight(), selectedVideoCodec.getFramerate());
-                // TODO: To be analyzed: InitEncoder exit with 0 but it works...
-                // if (result == 0) {
-                //   notifyPlayerEventError("Encoder init failed with error code " + result);
-                //   return;
-                // }
-            } else if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H263Config.CODEC_NAME)) {
-                // Default H263
-                NativeH263EncoderParams params = new NativeH263EncoderParams();
-                params.setEncFrameRate(selectedVideoCodec.getFramerate());
-                params.setBitRate(selectedVideoCodec.getBitrate());
-                params.setTickPerSrc(params.getTimeIncRes() / selectedVideoCodec.getFramerate());
-                params.setIntraPeriod(-1);
-                params.setNoFrameSkipped(false);
-                int result = NativeH263Encoder.InitEncoder(params);
-                if (result != 1) {
-                    notifyPlayerEventError("Encoder init failed with error code " + result);
-                    return;
-                }
+            timestampInc = 90000 / selectedVideoCodec.getFramerate();
+            int result = NativeH264Encoder.InitEncoder(selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight(), selectedVideoCodec.getFramerate());
+            if (result != 0) {
+               notifyPlayerEventError("Encoder init failed with error code " + result);
+               return;
             }
         } catch (UnsatisfiedLinkError e) {
             notifyPlayerEventError(e.getMessage());
@@ -311,11 +313,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         try {
             // Close the video encoder
-            if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                NativeH264Encoder.DeinitEncoder();
-            } else if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H263Config.CODEC_NAME)) {
-                NativeH263Encoder.DeinitEncoder();
-            }
+            NativeH264Encoder.DeinitEncoder();
         } catch (UnsatisfiedLinkError e) {
             if (logger.isActivated()) {
                 logger.error("Can't close correctly the video encoder", e);
@@ -341,11 +339,12 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             return;
         }
 
+        // Get NAL
+		sps = NativeH264Encoder.getNAL();
+		pps = NativeH264Encoder.getNAL();
+        
         // Start RTP layer
         rtpSender.startSession();
-
-        // Start capture
-        captureThread.start();
 
         // Player is started
         videoStartTime = SystemClock.uptimeMillis();
@@ -365,12 +364,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (!started) {
             // Already stopped
             return;
-        }
-
-        // Stop capture
-        try {
-            captureThread.interrupt();
-        } catch (Exception e) {
         }
 
         // Player is stopped
@@ -425,11 +418,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
             selectedVideoCodec = new VideoCodec(mediaCodec);
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
-
-            // Initialize frame buffer
-            if (frameBuffer == null) {
-                frameBuffer = new CameraBuffer();
-            }
         } else {
             notifyPlayerEventError("Codec not supported");
         }
@@ -530,6 +518,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             }
         }
     }
+    
+    int i = 0;
 
     /**
      * Preview frame from the camera
@@ -538,103 +528,35 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * @param camera Camera
      */
     public void onPreviewFrame(byte[] data, Camera camera) {
-        if (frameBuffer != null)
-            frameBuffer.setFrame(data);
-    }
+		if (!started) {
+			return;
+		}
 
-    /**
-     * Camera buffer
-     */
-    private class CameraBuffer {
-        /**
-         * YUV frame where frame size is always (videoWidth*videoHeight*3)/2
-         */
-        private byte frame[] = new byte[(selectedVideoCodec.getWidth()
-                * selectedVideoCodec.getHeight() * 3) / 2];
+		long time = System.currentTimeMillis();
+		timeStamp = time - startTime;
 
-        /**
-         * Set the last captured frame
-         *
-         * @param frame Frame
-         */
-        public void setFrame(byte[] frame) {
-            this.frame = frame;
-        }
+		if (!nalInit) {
+			if (logger.isActivated()) {
+				logger.debug("Send SPS");
+			}
+			rtpInput.addFrame(sps, timeStamp, false);
+			timeStamp += timestampInc;
 
-        /**
-         * Return the last captured frame
-         *
-         * @return Frame
-         */
-        public byte[] getFrame() {
-            return frame;
-        }
-    }
-
-    /**
-     * Video capture thread
-     */
-    private Thread captureThread = new Thread() {
-        /**
-         * Timestamp
-         */
-        private long timeStamp = 0;
-
-        /**
-         * Processing
-         */
-        public void run() {
-            if (rtpInput == null) {
-                return;
-            }
-
-            int timeToSleep = 1000 / selectedVideoCodec.getFramerate();
-            int timestampInc = 90000 / selectedVideoCodec.getFramerate();
-            byte[] frameData;
-            byte[] encodedFrame;
-            long encoderTs = 0;
-            long oldTs = System.currentTimeMillis();
-
-            while (started) {
-                // Set timestamp
-                long time = System.currentTimeMillis();
-                encoderTs = encoderTs + (time - oldTs);
-
-                // Get data to encode
-                frameData = frameBuffer.getFrame();
-
-                // Encode frame
-                int encodeResult = 0;
-                if (selectedVideoCodec.getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
-                    encodedFrame = NativeH264Encoder.EncodeFrame(frameData, encoderTs);
-                    encodeResult = NativeH264Encoder.getLastEncodeStatus();
-                } else {
-                	encodedFrame = NativeH263Encoder.EncodeFrame(frameData, encoderTs);
-                }
-
-                if ((encodeResult == 0) && (encodedFrame.length > 0)) {
-                    // Send encoded frame
-                    rtpInput.addFrame(encodedFrame, timeStamp);
-                    timeStamp += timestampInc;
-                } else {
-                	if (logger.isActivated()) {
-                		logger.error("Encoding error");
-                	}
-                }
-
-                // Sleep between frames if necessary
-                long delta = System.currentTimeMillis() - time;
-                if (delta < timeToSleep) {
-                    try {
-                        Thread.sleep((timeToSleep - delta) - (((timeToSleep - delta) * 10) / 100));
-                    } catch (InterruptedException e) {
-                    }
-                }
-
-                // Update old timestamp
-                oldTs = time;
-            }
-        }
+			if (logger.isActivated()) {
+				logger.debug("Send PPS");
+			}
+			rtpInput.addFrame(pps, timeStamp, false);
+			timeStamp += timestampInc;
+			
+			nalInit = true;
+		} else {
+			byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp);
+			int encodeResult = NativeH264Encoder.getLastEncodeStatus();
+			if ((encodeResult == 0) && (encoded.length > 0)) {
+				rtpInput.addFrame(encoded, timeStamp, true);
+				timeStamp += timestampInc;
+			}
+		}
     };
 
     /**
@@ -657,10 +579,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          *
          * @param data Data
          * @param timestamp Timestamp
+         * @param marker Marker bit 
          */
-        public void addFrame(byte[] data, long timestamp) {
+        public void addFrame(byte[] data, long timestamp, boolean marker) {
             if (fifo != null) {
-                fifo.addObject(new MediaSample(data, timestamp));
+                fifo.addObject(new MediaSample(data, timestamp, marker));
             }
         }
 

@@ -24,6 +24,7 @@ import java.util.Vector;
 import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
@@ -143,7 +144,7 @@ public class AnonymousFetchManager implements DiscoveryManager {
 	    	if (logger.isActivated()) {
 	    		logger.debug("Anonymous fetch notification is empty");
 	    	}
-	    	String contact = PhoneUtils.extractNumberFromUri(notify.getFromUri());
+	    	String contact = PhoneUtils.extractNumberFromUri(SipUtils.getAssertedIdentity(notify));
 
 	    	// Notify content was empty 
 	    	Capabilities capabilities = new Capabilities();

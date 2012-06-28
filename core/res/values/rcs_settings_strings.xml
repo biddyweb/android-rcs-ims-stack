@@ -66,12 +66,12 @@
 
 	<string name="rcs_settings_label_default_video_format">h264</string>
     <string-array name="rcs_settings_list_video_format_value">
-        <item>h263-2000</item>
+        <!-- <item>h263-2000</item>-->
         <item>h264</item>
     </string-array>
     <string-array name="rcs_settings_list_video_format_label">
-        <item>Low  (H.263)</item>
-        <item>High (H.264)</item>
+        <!-- <item>H.263</item>  -->
+        <item>H.264</item>
     </string-array>
 
 	<string name="rcs_settings_label_default_video_size">QCIF</string>

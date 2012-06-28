@@ -64,7 +64,12 @@ public class Multipart {
 	                        // Extract MIME type from content type
 		                    int beginType = type.indexOf(CONTENT_TYPE_HEADER);
 		                    int endType = type.indexOf(SipUtils.CRLF, beginType);
-		                    String mime = type.substring(beginType+CONTENT_TYPE_HEADER.length()+1, endType).trim();
+		                    String mime;
+		                    if (endType == -1) {
+			                    mime = type.substring(beginType+CONTENT_TYPE_HEADER.length()+1).trim();
+		                    } else {
+		                    	mime = type.substring(beginType+CONTENT_TYPE_HEADER.length()+1, endType).trim();
+		                    }
 		                    
 		                    // Add part in lowercase
 		                    parts.put(mime.toLowerCase(), part);

@@ -74,21 +74,27 @@ public class MessagingRI extends ListActivity {
 		    		Utils.showMessage(this, getString(R.string.label_ab_not_found));
 		    	}
                 break;
+                
 	        case 1:
             	startActivity(new Intent(this, InitiateFileTransfer.class));
 	            break;
+	            
 	        case 2:
             	startActivity(new Intent(this, InitiateChat.class));
 	            break;
+	            
 	        case 3:
             	startActivity(new Intent(this, InitiateChatGroup.class));
 	            break;
+	            
 	        case 4:
 	        	startActivity(new Intent(this, RejoinChat.class));
 	        	break;
+	        	
 	        case 5: 
 	        	startActivity(new Intent(this, ChatList.class));
 	            break;
+	            
 	        case 6:
 	        	startActivity(new Intent(this, SpamBox.class));
 	        	break;

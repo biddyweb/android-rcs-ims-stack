@@ -272,7 +272,15 @@ public abstract class ImsNetworkInterface {
 			if (logger.isActivated()) {
 				logger.debug("DNS NAPTR lookup for " + domain);
 			}
-			return new Lookup(domain, Type.NAPTR).run();
+			Lookup lookup = new Lookup(domain, Type.NAPTR);
+			Record[] result = lookup.run();
+			int code = lookup.getResult();
+			if (code != Lookup.SUCCESSFUL) {
+				if (logger.isActivated()) {
+					logger.warn("Lookup error: " + code + "/" + lookup.getErrorString());
+				}
+			}
+			return result;
         } catch(TextParseException e) {
 			if (logger.isActivated()) {
 				logger.debug("Not a valid DNS name");
@@ -297,8 +305,16 @@ public abstract class ImsNetworkInterface {
 			if (logger.isActivated()) {
 				logger.debug("DNS SRV lookup for " + domain);
 			}
-			return new Lookup(domain, Type.SRV).run();
-        } catch(TextParseException e) {
+			Lookup lookup = new Lookup(domain, Type.SRV);
+			Record[] result = lookup.run();
+			int code = lookup.getResult();
+			if (code != Lookup.SUCCESSFUL) {
+				if (logger.isActivated()) {
+					logger.warn("Lookup error: " + code + "/" + lookup.getErrorString());
+				}
+			}
+			return result;
+		} catch(TextParseException e) {
 			if (logger.isActivated()) {
 				logger.debug("Not a valid DNS name");
 			}
@@ -473,9 +489,6 @@ public abstract class ImsNetworkInterface {
 			}
 			return false;
 		}
-
-		// Init the registration procedure
-		registration.init();
 
     	// Register to IMS
 		boolean registered = registration.registration();

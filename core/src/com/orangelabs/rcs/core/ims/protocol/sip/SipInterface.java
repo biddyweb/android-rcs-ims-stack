@@ -51,6 +51,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.IpAddressUtils;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -536,8 +537,13 @@ public class SipInterface implements SipListener {
      * @return Route
      */
     public String getDefaultRoute() {
-        return "<sip:" + outboundProxyAddr + ":" + outboundProxyPort+
-            ";lr;transport=" + getProxyProtocol()+ ">";
+        if (IpAddressUtils.isIPv6(outboundProxyAddr)) {
+            return "<sip:[" + outboundProxyAddr + "]:" + outboundProxyPort+
+                    ";lr;transport=" + getProxyProtocol()+ ">";
+        } else {
+            return "<sip:" + outboundProxyAddr + ":" + outboundProxyPort+
+                ";lr;transport=" + getProxyProtocol()+ ">";
+        }
     }
 
     /**

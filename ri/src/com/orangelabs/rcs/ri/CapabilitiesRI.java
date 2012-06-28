@@ -59,9 +59,11 @@ public class CapabilitiesRI extends ListActivity {
 	        case 0:
             	startActivity(new Intent(this, MyCapabilities.class));
                 break;
+                
 	        case 1:
             	startActivity(new Intent(this, CapabilitiesDiscovery.class));
                 break;
+                
 	        case 2:
             	startActivity(new Intent(this, RefreshCapabilities.class));
                 break;

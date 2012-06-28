@@ -34,6 +34,11 @@ public class MediaSample {
 	 * Time stamp
 	 */
 	private long time;
+
+	/**
+	 * RTP marker bit
+	 */
+	private boolean marker = false;	
 	
 	/**
 	 * Constructor
@@ -44,6 +49,19 @@ public class MediaSample {
 	public MediaSample(byte[] data, long time) {
 		this.data = data;
 		this.time = time;
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param data Data
+	 * @param time Time stamp
+	 * @param marker Marker bit
+	 */
+	public MediaSample(byte[] data, long time, boolean marker) {
+		this.data = data;
+		this.time = time;
+		this.marker = marker;
 	}
 
 	/**
@@ -75,5 +93,14 @@ public class MediaSample {
 	 */
 	public long getTimeStamp() {
 		return time;
-	}	
+	}
+	
+	/**
+	 * Is RTP marker bit
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isMarker() {
+		return marker;
+	}
 }

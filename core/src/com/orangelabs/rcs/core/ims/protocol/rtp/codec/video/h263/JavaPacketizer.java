@@ -64,7 +64,7 @@ public class JavaPacketizer extends VideoCodec {
 				output.setLength(data.length);
 				output.setOffset(0);
 				output.setTimeStamp(input.getTimeStamp());
-				output.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
+				output.setFlags(Buffer.FLAG_RTP_MARKER);
 			}
 			return BUFFER_PROCESSED_OK;
 		}else{

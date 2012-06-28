@@ -171,8 +171,13 @@ public class HttpsProvisioningService extends Service {
 		}
 
 		// Get intent parameter
-        first = intent.getBooleanExtra(HttpsProvisioningService.FIRST_KEY, false);
-    	String version = RcsSettings.getInstance().getProvisioningVersion();
+        if (intent != null) {
+            first = intent.getBooleanExtra(HttpsProvisioningService.FIRST_KEY, false);
+        } else {
+            first = false;
+        }
+
+        String version = RcsSettings.getInstance().getProvisioningVersion();
         if (logger.isActivated()) {
         	logger.debug("Provisioning parameter: first=" + first + ", version= " + version);
         }
@@ -468,7 +473,7 @@ public class HttpsProvisioningService extends Service {
 	    	String ope = tm.getSimOperator();
             String mnc = ope.substring(3);
             String mcc = ope.substring(0, 3);
-            String requestUri_old = "config." + mcc + mnc + ".rcse";
+            String oldRequestUri = "config." + mcc + mnc + ".rcse";
             while (mnc.length() < 3) { // Set mnc on 3 digits
                 mnc = "0" + mnc;
             }
@@ -521,11 +526,11 @@ public class HttpsProvisioningService extends Service {
                 if (logger.isActivated()) {
                     logger.debug("The server " + requestUri + " can't be reachable, try with the old URI");
                 }
-                requestUri = requestUri_old;
+                requestUri = oldRequestUri;
                 response = executeRequest("http",requestUri, client, localContext);
             }
             result.code = response.getStatusLine().getStatusCode(); 
-            result.content = EntityUtils.toString(response.getEntity());
+			result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
             if (result.code != 200) {
                 if (result.code == 503) {
                     result.retryAfter = getRetryAfter(response);
@@ -549,7 +554,7 @@ public class HttpsProvisioningService extends Service {
                 }
 				return result;
 			}
-			result.content = EntityUtils.toString(response.getEntity());
+			result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
 
 			return result;
 		} catch(UnknownHostException e) {

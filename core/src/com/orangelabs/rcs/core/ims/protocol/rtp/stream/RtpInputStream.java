@@ -154,7 +154,6 @@ public class RtpInputStream implements ProcessorInputStream {
         buffer.setOffset(0);
         buffer.setFormat(inputFormat);
     	buffer.setSequenceNumber(rtpPacket.seqnum);
-    	buffer.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
     	buffer.setRTPMarker(rtpPacket.marker!=0);
     	buffer.setTimeStamp(rtpPacket.timestamp);
 

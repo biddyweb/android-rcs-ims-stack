@@ -67,18 +67,23 @@ public class PresenceRI extends ListActivity {
     	case 0:
     		startActivity(new Intent(this, PublishPresenceInfo.class));
     		break;
+    		
     	case 1:
     		startActivity(new Intent(this, ShowEab.class));
     		break;
+    		
     	case 2:
     		startActivity(new Intent(this, ManageContactList.class));
     		break;
+    		
     	case 3:
     		startActivity(new Intent(this, GrantedContactList.class));
     		break;
+    		
     	case 4:
     		startActivity(new Intent(this, BlockedContactList.class));
     		break;
+    		
     	case 5:
     		startActivity(new Intent(this, RevokedContactList.class));
     		break;

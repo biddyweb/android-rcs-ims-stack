@@ -22,6 +22,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
 
+import com.orangelabs.rcs.utils.IpAddressUtils;
+
 /**
  * Android network factory
  * 
@@ -41,7 +43,7 @@ public class AndroidNetworkFactory extends NetworkFactory {
 	            for (Enumeration<InetAddress> addr = intf.getInetAddresses(); addr.hasMoreElements();) {
 	                InetAddress inetAddress = (InetAddress)addr.nextElement();
                     if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
-                        return inetAddress.getHostAddress().toString();
+                        return IpAddressUtils.extractHostAddress(inetAddress.getHostAddress());
                     }
 	            }
 	        }

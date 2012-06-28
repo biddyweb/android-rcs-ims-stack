@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.4"
+ android:versionName="2.4.5"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"/>
@@ -135,6 +135,10 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer"/>
             </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.INITIATE_FT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
 		</activity>
 
 		<receiver android:name=".messaging.FileTransferInvitationReceiver">
@@ -152,9 +156,22 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.im-session"/>
             </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.INITIATE_CHAT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
 		</activity>
 
-        <activity android:name=".messaging.InitiateChatGroup"/>
+        <activity android:name=".messaging.InitiateChatGroup">
+			<intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.INITIATE_CHAT_GROUP"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+		</activity>        
 
 		<receiver android:name=".messaging.ChatInvitationReceiver">
             <intent-filter>
@@ -211,6 +228,18 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.event-log"/>
+            </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.VIEW_CHAT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.VIEW_CHAT_GROUP"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.VIEW_FT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 		</activity>
 </application>
