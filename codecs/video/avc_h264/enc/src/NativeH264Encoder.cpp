@@ -1,8 +1,5 @@
 /* ------------------------------------------------------------------
  * Copyright (C) 2009 OrangeLabs
- *
- * Author: Alexis Gilabert Senar
- * Date: 2009-07-01
  * -------------------------------------------------------------------
  */
 #define LOG_TAG "NativeEnc"
@@ -14,7 +11,6 @@ int     iSrcWidth;
 int     iSrcHeight;
 float   iSrcFrameRate;
 int	FrameSize;
-int	NalComplete = 0;
 
 /* variables needed in operation */
 PVAVCEncoder		*encoder;
@@ -26,16 +22,11 @@ TAVCEI_RETVAL		status;
 
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    InitEncoder
- * Signature: (IIF)I
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_InitEncoder
   (JNIEnv *env, jclass iclass, jint width, jint height, jint framerate)
 {
-    /**
-      * Init
-      */
     iSrcWidth = width;
     iSrcHeight = height;
     iSrcFrameRate = framerate;
@@ -76,9 +67,7 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     iOutData->iBitstream = (uint8*)malloc(FrameSize);
     iOutData->iBitstreamSize = FrameSize;
 
-    /**
-      * Set Encoder params
-      */
+    // Set Encoder params
     iInputFormat->iFrameWidth = width;
     iInputFormat->iFrameHeight = height;
     iInputFormat->iFrameRate = (OsclFloat)(framerate);
@@ -97,7 +86,7 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     iEncodeParam->iEncMode = EAVCEI_ENCMODE_TWOWAY;
     iEncodeParam->iOutOfBandParamSet = true;
     iEncodeParam->iOutputFormat = EAVCEI_OUTPUT_RTP;
-    iEncodeParam->iPacketSize = 8192;
+    iEncodeParam->iPacketSize = 1400;
     iEncodeParam->iRateControlType = EAVCEI_RC_CBR_1;
     iEncodeParam->iBufferDelay = (OsclFloat)2.0;
     iEncodeParam->iIquant[0]=15;
@@ -110,45 +99,45 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     iEncodeParam->iFSIBuff = NULL;
     iEncodeParam->iFSIBuffLength = 0;
 
-    /**
-      * Init encoder
-      */
-    return encoder->Initialize(iInputFormat,iEncodeParam);
-
+    // Init encoder
+    jint result = encoder->Initialize(iInputFormat,iEncodeParam);
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Init encoder %d", result);
+    return result;
 }
 
+/*
+ * Method:    GetNAL
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_getNAL
+  (JNIEnv *env, jclass iclass)
+{
+    jbyteArray result;
+
+    int32 NalSize = 30;
+    int NalType = 0;
+    uint8* NalBuff = (uint8*)malloc(NalSize*sizeof(uint8));
+    if (encoder->GetParameterSet(NalBuff,&NalSize,&NalType)== EAVCEI_SUCCESS) {
+	   result=(env)->NewByteArray(NalSize);
+	   (env)->SetByteArrayRegion(result, 0, NalSize, (jbyte*)NalBuff);
+	   free(NalBuff);
+	   return result;   
+    } else {
+	  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "NAL fail with code: %d",status);
+      result=(env)->NewByteArray(0);
+	   free(NalBuff);
+      return result;
+    }    
+}
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    EncodeFrame
- * Signature: ([BJ)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_EncodeFrame
   (JNIEnv *env, jclass iclass, jbyteArray frame, jlong timestamp)
 {
-    jbyteArray result ;
+    jbyteArray result;
 
-    /**
-      * Check NAL
-      */
-    if (NalComplete == 0){
-      __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Checking NAL");
-      int32 NalSize = 30;
-      int NalType = 0;
-      uint8* NalBuff = (uint8*)malloc(NalSize*sizeof(uint8));
-      if(encoder->GetParameterSet(NalBuff,&NalSize,&NalType)== EAVCEI_SUCCESS){
-	result=(env)->NewByteArray(NalSize);
-	(env)->SetByteArrayRegion(result, 0, NalSize, (jbyte*)NalBuff);
-	free(NalBuff);
-	return result;
-      } else {
-	NalComplete = 1; // Now encode video
-      }
-    }
-
-    /**
-      * EncodeFrame
-      */
+    // EncodeFrame
     jint len = env->GetArrayLength(frame);
     uint8* data = (uint8*)malloc(len);
     env->GetByteArrayRegion (frame, (jint)0, (jint)len, (jbyte*)data);
@@ -157,7 +146,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
     iInData->iTimeStamp = timestamp;
     status = encoder->Encode(iInData);
     if(status != EAVCEI_SUCCESS){
-      __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Encode fail with code: %d",status);
+      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "Encode fail with code: %d",status);
       result=(env)->NewByteArray(0);
       free(data);
       return result;
@@ -167,7 +156,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
     iOutData->iBitstreamSize = FrameSize;
     status = encoder->GetOutput(iOutData,&remainingByte);
     if(status != EAVCEI_SUCCESS){
-      __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Get output fail with code: %d",status);
+      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "Get output fail with code: %d",status);
       result=(env)->NewByteArray(0);
       free(data);
       return result;
@@ -182,9 +171,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
 }
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    getLastEncodeStatus
- * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_getLastEncodeStatus
   (JNIEnv *env, jclass clazz){
@@ -192,9 +179,7 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
 }
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    DeinitEncoder
- * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_DeinitEncoder
   (JNIEnv *env, jclass clazz){
@@ -203,7 +188,6 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     free(iEncodeParam);
     free(iInData);
     free(iOutData);
-    NalComplete = 0;
     return 1;
 }
 
@@ -218,7 +202,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         goto bail;
     }
 
-    /* success -- return valid version number */
+    // success -- return valid version number
     result = JNI_VERSION_1_4;
 
 bail:
