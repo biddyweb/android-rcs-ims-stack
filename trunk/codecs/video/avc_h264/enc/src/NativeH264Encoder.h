@@ -7,34 +7,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    InitEncoder
- * Signature: (IIF)I
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_InitEncoder
   (JNIEnv *, jclass, jint, jint, jint);
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
+ * Method:    Get NAL
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_getNAL
+  (JNIEnv *env, jclass iclass);
+
+/*
  * Method:    EncodeFrame
- * Signature: ([BJ)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_EncodeFrame
   (JNIEnv *, jclass, jbyteArray, jlong);
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
  * Method:    DeinitEncoder
- * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_DeinitEncoder
   (JNIEnv *, jclass);
 
 /*
- * Class:     com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder
- * Method:    getLastEncodeStatus
- * Signature: ()I
+ * Method:    GetLastEncodeStatus
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_getLastEncodeStatus
   (JNIEnv *env, jclass clazz);
