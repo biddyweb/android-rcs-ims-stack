@@ -280,7 +280,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
             rtpDummySender = new DummyPacketGenerator();
             rtpOutput = new MediaRtpOutput();
             rtpOutput.open();
-            rtpReceiver.prepareSession(rtpOutput, videoFormat);
+            rtpReceiver.prepareSession(remoteHost, remotePort, rtpOutput, videoFormat);
             rtpDummySender.prepareSession(remoteHost, remotePort, rtpReceiver.getInputStream());
             rtpDummySender.startSession();
         } catch (Exception e) {

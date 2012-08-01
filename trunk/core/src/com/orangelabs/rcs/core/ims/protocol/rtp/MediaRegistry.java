@@ -44,7 +44,6 @@ public class MediaRegistry {
 	static {
 		SUPPORTED_CODECS.put(H263VideoFormat.ENCODING.toLowerCase(), new H263VideoFormat());		
 		SUPPORTED_CODECS.put(H264VideoFormat.ENCODING.toLowerCase(), new H264VideoFormat());		
-		SUPPORTED_CODECS.put(PcmuAudioFormat.ENCODING.toLowerCase(), new PcmuAudioFormat());
 	}
 	
 	/**
@@ -113,6 +112,12 @@ public class MediaRegistry {
     			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaPacketizer()
     		};
     		return chain;
+        } else if (encoding.toLowerCase().equalsIgnoreCase(H264VideoFormat.ENCODING)) { 
+            // Java H264 packetizer
+            Codec[] chain = {
+                new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer()
+            };
+            return chain;
 		} else { 
 			// Codec implemented in the native part
 			return new Codec[0];
@@ -132,6 +137,12 @@ public class MediaRegistry {
     			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaDepacketizer()
     		};
     		return chain;
+        } else if (encoding.toLowerCase().equalsIgnoreCase(H264VideoFormat.ENCODING)) {
+            // Java H264 depacketizer
+            Codec[] chain = {
+                new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaDepacketizer()
+            };
+            return chain;
 		} else { 
 			// Codec implemented in the native part
 			return new Codec[0];

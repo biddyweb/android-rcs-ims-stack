@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 58;
+        private static final int DATABASE_VERSION = 59;
 
         private Context ctx;
 
@@ -161,13 +161,13 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.REGISTER_EXPIRE_PERIOD, 			"3600");
             addParameter(db, RcsSettingsData.REGISTER_RETRY_BASE_TIME, 			"30");
             addParameter(db, RcsSettingsData.REGISTER_RETRY_MAX_TIME, 			"1800");
-            addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"600000");
+            addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"3600");
             addParameter(db, RcsSettingsData.REVOKE_TIMEOUT, 					"300");
             addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, 		RcsSettingsData.DIGEST_AUTHENT);
             addParameter(db, RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, 		RcsSettingsData.DIGEST_AUTHENT);
             addParameter(db, RcsSettingsData.TEL_URI_FORMAT, 					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.RINGING_SESSION_PERIOD, 			"60");
-            addParameter(db, RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, 			"600000");
+            addParameter(db, RcsSettingsData.SUBSCRIBE_EXPIRE_PERIOD, 			"3600");
             addParameter(db, RcsSettingsData.IS_COMPOSING_TIMEOUT, 				"5");
             addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"0");
             addParameter(db, RcsSettingsData.PERMANENT_STATE_MODE,	 			RcsSettingsData.TRUE);
@@ -193,7 +193,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
         }

@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.sdp;
 
+import com.orangelabs.rcs.utils.IpAddressUtils;
+
 /**
  * SDP utility functions
  * 
@@ -39,4 +41,18 @@ public class SdpUtils {
 			return null;
 		}
 	}
+
+    /**
+     * Format "IN IP" attribute (4 or 6)
+     *
+     * @param address IP address
+     * @return "IN IP4 address" or "IN IP6 address"
+     */
+    public static String formatAddressType(String address) {
+        if (IpAddressUtils.isIPv6(address)) {
+            return "IN IP6 " + address;
+        } else {
+            return "IN IP4 " + address;
+        }
+    }
 }

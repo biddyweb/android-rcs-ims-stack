@@ -7,19 +7,18 @@
 #include "pvavcencoder.h"
 #include "android/log.h"
 
-int     iSrcWidth;
-int     iSrcHeight;
-float   iSrcFrameRate;
-int	FrameSize;
+int iSrcWidth;
+int iSrcHeight;
+float iSrcFrameRate;
+int FrameSize;
 
 /* variables needed in operation */
-PVAVCEncoder		*encoder;
-TAVCEIInputFormat	*iInputFormat;
-TAVCEIEncodeParam	*iEncodeParam;
-TAVCEIInputData		*iInData;
-TAVCEIOutputData	*iOutData;
-TAVCEI_RETVAL		status;
-
+PVAVCEncoder *encoder;
+TAVCEIInputFormat *iInputFormat;
+TAVCEIEncodeParam *iEncodeParam;
+TAVCEIInputData *iInData;
+TAVCEIOutputData *iOutData;
+TAVCEI_RETVAL status;
 
 /*
  * Method:    InitEncoder
@@ -74,7 +73,6 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     iInputFormat->iFrameOrientation = -1;
     iInputFormat->iVideoFormat = EAVCEI_VDOFMT_YUV420SEMIPLANAR;
 
-
     iEncodeParam->iEncodeID = 0;
     iEncodeParam->iProfile = EAVCEI_PROFILE_BASELINE;
     iEncodeParam->iLevel = EAVCEI_LEVEL_1B;
@@ -112,21 +110,18 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
   (JNIEnv *env, jclass iclass)
 {
     jbyteArray result;
-
     int32 NalSize = 30;
     int NalType = 0;
     uint8* NalBuff = (uint8*)malloc(NalSize*sizeof(uint8));
     if (encoder->GetParameterSet(NalBuff,&NalSize,&NalType)== EAVCEI_SUCCESS) {
-	   result=(env)->NewByteArray(NalSize);
-	   (env)->SetByteArrayRegion(result, 0, NalSize, (jbyte*)NalBuff);
-	   free(NalBuff);
-	   return result;   
+        result = (env)->NewByteArray(NalSize);
+        (env)->SetByteArrayRegion(result, 0, NalSize, (jbyte*)NalBuff);
     } else {
-	  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "NAL fail with code: %d",status);
-      result=(env)->NewByteArray(0);
-	   free(NalBuff);
-      return result;
-    }    
+        __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "NAL fail with code: %d",status);
+        result = (env)->NewByteArray(0);
+    }
+    free(NalBuff);
+    return result;
 }
 
 /*
@@ -146,20 +141,20 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
     iInData->iTimeStamp = timestamp;
     status = encoder->Encode(iInData);
     if(status != EAVCEI_SUCCESS){
-      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "Encode fail with code: %d",status);
-      result=(env)->NewByteArray(0);
-      free(data);
-      return result;
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Encode fail with code: %d",status);
+        result=(env)->NewByteArray(0);
+        free(data);
+        return result;
     }
 
     int remainingByte = 0;
     iOutData->iBitstreamSize = FrameSize;
     status = encoder->GetOutput(iOutData,&remainingByte);
     if(status != EAVCEI_SUCCESS){
-      __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "Get output fail with code: %d",status);
-      result=(env)->NewByteArray(0);
-      free(data);
-      return result;
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Get output fail with code: %d",status);
+        result=(env)->NewByteArray(0);
+        free(data);
+        return result;
     }
 
     // Copy aOutBuffer into result
@@ -167,7 +162,6 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
     (env)->SetByteArrayRegion(result, 0, iOutData->iBitstreamSize, (jbyte*)iOutData->iBitstream);
     free(data);
     return result;
-
 }
 
 /*

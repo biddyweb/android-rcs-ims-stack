@@ -67,11 +67,11 @@ public class MediaRtpReceiver {
      * @param format Media format
      * @throws RtpException
      */
-    public void prepareSession(MediaOutput renderer, Format format)
+    public void prepareSession(String remoteAddress, int remotePort, MediaOutput renderer, Format format)
             throws RtpException {
     	try {
 			// Create the input stream
-            inputStream = new RtpInputStream(localPort, format);
+            inputStream = new RtpInputStream(remoteAddress, remotePort, localPort, format);
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());

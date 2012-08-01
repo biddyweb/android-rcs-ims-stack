@@ -176,9 +176,9 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 	    	String sdp =
 	    		"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
-				"c=IN IP4 " + ipAddress + SipUtils.CRLF +
+				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +

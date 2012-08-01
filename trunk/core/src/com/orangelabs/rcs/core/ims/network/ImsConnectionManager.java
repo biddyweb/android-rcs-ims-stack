@@ -318,25 +318,27 @@ public class ImsConnectionManager implements Runnable {
 					return;
 				}
 				
-				// Test the default APN configuration
-				ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
-				String currentApn = null;
-				Cursor c = cr.query(Uri.parse("content://telephony/carriers/preferapn"),
-						new String[] { "apn" }, null, null, null);
-				if (c != null) {
-					final int apnIndex = c.getColumnIndexOrThrow("apn");
-					if (c.moveToFirst()) {
-						currentApn = c.getString(apnIndex);
+				// Test the default APN configuration if mobile network
+				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+					ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
+					String currentApn = null;
+					Cursor c = cr.query(Uri.parse("content://telephony/carriers/preferapn"),
+							new String[] { "apn" }, null, null, null);
+					if (c != null) {
+						final int apnIndex = c.getColumnIndexOrThrow("apn");
+						if (c.moveToFirst()) {
+							currentApn = c.getString(apnIndex);
+						}
+						c.close();
 					}
-					c.close();
-				}
-				if ((apn.length() > 0) && !apn.equalsIgnoreCase(currentApn)) {
-					if (logger.isActivated()) {
-						logger.warn("APN not authorized");
+					if ((apn.length() > 0) && !apn.equalsIgnoreCase(currentApn)) {
+						if (logger.isActivated()) {
+							logger.warn("APN not authorized");
+						}
+						return;
 					}
-					return;
 				}
-
+				
 				// Test the configuration
 				if (!currentNetworkInterface.isInterfaceConfigured()) {
 					if (logger.isActivated()) {

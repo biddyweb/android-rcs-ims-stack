@@ -275,8 +275,10 @@ public class SipMessageFactory {
 	        }
 	                
 	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			message.addHeader(prefHeader);
+	        if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+	        	message.addHeader(prefHeader);
+	        }
 
 	        // Set Contact header
 			message.addHeader(dialog.getSipStack().getContact());	        
@@ -516,9 +518,11 @@ public class SipMessageFactory {
 	        }
 	        
 	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			invite.addHeader(prefHeader);
-
+	        if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+				Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+				invite.addHeader(prefHeader);
+	        }
+	        
 			// Set User-Agent header
 	        invite.addHeader(SipUtils.buildUserAgentHeader());
 	        
@@ -849,8 +853,10 @@ public class SipMessageFactory {
 	        }
 	        
 	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			options.addHeader(prefHeader);
+	        if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+	        	options.addHeader(prefHeader);
+	        }
 
 			// Set User-Agent header
 	        options.addHeader(SipUtils.buildUserAgentHeader());
@@ -947,8 +953,10 @@ public class SipMessageFactory {
 	        refer.addHeader(referSub);
 	        
 	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			refer.addHeader(prefHeader);
+	        if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+	        	refer.addHeader(prefHeader);
+	        }
 
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
@@ -1002,8 +1010,10 @@ public class SipMessageFactory {
 	        refer.addHeader(referSub);
 	        
 	        // Set the P-Preferred-Identity header
-			Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, dialog.getLocalParty());
-			refer.addHeader(prefHeader);
+	        if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+	        	refer.addHeader(prefHeader);
+	        }
 
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());

@@ -157,9 +157,9 @@ public class ImdnManager extends Thread {
        		}
 
 	   		// Create CPIM/IDMN document
+			String from = ChatUtils.ANOMYNOUS_URI;
+			String to = ChatUtils.ANOMYNOUS_URI;
 			String imdn = ChatUtils.buildDeliveryReport(deliveryStatus.getMsgId(), deliveryStatus.getStatus());
-			String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-			String to = deliveryStatus.getContact();
 			String cpim = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
 			
 		    // Create authentication agent 

@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp;
 
+import java.util.List;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.ProcessorOutputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
@@ -86,7 +88,7 @@ public class CodecChain {
 
 	/**
 	 * Recursive codec processing
-	 * 
+	 *
 	 * @param codecNo Codec index
 	 * @param input Input buffer
 	 * @return Result
@@ -96,7 +98,17 @@ public class CodecChain {
 			// End of chain
 			try {
 				// Write data to the output stream
-				renderer.write(input);
+                if (input.isFragmented()) {
+                    // Write data from sub-buffers to the output stream
+                    final List<Buffer> fragments = input.getFragments();
+                    for (Buffer fragment : fragments) {
+                        renderer.write(fragment);
+                        fragment.setData(null);
+                    }
+                    input.setFragments(null);
+                } else {
+                    renderer.write(input);
+                }
 				return Codec.BUFFER_PROCESSED_OK;
 			} catch (Exception e) {
 				return Codec.BUFFER_PROCESSED_FAILED;
@@ -122,6 +134,7 @@ public class CodecChain {
 					buffers[codecNo].setOffset(0);
 					buffers[codecNo].setLength(0);
 					buffers[codecNo].setFlags(0);
+                    buffers[codecNo].setFragments(null);
 				}
 			} while((returnVal & Codec.INPUT_BUFFER_NOT_CONSUMED) != 0);
 

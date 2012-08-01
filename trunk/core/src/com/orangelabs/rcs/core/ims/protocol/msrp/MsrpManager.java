@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
+import com.orangelabs.rcs.utils.IpAddressUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 import java.io.IOException;
@@ -81,7 +82,11 @@ public class MsrpManager {
      * @return MSRP path
      */
     public String getLocalMsrpPath() {
-    	return "msrp://" + localMsrpAddress + ":" + localMsrpPort + "/" + sessionId + ";tcp";
+        if (IpAddressUtils.isIPv6(localMsrpAddress)) {
+            return "msrp://[" + localMsrpAddress + "]:" + localMsrpPort + "/" + sessionId + ";tcp";
+        } else {
+            return "msrp://" + localMsrpAddress + ":" + localMsrpPort + "/" + sessionId + ";tcp";
+        }
     }
     
 	/**

@@ -18,13 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder;
 
-
-public class NativeH264Encoder
-{
-
-    public NativeH264Encoder()
-    {
-    }
+public class NativeH264Encoder {
 
     public static native int InitEncoder(int i, int j, int k);
 
@@ -36,13 +30,10 @@ public class NativeH264Encoder
 
     public static native int getLastEncodeStatus();
 
-    static 
-    {
+    static {
         String libname = "H264Encoder";
-        try
-        {
+        try {
             System.loadLibrary(libname);
-        }
-        catch(UnsatisfiedLinkError unsatisfiedlinkerror) { }
+        } catch(UnsatisfiedLinkError unsatisfiedlinkerror) { }
     }
 }

@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacket;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
@@ -35,6 +36,16 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class RtpInputStream implements ProcessorInputStream {
     /**
+     * Remote address
+     */
+    private String remoteAddress;
+
+    /**
+     * Remote port
+     */
+    private int remotePort;
+
+    /**
      * Local port
      */
     private int localPort;
@@ -48,6 +59,11 @@ public class RtpInputStream implements ProcessorInputStream {
 	 * RTCP receiver
 	 */
 	private RtcpPacketReceiver rtcpReceiver =  null;
+
+   /**
+     * RTCP transmitter
+     */
+    private RtcpPacketTransmitter rtcpTransmitter =  null;
 
     /**
      * Input buffer
@@ -75,7 +91,9 @@ public class RtpInputStream implements ProcessorInputStream {
      * @param localPort Local port
      * @param inputFormat Input format
      */
-    public RtpInputStream(int localPort, Format inputFormat) {
+    public RtpInputStream(String remoteAddress, int remotePort, int localPort, Format inputFormat) {
+        this.remoteAddress = remoteAddress;
+        this.remotePort = remotePort;
 		this.localPort = localPort;
 		this.inputFormat = inputFormat;
 
@@ -94,6 +112,13 @@ public class RtpInputStream implements ProcessorInputStream {
     	// Create the RTCP receiver
         rtcpReceiver = new RtcpPacketReceiver(localPort + 1, rtcpSession);
         rtcpReceiver.start();
+
+        // Create the RTCP transmitter
+        rtcpTransmitter = new RtcpPacketTransmitter(remoteAddress,
+                remotePort + 1,
+                rtcpSession,
+                rtcpReceiver.getConnection());
+        rtcpTransmitter.start();
     }
 
     /**
@@ -101,6 +126,10 @@ public class RtpInputStream implements ProcessorInputStream {
      */
     public void close() {
 		try {
+            // Close the RTCP transmitter
+            if (rtcpTransmitter != null)
+                rtcpTransmitter.close();
+
 			// Close the RTP receiver
 			if (rtpReceiver != null) {
 				rtpReceiver.close();

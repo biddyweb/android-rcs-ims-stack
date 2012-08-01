@@ -18,10 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
+import java.util.ListIterator;
+
 import javax2.sip.address.Address;
 import javax2.sip.address.SipURI;
 import javax2.sip.address.URI;
 import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
 
 import android.content.Context;
 import android.telephony.TelephonyManager;
@@ -117,25 +120,25 @@ public class GibaRegistrationProcedure extends RegistrationProcedure {
 	public void readSecurityHeader(SipResponse response) throws CoreException {
 		try {
 			// Read the associated-URI from the 200 OK response
-			ExtensionHeader associatedHeader = (ExtensionHeader)response.getHeader(SipUtils.HEADER_P_ASSOCIATED_URI);
-			Address sipAddr = SipUtils.ADDR_FACTORY.createAddress(associatedHeader.getValue());
-			String domain = null;
-			String username = null;
-			URI uri = sipAddr.getURI();
-			if (uri instanceof SipURI) {
-				// SIP-URI
-				SipURI sip = (SipURI)sipAddr.getURI();
-				username = sip.getUser();				
-				domain = sip.getHost();
-			} else {
-				// Tel-URI
-				throw new CoreException("First P-Associated-URI is not a SIP-URI");
-			}			
+			ListIterator<Header> list = response.getHeaders(SipUtils.HEADER_P_ASSOCIATED_URI);
+			SipURI sipUri = null;
+			while(list.hasNext()) { 
+				ExtensionHeader associatedHeader = (ExtensionHeader)list.next();
+				Address sipAddr = SipUtils.ADDR_FACTORY.createAddress(associatedHeader.getValue());
+				URI uri = sipAddr.getURI();
+				if (uri instanceof SipURI) {
+					// SIP-URI
+					sipUri = (SipURI)sipAddr.getURI();
+				}			
+			}
+			if (sipUri == null)  {
+				throw new CoreException("No SIP-URI found in the P-Associated-URI header");
+			}
 			
 			// Update the user profile
-			ImsModule.IMS_USER_PROFILE.setUsername(username);
-			ImsModule.IMS_USER_PROFILE.setHomeDomain(domain);
-			ImsModule.IMS_USER_PROFILE.setXdmServerLogin("sip:" + username + "@" + domain);
+			ImsModule.IMS_USER_PROFILE.setUsername(sipUri.getUser());
+			ImsModule.IMS_USER_PROFILE.setHomeDomain(sipUri.getHost());
+			ImsModule.IMS_USER_PROFILE.setXdmServerLogin("sip:" + sipUri.getUser() + "@" + sipUri.getHost());
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't read a SIP-URI from the P-Associated-URI header", e);
