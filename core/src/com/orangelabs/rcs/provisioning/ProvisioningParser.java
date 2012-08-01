@@ -272,7 +272,7 @@ public class ProvisioningParser {
             } while ((childnode = childnode.getNextSibling()) != null);
         }
 
-        if (appRef != null && appRef.equalsIgnoreCase("IMS-Settings")) {
+        if (appRef != null && (appRef.equalsIgnoreCase("IMS-Settings") || appRef.equalsIgnoreCase("ims-rcse"))) {
             parseIMS(node);
         }
 

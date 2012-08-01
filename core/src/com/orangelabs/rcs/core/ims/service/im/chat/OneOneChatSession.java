@@ -77,18 +77,16 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public void sendTextMessage(String msgId, String txt) {
 		boolean useImdn = getImdnManager().isImdnActivated();
+		String mime = CpimMessage.MIME_TYPE;
+		String from = ChatUtils.ANOMYNOUS_URI;
+		String to = ChatUtils.ANOMYNOUS_URI;
 		String content;
-		String mime;
 		if (useImdn) {
-			// Send message in CPIM + IMDN headers
-			String from = ChatUtils.ANOMYNOUS_URI;
-			String to = ChatUtils.ANOMYNOUS_URI;
+			// Send message in CPIM + IMDN
 			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
-			mime = CpimMessage.MIME_TYPE;
 		} else {
-			// Send message in plain text
-			content = StringUtils.encodeUTF8(txt);
-			mime = InstantMessage.MIME_TYPE;
+			// Send message in CPIM
+			content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		}
 
 		// Send content

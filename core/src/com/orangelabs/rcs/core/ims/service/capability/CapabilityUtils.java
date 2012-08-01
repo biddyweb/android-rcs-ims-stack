@@ -33,6 +33,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
+import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -259,9 +260,9 @@ public class CapabilityUtils {
 				// Build the local SDP
 		    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 		    	sdp = "v=0" + SipUtils.CRLF +
-			        	"o=- " + ntpTime + " " + ntpTime + " IN IP4 " + ipAddress + SipUtils.CRLF +
+			        	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 			            "s=-" + SipUtils.CRLF +
-			            "c=IN IP4 " + ipAddress + SipUtils.CRLF +
+			            "c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 			            "t=0 0" + SipUtils.CRLF;
 
 		    	// Add video config

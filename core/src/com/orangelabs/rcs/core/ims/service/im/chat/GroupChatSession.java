@@ -148,7 +148,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 * @param txt Text message
 	 */ 
 	public void sendTextMessage(String msgId, String txt) {
-		// Send status in CPIM
+		// Send message in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = getRemoteContact();
 		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);

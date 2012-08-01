@@ -128,8 +128,7 @@ public abstract class ImsServiceSession extends Thread {
     			callId,
 				1,
 				getRemoteContact(),
-				// TODO: remove format number when bug corrected on IMS
-				PhoneUtils.formatNumberToSipAddress(ImsModule.IMS_USER_PROFILE.getPublicUri()),
+				ImsModule.IMS_USER_PROFILE.getPublicUri(),
 				getRemoteContact(),
 				route);
     	

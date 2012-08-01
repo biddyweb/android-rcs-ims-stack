@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.5
+Release 2.4.6
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,8 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- GSMA UI Connector API 1.0.
-- Video share IOT tests.
+- IOT test fest issues.
+- Packetization for video sharing.
+- IPv6 tests.
+
 
 
 Bugs fixed:
@@ -18,6 +20,11 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.6
+- Mantis #0015656	Stack: P-Preferred-URI should contain a Tel-URI if both SIP-URI and Tel-URI are provisioned.
+- Mantis #0015651	Stack: No anonymous URI in CPIM From/To of the SIP MESSAGE report
+- Mantis #0015636	Stack: No accept-wrapped-type for chat
 
 v2.4.5
 - Mantis #0015507	Stack: Multipart parser exception if no Content-Length header

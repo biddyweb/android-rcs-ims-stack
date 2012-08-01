@@ -59,6 +59,9 @@ import java.util.List;
 
 /**
  * Contains utility methods for interfacing with the Android SDK ContactsProvider.
+ * 
+ * @author jexa7410
+ * @author Deutsche Telekom
  */
 public final class ContactsManager {
 
@@ -1440,9 +1443,7 @@ public final class ContactsManager {
 	 * @return true if it is a RCS valid number
 	 */
     public boolean isRcsValidNumber(String phoneNumber){
-        return android.telephony.PhoneNumberUtils.isGlobalPhoneNumber(phoneNumber) 
-        	&& !android.telephony.PhoneNumberUtils.isEmergencyNumber(phoneNumber)
-        	&& (phoneNumber.length()>3);
+        return android.telephony.PhoneNumberUtils.isGlobalPhoneNumber(phoneNumber) && (phoneNumber.length()>3);
     }
 	
 	/**

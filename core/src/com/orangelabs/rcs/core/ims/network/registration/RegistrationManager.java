@@ -26,7 +26,6 @@ import java.util.Vector;
 
 import javax2.sip.header.ContactHeader;
 import javax2.sip.header.ExpiresHeader;
-import javax2.sip.header.ExtensionHeader;
 import javax2.sip.header.Header;
 import javax2.sip.header.ViaHeader;
 
@@ -415,12 +414,9 @@ public class RegistrationManager extends PeriodicRefresher {
 
     	SipResponse resp = ctx.getSipResponse();
     	
-        // Get the associated URI
-		ExtensionHeader associatedHeader = (ExtensionHeader)resp.getHeader(SipUtils.HEADER_P_ASSOCIATED_URI);
-		if (associatedHeader != null) {		
-			String associatedUri = associatedHeader.getValue();
-			ImsModule.IMS_USER_PROFILE.setPublicUri(associatedUri);
-		}
+        // Set the associated URIs
+		ListIterator<Header> associatedHeader = resp.getHeaders(SipUtils.HEADER_P_ASSOCIATED_URI);
+		ImsModule.IMS_USER_PROFILE.setAssociatedUri(associatedHeader);
 		
 		// Set the GRUU
 		networkInterface.getSipManager().getSipStack().setInstanceId(instanceId);			

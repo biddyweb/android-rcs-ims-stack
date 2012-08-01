@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.util;
 
+import java.util.List;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 
 /**
@@ -37,10 +39,10 @@ public class Buffer {
 	 */
 	public final static int FLAG_DISCARD = (1 << 1);
 
-	/**
-	 * This is a marker bit for RTP
-	 */
-	public final static int FLAG_RTP_MARKER = (1 << 2);
+    /**
+     * This is a marker bit for RTP
+     */
+    public final static int FLAG_RTP_MARKER = (1 << 11);
 
 	/**
 	 * Default value if the time stamp of the media is not known
@@ -91,6 +93,11 @@ public class Buffer {
 	 * The sequence number
 	 */
 	protected long sequenceNumber = SEQUENCE_UNKNOWN;
+
+    /**
+     * The list of buffer fragments
+     */
+    protected List<Buffer> fragments = null;
 
 	/**
 	 * Get the data format
@@ -298,4 +305,32 @@ public class Buffer {
 	public long getSequenceNumber() {
 		return sequenceNumber;
 	}
+
+    /**
+     * Get the buffer fragments
+     * 
+     * @return the fragments
+     */
+    public List<Buffer> getFragments() {
+        return fragments;
+    }
+
+    /**
+     * Set the buffer fragments
+     * 
+     * @param fragments the fragments to set
+     */
+    public void setFragments(List<Buffer> fragments) {
+        this.fragments = fragments;
+    }
+
+    /**
+     * Get the sub buffers
+     * 
+     * @return <code>true</code> in case of fragmented buffer, otherwise
+     *         <code>false</code>
+     */
+    public boolean isFragmented() {
+        return (fragments != null && fragments.size() > 0);
+    }
 }

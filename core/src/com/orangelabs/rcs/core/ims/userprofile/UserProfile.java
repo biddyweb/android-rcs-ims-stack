@@ -18,12 +18,11 @@
 
 package com.orangelabs.rcs.core.ims.userprofile;
 
-import javax2.sip.address.Address;
-import javax2.sip.address.SipURI;
-import javax2.sip.address.TelURL;
-import javax2.sip.address.URI;
+import java.util.ListIterator;
+import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import javax2.sip.header.ExtensionHeader;
+import javax2.sip.header.Header;
 
 /**
  * User profile 
@@ -73,9 +72,14 @@ public class UserProfile {
 	private String imConferenceUri;
 
 	/**
-	 * Public URI or associated URI
+	 * Associated URIs
 	 */
-	private String associatedUri = null;
+	private Vector<String> associatedUriList = new Vector<String>();
+	
+	/**
+	 * Preferred URI
+	 */
+	private String preferredUri = null;
 	
 	/**
 	 * Constructor
@@ -105,6 +109,7 @@ public class UserProfile {
 		this.xdmServerLogin = xdmServerLogin;
 		this.xdmServerPassword = xdmServerPassword;
 		this.imConferenceUri = imConferenceUri;
+		this.preferredUri = "sip:" + username + "@" + homeDomain;
 	}
 
 	/**
@@ -124,43 +129,61 @@ public class UserProfile {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	
+	/**
+	 * Get the user preferred URI
+	 * 
+	 * @return Preferred URI
+	 */
+	public String getPreferredUri() {
+		return preferredUri;
+	}	
 
 	/**
-	 * Get the user public URI or associated URI
+	 * Get the user public URI
 	 * 
 	 * @return Public URI
 	 */
 	public String getPublicUri() {
-		if (associatedUri == null) {
-			// Use end user profile as public URI
+		if (preferredUri == null) { 
 			return "sip:" + username + "@" + homeDomain;
 		} else {
-			// Use P-Associated-URI as public URI
-			return associatedUri;
+			return preferredUri;
 		}
 	}
 	
 	/**
-	 * Set the user public URI or associated URI
+	 * Set the user associated URIs
 	 * 
-	 * @param uri Public URI
+	 * @param uris List of URIs
 	 */
-	public void setPublicUri(String uri) {
-		try {
-			Address addr = SipUtils.ADDR_FACTORY.createAddress(uri);
-			URI uriObj = addr.getURI();
-			if (uriObj instanceof SipURI) {
-				// SIP-URI
-				SipURI sip = (SipURI)uriObj;
-				this.associatedUri = sip.toString();
+	public void setAssociatedUri(ListIterator<Header> uris) {
+		if (uris == null) {
+			return;
+		}
+		
+		String sipUri = null;
+		String telUri = null;
+		while(uris.hasNext()) {
+			ExtensionHeader header = (ExtensionHeader)uris.next();
+			String value = header.getValue();
+			associatedUriList.addElement(value);
+			if (value.startsWith("<sip:")) {
+				sipUri = value;
 			} else
-			if (uriObj instanceof TelURL) {
-				// Tel-URI
-				TelURL tel = (TelURL)addr.getURI();
-				this.associatedUri = tel.toString();
-			}			
-		} catch(Exception e) {
-			this.associatedUri = null;
+			if (value.startsWith("<tel:")) {
+				telUri = value;
+			}
+		}
+		
+		if ((sipUri != null) && (telUri != null)) {
+			preferredUri = telUri;
+		} else
+		if (telUri != null) {
+			preferredUri = telUri;
+		} else
+		if (sipUri != null) {
+			preferredUri = sipUri;
 		}
 	}
 	

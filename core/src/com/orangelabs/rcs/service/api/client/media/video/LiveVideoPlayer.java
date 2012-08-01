@@ -29,6 +29,7 @@ import android.os.SystemClock;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
@@ -128,16 +129,21 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Current time stamp
      */
     private long timeStamp = 0;
-    
+
     /**
-     * Start at
-     */
-	private long startTime = System.currentTimeMillis();
-	
-	/**
 	 * NAL initialization
 	 */
 	private boolean nalInit = false;
+
+    /**
+     * NAL repeat
+     */
+    private int nalRepeat = 0;
+
+    /**
+     * NAL repeat MAX value
+     */
+    private static final int NALREPEATMAX = 20;
     
     /**
      * The logger
@@ -339,10 +345,16 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             return;
         }
 
-        // Get NAL
-		sps = NativeH264Encoder.getNAL();
-		pps = NativeH264Encoder.getNAL();
-        
+        // Init NAL
+        if (!initNAL()) {
+            return;
+        }
+        nalInit = false;
+
+        timeStamp = 0;
+        nalInit = false;
+        nalRepeat = 0;
+
         // Start RTP layer
         rtpSender.startSession();
 
@@ -350,6 +362,39 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         videoStartTime = SystemClock.uptimeMillis();
         started = true;
         notifyPlayerEventStarted();
+    }
+
+    /**
+     * Init sps and pps
+     *
+     * @return true if done
+     */
+    private boolean initNAL() {
+        boolean ret = initOneNAL();
+        if (ret) {
+            ret = initOneNAL();
+        }
+        return ret;
+    }
+
+    /**
+     * Init sps or pps
+     *
+     * @return true if done
+     */
+    private boolean initOneNAL() {
+        byte[] nal = NativeH264Encoder.getNAL();
+        if ((nal != null) && (nal.length > 0)) {
+            int type = (nal[0] & 0x1f);
+            if (type == JavaPacketizer.AVC_NALTYPE_SPS) {
+                sps = nal;
+                return true;
+            } else if (type == JavaPacketizer.AVC_NALTYPE_PPS) {
+                pps = nal;
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -518,8 +563,6 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             }
         }
     }
-    
-    int i = 0;
 
     /**
      * Preview frame from the camera
@@ -532,9 +575,12 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 			return;
 		}
 
-		long time = System.currentTimeMillis();
-		timeStamp = time - startTime;
-
+        // Send SPS/PPS if necessary
+        nalRepeat++;
+        if (nalRepeat > NALREPEATMAX) {
+            nalInit = false;
+            nalRepeat = 0;
+        }
 		if (!nalInit) {
 			if (logger.isActivated()) {
 				logger.debug("Send SPS");
@@ -549,13 +595,14 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 			timeStamp += timestampInc;
 			
 			nalInit = true;
-		} else {
-			byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp);
-			int encodeResult = NativeH264Encoder.getLastEncodeStatus();
-			if ((encodeResult == 0) && (encoded.length > 0)) {
-				rtpInput.addFrame(encoded, timeStamp, true);
-				timeStamp += timestampInc;
-			}
+		} 
+
+		// Encode frame 
+		byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp);
+		int encodeResult = NativeH264Encoder.getLastEncodeStatus();
+		if ((encodeResult == 0) && (encoded.length > 0)) {
+			rtpInput.addFrame(encoded, timeStamp, true);
+			timeStamp += timestampInc;
 		}
     };
 
