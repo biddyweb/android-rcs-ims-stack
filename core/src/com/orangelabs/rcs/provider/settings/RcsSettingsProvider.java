@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 59;
+        private static final int DATABASE_VERSION = 61;
 
         private Context ctx;
 
@@ -105,7 +105,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE, 	RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CHAT_INVITATION_RINGTONE, 			"");
             addParameter(db, RcsSettingsData.CHAT_INVITATION_VIBRATE, 			RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT, 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.FREETEXT1, 						ctx.getString(R.string.rcs_settings_label_default_freetext_1));
             addParameter(db, RcsSettingsData.FREETEXT2, 						ctx.getString(R.string.rcs_settings_label_default_freetext_2));
             addParameter(db, RcsSettingsData.FREETEXT3,							ctx.getString(R.string.rcs_settings_label_default_freetext_3));
@@ -123,6 +122,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_FILE_TRANSFER_SESSIONS, 		"1");
             addParameter(db, RcsSettingsData.SMS_FALLBACK_SERVICE, 				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.WARN_SF_SERVICE,	 				RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.AUTO_ACCEPT_CHAT,			 		RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER,			RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.IM_SESSION_START,	 				"1");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_USERNAME, 			"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, 		"");
@@ -191,7 +192,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
             addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"500");
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
-            addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);

@@ -195,7 +195,7 @@ public class ImsConnectionManager implements Runnable {
         public void onReceive(Context context, final Intent intent) {
         	Thread t = new Thread() {
         		public void run() {
-        			connectionEvent(intent.getAction());
+        			connectionEvent(intent);
         		}
         	};
         	t.start();
@@ -205,17 +205,21 @@ public class ImsConnectionManager implements Runnable {
     /**
      * Connection event
      * 
-     * @param action Connectivity action
+     * @param intent Intent
      */
-    private synchronized void connectionEvent(String action) {
-		if (logger.isActivated()) {
-			logger.debug("Connection event " + action);
-		}
+    private synchronized void connectionEvent(Intent intent) {
+		if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+			
+			boolean connectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+            String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
+            boolean failover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER, false);
+			if (logger.isActivated()) {
+				logger.debug("Connectivity event change: failover=" + failover + ", connectivity=" + !connectivity + ", reason=" + reason);
+			}
 
-		if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-	    	// Check received network info
+			// Check received network info
 	    	NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
-			if ((networkInfo == null) || (currentNetworkInterface == null)) {
+			if (networkInfo == null) {
 				// Disconnect from IMS network interface
 				if (logger.isActivated()) {
 					logger.debug("Disconnect from IMS: no network (e.g. air plane mode)");
@@ -240,26 +244,20 @@ public class ImsConnectionManager implements Runnable {
 				logger.debug("Local IP address is " + localIpAddr);
 			}   				
 
-			// Check in the network access type has changed 
+			// Check if the network access type has changed 
 			if (networkInfo.getType() != currentNetworkInterface.getType()) {
 				// Network interface changed
 				if (logger.isActivated()) {
 					logger.info("Data connection state: NETWORK ACCESS CHANGED");
 				}
 
-				// Disconnect from IMS network interface
+				// Disconnect from current IMS network interface
 				if (logger.isActivated()) {
 					logger.debug("Disconnect from IMS: network access has changed");
 				}
 				disconnectFromIms();
 
-				// Load the user profile
-				loadUserProfile();
-				if (logger.isActivated()) {
-					logger.debug("User profile has been reloaded");
-				}
-
-				// Update current network interface
+				// Change current network interface
 				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
 					if (logger.isActivated()) {
 						logger.debug("Change the network interface to mobile");
@@ -272,11 +270,17 @@ public class ImsConnectionManager implements Runnable {
 					}
 					currentNetworkInterface = getWifiNetworkInterface();
 				}				
+
+				// Load the user profile for the new network interface
+				loadUserProfile();
+				if (logger.isActivated()) {
+					logger.debug("User profile has been reloaded");
+				}
 			} else {
 				// Check if the IP address has changed
 				if ((localIpAddr != null) &&
 						!localIpAddr.equals(currentNetworkInterface.getNetworkAccess().getIpAddress())) {
-					// Disconnect from IMS network interface
+					// Disconnect from current IMS network interface
 					if (logger.isActivated()) {
 						logger.debug("Disconnect from IMS: IP address has changed");
 					}
@@ -285,29 +289,29 @@ public class ImsConnectionManager implements Runnable {
 			}
 			
 			// Check if there is an IP connectivity
-			if (networkInfo.isConnected()) {
+			if (networkInfo.isConnected() && (localIpAddr != null)) {
 				if (logger.isActivated()) {
 					logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName());
 				}
 	
-				// Test roaming
-				if (networkInfo.isRoaming() &&
-					(networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) &&
-						(!RcsSettings.getInstance().isRoamingAuthorized())) {
-					if (logger.isActivated()) {
-						logger.warn("RCS not authorized in roaming");
-					}
-					return;
-				}
-				
-				// Test the connected network
+				// Test network access type
 				if ((network != RcsSettingsData.ANY_ACCESS) && (network != networkInfo.getType())) {
 					if (logger.isActivated()) {
 						logger.warn("Network access " + networkInfo.getTypeName() + " is not authorized");
 					}
 					return;
 				}
-	
+
+				// Test roaming flag if mobile network
+				if ((networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) && networkInfo.isRoaming()) {
+					if (!RcsSettings.getInstance().isRoamingAuthorized()) {
+						if (logger.isActivated()) {
+							logger.warn("RCS not authorized in roaming");
+						}
+						return;
+					}
+				}
+				
 				// Test the operator id
 				TelephonyManager tm = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 				String currentOpe = tm.getSimOperatorName();
@@ -317,7 +321,7 @@ public class ImsConnectionManager implements Runnable {
 					}
 					return;
 				}
-				
+					
 				// Test the default APN configuration if mobile network
 				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
 					ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
@@ -521,7 +525,7 @@ public class ImsConnectionManager implements Runnable {
     				// Pause before the next service check
 	    			Thread.sleep(servicePollingPeriod * 1000);
 	    		}
-            } catch (InterruptedException e) {
+            } catch(InterruptedException e) {
                 break;
             }		    	
 		}

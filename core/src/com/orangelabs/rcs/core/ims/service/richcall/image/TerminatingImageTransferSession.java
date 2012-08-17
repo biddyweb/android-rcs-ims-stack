@@ -415,9 +415,9 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     		logger.info("Data transfer error: " + error);
     	}
 
-		// Close the MSRP session
-		closeMsrpSession();
-			
+        // Close the media session
+        closeMediaSession();
+        
 		// Terminate session
 		terminateSession();
 

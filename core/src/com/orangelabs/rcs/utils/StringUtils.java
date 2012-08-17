@@ -31,6 +31,24 @@ public class StringUtils {
 	 */
 	private final static String CHARSET_UTF8 = "UTF-8"; 
 		
+    /**
+     * Truncate a string to a max length
+     * 
+     * @param text String to truncate
+     * @param truncatedLength Max length
+     * @return Truncated string
+     */
+    public static String truncate(String text, int truncatedLength) {
+        if (text == null) {
+            return null;
+        }        
+        
+        if ((truncatedLength < 0) || (truncatedLength > text.length())) {
+            return text;
+        }        
+        return text.substring(0, truncatedLength);
+    }
+	
 	/**
 	 * Encode string into UTF-8 string
 	 * 

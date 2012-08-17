@@ -95,7 +95,12 @@ public abstract class ImsServiceSession extends Thread {
      */
     private int ringingPeriod = RcsSettings.getInstance().getRingingPeriod();
 
-	/**
+    /**
+     * Session interrupted flag 
+     */
+    private boolean sessionInterrupted = false;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -372,7 +377,7 @@ public abstract class ImsServiceSession extends Thread {
 				waitUserAnswer.wait(ringingPeriod * 1000);
 			}
 		} catch(InterruptedException e) {
-			// Nothing to do
+			sessionInterrupted = true;
 		}
 		
 		return invitationStatus;
@@ -392,7 +397,7 @@ public abstract class ImsServiceSession extends Thread {
 				waitUserAnswer.notifyAll();
 			}
 			
-			if (!isInterrupted()) {
+			if (!isSessionInterrupted()) {
 				// Interrupt thread
 				interrupt();
 			}
@@ -738,5 +743,14 @@ public abstract class ImsServiceSession extends Thread {
 	 */
 	public int getResponseTimeout() {
 		return ringingPeriod + SipManager.TIMEOUT;
+	}
+	
+	/**
+	 * Is session interrupted
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isSessionInterrupted() {
+		return sessionInterrupted;
 	}
 }

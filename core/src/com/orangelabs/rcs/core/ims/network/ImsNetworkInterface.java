@@ -25,9 +25,11 @@ import java.net.UnknownHostException;
 
 import javax2.sip.ListeningPoint;
 
+import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.NAPTRRecord;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.ResolverConfig;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
@@ -265,14 +267,16 @@ public abstract class ImsNetworkInterface {
      * Get DNS NAPTR records
      * 
      * @param domain Domain
+     * @param resolver Resolver
      * @return NAPTR records or null if no record
      */
-    private Record[] getDnsNAPTR(String domain) {
+    private Record[] getDnsNAPTR(String domain, ExtendedResolver resolver) {
 		try {
 			if (logger.isActivated()) {
 				logger.debug("DNS NAPTR lookup for " + domain);
 			}
 			Lookup lookup = new Lookup(domain, Type.NAPTR);
+			lookup.setResolver(resolver);
 			Record[] result = lookup.run();
 			int code = lookup.getResult();
 			if (code != Lookup.SUCCESSFUL) {
@@ -298,14 +302,16 @@ public abstract class ImsNetworkInterface {
      * Get DNS SRV records
      * 
      * @param domain Domain
+     * @param resolver Resolver
      * @return SRV records or null if no record
      */
-    private Record[] getDnsSRV(String domain) {
+    private Record[] getDnsSRV(String domain, ExtendedResolver resolver) {
 		try {
 			if (logger.isActivated()) {
 				logger.debug("DNS SRV lookup for " + domain);
 			}
 			Lookup lookup = new Lookup(domain, Type.SRV);
+			lookup.setResolver(resolver);
 			Record[] result = lookup.run();
 			int code = lookup.getResult();
 			if (code != Lookup.SUCCESSFUL) {
@@ -341,7 +347,7 @@ public abstract class ImsNetworkInterface {
 			return InetAddress.getByName(domain).getHostAddress();
         } catch(UnknownHostException e) {
 			if (logger.isActivated()) {
-				logger.debug("Unknown host for " + imsProxyAddr);
+				logger.debug("Unknown host for " + domain);
 			}
 			return null;
         }
@@ -380,92 +386,6 @@ public abstract class ImsNetworkInterface {
         return result;
 	}
 	
-    /**
-     * Resolve the IMS proxy configuration
-     * 
-     * @throws SipException
-     */
-    private void resolveImsProxyConfiguration() throws SipException {
-        // First try to resolve via a NAPTR query, then a SRV
-		// query and finally via A query
-		if (logger.isActivated()) {
-			logger.debug("Resolve IMS proxy address...");
-		}
-		String ipAddress = null;
-		
-        // DNS NAPTR lookup
-    	String service;
-    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.UDP)) {
-    		service = "SIP+D2U";
-    	} else
-    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TCP)) {
-    		service = "SIP+D2T";
-    	} else
-    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TLS)) {
-    		service = "SIPS+D2T";
-    	} else {
-			throw new SipException("Unkown SIP protocol");
-    	}
-		Record[] naptrRecords = getDnsNAPTR(imsProxyAddr);
-		if ((naptrRecords != null) && (naptrRecords.length > 0)) {
-			if (logger.isActivated()) {
-				logger.debug("NAPTR records found: " + naptrRecords.length);
-			}
-	        for (int i = 0; i < naptrRecords.length; i++) {
-	        	NAPTRRecord naptr = (NAPTRRecord)naptrRecords[i];
-				if (logger.isActivated()) {
-					logger.debug("NAPTR record: " + naptr.toString());
-				}
-				if ((naptr != null) && naptr.getService().equals(service)) {
-			    	// DNS SRV lookup
-				    Record[] srvRecords = getDnsSRV(naptr.getReplacement().toString());
-					if ((srvRecords != null) && (srvRecords.length > 0)) {
-						SRVRecord srvRecord = getBestDnsSRV(srvRecords);
-						ipAddress = getDnsA(srvRecord.getTarget().toString());
-						imsProxyPort = srvRecord.getPort();
-					} else {
-						// Direct DNS A lookup
-						ipAddress = getDnsA(imsProxyAddr);
-					}
-				}
-	        }
-		} else {
-			// Direct DNS SRV lookup
-			if (logger.isActivated()) {
-				logger.debug("No NAPTR record found: use DNS SRV instead");
-			}
-		    String query;
-		    if (imsProxyAddr.startsWith("_sip.")) {
-		    	query = imsProxyAddr;
-		    } else {
-		    	query = "_sip._" + imsProxyProtocol.toLowerCase() + "." + imsProxyAddr;
-		    }
-		    Record[] srvRecords = getDnsSRV(query);
-			if ((srvRecords != null) && (srvRecords.length > 0)) {
-				SRVRecord srvRecord = getBestDnsSRV(srvRecords);
-				ipAddress = getDnsA(srvRecord.getTarget().toString());
-				imsProxyPort = srvRecord.getPort();
-			} else {
-				// Direct DNS A lookup
-				if (logger.isActivated()) {
-					logger.debug("No SRV record found: use DNS A instead");
-				}
-				ipAddress = getDnsA(imsProxyAddr);
-			}
-		}		
-
-        if (ipAddress == null) {
-	        throw new SipException("Proxy IP address not found");        	
-        }
-        
-    	this.imsProxyAddr = ipAddress;
-        
-		if (logger.isActivated()) {
-			logger.debug("SIP outbound proxy configuration: " +
-					imsProxyAddr + ":" + imsProxyPort + ";" + imsProxyProtocol);
-		}
-	}    
-
 	/**
      * Register to the IMS
      *
@@ -477,11 +397,95 @@ public abstract class ImsNetworkInterface {
 		}
 
 		try {
-			// Resolve the IMS proxy configuration
-			resolveImsProxyConfiguration();
+			String resolvedIpAddress = imsProxyAddr;  // Use IMS proxy address by default
+			int resolvedPort = imsProxyPort; // Use default port by default
+
+			// TODO: use DNS only if domain name used
+			boolean useDns = true;
+			if (useDns) {
+				// Set DNS resolver
+				ResolverConfig.refresh();
+				ExtendedResolver resolver = new ExtendedResolver(); 
+
+				// Resolve the IMS proxy configuration: first try to resolve via
+				// a NAPTR query, then a SRV query and finally via A query
+				if (logger.isActivated()) {
+					logger.debug("Resolve IMS proxy address " + imsProxyAddr);
+				}
+				
+		        // DNS NAPTR lookup
+		    	String service;
+		    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.UDP)) {
+		    		service = "SIP+D2U";
+		    	} else
+		    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TCP)) {
+		    		service = "SIP+D2T";
+		    	} else
+		    	if (imsProxyProtocol.equalsIgnoreCase(ListeningPoint.TLS)) {
+		    		service = "SIPS+D2T";
+		    	} else {
+					throw new SipException("Unkown SIP protocol");
+		    	}
+				Record[] naptrRecords = getDnsNAPTR(imsProxyAddr, resolver);
+				if ((naptrRecords != null) && (naptrRecords.length > 0)) {
+					if (logger.isActivated()) {
+						logger.debug("NAPTR records found: " + naptrRecords.length);
+					}
+			        for (int i = 0; i < naptrRecords.length; i++) {
+			        	NAPTRRecord naptr = (NAPTRRecord)naptrRecords[i];
+						if (logger.isActivated()) {
+							logger.debug("NAPTR record: " + naptr.toString());
+						}
+						if ((naptr != null) && naptr.getService().equalsIgnoreCase(service)) {
+					    	// DNS SRV lookup
+						    Record[] srvRecords = getDnsSRV(naptr.getReplacement().toString(), resolver);
+							if ((srvRecords != null) && (srvRecords.length > 0)) {
+								SRVRecord srvRecord = getBestDnsSRV(srvRecords);
+								resolvedIpAddress = getDnsA(srvRecord.getTarget().toString());
+								resolvedPort = srvRecord.getPort();
+							} else {
+								// Direct DNS A lookup
+								resolvedIpAddress = getDnsA(imsProxyAddr);
+							}
+						}
+			        }
+				} else {
+					// Direct DNS SRV lookup
+					if (logger.isActivated()) {
+						logger.debug("No NAPTR record found: use DNS SRV instead");
+					}
+				    String query;
+				    if (imsProxyAddr.startsWith("_sip.")) {
+				    	query = imsProxyAddr;
+				    } else {
+				    	query = "_sip._" + imsProxyProtocol.toLowerCase() + "." + imsProxyAddr;
+				    }
+				    Record[] srvRecords = getDnsSRV(query, resolver);
+					if ((srvRecords != null) && (srvRecords.length > 0)) {
+						SRVRecord srvRecord = getBestDnsSRV(srvRecords);
+						resolvedIpAddress = getDnsA(srvRecord.getTarget().toString());
+						resolvedPort = srvRecord.getPort();
+					} else {
+						// Direct DNS A lookup
+						if (logger.isActivated()) {
+							logger.debug("No SRV record found: use DNS A instead");
+						}
+						resolvedIpAddress = getDnsA(imsProxyAddr);
+					}
+				}		
+			}
+			
+	        if (resolvedIpAddress == null) {
+		        throw new SipException("Proxy IP address not found");        	
+	        }
+	        
+			if (logger.isActivated()) {
+				logger.debug("SIP outbound proxy configuration: " +
+						resolvedIpAddress + ":" + resolvedPort + ";" + imsProxyProtocol);
+			}
 			
 			// Initialize the SIP stack
-            sip.initStack(access.getIpAddress(), imsProxyAddr, imsProxyPort, imsProxyProtocol);
+            sip.initStack(access.getIpAddress(), resolvedIpAddress, resolvedPort, imsProxyProtocol);
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {

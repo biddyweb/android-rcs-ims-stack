@@ -18,10 +18,14 @@
 
 package com.orangelabs.rcs.connector;
 
+import java.util.List;
+
 import android.app.ListActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -30,6 +34,7 @@ import android.widget.ListView;
 import com.orangelabs.rcs.connector.utils.Utils;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.gsma.GsmaClientConnector;
 import com.orangelabs.rcs.service.api.client.gsma.GsmaUiConnector;
 import com.orangelabs.rcs.utils.PhoneUtils;
 
@@ -68,7 +73,10 @@ public class TestUiConnector extends ListActivity {
     		getString(R.string.menu_initiate_group_chat),
     		getString(R.string.menu_view_group_chat),
     		getString(R.string.menu_initiate_ft),
-    		getString(R.string.menu_view_ft)
+    		getString(R.string.menu_view_ft),
+    		getString(R.string.menu_is_joyn),
+    		getString(R.string.menu_is_activated),
+    		getString(R.string.menu_rcs_settings)
         };
     	setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -144,6 +152,52 @@ public class TestUiConnector extends ListActivity {
     				Utils.showMessage(this, getString(R.string.label_ui_not_found));
             	}
         		break;
-    	}
-    }
+
+			case 9:
+				// Is device RCS compliant
+				if (GsmaClientConnector.isDeviceRcsCompliant(this)) {
+					Utils.showMessage(this, getString(R.string.label_rcs_compliant));
+				} else {
+					Utils.showMessage(this, getString(R.string.label_not_rcs_compliant));
+				}
+				break;
+        		
+			case 10:
+				// Is RCS activated
+	    	    List<ApplicationInfo> apps = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
+    			boolean enabled = false;;
+	    	    for(int i=0; i < apps.size(); i++) {
+	    	    	ApplicationInfo info = apps.get(i);
+	    	        if (info.metaData != null) {
+	    	        	if (info.metaData.getBoolean("gsma.joyn.client", false)) {
+    		    			enabled = GsmaClientConnector.isRcsClientActivated(this, info.packageName);
+    						if (enabled) {
+    	    	        		// A client is found and activated
+    							break;
+    						}
+	    	        	}
+	    	        }
+	    	    }
+	    	    if (enabled) {
+	    	    	Utils.showMessage(this, getString(R.string.label_activated));
+	    	    } else {
+	    	    	Utils.showMessage(this, getString(R.string.label_not_activated));
+	    	    }
+				break;
+
+			case 11:
+        		// Load RCS settings
+        		try {
+        			Intent intent = GsmaClientConnector.getRcsSettingsActivityIntent(this);
+        			if (intent != null) {
+        				startActivity(intent);
+        			} else {
+        				Utils.showMessage(this, getString(R.string.label_ui_not_found));
+        			}
+            	} catch(ActivityNotFoundException e) {
+    				Utils.showMessage(this, getString(R.string.label_ui_not_found));
+            	}
+        		break;
+        	}
+    }    
 }

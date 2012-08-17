@@ -134,13 +134,21 @@ public abstract class GroupChatSession extends ChatSession {
 		// Stop the activity manager
 		getActivityManager().stop();		
 
-		// Stop conference subscription
-		conferenceSubscriber.terminate();
-		
 		// Close MSRP session
 		closeMsrpSession();
 	}
 
+	/**
+	 * Terminate session 
+	 */
+	public void terminateSession() {
+		// Stop conference subscription
+		conferenceSubscriber.terminate();
+		
+		// Terminate session
+		super.terminateSession();
+	}	
+	
 	/**
 	 * Send a text message
 	 * 
@@ -310,6 +318,11 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public void addParticipants(List<String> participants) {
 		try {
+			if (participants.size() == 1) {
+				addParticipant(participants.get(0));
+				return;
+			}
+			
         	if (logger.isActivated()) {
         		logger.debug("Add " + participants.size()+ " participants to the session");
         	}

@@ -90,8 +90,8 @@ public abstract class SipMessage {
 	 */
 	public void setStackTransaction(Transaction transaction) {
 		stackTransaction = transaction;
-	}	
-	
+	}
+
 	/**
 	 * Add a SIP header
 	 * 
@@ -101,19 +101,10 @@ public abstract class SipMessage {
 	public void addHeader(String name, String value) {
 		try {
 			Header header = SipUtils.HEADER_FACTORY.createHeader(name, value);
-			stackMessage.addHeader(header);
+			stackMessage.setHeader(header);
 		} catch(ParseException e) {
 			e.printStackTrace();
 		}
-	}	
-
-	/**
-	 * Add a SIP header
-	 * 
-	 * @param header Header
-	 */	
-	public void addHeader(Header header) {
-		stackMessage.addHeader(header);
 	}	
 	
 	/**

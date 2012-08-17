@@ -27,7 +27,7 @@ interface IMessagingApi {
 	IChatSession initiateAdhocGroupChatSession(in List<String> participants, in String firstMsg);
 
 	// Rejoin a chat group session
-	IChatSession rejoinChatGroupSession(in String chatId);
+	IChatSession rejoinChatGroupSession(in String sessionId);
 
 	// Get a chat session from its session ID
 	IChatSession getChatSession(in String id);

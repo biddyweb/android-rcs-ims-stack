@@ -33,7 +33,7 @@ public class AndroidRegistryFactory extends RegistryFactory {
 	/**
 	 * RCS registry name
 	 */
-	public static final String RCS_PREFS = "RCS";
+	public static final String RCS_PREFS_NAME = "RCS";
 
 	/**
 	 * Shared preference
@@ -52,7 +52,7 @@ public class AndroidRegistryFactory extends RegistryFactory {
 			throw new CoreException("Application context not initialized");
 		}
 		
-		preferences = AndroidFactory.getApplicationContext().getSharedPreferences(RCS_PREFS, Activity.MODE_PRIVATE);
+		preferences = AndroidFactory.getApplicationContext().getSharedPreferences(RCS_PREFS_NAME, Activity.MODE_PRIVATE);
 	}
 
 	/**

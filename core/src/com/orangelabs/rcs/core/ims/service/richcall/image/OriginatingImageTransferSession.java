@@ -450,8 +450,8 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
     	// Image has been transfered
     	imageTransfered();
     	
-    	// Close the MSRP session
-    	closeMsrpSession();
+        // Close the media session
+        closeMediaSession();
 		
 		// Terminate session
 		terminateSession();
@@ -512,8 +512,8 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
     		logger.info("Data transfer error: " + error);
     	}
 
-		// Close MSRP session
-		closeMsrpSession();
+        // Close the media session
+        closeMediaSession();
 
 		// Terminate session
 		terminateSession();

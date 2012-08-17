@@ -175,11 +175,6 @@ public class RcsSettingsData {
      */
 	public static final String CHAT_INVITATION_VIBRATE = "ChatInvitationVibrate";
 
-    /**
-     * Auto-accept mode for chat invitation
-     */
-	public static final String CHAT_INVITATION_AUTO_ACCEPT = "ChatInvitationAutoAccept";
-
 	/**
      * Predefined freetext
      */
@@ -264,6 +259,16 @@ public class RcsSettingsData {
 	 */
 	public static final String SMS_FALLBACK_SERVICE = "SmsFallbackService";
 
+	/**
+	 * Auto accept file transfer invitation
+	 */
+	public static final String AUTO_ACCEPT_FILE_TRANSFER = "AutoAcceptFileTransfer";
+	
+    /**
+     * Auto accept chat invitation
+     */
+	public static final String AUTO_ACCEPT_CHAT = "AutoAcceptChat";	
+	
 	/**
 	 * Display a warning if Store & Forward service is activated
 	 */

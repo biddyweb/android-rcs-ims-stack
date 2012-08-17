@@ -343,7 +343,7 @@ public class StartService extends Service {
                     logger.debug("Recreate a new RCS account");
                 }
                 AuthenticationService.createRcsAccount(getApplicationContext(),
-                        getString(R.string.rcs_core_account_username), true, true);
+                        getString(R.string.rcs_core_account_username), true);
             }
         } else {
             // Account exists: checks if it has changed
@@ -360,7 +360,7 @@ public class StartService extends Service {
                     logger.debug("Creating a new RCS account for " + currentUserAccount);
                 }
                 AuthenticationService.createRcsAccount(getApplicationContext(),
-                        getString(R.string.rcs_core_account_username), true, true);
+                        getString(R.string.rcs_core_account_username), true);
             }
         }
 
@@ -453,7 +453,7 @@ public class StartService extends Service {
      * @param value true if new user account
      */
     private void setNewUserAccount(boolean value) {
-        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(AndroidRegistryFactory.RCS_PREFS_NAME, Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(REGISTRY_NEW_USER_ACCOUNT, value);
         editor.commit();
@@ -466,7 +466,7 @@ public class StartService extends Service {
      * @return true if new user account
      */
     public static boolean getNewUserAccount(Context context) {
-        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS_NAME, Activity.MODE_PRIVATE);
         return preferences.getBoolean(REGISTRY_NEW_USER_ACCOUNT, false);
     }
 }

@@ -64,7 +64,7 @@ public class MobileNetworkAccess extends NetworkAccess {
      */
     public void connect(String ipAddress) {
     	if (logger.isActivated()) {
-    		logger.info("Connecting to " + ipAddress);
+    		logger.info("Network access connected (" + ipAddress + ")");
     	}
 		this.ipAddress = ipAddress;
     }
@@ -74,7 +74,7 @@ public class MobileNetworkAccess extends NetworkAccess {
      */
     public void disconnect() {
     	if (logger.isActivated()) {
-    		logger.info("Disconnecting from " + ipAddress);
+    		logger.info("Network access disconnected");
     	}
     	ipAddress = null;
     }

@@ -40,6 +40,7 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
@@ -187,6 +188,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
     	intent.putExtra("filetype", session.getContent().getEncoding());
+    	intent.putExtra("autoAccept", RcsSettings.getInstance().isFileTransferAutoAccepted());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 	

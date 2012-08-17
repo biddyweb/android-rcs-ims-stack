@@ -93,12 +93,16 @@ public class RcsSettings {
      * @return Value
      */
 	public String readParameter(String key) {
+		if (key == null) {
+			return null;
+		}
+
 		String result = null;
         Cursor c = cr.query(databaseUri, null, RcsSettingsData.KEY_KEY + "='" + key + "'", null, null);
-        if ((c != null) && (c.getCount() > 0)) {
-	        if (c.moveToFirst()) {
+        if (c != null) {
+        	if ((c.getCount() > 0) && c.moveToFirst()) {
 	        	result = c.getString(2);
-	        }
+        	}
 	        c.close();
         }
         return result;
@@ -111,6 +115,10 @@ public class RcsSettings {
      * @param value Value
      */
 	public void writeParameter(String key, String value) {
+		if ((key == null) || (value == null)) {
+			return;
+		}
+		
         ContentValues values = new ContentValues();
         values.put(RcsSettingsData.KEY_VALUE, value);
         String where = RcsSettingsData.KEY_KEY + "='" + key + "'";
@@ -124,7 +132,11 @@ public class RcsSettings {
      * @param value Value
      */
 	public void insertParameter(String key, String value) {
-        ContentValues values = new ContentValues();
+		if ((key == null) || (value == null)) {
+			return;
+		}
+
+		ContentValues values = new ContentValues();
         values.put(RcsSettingsData.KEY_KEY, key);
         values.put(RcsSettingsData.KEY_VALUE, value);
         cr.insert(databaseUri, values);
@@ -439,30 +451,6 @@ public class RcsSettings {
 	public void setPhoneVibrateForChatInvitation(boolean vibrate) {
 		if (instance != null) {
 			writeParameter(RcsSettingsData.CHAT_INVITATION_VIBRATE, Boolean.toString(vibrate));
-		}
-	}
-
-	/**
-     * Is auto accept mode for chat invitations activated
-     *
-     * @return Boolean
-     */
-	public boolean isAutoAcceptModeForChatInvitation(){
-		boolean result = false;
-		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT));
-		}
-		return result;
-	}
-
-	/**
-     * Set auto accept mode for chat invitations
-     *
-     * @param auto Auto accept mode
-     */
-	public void setAutoAcceptModeForChatInvitation(boolean auto) {
-		if (instance != null) {
-			writeParameter(RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT, Boolean.toString(auto));
 		}
 	}
 
@@ -1154,6 +1142,32 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.SMS_FALLBACK_SERVICE));
+		}
+		return result;
+	}
+	
+	/**
+     * Is chat invitation auto accepted
+     *
+     * @return Boolean
+     */
+	public boolean isChatAutoAccepted(){
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.AUTO_ACCEPT_CHAT));
+		}
+		return result;
+	}
+
+	/**
+     * Is file transfer invitation auto accepted
+     *
+     * @return Boolean
+     */
+	public boolean isFileTransferAutoAccepted() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER));
 		}
 		return result;
 	}
@@ -2050,6 +2064,22 @@ public class RcsSettings {
     	
         return true;
     }
+    
+	/**
+     * Is group chat activated
+     *
+     * @return Boolean
+     */
+	public boolean isGroupChatActivated() {
+		boolean result = false;
+		if (instance != null) {
+			String value = getImConferenceUri();
+			if ((value != null) && (value.length() > 0) && !value.equals("sip:foo@bar")) {
+				result = true;
+			}
+		}
+		return result;
+	}    
     
     /**
      * Backup account settings

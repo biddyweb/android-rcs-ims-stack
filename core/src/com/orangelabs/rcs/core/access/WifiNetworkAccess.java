@@ -50,7 +50,7 @@ public class WifiNetworkAccess extends NetworkAccess {
 	public WifiNetworkAccess() throws CoreException {
 		super();
 
-		// Get wi-Fi info
+		// Get Wi-Fi info
 		wifiManager = (WifiManager)AndroidFactory.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
 		if (logger.isActivated()) {
@@ -65,7 +65,7 @@ public class WifiNetworkAccess extends NetworkAccess {
      */
     public void connect(String ipAddress) {
     	if (logger.isActivated()) {
-    		logger.info("Connecting to " + ipAddress);
+    		logger.info("Network access connected (" + ipAddress + ")");
     	}
 		this.ipAddress = ipAddress;
     }
@@ -75,7 +75,7 @@ public class WifiNetworkAccess extends NetworkAccess {
      */
     public void disconnect() {
     	if (logger.isActivated()) {
-    		logger.info("Disconnecting from " + ipAddress);
+    		logger.info("Network access disconnected");
     	}
     	ipAddress = null;
     }

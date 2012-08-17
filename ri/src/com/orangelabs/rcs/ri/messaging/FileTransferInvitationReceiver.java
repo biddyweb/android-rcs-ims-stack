@@ -30,7 +30,16 @@ import android.content.Intent;
 public class FileTransferInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-        // Display invitation notification
-		ReceiveFileTransfer.addFileTransferInvitationNotification(context, intent);
+		boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
+		if (autoAccept) {
+			// Display progress
+			Intent progress = new Intent(intent);
+			progress.setClass(context, ReceiveFileTransfer.class);
+			progress.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			context.startActivity(progress);
+		} else {
+			// Display invitation notification
+			ReceiveFileTransfer.addFileTransferInvitationNotification(context, intent);
+		}
     }
 }

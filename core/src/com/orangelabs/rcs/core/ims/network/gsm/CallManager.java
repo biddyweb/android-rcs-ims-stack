@@ -175,6 +175,7 @@ public class CallManager {
 
 				case TelephonyManager.CALL_STATE_OFFHOOK:
 					if (callState == CallManager.CONNECTED) {
+					    // Request capabilities only if not a multiparty call or call hold
 						if (logger.isActivated()) {
 							logger.debug("Multiparty call established");
 						}
@@ -187,10 +188,17 @@ public class CallManager {
 
 					// Both parties are connected
 					callState = CallManager.CONNECTED;
-					
-				    // Request capabilities only if not a multiparty call or call hold
-			    	requestCapabilities(remoteParty);
-					
+
+                    // Sleep 2s before sending the option request
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        // Nothing to do
+                    }
+
+                    // Request capabilities
+                    requestCapabilities(remoteParty);
+
 					break;
 
 				default:
@@ -291,7 +299,10 @@ public class CallManager {
      */
 	private void requestCapabilities(String contact) {
 		 if ((contact != null) && (contact.length() > 0) && imsModule.getCapabilityService().isServiceStarted()) {
- 			 imsModule.getCapabilityService().requestContactCapabilities(contact);
+			if (logger.isActivated()) {
+				logger.debug("Request capabilities to " + contact);
+			}
+			imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
     }
 	
@@ -334,5 +345,32 @@ public class CallManager {
 		this.callHold = state;
 		
 		callLegHasChanged();	
-	}	
+	}
+	
+	/**
+	 * Connection event
+	 * 
+	 * @param connected Connection state
+	 */
+	public void connectionEvent(boolean connected) {
+		if (remoteParty == null) {
+			return;
+		}
+		
+		if (connected) {
+			if (logger.isActivated()) {
+				logger.info("Connectivity changed: update content sharing capabilities");
+			}
+
+			// Update content sharing capabilities
+			requestCapabilities(remoteParty);
+		} else {
+			if (logger.isActivated()) {
+				logger.info("Connectivity changed: disable content sharing capabilities");
+			}
+
+			// Disable content sharing capabilities
+			imsModule.getCapabilityService().resetContactCapabilitiesForContentSharing(remoteParty);
+		}
+	}
 }

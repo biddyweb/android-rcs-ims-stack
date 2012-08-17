@@ -70,6 +70,7 @@ import com.orangelabs.rcs.provisioning.ProvisioningParser;
 import com.orangelabs.rcs.provisioning.TermsAndConditionsRequest;
 import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.utils.HttpUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -86,7 +87,7 @@ public class HttpsProvisioningService extends Service {
     /**
 	 * Unknown value
 	 */
-	private static final String UNKNOWN = "unknown";
+	private static final String UNKNOWN = "xxxx";
 
     /**
      * Retry base timeout - 5min 
@@ -540,10 +541,11 @@ public class HttpsProvisioningService extends Service {
 
 			// Execute second HTTPS request
 			String args = "?vers=" + RcsSettings.getInstance().getProvisioningVersion()
-                    + "&client_vendor=Orange&client_version=" + getStackVersion()
-                    + "&terminal_vendor=" + HttpUtils.encodeURL(getProductManufacturer())
-                    + "&terminal_model=" + HttpUtils.encodeURL(getDeviceName())
-                    + "&terminal_sw_version=" + HttpUtils.encodeURL(getProductVersion())
+                    + "&client_vendor=" + getClientVendor()
+                    + "&client_version=" + getClientVersion()
+                    + "&terminal_vendor=" + HttpUtils.encodeURL(getTerminalVendor())
+                    + "&terminal_model=" + HttpUtils.encodeURL(getTerminalModel())
+                    + "&terminal_sw_version=" + HttpUtils.encodeURL(getTerminalSoftwareVersion())
                     + "&IMSI=" + imsi
                     + "&IMEI=" + imei;
             response = executeRequest("https",requestUri + args, client, localContext);
@@ -610,39 +612,83 @@ public class HttpsProvisioningService extends Service {
         }
         return 0;
     }
+    
+    /**
+     * Returns the client vendor
+     * 
+     * @return String(4)
+     */
+	private String getClientVendor() {
+		String result = UNKNOWN;
+		String version = getString(R.string.rcs_client_vendor);
+		if (version != null && version.length() > 0) {
+			result = version;
+		}
+		return StringUtils.truncate(result, 4);
+	}    
 
-
-	private String getStackVersion() {
-		return getString(R.string.rcs_core_release_number);
+	/**
+     * Returns the client version
+     * 
+     * @return String(15)
+     */
+	private String getClientVersion() {
+		String result = UNKNOWN;
+		String version = getString(R.string.rcs_client_release);
+		if (version != null && version.length() > 0) {
+			result = version;
+		}
+		return StringUtils.truncate(result, 15);
 	}
 
-	private String getDeviceName() {
-		final String devicename = getSystemProperties("ro.product.device");
+	/**
+     * Returns the terminal vendor
+     * 
+     * @return String(4)
+     */
+	private String getTerminalVendor() {
+		String result = UNKNOWN;
+		String productmanufacturer = getSystemProperties("ro.product.manufacturer");
+		if (productmanufacturer != null && productmanufacturer.length() > 0) {
+			result = productmanufacturer;
+		}
+		return StringUtils.truncate(result, 4);
+	}    
 
-		if (devicename != null)
-			return devicename;
-		else
-			return UNKNOWN;
+    /**
+     * Returns the terminal model
+     * 
+     * @return String(10)
+     */
+	private String getTerminalModel() {
+		String result = UNKNOWN;
+		String devicename = getSystemProperties("ro.product.device");
+		if (devicename != null && devicename.length() > 0) {
+			result = devicename;
+		}
+		return StringUtils.truncate(result, 10);
 	}
 
-	private String getProductVersion() {
-		final String productversion = getSystemProperties("ro.product.version");
-
-		if (productversion != null && productversion.length() > 0)
-			return productversion;
-		else
-			return UNKNOWN;
+    /**
+     * Returns the terminal software version
+     * 
+     * @return String(10)
+     */
+	private String getTerminalSoftwareVersion() {
+		String result = UNKNOWN;
+		String productversion = getSystemProperties("ro.product.version");
+		if (productversion != null && productversion.length() > 0) {
+			result = productversion;
+		}
+		return StringUtils.truncate(result, 10);
 	}
 
-	private String getProductManufacturer() {
-		final String productmanufacturer = getSystemProperties("ro.product.manufacturer");
-
-		if (productmanufacturer != null)
-			return productmanufacturer;
-		else
-			return UNKNOWN;
-	}
-
+	/**
+	 * Returns a system parameter
+	 * 
+	 * @param key Key parameter
+	 * @return Parameter value
+	 */
 	private String getSystemProperties(String key) {
 		String value = null;
 		try {

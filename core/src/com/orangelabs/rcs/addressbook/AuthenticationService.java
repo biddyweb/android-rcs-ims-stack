@@ -86,7 +86,7 @@ public class AuthenticationService extends Service {
      * @param enableSync true to enable synchronization
      * @param showUngroupedContacts true to show ungrouped contacts
      */
-    public static void createRcsAccount(Context context, String username, boolean enableSync, boolean showUngroupedContacts) {
+    public static void createRcsAccount(Context context, String username, boolean enableSync) {
 		// Instanciate contacts manager
 		ContactsManager.createInstance(context);
     	
@@ -110,14 +110,10 @@ public class AuthenticationService extends Service {
         }
         ContentResolver.setSyncAutomatically(mAccount, ContactsContract.AUTHORITY, enableSync);
 
-        /*
-         * Set the "Ungrouped contacts" flag. Set the visible parameter to true
-         * to display contacts in the Contacts app (even if primary contacts do not exist).
-         */
         ContentValues contentValues = new ContentValues();
         contentValues.put(Groups.ACCOUNT_NAME, username);
         contentValues.put(Groups.ACCOUNT_TYPE, AuthenticationService.ACCOUNT_MANAGER_TYPE);
-        contentValues.put(Settings.UNGROUPED_VISIBLE, showUngroupedContacts ? 1 : 0);
+        contentValues.put(Groups.GROUP_VISIBLE, false);
 
         context.getContentResolver().insert(Settings.CONTENT_URI, contentValues);
 
