@@ -80,6 +80,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     private long fileSize;
     
     /**
+     * Auto accept
+     */
+    private boolean autoAccept = false;
+    
+    /**
      * File transfer session
      */
     private IFileTransferSession transferSession = null;
@@ -96,6 +101,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		fileSize = getIntent().getLongExtra("filesize", -1);
+		autoAccept = getIntent().getBooleanExtra("autoAccept", false);
 
 		// Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
@@ -116,6 +122,44 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		messagingApi.removeApiEventListener(this);
 		messagingApi.disconnectApi();
 	}
+	
+	/**
+	 * Accept invitation
+	 */
+	private void acceptInvitation() {
+    	Thread thread = new Thread() {
+        	public void run() {
+            	try {
+            		// Accept the invitation
+        			transferSession.acceptSession();
+            	} catch(Exception e) {
+        			handler.post(new Runnable() { 
+        				public void run() {
+        					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
+						}
+	    			});
+            	}
+        	}
+        };
+        thread.start();
+	}
+	
+	/**
+	 * Reject invitation
+	 */
+	private void rejectInvitation() {
+        Thread thread = new Thread() {
+        	public void run() {
+            	try {
+            		// Reject the invitation
+            		transferSession.removeSessionListener(fileTransferSessionListener);
+        			transferSession.rejectSession();
+            	} catch(Exception e) {
+            	}
+        	}
+        };
+        thread.start();
+	}	
 	
 	/**
      * API disabled
@@ -142,22 +186,33 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			}
 			transferSession.addSessionListener(fileTransferSessionListener);
 			
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.title_recv_file_transfer);
-			
 			String size;
 	    	if (fileSize != -1) {
 	    		size = getString(R.string.label_file_size, " "+ (fileSize/1024), " Kb");
 	    	} else {
 	    		size = getString(R.string.label_file_size_unknown);
 	    	}
-			
-			builder.setMessage(getString(R.string.label_from) +	remoteContact +	"\n" + size);
-			builder.setCancelable(false);
-			builder.setIcon(R.drawable.ri_notif_file_transfer_icon);
-			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
-			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
-			builder.show();			
+
+	    	// Display transfer infos
+            setTitle(R.string.title_recv_file_transfer);
+    		TextView from = (TextView)findViewById(R.id.from);
+	        from.setText(getString(R.string.label_from) + " " + remoteContact);
+	    	TextView sizeTxt = (TextView)findViewById(R.id.image_size);
+	    	sizeTxt.setText(size);
+
+	    	if (autoAccept) {
+	    		// Auto accept
+	    	} else {
+				// Manual accept
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setTitle(R.string.title_recv_file_transfer);
+				builder.setMessage(getString(R.string.label_from) +	remoteContact +	"\n" + size);
+				builder.setCancelable(false);
+				builder.setIcon(R.drawable.ri_notif_file_transfer_icon);
+				builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
+				builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
+				builder.show();
+			}
 		} catch(Exception e) {
 			handler.post(new Runnable(){
 				public void run(){
@@ -201,35 +256,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * Accept button listener
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {           
-            // Set title
-            setTitle(R.string.title_recv_file_transfer);
-            
-    		TextView from = (TextView)findViewById(R.id.from);
-	        from.setText(getString(R.string.label_from) + " " + remoteContact);
-	        
-	    	TextView size = (TextView)findViewById(R.id.image_size);
-	    	if (fileSize != -1) {
-	    		size.setText(getString(R.string.label_file_size, " "+ (fileSize/1024), " Kb"));
-	    	} else {
-	    		size.setText(getString(R.string.label_file_size_unknown));
-	    	}
- 
-	    	Thread thread = new Thread() {
-            	public void run() {
-                	try {
-                		// Accept the invitation
-            			transferSession.acceptSession();
-	            	} catch(Exception e) {
-	        			handler.post(new Runnable() { 
-	        				public void run() {
-	        					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
-							}
-		    			});
-	            	}
-            	}
-            };
-            thread.start();
+        public void onClick(DialogInterface dialog, int which) {
+	    	// Accept invitation
+        	acceptInvitation();
         }
     };
 
@@ -238,18 +267,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */    
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            Thread thread = new Thread() {
-            	public void run() {
-                	try {
-                		// Reject the invitation
-                		transferSession.removeSessionListener(fileTransferSessionListener);
-            			transferSession.rejectSession();
-	            	} catch(Exception e) {
-	            	}
-            	}
-            };
-            thread.start();
-
+        	// Reject invitation
+        	rejectInvitation();
+        	
             // Exit activity
 			finish();
         }

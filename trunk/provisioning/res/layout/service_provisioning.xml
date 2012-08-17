@@ -176,6 +176,19 @@
 		android:layout_marginRight="5dip"
         android:text="Store and Forward service warning"/>
         
+        <CheckBox android:id="@+id/AutoAcceptFileTransfer"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="Auto-accept file transfer invitation"/>
+
+        <CheckBox android:id="@+id/AutoAcceptChat"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="Auto-accept chat invitation"/>
 </LinearLayout>
 	
 </ScrollView>

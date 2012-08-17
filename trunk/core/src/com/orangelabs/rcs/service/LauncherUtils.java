@@ -156,7 +156,7 @@ public class LauncherUtils {
      * @return last user account
      */
     public static String getLastUserAccount(Context context) {
-        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS_NAME, Activity.MODE_PRIVATE);
         return preferences.getString(REGISTRY_LAST_USER_ACCOUNT, null);
     }
 
@@ -167,7 +167,7 @@ public class LauncherUtils {
      * @param value last user account
      */
     public static void setLastUserAccount(Context context, String value) {
-        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS, Activity.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(AndroidRegistryFactory.RCS_PREFS_NAME, Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(REGISTRY_LAST_USER_ACCOUNT, value);
         editor.commit();

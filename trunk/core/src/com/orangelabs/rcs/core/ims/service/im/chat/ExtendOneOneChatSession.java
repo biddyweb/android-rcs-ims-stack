@@ -103,7 +103,7 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	    		"v=0" + SipUtils.CRLF +
 	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "s=-" + SipUtils.CRLF +
-				"c=IN " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
+				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +

@@ -1436,7 +1436,6 @@ public final class ContactsManager {
 	 * Check if number provided is a valid number for RCS
 	 * <br>It is not valid if :
 	 * <li>well formatted (not digits only or '+')
-	 * <li>not an emergency number
 	 * <li>minimum length
 	 * 
 	 * @param phoneNumber

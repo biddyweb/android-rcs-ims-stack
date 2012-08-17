@@ -38,8 +38,6 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.net.Uri.Builder;
 import android.provider.BaseColumns;
-import android.provider.CallLog;
-import android.provider.CallLog.Calls;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,9 +47,9 @@ import java.util.Set;
 
 /**
  * Virtual provider that enables EventLogs queries to be done in Core with access to SQLiteDatabase object.
- * 
- * Events are from : SMS, MMS, Calls, File Transfer, Chat, Content Sharing tables
- * 
+ *
+ * Events are from : SMS, MMS, File Transfer, Chat, Content Sharing tables
+ *
  * @author mhsm6403
  */
 public class EventLogProvider extends ContentProvider {
@@ -67,39 +65,22 @@ public class EventLogProvider extends ContentProvider {
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_SPAM_BOX), EventsLogApi.MODE_SPAM_BOX);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_ONE_TO_ONE_CHAT), EventsLogApi.MODE_ONE_TO_ONE_CHAT);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_GROUP_CHAT), EventsLogApi.MODE_GROUP_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT_CALL_SMS), EventsLogApi.MODE_RC_CHAT_FT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT_CALL), EventsLogApi.MODE_RC_CHAT_FT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT_SMS), EventsLogApi.MODE_RC_CHAT_FT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT), EventsLogApi.MODE_RC_CHAT_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_CALL_SMS), EventsLogApi.MODE_RC_CHAT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_CALL), EventsLogApi.MODE_RC_CHAT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_SMS), EventsLogApi.MODE_RC_CHAT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT), EventsLogApi.MODE_RC_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_FT_CALL_SMS), EventsLogApi.MODE_RC_FT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_FT_CALL), EventsLogApi.MODE_RC_FT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_FT_SMS), EventsLogApi.MODE_RC_FT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_FT), EventsLogApi.MODE_RC_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CALL_SMS), EventsLogApi.MODE_RC_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CALL), EventsLogApi.MODE_RC_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_SMS), EventsLogApi.MODE_RC_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC), EventsLogApi.MODE_RC);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_FT_CALL_SMS), EventsLogApi.MODE_CHAT_FT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_FT_CALL), EventsLogApi.MODE_CHAT_FT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_FT_SMS), EventsLogApi.MODE_CHAT_FT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_FT), EventsLogApi.MODE_CHAT_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_CALL_SMS), EventsLogApi.MODE_CHAT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_CALL), EventsLogApi.MODE_CHAT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT_SMS), EventsLogApi.MODE_CHAT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CHAT), EventsLogApi.MODE_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_FT_CALL_SMS), EventsLogApi.MODE_FT_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_FT_CALL), EventsLogApi.MODE_FT_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_FT_SMS), EventsLogApi.MODE_FT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_FT), EventsLogApi.MODE_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CALL_SMS), EventsLogApi.MODE_CALL_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_CALL), EventsLogApi.MODE_CALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_SMS), EventsLogApi.MODE_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_NONE), EventsLogApi.MODE_NONE);		
-		
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_NONE), EventsLogApi.MODE_NONE);
 	}
 	
 	@Override 
@@ -129,17 +110,16 @@ public class EventLogProvider extends ContentProvider {
 	
 	/**
 	 * Build a Date sorted Cursor which contains event logs of the mobile for a specific contact.
-	 *  
+	 *
 	 * This method is only called with uris from uriMatcher.
 	 * Each one defines a state of the eventlog filter and therefore aggregates events of selected types. 
-	 * 
+	 *
 	 * selection parameter is specially build : " IN ('phonenumber1','phonenumber2'...)" Must not be null
 	 * sortOrder must be (EventLogData.KEY_EVENT_SESSION_ID+ " DESC , "+EventLogData.KEY_EVENT_DATE + " DESC ")
 	 */
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
-			String[] selectionArgs, String sortOrder) {
-		
+		String[] selectionArgs, String sortOrder) {
 		SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 		SQLiteDatabase db = openHelper.getWritableDatabase();
 
@@ -194,9 +174,6 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
         	break;
         case EventsLogApi.MODE_NONE:
-        case EventsLogApi.MODE_RC_CHAT_FT_CALL_SMS:		
-			/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
 			/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
 			/* Query for Rich Messaging */
@@ -207,17 +184,6 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			/* Build a SortCursor with all cursors sorted by Date */
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_RC_CHAT_FT_CALL:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-    		/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, false);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
     	case EventsLogApi.MODE_RC_CHAT_FT_SMS:
     		/* Query the sms/mms table */
@@ -238,30 +204,6 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_RC_CHAT_CALL_SMS:
-    		/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-    		/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_RC_CHAT_CALL:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-    		/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
     	case EventsLogApi.MODE_RC_CHAT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
@@ -280,30 +222,6 @@ public class EventLogProvider extends ContentProvider {
 			richCallSelectQuery = buildRichCallQuery(selection);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
-			break;
-    	case EventsLogApi.MODE_RC_FT_CALL_SMS:
-    		/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-    		/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_RC_FT_CALL:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-    		/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
     	case EventsLogApi.MODE_RC_FT_SMS:
     		/* Query the sms/mms table */
@@ -324,26 +242,6 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_RC_CALL_SMS:
-    		/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-		case EventsLogApi.MODE_RC_CALL:
-			/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query for RichCALL */
-			richCallSelectQuery = buildRichCallQuery(selection);
-			unionQuery = builder.buildUnionQuery(new String[] { richCallSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
 		case EventsLogApi.MODE_RC_SMS:
 			/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
@@ -358,26 +256,6 @@ public class EventLogProvider extends ContentProvider {
 			richCallSelectQuery = buildRichCallQuery(selection);
 			unionQuery = builder.buildUnionQuery(new String[] { richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
-			break;
-    	case EventsLogApi.MODE_CHAT_FT_CALL_SMS:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, false);
-	        unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_CHAT_FT_CALL:
-    		/* Query the sms/mms table */
-    		callCursor = queryMmsSmsTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, false);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
 		case EventsLogApi.MODE_CHAT_FT_SMS: 	
 			/* Query the sms/mms table */
@@ -394,26 +272,6 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_CHAT_CALL_SMS:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
-	        unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_CHAT_CALL:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
     	case EventsLogApi.MODE_CHAT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
@@ -428,26 +286,6 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
     		break;
-    	case EventsLogApi.MODE_FT_CALL_SMS:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
-	        unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_FT_CALL:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query for Rich Messaging */
-			richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
-			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
-			unionCursor = db.rawQuery(unionQuery, null);
-			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
     	case EventsLogApi.MODE_FT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
@@ -462,17 +300,6 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
     		break;
-    	case EventsLogApi.MODE_CALL_SMS:
-    		/* Query the call table */
-			callCursor = queryCallTable(selection, sortOrder);
-			/* Query the sms/mms table */
-			smsCursor = queryMmsSmsTable(selection, sortOrder);
-			sortCursor = new SortCursor(new Cursor[]{smsCursor,callCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
-			break;
-    	case EventsLogApi.MODE_CALL:
-			/* Query the call table */
-			sortCursor = queryCallTable(selection, sortOrder);
-			break;
 		case EventsLogApi.MODE_SMS:
 			/* Query the sms/mms table */
 			sortCursor = queryMmsSmsTable(selection, sortOrder);
@@ -500,24 +327,6 @@ public class EventLogProvider extends ContentProvider {
 		return 0;
 	}
 
-	
-	/* Android native tables projections */
-	private static String[] callProjection = new String[]{
-		Calls._ID+" AS "+EventLogData.KEY_EVENT_ROW_ID,
-		"("+EventsLogApi.TYPE_INCOMING_GSM_CALL+"-1+"+Calls.TYPE + ")"+ " AS "+EventLogData.KEY_EVENT_TYPE,
-		Calls._ID+" AS "+EventLogData.KEY_EVENT_SESSION_ID,
-		Calls.DATE+" AS "+EventLogData.KEY_EVENT_DATE,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_CONTACT,
-		Calls.NEW+ " AS "+EventLogData.KEY_EVENT_STATUS,
-		Calls.DURATION+" AS "+EventLogData.KEY_EVENT_DATA,
-		Calls._ID+" AS "+EventLogData.KEY_EVENT_MESSAGE_ID,
-		"\'"+EventLogData.GSM_MIMETYPE+ "\' AS "+EventLogData.KEY_EVENT_MIMETYPE,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_NAME,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_SIZE,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-		Calls.NUMBER+" AS "+EventLogData.KEY_EVENT_IS_SPAM
-	};
-	
 	private static String KEY_SMS_ADDRESS = "address";
 	private static String KEY_SMS_DATE = "date";
 	private static String KEY_SMS_BODY = "body";
@@ -611,19 +420,7 @@ public class EventLogProvider extends ContentProvider {
 			RichCallData.KEY_SIZE,
 			RichCallData.KEY_SIZE
 	}));
-	
-	
-	/**
-	 *  Query the Android CallLog table to get all CallLog for the specified Numbers in selection
-	 * @param selection
-	 * @param sortOrder
-	 * @return
-	 */
-	private Cursor queryCallTable(String selection, String sortOrder) {
-		return getContext().getContentResolver().query(CallLog.Calls.CONTENT_URI, 
-				callProjection, (selection!=null?Calls.NUMBER+selection:null) , null, sortOrder);
-	}
-	
+
 	/**
 	 *  Query the Android MmsSms table to get all message for the specified Numbers in selection
 	 * @param selection
@@ -882,17 +679,10 @@ public class EventLogProvider extends ContentProvider {
 
         switch(match) {      
         case EventsLogApi.MODE_NONE:
-        case EventsLogApi.MODE_RC_CHAT_FT_CALL_SMS:
         	deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteRichMessaging(selection);
-        	deletedRows+=deleteCalls(selection);
         	deletedRows+=deleteSMSMMS(selection);
         	break;
-    	case EventsLogApi.MODE_RC_CHAT_FT_CALL:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteRichMessaging(selection);
-        	deletedRows+=deleteCalls(selection);
-    		break;
     	case EventsLogApi.MODE_RC_CHAT_FT_SMS:
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteRichMessaging(selection);
@@ -902,17 +692,6 @@ public class EventLogProvider extends ContentProvider {
 			deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteRichMessaging(selection);
 			break;
-    	case EventsLogApi.MODE_RC_CHAT_CALL_SMS:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteChat(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_RC_CHAT_CALL:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteChat(selection);
-        	deletedRows+=deleteCalls(selection);
-    		break;
     	case EventsLogApi.MODE_RC_CHAT_SMS:
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteChat(selection);
@@ -921,17 +700,6 @@ public class EventLogProvider extends ContentProvider {
     	case EventsLogApi.MODE_RC_CHAT:
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteChat(selection);
-    		break;
-    	case EventsLogApi.MODE_RC_FT_CALL_SMS:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteFT(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_RC_FT_CALL:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteFT(selection);
-        	deletedRows+=deleteCalls(selection);
     		break;
     	case EventsLogApi.MODE_RC_FT_SMS:
     		deletedRows+=deleteRichCalls(selection);
@@ -942,15 +710,6 @@ public class EventLogProvider extends ContentProvider {
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteFT(selection);
     		break;
-    	case EventsLogApi.MODE_RC_CALL_SMS:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-		case EventsLogApi.MODE_RC_CALL:
-    		deletedRows+=deleteRichCalls(selection);
-        	deletedRows+=deleteCalls(selection);
-			break;
 		case EventsLogApi.MODE_RC_SMS:
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteSMSMMS(selection);
@@ -958,15 +717,6 @@ public class EventLogProvider extends ContentProvider {
 		case EventsLogApi.MODE_RC:
     		deletedRows+=deleteRichCalls(selection);
 			break;
-    	case EventsLogApi.MODE_CHAT_FT_CALL_SMS:
-        	deletedRows+=deleteRichMessaging(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_CHAT_FT_CALL:
-        	deletedRows+=deleteRichMessaging(selection);
-        	deletedRows+=deleteCalls(selection);
-    		break;
 		case EventsLogApi.MODE_CHAT_FT_SMS:
         	deletedRows+=deleteRichMessaging(selection);
         	deletedRows+=deleteSMSMMS(selection);
@@ -974,15 +724,6 @@ public class EventLogProvider extends ContentProvider {
 		case EventsLogApi.MODE_CHAT_FT: 
         	deletedRows+=deleteRichMessaging(selection);
 			break;
-    	case EventsLogApi.MODE_CHAT_CALL_SMS:
-        	deletedRows+=deleteChat(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_CHAT_CALL:
-        	deletedRows+=deleteChat(selection);
-        	deletedRows+=deleteCalls(selection);
-    		break;
     	case EventsLogApi.MODE_CHAT_SMS:
         	deletedRows+=deleteChat(selection);
         	deletedRows+=deleteSMSMMS(selection);
@@ -990,28 +731,12 @@ public class EventLogProvider extends ContentProvider {
     	case EventsLogApi.MODE_CHAT:
         	deletedRows+=deleteChat(selection);
     		break;
-    	case EventsLogApi.MODE_FT_CALL_SMS:
-        	deletedRows+=deleteFT(selection);
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_FT_CALL:
-        	deletedRows+=deleteFT(selection);
-        	deletedRows+=deleteCalls(selection);
-    		break;
     	case EventsLogApi.MODE_FT_SMS:
         	deletedRows+=deleteFT(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
     	case EventsLogApi.MODE_FT:
         	deletedRows+=deleteFT(selection);
-    		break;
-    	case EventsLogApi.MODE_CALL_SMS:
-        	deletedRows+=deleteCalls(selection);
-        	deletedRows+=deleteSMSMMS(selection);
-    		break;
-    	case EventsLogApi.MODE_CALL:
-        	deletedRows+=deleteCalls(selection);
     		break;
 		case EventsLogApi.MODE_SMS:
         	deletedRows+=deleteSMSMMS(selection);
@@ -1055,11 +780,7 @@ public class EventLogProvider extends ContentProvider {
     	deletedRows+=getContext().getContentResolver().delete(EventLogData.MMS_URI,(selection!=null?getThreadIdSelection(selection):null),null);
 		return deletedRows;
 	}
-	
-	private int deleteCalls(String selection){
-		return getContext().getContentResolver().delete(CallLog.Calls.CONTENT_URI,(selection!=null?Calls.NUMBER+selection:null),null);
-	}
-	
+
 	private int deleteRichCalls(String selection){
 		return getContext().getContentResolver().delete(RichCallData.CONTENT_URI,(selection!=null?RichCallData.KEY_CONTACT+selection:null),null);
 	}

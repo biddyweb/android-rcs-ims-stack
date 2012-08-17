@@ -226,6 +226,9 @@ public class ImsModule implements SipEventListener {
 				services[i].start();
 			}
 		}
+		
+		// Send call manager event
+		getCallManager().connectionEvent(true);
     }
     
     /**
@@ -244,6 +247,9 @@ public class ImsModule implements SipEventListener {
     			services[i].stop();
     		}
     	}
+    	
+		// Send call manager event
+		getCallManager().connectionEvent(false);
     }
 
     /**

@@ -571,9 +571,10 @@ public class ProvisioningParser {
         String imWarnSF = null;
         String imSessionStart = null;
         String ftWarnSize = null;
+        String autoAcceptFt = null;
         String chatAuth = null;
         String smsFallBackAuth = null;
-        String autAccept = null;
+        String autoAcceptChat = null;
         String maxSize1to1 = null;
         String maxSize1toM = null;
         String timerIdle = null;
@@ -620,6 +621,21 @@ public class ProvisioningParser {
                     }
                 }
 
+                if (autoAcceptFt == null) {
+                    if ((autoAcceptFt = getValueByParamName("ftAutAccept", childnode)) != null) {
+                        if (autoAcceptFt.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER,
+                                    RcsSettingsData.FALSE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER,
+                                    RcsSettingsData.TRUE);
+                        }
+                        continue;
+                    }
+                }
+
                 if (imSessionStart == null) {
                     if ((imSessionStart = getValueByParamName("imSessionStart", childnode)) != null) {
                         RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START,
@@ -653,24 +669,24 @@ public class ProvisioningParser {
                     if ((smsFallBackAuth = getValueByParamName("SmsFallBackAuth", childnode)) != null) {
                         if (smsFallBackAuth.equals("0")) {
                             RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.SMS_FALLBACK_SERVICE, RcsSettingsData.FALSE);
+                                    RcsSettingsData.SMS_FALLBACK_SERVICE, RcsSettingsData.TRUE);
                         } else {
                             RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.SMS_FALLBACK_SERVICE, RcsSettingsData.TRUE);
+                                    RcsSettingsData.SMS_FALLBACK_SERVICE, RcsSettingsData.FALSE);
                         }
                         continue;
                     }
                 }
 
-                if (autAccept == null) {
-                    if ((autAccept = getValueByParamName("AutAccept", childnode)) != null) {
-                        if (autAccept.equals("0")) {
+                if (autoAcceptChat == null) {
+                    if ((autoAcceptChat = getValueByParamName("AutAccept", childnode)) != null) {
+                        if (autoAcceptChat.equals("0")) {
                             RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT,
+                                    RcsSettingsData.AUTO_ACCEPT_CHAT,
                                     RcsSettingsData.FALSE);
                         } else {
                             RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.CHAT_INVITATION_AUTO_ACCEPT,
+                                    RcsSettingsData.AUTO_ACCEPT_CHAT,
                                     RcsSettingsData.TRUE);
                         }
                         continue;

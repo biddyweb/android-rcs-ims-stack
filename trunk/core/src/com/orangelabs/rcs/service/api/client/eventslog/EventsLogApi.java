@@ -24,7 +24,6 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.CallLog.Calls;
 
 import com.orangelabs.rcs.provider.eventlogs.EventLogData;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
@@ -129,11 +128,7 @@ public class EventsLogApi extends ClientApi {
 	// SMS
 	public static final int TYPE_INCOMING_SMS = 10;			// 
 	public static final int TYPE_OUTGOING_SMS = 11;
-	// Call
-	public static final int TYPE_INCOMING_GSM_CALL = 12; 	// Calls.INCOMING_TYPE = 1, Calls.OUTGOING_TYPE = 2, Calls.MISSED_TYPE = 3
-	public static final int TYPE_OUTGOING_GSM_CALL = 13;
-	public static final int TYPE_MISSED_GSM_CALL = 14;
-	
+
 	// Possible status values
 	// Sessions
 	public static final int STATUS_STARTED = 0;
@@ -176,52 +171,35 @@ public class EventsLogApi extends ClientApi {
 	 * Mode spam box
 	 */
 	public static final int MODE_SPAM_BOX = 34;
-	
+
 	/**
 	 * Each mode below is valued according to the binary representation of a variable representing the selected mode.
 	 * *****************************
 	 * Bit representation of the selected mode variable value :
 	 * sms/mms 			(SMS) 	= bit0
-	 * calls 			(CALL)	= bit1
-	 * File Transfer	(FT) 	= bit2
-	 * Chat				(CHAT)	= bit3
-	 * ContentSharing 	(RC) 	= bit4
+	 * File Transfer	(FT) 	= bit1
+	 * Chat				(CHAT)	= bit2
+	 * ContentSharing 	(RC) 	= bit3
 	 * *****************************
-	 * For exemple if selected modes are Chat and File Transfer, the mode value will be 01100 => 12 which is MODE_CHAT_FT
+	 * For exemple if selected modes are Chat and ContentSharing, the mode value will be 1100 => 12 which is MODE_RC_CHAT
 	 */
-	public static final int MODE_RC_CHAT_FT_CALL_SMS = 31;
-	public static final int MODE_RC_CHAT_FT_CALL = 30;
-	public static final int MODE_RC_CHAT_FT_SMS = 29;
-	public static final int MODE_RC_CHAT_FT = 28;
-	public static final int MODE_RC_CHAT_CALL_SMS = 27;
-	public static final int MODE_RC_CHAT_CALL = 26;
-	public static final int MODE_RC_CHAT_SMS = 25;
-	public static final int MODE_RC_CHAT = 24;
-	public static final int MODE_RC_FT_CALL_SMS = 23;
-	public static final int MODE_RC_FT_CALL = 22;
-	public static final int MODE_RC_FT_SMS = 21;
-	public static final int MODE_RC_FT = 20;
-	public static final int MODE_RC_CALL_SMS = 19;
-	public static final int MODE_RC_CALL = 18;
-	public static final int MODE_RC_SMS = 17;
-	public static final int MODE_RC = 16;
-	public static final int MODE_CHAT_FT_CALL_SMS = 15;
-	public static final int MODE_CHAT_FT_CALL = 14;
-	public static final int MODE_CHAT_FT_SMS = 13;
-	public static final int MODE_CHAT_FT = 12;
-	public static final int MODE_CHAT_CALL_SMS = 11;
-	public static final int MODE_CHAT_CALL = 10;
-	public static final int MODE_CHAT_SMS = 9;
-	public static final int MODE_CHAT = 8;
-	public static final int MODE_FT_CALL_SMS = 7;
-	public static final int MODE_FT_CALL = 6;
-	public static final int MODE_FT_SMS = 5;
-	public static final int MODE_FT = 4;
-	public static final int MODE_CALL_SMS = 3;
-	public static final int MODE_CALL = 2;
+	public static final int MODE_RC_CHAT_FT_SMS = 15;
+	public static final int MODE_RC_CHAT_FT = 14;
+	public static final int MODE_RC_CHAT_SMS = 13;
+	public static final int MODE_RC_CHAT = 12;
+	public static final int MODE_RC_FT_SMS = 11;
+	public static final int MODE_RC_FT = 10;
+	public static final int MODE_RC_SMS = 9;
+	public static final int MODE_RC = 8;
+	public static final int MODE_CHAT_FT_SMS = 7;
+	public static final int MODE_CHAT_FT = 6;
+	public static final int MODE_CHAT_SMS = 5;
+	public static final int MODE_CHAT = 4;
+	public static final int MODE_FT_SMS = 3;
+	public static final int MODE_FT = 2;
 	public static final int MODE_SMS = 1;
 	public static final int MODE_NONE = 0;
-	
+
     /**
      * Constructor
      * 
@@ -268,15 +246,6 @@ public class EventsLogApi extends ClientApi {
      */
     public void deleteMmsEntry(long id){
     	ctx.getContentResolver().delete(ContentUris.withAppendedId(EventLogData.MMS_URI, id),null, null);
-    }
-   
-    /**
-     * Delete a call entry
-     * 
-     * @param item id
-     */
-    public void deleteCallEntry(long id){
-    	ctx.getContentResolver().delete(Calls.CONTENT_URI, Calls._ID+" IN ("+id+")", null);
     }
 
     /**
@@ -456,7 +425,7 @@ public class EventsLogApi extends ClientApi {
     			new String[]{RichMessagingData.KEY_ID},
     			RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'" +
     					" AND ("+RichMessagingData.KEY_STATUS +" = "+EventsLogApi.STATUS_DISPLAYED +
-    					" OR "+RichMessagingData.KEY_STATUS + " = " + EventsLogApi.STATUS_ALL_DISPLAYED + ")" +    					
+    					" OR "+RichMessagingData.KEY_STATUS + " = " + EventsLogApi.STATUS_ALL_DISPLAYED + ")" +
     					" AND ("+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE +
     					" OR "+RichMessagingData.KEY_TYPE + " = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE + ")", 
     			null, 

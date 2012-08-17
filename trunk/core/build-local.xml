@@ -6,7 +6,7 @@
 	<property environment="env"/>
 	<property name="android.root" 		value="${env.ANDROID_SDK}"/>
 	<property name="terminal.root" 		value="../core"/>
-	<property name="terminal.api" 		value="${terminal.root}/libs/rcs_api.jar"/>
+	<property name="terminal.api" 		value="${terminal.root}/rcs_api.jar"/>
 	<property name="terminal.build"		value="${terminal.root}/build"/>
 	<property name="src.path" 			value="${terminal.root}/src"/>
 
@@ -23,7 +23,7 @@
 
     <!-- Generate RCS API JAR -->
     <target name="api">
-        <echo>Generate ${terminal.api} file to /libs</echo>
+        <echo>Generate ${terminal.api} file</echo>
 
 	<delete file="${terminal.api}"/>
     	

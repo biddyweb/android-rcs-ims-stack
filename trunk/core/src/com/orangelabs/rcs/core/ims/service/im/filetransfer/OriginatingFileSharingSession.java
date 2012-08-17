@@ -443,8 +443,8 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
     	// File has been transfered
     	fileTransfered();
     	
-    	// Close the MSRP session
-    	closeMsrpSession();
+        // Close the media session
+        closeMediaSession();
 		
 		// Terminate session
 		terminateSession();
@@ -505,8 +505,8 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
     		logger.info("Data transfer error: " + error);
     	}
     	
-		// Close MSRP session
-		closeMsrpSession();
+        // Close the media session
+        closeMediaSession();
 			
 		// Terminate session
 		terminateSession();

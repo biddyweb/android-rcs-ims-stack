@@ -88,21 +88,11 @@ public class SessionTimerManager extends PeriodicRefresher {
 		int expire = msg.getSessionTimerExpire();
 		if (expire < 90) {
 			if (logger.isActivated()) {
-				logger.debug("Session timer not supported: no expire value");
+				logger.debug("Session timer not activated");
 			}
 			return false;
 		}
 
-		// Check if the UPDATE method is supported in Allow header
-	/* TODO: not supported by our platform 
-	 	AllowHeader allowHeader = (AllowHeader)msg.getHeader(AllowHeader.NAME);
-		if ((allowHeader != null) && !allowHeader.getMethod().contains("UPDATE")) {
-			if (logger.isActivated()) {
-				logger.debug("Session timer not supported: UPDATE method not allowed");
-			}
-			return false;
-		}*/
-		
 		return true;
 	}
 	
@@ -117,6 +107,11 @@ public class SessionTimerManager extends PeriodicRefresher {
 			logger.debug("Start session timer for session " + session.getId() + " (role=" + refresher + ", expire=" + expirePeriod + ")");
 		}
 
+		// If the session timer is set to 0 value, it may have not been set, so take the expire period as value
+		if (session.getDialogPath().getSessionExpireTime()==0){
+			session.getDialogPath().setSessionExpireTime(expirePeriod);
+		}
+		
 		// Set refresher role
 		this.refresher = refresher;
 		

@@ -86,9 +86,7 @@ public class PresenceSubscribeManager extends SubscribeManager {
     	subscribe.addHeader(EventHeader.NAME, "presence");
 
     	// Set the Accept header
-    	subscribe.addHeader(AcceptHeader.NAME, "application/pidf+xml");
-    	subscribe.addHeader(AcceptHeader.NAME, "application/rlmi+xml");
-    	subscribe.addHeader(AcceptHeader.NAME, "multipart/related");
+    	subscribe.addHeader(AcceptHeader.NAME, "application/pidf+xml, application/rlmi+xml, multipart/related");
 
     	// Set the Supported header
     	subscribe.addHeader(SupportedHeader.NAME, "eventlist");

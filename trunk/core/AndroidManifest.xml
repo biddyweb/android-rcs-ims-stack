@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.6"
+ android:versionName="2.4.7"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"/>
@@ -40,6 +40,15 @@
 
 	<application android:icon="@drawable/rcs_icon" android:label="@string/rcs_core_application_title">  
 		
+		<!-- the following meta-data is used to identify the application as a joyn client -->
+		<meta-data android:name="gsma.joyn.client"
+			android:value="true" />
+		
+		<!-- the following meta-data is used to provide the value of the intent action that
+		 can be used by other applications to start the joyn client settings screen -->
+		<meta-data android:name="gsma.joyn.settings.activity"
+			android:value="com.orangelabs.rcs.SETTINGS" />
+
 		<!-- RCS service -->	
 
 		<service android:name="com.orangelabs.rcs.service.RcsCoreService">  

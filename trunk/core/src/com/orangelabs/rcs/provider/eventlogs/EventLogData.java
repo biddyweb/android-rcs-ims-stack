@@ -31,10 +31,9 @@ public class EventLogData {
 	// Virtual Database URI
 	public static final Uri CONTENT_URI = Uri.parse("content://com.orangelabs.rcs.eventlogs/");
 
-	public static final String GSM_MIMETYPE = "call/gsm";
 	public static final String SMS_MIMETYPE = "sms/text";
 	public static final String MMS_MIMETYPE = "mms/text";
-	
+
 	public static final Uri SMS_URI = Uri.parse("content://sms");
 	public static final Uri MMS_URI = Uri.parse("content://mms");
 	

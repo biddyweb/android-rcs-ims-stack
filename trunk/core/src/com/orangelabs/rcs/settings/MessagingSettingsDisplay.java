@@ -62,10 +62,6 @@ public class MessagingSettingsDisplay extends PreferenceActivity implements Pref
         	Boolean state = (Boolean)objValue;
         	RcsSettings.getInstance().setPhoneVibrateForChatInvitation(state.booleanValue());
         }
-        if (preference.getKey().equals("chat_invitation_auto_invitation")) {
-        	Boolean state = (Boolean)objValue;
-        	RcsSettings.getInstance().setAutoAcceptModeForChatInvitation(state.booleanValue());
-        }
         return true;
     }    
 }

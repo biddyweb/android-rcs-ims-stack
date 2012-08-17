@@ -77,6 +77,7 @@ import com.orangelabs.rcs.service.api.client.sip.ISipApi;
 import com.orangelabs.rcs.service.api.client.terms.ITermsApi;
 import com.orangelabs.rcs.service.api.server.ImsApiService;
 import com.orangelabs.rcs.service.api.server.capability.CapabilityApiService;
+import com.orangelabs.rcs.service.api.server.gsma.GsmaUtils;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
@@ -270,6 +271,9 @@ public class RcsCoreService extends Service implements CoreListener {
 	        // Show a first notification
 	    	addRcsServiceNotification(false, getString(R.string.rcs_core_loaded));
 
+	    	// Update GSMA client API
+	    	GsmaUtils.setClientActivationState(getApplicationContext(), true);
+	    	
 			// Send service intent 
 			intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTED);
@@ -310,6 +314,9 @@ public class RcsCoreService extends Service implements CoreListener {
 			logger.debug("Stop RCS core service");
 		}
 
+    	// Update GSMA client API
+    	GsmaUtils.setClientActivationState(getApplicationContext(), false);
+		
 		// Send service intent 
 		Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 		intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STOPPING);

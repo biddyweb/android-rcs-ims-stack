@@ -87,8 +87,8 @@ public class EventLog extends Activity {
 	 * 
 	 * See itemsIndexInCheckedArray description below.
 	 */
-	private int selectedMode = EventsLogApi.MODE_RC_CHAT_FT_CALL_SMS;
-	
+	private int selectedMode = EventsLogApi.MODE_RC_CHAT_FT_SMS;
+
 	/**
 	 * AlertDialog to show for selecting filters.
 	 */
@@ -98,42 +98,39 @@ public class EventLog extends Activity {
 	 * The filter values as CharSequence[].
 	 * Ordered according to itemsIndexInCheckedArray.
 	 */
-	private CharSequence[] items={"SMS/MMS", "Calls", "File Transfer", "Chat", "RichCall"};
+	private CharSequence[] items={"SMS/MMS", "File Transfer", "Chat", "RichCall"};
 	
 	/**
-	 *  CheckedItems contains states of the Filter menu. (checked, unchecked)
-	 *  This state determines the value of the selectedMode
-	 *  by calculating it on a binary representation. 
-	 *  
-	 *  Whenever the items are reordered or not in UI, the checkedItems array will always be ordered as this.
+	 * CheckedItems contains states of the Filter menu. (checked, unchecked)
+	 * This state determines the value of the selectedMode
+	 * by calculating it on a binary representation.
+	 *
+	 * Whenever the items are reordered or not in UI, the checkedItems array will always be ordered as this.
 	 */
 	private boolean[] checkedItems = {
 			/*(sms/mms	bit0)*/true,
-			/*(calls	bit1)*/true,
-			/*(FT		bit2)*/true,
-			/*(chat		bit3)*/true,
-			/*(RC		bit4)*/true};
+			/*(FT		bit1)*/true,
+			/*(chat		bit2)*/true,
+			/*(RC		bit3)*/true};
 	/**
 	 * Enables the UI elements to be indexed in the binary representation of the selectedMode. 
 	 * *****************************
 	 * Bit representation of the selectedMode :
 	 * sms/mms  = bit0
-	 * calls 	= bit1
 	 * FT 		= bit2
 	 * chat 	= bit3
 	 * RC 		= bit4
 	 * *****************************
 	 * If UI element should be reordered, then reorder also the itemsIndexInCheckedArray, following the bits representation above.
 	 * 
-	 * i.e. : items = {"RichCall", "Calls", "File Transfer", "Chat", "SMS/MMS"};
-	 * 		  itemsIndexInCheckedArray = {4,1,2,3,0};
+	 * i.e. : items = {"RichCall", "File Transfer", "Chat", "SMS/MMS"};
+	 * 		  itemsIndexInCheckedArray = {3,1,2,0};
 	 * 		  
 	 * 		  Reordering is done with: checkItems[itemsIndexInCheckedArray[which]] = isChecked
-	 * 		  Then : selectedMode = for(i=0..4) checkItems[i]*2^i 
+	 * 		  Then : selectedMode = for(i=0..3) checkItems[i]*2^i 
 	 */
-	private final int[] itemsIndexInCheckedArray = {0,1,2,3,4};
-	
-	
+	private final int[] itemsIndexInCheckedArray = {0,1,2,3};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -419,7 +416,6 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_FILE_TRANSFER:
-	    		case EventsLogApi.TYPE_INCOMING_GSM_CALL:
 	    		case EventsLogApi.TYPE_INCOMING_RICH_CALL:
 	    		case EventsLogApi.TYPE_INCOMING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
@@ -430,16 +426,12 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
-	    		case EventsLogApi.TYPE_OUTGOING_GSM_CALL:
 	    		case EventsLogApi.TYPE_OUTGOING_RICH_CALL:
 	    		case EventsLogApi.TYPE_OUTGOING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
 	    				eventDirectionIconView.setImageDrawable(mDrawableOutgoingFailed);
 	    			else 
 	    				eventDirectionIconView.setImageDrawable(mDrawableOutgoing);
-	    			break;
-	    		case EventsLogApi.TYPE_MISSED_GSM_CALL:
-	    			eventDirectionIconView.setImageDrawable(mDrawableMissed);
 	    			break;
     		}
     		
@@ -453,18 +445,6 @@ public class EventLog extends Activity {
     		}
     		
     		switch(type){
-	    		case EventsLogApi.TYPE_INCOMING_GSM_CALL:
-	    		case EventsLogApi.TYPE_OUTGOING_GSM_CALL:
-	    		case EventsLogApi.TYPE_MISSED_GSM_CALL:
-	    			eventIconView.setImageDrawable(mDrawableCall);
-	    			try{
-	    				line1View.setText(DateUtils.formatElapsedTime(Long.parseLong(data)));
-	    			}catch(NumberFormatException e){
-	    				// Data corrupted ?
-	    				line1View.setText(null);
-	    			}
-	    			break;
-	    		
 	    		case EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:

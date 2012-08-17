@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.6
+Release 2.4.7
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,10 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
+- JellyBean tests.
+- GSMA Implementation Guidelines 3.0.
 - IOT test fest issues.
-- Packetization for video sharing.
-- IPv6 tests.
-
+- Gruu enabled by default.
 
 
 Bugs fixed:
@@ -21,8 +21,23 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+v2.4.7
+- Mantis #0014730	Stack: Race problem : Receiving SIP BYE when session is being stopped by other thread
+- GSMA Guidelines 	Stack: ID_4_20: Optimization on the options exchange during a call
+- Mantis #0015013 	Stack: Send an OPTIONS if bearer has changed during a call
+- Open source #78	Stack: How to compile the RCS code
+- GSMA Guidelines 	Stack: ID_4_32: File transfer auto accept
+- GSMA Guidelines 	Stack: ID_3_1: RCS client detection
+- Mantis #0015496	Stack: DNS problems after network switch
+- GSMA Guidelines 	Stack: ID_4_32 Auto accept FT
+- Mantis #0015832	Stack: Bad SMS fallback parameter parsing from provisioning
+- Open source #77	Stack: Potential cursor leak
+- Mantis #0015815	Stack: API method addParticipants don't support only one participant in its list
+- Mantis #0015691	Stack: Some updates on session may have an expire set to 0
+- Mantis #0015693	Stack: When using rejoinChatGroupSession() function, the chat session object has a different chat session id than the one given in parameter
+
 v2.4.6
-- Mantis #0015656	Stack: P-Preferred-URI should contain a Tel-URI if both SIP-URI and Tel-URI are provisioned.
+- Mantis #0015656	Stack: P-Preferred-URI should contain a Tel-URI if both SIP-URI and Tel-URI are provisioned
 - Mantis #0015651	Stack: No anonymous URI in CPIM From/To of the SIP MESSAGE report
 - Mantis #0015636	Stack: No accept-wrapped-type for chat
 

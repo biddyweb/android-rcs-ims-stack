@@ -38,6 +38,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -93,43 +94,53 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
         		return;
         	}
 
-    		// Send a 180 Ringing response
-			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-			
-			// Wait invitation answer
-	    	int answer = waitInvitationAnswer();
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected by user");
-				}
+    		if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
+    	    	if (logger.isActivated()) {
+    	    		logger.debug("Auto accept file transfer invitation");
+    	    	}
+    		} else {
+    	    	if (logger.isActivated()) {
+    	    		logger.debug("Accept manually file transfer invitation");
+    	    	}    			
+
+    	    	// Send a 180 Ringing response
+				send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
-		        }
-				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected on timeout");
+				// Wait invitation answer
+		    	int answer = waitInvitationAnswer();
+				if (answer == ImsServiceSession.INVITATION_REJECTED) {
+					if (logger.isActivated()) {
+						logger.debug("Session has been rejected by user");
+					}
+					
+			    	// Remove the current session
+			    	getImsService().removeSession(this);
+	
+			    	// Notify listeners
+			    	for(int i=0; i < getListeners().size(); i++) {
+			    		getListeners().get(i).handleSessionAborted();
+			        }
+					return;
+				} else
+				if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+					if (logger.isActivated()) {
+						logger.debug("Session has been rejected on timeout");
+					}
+	
+					// Ringing period timeout
+					send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+					
+			    	// Remove the current session
+			    	getImsService().removeSession(this);
+	
+			    	// Notify listeners
+	            	for(int j=0; j < getListeners().size(); j++) {
+	            		getListeners().get(j).handleSessionAborted();
+			        }
+					return;
 				}
-
-				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-            	for(int j=0; j < getListeners().size(); j++) {
-            		getListeners().get(j).handleSessionAborted();
-		        }
-				return;
-			}
-
+    		}
+    		
 			// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
@@ -407,8 +418,8 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     	}
 
     	try {
-			// Close the MSRP session
-			closeMsrpSession();
+            // Close the media session
+            closeMediaSession();
 				
 			// Terminate session
 			terminateSession();

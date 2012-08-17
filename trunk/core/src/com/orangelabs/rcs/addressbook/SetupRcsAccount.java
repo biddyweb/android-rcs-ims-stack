@@ -34,7 +34,7 @@ public class SetupRcsAccount extends android.accounts.AccountAuthenticatorActivi
 		super.onCreate(icicle);
 		
 		// Create RCS account
-		AuthenticationService.createRcsAccount(this, getString(R.string.rcs_core_account_username), true, true);
+		AuthenticationService.createRcsAccount(this, getString(R.string.rcs_core_account_username), true);
 		
 		Bundle extras = getIntent().getExtras();
 		if (extras != null) {

@@ -169,9 +169,9 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
             	"s=-" + SipUtils.CRLF +
             	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
+                "b=AS:128" + SipUtils.CRLF +
                 "t=0 0" + SipUtils.CRLF +
                 videoSdp +
-                "b=AS:128" + SipUtils.CRLF +
                 "a=recvonly" + SipUtils.CRLF;
 
             // Set the local SDP part in the dialog path

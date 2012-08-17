@@ -32,7 +32,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
     /**
 	 * Max file transfer size (in bytes)
 	 */
-	public final static int MAX_FILE_SIZE = RcsSettings.getInstance().getMaxFileTransferSize()*1014;
+	public final static int MAX_FILE_SIZE = RcsSettings.getInstance().getMaxFileTransferSize()*1024;
 	
 	/**
 	 * Default SO_TIMEOUT value (in seconds)

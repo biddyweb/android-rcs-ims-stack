@@ -114,6 +114,12 @@ public class ServiceProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.WARN_SF_SERVICE)));
+
+        check = (CheckBox)this.findViewById(R.id.AutoAcceptFileTransfer);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER)));
+
+        check = (CheckBox)this.findViewById(R.id.AutoAcceptChat);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.AUTO_ACCEPT_CHAT)));
 	}
 	
     @Override
@@ -181,6 +187,11 @@ public class ServiceProvisioning extends Activity {
 		        check = (CheckBox)this.findViewById(R.id.StoreForwardServiceWarning);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.WARN_SF_SERVICE, Boolean.toString(check.isChecked()));
 				
+		        check = (CheckBox)this.findViewById(R.id.AutoAcceptFileTransfer);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER, Boolean.toString(check.isChecked()));
+				
+		        check = (CheckBox)this.findViewById(R.id.AutoAcceptChat);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_ACCEPT_CHAT, Boolean.toString(check.isChecked()));
 				break;
 		}
 		return true;
