@@ -93,7 +93,7 @@ public class GibaRegistrationProcedure extends RegistrationProcedure {
 	}
 	
 	/**
-	 * Returns the public URI or IMPU
+	 * Returns the public URI or IMPU for registration
 	 * 
 	 * @return Public URI
 	 */

@@ -292,8 +292,11 @@ public class CapabilityUtils {
 					// Update SDP
 					String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
 						"a=accept-types:" + supportedImageFormats.toString().trim() + SipUtils.CRLF +
-						"a=file-selector" + SipUtils.CRLF +
-						"a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF;
+						"a=file-selector" + SipUtils.CRLF;
+			    	int maxSize = ImageTransferSession.getMaxImageSharingSize();
+			    	if (maxSize > 0) {
+			    		imageSharingConfig += "a=max-size:" + maxSize + SipUtils.CRLF;
+			    	}
 			    	sdp += imageSharingConfig;
 		        }
 	        }

@@ -59,6 +59,16 @@ public class ChatError extends ImsServiceError {
 	public final static int SUBSCRIBE_CONFERENCE_FAILED = 0x06;
 	
 	/**
+	 * Group chat session not found in the server 
+	 */
+	public final static int SESSION_NOT_FOUND = 0x07;
+	
+	/**
+	 * Group chat restart has failed
+	 */
+	public final static int SESSION_RESTART_FAILED = 0x08;
+	
+	/**
 	 * Constructor
 	 * 
 	 * @param code Error code

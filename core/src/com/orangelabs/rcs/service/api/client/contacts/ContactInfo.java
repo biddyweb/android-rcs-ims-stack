@@ -320,15 +320,15 @@ public class ContactInfo implements Parcelable {
 	 * @return String
 	 */
 	public String toString() {
-		String result =  "- Contact: " + contact + "\n" +
-			"- RCS Status: " + rcsStatus + "\n" +	
-			"- RCS registration state: " + registrationState+ "\n" +
-			"- RCS status timestamp: " + rcsStatusTimestamp + "\n";
+		String result =  "Contact=" + contact +
+			", Status=" + rcsStatus +
+			", State=" + registrationState +
+			", Timestamp=" + rcsStatusTimestamp;
 		if (capabilities != null) {
-			result += "- Capabilities: " + capabilities.toString() + "\n";
+			result += ", Capabilities=" + capabilities.toString();
 		}
 		if (presenceInfo != null) {
-			result += "- Presence info: " + presenceInfo.toString() + "\n";
+			result += ", Presence=" + presenceInfo.toString();
 		}
 		return result;
 	}

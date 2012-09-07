@@ -1004,7 +1004,7 @@ public class RcsSettings {
      * @return Number of participants
      */
 	public int getMaxChatParticipants() {
-		int result = 5;
+		int result = 10;
 		if (instance != null) {
 			try {
 				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_CHAT_PARTICIPANTS));
@@ -1145,7 +1145,7 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
 	/**
      * Is chat invitation auto accepted
      *
@@ -1158,6 +1158,19 @@ public class RcsSettings {
 		}
 		return result;
 	}
+
+    /**
+     * Is group chat invitation auto accepted
+     *
+     * @return Boolean
+     */
+    public boolean isGroupChatAutoAccepted(){
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT));
+        }
+        return result;
+    }
 
 	/**
      * Is file transfer invitation auto accepted

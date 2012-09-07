@@ -3,9 +3,10 @@
 
 <string name="app_name">UI Connector</string>
 <string name="label_refresh">Refresh</string>
-<string name="label_ui_not_found">UI not found!</string>
 <string name="title_msg">Information</string>
 <string name="label_ok">OK</string>
+<string name="label_ui_not_found">UI not found!</string>
+
 
 <!-- RCS status -->
 <string name="menu_is_joyn">Is device RCS compliant</string>
@@ -21,8 +22,10 @@
 <string name="label_registered">registered</string>
 <string name="label_unregistered">not registered</string>
 <string name="menu_is_activated">Is RCS client activated</string>
-<string name="label_activated">RCS client is activated</string>
-<string name="label_not_activated">RCS client not activated</string>
+<string name="label_client_activated">At least one RCS client is activated in the device</string>
+<string name="label_client_not_activated">No activated RCS client found in the device</string>
+<string name="label_client_settings_not_found">RCS client settings not found</string>
+<string name="label_client_not_found">RCS client not found</string>
 
 <!-- Capabilities -->
 <string name="menu_contact_capabilities">Contact capabilities</string>
@@ -46,7 +49,7 @@
 <string name="menu_view_group_chat">View group chat</string>
 <string name="menu_initiate_ft">Initiate file transfer</string>
 <string name="menu_view_ft">View file transfer</string>
-<string name="menu_rcs_settings">RCS settings</string>
+<string name="menu_rcs_settings">Load RCS client settings</string>
 
 </resources>
 

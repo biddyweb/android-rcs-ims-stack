@@ -137,7 +137,7 @@ public class SipUtils {
 	 * Min-SE header
 	 */
 	public static final String HEADER_MIN_SE = "Min-SE";
-	
+		
 	/**
 	 * Extract the URI part of a SIP address
 	 * 

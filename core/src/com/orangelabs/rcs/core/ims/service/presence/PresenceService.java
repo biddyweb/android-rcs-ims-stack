@@ -56,11 +56,6 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 	public boolean permanentState;
 
 	/**
-	 * Max photo-icon size (in bytes)
-	 */
-	public int maxPhotoIconSize;
-
-	/**
      * Presence info
      */
     private PresenceInfo presenceInfo = new PresenceInfo();
@@ -101,7 +96,6 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 
 		// Set presence service options
 		this.permanentState = RcsSettings.getInstance().isPermanentStateModeActivated();
-		this.maxPhotoIconSize = RcsSettings.getInstance().getMaxPhotoIconSize() * 1024;
 
 		// Instanciate the XDM manager
     	xdm = new XdmManager(parent);
@@ -634,8 +628,8 @@ public class PresenceService extends ImsService implements AddressBookEventListe
     		" xmlns:op=\"urn:oma:xml:prs:pidf:oma-pres\"" +
     		" xmlns:opd=\"urn:oma:xml:pde:pidf:ext\"" +
 			" xmlns:pdm=\"urn:ietf:params:xml:ns:pidf:data-model\"" +
- " xmlns:ci=\"urn:ietf:params:xml:ns:pidf:cipid\""
-                + " xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\"" +
+			" xmlns:ci=\"urn:ietf:params:xml:ns:pidf:cipid\"" +
+			" xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\"" +
     		" entity=\""+ ImsModule.IMS_USER_PROFILE.getPublicUri() + "\">" + SipUtils.CRLF;
 
     	// Encode timestamp
@@ -666,7 +660,8 @@ public class PresenceService extends ImsService implements AddressBookEventListe
     	PhotoIcon currentPhoto = presenceInfo.getPhotoIcon();
     	if ((photoIcon != null) && (photoIcon.getEtag() == null)) {
     		// Test photo icon size
-        	if ((maxPhotoIconSize != 0) && (photoIcon.getSize() > maxPhotoIconSize)) {
+    		int maxSize = RcsSettings.getInstance().getMaxPhotoIconSize()*1024;
+        	if ((maxSize != 0) && (photoIcon.getSize() > maxSize)) {
     			if (logger.isActivated()) {
     				logger.debug("Max photo size achieved");
     			}

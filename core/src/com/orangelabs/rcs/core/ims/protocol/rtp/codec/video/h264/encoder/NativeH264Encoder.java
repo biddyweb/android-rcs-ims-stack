@@ -18,9 +18,14 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder;
 
+/**
+ * Native H264 Encoder
+ *
+ * @author Orange
+ */
 public class NativeH264Encoder {
 
-    public static native int InitEncoder(int i, int j, int k);
+    public static native int InitEncoder(NativeH264EncoderParams nativeH264EncoderParams);
 
     public static native byte[] EncodeFrame(byte abyte0[], long l);
 

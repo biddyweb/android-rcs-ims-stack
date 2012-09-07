@@ -40,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -63,12 +64,16 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
 		super(parent, ChatUtils.getReferredIdentity(invite));
 
-		// Set first message
-		InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);
-		setFirstMesssage(firstMsg);
+		// Set subject
+		String subject = ChatUtils.getSubject(invite);
+		setSubject(subject);
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
+		
+		// Set contribution ID
+		String id = ChatUtils.getContributionId(invite);
+		setContributionID(id);				
 	}
 
 	/**
@@ -79,44 +84,53 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new ad-hoc group chat session as terminating");
 	    	}
-	    		
-	    	// Send a 180 Ringing response
-			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-			
-			// Wait invitation answer
-	    	int answer = waitInvitationAnswer();
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected by user");
-				}
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
 
-		    	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
-		        }
-				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected on timeout");
-				}
+            if (RcsSettings.getInstance().isGroupChatAutoAccepted()) {
+                if (logger.isActivated()) {
+                    logger.debug("Auto accept group chat invitation");
+                }
+            } else {
+                if (logger.isActivated()) {
+                    logger.debug("Accept manually group chat invitation");
+                }
+    	    	// Send a 180 Ringing response
+    			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+    			
+    			// Wait invitation answer
+    	    	int answer = waitInvitationAnswer();
+    			if (answer == ImsServiceSession.INVITATION_REJECTED) {
+    				if (logger.isActivated()) {
+    					logger.debug("Session has been rejected by user");
+    				}
+    				
+    		    	// Remove the current session
+    		    	getImsService().removeSession(this);
+    
+    		    	// Notify listeners
+    		    	for(int i=0; i < getListeners().size(); i++) {
+    		    		getListeners().get(i).handleSessionAborted();
+    		        }
+    				return;
+    			} else
+    			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+    				if (logger.isActivated()) {
+    					logger.debug("Session has been rejected on timeout");
+    				}
+    
+    				// Ringing period timeout
+    				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+    				
+    		    	// Remove the current session
+    		    	getImsService().removeSession(this);
+    
+    		    	// Notify listeners
+        	    	for(int i=0; i < getListeners().size(); i++) {
+        	    		getListeners().get(i).handleSessionAborted();
+    		        }
+    				return;
+    			}
+            }
 
-				// Ringing period timeout
-				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-    	    	for(int i=0; i < getListeners().size(); i++) {
-    	    		getListeners().get(i).handleSessionAborted();
-		        }
-				return;
-			}
-			
 			// Extract the SDP part
 			byte[] remoteSdp = null;
 		    String content = getDialogPath().getInvite().getContent();

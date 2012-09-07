@@ -268,7 +268,12 @@ public class RcsSettingsData {
      * Auto accept chat invitation
      */
 	public static final String AUTO_ACCEPT_CHAT = "AutoAcceptChat";	
-	
+
+    /**
+     * Auto accept chat invitation
+     */
+    public static final String AUTO_ACCEPT_GROUP_CHAT = "AutoAcceptGroupChat"; 
+
 	/**
 	 * Display a warning if Store & Forward service is activated
 	 */

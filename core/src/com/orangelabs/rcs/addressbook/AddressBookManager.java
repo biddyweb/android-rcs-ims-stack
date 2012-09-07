@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-
+ 
 package com.orangelabs.rcs.addressbook;
 
 import java.util.Vector;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -79,8 +80,13 @@ public class AddressBookManager {
      * Content observer registered flag
      */
     private boolean observerIsRegistered = false; 
+
+    /**
+     * Background service executor
+     */
+    private ExecutorService cleanupExecutor;
     
-	/**
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -102,6 +108,9 @@ public class AddressBookManager {
 		if (logger.isActivated()) {
 			logger.info("Start address book monitoring");
 		}
+
+		// Instanciate background executor
+		cleanupExecutor = Executors.newSingleThreadExecutor();
 
 		if (!observerIsRegistered){
 			// Instanciate content observer
@@ -139,6 +148,8 @@ public class AddressBookManager {
 			contactsContractCursor.close();
 		}
 		
+		// Shutdown background executor
+		cleanupExecutor.shutdown();
 	}
 	
 	/**
@@ -194,26 +205,62 @@ public class AddressBookManager {
      * Handler used to avoid too many checks
      */
     private class CheckHandler extends Handler{
-    	
+    	private boolean isCleanupNeeded;
+    	private boolean isCleanupRunning;
+    	private final Object check = new Object();
+   	
     	@Override
     	public void handleMessage(Message msg) {
     		super.handleMessage(msg);
 
     		if (msg.what == CHECK_MESSAGE){
+        		// Clean RCS entries associated to numbers that have been removed or modified
         		if (logger.isActivated()){
         			logger.debug("Minimum check period elapsed, notify the listeners that a change occured in the address book");
         		}
         		
-        		// Clean RCS entries associated to numbers that have been removed or modified
-        		ContactsManager.getInstance().cleanRCSEntries();
+        		// We may receive multiple CHECK_MESSAGE messages while already processing one. We cannot
+        		// stay in the handler for too long because the application will be killed as ANR. Thus,
+        		// we will schedule the processing if is is not running or tell the running task
+        		// that it will have to do it again once it is done.
+        		boolean scheduleCleanup = false;
+         		synchronized(check) {
+					if (isCleanupRunning) {
+						// We need to redo it again
+						isCleanupNeeded = true;
+					} else {
+						scheduleCleanup = true;
+					}
+         		}
         		
-        		// Notify listeners
-        		for(int i=0; i < listeners.size(); i++) {
-        			AddressBookEventListener listener = (AddressBookEventListener)listeners.elementAt(i);
-        			listener.handleAddressBookHasChanged();
+        		if (scheduleCleanup) {
+	        		cleanupExecutor.execute(new Runnable() {
+ 	        			public void run() {
+	        				isCleanupRunning = true;
+	        				
+	        				while(true) {
+	        					isCleanupNeeded = false;
+	        					
+				        		// Clean RCS entries associated to numbers that have been removed or modified
+				        		ContactsManager.getInstance().cleanRCSEntries();
+				        		
+				        		// Notify listeners
+				        		for(int i=0; i < listeners.size(); i++) {
+				        			AddressBookEventListener listener = (AddressBookEventListener)listeners.elementAt(i);
+				        			listener.handleAddressBookHasChanged();
+				        		}
+				        		synchronized (check) {
+				        			if (!isCleanupNeeded) {
+				        				isCleanupRunning = false;
+ 				        				break;
+				        			}
+								}
+ 	        				}
+	        			}
+	        		});
         		}
     		}
     	}
-    };	
-	
+    }
 }
+

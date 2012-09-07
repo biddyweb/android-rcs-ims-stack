@@ -135,7 +135,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     }
 	
 	/**
-	 * Returns the list of participants
+	 * Returns the list of connected participants
 	 * 
 	 * @return List of participants
 	 */
@@ -161,6 +161,14 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 		    	ConferenceInfoParser confParser = new ConferenceInfoParser(pidfInput);
 		    	ConferenceInfoDocument conference = confParser.getConferenceInfo();
 		    	if (conference != null) {
+		    		int maxParticipants = conference.getMaxUserCount(); 
+                    if (maxParticipants > 0) {
+				    	if (logger.isActivated()) {
+				    		logger.debug("Set max number of participants to " + maxParticipants);
+				    	}
+                        session.setMaxParticipants(maxParticipants);
+                    }
+                    
 			    	Vector<User> users = conference.getUsers();
 			    	for(int i=0; i < users.size(); i++) {
 			    		User user = (User)users.elementAt(i);
@@ -175,19 +183,39 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    			continue;
 			    		}
 			    		
+				    	// Get state
+				    	String state = user.getState();
+				    	String method = user.getDisconnectionMethod(); 
+				    	if (logger.isActivated()) {
+				    		logger.debug("User conference info: " + user.toString());
+				    	}
+				    	if (method != null) {
+					    	// If there is a method then use it as a specific state
+				    		state = method;
+
+				    		// If session failed because declined by remote then use it as a specific state
+				    		if (method.equals("failed")) {
+					    		String reason = user.getFailureReason();
+					    		if ((reason != null) && reason.contains("603")) {
+					    			state = User.STATE_DECLINED;
+					    		}
+				    		}
+				    	}
+
 			    		// Update the participants list
-			    		if (user.getState().equals(User.STATE_CONNECTED)) {
+			    		if (state.equals(User.STATE_CONNECTED)) {
 			    			// A participant has joined the session
 			    			connectedParticipants.addParticipant(entity);
 			    		} else
-			    		if (user.getState().equals(User.STATE_DISCONNECTED)) {
+			    		if (state.equals(User.STATE_DISCONNECTED) || state.equals(User.STATE_DEPARTED)) {
 			    			// A participant has quit the session
 			    			connectedParticipants.removeParticipant(entity);
 			    		}
 			    		
 			    		// Notify session listeners
 		    	    	for(int j=0; j < session.getListeners().size(); j++) {
-		    	    		((ChatSessionListener)session.getListeners().get(j)).handleConferenceEvent(entity, user.getDisplayName(), user.getState());
+		    	    		((ChatSessionListener)session.getListeners().get(j)).handleConferenceEvent(entity,
+		    	    				user.getDisplayName(), state);
 				        }
 			    	}
 		    	}

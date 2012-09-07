@@ -38,6 +38,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -106,10 +107,13 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=max-size:" + FileSharingSession.MAX_FILE_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
 	    		"a=file-disposition:attachment" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
+	    	int maxSize = FileSharingSession.getMaxFileSharingSize();
+	    	if (maxSize > 0) {
+	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
+	    	}
 	    	
 	    	// Set File-selector attribute
 	    	String selector = getFileSelectorAttribute();
