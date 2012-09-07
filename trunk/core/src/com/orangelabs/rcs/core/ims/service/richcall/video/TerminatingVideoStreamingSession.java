@@ -169,7 +169,6 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
             	"s=-" + SipUtils.CRLF +
             	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-                "b=AS:128" + SipUtils.CRLF +
                 "t=0 0" + SipUtils.CRLF +
                 videoSdp +
                 "a=recvonly" + SipUtils.CRLF;

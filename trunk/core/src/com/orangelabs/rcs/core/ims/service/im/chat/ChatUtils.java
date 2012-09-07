@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax2.sip.header.ContactHeader;
+import javax2.sip.header.ExtensionHeader;
 
 import org.xml.sax.InputSource;
 
@@ -50,7 +51,7 @@ public class ChatUtils {
 	 * Anonymous URI
 	 */
 	public final static String ANOMYNOUS_URI = "sip:anonymous@anonymous.invalid";
-	
+		
 	/**
 	 * Contribution ID header
 	 */
@@ -61,6 +62,20 @@ public class ChatUtils {
 	 */
 	private static final String CRLF = "\r\n";
 
+	/**
+	 * Get contribution ID
+	 * 
+	 * @return String
+	 */
+	public static String getContributionId(SipRequest request) {
+		ExtensionHeader contribHeader = (ExtensionHeader)request.getHeader(ChatUtils.HEADER_CONTRIBUTION_ID);
+		if (contribHeader != null) {
+			return contribHeader.getValue();
+		} else {
+			return null;
+		}
+	}
+	
 	/**
 	 * Is a group chat session invitation
 	 * 
@@ -507,6 +522,16 @@ public class ChatUtils {
 		} else {
 			return getFirstMessageFromSubject(invite);
 		}
+	}
+
+	/**
+	 * Get the subject
+	 * 
+	 * @param invite Request
+	 * @return String
+	 */
+	public static String getSubject(SipRequest invite) {
+		return invite.getSubject();
 	}
 
 	/**

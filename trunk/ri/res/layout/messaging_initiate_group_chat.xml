@@ -11,6 +11,17 @@
 	 android:layout_marginRight="5dip"
 	 android:id="@+id/invite_btn"/>
 
+	<TableRow android:paddingTop="10dip">
+        <TextView android:text="@string/label_subject"
+			 android:layout_marginLeft="5dip"
+         android:gravity="right"/>
+		<EditText android:id="@+id/subject"
+		 android:singleLine="true"
+		 android:layout_marginLeft="5dip"
+		 android:layout_marginRight="5dip"
+		 android:maxLength="50"/>
+	</TableRow>
+
     <TableRow android:paddingTop="5dip">
 	    <TextView android:text="@string/label_contacts"
 			android:layout_marginLeft="5dip"

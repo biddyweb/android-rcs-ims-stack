@@ -30,7 +30,16 @@ import android.content.Intent;
 public class ChatInvitationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-    	// Display invitation notification
-		ReceiveChat.addChatInvitationNotification(context, intent);
+        boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
+        if (autoAccept) {
+            // Display chat
+            Intent progress = new Intent(intent);
+            progress.setClass(context, ReceiveChat.class);
+            progress.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(progress);
+        } else {
+            // Display invitation notification
+            ReceiveChat.addChatInvitationNotification(context, intent);
+        }
     }
 }

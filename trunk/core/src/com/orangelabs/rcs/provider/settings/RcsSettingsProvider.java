@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 61;
+        private static final int DATABASE_VERSION = 62;
 
         private Context ctx;
 
@@ -123,6 +123,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SMS_FALLBACK_SERVICE, 				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.WARN_SF_SERVICE,	 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.AUTO_ACCEPT_CHAT,			 		RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT,            RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER,			RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.IM_SESSION_START,	 				"1");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_USERNAME, 			"");
@@ -194,7 +195,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
         }

@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -46,6 +47,11 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ChatSession extends ImsServiceSession implements MsrpEventListener {
+	/**
+	 * Subject
+	 */
+	private String subject = null;
+	
 	/**
 	 * First message
 	 */
@@ -70,7 +76,17 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * Chat activity manager
 	 */
 	private ChatActivityManager activityMgr = new ChatActivityManager(this);
-	
+
+    /**
+     * Max number of participants in the session
+     */
+    private int maxParticipants = RcsSettings.getInstance().getMaxChatParticipants();
+
+    /**
+     * Contribution ID
+     */
+    private String contributionId = null;
+    
 	/**
      * The logger
      */
@@ -90,7 +106,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
 	}
-    
+
     /**
 	 * Constructor
 	 * 
@@ -104,7 +120,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Set the session participants
 		setParticipants(participants);
 	}
-		
+
 	/**
 	 * Return the first message of the session
 	 * 
@@ -123,6 +139,24 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		this.firstMessage = firstMessage; 
 	}	
 
+    /**
+     * Returns the subject of the session
+     * 
+     * @return String
+     */
+    public String getSubject() {
+    	return subject;
+    }
+    
+    /**
+     * Set the subject of the session
+     * 
+     * @param subject Subject
+     */
+    public void setSubject(String subject) {
+    	this.subject = subject;
+    }	
+	
 	/**
 	 * Returns the IMDN manager
 	 * 
@@ -147,8 +181,17 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @return Contribution ID
 	 */
 	public String getContributionID() {
-		return getSessionID();
+		return contributionId;
 	}	
+	
+	/**
+	 * Set the contribution ID
+	 * 
+	 * @param id Contribution ID
+	 */
+	public void setContributionID(String id) {
+		this.contributionId = id;
+	}
 	
 	/**
 	 * Returns the list of participants
@@ -438,11 +481,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Is chat group
+	 * Is group chat
 	 * 
 	 * @return Boolean
 	 */
-	public abstract boolean isChatGroup();
+	public abstract boolean isGroupChat();
 	
 	/**
 	 * Is Store & Forward
@@ -529,4 +572,27 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     		}
     	}
     }
+
+    /**
+     * Get max number of participants in the session including the initiator
+     * 
+     * @return Integer
+     */
+    public int getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    /**
+     * Set max number of participants in the session including the initiator
+     * 
+     * @param maxParticipants Max number
+     */
+    public void setMaxParticipants(int maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
+    
+	/**
+	 * Reject the session invitation
+	 */
+	public abstract void rejectSession();
 }

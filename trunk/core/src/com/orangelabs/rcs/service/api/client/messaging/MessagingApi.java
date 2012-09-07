@@ -189,14 +189,25 @@ public class MessagingApi extends ClientApi {
 	 * Initiate an ad-hoc group chat session
 	 * 
      * @param participants List of participants
-     * @param firstMsg First message exchanged during the session
 	 * @return Chat session
 	 * @throws ClientApiException
 	 */
-	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String firstMsg) throws ClientApiException {
+	public IChatSession initiateAdhocGroupChatSession(List<String> participants) throws ClientApiException {
+		return initiateAdhocGroupChatSession(participants, null);
+	}
+		
+	/**
+	 * Initiate an ad-hoc group chat session
+	 * 
+     * @param participants List of participants
+     * @param subject Subject associated to the session
+	 * @return Chat session
+	 * @throws ClientApiException
+	 */
+	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String subject) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateAdhocGroupChatSession(participants, firstMsg);
+		    	return coreApi.initiateAdhocGroupChatSession(participants, subject);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -206,16 +217,16 @@ public class MessagingApi extends ClientApi {
 	}
 	
 	/**
-	 * Rejoin a chat group session
+	 * Rejoin a group chat session
 	 * 
-	 * @param sessionId Session ID
+	 * @param chatId Chat ID
 	 * @return Chat session
 	 * @throws ClientApiException
 	 */
-	public IChatSession rejoinChatGroupSession(String sessionId) throws ClientApiException {
+	public IChatSession rejoinGroupChatSession(String chatId) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.rejoinChatGroupSession(sessionId);
+		    	return coreApi.rejoinGroupChatSession(chatId);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -223,6 +234,25 @@ public class MessagingApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+	
+	/**
+	 * Restart a group chat session
+	 * 
+	 * @param chatId Chat ID
+	 * @return Chat session
+	 * @throws ClientApiException
+	 */
+	public IChatSession restartGroupChatSession(String chatId) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.restartGroupChatSession(chatId);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}	
 	
 	/**
 	 * Get a chat session from its session ID

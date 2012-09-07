@@ -117,7 +117,17 @@ public class CapabilityApi extends ClientApi {
     	}
     }    
     
-	/**
+    /**
+     * Get contact info
+     * 
+     * @param contact Contact
+     * @return Contact info
+     */
+    public ContactInfo getContactInfo(String contact) {
+    	return ContactsManager.getInstance().getContactInfo(contact);
+    }    
+
+    /**
 	 * Request capabilities for a given contact
 	 * 
 	 * @param contact Contact

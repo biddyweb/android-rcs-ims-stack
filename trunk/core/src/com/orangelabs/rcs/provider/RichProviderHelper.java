@@ -30,7 +30,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 7;
+	private static final int DATABASE_VERSION = 9;
 
 	@Override
 	public void onCreate(SQLiteDatabase db){
@@ -45,15 +45,16 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ RichMessagingData.KEY_DATA + " TEXT, "
 				+ RichMessagingData.KEY_MESSAGE_ID + " TEXT, "
 				+ RichMessagingData.KEY_IS_SPAM + " integer, "
+				+ RichMessagingData.KEY_CHAT_ID + " TEXT, "
+				+ RichMessagingData.KEY_CHAT_REJOIN_ID + " TEXT, "
+				
 				// Fields for file transfer
 				+ RichMessagingData.KEY_MIME_TYPE + " TEXT, "
 				+ RichMessagingData.KEY_NAME + " TEXT, "
 				+ RichMessagingData.KEY_SIZE + " long, "
 				+ RichMessagingData.KEY_TOTAL_SIZE + " long, "
-				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer, "
 
-				// Additional fields for chat
-				+ RichMessagingData.KEY_CHAT_ID + " TEXT);"
+				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer)"
 				);
 		
 		db.execSQL("create table " + RichCallProvider.TABLE + " ("

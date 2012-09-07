@@ -50,22 +50,23 @@ public interface MessagingApiIntents {
      *   <li><em>contact</em> - Contact phone number.</li>
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
      *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
-     *   <li><em>isChatGroup</em> - Boolean indicating if it's a chat group.</li>
+     *   <li><em>isGroupChat</em> - Boolean indicating if it's a group chat.</li>
      *   <li><em>replacedSessionId</em> - Session ID of the session which has been replaced by
-     *    this chat group session (may be null).</li>
-     *   <li><em>firstMessage</em> - First message of the session.</li>
+     *    this group chat session (may be null).</li>
+     *   <li><em>firstMessage</em> - First message of the session (only for 1-1 chat).</li>
+     *   <li><em>subject</em> - Subject of the session (only for group chat).</li>
      * </ul>
      * </ul>
      */
 	public final static String CHAT_INVITATION = "com.orangelabs.rcs.messaging.CHAT_INVITATION";
 	
     /**
-     * Intent broadcasted when a 1-1 chat session has been replaced by a chat group session
+     * Intent broadcasted when a 1-1 chat session has been replaced by a group chat session
      * 
      * <p>The intent will have the following extra values:
      * <ul>
      *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
-     *   <li><em>replacedSessionId</em> - Session ID of the session which has been replaced by this chat group session.</li>
+     *   <li><em>replacedSessionId</em> - Session ID of the session which has been replaced by this group chat session.</li>
      * </ul>
      * </ul>
      */

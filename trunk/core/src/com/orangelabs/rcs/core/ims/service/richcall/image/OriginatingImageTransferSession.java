@@ -107,10 +107,13 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
 	    		"a=file-disposition:render" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
+	    	int maxSize = ImageTransferSession.getMaxImageSharingSize();
+	    	if (maxSize > 0) {
+	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
+	    	}
 
 	    	// Set File-selector attribute
 	    	String selector = getFileSelectorAttribute();

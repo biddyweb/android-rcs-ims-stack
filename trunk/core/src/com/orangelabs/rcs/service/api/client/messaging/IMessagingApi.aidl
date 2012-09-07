@@ -24,10 +24,13 @@ interface IMessagingApi {
 	IChatSession initiateOne2OneChatSession(in String contact, in String firstMsg);
 
 	// Initiate an ad-hoc group chat session
-	IChatSession initiateAdhocGroupChatSession(in List<String> participants, in String firstMsg);
+	IChatSession initiateAdhocGroupChatSession(in List<String> participants, in String subject);
 
-	// Rejoin a chat group session
-	IChatSession rejoinChatGroupSession(in String sessionId);
+	// Rejoin a group chat session
+	IChatSession rejoinGroupChatSession(in String chatId);
+
+	// Restart a group chat session
+	IChatSession restartGroupChatSession(in String chatId);
 
 	// Get a chat session from its session ID
 	IChatSession getChatSession(in String id);

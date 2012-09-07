@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.ri.messaging;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -46,6 +47,7 @@ import android.widget.Toast;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
@@ -73,7 +75,12 @@ public class InitiateFileTransfer extends Activity {
 	 */
 	private String filename;
 	
-    /**
+	/**
+	 * Selected filesize
+	 */
+	private long filesize = -1;
+	
+	/**
 	 * Messaging API
 	 */
     private MessagingApi messagingApi;
@@ -163,45 +170,67 @@ public class InitiateFileTransfer extends Activity {
      */
     private OnClickListener btnInviteListener = new OnClickListener() {
         public void onClick(View v) {
-        	// Get remote contact
-            Spinner spinner = (Spinner)findViewById(R.id.contact);
-            MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
-            final String remote = cursor.getString(1);
-            
-            // Initiate session in background
-            Thread thread = new Thread() {
-            	public void run() {
-                	try {
-                        // Initiate transfer
-	            		transferSession = messagingApi.transferFile(remote, filename);
-	        	        transferSession.addSessionListener(cshSessionListener);
-	            	} catch(Exception e) {
-						handler.post(new Runnable(){
-							public void run(){
-								Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
-							}
-						});
-	            	}
+            if (filesize >= (RcsSettings.getInstance().getWarningMaxFileTransferSize()*1024)) {
+				// Display a warning message
+            	AlertDialog.Builder builder = new AlertDialog.Builder(InitiateFileTransfer.this);
+            	builder.setMessage(getString(R.string.label_sharing_warn_size, filesize));
+            	builder.setCancelable(false);
+            	builder.setPositiveButton(getString(R.string.label_yes), new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog, int position) {
+                		initiateTransfer();
+                	}
+        		});	                    			
+            	builder.setNegativeButton(getString(R.string.label_no), null);
+                AlertDialog alert = builder.create();
+            	alert.show();
+            } else {
+            	initiateTransfer();
+            }
+    	}
+	};
+      
+	/**
+	 * Initiate transfer
+	 */
+    private void initiateTransfer() {
+    	// Get remote contact
+        Spinner spinner = (Spinner)findViewById(R.id.contact);
+        MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
+        final String remote = cursor.getString(1);
+        
+        // Initiate session in background
+        Thread thread = new Thread() {
+        	public void run() {
+            	try {
+                    // Initiate transfer
+            		transferSession = messagingApi.transferFile(remote, filename);
+        	        transferSession.addSessionListener(cshSessionListener);
+            	} catch(Exception e) {
+					handler.post(new Runnable(){
+						public void run(){
+							Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
+						}
+					});
             	}
-            };
-            thread.start();
-            
-            // Display a progress dialog
-            progressDialog = Utils.showProgressDialog(InitiateFileTransfer.this, getString(R.string.label_command_in_progress));
-            progressDialog.setOnCancelListener(new OnCancelListener() {
-				public void onCancel(DialogInterface dialog) {
-					Toast.makeText(InitiateFileTransfer.this, getString(R.string.label_ft_initiation_canceled), Toast.LENGTH_SHORT).show();
-					quitSession();
-				}
-			});            
+        	}
+        };
+        thread.start();
+        
+        // Display a progress dialog
+        progressDialog = Utils.showProgressDialog(InitiateFileTransfer.this, getString(R.string.label_command_in_progress));
+        progressDialog.setOnCancelListener(new OnCancelListener() {
+			public void onCancel(DialogInterface dialog) {
+				Toast.makeText(InitiateFileTransfer.this, getString(R.string.label_ft_initiation_canceled), Toast.LENGTH_SHORT).show();
+				quitSession();
+			}
+		});            
 
-            // Hide buttons
-            Button inviteBtn = (Button)findViewById(R.id.invite_btn);
-        	inviteBtn.setVisibility(View.INVISIBLE);
-            Button selectBtn = (Button)findViewById(R.id.select_btn);
-            selectBtn.setVisibility(View.INVISIBLE);
-        }
-    };
+        // Hide buttons
+        Button inviteBtn = (Button)findViewById(R.id.invite_btn);
+    	inviteBtn.setVisibility(View.INVISIBLE);
+        Button selectBtn = (Button)findViewById(R.id.select_btn);
+        selectBtn.setVisibility(View.INVISIBLE);
+    }
        
     /**
      * Select file button listener
@@ -244,12 +273,14 @@ public class InitiateFileTransfer extends Activity {
                     TextView uriEdit = (TextView)findViewById(R.id.uri);
                     try {
                     	FileDescription desc = FileFactory.getFactory().getFileDescription(filename);                    
-	                    uriEdit.setText((desc.getSize()/1024) + " KB");
+                    	filesize = desc.getSize()/1024;
+                    	uriEdit.setText(filesize + " KB");
                     } catch(Exception e) {
-	                    uriEdit.setText(filename);
+                    	filesize = -1;
+                    	uriEdit.setText(filename);
                     }
 
-                    // Hide invite button
+                    // Show invite button
                     Button inviteBtn = (Button)findViewById(R.id.invite_btn);
                 	inviteBtn.setEnabled(true);
             	}
@@ -257,7 +288,7 @@ public class InitiateFileTransfer extends Activity {
             break;
         }
     }
-    
+
 	/**
 	 * Hide progress dialog
 	 */

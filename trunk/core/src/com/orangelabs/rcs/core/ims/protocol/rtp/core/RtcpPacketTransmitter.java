@@ -155,7 +155,7 @@ public class RtcpPacketTransmitter extends Thread {
 	public void run() {
 		try {
             // Send a SDES packet
-            // sendSdesPacket();
+            sendSdesPacket();
 
             boolean terminate = false;
             while (!terminate) {
@@ -442,4 +442,24 @@ public class RtcpPacketTransmitter extends Thread {
 	public RtcpStatisticsTransmitter getStatistics() {
 		return stats;
 	}
+
+    /**
+     * Send a SDES packet
+     */
+    private void sendSdesPacket() {
+        // Create a report
+        Vector<RtcpSdesPacket> repvec = makereports();
+        RtcpPacket packets[] = new RtcpPacket[repvec.size()];
+        repvec.copyInto(packets);
+
+        // Create a RTCP compound packet
+        RtcpCompoundPacket cp = new RtcpCompoundPacket(packets);
+
+        // Assemble the RTCP packet
+        int i = cp.calcLength();
+        cp.assemble(i, false);
+
+        // Send the RTCP packet
+        transmit(cp);
+    }
 }

@@ -69,10 +69,20 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	private String remoteContact;
 	
 	/**
-	 * First message
+	 * First message (only for 1-1 chat)
 	 */
 	private InstantMessage firstMessage;
-	
+
+	/**
+	 * Subject (only for group chat)
+	 */
+	private String subject;
+
+    /**
+     * Auto accept
+     */
+    private boolean autoAccept = false;
+
 	/**
      * Chat session
      */
@@ -89,7 +99,9 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		firstMessage = getIntent().getParcelableExtra("firstMessage");
-        
+		subject = getIntent().getStringExtra("subject");
+        autoAccept = getIntent().getBooleanExtra("autoAccept", false);
+
 		// Remove the notification
 		ReceiveChat.removeChatNotification(this, sessionId);
 
@@ -133,19 +145,27 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 				return;
 			}
 			chatSession.addSessionListener(chatSessionListener);
-			
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.title_recv_chat);
-			String msg = getString(R.string.label_from) + " " + remoteContact;
-			if (firstMessage != null) {
-				msg = msg + "\n" + getString(R.string.label_msg) + " " + firstMessage.getTextMessage();
-			}
-			builder.setMessage(msg);
-			builder.setCancelable(false);
-			builder.setIcon(R.drawable.ri_notif_chat_icon);
-			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
-			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
-			builder.show();
+
+            if (autoAccept) {
+                // Auto accept
+            } else {
+                // Manual accept
+    			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    			builder.setTitle(R.string.title_recv_chat);
+    			String msg = getString(R.string.label_from) + " " + remoteContact;
+    			if (firstMessage != null) {
+    				msg = msg + "\n" + getString(R.string.label_msg) + " " + firstMessage.getTextMessage();
+    			} else
+    			if (subject != null) {
+    				msg = msg + "\n" + getString(R.string.label_subject) + " " + subject;
+    			}
+    			builder.setMessage(msg);
+    			builder.setCancelable(false);
+    			builder.setIcon(R.drawable.ri_notif_chat_icon);
+    			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
+    			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
+    			builder.show();
+            }
 		} catch(Exception e) {
 			handler.post(new Runnable(){
 				public void run(){
@@ -235,15 +255,23 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		// Session is started
 		public void handleSessionStarted() {
 			try {
-				// Display first message
+				// Update delivery status of the first message
 				InstantMessage firstMessage = chatSession.getFirstMessage();
 				if (firstMessage != null) {
 					chatSession.setMessageDeliveryStatus(chatSession.getFirstMessage().getMessageId(),
 						ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 				}
-				
+
 				// Display chat view
-	        	Intent intent = new Intent(ReceiveChat.this, ChatView.class);
+				Intent intent;
+				if (chatSession.isGroupChat()) {
+		        	intent = new Intent(ReceiveChat.this, GroupChatView.class);
+		        	intent.putExtra("subject", subject);
+				} else {
+		        	intent = new Intent(ReceiveChat.this, OneToOneChatView.class);
+		        	intent.putExtra("contact", remoteContact);
+		        	intent.putExtra("firstmessage", firstMessage);
+				}
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	        	intent.putExtra("sessionId", sessionId);
 	        	startActivity(intent);

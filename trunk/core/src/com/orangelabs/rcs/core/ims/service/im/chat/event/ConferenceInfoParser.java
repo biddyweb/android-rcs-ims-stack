@@ -28,7 +28,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Conference-Info parser
- * 
+ *
  * @author jexa7410
  */
 public class ConferenceInfoParser extends DefaultHandler {
@@ -45,6 +45,7 @@ public class ConferenceInfoParser extends DefaultHandler {
         <purpose>web-page</purpose>
        </entry>
       </service-uris>
+      <maximum-user-count>50</maximum-user-count>
      </conference-description>
      
      <!-- CONFERENCE STATE -->
@@ -106,15 +107,15 @@ public class ConferenceInfoParser extends DefaultHandler {
 	private StringBuffer accumulator;
 	private ConferenceInfoDocument conference = null;
 	private User user = null;
-	
-	/**
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
      * Constructor
-     * 
+     *
      * @param inputSource Input source
      * @throws Exception
      */
@@ -177,9 +178,25 @@ public class ConferenceInfoParser extends DefaultHandler {
 				user.setState(accumulator.toString().trim());
 			}
 		} else
+        if (localName.equals("maximum-user-count")) {
+            conference.setMaxUserCount(Integer.parseInt(accumulator.toString().trim()));
+        } else
+        if (localName.equals("user-count")) {
+            conference.setUserCount(Integer.parseInt(accumulator.toString().trim()));
+        } else
 		if (localName.equals("conference-info")) {
 			if (logger.isActivated()) {
 				logger.debug("Conference-Info document complete");
+			}
+		} else
+		if (localName.equals("disconnection-method")) {
+			if (user != null) {
+				user.setDisconnectionMethod(accumulator.toString().trim());
+			}
+		} else
+		if (localName.equals("reason")) {
+			if (user != null) {
+				user.setFailureReason(accumulator.toString().trim());
 			}
 		}
 	}

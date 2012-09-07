@@ -354,13 +354,11 @@ public class EventLog extends Activity {
     /**
      * Event log adapter
      */
-    class EventLogAdapter extends ResourceCursorAdapter {
+    private class EventLogAdapter extends ResourceCursorAdapter {
     	private Drawable mDrawableIncomingFailed;
     	private Drawable mDrawableOutgoingFailed;
     	private Drawable mDrawableIncoming;
     	private Drawable mDrawableOutgoing;
-    	private Drawable mDrawableMissed;
-    	private Drawable mDrawableCall;
     	private Drawable mDrawableSms;
     	private Drawable mDrawableMms;
     	private Drawable mDrawableChat;
@@ -375,8 +373,6 @@ public class EventLog extends Activity {
     		mDrawableOutgoingFailed = context.getResources().getDrawable(R.drawable.ri_eventlog_list_outgoing_call_failed);
     		mDrawableIncoming = context.getResources().getDrawable(R.drawable.ri_eventlog_list_incoming_call);
     		mDrawableOutgoing = context.getResources().getDrawable(R.drawable.ri_eventlog_list_outgoing_call);
-    		mDrawableMissed = context.getResources().getDrawable(R.drawable.ri_eventlog_list_missed_call);
-    		mDrawableCall = context.getResources().getDrawable(android.R.drawable.sym_action_call);
     		mDrawableSms = context.getResources().getDrawable(R.drawable.ri_eventlog_sms);
     		mDrawableMms = context.getResources().getDrawable(R.drawable.ri_eventlog_mms);
     		mDrawableChat = context.getResources().getDrawable(R.drawable.ri_eventlog_chat);

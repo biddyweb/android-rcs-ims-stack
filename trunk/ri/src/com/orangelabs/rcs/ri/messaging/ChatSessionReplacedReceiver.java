@@ -30,9 +30,9 @@ import android.content.Intent;
 public class ChatSessionReplacedReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Load a new chat view for the new extended session 
+		// Load a new chat view for the new extended session
 		Intent replacedView = new Intent(intent);
-		replacedView.setClass(context, ChatView.class);
+		replacedView.setClass(context, GroupChatView.class);
 		replacedView.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(replacedView);
     }

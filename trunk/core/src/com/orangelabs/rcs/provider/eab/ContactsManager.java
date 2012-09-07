@@ -39,6 +39,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.AggregationExceptions;
@@ -2890,8 +2891,10 @@ public final class ContactsManager {
         if (cur != null) {
             while (cur.moveToNext()) {
                 long rawContactId = cur.getLong(cur.getColumnIndex(Data.RAW_CONTACT_ID));
-                if (!isRawContactRcs(rawContactId) && !rawContactsIds.contains(rawContactId) &&!isSimAssociated(rawContactId)) {
-                	// We exclude the SIM only contacts, as they cannot be aggregated to a RCS raw contact
+                if (!isRawContactRcs(rawContactId) && !rawContactsIds.contains(rawContactId) 
+                        && (!isSimAssociated(rawContactId) || (Build.VERSION.SDK_INT > 10))) { //Build.VERSION_CODES.GINGERBREAD_MR1
+                    // We exclude the SIM only contacts, as they cannot be aggregated to a RCS raw contact
+                    // only if OS version if gingebread or fewer
                     rawContactsIds.add(rawContactId);
                 }
             }
@@ -2915,8 +2918,10 @@ public final class ContactsManager {
         if (cur != null) {
             while (cur.moveToNext()) {
                 long rawContactId = cur.getLong(cur.getColumnIndex(Data.RAW_CONTACT_ID));
-                if (!isRawContactRcs(rawContactId) && !rawContactsIds.contains(rawContactId) &&!isSimAssociated(rawContactId)) {
-                	// We exclude the SIM only contacts, as they cannot be aggregated to a RCS raw contact
+                if (!isRawContactRcs(rawContactId) && !rawContactsIds.contains(rawContactId) 
+                        && (!isSimAssociated(rawContactId) || (Build.VERSION.SDK_INT > 10))) { //Build.VERSION_CODES.GINGERBREAD_MR1
+                    // We exclude the SIM only contacts, as they cannot be aggregated to a RCS raw contact
+                    // only if OS version if gingebread or fewer
                     rawContactsIds.add(rawContactId);
                 }
             }
