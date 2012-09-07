@@ -57,17 +57,11 @@ LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE)\
 	$(LOCAL_PATH)/src \
  	$(LOCAL_PATH)/include \
-	$(AVC_ROOT)/oscl/osclbase/src \
-	$(AVC_ROOT)/oscl/osclerror/src \
-	$(AVC_ROOT)/oscl/osclmemory/src\
-	$(AVC_ROOT)/oscl/osclutil/src\
-	$(AVC_ROOT)/oscl/config/shared \
-	$(AVC_ROOT)/oscl/config/android \
-	$(AVC_ROOT)/common/include \
-	$(AVC_ROOT)/colorconvert/include  
+	$(AVC_ROOT)/oscl \
+	$(AVC_ROOT)/common/include
 
 # No specia compiler flags.
-LOCAL_CFLAGS += 
+LOCAL_CFLAGS +=
 
 # Link libs (ex logs)
 LOCAL_LDLIBS := -llog

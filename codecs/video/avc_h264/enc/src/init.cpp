@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ AVCEnc_Status  SetEncodeParam(AVCHandle* avcHandle, AVCEncParams* encParam,
 
     if (!extS && !extP)
     {
-        maxFrameNum = (encParam->idr_period == -1) ? (1 << 16) : encParam->idr_period;
+        maxFrameNum = (encParam->idr_period == 0) ? (1 << 16) : encParam->idr_period;
         ii = 0;
         while (maxFrameNum > 0)
         {
@@ -143,7 +143,7 @@ AVCEnc_Status  SetEncodeParam(AVCHandle* avcHandle, AVCEncParams* encParam,
         seqParam->pic_height_in_map_units_minus1 = video->PicHeightInMapUnits - 1;
         seqParam->frame_mbs_only_flag = TRUE;
         seqParam->mb_adaptive_frame_field_flag = FALSE;
-        seqParam->direct_8x8_inference_flag = FALSE; /* default */
+        seqParam->direct_8x8_inference_flag = TRUE; /* default */
         seqParam->frame_cropping_flag = FALSE;
         seqParam->frame_crop_bottom_offset = 0;
         seqParam->frame_crop_left_offset = 0;
@@ -312,7 +312,7 @@ AVCEnc_Status  SetEncodeParam(AVCHandle* avcHandle, AVCEncParams* encParam,
         {
             return AVCENC_WEIGHTED_BIPRED_FAIL;
         }
-        picParam->pic_init_qp_minus26 = 0; /* default, will be changed at slice level anyway */
+        picParam->pic_init_qp_minus26 = encParam->initQP - 26;
         if (picParam->pic_init_qp_minus26 < -26 || picParam->pic_init_qp_minus26 > 25)
         {
             return AVCENC_INIT_QP_FAIL; /* out of range */
@@ -502,7 +502,7 @@ AVCEnc_Status  SetEncodeParam(AVCHandle* avcHandle, AVCEncParams* encParam,
 
     /* now the rate control and performance related parameters */
     rateCtrl->scdEnable = (encParam->auto_scd == AVC_ON) ? TRUE : FALSE;
-    rateCtrl->idrPeriod = encParam->idr_period + 1;
+    rateCtrl->idrPeriod = encParam->idr_period;// + 1;
     rateCtrl->intraMBRate = encParam->intramb_refresh;
     rateCtrl->dpEnable = (encParam->data_par == AVC_ON) ? TRUE : FALSE;
 

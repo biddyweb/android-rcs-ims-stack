@@ -31,7 +31,6 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264EncoderParams;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
@@ -279,26 +278,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Init video encoder
         try {
             timestampInc = 90000 / selectedVideoCodec.getFramerate();
-            NativeH264EncoderParams nativeH264EncoderParams = new NativeH264EncoderParams();
-            nativeH264EncoderParams.setFrameWidth(selectedVideoCodec.getWidth());
-            nativeH264EncoderParams.setFrameHeight(selectedVideoCodec.getHeight());
-            nativeH264EncoderParams.setFrameRate(selectedVideoCodec.getFramerate());
-            nativeH264EncoderParams.setBitRate(selectedVideoCodec.getBitrate());
-
-            // Codec profile level
-            nativeH264EncoderParams.setProfile(NativeH264EncoderParams.PROFILE_BASELINE);
-            nativeH264EncoderParams.setLevel(NativeH264EncoderParams.LEVEL_1B);
-
-            // Codec settings optimization
-            nativeH264EncoderParams.setBitRate(96000);
-            nativeH264EncoderParams.setFrameRate(10);
-            nativeH264EncoderParams.setEncMode(NativeH264EncoderParams.ENCODING_MODE_STREAMING);
-            nativeH264EncoderParams.setPacketSize(JavaPacketizer.H264_MAX_FRAME_SIZE);
-            nativeH264EncoderParams.setSceneDetection(true);
-            nativeH264EncoderParams.setIFrameInterval(10);
-            nativeH264EncoderParams.setFrameOrientation(0);
-
-            int result = NativeH264Encoder.InitEncoder(nativeH264EncoderParams);
+            int result = NativeH264Encoder.InitEncoder(selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight(), selectedVideoCodec.getFramerate());
             if (result != 0) {
                notifyPlayerEventError("Encoder init failed with error code " + result);
                return;

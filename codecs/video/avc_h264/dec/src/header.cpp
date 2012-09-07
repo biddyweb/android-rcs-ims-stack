@@ -24,10 +24,10 @@
 AVCDec_Status DecodeSPS(AVCDecObject *decvid, AVCDecBitstream *stream)
 {
     AVCDec_Status status = AVCDEC_SUCCESS;
-    AVCSeqParamSet *seqParam;
+    AVCSeqParamSet *seqParam, tempSeqParam;
     uint temp;
     int i;
-    uint profile_idc, constrained_set0_flag, constrained_set1_flag, constrained_set2_flag;
+    uint profile_idc, constrained_set0_flag, constrained_set1_flag, constrained_set2_flag,constrained_set3_flag;
     uint level_idc, seq_parameter_set_id;
     void *userData = decvid->avcHandle->userData;
     AVCHandle *avcHandle = decvid->avcHandle;
@@ -42,7 +42,8 @@ AVCDec_Status DecodeSPS(AVCDecObject *decvid, AVCDecBitstream *stream)
 //  }
     BitstreamRead1Bit(stream, &constrained_set1_flag);
     BitstreamRead1Bit(stream, &constrained_set2_flag);
-    BitstreamReadBits(stream, 5, &temp);
+    BitstreamRead1Bit(stream, &constrained_set3_flag);
+    BitstreamReadBits(stream, 4, &temp);
     BitstreamReadBits(stream, 8, &level_idc);
     if (level_idc > 51)
     {
@@ -73,12 +74,14 @@ AVCDec_Status DecodeSPS(AVCDecObject *decvid, AVCDecBitstream *stream)
 
     DEBUG_LOG(userData, AVC_LOGTYPE_INFO, "done alloc seqParams", -1, -1);
 
-    seqParam = decvid->seqParams[seq_parameter_set_id];
+    seqParam = &tempSeqParam; // assign to temporary structure first
+    oscl_memset((void*) seqParam, 0, sizeof(AVCSeqParamSet)); // init to 0
 
     seqParam->profile_idc = profile_idc;
     seqParam->constrained_set0_flag = constrained_set0_flag;
     seqParam->constrained_set1_flag = constrained_set1_flag;
     seqParam->constrained_set2_flag = constrained_set2_flag;
+    seqParam->constrained_set3_flag = constrained_set3_flag;
     seqParam->level_idc = level_idc;
     seqParam->seq_parameter_set_id = seq_parameter_set_id;
 
@@ -164,9 +167,14 @@ AVCDec_Status DecodeSPS(AVCDecObject *decvid, AVCDecBitstream *stream)
         status = vui_parameters(decvid, stream, seqParam);
         if (status != AVCDEC_SUCCESS)
         {
-            return AVCDEC_FAIL;
+            return status;
         }
     }
+
+    /* now everything is good, copy it */
+    oscl_memcpy(decvid->seqParams[seq_parameter_set_id], seqParam, sizeof(AVCSeqParamSet));
+
+    decvid->lastSPS = decvid->seqParams[seq_parameter_set_id]; /* for PVAVCDecGetSeqInfo */
 
     return status;
 }
@@ -279,6 +287,7 @@ AVCDec_Status vui_parameters(AVCDecObject *decvid, AVCDecBitstream *stream, AVCS
     }
     return AVCDEC_SUCCESS;
 }
+
 AVCDec_Status hrd_parameters(AVCDecObject *decvid, AVCDecBitstream *stream, AVCHRDParams *HRDParam)
 {
     OSCL_UNUSED_ARG(decvid);
@@ -311,6 +320,7 @@ AVCDec_Status hrd_parameters(AVCDecObject *decvid, AVCDecBitstream *stream, AVCH
     /*  time_offset_length  */
     BitstreamReadBits(stream, 5, &temp);
     HRDParam->time_offset_length = temp;
+
     return AVCDEC_SUCCESS;
 }
 
@@ -323,8 +333,10 @@ AVCDec_Status DecodePPS(AVCDecObject *decvid, AVCCommonObj *video, AVCDecBitstre
     int i, iGroup, numBits;
     int PicWidthInMbs, PicHeightInMapUnits, PicSizeInMapUnits;
     uint pic_parameter_set_id, seq_parameter_set_id;
+    uint temp_uint;
     void *userData = decvid->avcHandle->userData;
     AVCHandle *avcHandle = decvid->avcHandle;
+    AVCPicParamSet tempPicParam;  /* add this to make sure that we don't overwrite good PPS with corrupted new PPS */
 
     ue_v(stream, &pic_parameter_set_id);
     if (pic_parameter_set_id > 255)
@@ -339,27 +351,19 @@ AVCDec_Status DecodePPS(AVCDecObject *decvid, AVCCommonObj *video, AVCDecBitstre
         return AVCDEC_FAIL;
     }
 
-    /* 2.1 if picParams[pic_param_set_id] is NULL, allocate it. */
-    if (decvid->picParams[pic_parameter_set_id] == NULL)
-    {
-        decvid->picParams[pic_parameter_set_id] =
-            (AVCPicParamSet*)avcHandle->CBAVC_Malloc(userData, sizeof(AVCPicParamSet), DEFAULT_ATTR);
-        if (decvid->picParams[pic_parameter_set_id] == NULL)
-        {
-            return AVCDEC_MEMORY_FAIL;
-        }
 
-        decvid->picParams[pic_parameter_set_id]->slice_group_id = NULL;
-    }
+    picParam = &tempPicParam;  /* decode everything into this local structure first */
+    oscl_memset((void *) picParam, 0, sizeof(AVCPicParamSet)); // init the structure to 0
 
-    video->currPicParams = picParam = decvid->picParams[pic_parameter_set_id];
+    picParam->slice_group_id = NULL;
+
     picParam->seq_parameter_set_id = seq_parameter_set_id;
     picParam->pic_parameter_set_id = pic_parameter_set_id;
 
     BitstreamRead1Bit(stream, (uint*)&(picParam->entropy_coding_mode_flag));
     if (picParam->entropy_coding_mode_flag)
     {
-        status = AVCDEC_FAIL;
+        status = AVCDEC_NOT_SUPPORTED;
         goto clean_up;
     }
     BitstreamRead1Bit(stream, (uint*)&(picParam->pic_order_present_flag));
@@ -375,6 +379,12 @@ AVCDec_Status DecodePPS(AVCDecObject *decvid, AVCCommonObj *video, AVCDecBitstre
     if (picParam->num_slice_groups_minus1 > 0)
     {
         ue_v(stream, &(picParam->slice_group_map_type));
+        if (picParam->slice_group_map_type > 6)
+        {
+            status = AVCDEC_FAIL; /* out of range */
+            goto clean_up;
+        }
+
         if (picParam->slice_group_map_type == 0)
         {
             for (iGroup = 0; iGroup <= (int)picParam->num_slice_groups_minus1; iGroup++)
@@ -444,7 +454,6 @@ AVCDec_Status DecodePPS(AVCDecObject *decvid, AVCCommonObj *video, AVCDecBitstre
                 BitstreamReadBits(stream, numBits, &(picParam->slice_group_id[i]));
             }
         }
-
     }
 
     ue_v(stream, &(picParam->num_ref_idx_l0_active_minus1));
@@ -487,29 +496,50 @@ AVCDec_Status DecodePPS(AVCDecObject *decvid, AVCCommonObj *video, AVCDecBitstre
     if (picParam->chroma_qp_index_offset < -12 || picParam->chroma_qp_index_offset > 12)
     {
         status = AVCDEC_FAIL; /* out of range */
-        status = AVCDEC_FAIL; /* out of range */
         goto clean_up;
     }
 
-    BitstreamReadBits(stream, 3, &pic_parameter_set_id);
-    picParam->deblocking_filter_control_present_flag = pic_parameter_set_id >> 2;
-    picParam->constrained_intra_pred_flag = (pic_parameter_set_id >> 1) & 1;
-    picParam->redundant_pic_cnt_present_flag = pic_parameter_set_id & 1;
+    BitstreamReadBits(stream, 3, &temp_uint);
+    picParam->deblocking_filter_control_present_flag = temp_uint >> 2;
+    picParam->constrained_intra_pred_flag = (temp_uint >> 1) & 1;
+    picParam->redundant_pic_cnt_present_flag = temp_uint & 1;
+
+    // add this final check
+    if (decvid->seqParams[picParam->seq_parameter_set_id] == NULL) // associated SPS is not found
+    {
+        status = AVCDEC_FAIL;
+        goto clean_up;
+    }
+
+    // now that everything is OK - we may want to allocate the structure
+    /* 2.1 if picParams[pic_param_set_id] is NULL, allocate it. */
+    if (decvid->picParams[pic_parameter_set_id] == NULL)
+    {
+        decvid->picParams[pic_parameter_set_id] =
+            (AVCPicParamSet*)avcHandle->CBAVC_Malloc(userData, sizeof(AVCPicParamSet), DEFAULT_ATTR);
+        if (decvid->picParams[pic_parameter_set_id] == NULL)
+        {
+            return AVCDEC_MEMORY_FAIL;
+        }
+
+        oscl_memset(decvid->picParams[pic_parameter_set_id], 0, sizeof(AVCPicParamSet));
+    }
+
+    /* Everything is successful, now copy it to the global structure */
+    oscl_memcpy(decvid->picParams[pic_parameter_set_id], picParam, sizeof(AVCPicParamSet));
+
+    video->currPicParams = decvid->picParams[pic_parameter_set_id];
+
 
     return AVCDEC_SUCCESS;
 clean_up:
-    if (decvid->picParams[pic_parameter_set_id])
+
+    if (picParam->slice_group_id != NULL)
     {
-        if (picParam->slice_group_id)
-        {
-            avcHandle->CBAVC_Free(userData, (int)picParam->slice_group_id);
-        }
-        decvid->picParams[pic_parameter_set_id]->slice_group_id = NULL;
-        avcHandle->CBAVC_Free(userData, (int)decvid->picParams[pic_parameter_set_id]);
-        decvid->picParams[pic_parameter_set_id] = NULL;
-        return status;
+        avcHandle->CBAVC_Free(userData, (int)picParam->slice_group_id);
     }
-    return AVCDEC_SUCCESS;
+
+    return status;
 }
 
 
@@ -530,7 +560,7 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
 
     if (sliceHdr->first_mb_in_slice != 0)
     {
-        if ((int)sliceHdr->slice_type >= 5 && slice_type != (int)sliceHdr->slice_type - 5)
+        if ((int)sliceHdr->slice_type >= 5 && (slice_type != (int)sliceHdr->slice_type) && (slice_type != (int)sliceHdr->slice_type - 5))
         {
             return AVCDEC_FAIL; /* slice type doesn't follow the first slice in the picture */
         }
@@ -543,7 +573,7 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
 
     if (slice_type == 1 || slice_type > 2)
     {
-        return AVCDEC_FAIL;
+        return AVCDEC_NOT_SUPPORTED;
     }
 
     video->slice_type = (AVCSliceType) slice_type;
@@ -573,6 +603,7 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
         status = (AVCDec_Status)AVCConfigureSequence(decvid->avcHandle, video, false);
         if (status != AVCDEC_SUCCESS)
             return status;
+
         video->level_idc = currSPS->level_idc;
     }
 
@@ -603,7 +634,7 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
         BitstreamRead1Bit(stream, &(sliceHdr->field_pic_flag));
         if (sliceHdr->field_pic_flag)
         {
-            return AVCDEC_FAIL;
+            return AVCDEC_NOT_SUPPORTED;
         }
     }
 
@@ -664,7 +695,7 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
             return AVCDEC_FAIL;
 
         if (sliceHdr->redundant_pic_cnt > 0) /* redundant picture */
-            return AVCDEC_FAIL; /* not supported */
+            return AVCDEC_NOT_SUPPORTED; /* not supported */
     }
     sliceHdr->num_ref_idx_l0_active_minus1 = currPPS->num_ref_idx_l0_active_minus1;
     sliceHdr->num_ref_idx_l1_active_minus1 = currPPS->num_ref_idx_l1_active_minus1;
@@ -676,21 +707,14 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
         {
             ue_v(stream, &(sliceHdr->num_ref_idx_l0_active_minus1));
         }
-        else  /* the following condition is not allowed if the flag is zero */
-        {
-            if ((slice_type == AVC_P_SLICE) && currPPS->num_ref_idx_l0_active_minus1 > 15)
-            {
-                return AVCDEC_FAIL; /* not allowed */
-            }
-        }
     }
 
-
-    if (sliceHdr->num_ref_idx_l0_active_minus1 > 15 ||
-            sliceHdr->num_ref_idx_l1_active_minus1 > 15)
+    // check bound
+    if (sliceHdr->num_ref_idx_l0_active_minus1 > 15) // ||sliceHdr->num_ref_idx_l1_active_minus1 > 31)
     {
         return AVCDEC_FAIL; /* not allowed */
     }
+
     /* if MbaffFrameFlag =1,
     max value of index is num_ref_idx_l0_active_minus1 for frame MBs and
     2*sliceHdr->num_ref_idx_l0_active_minus1 + 1 for field MBs */
@@ -874,6 +898,11 @@ AVCDec_Status ref_pic_list_reordering(AVCCommonObj *video, AVCDecBitstream *stre
             }
             while (sliceHdr->reordering_of_pic_nums_idc_l0[i-1] != 3
                     && i <= (int)sliceHdr->num_ref_idx_l0_active_minus1 + 1) ;
+
+            if (sliceHdr->reordering_of_pic_nums_idc_l0[i-1] != 3) // only way to exit the while loop
+            {
+                return AVCDEC_FAIL;
+            }
         }
     }
     return AVCDEC_SUCCESS;

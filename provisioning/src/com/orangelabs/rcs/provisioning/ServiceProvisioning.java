@@ -120,9 +120,6 @@ public class ServiceProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.AutoAcceptChat);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.AUTO_ACCEPT_CHAT)));
-
-        check = (CheckBox)this.findViewById(R.id.AutoAcceptGroupChat);
-        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT)));
 	}
 	
     @Override
@@ -195,10 +192,7 @@ public class ServiceProvisioning extends Activity {
 				
 		        check = (CheckBox)this.findViewById(R.id.AutoAcceptChat);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_ACCEPT_CHAT, Boolean.toString(check.isChecked()));
-
-                check = (CheckBox)this.findViewById(R.id.AutoAcceptGroupChat);
-                RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT, Boolean.toString(check.isChecked()));
-                break;
+				break;
 		}
 		return true;
 	}

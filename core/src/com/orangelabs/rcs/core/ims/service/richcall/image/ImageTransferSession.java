@@ -30,6 +30,11 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * @author jexa7410
  */
 public abstract class ImageTransferSession extends ContentSharingSession {
+    /**
+	 * Max content sharing size (in bytes)
+	 */
+	public final static int MAX_CONTENT_SIZE = RcsSettings.getInstance().getMaxImageSharingSize()*1024;
+	
 	/**
 	 * Default SO_TIMEOUT value (in seconds)
 	 */
@@ -80,13 +85,4 @@ public abstract class ImageTransferSession extends ContentSharingSession {
 			getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 		}
 	}
-	
-	/**
-	 * Returns max image sharing size
-	 * 
-	 * @return Size in bytes
-	 */
-	public static int getMaxImageSharingSize() {
-		return RcsSettings.getInstance().getMaxImageSharingSize()*1024;
-	}	
 }

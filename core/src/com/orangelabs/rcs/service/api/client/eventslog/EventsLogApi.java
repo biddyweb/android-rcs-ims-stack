@@ -81,49 +81,34 @@ public class EventsLogApi extends ClientApi {
 	 * <br>Holds IMDN id for chat messages or file transfer session id for file transfers
 	 */
 	public static final int MESSAGE_ID_COLUMN = 7;
-	
-	/**
-	 * Spam flag
-	 */
-	public static final int IS_SPAM_COLUMN = 8;
-
-	/**
-	 * Id of the chat 
-	 */
-	public static final int CHAT_ID_COLUMN = 9;
-
-	/**
-	 * Rejoin ID 
-	 */
-	public static final int CHAT_REJOIN_ID_COLUMN = 10;
 
 	/**
 	 * Mime-type of the content
 	 * 
 	 * <br>Only relevant for file transfer
 	 */
-	public static final int MIMETYPE_COLUMN = 11;
+	public static final int MIMETYPE_COLUMN = 8;
 	
 	/**
 	 * Name of the content
 	 * 
 	 * <br>Only relevant for file transfer
 	 */
-	public static final int NAME_COLUMN = 12;
+	public static final int NAME_COLUMN = 9;
 	
 	/**
 	 * Size already transfered
 	 * 
 	 * <br>Only relevant for file transfer or rich call
 	 */
-	public static final int SIZE_COLUMN = 13;
+	public static final int SIZE_COLUMN = 10;
 	
 	/**
 	 * Total size of the file
 	 * 	 
 	 * <br>Only relevant for file transfer or rich call
 	 */
-	public static final int TOTAL_SIZE_COLUMN = 14;
+	public static final int TOTAL_SIZE_COLUMN = 11;
 	
 	// Entry types
 	// One to one chat
@@ -141,7 +126,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int TYPE_INCOMING_RICH_CALL = 8;
 	public static final int TYPE_OUTGOING_RICH_CALL = 9;	
 	// SMS
-	public static final int TYPE_INCOMING_SMS = 10; 
+	public static final int TYPE_INCOMING_SMS = 10;			// 
 	public static final int TYPE_OUTGOING_SMS = 11;
 
 	// Possible status values
@@ -163,15 +148,11 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_REPORT_REQUESTED = 10; // receiver side : the sender has requested a "displayed" report when the message will be displayed
 	
 	// Possible data for chat system event
-	public static final int EVENT_JOINED_CHAT = 12; // Contact has joined
-	public static final int EVENT_LEFT_CHAT = 13; // Contact is departed
-	public static final int EVENT_INVITED = 14; // Contact is invited
-	public static final int EVENT_INITIATED = 15; // Contact is inviting
-	public static final int EVENT_DISCONNECT_CHAT = 16; // Contact is booted
-	public static final int EVENT_FAILED = 17; // Contact has declined the invitation or any other reason
-	public static final int EVENT_BUSY = 18; // Contact is busy
-	public static final int EVENT_DECLINED = 19; // Contact has declined the invitation
-	
+	public static final int EVENT_JOINED_CHAT = 12;
+	public static final int EVENT_LEFT_CHAT = 13;
+	public static final int EVENT_INVITED = 14;		// We were invited
+	public static final int EVENT_INITIATED = 15;	// We initiated the chat
+
 	// Is Spam
 	public static final int MESSAGE_IS_NOT_SPAM = 0;
 	public static final int MESSAGE_IS_SPAM = 1;
@@ -230,44 +211,6 @@ public class EventsLogApi extends ClientApi {
     	RichCall.createInstance(ctx);
     	RichMessaging.createInstance(ctx);
     }
-
-    /**
-     * Get the events log content provider base uri
-     * 
-     * @param mode
-     * @return uri
-     */
-    public Uri getEventLogContentProviderUri(int mode){
-    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, mode); 
-    }
-    
-    /**
-     * Get one to one chat log
-     * 
-     * @return uri
-     */
-    public Uri getOneToOneChatLogContentProviderUri(){
-    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_ONE_TO_ONE_CHAT);
-    }
-    
-    
-    /**
-     * Get group chat log
-     * 
-     * @return uri
-     */
-    public Uri getGroupChatLogContentProviderUri(){
-    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_GROUP_CHAT);
-    }	
-	
-    /**
-     * Get spam box log
-     * 
-     * @return uri
-     */
-    public Uri getSpamBoxLogContentProviderUri(){
-    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_SPAM_BOX);
-    }    
 
     /**
      * Clear the history of a given contact
@@ -411,6 +354,35 @@ public class EventsLogApi extends ClientApi {
     }
     
     /**
+     * Get the events log content provider base uri
+     * 
+     * @param mode
+     * @return uri
+     */
+    public Uri getEventLogContentProviderUri(int mode){
+    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, mode); 
+    }
+    
+    /**
+     * Get one to one chat log
+     * 
+     * @return uri
+     */
+    public Uri getOneToOneChatLogContentProviderUri(){
+    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_ONE_TO_ONE_CHAT);
+    }
+    
+    
+    /**
+     * Get group chat log
+     * 
+     * @return uri
+     */
+    public Uri getGroupChatLogContentProviderUri(){
+    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_GROUP_CHAT);
+    }
+    
+    /**
      * Mark message as spam
      * 
      * @param msgId
@@ -470,5 +442,14 @@ public class EventsLogApi extends ClientApi {
      */
     public void deleteAllSpams(){
     	RichMessaging.getInstance().deleteAllSpams();
+    }
+    
+    /**
+     * Get spam box log
+     * 
+     * @return uri
+     */
+    public Uri getSpamBoxLogContentProviderUri(){
+    	return ContentUris.withAppendedId(EventLogData.CONTENT_URI, MODE_SPAM_BOX);
     }
 }

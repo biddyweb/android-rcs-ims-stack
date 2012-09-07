@@ -18,7 +18,7 @@
 package com.orangelabs.rcs.core.ims.service;
 
 /**
- * Session ID generator
+ * Session-ID generator
  * 
  * @author jexa7410
  */

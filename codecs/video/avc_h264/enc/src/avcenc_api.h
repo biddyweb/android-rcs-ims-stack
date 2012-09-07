@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -261,6 +261,15 @@ extern "C"
     \return "AVCENC_SUCCESS if success, AVCENC_FAIL otherwise."
     */
     OSCL_IMPORT_REF AVCEnc_Status PVAVCEncGetNALType(uint8 *bitstream, int size, int *nal_type, int *nal_ref_idc);
+
+    /**
+    This function gets the profile and level.
+    \param "avcHandle"  "Handle to the AVC encoder library object."
+    \param "profile"    "profile value"
+    \param "level"      "level value"
+    \return "AVCENC_SUCCESS if success, AVCENC_UNINITIALIZED if encoder obj is NULL."
+    */
+    OSCL_IMPORT_REF AVCEnc_Status PVAVCEncGetProfileLevel(AVCHandle* avcHandle, AVCProfile* profile, AVCLevel* level);
 
     /**
     This function returns the pointer to internal overrun buffer. Users can call this to query

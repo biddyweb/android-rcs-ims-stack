@@ -33,7 +33,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * HTTP Digest MD5 registration procedure
  * 
  * @author jexa7410
- * @author Deutsche Telekom
  */
 public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	/**
@@ -69,12 +68,12 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	}
 
 	/**
-	 * Returns the public URI or IMPU for registration
+	 * Returns the public URI or IMPU
 	 * 
 	 * @return Public URI
 	 */
 	public String getPublicUri() {
-    	return "sip:" + ImsModule.IMS_USER_PROFILE.getUsername() + "@" + ImsModule.IMS_USER_PROFILE.getHomeDomain();    	
+		return ImsModule.IMS_USER_PROFILE.getPublicUri();
 	}
 
 	/**

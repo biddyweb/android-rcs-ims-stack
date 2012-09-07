@@ -27,7 +27,6 @@ public class PhoneUtilsTest extends AndroidTestCase {
 		assertEquals(PhoneUtils.formatNumberToInternational("+33121345678"), "+33121345678");
 		assertEquals(PhoneUtils.formatNumberToInternational("33121345678"), "+3333121345678");
 		assertEquals(PhoneUtils.formatNumberToInternational("123"), "+33123");
-		assertEquals(PhoneUtils.formatNumberToInternational("+33004010001"), "+33004010001");
 	}
 
 	public void testSpainNumber() {

@@ -9,18 +9,12 @@
 #ifndef _3GPVIDEOPARSER_H_
 #define _3GPVIDEOPARSER_H_
 
-
-#if 1
-	#include "oscl_types.h"
-#else
-	/* Define new types */
-	typedef unsigned char uint8;
-	typedef unsigned short uint16;
-	typedef short int16;
-	typedef unsigned long uint32;
-	typedef long int32;
-#endif
-
+/* Define new types */
+typedef unsigned char uint8;
+typedef unsigned short uint16;
+typedef short int16;
+typedef unsigned long uint32;
+typedef long int32;
 
 #define DEBUG 1;
 

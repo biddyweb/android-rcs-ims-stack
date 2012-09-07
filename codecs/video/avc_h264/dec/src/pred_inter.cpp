@@ -1600,6 +1600,7 @@ void DiagonalInterpMC(uint8 *in1, uint8 *in2, int inpitch,
     uint32 tmp, pkres, tmp_result;
     int32 r0, r1, r2, r3, r4, r5;
     int32 r6, r7, r8, r9, r10, r13;
+    void *tmp_void;
 
     ref_offset = inpitch - blkwidth;
     p_ref = in1 - 2;
@@ -1613,7 +1614,9 @@ void DiagonalInterpMC(uint8 *in1, uint8 *in2, int inpitch,
             ref_offset = 24-blkwidth;
         }*/
 
-    p_tmp = (uint32*) & (tmp_res[0][0]);
+    tmp_void = (void*) & (tmp_res[0][0]);
+    p_tmp = (uint32*) tmp_void;
+
     for (j = blkheight; j > 0; j--)
     {
         r13 = 0;

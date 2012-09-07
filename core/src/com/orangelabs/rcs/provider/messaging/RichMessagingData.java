@@ -40,7 +40,6 @@ public class RichMessagingData {
 	public static final String KEY_MESSAGE_ID = "message_id";
 	public static final String KEY_IS_SPAM = "is_spam";
 	public static final String KEY_CHAT_ID = "chat_id";
-	public static final String KEY_CHAT_REJOIN_ID = "chat_rejoin_id";
 	
 	// Fields for file transfer
 	public static final String KEY_MIME_TYPE = "mime_type";

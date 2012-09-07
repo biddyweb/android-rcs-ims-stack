@@ -184,14 +184,11 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
+	            "a=max-size:" + ImageTransferSession.MAX_CONTENT_SIZE + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
-	    	int maxSize = ImageTransferSession.getMaxImageSharingSize();
-	    	if (maxSize > 0) {
-	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
-	    	}
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);

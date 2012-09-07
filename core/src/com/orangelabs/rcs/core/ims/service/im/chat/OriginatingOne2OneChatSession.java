@@ -78,10 +78,6 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		
 		// Create dialog path
 		createOriginatingDialogPath();
-		
-		// Set contribution ID
-		String id = ContributionIdGenerator.getContributionId(getDialogPath().getCallId());
-		setContributionID(id);		
 	}
 	
 	/**

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -367,7 +367,7 @@ class PVAVCEncoderInterface
         encoding to a new value.
         \parm aIFrameInterval is a new value of the IDR-frame interval in millisecond.
         \return SUCCESS or FAIL (if the value is invalid). */
-        virtual  TAVCEI_RETVAL UpdateIDRFrameInterval(int32 aIFrameInterval) = 0;
+        virtual  TAVCEI_RETVAL UpdateIDRFrameInterval(int32 aIDRFrameInterval) = 0;
 
         /** This function forces an IDR mode to the next frame to be encoded.
         \return  none. */

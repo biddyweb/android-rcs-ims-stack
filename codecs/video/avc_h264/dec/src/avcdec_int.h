@@ -67,6 +67,8 @@ typedef struct tagDecObject
     /* sequence parameter set */
     AVCSeqParamSet *seqParams[32]; /* Array of pointers, get allocated at arrival of new seq_id */
 
+    AVCSeqParamSet *lastSPS; /* point to the most recently decoded SPS, for PVAVCDecGetSeqInfo */
+
     /* picture parameter set */
     AVCPicParamSet *picParams[256]; /* Array of pointers to picture param set structures */
 

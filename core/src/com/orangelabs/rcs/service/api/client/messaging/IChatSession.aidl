@@ -19,17 +19,14 @@ interface IChatSession {
 	// Get session state
 	int getSessionState();
 
-	// Is group chat
-	boolean isGroupChat();
+	// Is chat group
+	boolean isChatGroup();
 	
 	// Is Store & Forward
 	boolean isStoreAndForward();
 
 	// Get first message exchanged during the session
 	InstantMessage getFirstMessage();
-
-	// Get subject associated to the session
-	String getSubject();
 
 	// Accept the session invitation
 	void acceptSession();
@@ -42,12 +39,6 @@ interface IChatSession {
 
 	// Get list of participants in the session
 	List<String> getParticipants();
-
-	// Get max number of participants in the session
-	int getMaxParticipants();
-
-	// Get max number of participants which can be added to the conference
-	int getMaxParticipantsToBeAdded();
 
 	// Add a participant to the session
 	void addParticipant(in String participant);

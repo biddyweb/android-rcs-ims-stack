@@ -575,7 +575,6 @@ public class ProvisioningParser {
         String chatAuth = null;
         String smsFallBackAuth = null;
         String autoAcceptChat = null;
-        String autoAcceptGroupChat = null;
         String maxSize1to1 = null;
         String maxSize1toM = null;
         String timerIdle = null;
@@ -688,21 +687,6 @@ public class ProvisioningParser {
                         } else {
                             RcsSettings.getInstance().writeParameter(
                                     RcsSettingsData.AUTO_ACCEPT_CHAT,
-                                    RcsSettingsData.TRUE);
-                        }
-                        continue;
-                    }
-                }
-
-                if (autoAcceptGroupChat == null) {
-                    if ((autoAcceptGroupChat = getValueByParamName("AutAcceptGroupChat", childnode)) != null) {
-                        if (autoAcceptGroupChat.equals("0")) {
-                            RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT,
-                                    RcsSettingsData.FALSE);
-                        } else {
-                            RcsSettings.getInstance().writeParameter(
-                                    RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT,
                                     RcsSettingsData.TRUE);
                         }
                         continue;

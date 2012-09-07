@@ -18,13 +18,14 @@
 
 package com.orangelabs.rcs.connector;
 
-import java.util.Vector;
+import java.util.List;
 
 import android.app.ListActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -154,73 +155,49 @@ public class TestUiConnector extends ListActivity {
 
 			case 9:
 				// Is device RCS compliant
-				isRcsCompliant();
+				if (GsmaClientConnector.isDeviceRcsCompliant(this)) {
+					Utils.showMessage(this, getString(R.string.label_rcs_compliant));
+				} else {
+					Utils.showMessage(this, getString(R.string.label_not_rcs_compliant));
+				}
 				break;
         		
 			case 10:
 				// Is RCS activated
-				isRcsClientActivated();
+	    	    List<ApplicationInfo> apps = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
+    			boolean enabled = false;;
+	    	    for(int i=0; i < apps.size(); i++) {
+	    	    	ApplicationInfo info = apps.get(i);
+	    	        if (info.metaData != null) {
+	    	        	if (info.metaData.getBoolean("gsma.joyn.client", false)) {
+    		    			enabled = GsmaClientConnector.isRcsClientActivated(this, info.packageName);
+    						if (enabled) {
+    	    	        		// A client is found and activated
+    							break;
+    						}
+	    	        	}
+	    	        }
+	    	    }
+	    	    if (enabled) {
+	    	    	Utils.showMessage(this, getString(R.string.label_activated));
+	    	    } else {
+	    	    	Utils.showMessage(this, getString(R.string.label_not_activated));
+	    	    }
 				break;
 
 			case 11:
         		// Load RCS settings
-				loadRcsSettings();
+        		try {
+        			Intent intent = GsmaClientConnector.getRcsSettingsActivityIntent(this);
+        			if (intent != null) {
+        				startActivity(intent);
+        			} else {
+        				Utils.showMessage(this, getString(R.string.label_ui_not_found));
+        			}
+            	} catch(ActivityNotFoundException e) {
+    				Utils.showMessage(this, getString(R.string.label_ui_not_found));
+            	}
         		break;
         	}
-    } 
-    
-    /**
-     * Is device RCS compliant
-     */
-    public void isRcsCompliant() {
-		if (GsmaClientConnector.isDeviceRcsCompliant(this)) {
-			Utils.showMessage(this, getString(R.string.label_rcs_compliant));
-		} else {
-			Utils.showMessage(this, getString(R.string.label_not_rcs_compliant));
-		}
-    }
-
-    /**
-     * Is RCS client activated
-     */
-    public void isRcsClientActivated() {
-		boolean enabled = false;
-		Vector<ApplicationInfo> clients = GsmaClientConnector.getRcsClients(this);
-		for(int i=0; i< clients.size(); i++) {
-			ApplicationInfo client = clients.get(0);
-			enabled = GsmaClientConnector.isRcsClientActivated(this, client.packageName);
-			if (enabled) {
-        		// A client is found and activated
-				break;
-			}
-	    }
-	    if (enabled) {
-	    	Utils.showMessage(this, getString(R.string.label_client_activated));
-	    } else {
-	    	Utils.showMessage(this, getString(R.string.label_client_not_activated));
-	    }
-    }
-    
-    /**
-     * Load RCS settings
-     */
-    public void loadRcsSettings() {
-		try {
-			Vector<ApplicationInfo> clients = GsmaClientConnector.getRcsClients(this);
-			if (clients.size() > 0) {
-				ApplicationInfo client = clients.get(0);
-				Intent intent = GsmaClientConnector.getRcsSettingsActivityIntent(this, client.packageName);
-				if (intent != null) {
-					// Display settings
-					startActivity(intent);
-				} else {
-					Utils.showMessage(this, getString(R.string.label_client_settings_not_found));
-				}
-			} else {
-				Utils.showMessage(this, getString(R.string.label_client_not_found));
-			}
-    	} catch(ActivityNotFoundException e) {
-			Utils.showMessage(this, getString(R.string.label_client_settings_not_found));
-    	}
-	}    
+    }    
 }

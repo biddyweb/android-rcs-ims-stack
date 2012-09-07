@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.8"
+ android:versionName="2.4.7"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"/>
 	
-	<uses-permission android:name="android.permission.GET_TASKS"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
@@ -163,7 +162,7 @@
             </intent-filter>
 		</activity>
 
-        <activity android:name=".messaging.InitiateGroupChat">
+        <activity android:name=".messaging.InitiateChatGroup">
 			<intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -188,14 +187,12 @@
 
         <activity android:name=".messaging.ReceiveChat"/>
 
-        <activity android:name=".messaging.OneToOneChatView"/>
-        
-        <activity android:name=".messaging.GroupChatView"/>
+        <activity android:name=".messaging.ChatView"/>
+
+        <activity android:name=".messaging.RejoinChat"/>
 
         <activity android:name=".messaging.ChatList"/>
         
-        <activity android:name=".messaging.BlockContact"/>
-
         <activity android:name=".messaging.SpamBox"/>
 
         <!-- Rich call RI -->

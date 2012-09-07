@@ -96,8 +96,7 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
 	    	String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"s=-" + SipUtils.CRLF +
-            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
+            	"s=-" + SipUtils.CRLF + "c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
             	"t=0 0" + SipUtils.CRLF +
             	videoSdp +
             	"a=sendonly" + SipUtils.CRLF;

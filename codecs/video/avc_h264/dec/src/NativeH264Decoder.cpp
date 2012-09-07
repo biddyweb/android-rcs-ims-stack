@@ -7,99 +7,9 @@
 #include "NativeH264Decoder.h"
 #include "pvavcdecoder.h"
 #include "3GPVideoParser.h"
-
-#include "avcapi_common.h" //+OrangeLabs
-#include "oscl_mem.h" //+OrangeLabs
-#include "avcdec_api.h"
 #include "yuv2rgb.h"
 
 #define MB_BASED_DEBLOCK
-
-/* ------------------------------------------------------------------------------------- */
-/*  Callback declaration for pvAvcDecoder                                                */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-#define AVC_DEC_TIMESTAMP_ARRAY_SIZE 17    // don't ask me why :) look at avc_dev.h
-
-typedef struct s_decoderData {
-    uint32          FrameSize;
-    uint8*          pDpbBuffer;
-    uint32   	    DisplayTimestampArray[AVC_DEC_TIMESTAMP_ARRAY_SIZE];
-    uint32     		CurrInputTimestamp;
-
-    PVAVCDecoder *  pvAvDec;
-    AVCDecSPSInfo   SeqInfo;
-} DecoderData;
-
-DecoderData    gDecodeData = {0};
-
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-int cb_AVC_init_SPS(void *userData, uint aSizeInMbs, uint aNumBuffers) {
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB init_SPS");
-
-	DecoderData *avcDec = (DecoderData*) userData;
-    if (NULL == avcDec) {
-        return 0;
-    }
-    avcDec->pvAvDec->GetSeqInfo(&avcDec->SeqInfo);
-    if (avcDec->pDpbBuffer) {
-        free(avcDec->pDpbBuffer);
-        avcDec->pDpbBuffer = NULL;
-    }
-    avcDec->FrameSize = (aSizeInMbs << 7) * 3;
-    avcDec->pDpbBuffer = (uint8*) malloc(aNumBuffers * (avcDec->FrameSize));
-
-    return 1;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-int cb_AVC_Malloc(void *userData, int32 size, int attribute) {
-	DecoderData *avcDec = (DecoderData*) userData;
-    return avcDec->pvAvDec->AVC_Malloc(size, attribute);
-}
-
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-void cb_AVC_Free(void *userData, int mem) {
-	DecoderData *avcDec = (DecoderData*) userData;
-	avcDec->pvAvDec->AVC_Free(mem);
-}
-
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-int cb_AVC_DPBAlloc(void* userData, int32 i, uint8** aYuvBuffer) {
-	//__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB cb_AVC_DPBAlloc");
-	DecoderData *avcDec = (DecoderData*) userData;
-    if (NULL == avcDec) {
-        return 0;
-    }
-
-    *aYuvBuffer = avcDec->pDpbBuffer + i * avcDec->FrameSize;
-    //Store the input timestamp at the correct index
-    avcDec->DisplayTimestampArray[i] = avcDec->CurrInputTimestamp;
-
-    return 1;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
-void cb_AVC_FrameUnbind(void *userData, int indx) {
-    OSCL_UNUSED_ARG(userData);
-    OSCL_UNUSED_ARG(indx);
-    return;
-}
-
-/* ------------------------------------------------------------------------------------- */
-/*  JNI wrapper                                                                          */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
 
 /* Packet video decoder */
 PVAVCDecoder *decoder;
@@ -149,19 +59,66 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
             __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Receive PPS");
             break;
 
-        case 5: // IDR slice
-        case 1: // non-IDR slice
+        case 28: { // FU-A fragmented NAL
+            // Save FU indicator
+            uint8 fu_indicator = input[0];
+
+            // Skip FU indicator
+            input++;
+            size--;
+
+            // Check FU header
+            uint8 fu_header = *input;
+            uint8 start_bit = fu_header >> 7;
+            uint8 end_bit = (fu_header & 0x40) >> 6;
+            uint8 nal_type = fu_header & 0x1f;
+
+            if (start_bit && end_bit) {
+                __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+                        "Not possible to have start_bit and end_bit in the same FU-A frame");
+                return 0;
+            }
+
+            if (start_bit) {
+                // Build a new NAL
+                uint8 reconstructed_nal = fu_indicator & 0xe0;
+                reconstructed_nal |= nal_type;
+
+                // Skip FU header
+                input++;
+                size--;
+
+                // Create the concatenated buffer
+                aConcatSize = size + 1;
+                aConcatBuf = (uint8*) malloc(aConcatSize);
+                aConcatBuf[0] = reconstructed_nal;
+                memcpy(aConcatBuf + 1, input, size);
+            } else {
+                // Skip FU header
+                input++;
+                size--;
+
+                // Add to concatenated buffer
+                aConcatBuf = (uint8*) realloc(aConcatBuf, aConcatSize + size);
+                memcpy(aConcatBuf + aConcatSize, input, size);
+                aConcatSize += size;
+            }
+
+            if (end_bit) {
+                // Decode the concatenated buffer
+                Decode(env, aConcatBuf, aConcatSize, decoded);
+            }
+        } break;
+
+        default:
             // Decode the buffer
             status = decoder->DecodeAVCSlice(input, &size);
             if (status > AVCDEC_FAIL) {
                 AVCFrameIO outVid;
                 decoder->GetDecOutput(&indexFrame, &releaseFrame, &outVid);
-
-                //+OrangeLabs
-                //if (releaseFrame == 1) {
-                //      decoder->AVC_FrameUnbind(indexFrame);
-                //  }
-                //+OrangeLabs
+                if (releaseFrame == 1) {
+                    decoder->AVC_FrameUnbind(indexFrame);
+                }
 
                 // Copy result to YUV array
                 memcpy(aOutBuffer, outVid.YCbCr[0], videoWidth * videoHeight);
@@ -170,13 +127,11 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
 
                 // Create the output buffer
                 uint32* resultBuffer = (uint32*) malloc(videoWidth * videoHeight * sizeof(uint32));
-                if (resultBuffer == NULL) {
+                if (resultBuffer == NULL)
                     return 0;
-				}
 
                 // Convert to RGB
                 convert(videoWidth, videoHeight, aOutBuffer, resultBuffer);
-
                 (env)->SetIntArrayRegion(decoded, 0, videoWidth * videoHeight, (const jint*) resultBuffer);
                 free(resultBuffer);
             } else {
@@ -188,40 +143,24 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
     return 1;
 }
 
-
 /**
  * Method:    InitDecoder
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_InitDecoder
-  (JNIEnv * env, jclass clazz, jint width, jint height) {
+  (JNIEnv * env, jclass clazz, jint width, jint height){
     videoWidth = width;
     videoHeight = height;
 
     aOutBuffer = (uint8*)malloc(videoWidth * videoHeight * 3/2);
     decoder = PVAVCDecoder::New();
-
-    //+OrangeLabs
-    memset (&gDecodeData, '\0', sizeof(DecoderData));
-
-    gDecodeData.pvAvDec = decoder;
-    decoder->InitAVCDecoder(
-    		&cb_AVC_init_SPS,
-    		&cb_AVC_DPBAlloc,
-    		&cb_AVC_FrameUnbind,
-            &cb_AVC_Malloc,
-            &cb_AVC_Free,
-            &gDecodeData);
-    //-OrangeLabs
-
-	return (decoder!=NULL)?1:0;
-//    return ((decoder!=NULL)? 0:1);  //OrangeLabs invert 0 and 1 to have the same behaviour as enc
+    return (decoder!=NULL)?1:0;
 }
 
 /**
  * Method:    DeinitDecoder
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DeinitDecoder
-  (JNIEnv * env, jclass clazz) {
+  (JNIEnv * env, jclass clazz){
     free(aOutBuffer);
     delete(decoder);
     return 1;
@@ -231,7 +170,8 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
  * Method:    DecodeAndConvert
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
-  (JNIEnv *env, jclass clazz, jbyteArray h264Frame, jintArray decoded) {
+  (JNIEnv *env, jclass clazz, jbyteArray h264Frame, jintArray decoded)
+{
     int32 size = 0;
     jint len = env->GetArrayLength(h264Frame);
     jbyte data[len];
@@ -260,9 +200,4 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 bail:
     return result;
 }
-
-
-
-
-
 

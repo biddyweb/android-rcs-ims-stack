@@ -82,7 +82,7 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
-		
+
 		// Create dialog path
 		createTerminatingDialogPath(invite);
 	}

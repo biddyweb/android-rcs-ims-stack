@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.protocol.sip;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
-import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.IdGenerator;
@@ -146,7 +145,7 @@ public class SipDialogPath {
 	public SipDialogPath(SipInterface stack,
 			String callId,
 			long cseq,
-			String target,
+			String target,			
 			String localParty,
 			String remoteParty,
 			Vector<String> route) {
@@ -160,7 +159,7 @@ public class SipDialogPath {
 		
     	int defaultExpireTime = RcsSettings.getInstance().getSessionRefreshExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_SESSION_EXPIRE_PERIOD, -1);
-    	if ((defaultExpireTime > SessionTimerManager.MIN_EXPIRE_PERIOD) && (minExpireValue != -1) && (defaultExpireTime < minExpireValue)) {
+    	if ((minExpireValue != -1) && (defaultExpireTime < minExpireValue)) {
         	this.sessionExpireTime = minExpireValue;
     	} else {
     		this.sessionExpireTime = defaultExpireTime;

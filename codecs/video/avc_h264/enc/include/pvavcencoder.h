@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,6 @@
 #include "avcenc_api.h"
 #endif
 
-#include "ccrgb24toyuv420.h"
-#include "ccrgb12toyuv420.h"
-#include "ccyuv420semitoyuv420.h"
-
 /** AVC encoder class interface. See PVAVCEncoderInterface APIs for
 virtual functions definitions. */
 class PVAVCEncoder : public PVAVCEncoderInterface
@@ -49,7 +45,7 @@ class PVAVCEncoder : public PVAVCEncoderInterface
 
         OSCL_IMPORT_REF virtual TAVCEI_RETVAL UpdateBitRate(int32* aBitRate);
         OSCL_IMPORT_REF virtual TAVCEI_RETVAL UpdateFrameRate(OsclFloat* aFrameRate);
-        OSCL_IMPORT_REF virtual TAVCEI_RETVAL UpdateIDRFrameInterval(int32 aIFrameInterval);
+        OSCL_IMPORT_REF virtual TAVCEI_RETVAL UpdateIDRFrameInterval(int32 aIDRFrameInterval);
         OSCL_IMPORT_REF virtual TAVCEI_RETVAL IDRRequest();
 
         OSCL_IMPORT_REF virtual int32 GetEncodeWidth(int32 aLayer);
@@ -67,21 +63,7 @@ class PVAVCEncoder : public PVAVCEncoderInterface
         bool Construct(void);
         TAVCEI_RETVAL Init(TAVCEIInputFormat *aVidInFormat, TAVCEIEncodeParam *aEncParam, AVCEncParams& aEncOption);
 
-#ifdef YUV420SEMIPLANAR_INPUT
         void CopyToYUVIn(uint8* YUV, int width, int height);
-#endif
-#ifdef  YUV_INPUT
-        void CopyToYUVIn(uint8* YUV, int width, int height, int width_16, int height_16);
-#endif
-
-        /** Color conversion instance RGB24/RGB12/YUV420SEMI to YUV 420 */
-#if defined(RGB24_INPUT) || defined (RGB12_INPUT) || defined(YUV420SEMIPLANAR_INPUT)
-        ColorConvertBase *ccRGBtoYUV;
-#endif
-
-#ifdef FOR_3GPP_COMPLIANCE
-        void Check3GPPCompliance(TAVCEIEncodeParam* aEncParam, int* aEncWidth, int* aEncHeight);
-#endif
 
         AVCProfile  mapProfile(TAVCEIProfile in);
         AVCLevel    mapLevel(TAVCEILevel out);

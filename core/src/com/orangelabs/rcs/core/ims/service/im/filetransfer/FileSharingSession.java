@@ -29,6 +29,11 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * @author jexa7410
  */
 public abstract class FileSharingSession extends ImsServiceSession {
+    /**
+	 * Max file transfer size (in bytes)
+	 */
+	public final static int MAX_FILE_SIZE = RcsSettings.getInstance().getMaxFileTransferSize()*1024;
+	
 	/**
 	 * Default SO_TIMEOUT value (in seconds)
 	 */
@@ -136,14 +141,5 @@ public abstract class FileSharingSession extends ImsServiceSession {
 		if (!isFileTransfered()) {
 			getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 		}
-	}
-
-	/**
-	 * Returns max file sharing size
-	 * 
-	 * @return Size in bytes
-	 */
-	public static int getMaxFileSharingSize() {
-		return RcsSettings.getInstance().getMaxFileTransferSize()*1024;
 	}
 }

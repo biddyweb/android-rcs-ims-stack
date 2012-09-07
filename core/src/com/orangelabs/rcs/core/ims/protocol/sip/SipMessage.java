@@ -40,7 +40,6 @@ import javax2.sip.header.ViaHeader;
 import javax2.sip.message.Message;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 
 /**
  * SIP message
@@ -383,15 +382,11 @@ public abstract class SipMessage {
 	 * @return "uac" or "uas"
 	 */
 	public String getSessionTimerRefresher() {
-		String role = null;
+		String role = "uac";
 		SessionExpiresHeader sessionExpiresHeader = (SessionExpiresHeader)getHeader(SessionExpiresHeader.NAME);
 		if (sessionExpiresHeader != null) {
 			role = sessionExpiresHeader.getRefresher();
 		}
-        if (role == null) {
-            return SessionTimerManager.UAC_ROLE;
-        } else {
-            return role;
-        }
+		return role;
 	}
 }

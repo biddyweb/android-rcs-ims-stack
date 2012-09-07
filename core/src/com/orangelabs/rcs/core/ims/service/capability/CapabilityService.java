@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.database.Cursor;
-import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 
@@ -286,10 +285,10 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
                 if (ContactsManager.getInstance().isRcsValidNumber(phoneNumber)
 						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
-						&& ( !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber) || (Build.VERSION.SDK_INT > 10))) { //Build.VERSION_CODES.GINGERBREAD_MR1
+						&& !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber)) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
-                    // We exclude the number that comes from SIM only contacts, as those cannot be
-                    // aggregated to RCS raw contacts only if OS version if gingebread or fewer
+                    // We exclude the number that comes from SIM only contacts,
+                    // as those cannot be aggregated to RCS raw contacts
 					toBeTreatedNumbers.add(phoneNumber);
 				} else {
 					// This entry is either not valid or already RCS, this number is already done
@@ -305,8 +304,8 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 				// Check if the raw contact is associated with a RCS raw contact, if not the case then we have to create a new association for it
 				long rawContactId = phonesCursor.getLong(2);
 
-                if ((!ContactsManager.getInstance().isSimAccount(rawContactId) || (Build.VERSION.SDK_INT > 10))
-                        && (ContactsManager.getInstance().getAssociatedRcsRawContact(rawContactId, phoneNumber)==-1)){
+                if (!ContactsManager.getInstance().isSimAccount(rawContactId)
+						&& (ContactsManager.getInstance().getAssociatedRcsRawContact(rawContactId, phoneNumber)==-1)){
 					// Create a new RCS raw contact with the same info and attach it to the raw contact
 					ContactInfo currentInfo = ContactsManager.getInstance().getContactInfo(phoneNumber);
 					ContactsManager.getInstance().createRcsContact(currentInfo, rawContactId);

@@ -35,8 +35,6 @@
 <string name="label_refresh">Refresh</string>
 <string name="label_from">From:</string>
 <string name="label_invitation_failed">Invitation has failed</string>
-<string name="label_yes">Yes</string>
-<string name="label_no">No</string>
 
 <!-- About menu -->
 <string name="label_about_title">RCS-e Reference Implementation</string>
@@ -127,19 +125,21 @@
 <string name="menu_transfer_file">Transfer a file</string>
 <string name="menu_one_to_one_chat">One-to-one chat</string>
 <string name="menu_adhoc_group_chat">Ad-hoc group chat</string>
-<string name="menu_chat_list">Chat history</string>
-<string name="menu_block_contact">Block/unblock contact</string>
+<string name="menu_chat_list">Chat sessions</string>
+<string name="menu_rejoin_chat">Rejoin group chat</string>
+<string name="label_im_capable_contacts_header">Click to Block/Unblock a RCS contact</string>
 <string name="label_contact_blocked">%s has been blocked</string>
 <string name="label_contact_unblocked">%s has been unblocked</string>
+<string name="label_active_im_sessions_header">List of active sessions</string>
 <string name="title_recv_file_transfer">New file transfer invitation</string>
 <string name="label_file">Selected file:</string>
 <string name="title_recv_chat">New chat invitation</string>
 <string name="label_msg">Message:</string>
 <string name="label_hint_first_message">Enter first message</string>
 <string name="title_chat_view">Chat</string>
-<string name="title_chat_view_group">Group chat</string>
+<string name="title_chat_view_group">Chat group</string>
 <string name="title_chat_view_oneone">Chat with</string>
-<string name="title_chat_exit">Are you sure to quit the session?</string>
+<string name="title_chat_exit">Are you sure to close session?</string>
 <string name="title_chat_rejoin">Do you want to rejoin the group chat session?</string>
 <string name="label_chat_aborted">Chat session aborted</string>
 <string name="menu_insert_smiley">Smiley</string>
@@ -150,7 +150,7 @@
 <string name="label_chat_failed">Chat session has failed</string>
 <string name="label_contacts">Contacts:</string>
 <string name="label_contact_is_composing">is typing...</string>
-<string name="label_transfer_failed">Transfer has failed or is aborted (error code %d)</string>
+<string name="label_transfer_failed">Transfer has failed or is aborted (code %d)</string>
 <string name="label_select_contacts">Select contacts</string>
 <string name="label_chat_wizz">Wizz</string>
 <string name="label_chat_initiation_canceled">Chat session has been canceled</string>
@@ -169,18 +169,10 @@
 <string name="menu_unspam">Move to my messages</string>
 <string name="menu_clear_all_spams">Clear all spams</string>
 <string name="label_spam_empty">No spam</string>
-<string name="label_continue_chat_failed">Can\'t continue the conversation (service not available)</string>
-<string name="label_subject">Subject:</string>
-<string name="label_max_participants">Can\'t add participants: max number of participants is reached (max=%d)</string>
-<string name="label_rejoin_chat_failed">Can\'t rejoin the conversation (error code %d)</string>
-<string name="label_rejoin_chat_exception">Can\'t rejoin the conversation (unexpected exception)</string>
-<string name="label_chat_rejoin_canceled">Rejoin chat conversation has been canceled</string>
-<string name="label_rejoin_chat_terminated_by_remote">Rejoin session terminated by remote</string>
-<string name="label_restart_chat_failed">Can\'t restart the conversation (error code %d)</string>
-<string name="label_restart_chat_exception">Can\'t restart the conversation (unexpected exception)</string>
-<string name="label_chat_restart_canceled">Restart chat conversation has been canceled</string>
-<string name="label_restart_chat_terminated_by_remote">Restart session terminated by remote</string>
-<string name="label_sharing_warn_size">Do you confirm sending a file of %d KB?</string>
+<string name="label_session">Last session:</string>
+<string name="label_rejoin">Rejoin</string>
+<string name="label_rejoin_chat_failed">Can\'t rejoin the session (session no more exist or session error)</string>
+<string name="label_rejoin_chat_success">Session has been rejoined with success, you can return to the chat view via the chat list</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
@@ -205,7 +197,7 @@
 <string name="title_recv_image_sharing">New Image Sharing invitation</string>
 <string name="title_recv_video_sharing">New Video Sharing invitation</string>
 <string name="label_out_of_memory">No enough memory to display the image</string>
-<string name="label_csh_failed">Sharing has failed or is aborted (error code %d)</string>
+<string name="label_csh_failed">Sharing has failed or is aborted (code %d)</string>
 <string name="label_end_of_media">End of media</string>
 <string name="label_video_format_not_supported">Only H.263 QCIF format supported!\nPlease select another file.</string>
 <string name="label_video_sharing_with">Video sharing with %s</string>

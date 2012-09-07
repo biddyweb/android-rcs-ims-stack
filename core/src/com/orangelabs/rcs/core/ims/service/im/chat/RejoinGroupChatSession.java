@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import java.util.List;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -54,24 +53,14 @@ public class RejoinGroupChatSession extends GroupChatSession {
 	 * Constructor
 	 * 
 	 * @param parent IMS service
-	 * @param rejoinId Rejoin ID
-	 * @param chatId Chat ID or contribution ID
-	 * @param subject Subject
-	 * @param participants List of participants 
-	 */
-	public RejoinGroupChatSession(ImsService parent, String rejoinId, String chatId, String subject, List<String> participants) {
-		super(parent, rejoinId, new ListOfParticipant(participants));
+	 * @param chatId Chat ID
 
-		// Set subject
-		if ((subject != null) && (subject.length() > 0)) {
-			setSubject(subject);		
-		}
+	 */
+	public RejoinGroupChatSession(ImsService parent, String chatId) {
+		super(parent, chatId, new ListOfParticipant()); // TODO: set list of participants by default
 
 		// Create dialog path
 		createOriginatingDialogPath();
-		
-		// Set contribution ID
-		setContributionID(chatId);
 	}
 	
 	/**
@@ -190,11 +179,6 @@ public class RejoinGroupChatSession extends GroupChatSession {
             if (ctx.getStatusCode() == 487) {
             	// 487 Invitation cancelled
             	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
-    					ctx.getReasonPhrase()));
-            } else
-            if (ctx.getStatusCode() == 404) {
-            	// 404 session not found
-            	handleError(new ChatError(ChatError.SESSION_NOT_FOUND,
     					ctx.getReasonPhrase()));
             } else {
             	// Other error response

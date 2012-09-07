@@ -39,8 +39,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 import java.util.Vector;
 
-import javax2.sip.header.RequireHeader;
-
 /**
  * Extends a one-to-one chat session to an ad-hoc session
  * 
@@ -177,9 +175,6 @@ public class ExtendOneOneChatSession extends GroupChatSession {
         		InstantMessagingService.CHAT_FEATURE_TAGS,
         		content, boundary);
 
-        // Add a require header
-        invite.addHeader(RequireHeader.NAME, "recipient-list-invite");
-        
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID());
         

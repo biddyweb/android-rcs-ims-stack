@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.8
+Release 2.4.7
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,12 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- A group chat has no more a first message, but a subject is used instead (optionally).
-- New states are added for group chat to distinguish the "departed" and "booted" status.
-- Video codec optimizations:
-   + Update PacketVideo source code with last release,
-   + Tuning: increase bitrate, decrease framerate, choose streaming encoding mode, decrease packet size and decrease Iframe interval.
-- Stack UI is now JellyBean compliant.
+- JellyBean tests.
+- GSMA Implementation Guidelines 3.0.
+- IOT test fest issues.
+- Gruu enabled by default.
 
 
 Bugs fixed:
@@ -22,20 +20,6 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
-
-v2.4.8
-- GSMA Guidelines 	Stack: ID_4_21_1: Clarification on a group chat initiation
-- GSMA Guidelines 	Stack: ID_4_21_2: Clarification on a group chat automatic re-join
-- GSMA Guidelines 	Stack: ID_4_21_3: Clarification on a group chat re-start
-- GSMA Guidelines 	Stack: ID_4_21_4: Clarification on a abandoning a group chat
-- GSMA Guidelines 	Stack: ID_4_21_5: Re-joining or re-starting a chat that the user has previously abandoned
-- GSMA Guidelines 	Stack: ID_4_21_6: Clarifications on adding participants to a Group Chat
-- GSMA Guidelines 	Stack: ID_4_21_7: Clarifications on Contribution-ID value
-- GSMA Guidelines 	Stack: ID_4_21_8: List of participants
-- GSMA Guidelines 	Stack: ID_4_21_9: Chat autoaccept setting
-- GSMA Guidelines 	Stack: ID_4_21_10: Clarifications on Closing Group Chat
-- Mantis #0016012	Stack: This header "Require: recipient-list-invite" is missing from INVITE when extending a chat
-- Mantis #0016062	Stack: Max size should not be used in SDP if it's value is 0
 
 v2.4.7
 - Mantis #0014730	Stack: Race problem : Receiving SIP BYE when session is being stopped by other thread

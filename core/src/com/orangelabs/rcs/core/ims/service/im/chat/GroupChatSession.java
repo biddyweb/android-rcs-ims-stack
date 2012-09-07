@@ -78,11 +78,11 @@ public abstract class GroupChatSession extends ChatSession {
 	}
 	
 	/**
-	 * Is group chat
+	 * Is chat group
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isGroupChat() {
+	public boolean isChatGroup() {
 		return true;
 	}
 	
@@ -95,7 +95,7 @@ public abstract class GroupChatSession extends ChatSession {
 		return conferenceSubscriber.getParticipants();
 	}
     
-    /**
+	/**
 	 * Get replaced session ID
 	 * 
 	 * @return Session ID
@@ -441,13 +441,6 @@ public abstract class GroupChatSession extends ChatSession {
 	 * @param status Status
 	 */
 	public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
-		// NO IMDN for group chat
+		// NO IMDN for chat group
 	}
-	
-	/**
-	 * Reject the session invitation
-	 */
-	public void rejectSession() {
-		rejectSession(603);
-	}		
 }

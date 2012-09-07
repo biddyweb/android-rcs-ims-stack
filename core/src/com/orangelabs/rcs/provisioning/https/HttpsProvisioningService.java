@@ -87,7 +87,7 @@ public class HttpsProvisioningService extends Service {
     /**
 	 * Unknown value
 	 */
-	private static final String UNKNOWN = "unknown";
+	private static final String UNKNOWN = "xxxx";
 
     /**
      * Retry base timeout - 5min 
@@ -298,7 +298,6 @@ public class HttpsProvisioningService extends Service {
 
                         // Reset config
                         LauncherUtils.resetRcsConfig(getApplicationContext());
-                        
                         // Force version to "-1" (resetRcs set version to "0")
                         RcsSettings.getInstance().setProvisioningVersion(version);
                     } else if (version.equals("0") && validity == 0) {
@@ -533,7 +532,7 @@ public class HttpsProvisioningService extends Service {
             }
             result.code = response.getStatusLine().getStatusCode(); 
 			result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
-			if (result.code != 200) {
+            if (result.code != 200) {
                 if (result.code == 503) {
                     result.retryAfter = getRetryAfter(response);
                 }
@@ -635,14 +634,9 @@ public class HttpsProvisioningService extends Service {
      */
 	private String getClientVersion() {
 		String result = UNKNOWN;
-		String version = getString(R.string.rcs_core_release_number);
+		String version = getString(R.string.rcs_client_release);
 		if (version != null && version.length() > 0) {
-			String[] values = version.split(".");
-			if (values.length > 2) { 
-				result = values[0] + "." + values[1];
-			} else {
-				result = version;
-			}
+			result = version;
 		}
 		return StringUtils.truncate(result, 15);
 	}

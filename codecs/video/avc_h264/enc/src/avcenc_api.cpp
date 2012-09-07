@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,31 @@ OSCL_EXPORT_REF AVCEnc_Status PVAVCEncGetNALType(unsigned char *bitstream, int s
     }
 
     return AVCENC_FAIL;
+}
+
+/* ======================================================================== */
+/*  Function : PVAVCEncGetProfileLevel()                                            */
+/*  Date     : 3/4/2010                                                    */
+/*  Purpose  : Get profile and level type from the bitstream                            */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS if succeed, AVCENC_FAIL if fail.              */
+/*  Modified :                                                              */
+/* ======================================================================== */
+OSCL_EXPORT_REF AVCEnc_Status PVAVCEncGetProfileLevel(AVCHandle* avcHandle, AVCProfile* profile, AVCLevel* level)
+{
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCCommonObj *video = encvid->common;
+    AVCSeqParamSet *seqParam = video->currSeqParams;
+
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    *profile = (AVCProfile)seqParam->profile_idc;
+    *level = (AVCLevel)seqParam->level_idc;
+
+    return AVCENC_SUCCESS;
 }
 
 
@@ -551,7 +576,7 @@ OSCL_EXPORT_REF uint8* PVAVCEncGetOverrunBuffer(AVCHandle* avcHandle)
 /*              assume that user will make a copy if they want to hold on   */
 /*              to it. Otherwise, it is not guaranteed to be reserved.      */
 /*              Most applications prefer to see original frame rather than  */
-/*              reconstructed frame. So, we are staying aware from complex  */
+/*              reconstructed frame. So, we stay away from complex          */
 /*              buffering mechanism. If needed, can be added later.         */
 /*  In/out   :                                                              */
 /*  Return   : AVCENC_SUCCESS for success.                                  */
@@ -691,42 +716,208 @@ OSCL_EXPORT_REF void    PVAVCCleanUpEncoder(AVCHandle *avcHandle)
     return ;
 }
 
+/* ======================================================================== */
+/*  Function : PVAVCEncUpdateBitRate()                                      */
+/*  Date     : 2/20/2010                                                    */
+/*  Purpose  : Update bitrate while encoding.                               */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS for success, else fail.                       */
+/*  Modified :                                                              */
+/* ======================================================================== */
+
 OSCL_EXPORT_REF AVCEnc_Status PVAVCEncUpdateBitRate(AVCHandle *avcHandle, uint32 bitrate)
 {
-    OSCL_UNUSED_ARG(avcHandle);
-    OSCL_UNUSED_ARG(bitrate);
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCCommonObj *video = encvid->common;
+    AVCRateControl *rateCtrl = encvid->rateCtrl;
+    AVCSeqParamSet *seqParam = video->currSeqParams;
 
-    return AVCENC_FAIL;
+    int lev_idx;
+
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    // only allow changing bit rate right after encoding a frame and before a new frame is analyzed.
+    if (encvid->enc_state != AVCEnc_Analyzing_Frame)
+    {
+        return AVCENC_WRONG_STATE;
+    }
+
+    if (bitrate && rateCtrl->cpbSize && (rateCtrl->rcEnable == TRUE))
+    {
+        // verify level constraint
+        // Note we keep the same cbpsize, hence the vbv delay will be affected.
+        lev_idx = mapLev2Idx[seqParam->level_idc];
+
+        if (bitrate > (uint32)(MaxBR[lev_idx]*1000))
+        {
+            return AVCENC_FAIL;
+        }
+
+        rateCtrl->bitRate = bitrate;
+
+        // update other rate control parameters
+        RCUpdateParams(rateCtrl, encvid);
+
+        return AVCENC_SUCCESS;
+    }
+    else
+    {
+        return AVCENC_FAIL;
+    }
 }
+
+/* ======================================================================== */
+/*  Function : PVAVCEncUpdateFrameRate()                                    */
+/*  Date     : 2/20/2010                                                    */
+/*  Purpose  : Update frame rate while encoding.                            */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS for success, else fail.                       */
+/*  Limitation: Changing frame rate will affect the first IDR frame coming  */
+/*             after this call. It may come earlier or later than expected  */
+/*             but after this first IDR frame, the IDR period will be back  */
+/*             to normal.                                                   */
+/*  Modified :                                                              */
+/* ======================================================================== */
 
 OSCL_EXPORT_REF AVCEnc_Status PVAVCEncUpdateFrameRate(AVCHandle *avcHandle, uint32 num, uint32 denom)
 {
-    OSCL_UNUSED_ARG(avcHandle);
-    OSCL_UNUSED_ARG(num);
-    OSCL_UNUSED_ARG(denom);
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCCommonObj *video = encvid->common;
+    AVCRateControl *rateCtrl = encvid->rateCtrl;
+    AVCSeqParamSet *seqParam = video->currSeqParams;
+
+    int mb_per_sec;
+    int lev_idx;
+
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    // only allow changing frame rate right after encoding a frame and before a new frame is analyzed.
+    if (encvid->enc_state != AVCEnc_Analyzing_Frame)
+    {
+        return AVCENC_WRONG_STATE;
+    }
+
+    if (num && denom && (rateCtrl->rcEnable == TRUE))
+    {
+        mb_per_sec = ((video->PicSizeInMbs * num) + denom - 1) / denom;
+
+        // copy some code from VerifyLevel here
+        lev_idx = mapLev2Idx[seqParam->level_idc];
+
+        if (mb_per_sec > MaxMBPS[lev_idx])
+        {
+            return AVCENC_FAIL;
+        }
+
+        rateCtrl->frame_rate = (OsclFloat)num / denom;
+
+        // update other rate control parameters
+        RCUpdateParams(rateCtrl, encvid);
+
+        return AVCENC_SUCCESS;
+    }
+    else
+    {
+        return AVCENC_FAIL;
+    }
 
     return AVCENC_FAIL;
 }
 
+
+/* ======================================================================== */
+/*  Function : PVAVCEncUpdateIDRInterval()                                  */
+/*  Date     : 2/20/2010                                                    */
+/*  Purpose  : Update IDR interval while encoding.                          */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS for success, else fail.                       */
+/*  Limitation: See PVAVCEncUpdateFrameRate.                                */
+/*  Modified :                                                              */
+/* ======================================================================== */
 OSCL_EXPORT_REF AVCEnc_Status PVAVCEncUpdateIDRInterval(AVCHandle *avcHandle, int IDRInterval)
 {
-    OSCL_UNUSED_ARG(avcHandle);
-    OSCL_UNUSED_ARG(IDRInterval);
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCCommonObj *video = encvid->common;
+    AVCRateControl *rateCtrl = encvid->rateCtrl;
 
-    return AVCENC_FAIL;
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    if (IDRInterval > (int)video->MaxFrameNum)
+    {
+        return AVCENC_FAIL;
+    }
+
+    /* Note : IDRInterval defines periodicity of IDR frames after every nPFrames.*/
+    rateCtrl->idrPeriod = IDRInterval;
+
+    /* Note, when set to 1 (all I-frame), rate control is turned off */
+
+    return AVCENC_SUCCESS;
 }
 
+/* ======================================================================== */
+/*  Function : PVAVCEncIDRRequest()                                         */
+/*  Date     : 2/20/2010                                                    */
+/*  Purpose  : Request next frame to be IDR.                                */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS for success, else fail.                       */
+/*  Modified :                                                              */
+/* ======================================================================== */
 OSCL_EXPORT_REF AVCEnc_Status PVAVCEncIDRRequest(AVCHandle *avcHandle)
 {
-    OSCL_UNUSED_ARG(avcHandle);
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCRateControl *rateCtrl = encvid->rateCtrl;
 
-    return AVCENC_FAIL;
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    // only allow changing frame rate right after encoding a frame and before a new frame is analyzed.
+    if (encvid->enc_state != AVCEnc_Analyzing_Frame)
+    {
+        return AVCENC_WRONG_STATE;
+    }
+
+    rateCtrl->first_frame = 1;
+
+    return AVCENC_SUCCESS;
 }
 
+
+/* ======================================================================== */
+/*  Function : PVAVCEncUpdateIMBRefresh()                                   */
+/*  Date     : 2/20/2010                                                    */
+/*  Purpose  : Update number of minimal I MBs per frame.                    */
+/*  In/out   :                                                              */
+/*  Return   : AVCENC_SUCCESS for success, else fail.                       */
+/*  Modified :                                                              */
+/* ======================================================================== */
 OSCL_EXPORT_REF AVCEnc_Status PVAVCEncUpdateIMBRefresh(AVCHandle *avcHandle, int numMB)
 {
-    OSCL_UNUSED_ARG(avcHandle);
-    OSCL_UNUSED_ARG(numMB);
+    AVCEncObject *encvid = (AVCEncObject*)avcHandle->AVCObject;
+    AVCRateControl *rateCtrl = encvid->rateCtrl;
+    AVCCommonObj *video = encvid->common;
+
+    if (encvid == NULL)
+    {
+        return AVCENC_UNINITIALIZED;
+    }
+
+    if (numMB <= (int)video->PicSizeInMbs)
+    {
+        rateCtrl->intraMBRate = numMB;
+        return AVCENC_SUCCESS;
+    }
 
     return AVCENC_FAIL;
 }

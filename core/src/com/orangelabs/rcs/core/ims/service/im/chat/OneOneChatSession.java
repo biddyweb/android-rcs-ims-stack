@@ -52,11 +52,11 @@ public abstract class OneOneChatSession extends ChatSession {
 	}
 	
 	/**
-	 * Is group chat
+	 * Is chat group
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isGroupChat() {
+	public boolean isChatGroup() {
 		return false;
 	}
 
@@ -183,11 +183,4 @@ public abstract class OneOneChatSession extends ChatSession {
 			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
 		}
 	}	
-
-	/**
-	 * Reject the session invitation
-	 */
-	public void rejectSession() {
-		rejectSession(486);
-	}		
 }

@@ -1,5 +1,5 @@
 -----------------------------------
- Supported standards at 07/09/2012
+ Supported standards at 22/03/2011
 -----------------------------------
 
 
@@ -56,8 +56,6 @@ draft-ietf-sip-multiple-refer-01	 - Referring to Multiple Resources in the Sessi
 draft-ietf-simple-imdn-04		 - Instant Message Disposition Notification
 draft-ietf-mmusic-file-transfer-mech-03	 - A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer
 draft-ietf-simple-msrp-sessmatch-10	 - Session Matching Update for the Message Session Relay Protocol (MSRP)
-draft-kaplan-dispatch-session-id-03	 - A Session Identifier for the Session Initiation Protocol (SIP)
-
 
 3GPP:
 -----
@@ -85,10 +83,6 @@ RCS Release 2 - Technical Realization
 RCS Release 2 - Endorsement of OMA SIP/SIMPLE IM 1.0
 RCS Release 2 - Management Objects
 RCS-e Version 1.1 - Services and Client Specification
-RCS-e Version 1.2.1 - Services and Client Specification
-RCS-e GSMA RCS IOT RCS-e Implementation Guidelines 2.1
-RCS-e GSMA RCS IOT RCS-e Implementation Guidelines 3.1
-
 IR74 - Video Share Interoper ability Specification
 IR79 - Image Share Interoperability Specification
 

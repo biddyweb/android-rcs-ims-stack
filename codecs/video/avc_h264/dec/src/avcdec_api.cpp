@@ -22,10 +22,11 @@ This file contains application function interfaces to the AVC decoder library.
 
 #include "oscl_types.h"
 #include "oscl_mem.h"
-#include "avcapi_common.h" //+OrangeLabs
 #include "avcdec_api.h"
 #include "avcdec_lib.h"
 #include "avcdec_bitstream.h"
+#define LOG_TAG "NativeDec"
+#include "android/log.h"
 
 /* ======================================================================== */
 /*  Function : EBSPtoRBSP()                                                 */
@@ -315,7 +316,7 @@ OSCL_EXPORT_REF AVCDec_Status   PVAVCDecSeqParamSet(AVCHandle *avcHandle, uint8 
 /* ======================================================================== */
 /*  Function : PVAVCDecGetSeqInfo()                                         */
 /*  Date     : 11/4/2003                                                    */
-/*  Purpose  : Get sequence parameter info. after SPS NAL is decoded.       */
+/*  Purpose  : Get sequence parameter info of the last decoded SPS          */
 /*  In/out   :                                                              */
 /*  Return   : AVCDEC_SUCCESS if succeed, AVC_FAIL if fail.                 */
 /*  Modified :                                                              */
@@ -328,38 +329,38 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetSeqInfo(AVCHandle *avcHandle, AVCDecSPS
     AVCCommonObj *video;
     int PicWidthInMbs, PicHeightInMapUnits, FrameHeightInMbs;
 
-    if (decvid == NULL || decvid->seqParams[0] == NULL)
+    if (decvid == NULL || decvid->lastSPS == NULL)
     {
         return AVCDEC_FAIL;
     }
 
     video = decvid->common;
 
-    PicWidthInMbs = decvid->seqParams[0]->pic_width_in_mbs_minus1 + 1;
-    PicHeightInMapUnits = decvid->seqParams[0]->pic_height_in_map_units_minus1 + 1 ;
-    FrameHeightInMbs = (2 - decvid->seqParams[0]->frame_mbs_only_flag) * PicHeightInMapUnits ;
+    PicWidthInMbs = decvid->lastSPS->pic_width_in_mbs_minus1 + 1;
+    PicHeightInMapUnits = decvid->lastSPS->pic_height_in_map_units_minus1 + 1 ;
+    FrameHeightInMbs = (2 - decvid->lastSPS->frame_mbs_only_flag) * PicHeightInMapUnits ;
 
     seqInfo->FrameWidth = PicWidthInMbs << 4;
     seqInfo->FrameHeight = FrameHeightInMbs << 4;
 
-    seqInfo->frame_only_flag = decvid->seqParams[0]->frame_mbs_only_flag;
+    seqInfo->frame_only_flag = decvid->lastSPS->frame_mbs_only_flag;
 
-    if (decvid->seqParams[0]->frame_cropping_flag)
+    if (decvid->lastSPS->frame_cropping_flag)
     {
-        seqInfo->frame_crop_left = 2 * decvid->seqParams[0]->frame_crop_left_offset;
-        seqInfo->frame_crop_right = seqInfo->FrameWidth - (2 * decvid->seqParams[0]->frame_crop_right_offset + 1);
+        seqInfo->frame_crop_left = 2 * decvid->lastSPS->frame_crop_left_offset;
+        seqInfo->frame_crop_right = seqInfo->FrameWidth - (2 * decvid->lastSPS->frame_crop_right_offset + 1);
 
         if (seqInfo->frame_only_flag)
         {
-            seqInfo->frame_crop_top = 2 * decvid->seqParams[0]->frame_crop_top_offset;
-            seqInfo->frame_crop_bottom = seqInfo->FrameHeight - (2 * decvid->seqParams[0]->frame_crop_bottom_offset + 1);
+            seqInfo->frame_crop_top = 2 * decvid->lastSPS->frame_crop_top_offset;
+            seqInfo->frame_crop_bottom = seqInfo->FrameHeight - (2 * decvid->lastSPS->frame_crop_bottom_offset + 1);
             /* Note in 7.4.2.1, there is a contraint on the value of frame_crop_left and frame_crop_top
             such that they have to be less than or equal to frame_crop_right/2 and frame_crop_bottom/2, respectively. */
         }
         else
         {
-            seqInfo->frame_crop_top = 4 * decvid->seqParams[0]->frame_crop_top_offset;
-            seqInfo->frame_crop_bottom = seqInfo->FrameHeight - (4 * decvid->seqParams[0]->frame_crop_bottom_offset + 1);
+            seqInfo->frame_crop_top = 4 * decvid->lastSPS->frame_crop_top_offset;
+            seqInfo->frame_crop_bottom = seqInfo->FrameHeight - (4 * decvid->lastSPS->frame_crop_bottom_offset + 1);
             /* Note in 7.4.2.1, there is a contraint on the value of frame_crop_left and frame_crop_top
             such that they have to be less than or equal to frame_crop_right/2 and frame_crop_bottom/4, respectively. */
         }
@@ -369,6 +370,13 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetSeqInfo(AVCHandle *avcHandle, AVCDecSPS
         seqInfo->frame_crop_bottom = seqInfo->FrameHeight - 1;
         seqInfo->frame_crop_right = seqInfo->FrameWidth - 1;
         seqInfo->frame_crop_top = seqInfo->frame_crop_left = 0;
+    }
+
+    seqInfo->num_frames = (uint32)(MaxDPBX2[(uint32)mapLev2Idx[decvid->lastSPS->level_idc]] << 2) / (3 * PicWidthInMbs * PicHeightInMapUnits) + 1;
+
+    if (seqInfo->num_frames  >= MAX_FS)
+    {
+        seqInfo->num_frames  = MAX_FS;
     }
 
     return AVCDEC_SUCCESS;
@@ -486,14 +494,14 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecodeSlice(AVCHandle *avcHandle, uint8 *buff
         if (video->nal_unit_type != AVC_NALTYPE_SLICE &&
                 video->nal_unit_type != AVC_NALTYPE_IDR)
         {
-            return AVCDEC_FAIL; /* not supported */
+            return AVCDEC_NOT_SUPPORTED; /* not supported */
         }
 
 
 
         if (video->nal_unit_type >= 2 && video->nal_unit_type <= 4)
         {
-            return AVCDEC_FAIL; /* not supported */
+            return AVCDEC_NOT_SUPPORTED; /* not supported */
         }
         else
         {
@@ -733,6 +741,7 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetOutput(AVCHandle *avcHandle, int *indx,
 
     if (decvid == NULL)
     {
+	  __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "decvid is null");
         return AVCDEC_FAIL;
     }
 
@@ -741,6 +750,7 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetOutput(AVCHandle *avcHandle, int *indx,
 
     if (dpb->num_fs == 0)
     {
+	  __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "num_fs = 0");
         return AVCDEC_FAIL;
     }
 
@@ -827,6 +837,7 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetOutput(AVCHandle *avcHandle, int *indx,
         }
         if (i < dpb->num_fs)
         {
+	  __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "i < dpb->num_fs");
             /* there are frames available for decoding */
             return AVCDEC_FAIL; /* no frame to be outputted */
         }
@@ -859,6 +870,7 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecGetOutput(AVCHandle *avcHandle, int *indx,
             avcHandle->CBAVC_FrameUnbind(avcHandle->userData, MinIdx);
         }
 #endif
+		  __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "oldest frame = null");
         return AVCDEC_FAIL;
     }
     /* MASK 0x01 means the frame is outputted (for display). A frame gets freed when it is

@@ -48,30 +48,25 @@ LOCAL_SRC_FILES:= \
 	../common/src/reflist.cpp \
 	../common/src/fmo.cpp \
 	../common/src/deblock.cpp \
-	../common/src/dpb.cpp \
+	../common/src/dpb.cpp
+
 
 # All of the shared libraries we link against.
 LOCAL_SHARED_LIBRARIES := 
 
-# static libraries.
-LOCAL_STATIC_LIBRARIES := libcolorconvert
+# No static libraries.
+LOCAL_STATIC_LIBRARIES :=
 
 # Also need the JNI headers.
 LOCAL_C_INCLUDES += \
 	$(JNI_H_INCLUDE)\
 	$(LOCAL_PATH)/src \
  	$(LOCAL_PATH)/include \
-	$(AVC_ROOT)/oscl/osclbase/src \
-	$(AVC_ROOT)/oscl/osclerror/src \
-	$(AVC_ROOT)/oscl/osclmemory/src\
-	$(AVC_ROOT)/oscl/osclutil/src\
-	$(AVC_ROOT)/oscl/config/shared \
-	$(AVC_ROOT)/oscl/config/android \
-	$(AVC_ROOT)/common/include \
-	$(AVC_ROOT)/colorconvert/include
+	$(AVC_ROOT)/oscl \
+	$(AVC_ROOT)/common/include
 
 # No specia compiler flags.
-LOCAL_CFLAGS += -DYUV_INPUT -DYUV420SEMIPLANAR_INPUT
+LOCAL_CFLAGS +=
 
 # Link libs (ex logs)
 LOCAL_LDLIBS := -llog
@@ -79,5 +74,5 @@ LOCAL_LDLIBS := -llog
 # Don't prelink this library.  For more efficient code, you may want
 # to add this library to the prelink map and set this to true.
 LOCAL_PRELINK_MODULE := false
-                                
+
 include $(BUILD_SHARED_LIBRARY) 

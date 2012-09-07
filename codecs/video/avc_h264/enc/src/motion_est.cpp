@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -273,14 +273,19 @@ void AVCMotionEstimation(AVCEncObject *encvid)
 
     offset = 0;
 
-    if (slice_type == AVC_I_SLICE)
+    if (slice_type == AVC_I_SLICE) // need to calculate rateCtrl->totalSAD for RC to take action!!
     {
         /* cannot do I16 prediction here because it needs full decoding. */
-        for (i = 0; i < totalMB; i++)
-        {
-            encvid->min_cost[i] = 0x7FFFFFFF;  /* max value for int */
+        {   /* no RC for I-slice */
+
+            i = totalMB - 1;
+            while (i >= 0)
+            {
+                encvid->min_cost[i--] = 0x7FFFFFFF;  /* max value for int */
+            }
         }
 
+        /* reset intra MB pattern */
         oscl_memset(intraSearch, 1, sizeof(uint8)*totalMB);
 
         encvid->firstIntraRefreshMBIndx = 0; /* reset this */
@@ -1770,6 +1775,8 @@ int AVCFindMin(int dn[])
 
     return min;
 }
+
+
 
 
 

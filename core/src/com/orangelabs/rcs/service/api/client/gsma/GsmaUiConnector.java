@@ -132,8 +132,8 @@ public class GsmaUiConnector {
 	public static final String ACTION_INITIATE_CHAT = "android.net.rcs.INITIATE_CHAT";
 
 	/**
-	 * Intent to load the group chat application or group chat view. Input: the data
-	 * contains the URI (e.g. content://chats/x) of the group chat conversation. If
+	 * Intent to load the chat group application or chat group view. Input: the data
+	 * contains the URI (e.g. content://chats/x) of the chat group conversation. If
 	 * no data the main entry of the chat application is displayed.
 	 */
 	public static final String ACTION_VIEW_CHAT_GROUP = "android.net.rcs.VIEW_CHAT_GROUP"; 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <resources>
 	<string name="rcs_client_vendor">Orange</string>
-	<string name="rcs_core_release_number">2.4.8</string>
+	<string name="rcs_client_release">2.4</string>
+	<string name="rcs_core_release_number">2.4.7</string>
 </resources>

@@ -15,164 +15,152 @@
  * and limitations under the License.
  * -------------------------------------------------------------------
  */
-#include "oscl_mem.h"
-#include "avcapi_common.h"
-#include "avcdec_api.h"
-
 #include "pvavcdecoder.h"
+#include "oscl_mem.h"
 
+/* global static functions */
 
-/////////////////////////////////////////////////////////////////////////////
-PVAVCDecoder::PVAVCDecoder() : iAVCHandle(NULL)
+void CbAvcDecDebugLog(uint32 *userData, AVCLogType type, char *string1, int val1, int val2)
 {
+    OSCL_UNUSED_ARG(userData);
+    OSCL_UNUSED_ARG(type);
+    OSCL_UNUSED_ARG(string1);
+    OSCL_UNUSED_ARG(val1);
+    OSCL_UNUSED_ARG(val2);
+
+    return ;
 }
 
+int CbAvcDecMalloc(void *userData, int32 size, int attribute)
+{
+    OSCL_UNUSED_ARG(userData);
+    OSCL_UNUSED_ARG(attribute);
+
+    uint8 *mem;
+
+    mem = (uint8*) oscl_malloc(size);
+
+    return (int)mem;
+}
+
+void CbAvcDecFree(void *userData, int mem)
+{
+    OSCL_UNUSED_ARG(userData);
+
+    oscl_free((void*)mem);
+
+    return ;
+}
+
+int CbAvcDecDPBAlloc(void *userData, uint frame_size_in_mbs, uint num_buffers)
+{
+    PVAVCDecoder *pAvcDec = (PVAVCDecoder*) userData;
+
+    return pAvcDec->AVC_DPBAlloc(frame_size_in_mbs, num_buffers);
+}
+
+void CbAvcDecFrameUnbind(void *userData, int indx)
+{
+    PVAVCDecoder *pAvcDec = (PVAVCDecoder*) userData;
+
+    pAvcDec->AVC_FrameUnbind(indx);
+
+    return ;
+}
+
+int CbAvcDecFrameBind(void *userData, int indx, uint8 **yuv)
+{
+    PVAVCDecoder *pAvcDec = (PVAVCDecoder*) userData;
+
+    return pAvcDec->AVC_FrameBind(indx, yuv);
+}
+
+
+
+/* ///////////////////////////////////////////////////////////////////////// */
+PVAVCDecoder::PVAVCDecoder()
+{
+
+//iDecoderControl
+}
+
+/* ///////////////////////////////////////////////////////////////////////// */
+PVAVCDecoder::~PVAVCDecoder()
+{
+    CleanUpAVCDecoder();
+}
+
+/* ///////////////////////////////////////////////////////////////////////// */
 PVAVCDecoder* PVAVCDecoder::New(void)
 {
     PVAVCDecoder* self = new PVAVCDecoder;
-
+    if (self && self->Construct())
+        return self;
     if (self)
-    {
-        if (!self->Construct())
-        {
-            OSCL_DELETE(self);
-            self = NULL;
-        }
-    }
-
-    return self;
+        delete self;
+    return NULL;
 }
 
+/* ///////////////////////////////////////////////////////////////////////// */
 bool PVAVCDecoder::Construct()
 {
-    iAVCHandle = (AVCHandle *) new AVCHandle;
-    if (iAVCHandle)
-    {
-        oscl_memset(iAVCHandle, 0, sizeof(iAVCHandle));
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    oscl_memset((void*)&iAvcHandle, 0, sizeof(AVCHandle));
+
+    iAvcHandle.CBAVC_DPBAlloc = &CbAvcDecDPBAlloc;
+    iAvcHandle.CBAVC_FrameBind = &CbAvcDecFrameBind;
+    iAvcHandle.CBAVC_FrameUnbind = &CbAvcDecFrameUnbind;
+    iAvcHandle.CBAVC_Free = &CbAvcDecFree;
+    iAvcHandle.CBAVC_Malloc = &CbAvcDecMalloc;
+    iAvcHandle.CBAVC_DebugLog = &CbAvcDecDebugLog;
+    iAvcHandle.userData = this;
+
+    iFramePtr = NULL;
+    iDPB = NULL;
+    iFrameUsed = NULL;
+    iNumFrames = NULL;
+
+    return true;
 }
-
-/////////////////////////////////////////////////////////////////////////////
-PVAVCDecoder::~PVAVCDecoder()
-{
-    if (iAVCHandle)
-    {
-        OSCL_DELETE((AVCHandle *)iAVCHandle);
-        iAVCHandle = NULL;
-    }
-}
-
-
 
 /////////////////////////////////////////////////////////////////////////////
 void PVAVCDecoder::CleanUpAVCDecoder(void)
 {
-    PVAVCCleanUpDecoder((AVCHandle *)iAVCHandle);
+    PVAVCCleanUpDecoder((AVCHandle *)&iAvcHandle);
 }
 
 
 void PVAVCDecoder::ResetAVCDecoder(void)
 {
-    PVAVCDecReset((AVCHandle *)iAVCHandle);
+    PVAVCDecReset((AVCHandle *)&iAvcHandle);
 }
 
-////////////////////////////////////////////////////////////////////////////
-/* This part is a C-callback function can be in anywhere. */
-int CBAVC_Malloc(void *userData, int32 size, int attribute)
-{
-    PVAVCDecoder *avcDec = (PVAVCDecoder*) userData;
-
-    return avcDec->AVC_Malloc(size, attribute);
-}
-
-void CBAVC_Free(void *userData, int mem)
-{
-    PVAVCDecoder *avcDec = (PVAVCDecoder*) userData;
-    avcDec->AVC_Free(mem);
-    return ;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////
-/* Callback functions for memory allocation/free and request for more data */
-/* with C++ wrapper */
-int PVAVCDecoder::AVC_Malloc(int32 size, int attribute)
-{
-    OSCL_UNUSED_ARG(attribute);
-    return (int)(oscl_malloc(size));
-}
-
-void PVAVCDecoder::AVC_Free(int mem)
-{
-    oscl_free((uint8*)mem);
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-bool PVAVCDecoder::InitAVCDecoder(FunctionType_SPS init_sps, FunctionType_Alloc alloc_buffer,
-                                  FunctionType_Unbind unbind_buffer,
-                                  FunctionType_Malloc AVCAlloc,
-                                  FunctionType_Free AVCFree,
-                                  void *userdata)
-{
-    /* Initialize videoCtrl */
-    ((AVCHandle *)iAVCHandle)->AVCObject = NULL;
-    ((AVCHandle *)iAVCHandle)->userData = userdata;
-
-    ((AVCHandle *)iAVCHandle)->CBAVC_DPBAlloc = init_sps;
-    ((AVCHandle *)iAVCHandle)->CBAVC_FrameBind = alloc_buffer;
-    ((AVCHandle *)iAVCHandle)->CBAVC_FrameUnbind = unbind_buffer;
-    ((AVCHandle *)iAVCHandle)->CBAVC_Malloc = AVCAlloc;
-    ((AVCHandle *)iAVCHandle)->CBAVC_Free = AVCFree;
-
-    return true;
-}
 /////////////////////////////////////////////////////////////////////////////
 
 int32 PVAVCDecoder::DecodeSPS(uint8 *bitstream, int32 buffer_size)
 {
-    return PVAVCDecSeqParamSet((AVCHandle *)iAVCHandle, bitstream, buffer_size);
+    return PVAVCDecSeqParamSet((AVCHandle *)&iAvcHandle, bitstream, buffer_size);
 }
 
 int32 PVAVCDecoder::DecodePPS(uint8 *bitstream, int32 buffer_size)
 {
-    return PVAVCDecPicParamSet((AVCHandle *)iAVCHandle, bitstream, buffer_size);
+    return PVAVCDecPicParamSet((AVCHandle *)&iAvcHandle, bitstream, buffer_size);
 }
 
 int32 PVAVCDecoder::DecodeAVCSlice(uint8 *bitstream, int32 *buffer_size)
 {
-    return (PVAVCDecodeSlice((AVCHandle *)iAVCHandle, bitstream, *buffer_size));
+    return (PVAVCDecodeSlice((AVCHandle *)&iAvcHandle, bitstream, *buffer_size));
 }
 
-bool PVAVCDecoder::GetDecOutput(int *indx, int *release)
-{
-    AVCFrameIO output;
-    return (PVAVCDecGetOutput((AVCHandle *)iAVCHandle, indx, release, &output) != AVCDEC_SUCCESS) ? false : true;
-}
-
-// OrangeLabs : addition to be compliant with existing code
 bool PVAVCDecoder::GetDecOutput(int *indx, int *release, AVCFrameIO* output)
 {
-    return (PVAVCDecGetOutput((AVCHandle *)iAVCHandle, indx, release, output) != AVCDEC_SUCCESS) ? false : true;
-}
-
-
-void PVAVCDecoder::GetSeqInfo(AVCDecSPSInfo *seqInfo )
-{
-	PVAVCDecGetSeqInfo((AVCHandle *)iAVCHandle, seqInfo);
+    return (PVAVCDecGetOutput((AVCHandle *)&iAvcHandle, indx, release, output) != AVCDEC_SUCCESS) ? false : true;
 }
 
 
 void PVAVCDecoder::GetVideoDimensions(int32 *width, int32 *height, int32 *top, int32 *left, int32 *bottom, int32 *right)
 {
     AVCDecSPSInfo seqInfo;
-    PVAVCDecGetSeqInfo((AVCHandle *)iAVCHandle, &seqInfo);
+    PVAVCDecGetSeqInfo((AVCHandle *)&iAvcHandle, &seqInfo);
     *width = seqInfo.FrameWidth;
     *height = seqInfo.FrameHeight;
 
@@ -181,4 +169,73 @@ void PVAVCDecoder::GetVideoDimensions(int32 *width, int32 *height, int32 *top, i
     *left = seqInfo.frame_crop_left;
     *bottom = seqInfo.frame_crop_bottom;
     *right = seqInfo.frame_crop_right;
+}
+
+/* ///////////////////////////////////////////////////////////////////////// */
+
+int PVAVCDecoder::AVC_DPBAlloc(uint frame_size_in_mbs, uint num_buffers)
+{
+    int ii;
+    uint frame_size = (frame_size_in_mbs << 8) + (frame_size_in_mbs << 7);
+
+    if (iDPB) oscl_free(iDPB); // free previous one first
+
+    iDPB = (uint8*) oscl_malloc(sizeof(uint8) * frame_size * num_buffers);
+    if (iDPB == NULL)
+    {
+        return 0;
+    }
+
+    iNumFrames = num_buffers;
+
+    if (iFrameUsed) oscl_free(iFrameUsed); // free previous one
+
+    iFrameUsed = (bool*) oscl_malloc(sizeof(bool) * num_buffers);
+    if (iFrameUsed == NULL)
+    {
+        return 0;
+    }
+
+    if (iFramePtr) oscl_free(iFramePtr); // free previous one
+    iFramePtr = (uint8**) oscl_malloc(sizeof(uint8*) * num_buffers);
+    if (iFramePtr == NULL)
+    {
+        return 0;
+    }
+
+    iFramePtr[0] = iDPB;
+    iFrameUsed[0] = false;
+
+    for (ii = 1; ii < (int)num_buffers; ii++)
+    {
+        iFrameUsed[ii] = false;
+        iFramePtr[ii] = iFramePtr[ii-1] + frame_size;
+    }
+
+    return 1;
+}
+
+/* ///////////////////////////////////////////////////////////////////////// */
+void PVAVCDecoder::AVC_FrameUnbind(int indx)
+{
+    if (indx < iNumFrames)
+    {
+        iFrameUsed[indx] = false;
+    }
+
+    return ;
+}
+
+/* ///////////////////////////////////////////////////////////////////////// */
+int PVAVCDecoder::AVC_FrameBind(int indx, uint8** yuv)
+{
+    if ((iFrameUsed[indx] == true) || (indx >= iNumFrames))
+    {
+        return 0; // already in used
+    }
+
+    iFrameUsed[indx] = true;
+    *yuv = iFramePtr[indx];
+
+    return 1;
 }

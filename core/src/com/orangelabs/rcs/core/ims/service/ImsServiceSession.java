@@ -562,11 +562,23 @@ public abstract class ImsServiceSession extends Thread {
 
 	/**
 	 * Receive re-INVITE request 
-	 *
+	 * 
 	 * @param reInvite re-INVITE request
 	 */
 	public void receiveReInvite(SipRequest reInvite) {
-        sessionTimer.receiveReInvite(reInvite);
+		try {
+	        // Send a 405 error
+	    	if (logger.isActivated()) {
+	    		logger.info("Send 405 Method Not Allowed");
+	    	}
+	        SipResponse resp = SipMessageFactory.createResponse(reInvite, 405);
+	        SipUtils.buildAllowHeader(resp.getStackMessage());
+	        getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 405 error response", e);
+			}
+		}
 	}
 
 	/**
@@ -575,7 +587,7 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param update UPDATE request
 	 */
 	public void receiveUpdate(SipRequest update) {
-		sessionTimer.receiveUpdate(update);
+		sessionTimer.receiveUpdate(update);		
 	}
 
 	/**

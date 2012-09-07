@@ -73,7 +73,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	private RemoteCallbackList<IMessageDeliveryListener> listeners = new RemoteCallbackList<IMessageDeliveryListener>();
 
 	/**
-	 * Lock used for synchronization
+	 * Lock used for synchronisation
 	 */
 	private Object lock = new Object();
 
@@ -348,10 +348,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("isGroupChat", false);
+    	intent.putExtra("isChatGroup", false);
     	intent.putExtra("isStoreAndForward", session.isStoreAndForward());
     	intent.putExtra("firstMessage", session.getFirstMessage());
-        intent.putExtra("autoAccept", RcsSettings.getInstance().isChatAutoAccepted());
+    	
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
     
@@ -437,21 +437,21 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
-    	intent.putExtra("isGroupChat", true);
+    	intent.putExtra("isChatGroup", true);
     	intent.putExtra("replacedSessionId", session.getReplacedSessionId());
-    	intent.putExtra("subject", session.getSubject());
-    	intent.putExtra("autoAccept", RcsSettings.getInstance().isGroupChatAutoAccepted());
+    	intent.putExtra("firstMessage", session.getFirstMessage());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
-
+	
 	/**
 	 * Initiate an ad-hoc group chat session
 	 * 
      * @param participants List of participants
-     * @param subject Subject associated to the session	 * @return Chat session
+     * @param firstMsg First message exchanged during the session
+	 * @return Chat session
      * @throws ServerApiException
 	 */
-	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String subject) throws ServerApiException {
+	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String firstMsg) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -464,7 +464,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		try {
 			// Initiate the session
-			ChatSession session = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants, subject);
+			ChatSession session = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants, firstMsg);
 
 			// Update rich messaging history
 			RichMessaging.getInstance().addOutgoingChatSession(session);
@@ -479,15 +479,15 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}
 	
 	/**
-	 * Rejoin a group chat session
+	 * Rejoin a chat group session
 	 * 
-	 * @param chatId Chat ID
+	 * @param sessionId Session ID
 	 * @return Chat session
      * @throws ServerApiException
 	 */
-	public IChatSession rejoinGroupChatSession(String chatId) throws ServerApiException {
+	public IChatSession rejoinChatGroupSession(String sessionId) throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Rejoin group chat session related to the conversation " + chatId);
+			logger.info("Rejoin chat group session " + sessionId);
 		}
 		
     	// Check permission
@@ -497,8 +497,17 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testIms();
 
 		try {
+			// Get the chat ID from database
+			String chatId = RichMessaging.getInstance().getGroupChatIdFromSessionId(sessionId); 
+			if (chatId == null) {
+				if (logger.isActivated()) {
+					logger.warn("Session " + sessionId + " can't be rejoined");
+				}
+				throw new ServerApiException("Chat ID not found in database");
+			}
+			
 			// Initiate the session
-			ChatSession session = Core.getInstance().getImService().rejoinGroupChatSession(chatId);
+			ChatSession session = Core.getInstance().getImService().rejoinChatGroupSession(chatId);
 
 			// Add session in the list
 			ImSession sessionApi = new ImSession(session);
@@ -509,37 +518,6 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		}
 	}	
 	
-	/**
-	 * Restart a group chat session
-	 * 
-	 * @param chatId Chat ID
-	 * @return Chat session
-     * @throws ServerApiException
-	 */
-	public IChatSession restartGroupChatSession(String chatId) throws ServerApiException {
-		if (logger.isActivated()) {
-			logger.info("Restart group chat session related to the conversation " + chatId);
-		}
-		
-    	// Check permission
-		ServerApiUtils.testPermission();
-
-		// Test IMS connection
-		ServerApiUtils.testIms();
-
-		try {
-			// Initiate the session
-			ChatSession session = Core.getInstance().getImService().restartGroupChatSession(chatId);
-
-			// Add session in the list
-			ImSession sessionApi = new ImSession(session);
-			MessagingApiService.addChatSession(sessionApi);
-			return sessionApi;
-		} catch(Exception e) {
-			throw new ServerApiException(e.getMessage());
-		}
-	}	
-
 	/**
 	 * Get a chat session from its session id
 	 * 

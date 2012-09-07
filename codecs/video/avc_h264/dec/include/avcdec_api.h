@@ -39,7 +39,7 @@ typedef enum
     The followings are fail with details. Their values are negative.
     */
     AVCDEC_NO_DATA = -4,
-    AVCDEC_PACKET_LOSS = -3,
+    AVCDEC_NOT_SUPPORTED = -3,
     /**
     Fail information
     */
@@ -74,6 +74,7 @@ typedef struct tagAVCDecSPSInfo
     int  frame_crop_right;
     int  frame_crop_top;
     int  frame_crop_bottom;
+    int  num_frames; // minimal number of YUV frame buffers required
 
 } AVCDecSPSInfo;
 
@@ -126,7 +127,7 @@ extern "C"
     \param "avcHandle"  "Handle to the AVC decoder library object."
     \param "seqInfo"    "Pointer to the AVCDecSeqParamInfo structure."
     \return "AVCDEC_SUCCESS if success and AVCDEC_FAIL if fail."
-    \note "This API can be combined with PVAVCInitSequence if wanted to be consistent with m4vdec lib."
+    \note "This API returns the SPS Info of the most recently decoded SPS (to be used right after PVAVCDecSeqParamSet)."
     */
     OSCL_IMPORT_REF AVCDec_Status PVAVCDecGetSeqInfo(AVCHandle *avcHandle, AVCDecSPSInfo *seqInfo);
 
@@ -187,6 +188,7 @@ extern "C"
     */
     OSCL_IMPORT_REF void    PVAVCCleanUpDecoder(AVCHandle *avcHandle);
 //AVCDec_Status EBSPtoRBSP(uint8 *nal_unit,int *size);
+
 
 
 

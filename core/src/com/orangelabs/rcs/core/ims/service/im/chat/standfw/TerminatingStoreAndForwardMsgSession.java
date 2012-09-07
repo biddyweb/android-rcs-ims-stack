@@ -73,10 +73,6 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
-
-		// Set contribution ID
-		String id = ChatUtils.getContributionId(invite);
-		setContributionID(id);
 	}
 	
 	/**

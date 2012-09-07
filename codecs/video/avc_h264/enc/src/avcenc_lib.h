@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -603,7 +603,6 @@ extern "C"
     */
     int AVCFindMin(int dn[]);
 
-
     /*------------- findhalfpel.c -------------------*/
 
     /**
@@ -772,6 +771,15 @@ extern "C"
     \return "AVCENC_SUCCESS or AVCENC_SKIPPED_PICTURE when bufer overflow (need to discard current frame)."
     */
     AVCEnc_Status RCUpdateFrame(AVCEncObject *encvid);
+
+    /**
+    This function is called to update the RC internal variables when bit rate/frame rate is changed.
+    \param "rateCtrl"   "Pointer to the rate control structure."
+    \param "encvid"     "Pointer to AVCEncObject."
+    \return "void"
+    */
+    void RCUpdateParams(AVCRateControl *rateCtrl, AVCEncObject *encvid);
+
 
     /*--------- residual.c -------------------*/
 

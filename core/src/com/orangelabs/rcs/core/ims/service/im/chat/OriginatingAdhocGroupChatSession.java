@@ -63,24 +63,21 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * Constructor
 	 * 
 	 * @param parent IMS service
-	 * @param conferenceId Conference ID
-	 * @param subject Subject associated to the session
+	 * @param conferenceId Conference id
+	 * @param msg First message of the session
 	 * @param participants List of invited participants
 	 */
-	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String subject, ListOfParticipant participants) {
+	public OriginatingAdhocGroupChatSession(ImsService parent, String conferenceId, String msg, ListOfParticipant participants) {
 		super(parent, conferenceId, participants);
 
-		// Set subject
-		if ((subject != null) && (subject.length() > 0)) {
-			setSubject(subject);		
+		// Set first message
+		if ((msg != null) && (msg.length() > 0)) {
+			InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(), msg, false);
+			setFirstMesssage(firstMessage);		
 		}
 		
 		// Create dialog path
 		createOriginatingDialogPath();
-		
-		// Set contribution ID
-		String id = ContributionIdGenerator.getContributionId(getDialogPath().getCallId());
-		setContributionID(id);				
 	}
 	
 	/**
@@ -176,10 +173,10 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
         		InstantMessagingService.CHAT_FEATURE_TAGS,
         		content, boundary);
 
-    	// Test if there is a subject
-    	if (getSubject() != null) {
+    	// Test if there is a first message
+    	if (getFirstMessage() != null) {
 	        // Add a subject header
-    		invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getSubject()));
+    		invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getFirstMessage().getTextMessage()));
     	}
 
         // Add a require header

@@ -41,7 +41,7 @@ public abstract class RegistrationProcedure {
 	public abstract String getHomeDomain(); 
 	
 	/**
-	 * Returns the public URI or IMPU for registration
+	 * Returns the public URI or IMPU
 	 * 
 	 * @return Public URI
 	 */

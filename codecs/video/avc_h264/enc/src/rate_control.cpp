@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
- * Copyright (C) 1998-2009 PacketVideo
+ * Copyright (C) 1998-2010 PacketVideo
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,6 +88,8 @@ AVCEnc_Status RCDetermineFrameNum(AVCEncObject *encvid, AVCRateControl *rateCtrl
         }
         modTime += encvid->wrapModTime; /* wrapModTime is non zero after wrap-around */
 
+        /* Calculate frame number based on frame rate starting from modTimeRef */
+        /* Note, this value is totally independent from sliceHdr->frame_num or video->CurrPicNum */
         currFrameNum = (int32)(((modTime - modTimeRef) * rateCtrl->frame_rate + 200) / 1000); /* add small roundings */
 
         if (currFrameNum <= (int32)encvid->prevProcFrameNum)
@@ -97,6 +99,7 @@ AVCEnc_Status RCDetermineFrameNum(AVCEncObject *encvid, AVCRateControl *rateCtrl
 
         frameInc = currFrameNum - encvid->prevProcFrameNum;
 
+        /* Check how many frames have been skipped since the last processed frame */
         if (frameInc < rateCtrl->skip_next_frame + 1)
         {
             return AVCENC_FAIL;  /* frame skip required to maintain the target bit rate. */
@@ -104,27 +107,20 @@ AVCEnc_Status RCDetermineFrameNum(AVCEncObject *encvid, AVCRateControl *rateCtrl
 
         RCUpdateBuffer(video, rateCtrl, frameInc - rateCtrl->skip_next_frame);  /* in case more frames dropped */
 
-        *frameNum = currFrameNum;
-
         /* This part would be similar to DetermineVopType of m4venc */
-        if ((*frameNum >= (uint)rateCtrl->idrPeriod && rateCtrl->idrPeriod > 0) || (*frameNum > video->MaxFrameNum)) /* first frame or IDR*/
-        {
-            /* set frame type to IDR-frame */
-            if (rateCtrl->idrPeriod)
-            {
-                encvid->modTimeRef += (uint32)(rateCtrl->idrPeriod * 1000 / rateCtrl->frame_rate);
-                *frameNum -= rateCtrl->idrPeriod;
-            }
-            else
-            {
-                encvid->modTimeRef += (uint32)(video->MaxFrameNum * 1000 / rateCtrl->frame_rate);
-                *frameNum -= video->MaxFrameNum;
-            }
 
+        if ((currFrameNum >= (int32)rateCtrl->idrPeriod && rateCtrl->idrPeriod > 0) /* exceed IDR period */
+                || (currFrameNum >= (int32)video->MaxFrameNum)) /* this line for all P-frames (idrPeriod=0) */
+        {
+            /* Re-assign modTimeRef to the new IDR frame */
+            encvid->modTimeRef += (uint32)(currFrameNum * 1000 / rateCtrl->frame_rate);
+
+            /* Set frame type to IDR-frame */
             video->nal_unit_type = AVC_NALTYPE_IDR;
             sliceHdr->slice_type = AVC_I_ALL_SLICE;
             video->slice_type = AVC_I_SLICE;
-            encvid->prevProcFrameNum = *frameNum;
+
+            encvid->prevProcFrameNum = *frameNum = 0; // Reset frameNum to zero.
         }
         else
         {
@@ -132,6 +128,7 @@ AVCEnc_Status RCDetermineFrameNum(AVCEncObject *encvid, AVCRateControl *rateCtrl
             sliceHdr->slice_type = AVC_P_ALL_SLICE;
             video->slice_type = AVC_P_SLICE;
             encvid->prevProcFrameNum = currFrameNum;
+            *frameNum = currFrameNum;
         }
 
     }
@@ -979,5 +976,58 @@ int Qstep2QP(double Qstep)
     return (q_per * 6 + q_rem);
 }
 
+
+void RCUpdateParams(AVCRateControl *rateCtrl, AVCEncObject *encvid)
+{
+    int32 prevFrameNum, newFrameNum;
+    uint32 prevModTime;
+
+    if (rateCtrl->frame_rate != rateCtrl->pMP->framerate)
+    {
+        /* this part for frame rate change */
+
+        rateCtrl->pMP->frameRange = (int)(rateCtrl->frame_rate * 1.0); /* 1.0s time frame*/
+        rateCtrl->pMP->frameRange = AVC_MAX(rateCtrl->pMP->frameRange, 5);
+        rateCtrl->pMP->frameRange = AVC_MIN(rateCtrl->pMP->frameRange, 30);
+
+        prevFrameNum = encvid->prevProcFrameNum;  // previous frame number
+
+        // convert from frame num to time based on the previous frame rate
+        prevModTime = (uint32)(prevFrameNum * 1000 / rateCtrl->pMP->framerate);  // offseted by modTimeRef
+
+        // convert back from time to frame num based on new frame rate
+        newFrameNum = (int32)((prevModTime * rateCtrl->frame_rate) / 1000);
+
+        // assign the newFrameNum to prevFrameNum
+        // note, this will cause the IDR frame to come earlier and later than expected !!
+        encvid->prevProcFrameNum = newFrameNum;
+    }
+
+    // recalculate fixed values that are dependent on bitrate and framerate
+
+    rateCtrl->bitsPerFrame = (int32)(rateCtrl->bitRate / rateCtrl->frame_rate);
+
+    rateCtrl->max_BitVariance_num = (int)((OsclFloat)(rateCtrl->Bs - rateCtrl->VBV_fullness) / (rateCtrl->bitsPerFrame / 10.0)) - 5;
+    if (rateCtrl->max_BitVariance_num < 0) rateCtrl->max_BitVariance_num += 5;
+
+    /* no change to rateCtrl->cpbSize, rateCtrl->Bs, rateCtrl->low_bound, rateCtrl->VBV_fullness_offset*/
+
+    /* keep continuity to the following values */
+    /* rateCtrl->pMP->framePos, rateCtrl->TMN_TH, rateCtrl->TMN_W */
+    /* rateCtrl->VBV_fullness, rateCtrl->pMP->counter_BTsrc, */
+
+    /* reset some stats for CalculateQuantizerMultiPass and active bit resource protection */
+    rateCtrl->pMP->sum_QP /= rateCtrl->pMP->encoded_frames;  // reset it to 1
+    rateCtrl->pMP->encoded_frames = 1;
+    rateCtrl->pMP->sum_mad = 0;
+    rateCtrl->T = 0;
+
+    /* Finalizing bitrate and framerate to pMP structure*/
+    rateCtrl->pMP->bitrate = rateCtrl->bitRate;
+    rateCtrl->pMP->framerate = rateCtrl->frame_rate;
+    rateCtrl->pMP->target_bits_per_frame = rateCtrl->pMP->bitrate / rateCtrl->pMP->framerate;
+
+    return ;
+}
 
 

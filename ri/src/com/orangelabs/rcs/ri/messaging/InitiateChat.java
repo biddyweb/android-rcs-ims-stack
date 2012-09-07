@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -95,12 +97,15 @@ public class InitiateChat extends Activity {
             // Build participant list
         	Spinner spinner = (Spinner)findViewById(R.id.contact);
         	MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
-            String remoteContact = cursor.getString(1);
-            
-            // Display chat view
-        	Intent intent = new Intent(InitiateChat.this, OneToOneChatView.class);
+            String remote = cursor.getString(1);
+            ArrayList<String> participants = new ArrayList<String>();
+            participants.add(remote);
+
+			// Display chat view
+        	Intent intent = new Intent(InitiateChat.this, ChatView.class);
         	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        	intent.putExtra("contact", remoteContact);
+        	intent.putExtra("participants", participants);
+        	intent.putExtra("isChatGroup", false);
         	startActivity(intent);
         	
         	// Exit activity

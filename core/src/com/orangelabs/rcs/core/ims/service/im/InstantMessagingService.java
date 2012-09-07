@@ -38,7 +38,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession;
-import com.orangelabs.rcs.core.ims.service.im.chat.RestartGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
@@ -50,13 +49,12 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharin
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Instant messaging services (1-1 chat, group chat and file transfer)
+ * Instant messaging services (chat 1-1, chat group and file transfer)
  * 
  * @author jexa7410
  */
@@ -392,7 +390,7 @@ public class InstantMessagingService extends ImsService {
 			// Save the message
 			InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);
 			if (firstMsg != null) {
-				RichMessaging.getInstance().addIncomingChatMessage(firstMsg, ChatUtils.getContributionId(invite));
+				RichMessaging.getInstance().addIncomingChatMessage(firstMsg);
 			}
 			
 			// Send a 486 Busy response
@@ -414,11 +412,11 @@ public class InstantMessagingService extends ImsService {
      * Initiate an ad-hoc group chat session
      * 
      * @param contacts List of contacts
-     * @param subject Subject
+     * @param firstMsg First message
      * @return IM session
      * @throws CoreException
      */
-    public ChatSession initiateAdhocGroupChatSession(List<String> contacts, String subject) throws CoreException {
+    public ChatSession initiateAdhocGroupChatSession(List<String> contacts, String firstMsg) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an ad-hoc group chat session");
 		}
@@ -435,7 +433,7 @@ public class InstantMessagingService extends ImsService {
 		OriginatingAdhocGroupChatSession session = new OriginatingAdhocGroupChatSession(
 				this,
 				ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
-				subject,
+				firstMsg,
 				new ListOfParticipant(contacts));
 
 		// Start the session
@@ -487,15 +485,15 @@ public class InstantMessagingService extends ImsService {
     }
 
     /**
-     * Rejoin a group chat session
+     * Rejoin a chat group session
      * 
      * @param chatId Chat ID
      * @return IM session
      * @throws CoreException
      */
-    public ChatSession rejoinGroupChatSession(String chatId) throws CoreException {
+    public ChatSession rejoinChatGroupSession(String chatId) throws CoreException {
 		if (logger.isActivated()) {
-			logger.info("Rejoin group chat session");
+			logger.info("Rejoin chat group session " + chatId);
 		}
 
 		// Test number of sessions
@@ -504,77 +502,17 @@ public class InstantMessagingService extends ImsService {
 				logger.debug("The max number of chat sessions is achieved: cancel the initiation");
 			}
 			throw new CoreException("Max chat sessions achieved");
-		}
-
-		// Get the group chat info from database
-		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfoFromChatId(chatId); 
-		if (groupChat == null) {
-			if (logger.isActivated()) {
-				logger.warn("Group chat " + chatId + " can't be rejoined: conversation not found");
-			}
-			throw new CoreException("Group chat conversation not found in database");
-		}
-		if (logger.isActivated()) {
-			logger.debug("Rejoin group chat: " + groupChat.toString());
 		}
 
 		// Create a new session
 		RejoinGroupChatSession session = new RejoinGroupChatSession(
 				this,
-				groupChat.getRejoinId(),
-				groupChat.getContributionId(),
-				groupChat.getSubject(),
-				groupChat.getParticipants());
-
-		// Start the session
-		session.startSession();
-		return session;
-    }
-    
-    /**
-     * Restart a group chat session
-     * 
-     * @param chatId Chat ID
-     * @return IM session
-     * @throws CoreException
-     */
-    public ChatSession restartGroupChatSession(String chatId) throws CoreException {
-		if (logger.isActivated()) {
-			logger.info("Restart group chat session");
-		}
-
-		// Test number of sessions
-		if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
-			if (logger.isActivated()) {
-				logger.debug("The max number of chat sessions is achieved: cancel the initiation");
-			}
-			throw new CoreException("Max chat sessions achieved");
-		}
-		
-		// Get the group chat info from database
-		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfoFromChatId(chatId); 
-		if (groupChat == null) {
-			if (logger.isActivated()) {
-				logger.warn("Group chat " + chatId + " can't be restarted: conversation not found");
-			}
-			throw new CoreException("Group chat conversation not found in database");
-		}
-		if (logger.isActivated()) {
-			logger.debug("Restart group chat: " + groupChat.toString());
-		}
-
-		// Create a new session
-		RestartGroupChatSession session = new RestartGroupChatSession(
-				this,
-				ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
-				groupChat.getSubject(),
-				new ListOfParticipant(groupChat.getParticipants()),
 				chatId);
 
 		// Start the session
 		session.startSession();
 		return session;
-    }    
+    }
     
     /**
      * Receive a conference notification

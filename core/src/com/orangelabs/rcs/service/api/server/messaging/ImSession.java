@@ -86,7 +86,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @return Chat ID
 	 */
 	public String getChatID() {
-		return session.getContributionID();
+		return session.getImSessionIdentity();
 	}
 	
 	/**
@@ -108,12 +108,12 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 	
 	/**
-	 * Is group chat
+	 * Is chat group
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isGroupChat() {
-		return session.isGroupChat();
+	public boolean isChatGroup() {
+		return session.isChatGroup();
 	}
 	
 	/**
@@ -132,15 +132,6 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 */
 	public InstantMessage getFirstMessage() {
 		return session.getFirstMessage();
-	}
-	
-	/**
-	 * Get subject associated to the session
-	 * 
-	 * @return String
-	 */
-	public String getSubject() {
-		return session.getSubject();
 	}
 
 	/**
@@ -167,7 +158,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		RichMessaging.getInstance().addChatSessionTermination(session);
 		
         // Reject invitation
-		session.rejectSession();
+		session.rejectSession(486);
 	}
 
 	/**
@@ -183,40 +174,17 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 	
 	/**
-	 * Get list of participants connected to the session
+	 * Get list of participants to the session
 	 * 
 	 * @return List
 	 */
 	public List<String> getParticipants() {
 		if (logger.isActivated()) {
-			logger.info("Get list of connected participants in the session");
+			logger.info("Get list of participants in the session");
 		}
 		return session.getConnectedParticipants().getList();
 	}
-
-    /**
-     * Get max number of participants in the session
-     *
-     * @return max
-     */
-    public int getMaxParticipants() {
-        if (logger.isActivated()) {
-            logger.info("Get max number of participants in the session");
-        }
-        return session.getMaxParticipants();
-    }
-
-	/**
-	 * Get max number of participants which can be added to the conference
-	 * 
-	 * @return Number
-	 */
-	public int getMaxParticipantsToBeAdded() {
-		int max = session.getMaxParticipants()-1;
-		int connected = session.getConnectedParticipants().getList().size(); 
-		return max-connected;
-	}	
-
+	
 	/**
 	 * Add a participant to the session
 	 * 
@@ -226,18 +194,11 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		if (logger.isActivated()) {
 			logger.info("Add participant " + participant + " to the session");
 		}
-
-		int max = session.getMaxParticipants()-1;
-		int connected = session.getConnectedParticipants().getList().size(); 
-		if (connected < max) {
-            // Add a participant to the session
-            session.addParticipant(participant);
-        } else {
-        	// Max participants achieved
-            handleAddParticipantFailed("Maximum number of participants reached");
-        }
+		
+		// Add a participant to the session
+		session.addParticipant(participant);
 	}
-
+	
 	/**
 	 * Add a list of participants to the session
 	 * 
@@ -247,16 +208,9 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		if (logger.isActivated()) {
 			logger.info("Add " + participants.size() + " participants to the session");
 		}
-
-		int max = session.getMaxParticipants()-1;
-		int connected = session.getConnectedParticipants().getList().size(); 
-        if (connected < max) {
-            // Add a list of participants to the session
-            session.addParticipants(participants);
-        } else {
-        	// Max participants achieved
-            handleAddParticipantFailed("Maximum number of participants reached");
-        }
+		
+		// Add a list of participants to the session
+		session.addParticipants(participants);
 	}
 	
 	/**
@@ -345,7 +299,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			}
 
 			// Update rich messaging history
-			RichMessaging.getInstance().markChatSessionStarted(session);
+			RichMessaging.getInstance().markChatSessionStarted(session.getSessionID(), session.getImSessionIdentity());
 	    	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -466,17 +420,14 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			
 			// Update rich messaging history
 	    	switch(error.getErrorCode()){
-	    		case ChatError.SESSION_NOT_FOUND:
-	    		case ChatError.SESSION_RESTART_FAILED:
-	    			// These errors are not logged
-	    			break;
 		    	case ChatError.SESSION_INITIATION_DECLINED:
 					RichMessaging.getInstance().addChatSessionTermination(session);
 		    		break;
 		    	case ChatError.SESSION_INITIATION_FAILED:
 		    	case ChatError.SESSION_INITIATION_CANCELLED:
 					RichMessaging.getInstance().addChatSessionTermination(session);
-					RichMessaging.getInstance().markFirstMessageFailed(session.getSessionID());
+					// Also mark the first message that was sent as failed
+					RichMessaging.getInstance().markChatSessionFailed(session.getSessionID());
 		    		break;
 		    	default:
 					RichMessaging.getInstance().addChatSessionError(session);
@@ -542,7 +493,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			}
 			
 			// Update rich messaging history
-			RichMessaging.getInstance().addConferenceEvent(session, contact, state);
+			RichMessaging.getInstance().addConferenceEvent(contact, session.getSessionID(), state);
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
