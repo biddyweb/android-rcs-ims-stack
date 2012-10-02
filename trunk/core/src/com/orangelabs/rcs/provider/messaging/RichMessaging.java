@@ -373,11 +373,14 @@ public class RichMessaging {
 	 */
 	public void markChatSessionStarted(ChatSession session) {
 		int type = getChatSystemEventType(session);
+		String participants = getParticipants(session);
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_CHAT_REJOIN_ID, session.getImSessionIdentity());
+		values.put(RichMessagingData.KEY_CONTACT, participants);
 		cr.update(databaseUri, 
 				values, 
-				"(" + RichMessagingData.KEY_CHAT_SESSION_ID +" = \""+session.getSessionID()+"\") AND (" +RichMessagingData.KEY_TYPE + " =" + type + ")", 
+				"(" + RichMessagingData.KEY_CHAT_SESSION_ID +" = \"" + session.getSessionID() +
+				"\") AND (" + RichMessagingData.KEY_TYPE + " =" + type + ")", 
 				null);
 		
 	}	
@@ -1010,31 +1013,7 @@ public class RichMessaging {
 	}
 
 	/**
-	 * Get the group chat rejoin ID
-	 * 
-	 * @param sessionId Session ID
-	 * @result Rejoin ID or null
-	 */
-	public String getGroupChatRejoinId(String sessionId) {
-		String result = null;
-    	Cursor cursor = cr.query(databaseUri, 
-    			new String[] {
-    				RichMessagingData.KEY_CHAT_REJOIN_ID
-    			},
-    			"(" + RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "') AND (" + 
-    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
-    				RichMessagingData.KEY_CHAT_REJOIN_ID + " NOT NULL)", 
-    			null, 
-    			RichMessagingData.KEY_TIMESTAMP + " DESC");
-    	if (cursor.moveToFirst()) {
-    		result = cursor.getString(0);
-    	}
-    	cursor.close();
-    	return result;
-	}	
-
-	/**
-	 * Get the group chat ID
+	 * Get the group chat ID from its session ID
 	 * 
 	 * @param sessionId Session ID
 	 * @result Chat ID or null
@@ -1058,18 +1037,84 @@ public class RichMessaging {
 	}	
 
 	/**
+	 * Get the group chat rejoin ID
+	 * 
+	 * @param chatId Chat ID
+	 * @result Rejoin ID or null
+	 */
+	public String getGroupChatRejoinId(String chatId) {
+		String result = null;
+    	Cursor cursor = cr.query(databaseUri, 
+    			new String[] {
+    				RichMessagingData.KEY_CHAT_REJOIN_ID
+    			},
+    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
+    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
+    				RichMessagingData.KEY_CHAT_REJOIN_ID + " NOT NULL)", 
+    			null, 
+    			RichMessagingData.KEY_TIMESTAMP + " DESC");
+    	if (cursor.moveToFirst()) {
+    		result = cursor.getString(0);
+    	}
+    	cursor.close();
+    	return result;
+	}	
+
+	/**
+	 * Get the group chat info
+	 * 
+	 * @param chatId Chat ID
+	 * @result Group chat info
+	 */
+	public GroupChatInfo getGroupChatInfo(String chatId) {
+		GroupChatInfo result = null;
+    	Cursor cursor = cr.query(databaseUri, 
+    			new String[] {
+    				RichMessagingData.KEY_CHAT_SESSION_ID,
+    				RichMessagingData.KEY_CHAT_REJOIN_ID,
+    				RichMessagingData.KEY_CONTACT,
+    				RichMessagingData.KEY_DATA
+    			},
+    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
+    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND ((" +
+    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + ") OR (" +
+    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED + "))", 
+    				null, 
+    			RichMessagingData.KEY_TIMESTAMP + " DESC");
+    	
+    	if (cursor.moveToFirst()) {
+    		String participants = cursor.getString(2); 
+        	List<String> list = new ArrayList<String>();
+        	if (participants != null) {
+        		String[] contacts = participants.split(";");
+        		for(int i=0; i < contacts.length; i++) {
+        			list.add(contacts[i]);
+        		}
+        	}    		
+        	result = new GroupChatInfo(
+    				cursor.getString(0),
+    				cursor.getString(1),
+    				chatId,
+    				list,
+    				cursor.getString(3));
+    	}
+    	cursor.close();
+    	return result;
+	}
+
+	/**
 	 * Get group chat status
 	 * 
-	 * @param sessionId Session ID
+	 * @param chatId Chat ID
 	 * @return Status
 	 */
-	public int getGroupChatStatus(String sessionId) {
+	public int getGroupChatStatus(String chatId) {
 		int result = -1;
     	Cursor cursor = cr.query(databaseUri, 
     			new String[] {
     				RichMessagingData.KEY_STATUS
     			},
-    			"(" + RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "') AND (" + 
+    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
     				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ")", 
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
@@ -1081,21 +1126,21 @@ public class RichMessaging {
 	}	
 
 	/**
-	 * Get the group chat participants
+	 * Get the group chat participants who have been connected to the chat
 	 * 
-	 * @param sessionId Session ID
+	 * @param chatId Chat ID
 	 * @result List of contacts
 	 */
-	public List<String> getGroupChatParticipants(String sessionId) {
+	public List<String> getGroupChatConnectedParticipants(String chatId) {
     	List<String> result = new ArrayList<String>();
     	String participants = null;
     	Cursor cursor = cr.query(databaseUri, 
     			new String[] {
     				RichMessagingData.KEY_CONTACT
     			},
-    			"(" + RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "') AND (" + 
+    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
     				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED+ ")", 
+    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT + ")", 
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
     	if (cursor.moveToFirst()) {
@@ -1115,63 +1160,22 @@ public class RichMessaging {
 	/**
 	 * Get the group chat subject
 	 * 
-	 * @param sessionId Session ID
+	 * @param chatId Chat ID
 	 * @result Subject or null
 	 */
-	public String getGroupChatSubject(String sessionId) {
+	public String getGroupChatSubject(String chatId) {
 		String result = null;
     	Cursor cursor = cr.query(databaseUri, 
     			new String[] {
     				RichMessagingData.KEY_DATA
     			},
-    			"(" + RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "') AND (" + 
+    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
     				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED+ ")", 
+    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT + ")", 
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
     	if (cursor.moveToFirst()) {
     		result = cursor.getString(0);
-    	}
-    	cursor.close();
-    	return result;
-	}
-
-	/**
-	 * Get the group chat info
-	 * 
-	 * @param chatId Chat ID
-	 * @result Group chat info
-	 */
-	public GroupChatInfo getGroupChatInfoFromChatId(String chatId) {
-		GroupChatInfo result = null;
-    	Cursor cursor = cr.query(databaseUri, 
-    			new String[] {
-    				RichMessagingData.KEY_CHAT_SESSION_ID,
-    				RichMessagingData.KEY_CHAT_REJOIN_ID,
-    				RichMessagingData.KEY_CONTACT,
-    				RichMessagingData.KEY_DATA
-    			},
-    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
-    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND ((" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + ") OR (" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED + "))", 
-    				null, 
-    			RichMessagingData.KEY_TIMESTAMP + " DESC");
-    	if (cursor.moveToFirst()) {
-    		String participants = cursor.getString(2); 
-        	List<String> list = new ArrayList<String>();
-        	if (participants != null) {
-        		String[] contacts = participants.split(";");
-        		for(int i=0; i < contacts.length; i++) {
-        			list.add(contacts[i]);
-        		}
-        	}    		
-    		result = new GroupChatInfo(
-    				cursor.getString(0),
-    				cursor.getString(1),
-    				chatId,
-    				list,
-    				cursor.getString(3));
     	}
     	cursor.close();
     	return result;
