@@ -507,18 +507,18 @@ public class InstantMessagingService extends ImsService {
 		}
 
 		// Get the group chat info from database
-		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfoFromChatId(chatId); 
+		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfo(chatId); 
 		if (groupChat == null) {
 			if (logger.isActivated()) {
 				logger.warn("Group chat " + chatId + " can't be rejoined: conversation not found");
 			}
 			throw new CoreException("Group chat conversation not found in database");
 		}
+
+		// Create a new session
 		if (logger.isActivated()) {
 			logger.debug("Rejoin group chat: " + groupChat.toString());
 		}
-
-		// Create a new session
 		RejoinGroupChatSession session = new RejoinGroupChatSession(
 				this,
 				groupChat.getRejoinId(),
@@ -552,23 +552,41 @@ public class InstantMessagingService extends ImsService {
 		}
 		
 		// Get the group chat info from database
-		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfoFromChatId(chatId); 
+		GroupChatInfo groupChat = RichMessaging.getInstance().getGroupChatInfo(chatId); 
 		if (groupChat == null) {
 			if (logger.isActivated()) {
 				logger.warn("Group chat " + chatId + " can't be restarted: conversation not found");
 			}
 			throw new CoreException("Group chat conversation not found in database");
 		}
-		if (logger.isActivated()) {
-			logger.debug("Restart group chat: " + groupChat.toString());
+
+		// Get the connected participants from database
+		List<String> participants = RichMessaging.getInstance().getGroupChatConnectedParticipants(chatId);
+		
+		// Add also participants who have been connected after the initial invitation
+		List<String> invitedParticipants = groupChat.getParticipants();
+		for(int i=0; i < invitedParticipants.size(); i++) {
+			String user = invitedParticipants.get(i);
+			if (!participants.contains(user)) {
+				participants.add(user);
+			}
+		}
+		if (participants.size() == 0) {
+			if (logger.isActivated()) {
+				logger.warn("Group chat " + chatId + " can't be restarted: participants not found");
+			}
+			throw new CoreException("Group chat participants not found in database");
 		}
 
 		// Create a new session
+		if (logger.isActivated()) {
+			logger.debug("Restart group chat: " + groupChat.toString());
+		}
 		RestartGroupChatSession session = new RestartGroupChatSession(
 				this,
 				ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
 				groupChat.getSubject(),
-				new ListOfParticipant(groupChat.getParticipants()),
+				new ListOfParticipant(participants),
 				chatId);
 
 		// Start the session
