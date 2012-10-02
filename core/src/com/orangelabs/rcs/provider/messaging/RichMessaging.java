@@ -1133,7 +1133,6 @@ public class RichMessaging {
 	 */
 	public List<String> getGroupChatConnectedParticipants(String chatId) {
     	List<String> result = new ArrayList<String>();
-    	String participants = null;
     	Cursor cursor = cr.query(databaseUri, 
     			new String[] {
     				RichMessagingData.KEY_CONTACT
@@ -1143,15 +1142,10 @@ public class RichMessaging {
     				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT + ")", 
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
-    	if (cursor.moveToFirst()) {
-    		participants = cursor.getString(0);
-    	}
-    	cursor.close();
-    	
-    	if (participants != null) {
-    		String[] contacts = participants.split(";");
-    		for(int i=0; i < contacts.length; i++) {
-    			result.add(contacts[i]);
+    	while(cursor.moveToNext()) {
+    		String participant = cursor.getString(0);
+    		if (!result.contains(participant)) {
+    			result.add(participant);
     		}
     	}
     	return result;
