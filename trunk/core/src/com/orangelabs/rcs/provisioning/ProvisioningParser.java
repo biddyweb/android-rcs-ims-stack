@@ -18,18 +18,18 @@
 
 package com.orangelabs.rcs.provisioning;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
-import com.orangelabs.rcs.utils.logger.Logger;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
 import java.io.ByteArrayInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax2.sip.ListeningPoint;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Provisioning parser
@@ -934,14 +934,26 @@ public class ProvisioningParser {
 
                 if (wifiMedia == null) {
                     if ((wifiMedia = getValueByParamName("wifiMedia", childnode)) != null) {
-                        // Not supported
+                        if (wifiMedia.equals("MSRP")) {
+	                        RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_MSRP_OVER_WIFI,
+	                        		RcsSettingsData.FALSE);
+                        } else if (wifiMedia.equals("MSRPoTLS")) {
+	                        RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_MSRP_OVER_WIFI,
+	                        		RcsSettingsData.TRUE);
+                        }
                         continue;
                     }
                 }
 
                 if (wifiRtMedia == null) {
                     if ((wifiRtMedia = getValueByParamName("wifiRTMedia", childnode)) != null) {
-                        // Not supported
+                        if (wifiMedia.equals("RTP")) {
+	                        RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI,
+	                        		RcsSettingsData.FALSE);
+                        } else if (wifiMedia.equals("SRTP")) {
+	                        RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI,
+	                        		RcsSettingsData.TRUE);
+                        }
                         continue;
                     }
                 }

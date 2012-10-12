@@ -21,10 +21,18 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import java.io.ByteArrayInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
+import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
+import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
+import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
+import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -105,6 +113,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+		if (parent.getImsModule().isConnectedToWifiAccess()) {
+			msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
+		}
 	}
 
     /**
@@ -257,7 +268,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param error Error
 	 */
-	public void handleError(ChatError error) {
+	public void handleError(ImsServiceError error) {
         // Error	
     	if (logger.isActivated()) {
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
@@ -272,10 +283,28 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Notify listeners
 		if (!isInterrupted()) {
 	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleImError(error);
+	    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(error));
 	        }
 		}
 	}
+
+    /**
+     * Handle 486 Busy
+     *
+     * @param resp 486 response
+     */
+    public void handle486Busy(SipResponse resp) {
+        handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED, resp.getReasonPhrase()));
+    }
+
+    /**
+     * Handle 603 Decline
+     *
+     * @param resp 603 response
+     */
+    public void handle603Declined(SipResponse resp) {
+        handleDefaultError(resp);
+    }
 
 	/**
 	 * Data has been transfered
@@ -590,7 +619,52 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     public void setMaxParticipants(int maxParticipants) {
         this.maxParticipants = maxParticipants;
     }
-    
+
+    /**
+     * Prepare media session
+     * 
+     * @throws Exception 
+     */
+    public void prepareMediaSession() throws Exception {
+        // Parse the remote SDP part
+        SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
+        Vector<MediaDescription> media = parser.getMediaDescriptions();
+        MediaDescription mediaDesc = media.elementAt(0);
+        MediaAttribute attr = mediaDesc.getMediaAttribute("path");
+        String remoteMsrpPath = attr.getValue();
+        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+        int remotePort = mediaDesc.port;
+
+        // Create the MSRP session
+        MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+        session.setFailureReportOption(false);
+        session.setSuccessReportOption(false);
+    }
+
+    /**
+     * Start media session
+     * 
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        // Open the MSRP session
+        getMsrpMgr().openMsrpSession();
+
+        // Send an empty packet
+        sendEmptyDataChunk();
+    }
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Stop the activity manager
+        getActivityManager().stop();
+
+        // Close MSRP session
+        closeMsrpSession();
+    }
+
 	/**
 	 * Reject the session invitation
 	 */

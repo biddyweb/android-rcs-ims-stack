@@ -19,11 +19,13 @@
 package com.orangelabs.rcs.core.ims.protocol.sip;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -34,6 +36,7 @@ import java.security.cert.X509Certificate;
  * KeyStore manager for secure connection.
  * 
  * @author B. JOGUET
+ * @author Deutsche Telekom AG
  */
 public class KeyStoreManager {
 
@@ -164,13 +167,12 @@ public class KeyStoreManager {
     }
 
     /**
-     * Add a certificate in the keystore
-     * 
-     * @param alias certificate alias
-     * @param path certificate path
+     * Add a certificate or all certificates in folder in the keystore
+     *
+     * @param path certificates path
      * @throws Exception
      */
-    public static void addCertificate(String path) throws KeyStoreManagerException {
+    public static void addCertificates(String path) throws KeyStoreManagerException {
         if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
             FileInputStream fis = null;
             FileOutputStream fos = null;
@@ -179,29 +181,63 @@ public class KeyStoreManager {
                 fis = new FileInputStream(getKeystorePath());
                 KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
                 ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
+
+                // Open certificates path
+                File pathFile = new File(path);
+                if (pathFile.isDirectory()) {
+                    // The path is a folder, add all certificates
+                    File[] certificates = pathFile.listFiles(new FilenameFilter() {
+                        public boolean accept(File dir, String filename) {
+                            return filename.endsWith(RcsSettingsData.CERTIFICATE_FILE_TYPE);
+                        }
+                    });
+
+                    if (certificates != null) {
+                        for (File file : certificates) {
+                            // Get certificate and add in keystore
+                            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                            InputStream inStream = new FileInputStream(file);
+                            X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
+                            inStream.close();
+                            ks.setCertificateEntry(buildCertificateAlias(path), cert);
+
+                            // save the keystore
+                            fos = new FileOutputStream(getKeystorePath());
+                            ks.store(fos, KEYSTORE_PASSWORD.toCharArray());
+                            fos.close();
+                            fos = null;
+                        }
+                    }
+                } else {
+                    // The path is a file, add certificate
+                    if (path.endsWith(RcsSettingsData.CERTIFICATE_FILE_TYPE)) {
+                        // Get certificate and add in keystore
+                        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                        InputStream inStream = new FileInputStream(path);
+                        X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
+                        inStream.close();
+                        ks.setCertificateEntry(buildCertificateAlias(path), cert);
     
-                // Get certificate and add in keystore
-                CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                InputStream inStream = new FileInputStream(path);
-                X509Certificate cert = (X509Certificate) cf.generateCertificate(inStream);
-                inStream.close();
-                ks.setCertificateEntry(buildCertificateAlias(path), cert);
-    
-                // save the keystore
-                fos = new FileOutputStream(getKeystorePath());
-                ks.store(fos, KEYSTORE_PASSWORD.toCharArray());
+                        // save the keystore
+                        fos = new FileOutputStream(getKeystorePath());
+                        ks.store(fos, KEYSTORE_PASSWORD.toCharArray());
+                    }
+                }
+
             } catch (Exception e) {
                 throw new KeyStoreManagerException(e.getMessage());
             } finally {
                 try {
-                    if (fis != null)
+                    if (fis != null) {
                         fis.close();
+                    }
                 } catch (IOException e) {
                     // Intentionally blank
                 }
                 try {
-                    if (fos != null)
+                    if (fos != null) {
                         fos.close();
+                    }
                 } catch (IOException e) {
                     // Intentionally blank
                 }
@@ -227,56 +263,4 @@ public class KeyStoreManager {
             alias = filename + lastModified;
         return alias;
     }
-
-    // /**
-    // * Initialize a private key with self signed certificate.
-    // *
-    // * @throws Exception
-    // */
-    // @SuppressWarnings("deprecation")
-    // public static void initPrivateKeyAndSelfsignedCertificate() throws
-    // Exception {
-    // if (KeyStoreManager.isKeystoreExists(getKeystorePath())) {
-    // // Open the existing keystore
-    // KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
-    // ks.load(new FileInputStream(getKeystorePath()),
-    // KEYSTORE_PASSWORD.toCharArray());
-    //
-    // // is Private Key not exists
-    // if (!ks.isKeyEntry(PRIVATE_KEY_ALIAS)) {
-    // // Generate Key
-    // KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-    // kpg.initialize(1024);
-    // KeyPair kp = kpg.generateKeyPair();
-    //
-    // // Generate certificate
-    // long currentTime = System.currentTimeMillis();
-    // X509V3CertificateGenerator v3CertGen = new X509V3CertificateGenerator();
-    // v3CertGen.setSerialNumber(new BigInteger(Long.toString(currentTime)));
-    // v3CertGen.setIssuerDN(new X509Principal(
-    // "CN=OrangeLabs, OU=None, O=None, L=None, C=None"));
-    // v3CertGen.setNotBefore(new Date(currentTime - 1000L * 60 * 60 * 24 *
-    // 30));
-    // v3CertGen.setNotAfter(new Date(currentTime + (1000L * 60 * 60 * 24 * 365
-    // * 10)));
-    // v3CertGen.setSubjectDN(new X509Principal(
-    // "CN=OrangeLabs, OU=None, O=None, L=None, C=None"));
-    // v3CertGen.setPublicKey(kp.getPublic());
-    // v3CertGen.setSignatureAlgorithm("MD5WithRSAEncryption");
-    // X509Certificate cert =
-    // v3CertGen.generateX509Certificate(kp.getPrivate());
-    //
-    // // Add the private key with cert in keystore
-    // ks.setKeyEntry(PRIVATE_KEY_ALIAS, kp.getPrivate(),
-    // KEYSTORE_PASSWORD.toCharArray(),
-    // new Certificate[] {
-    // cert
-    // });
-    //
-    // // save the keystore
-    // ks.store(new FileOutputStream(getKeystorePath()),
-    // KEYSTORE_PASSWORD.toCharArray());
-    // }
-    // }
-    // }
 }

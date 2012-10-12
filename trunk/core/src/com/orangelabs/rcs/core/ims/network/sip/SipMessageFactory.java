@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.network.sip;
 
 import gov2.nist.javax2.sip.Utils;
+import gov2.nist.javax2.sip.header.Subject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,7 @@ public class SipMessageFactory {
 	 * @param dialog SIP dialog path
      * @param featureTags Feature tags
 	 * @param expirePeriod Expiration period
-	 * @param instanceId UA instance Id
+	 * @param instanceId UA SIP instance ID
 	 * @return SIP request
 	 * @throws SipException
 	 */
@@ -113,7 +114,7 @@ public class SipMessageFactory {
 	        // Set Contact header
 	        ContactHeader contact = dialog.getSipStack().getLocalContact();
 	        if (instanceId != null) {
-	        	contact.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
+	        	contact.setParameter(SipUtils.SIP_INSTANCE_PARAM, "\"<urn:uuid:" + instanceId + ">\"");
 	        }
 	        register.addHeader(contact);
 
@@ -287,7 +288,10 @@ public class SipMessageFactory {
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM };
             SipUtils.setFeatureTags(message, tags);
-	        
+
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(message, dialog.getRemoteSipInstance());
+
 	        // Set User-Agent header
 	        message.addHeader(SipUtils.buildUserAgentHeader());
 	
@@ -582,7 +586,7 @@ public class SipMessageFactory {
 	
 	        // Set feature tags
 	        SipUtils.setFeatureTags(response, featureTags);
-	        
+
             // Set Allow header
 	        SipUtils.buildAllowHeader(response);
 
@@ -933,10 +937,11 @@ public class SipMessageFactory {
 	 * 
 	 * @param dialog SIP dialog path
 	 * @param toContact Refer to contact
+	 * @param subject Subject
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRefer(SipDialogPath dialog, String toContact) throws SipException {
+    public static SipRequest createRefer(SipDialogPath dialog, String toContact, String subject) throws SipException {
 		try {			
 			// Create the request
 		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
@@ -944,7 +949,10 @@ public class SipMessageFactory {
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
-			
+
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
+
 	        // Set Refer-To header
 	        Header referTo = SipUtils.HEADER_FACTORY.createHeader(ReferToHeader.NAME, toContact);
 	        refer.addHeader(referTo);
@@ -959,9 +967,13 @@ public class SipMessageFactory {
 	        	refer.addHeader(prefHeader);
 	        }
 
+	        // Set Subject header
+			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
+			refer.addHeader(s);
+
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
-	        
+        
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)refer.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
@@ -980,10 +992,11 @@ public class SipMessageFactory {
 	 * 
 	 * @param dialog SIP dialog path
 	 * @param participants List of participants
+	 * @param subject Subject
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRefer(SipDialogPath dialog, List<String> participants) throws SipException {
+    public static SipRequest createRefer(SipDialogPath dialog, List<String> participants, String subject) throws SipException {
     	try {
 			// Create the request
 		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
@@ -994,7 +1007,10 @@ public class SipMessageFactory {
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
-			
+
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
+
 	        // Set Require header
             Header require = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "multiple-refer");
             refer.addHeader(require);
@@ -1015,6 +1031,10 @@ public class SipMessageFactory {
 	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
 	        	refer.addHeader(prefHeader);
 	        }
+	        
+	        // Set Subject header
+			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
+			refer.addHeader(s);
 
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
@@ -1070,6 +1090,9 @@ public class SipMessageFactory {
             reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
             reInvite.addHeader(invite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
 
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(invite.getStackMessage(), dialog.getRemoteSipInstance());
+
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);
 
@@ -1093,10 +1116,6 @@ public class SipMessageFactory {
                         ""+dialog.getSessionExpireTime());
                 reInvite.addHeader(sessionExpiresHeader);
             }
-
-//            // Add content
-//            reInvite.setContent(invite.getContent(), (ContentTypeHeader) invite.getHeader(ContentTypeHeader.NAME));
-//            reInvite.addHeader(invite.getHeader(ContentLengthHeader.NAME));
 
             // Set "rport" (RFC3581)
             ViaHeader viaHeader = (ViaHeader)reInvite.getHeader(ViaHeader.NAME);

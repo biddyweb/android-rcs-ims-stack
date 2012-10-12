@@ -19,40 +19,30 @@
 package com.orangelabs.rcs.core.ims.service.sip;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
 
 /**
  * SIP session error
  * 
  * @author jexa7410
  */
-public class SipSessionError extends ImsServiceError {
+public class SipSessionError extends ImsSessionBasedServiceError {
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * Unexpected exception occurs in the module (e.g. internal exception)
-	 */
-	public final static int UNEXPECTED_EXCEPTION = 0x01;
-	
-	/**
-	 * Session initiation has failed (e.g. 408 timeout)
-	 */
-	public final static int SESSION_INITIATION_FAILED = 0x02;
-	
-	/**
-	 * Session initiation has been declines (e.g. 603 Decline)
-	 */
-	public final static int SESSION_INITIATION_DECLINED = 0x03;	
 
-	/**
-	 * Session initiation has been cancelled (e.g. 487 Session terminated)
-	 */
-	public final static int SESSION_INITIATION_CANCELLED = 0x04;	
-	
 	/**
 	 * SDP not initialized
 	 */
-	public final static int SDP_NOT_INITIALIZED = 0x05;	
-	
+	public final static int SDP_NOT_INITIALIZED = SIP_ERROR_CODES + 1;	
+
+    /**
+     * Constructor
+     *
+     * @param error Error
+     */
+    public SipSessionError(ImsServiceError error) {
+        super(error.getErrorCode(), error.getMessage());
+    }
+
 	/**
 	 * Constructor
 	 * 

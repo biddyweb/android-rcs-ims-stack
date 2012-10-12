@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -87,7 +86,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a store & forward session for messages");
 	    	}
-	    	
+
 	    	// Send a 180 Ringing response
 			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 			
@@ -98,7 +97,8 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 				if (msgId != null) {
 					// Send message delivery status via a SIP MESSAGE
 					getImdnManager().sendMessageDeliveryStatusImmediately(getRemoteContact(),
-							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED,
+							SipUtils.getRemoteInstanceID(getDialogPath().getInvite()));
 				}
 			}
 
@@ -134,8 +134,14 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
     	    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
-			}
-			
+			} else
+            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been canceled");
+                }
+                return;
+            }
+
 			// Extract the SDP part
 			byte[] remoteSdp = null;
 		    String content = getDialogPath().getInvite().getContent();
@@ -242,15 +248,12 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
             		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
 
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
             // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-    		
-            // The signalisation is established
-	        getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
-            
             // Analyze the received response 
             if (ctx.isSipAck()) {
     	        // ACK received
@@ -304,6 +307,6 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
         	// Unexpected error
 			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
-		}		
+		}
 	}
 }

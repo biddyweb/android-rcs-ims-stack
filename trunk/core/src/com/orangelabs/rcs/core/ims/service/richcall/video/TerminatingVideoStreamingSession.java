@@ -22,7 +22,6 @@ import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.VideoContent;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -142,6 +141,12 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                     getListeners().get(i).handleSessionAborted();
                 }
                 return;
+            } else
+            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been canceled");
+                }
+                return;
             }
 
             // Check that a media renderer has been set
@@ -183,14 +188,11 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
                     RichcallService.FEATURE_TAGS_VIDEO_SHARE, sdp);
 
-            // Send response
-            SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-
             // The signalisation is established
             getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
+            // Send response
+            SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
 
             // Analyze the received response
             if (ctx.isSipAck()) {
@@ -355,6 +357,24 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 }
             }
         }
+    }
+
+    /**
+     * Prepare media session
+     * 
+     * @throws Exception 
+     */
+    public void prepareMediaSession() throws Exception {
+        // Nothing to do in terminating side
+    }
+
+    /**
+     * Start media session
+     * 
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        // Nothing to do in terminating side
     }
 }
 

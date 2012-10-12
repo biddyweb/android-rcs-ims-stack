@@ -7,10 +7,6 @@
 	<string name="rcs_core_permission_desc">Rich Communication Suite</string>
 	<string name="rcs_core_permission_ext_desc">Rich Communication Suite extensions</string>
 		
-    <string name="rcs_core_images_directory">/My RCS pictures/</string>	
-    <string name="rcs_core_videos_directory">/My RCS videos/</string>	
-    <string name="rcs_core_files_directory">/My RCS files/</string>	
-
 	<string name="rcs_core_loaded">RCS service is loaded</string>
 	<string name="rcs_core_failed">RCS service has failed</string>
 	<string name="rcs_core_started">RCS service is started</string>
@@ -38,6 +34,6 @@
     <!-- Terms and Conditions -->
     <string name="rcs_core_terms_accept">Accept</string>
     <string name="rcs_core_terms_decline">Decline</string>
-    <string name="rcs_core_terms_ok">Ok</string>
+	<string name="rcs_core_terms_ok">Ok</string>
 
 </resources>

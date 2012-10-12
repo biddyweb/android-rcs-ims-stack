@@ -33,7 +33,6 @@ import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
@@ -194,7 +193,26 @@ public class RegistrationManager extends PeriodicRefresher {
     public boolean isRegistered() {
         return registered;
     }
-    
+
+    /**
+     * Restart registration procedure
+     */
+    public void restart() {
+        Thread t = new Thread() {
+            /**
+             * Processing
+             */
+            public void run() {
+                // Stop the current registration
+                stopRegistration();
+
+                // Start a new registration
+                registration();
+            }
+        };
+        t.start();
+    }
+
     /**
      * Registration
      * 
@@ -342,20 +360,12 @@ public class RegistrationManager extends PeriodicRefresher {
         	logger.info("Send REGISTER, expire=" + register.getExpires());
         }
 
-        if (registered) {
-	        // Set the security header
-        	registrationProcedure.writeSecurityHeader(register);
-        }
-        
+        // Set the security header
+        registrationProcedure.writeSecurityHeader(register);
+
         // Send REGISTER request
         SipTransactionContext ctx = networkInterface.getSipManager().sendSipMessageAndWait(register);
 
-        // Wait response
-        if (logger.isActivated()) {
-        	logger.info("Wait response");
-        }
-        ctx.waitResponse(SipManager.TIMEOUT);
-        
         // Analyze the received response 
         if (ctx.isSipResponse()) {
         	// A response has been received
@@ -423,7 +433,7 @@ public class RegistrationManager extends PeriodicRefresher {
 		ListIterator<Header> contacts = resp.getHeaders(ContactHeader.NAME);
 		while(contacts.hasNext()) {
 			ContactHeader contact = (ContactHeader)contacts.next();
-			String contactInstanceId = contact.getParameter("+sip.instance");
+			String contactInstanceId = contact.getParameter(SipUtils.SIP_INSTANCE_PARAM);
 			if ((contactInstanceId != null) && (instanceId != null) && (contactInstanceId.contains(instanceId))) {
 				String pubGruu = contact.getParameter("pub-gruu");
 				networkInterface.getSipManager().getSipStack().setPublicGruu(pubGruu);			

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -127,9 +126,9 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 						logger.debug("Session has been rejected on timeout");
 					}
 	
-					// Ringing period timeout
-					send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-					
+                    // Ringing period timeout
+                    send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+
 			    	// Remove the current session
 			    	getImsService().removeSession(this);
 	
@@ -138,9 +137,15 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	            		getListeners().get(j).handleSessionAborted();
 			        }
 					return;
-				}
+				} else
+                if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                    if (logger.isActivated()) {
+                        logger.debug("Session has been canceled");
+                    }
+                    return;
+                }
     		}
-    		
+
 			// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
@@ -236,16 +241,13 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
             		InstantMessagingService.FT_FEATURE_TAGS, sdp);
-            
+
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
             // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-    		
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
 
-	        // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
-            
             // Analyze the received response 
             if (ctx.isSipAck()) {
     	        // ACK received
@@ -442,25 +444,35 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	        }
 		}
 	}
-	
-	/**
-	 * Close the MSRP session
-	 */
-	private void closeMsrpSession() {
-    	if (msrpMgr != null) {
-    		msrpMgr.closeSession();
-			if (logger.isActivated()) {
-				logger.debug("MSRP session has been closed");
-			}
-    	}
-	}
 
-	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Close MSRP session
-		closeMsrpSession();
-	}
-	
+    /**
+     * Prepare media session
+     * 
+     * @throws Exception 
+     */
+    public void prepareMediaSession() throws Exception {
+        // Nothing to do in terminating side
+    }
+
+    /**
+     * Start media session
+     * 
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        // Nothing to do in terminating side
+    }
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Close MSRP session
+        if (msrpMgr != null) {
+            msrpMgr.closeSession();
+            if (logger.isActivated()) {
+                logger.debug("MSRP session has been closed");
+            }
+        }
+    }
 }

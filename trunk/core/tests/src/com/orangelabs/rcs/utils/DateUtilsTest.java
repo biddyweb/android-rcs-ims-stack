@@ -1,4 +1,4 @@
-package com.orangelabs.rcs.test;
+package com.orangelabs.rcs.utils;
 
 import java.util.Date;
 

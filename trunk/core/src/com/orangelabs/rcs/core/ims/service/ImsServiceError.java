@@ -26,24 +26,24 @@ public class ImsServiceError extends Error {
 	static final long serialVersionUID = 1L;
 	
 	/**
+	 * Error code base for IMS sessions
+	 */
+	protected static final int SESSION_ERROR_CODES = 100;
+	
+	/**
+	 * Error code base for capabitity service
+	 */
+	protected static final int CAPABILITY_ERROR_CODES = 200;
+
+	/**
+	 * Error code base for presence service
+	 */
+	protected static final int PRESENCE_ERROR_CODES = 300;
+	
+	/**
 	 * Unexpected exception occurs in the module (e.g. internal exception)
 	 */
 	public final static int UNEXPECTED_EXCEPTION = 1;
-	
-	/**
-	 * Session initiation has failed (e.g. 408 timeout)
-	 */
-	public final static int SESSION_INITIATION_FAILED = 2;
-	
-	/**
-	 * Session initiation has been declined (e.g. 603 Decline or 486 Busy)
-	 */
-	public final static int SESSION_INITIATION_DECLINED = 3;	
-
-	/**
-	 * Session initiation has been cancelled (e.g. 487 Session terminated)
-	 */
-	public final static int SESSION_INITIATION_CANCELLED = 4;	
 	
 	/**
 	 * Error code

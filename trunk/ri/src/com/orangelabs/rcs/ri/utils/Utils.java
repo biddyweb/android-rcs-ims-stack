@@ -208,11 +208,7 @@ public class Utils {
 
 	    ContentResolver content = activity.getContentResolver();
 		// Query all phone numbers
-        Cursor cursor = content.query(Phone.CONTENT_URI, 
-        		PROJECTION, 
-        		null, 
-        		null, 
-        		null);
+        Cursor cursor = content.query(Phone.CONTENT_URI, PROJECTION, null, null, null);
 
 		// List of unique number
 		Vector<String> treatedNumbers = new Vector<String>();

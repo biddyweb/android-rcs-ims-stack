@@ -1048,6 +1048,28 @@ public abstract class SIPTransaction extends MessageChannel implements
     }
 
     /**
+     * Sets timers value. Bug fix OrangeLabs, JOGUET Benoit.
+     *
+     * @param timer_T1
+     * @param timer_T2
+     * @param timer_T4
+     */
+    public void setRetransmitTimers(int timer_T1, int timer_T2, int timer_T4) {
+        if ((timer_T1 <= 0) || (timer_T2 <= 0) || (timer_T4 <= 0)) {
+            throw new IllegalArgumentException("Retransmit timers must be positives!");
+        }
+        if (this.transactionTimerStarted.get()) {
+            throw new IllegalStateException("Transaction timer is already started");
+        }
+        BASE_TIMER_INTERVAL = timer_T1;
+        T4 = timer_T4 / BASE_TIMER_INTERVAL;
+        T2 = timer_T2 / BASE_TIMER_INTERVAL;
+        TIMER_I = T4;
+        TIMER_K = T4;
+        TIMER_D = 32000 / BASE_TIMER_INTERVAL;
+    }
+
+    /**
      * Close the encapsulated channel.
      */
     public void close() {

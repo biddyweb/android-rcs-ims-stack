@@ -18,11 +18,11 @@
 
 package com.orangelabs.rcs.core.ims.protocol.msrp;
 
-import com.orangelabs.rcs.utils.IpAddressUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.orangelabs.rcs.utils.IpAddressUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * MSRP manager
@@ -50,6 +50,11 @@ public class MsrpManager {
      */
     private long sessionId;
    
+    /**
+     * Secured connection
+     */
+    private boolean secured = false;
+    
     /**
      * The logger
      */
@@ -83,13 +88,26 @@ public class MsrpManager {
      */
     public String getLocalMsrpPath() {
         if (IpAddressUtils.isIPv6(localMsrpAddress)) {
-            return "msrp://[" + localMsrpAddress + "]:" + localMsrpPort + "/" + sessionId + ";tcp";
+            return getMsrpProtocol() + "://[" + localMsrpAddress + "]:" + localMsrpPort + "/" + sessionId + ";tcp";
         } else {
-            return "msrp://" + localMsrpAddress + ":" + localMsrpPort + "/" + sessionId + ";tcp";
+            return getMsrpProtocol() + "://" + localMsrpAddress + ":" + localMsrpPort + "/" + sessionId + ";tcp";
         }
     }
     
-	/**
+    /**
+     * Get the MSRP protocol
+     * 
+     * @return MSRP protocol
+     */
+    public String getMsrpProtocol() {
+    	if (secured) {
+    		return MsrpConstants.MSRP_SECURED_PROTOCOL;
+    	} else {
+    		return MsrpConstants.MSRP_PROTOCOL;
+    	}
+    }
+    
+    /**
 	 * Return the MSRP session
 	 * 
 	 * @return MSRP session
@@ -97,7 +115,25 @@ public class MsrpManager {
 	public MsrpSession getMsrpSession() {
 		return msrpSession;
 	}
+
+	/**
+	 * Is secured
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isSecured() {
+		return secured;
+	}
 	
+	/**
+	 * Set secured
+	 * 
+	 * @param flag Boolean flag
+	 */
+	public void setSecured(boolean flag) {
+		this.secured = flag;
+	}
+
 	/**
 	 * Open the MSRP session
 	 * 
@@ -147,7 +183,7 @@ public class MsrpManager {
 			msrpSession.setTo(remoteMsrpPath);
 
 			// Create a MSRP client connection
-			final MsrpConnection connection = new MsrpClientConnection(msrpSession, remoteHost, remotePort);
+			MsrpConnection connection = new MsrpClientConnection(msrpSession, remoteHost, remotePort, secured);
 
 			// Associate the connection to the session
 			msrpSession.setConnection(connection);
@@ -184,7 +220,7 @@ public class MsrpManager {
 		msrpSession.setTo(remoteMsrpPath);
 
 		// Create a MSRP server connection
-		final MsrpConnection connection = new MsrpServerConnection(msrpSession, localMsrpPort);
+		MsrpConnection connection = new MsrpServerConnection(msrpSession, localMsrpPort);
 
 		// Associate the connection to the session
 		msrpSession.setConnection(connection);

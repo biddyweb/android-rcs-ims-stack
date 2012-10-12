@@ -33,7 +33,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * HTTP Digest MD5 registration procedure
  * 
  * @author jexa7410
- * @author Deutsche Telekom
+ * @author Deutsche Telekom AG
  */
 public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	/**
@@ -84,30 +84,45 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
 	 * @throws CoreException
 	 */
 	public void writeSecurityHeader(SipRequest request) throws CoreException {
-		if ((digest == null) || (digest.getRealm() == null) || (digest.getNextnonce() == null)) {
+		if (digest == null) {
 			return;
 		}
-		
+
 		try {
-	   		// Update nonce parameters
-			digest.updateNonceParameters();
-			
-			// Calculate response
-			String user = ImsModule.IMS_USER_PROFILE.getPrivateID();
-			String password = ImsModule.IMS_USER_PROFILE.getPassword();
-	   		String response = digest.calculateResponse(user,
-	   				password,
-	   				request.getMethod(),
-	   				request.getRequestURI(),
-					digest.buildNonceCounter(),
-					request.getContent());				
+            // Get Realm
+            String realm = "";
+            if (digest.getRealm() != null) {
+                realm = digest.getRealm();
+            } else {
+                realm = ImsModule.IMS_USER_PROFILE.getHomeDomain();
+            }
+
+            // Update nonce parameters
+            String nonce = "";
+            if (digest.getNextnonce() != null) {
+                digest.updateNonceParameters();
+                nonce = digest.getNonce();
+            }
+
+            // Calculate response
+            String response = "";
+            if (nonce.length() > 0) {
+                String user = ImsModule.IMS_USER_PROFILE.getPrivateID();
+                String password = ImsModule.IMS_USER_PROFILE.getPassword();
+                response = digest.calculateResponse(user,
+                        password,
+                        request.getMethod(),
+                        request.getRequestURI(),
+                        digest.buildNonceCounter(),
+                        request.getContent());
+            }
 
 	   		// Build the Authorization header
 			String auth = "Digest username=\"" + ImsModule.IMS_USER_PROFILE.getPrivateID() + "\"" +
 					",uri=\"" + request.getRequestURI() + "\"" +
 					",algorithm=MD5" +
-					",realm=\"" + digest.getRealm() + "\"" +
-					",nonce=\"" + digest.getNonce() + "\"" +
+					",realm=\"" + realm + "\"" +
+					",nonce=\"" + nonce + "\"" +
 					",response=\"" + response + "\"";
 			String opaque = digest.getOpaque();
 			if (opaque != null) {

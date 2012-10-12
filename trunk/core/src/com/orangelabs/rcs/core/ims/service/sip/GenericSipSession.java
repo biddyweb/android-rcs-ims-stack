@@ -18,8 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.service.sip;
 
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Generic SIP session 
@@ -41,7 +46,12 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	 * Remote SDP
 	 */
 	private String remoteSdp = null;
-	
+
+    /**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
     /**
 	 * Constructor
 	 * 
@@ -99,4 +109,69 @@ public abstract class GenericSipSession extends ImsServiceSession {
 	public void setRemoteSdp(String sdp) {
 		this.remoteSdp = sdp;
 	}
+
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        return SipMessageFactory.createInvite(
+                getDialogPath(),
+                new String [] { getFeatureTag() },
+                getDialogPath().getLocalContent());
+    }
+
+    /**
+     * Prepare media session
+     * 
+     * @throws Exception 
+     */
+    public void prepareMediaSession() throws Exception {
+        // Set the SDP answer 
+        setRemoteSdp(getDialogPath().getRemoteContent());
+    }
+
+    /**
+     * Start media session
+     * 
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        // Nothing to do
+    }
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+    }
+
+    /**
+     * Handle error
+     * 
+     * @param error Error
+     */
+    public void handleError(ImsServiceError error) {
+        // Error
+        if (logger.isActivated()) {
+            logger.info("Session error: " + error.getErrorCode() + ", reason="
+                    + error.getMessage());
+        }
+
+        // Close media session
+        closeMediaSession();
+
+        // Remove the current session
+        getImsService().removeSession(this);
+
+        // Notify listeners
+        if (!isInterrupted()) {
+            for (int j = 0; j < getListeners().size(); j++) {
+                ((SipSessionListener) getListeners().get(j))
+                        .handleSessionError(new SipSessionError(error));
+            }
+        }
+    }
 }

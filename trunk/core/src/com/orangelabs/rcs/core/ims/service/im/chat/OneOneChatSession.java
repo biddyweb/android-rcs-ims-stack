@@ -21,8 +21,15 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax2.sip.header.SubjectHeader;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
@@ -36,6 +43,11 @@ import com.orangelabs.rcs.utils.StringUtils;
  * @author jexa7410
  */
 public abstract class OneOneChatSession extends ChatSession {
+    /**
+     * Boundary delimiter
+     */
+    protected final static String boundary = "boundary1";
+
 	/**
 	 * Constructor
 	 * 
@@ -107,18 +119,7 @@ public abstract class OneOneChatSession extends ChatSession {
 			}
 		}
 	}
-	
-	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Stop the activity manager
-		getActivityManager().stop();		
 
-		// Close MSRP session
-		closeMsrpSession();
-	}
-	
 	/**
 	 * Send is composing status
 	 * 
@@ -189,5 +190,78 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public void rejectSession() {
 		rejectSession(486);
-	}		
+	}
+
+    /**
+     * Create INVITE request
+     * 
+     * @param content Content part
+     * @return Request
+     * @throws SipException
+     */
+    private SipRequest createMultipartInviteRequest(String content) throws SipException {
+        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+                InstantMessagingService.CHAT_FEATURE_TAGS, 
+                content,
+                boundary);
+
+        // Test if there is a first message
+        if (getFirstMessage() != null) {
+            // Add a subject header
+            invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getFirstMessage().getTextMessage()));
+        }
+
+        // Add a contribution ID header
+        invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 
+
+        return invite;
+    }
+
+    /**
+     * Create INVITE request
+     * 
+     * @param content Content part
+     * @return Request
+     * @throws SipException
+     */
+    private SipRequest createInviteRequest(String content) throws SipException {
+        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(), 
+                InstantMessagingService.CHAT_FEATURE_TAGS, 
+                content);
+
+        // Add a contribution ID header
+        invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 
+
+        return invite;
+    }
+
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        // If there is a first message then builds a multipart content else builds a SDP content
+        SipRequest invite; 
+        if (getFirstMessage() != null) {
+            invite = createMultipartInviteRequest(getDialogPath().getLocalContent());
+        } else {
+            invite = createInviteRequest(getDialogPath().getLocalContent());
+        }
+        return invite;
+    }
+
+    /**
+     * Handle 200 0K response 
+     *
+     * @param resp 200 OK response
+     */
+    public void handle200OK(SipResponse resp) {
+        super.handle200OK(resp);
+
+        // Start the activity manager
+        getActivityManager().start();
+    }
+
 }

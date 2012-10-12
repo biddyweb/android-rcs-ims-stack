@@ -79,8 +79,6 @@ public class ReportTransaction extends Object {
 	
 	/**
 	 * Wait report
-	 * 
-	 * @return True if success else returns false
 	 */
 	public void waitReport() {
 		synchronized(this) {

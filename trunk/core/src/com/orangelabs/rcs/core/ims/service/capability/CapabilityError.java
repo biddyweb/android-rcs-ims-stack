@@ -26,16 +26,11 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceError;
  */
 public class CapabilityError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * Unexpected exception occurs in the module (e.g. internal exception)
-	 */
-	public final static int UNEXPECTED_EXCEPTION = 0x01;
-	
+
 	/**
 	 * Options has failed
 	 */
-	public final static int OPTIONS_FAILED = 0x02;	
+	public final static int OPTIONS_FAILED = CAPABILITY_ERROR_CODES + 1;
 	
 	/**
 	 * Constructor

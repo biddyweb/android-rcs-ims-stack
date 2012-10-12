@@ -110,27 +110,33 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
      * Background processing
      */
     public void run() {
+        boolean first = true;
     	while(!interrupted) {
 	    	try {
 	    		// Build a new dummy packet
 	    	    Buffer packet = new Buffer();
-	    	    packet.setData(new byte[0]);   	
+	    	    packet.setData(new byte[0]);
 	    	    packet.setLength(0);
 	    	    packet.setFormat(format);
 	    	    packet.setSequenceNumber(seqNo++);
-	        	packet.setTimeStamp(systemTimeBase.getTime());    	    	
+	        	packet.setTimeStamp(systemTimeBase.getTime());
 
 	        	// Post the packet in the FIFO
 	        	fifo.addObject(packet);
-	        	
-	    		// Make a pause
-	    		Thread.sleep(DUMMY_SOURCE_PERIOD * 1000);
+
+                // Make a pause
+                if (first) {
+                    Thread.sleep(1000);
+                    first = false;
+                } else {
+                    Thread.sleep(DUMMY_SOURCE_PERIOD * 1000);
+                }
 	    	} catch(Exception e) {
 	    		if (logger.isActivated()) {
 	    			logger.error("Dummy packet source has failed", e);
 	    		}
 	    	}
-    	}    
+    	}
     }
 
     /**

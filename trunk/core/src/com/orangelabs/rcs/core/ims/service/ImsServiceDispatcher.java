@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.service;
 
 import java.util.Enumeration;
 
+import javax2.sip.header.ContactHeader;
 import javax2.sip.header.EventHeader;
 import javax2.sip.message.Request;
 
@@ -137,11 +138,33 @@ public class ImsServiceDispatcher extends Thread {
 			if (logger.isActivated()) {
 				logger.debug("Request-URI IP doesn't match with registered contact: reject the request");
 			}
-			sendFinalResponse(request, 404);			
+			sendFinalResponse(request, 404);
 			return;
 		}
-		
-		
+
+        // Check SIP instance ID: RCS client supporting the multidevice procedure shall respond to the
+        // invite with a 486 BUSY HERE if the identifier value of the "+sip.instance" tag included
+        // in the Accept-Contact header of that incoming SIP request does not match theirs
+        String instanceId = SipUtils.getInstanceID(request);
+        if ((instanceId != null) && !instanceId.contains(imsModule.getSipManager().getSipStack().getInstanceId())) {
+            // Send 486 Busy Here
+			if (logger.isActivated()) {
+				logger.debug("SIP instance ID doesn't match: reject the request");
+			}
+            sendFinalResponse(request, 486);
+            return;
+        }
+
+        // Update remote SIP instance ID in the dialog path of the session
+        ImsServiceSession session = searchSession(request.getCallId());
+        if (session != null) {
+            ContactHeader contactHeader = (ContactHeader)request.getHeader(ContactHeader.NAME);
+            if (contactHeader != null) {
+                String remoteInstanceId = contactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+                session.getDialogPath().setRemoteSipInstance(remoteInstanceId);
+            }
+        }
+
 	    if (request.getMethod().equals(Request.OPTIONS)) {
 	    	// OPTIONS received
 	    	if (imsModule.getCallManager().isCallConnected()) { 
@@ -154,7 +177,6 @@ public class ImsServiceDispatcher extends Thread {
 	    } else		
 	    if (request.getMethod().equals(Request.INVITE)) {
 	    	// INVITE received
-	    	ImsServiceSession session = searchSession(request.getCallId());
 	    	if (session != null) {
 	    		// Subsequent request received
 	    		session.receiveReInvite(request);
@@ -163,7 +185,7 @@ public class ImsServiceDispatcher extends Thread {
 	    	
 			// Send a 100 Trying response
 			send100Trying(request);
-			
+
     		// Extract the SDP part
 	    	String sdp = request.getContent().toLowerCase();
 
@@ -311,7 +333,6 @@ public class ImsServiceDispatcher extends Thread {
 	        // BYE received
 			
 			// Route request to session
-    		ImsServiceSession session = searchSession(request.getCallId());
         	if (session != null) {
         		session.receiveBye(request);
         	}
@@ -333,7 +354,6 @@ public class ImsServiceDispatcher extends Thread {
 	        // CANCEL received
 			
 			// Route request to session
-	    	ImsServiceSession session = searchSession(request.getCallId());
 	    	if (session != null) {
 	    		session.receiveCancel(request);
 	    	}
@@ -353,7 +373,6 @@ public class ImsServiceDispatcher extends Thread {
     	} else
     	if (request.getMethod().equals(Request.UPDATE)) {
 	        // UPDATE received
-    		ImsServiceSession session = searchSession(request.getCallId());
         	if (session != null) {
         		session.receiveUpdate(request);
         	}

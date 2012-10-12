@@ -116,7 +116,7 @@ public class ChunkReceiver extends Thread {
 				
 				// Check the MSRP tag
 				String[] firstLineTags = line.toString().split(" ");
-				if ((firstLineTags.length < 3) || !firstLineTags[0].equals(MsrpConstants.MSRP_PROTOCOL)) {
+				if ((firstLineTags.length < 3) || !firstLineTags[0].equals(MsrpConstants.MSRP_HEADER)) {
 					if (logger.isActivated()) {
 						logger.debug("Not a MSRP message");
 					}

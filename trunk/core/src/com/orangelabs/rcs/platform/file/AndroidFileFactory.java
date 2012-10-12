@@ -28,9 +28,7 @@ import java.io.OutputStream;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
-import android.os.Environment;
 
-import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -83,36 +81,6 @@ public class AndroidFileFactory extends FileFactory {
 		} else {
 			return new FileDescription(url, file.length(), false);
 		}
-	}
-	
-	/**
-	 * Returns the root directory for photos
-	 * 
-	 *  @return Directory path
-	 */
-	public String getPhotoRootDirectory() {
-		String directory = AndroidFactory.getApplicationContext().getString(R.string.rcs_core_images_directory);
-		return Environment.getExternalStorageDirectory() + directory;
-	}
-
-	/**
-	 * Returns the root directory for videos
-	 * 
-	 *  @return Directory path
-	 */
-	public String getVideoRootDirectory() {
-		String directory = AndroidFactory.getApplicationContext().getString(R.string.rcs_core_videos_directory);
-		return Environment.getExternalStorageDirectory() + directory;
-	}
-	
-	/**
-	 * Returns the root directory for files
-	 * 
-	 *  @return Directory path
-	 */
-	public String getFileRootDirectory() {	
-		String directory = AndroidFactory.getApplicationContext().getString(R.string.rcs_core_files_directory);
-		return Environment.getExternalStorageDirectory() + directory;
 	}
 	
 	/**

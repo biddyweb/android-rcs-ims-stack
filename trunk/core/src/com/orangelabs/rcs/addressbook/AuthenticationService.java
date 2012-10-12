@@ -32,7 +32,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Groups;
-import android.provider.ContactsContract.Settings;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -115,7 +114,7 @@ public class AuthenticationService extends Service {
         contentValues.put(Groups.ACCOUNT_TYPE, AuthenticationService.ACCOUNT_MANAGER_TYPE);
         contentValues.put(Groups.GROUP_VISIBLE, false);
 
-        context.getContentResolver().insert(Settings.CONTENT_URI, contentValues);
+        context.getContentResolver().insert(Groups.CONTENT_URI, contentValues);
 
         // Create the "Me" item
         ContactsManager.getInstance().createMyContact();

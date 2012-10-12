@@ -23,6 +23,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.MimeManager;
 
 import java.io.IOException;
@@ -46,12 +47,12 @@ public class ContentManager{
 		// Generate a file path
 		String path;
     	if (mime.startsWith("image")) {
-			path = FileFactory.getFactory().getPhotoRootDirectory();
+			path = RcsSettings.getInstance().getPhotoRootDirectory();
         } else
     	if (mime.startsWith("video")) {
-			path = FileFactory.getFactory().getVideoRootDirectory();
+			path = RcsSettings.getInstance().getVideoRootDirectory();
     	} else {
-			path = FileFactory.getFactory().getFileRootDirectory();
+			path = RcsSettings.getInstance().getFileRootDirectory();
     	}
 
     	// Check that the filename will not overwrite existing file

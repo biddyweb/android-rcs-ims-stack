@@ -44,6 +44,7 @@ import javax2.sip.header.ExtensionHeader;
 import javax2.sip.header.Header;
 import javax2.sip.header.ViaHeader;
 
+import android.net.ConnectivityManager;
 import android.text.TextUtils;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -165,10 +166,20 @@ public class SipInterface implements SipListener {
     private String instanceId = null;
 
     /**
-     * Base timer (in ms)
+     * Base timer T1 (in ms)
      */
-    private int baseTimer = 500;
-    
+    private int timerT1 = 500;
+
+    /**
+     * Base timer T2 (in ms)
+     */
+    private int timerT2 = 4000;
+
+    /**
+     * Base timer T4 (in ms)
+     */
+    private int timerT4 = 5000;
+
     /**
      * The logger
      */
@@ -181,16 +192,22 @@ public class SipInterface implements SipListener {
      * @param proxyAddr Outbound proxy address
      * @param proxyPort Outbound proxy port
      * @param defaultProtocol Default protocol
+     * @param networkType Type of network 
      * @throws SipException
      */
     public SipInterface(String localIpAddress, String proxyAddr,
-    		int proxyPort, String defaultProtocol) throws SipException {
+    		int proxyPort, String defaultProtocol, int networkType) throws SipException {
         this.localIpAddress = localIpAddress;
         this.defaultProtocol = defaultProtocol;
         this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
         this.outboundProxyAddr = proxyAddr;
         this.outboundProxyPort = proxyPort;
-        this.baseTimer = RcsSettings.getInstance().getSipTimerT1();
+        // Set timers value from provisioning for 3G or default for Wifi
+        if (networkType == ConnectivityManager.TYPE_MOBILE) {
+            this.timerT1 = RcsSettings.getInstance().getSipTimerT1();
+            this.timerT2 = RcsSettings.getInstance().getSipTimerT2();
+            this.timerT4 = RcsSettings.getInstance().getSipTimerT4();
+        }
 
         // Set the default route path
         defaultRoutePath = new Vector<String>();
@@ -258,7 +275,7 @@ public class SipInterface implements SipListener {
                 if (!TextUtils.isEmpty(certPathRoot)) {
                     certPathRoot = RcsSettingsData.CERTIFICATE_FOLDER_PATH + certPathRoot;
                     if (!KeyStoreManager.isCertificateEntry(certPathRoot)) {
-                        KeyStoreManager.addCertificate(certPathRoot);
+                        KeyStoreManager.addCertificates(certPathRoot);
                     }
                 }
                 String certPathIntermediate = RcsSettings.getInstance().getTlsCertificateIntermediate();
@@ -266,7 +283,7 @@ public class SipInterface implements SipListener {
                     certPathIntermediate = RcsSettingsData.CERTIFICATE_FOLDER_PATH
                             + certPathIntermediate;
                     if (!KeyStoreManager.isCertificateEntry(certPathIntermediate)) {
-                        KeyStoreManager.addCertificate(certPathIntermediate);
+                        KeyStoreManager.addCertificates(certPathIntermediate);
                     }
                 }
 
@@ -521,9 +538,9 @@ public class SipInterface implements SipListener {
             contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
         } else
         if (instanceId != null) {
-            // Create a local contact with +sip.instance
+            // Create a local contact with an instance ID
             contactHeader = getLocalContact();
-            contactHeader.setParameter("+sip.instance", "\"<urn:uuid:" + instanceId + ">\"");
+            contactHeader.setParameter(SipUtils.SIP_INSTANCE_PARAM, "\"<urn:uuid:" + instanceId + ">\"");
         } else {
             // Create a local contact
             contactHeader = getLocalContact();
@@ -537,13 +554,15 @@ public class SipInterface implements SipListener {
      * @return Route
      */
     public String getDefaultRoute() {
+        String defaultRoute;
         if (IpAddressUtils.isIPv6(outboundProxyAddr)) {
-            return "<sip:[" + outboundProxyAddr + "]:" + outboundProxyPort+
-                    ";lr;transport=" + getProxyProtocol()+ ">";
+            defaultRoute = String.format("<sip:[%s]:%s;transport=%s;lr>",
+                    outboundProxyAddr, outboundProxyPort, getProxyProtocol());
         } else {
-            return "<sip:" + outboundProxyAddr + ":" + outboundProxyPort+
-                ";lr;transport=" + getProxyProtocol()+ ">";
+            defaultRoute = String.format("<sip:%s:%s;transport=%s;lr>",
+                    outboundProxyAddr, outboundProxyPort, getProxyProtocol());
         }
+        return defaultRoute.toLowerCase();
     }
 
     /**
@@ -579,7 +598,7 @@ public class SipInterface implements SipListener {
             // Add the received service route path
             while(routes.hasNext()) {
                 ExtensionHeader route = (ExtensionHeader)routes.next();
-                String rt = route.getValue();
+                String rt = route.getValue().toLowerCase();
                 if (!serviceRoutePath.contains(rt)) {
                 	serviceRoutePath.addElement(rt);
                 }
@@ -655,7 +674,7 @@ public class SipInterface implements SipListener {
                 if (transaction == null) {
                     // Create a new transaction
                     transaction = getDefaultSipProvider().getNewClientTransaction(req.getStackMessage());
-                    transaction.setRetransmitTimer(baseTimer);
+                    transaction.setRetransmitTimers(timerT1, timerT2, timerT4);
                     req.setStackTransaction(transaction);
                 }
 
@@ -810,7 +829,7 @@ public class SipInterface implements SipListener {
 
             // Create a new transaction
             ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(cancel.getStackMessage());
-            transaction.setRetransmitTimer(baseTimer);
+            transaction.setRetransmitTimers(timerT1, timerT2, timerT4);
             
             // Send the SIP message to the network
             if (logger.isActivated()) {
@@ -847,7 +866,7 @@ public class SipInterface implements SipListener {
 
             // Create a new transaction
             ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(bye.getStackMessage());
-            transaction.setRetransmitTimer(baseTimer);
+            transaction.setRetransmitTimers(timerT1, timerT2, timerT4);
 
             // Send the SIP message to the network
             if (logger.isActivated()) {
@@ -885,7 +904,7 @@ public class SipInterface implements SipListener {
 
             // Get stack transaction
             ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(update.getStackMessage());
-            transaction.setRetransmitTimer(baseTimer);
+            transaction.setRetransmitTimers(timerT1, timerT2, timerT4);
 
             // Create a transaction context
             SipTransactionContext ctx = new SipTransactionContext(transaction);
@@ -931,7 +950,7 @@ public class SipInterface implements SipListener {
 
             // Get stack transaction
             ClientTransaction transaction = defaultSipProvider.getNewClientTransaction(request.getStackMessage());
-            transaction.setRetransmitTimer(baseTimer);
+            transaction.setRetransmitTimers(timerT1, timerT2, timerT4);
 
             // Send the SIP message to the network
             if (logger.isActivated()) {

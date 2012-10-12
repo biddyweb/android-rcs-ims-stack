@@ -138,7 +138,13 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.RcsApn);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RCS_APN));
 
-        CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
+		txt = (EditText)this.findViewById(R.id.CountryCode);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.COUNTRY_CODE));
+
+		txt = (EditText)this.findViewById(R.id.CountryAreaCode);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.COUNTRY_AREA_CODE));
+
+		CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IMAGE_SHARING)));
 
         box = (CheckBox)findViewById(R.id.video_sharing);
@@ -226,6 +232,12 @@ public class ProfileProvisioning extends Activity {
 
 		        txt = (EditText)this.findViewById(R.id.RcsApn);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.RCS_APN, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.CountryCode);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.COUNTRY_CODE, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.CountryAreaCode);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.COUNTRY_AREA_CODE, txt.getText().toString());
 
 		        // Save capabilities
 		        CheckBox box = (CheckBox)findViewById(R.id.image_sharing);

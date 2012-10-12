@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Reassembles H264 RTP packets into H264 frames, as per RFC 3984
  *
- * @author Deutsche Telekom
+ * @author Deutsche Telekom AG
  */
 public class JavaPacketizer extends VideoCodec {
 

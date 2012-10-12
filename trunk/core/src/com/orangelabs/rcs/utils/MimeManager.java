@@ -55,7 +55,11 @@ public class MimeManager {
      * @return Boolean
      */
     public static boolean isMimeTypeSupported(String mime) {
-		return mimeTable.containsValue(mime);
+    	if (mime.equals("*")) { // Changed by Deutsche Telekom AG    		
+    		return true;
+    	} else {
+    		return mimeTable.containsValue(mime);
+    	}
     }    
     
     /**

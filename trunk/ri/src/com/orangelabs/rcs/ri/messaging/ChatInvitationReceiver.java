@@ -36,6 +36,7 @@ public class ChatInvitationReceiver extends BroadcastReceiver {
             Intent progress = new Intent(intent);
             progress.setClass(context, ReceiveChat.class);
             progress.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            progress.setAction(intent.getStringExtra("sessionId"));
             context.startActivity(progress);
         } else {
             // Display invitation notification

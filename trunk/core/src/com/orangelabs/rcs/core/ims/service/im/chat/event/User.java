@@ -83,7 +83,7 @@ public class User {
 	public String getFailureReason() {
 		return failureReason;
 	}
-	
+
 	public String toString() {
 		String result = "user=" + entity + ", state=" + state;
 		if (disconnectionMethod != null) {
@@ -93,5 +93,13 @@ public class User {
 			result += ", reason=" + failureReason; 
 		}
 		return result;
+	}
+
+	public static boolean isConnected(String state) {
+		return state.equals(User.STATE_CONNECTED);
+	}
+	
+	public static boolean isDisconnected(String state) {
+		return (state.equals(User.STATE_DISCONNECTED) || state.equals(User.STATE_DEPARTED) || state.equals(User.STATE_BOOTED));
 	}
 }

@@ -20,6 +20,7 @@ package com.orangelabs.rcs.provider.settings;
 
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Environment;
 
 /**
  * RCS settings data constants
@@ -89,7 +90,7 @@ public class RcsSettingsData {
     /**
      * Folder path for certificate
      */
-    public static final String CERTIFICATE_FOLDER_PATH = "/sdcard/";
+    public static final String CERTIFICATE_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
 
     /**
      * File type for certificate
@@ -393,15 +394,15 @@ public class RcsSettingsData {
 	public static final String SIP_DEFAULT_PORT = "SipListeningPort";
 
 	/**
-     * Default SIP protocol
+     * Default SIP protocol for mobile
      */
     public static final String SIP_DEFAULT_PROTOCOL_FOR_MOBILE = "SipDefaultProtocolForMobile";
 
     /**
-     * Default SIP protocol
+     * Default SIP protocol for Wi-Fi
      */
     public static final String SIP_DEFAULT_PROTOCOL_FOR_WIFI = "SipDefaultProtocolForWifi";
-
+    
     /**
      * TLS Certifcate root
      */
@@ -651,4 +652,29 @@ public class RcsSettingsData {
      * Provisioning version
      */
     public static final String PROVISIONING_VERSION = "ProvisioningVersion";
+    
+    /**
+     * Directory path for photos
+     */
+    public static final String DIRECTORY_PATH_PHOTOS = "DirectoryPathPhotos";
+
+    /**
+     * Directory path for videos
+     */
+    public static final String DIRECTORY_PATH_VIDEOS = "DirectoryPathVideos";
+
+    /**
+     * Directory path for files
+     */
+    public static final String DIRECTORY_PATH_FILES = "DirectoryPathFiles";
+
+    /**
+     * Secure MSRP over Wi-Fi
+     */
+    public static final String SECURE_MSRP_OVER_WIFI = "SecureMsrpOverWifi";
+
+    /**
+     * Secured RTP over Wi-Fi
+     */
+    public static final String SECURE_RTP_OVER_WIFI = "SecureRtpOverWifi";
 }

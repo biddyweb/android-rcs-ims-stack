@@ -18,50 +18,40 @@
 package com.orangelabs.rcs.core.ims.service.im.filetransfer;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
 
 /**
  * File transfer error
  * 
  * @author jexa7410
  */
-public class FileSharingError extends ImsServiceError {
+public class FileSharingError extends ImsSessionBasedServiceError {
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * Unexpected exception occurs in the module (e.g. internal exception)
-	 */
-	public final static int UNEXPECTED_EXCEPTION = 0x01;
-	
-	/**
-	 * Session initiation has failed (e.g. 408 timeout)
-	 */
-	public final static int SESSION_INITIATION_FAILED = 0x02;
-	
-	/**
-	 * Session initiation has been declined (e.g. 603 Decline)
-	 */
-	public final static int SESSION_INITIATION_DECLINED = 0x03;	
 
-	/**
-	 * Session initiation has been cancelled (e.g. 487 Session terminated)
-	 */
-	public final static int SESSION_INITIATION_CANCELLED = 0x04;	
-	
 	/**
 	 * Media transfer has failed (e.g. MSRP failure)
 	 */
-	public final static int MEDIA_TRANSFER_FAILED = 0x05;
+	public final static int MEDIA_TRANSFER_FAILED = FT_ERROR_CODES + 1;
 	
 	/**
 	 * Unsupported media type (e.g. codec not supported)
 	 */
-	public final static int UNSUPPORTED_MEDIA_TYPE = 0x06;
+	public final static int UNSUPPORTED_MEDIA_TYPE = FT_ERROR_CODES + 2;
 
 	/**
 	 * Media saving has failed (e.g. sdcard is not correctly mounted)
 	 */
-	public final static int MEDIA_SAVING_FAILED = 0x07;
-	
+	public final static int MEDIA_SAVING_FAILED = FT_ERROR_CODES + 3;
+
+    /**
+     * Constructor
+     *
+     * @param error Error
+     */
+    public FileSharingError(ImsServiceError error) {
+        super(error.getErrorCode(), error.getMessage());
+    }
+
 	/**
 	 * Constructor
 	 * 

@@ -22,6 +22,8 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
 
+import android.net.ConnectivityManager;
+
 import com.orangelabs.rcs.utils.IpAddressUtils;
 
 /**
@@ -32,24 +34,33 @@ import com.orangelabs.rcs.utils.IpAddressUtils;
 public class AndroidNetworkFactory extends NetworkFactory {
 
 	/**
-	 * Returns the local IP address
-	 *
-	 * @return IP address
+	 * Returns the local IP address of a given network interface
+	 * 
+	 * @param type Network interface type
+	 * @return Address
 	 */
-	public String getLocalIpAddress() {
+	public String getLocalIpAddress(int type) {
+		String ipAddress = null;
 		try {
 	        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); (en != null) && en.hasMoreElements();) {
-	            NetworkInterface intf = (NetworkInterface)en.nextElement();
-	            for (Enumeration<InetAddress> addr = intf.getInetAddresses(); addr.hasMoreElements();) {
+	            NetworkInterface netIntf = (NetworkInterface)en.nextElement();
+	            for (Enumeration<InetAddress> addr = netIntf.getInetAddresses(); addr.hasMoreElements();) {
 	                InetAddress inetAddress = (InetAddress)addr.nextElement();
                     if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
-                        return IpAddressUtils.extractHostAddress(inetAddress.getHostAddress());
+                    	ipAddress = IpAddressUtils.extractHostAddress(inetAddress.getHostAddress());
+                    	String intfName = netIntf.getDisplayName().toLowerCase();
+                    	if ((type == ConnectivityManager.TYPE_WIFI) && intfName.startsWith("wlan")) {
+                            return ipAddress;
+                       } else
+                       if ((type == ConnectivityManager.TYPE_MOBILE) && !intfName.startsWith("wlan")) {
+                            return ipAddress;
+                       }
                     }
 	            }
 	        }
-	        return null;
+	        return ipAddress;
 		} catch(Exception e) {
-			return null;
+			return ipAddress;
 		}
 	}
 

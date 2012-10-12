@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.8
+Release 2.4.9
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,12 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- A group chat has no more a first message, but a subject is used instead (optionally).
-- New states are added for group chat to distinguish the "departed" and "booted" status.
-- Video codec optimizations:
-   + Update PacketVideo source code with last release,
-   + Tuning: increase bitrate, decrease framerate, choose streaming encoding mode, decrease packet size and decrease Iframe interval.
-- Stack UI is now JellyBean compliant.
+- Prepare secured media integration.
+- Merge Deutsche Telecom contributions.
+- GSMA Implementation Guidelines version 3.1 (hot fixes).
+- New settings to store paths of shared contents.
 
 
 Bugs fixed:
@@ -22,6 +20,16 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.9
+- GSMA Guidelines 	Stack: ID_4_33_1: Multidevice support
+- GSMA Guidelines 	Stack: ID_4_11: Redo registration if 403 and no warning header
+- Mantis #0016114	Stack: If a user is booted he's not removed from the list of connected participants
+- Mantis #0016112	Stack: No subject added in the invitation when adding a participant to a group chat
+- Mantis #0016111	Stack: Duplicate entries in chat history if a participant restart a session
+- Mantis #0016098	Stack: Restart failed for a participant: bad URI list of participants
+- Mantis #0016108	Stack: Restart group chat don't invite participants who have been invited after the initial invitation
+- Mantis #0016125	Stack: After a FT session timeout a 603 error is sent by the stack even if the session has been cancelled by the server
 
 v2.4.8
 - GSMA Guidelines 	Stack: ID_4_21_1: Clarification on a group chat initiation

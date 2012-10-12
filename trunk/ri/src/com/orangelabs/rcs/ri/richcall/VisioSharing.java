@@ -18,22 +18,8 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
-import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.CpuMonitor;
-import com.orangelabs.rcs.ri.utils.Utils;
-import com.orangelabs.rcs.service.api.client.ClientApiListener;
-import com.orangelabs.rcs.service.api.client.ImsEventListener;
-import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
-import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
-import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
-import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
+import java.lang.reflect.Method;
+import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -67,8 +53,22 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.CpuMonitor;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
+import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
+import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
+import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
+import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
+import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
+import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
 
 /**
  * Visio sharing activity - two half duplex live video sharing

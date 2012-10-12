@@ -181,9 +181,17 @@ public class RcsCoreService extends Service implements CoreListener {
 		richcallApi.close();
 		messagingApi.close();
 		sipApi.close();
-		
+
         // Stop the core
-        stopCore();
+        Thread t = new Thread() {
+            /**
+             * Processing
+             */
+            public void run() {
+                stopCore();
+            }
+        };
+        t.start();
     }
 
     /**
@@ -244,9 +252,9 @@ public class RcsCoreService extends Service implements CoreListener {
 			Core.getInstance().startCore();		
 
 			// Create multimedia directory on sdcard
-			FileFactory.createDirectory(FileFactory.getFactory().getPhotoRootDirectory());
-			FileFactory.createDirectory(FileFactory.getFactory().getVideoRootDirectory());
-			FileFactory.createDirectory(FileFactory.getFactory().getFileRootDirectory());
+			FileFactory.createDirectory(RcsSettings.getInstance().getPhotoRootDirectory());
+			FileFactory.createDirectory(RcsSettings.getInstance().getVideoRootDirectory());
+			FileFactory.createDirectory(RcsSettings.getInstance().getFileRootDirectory());
 			
 			// Init CPU manager
 			cpuManager.init();

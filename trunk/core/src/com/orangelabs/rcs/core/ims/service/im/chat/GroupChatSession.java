@@ -23,10 +23,11 @@ import java.util.List;
 import javax2.sip.header.ExtensionHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
@@ -128,17 +129,6 @@ public abstract class GroupChatSession extends ChatSession {
 	}	
 
 	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Stop the activity manager
-		getActivityManager().stop();		
-
-		// Close MSRP session
-		closeMsrpSession();
-	}
-
-	/**
 	 * Terminate session 
 	 */
 	public void terminateSession() {
@@ -215,14 +205,8 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.debug("Send REFER");
         	}
     		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
-	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject());
     		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
-	        
-	        // Wait response
-        	if (logger.isActivated()) {
-        		logger.debug("Wait response");
-        	}
-	        ctx.waitResponse(SipManager.TIMEOUT);
 	
 	        // Analyze received message
             if (ctx.getStatusCode() == 407) {
@@ -241,19 +225,13 @@ public abstract class GroupChatSession extends ChatSession {
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(getDialogPath(), contactUri);
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject());
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
                 
                 // Send REFER request
         		ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
-    	        
-                // Wait response
-                if (logger.isActivated()) {
-                	logger.debug("Wait response");
-                }
-                ctx.waitResponse(SipManager.TIMEOUT);
 
                 // Analyze received message
                 if ((ctx.getStatusCode() >= 200) && (ctx.getStatusCode() < 300)) {
@@ -337,14 +315,8 @@ public abstract class GroupChatSession extends ChatSession {
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
-	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), participants);
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject());
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
-	
-	        // Wait response
-        	if (logger.isActivated()) {
-        		logger.debug("Wait response");
-        	}
-	        ctx.waitResponse(SipManager.TIMEOUT);
 	
 	        // Analyze received message
             if (ctx.getStatusCode() == 407) {
@@ -363,19 +335,13 @@ public abstract class GroupChatSession extends ChatSession {
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(getDialogPath(), participants);
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject());
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
                 
                 // Send REFER request
     	        ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
-
-                // Wait response
-                if (logger.isActivated()) {
-                	logger.debug("Wait response");
-                }
-                ctx.waitResponse(SipManager.TIMEOUT);
 
                 // Analyze received message
                 if ((ctx.getStatusCode() >= 200) && (ctx.getStatusCode() < 300)) {
@@ -449,5 +415,31 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public void rejectSession() {
 		rejectSession(603);
-	}		
+	}
+
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        // Nothing to do in terminating side
+        return null;
+    }
+
+    /**
+     * Handle 200 0K response 
+     *
+     * @param resp 200 OK response
+     */
+    public void handle200OK(SipResponse resp) {
+        super.handle200OK(resp);
+
+        // Subscribe to event package
+        getConferenceEventSubscriber().subscribe();
+
+        // Start the activity manager
+        getActivityManager().start();
+    }
 }

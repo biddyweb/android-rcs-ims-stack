@@ -19,10 +19,16 @@
 package com.orangelabs.rcs.core.ims.service.richcall.image;
 
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Image sharing transfer session
@@ -39,7 +45,12 @@ public abstract class ImageTransferSession extends ContentSharingSession {
 	 * Image transfered
 	 */
 	private boolean imageTransfered = false;
-	
+
+    /**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
     /**
 	 * Constructor
 	 * 
@@ -88,5 +99,45 @@ public abstract class ImageTransferSession extends ContentSharingSession {
 	 */
 	public static int getMaxImageSharingSize() {
 		return RcsSettings.getInstance().getMaxImageSharingSize()*1024;
-	}	
+	}
+
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        return SipMessageFactory.createInvite(
+                getDialogPath(),
+                RichcallService.FEATURE_TAGS_IMAGE_SHARE,
+                getDialogPath().getLocalContent());
+    }
+
+    /**
+     * Handle error 
+     *
+     * @param error Error
+     */
+    public void handleError(ImsServiceError error) {
+        if (isInterrupted()) {
+            return;
+        }
+
+        // Error
+        if (logger.isActivated()) {
+            logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
+        }
+
+        // Close MSRP session
+        closeMediaSession();
+
+        // Remove the current session
+        getImsService().removeSession(this);
+
+        // Notify listeners
+        for(int j=0; j < getListeners().size(); j++) {
+            ((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(error));
+        }
+    }
 }

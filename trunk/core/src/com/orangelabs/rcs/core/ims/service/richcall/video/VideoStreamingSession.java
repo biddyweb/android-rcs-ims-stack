@@ -19,10 +19,16 @@
 package com.orangelabs.rcs.core.ims.service.richcall.video;
 
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Video sharing streaming session
@@ -34,7 +40,12 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
 	 * Media renderer
 	 */
 	private IMediaRenderer renderer = null;
-	
+
+    /**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
 	/**
 	 * Constructor
 	 * 
@@ -75,4 +86,42 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
 		// Request capabilities to the remote
 		getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 	}
+
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        return SipMessageFactory.createInvite(getDialogPath(),
+                RichcallService.FEATURE_TAGS_VIDEO_SHARE, getDialogPath().getLocalContent());
+    }
+
+    /**
+     * Handle error
+     *
+     * @param error Error
+     */
+    public void handleError(ImsServiceError error) {
+        // Error
+        if (logger.isActivated()) {
+            logger.info("Session error: " + error.getErrorCode() + ", reason="
+                    + error.getMessage());
+        }
+
+        // Close media session
+        closeMediaSession();
+
+        // Remove the current session
+        getImsService().removeSession(this);
+
+        // Notify listeners
+        if (!isInterrupted()) {
+            for (int i = 0; i < getListeners().size(); i++) {
+                ((VideoStreamingSessionListener) getListeners().get(i))
+                        .handleSharingError(new ContentSharingError(error));
+            }
+        }
+    }
 }

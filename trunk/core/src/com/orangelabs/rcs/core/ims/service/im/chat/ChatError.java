@@ -19,55 +19,45 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
 
 /**
  * Chat error
  * 
  * @author jexa7410
  */
-public class ChatError extends ImsServiceError {
+public class ChatError extends ImsSessionBasedServiceError {
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * Unexpected exception occurs in the module (e.g. internal exception)
-	 */
-	public final static int UNEXPECTED_EXCEPTION = 0x01;
-	
-	/**
-	 * IM session initiation has failed (e.g. 408 timeout)
-	 */
-	public final static int SESSION_INITIATION_FAILED = 0x02;
 
-	/**
-	 * Session initiation has been declined (e.g. 486 Busy)
-	 */
-	public final static int SESSION_INITIATION_DECLINED = 0x03;	
-
-	/**
-	 * Session initiation has been cancelled (e.g. 487 Session terminated)
-	 */
-	public final static int SESSION_INITIATION_CANCELLED = 0x04;	
-	
 	/**
 	 * Media session has failed (e.g. MSRP failure)
 	 */
-	public final static int MEDIA_SESSION_FAILED = 0x05;
+	public final static int MEDIA_SESSION_FAILED = CHAT_ERROR_CODES + 1;
 	
 	/**
 	 * Subscription to conference package has failed
 	 */
-	public final static int SUBSCRIBE_CONFERENCE_FAILED = 0x06;
+	public final static int SUBSCRIBE_CONFERENCE_FAILED = CHAT_ERROR_CODES + 2;
 	
 	/**
 	 * Group chat session not found in the server 
 	 */
-	public final static int SESSION_NOT_FOUND = 0x07;
+	public final static int SESSION_NOT_FOUND = CHAT_ERROR_CODES + 3;
 	
 	/**
 	 * Group chat restart has failed
 	 */
-	public final static int SESSION_RESTART_FAILED = 0x08;
-	
+	public final static int SESSION_RESTART_FAILED = CHAT_ERROR_CODES + 4;
+
+    /**
+     * Constructor
+     *
+     * @param error Error code
+     */
+    public ChatError(ImsServiceError error) {
+        super(error.getErrorCode(), error.getMessage());
+    }
+
 	/**
 	 * Constructor
 	 * 

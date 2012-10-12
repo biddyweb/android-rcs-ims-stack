@@ -26,10 +26,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
@@ -131,278 +128,53 @@ public class OriginatingPreRecordedVideoStreamingSession extends VideoStreamingS
 	}
 
     /**
-     * Send INVITE message
-     *
-     * @param invite SIP INVITE
-     * @throws SipException
+     * Prepare media session
+     * 
+     * @throws Exception 
      */
-	private void sendInvite(SipRequest invite) throws SipException {
-		// Send INVITE request
-		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
+    public void prepareMediaSession() throws Exception {
+        // Parse the remote SDP part
+        SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
+        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+        MediaDescription mediaVideo = parser.getMediaDescription("video");
+        int remotePort = mediaVideo.port;
 
-        // Wait response
-        ctx.waitResponse(getResponseTimeout());
+        // Extract video codecs from SDP
+        Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
+        Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
 
-        // Analyze the received response
-        if (ctx.isSipResponse()) {
-	        // A response has been received
-            if (ctx.getStatusCode() == 200) {
-            	// 200 OK
-            	handle200OK(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 407) {
-            	// 407 Proxy Authentication Required
-            	handle407Authentication(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 422) {
-            	// 422 Session Interval Too Small
-            	handle422SessionTooSmall(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 603) {
-            	// 603 Invitation declined
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_DECLINED,
-    					ctx.getReasonPhrase()));
-            } else
-            if (ctx.getStatusCode() == 487) {
-            	// 487 Invitation cancelled
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_CANCELLED,
-    					ctx.getReasonPhrase()));
-            } else {
-            	// Other error response
-            	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED,
-            			ctx.getStatusCode() + " " + ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
+        // Codec negotiation
+        VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
+                player.getSupportedMediaCodecs(), proposedCodecs);
+        if (selectedVideoCodec == null) {
+            if (logger.isActivated()) {
+                logger.debug("Proposed codecs are not supported");
             }
-        } else {
-        	// No response received: timeout
-        	handleError(new ContentSharingError(ContentSharingError.SESSION_INITIATION_FAILED, "timeout"));
+
+            // Terminate session
+            terminateSession();
+            handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
+            return;
         }
+
+        // Set the selected media codec
+        player.setMediaCodec(selectedVideoCodec.getMediaCodec());
+
+        // Set media player event listener
+        player.addListener(new MediaPlayerEventListener(this));
+
+        // Open the media player
+        player.open(remoteHost, remotePort);
     }
 
     /**
-     * Handle 200 0K response
-     *
-     * @param resp 200 OK response
+     * Start media session
+     * 
+     * @throws Exception 
      */
-	public void handle200OK(SipResponse resp) {
-		try {
-	        // 200 OK received
-			if (logger.isActivated()) {
-				logger.info("200 OK response received");
-			}
-
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
-
-	        // Set the remote tag
-	        getDialogPath().setRemoteTag(resp.getToTag());
-
-	        // Set the target
-	        getDialogPath().setTarget(resp.getContactURI());
-
-	        // Set the route path with the Record-Route header
-	        Vector<String> newRoute = SipUtils.routeProcessing(resp, true);
-			getDialogPath().setRoute(newRoute);
-
-	        // Set the remote SDP part
-	        getDialogPath().setRemoteContent(resp.getContent());
-
-	        // The session is established
-	        getDialogPath().sessionEstablished();
-
-	        // Parse the remote SDP part
-        	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
-            MediaDescription mediaVideo = parser.getMediaDescription("video");
-            int remotePort = mediaVideo.port;
-
-            // Extract video codecs from SDP
-            Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
-            Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
-
-            // Codec negotiation
-            VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    player.getSupportedMediaCodecs(), proposedCodecs);
-            if (selectedVideoCodec == null) {
-                if (logger.isActivated()) {
-                    logger.debug("Proposed codecs are not supported");
-                }
-                
-                // Terminate session
-                terminateSession();
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
-                return;
-            }
-
-            // Set the selected media codec
-            player.setMediaCodec(selectedVideoCodec.getMediaCodec());
-
-	    	// Set media player event listener
-	        player.addListener(new MediaPlayerEventListener(this));
-
-	        // Open the media player
-    		player.open(remoteHost, remotePort);
-
-			// Send ACK request
-	        if (logger.isActivated()) {
-	        	logger.info("Send ACK");
-	        }
-	        getImsService().getImsModule().getSipManager().sendSipAck(getDialogPath());
-
-			// Start the media player
-	        player.start();
-
-        	// Start session timer
-        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
-        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
-        	}
-
-			// Notify listeners
-        	for(int i=0; i < getListeners().size(); i++) {
-        		getListeners().get(i).handleSessionStarted();
-            }
-		} catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Session initiation has failed", e);
-        	}
-
-        	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-        }
-	}
-
-    /**
-     * Handle 407 Proxy Authentication Required
-     *
-     * @param resp 407 response
-     */
-	public void handle407Authentication(SipResponse resp) {
-		try {
-	        if (logger.isActivated()) {
-	        	logger.info("407 response received");
-	        }
-
-	        // Set the remote tag
-	        getDialogPath().setRemoteTag(resp.getToTag());
-
-	        // Update the authentication agent
-            getAuthenticationAgent().readProxyAuthenticateHeader(resp);
-
-	        // Increment the Cseq number of the dialog path
-	        getDialogPath().incrementCseq();
-
-	        // Create a second INVITE request with the right token
-	        if (logger.isActivated()) {
-	        	logger.info("Send second INVITE");
-	        }
-	        SipRequest invite = SipMessageFactory.createInvite(
-	        		getDialogPath(),
-	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE,
-					getDialogPath().getLocalContent());
-
-	        // Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
-
-	        // Send INVITE request
-	        sendInvite(invite);
-
-        } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Session initiation has failed", e);
-        	}
-
-        	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-        }
-	}
-
-    /**
-     * Handle error
-     *
-     * @param error Error
-     */
-	public void handleError(ContentSharingError error) {
-        // Error
-    	if (logger.isActivated()) {
-    		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
-    	}
-
-        // Close media session
-    	closeMediaSession();
-
-		// Remove the current session
-    	getImsService().removeSession(this);
-
-		// Notify listeners
-    	if (!isInterrupted()) {
-	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(error);
-	        }
-        }
-	}
-
-    /**
-     * Handle 422 response
-     *
-     * @param resp 422 response
-     */
-	private void handle422SessionTooSmall(SipResponse resp) {
-		try {
-			// 422 response received
-	    	if (logger.isActivated()) {
-	    		logger.info("422 response received");
-	    	}
-
-	        // Extract the Min-SE value
-	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
-	        if (minExpire == -1) {
-	            if (logger.isActivated()) {
-	            	logger.error("Can't read the Min-SE value");
-	            }
-	        	handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
-	        	return;
-	        }
-
-	        // Set the min expire value
-	        getDialogPath().setMinSessionExpireTime(minExpire);
-
-	        // Set the expire value
-	        getDialogPath().setSessionExpireTime(minExpire);
-
-	        // Increment the Cseq number of the dialog path
-	        getDialogPath().incrementCseq();
-
-	        // Create a new INVITE with the right expire period
-	        if (logger.isActivated()) {
-	        	logger.info("Send new INVITE");
-	        }
-	        SipRequest invite = SipMessageFactory.createInvite(
-	        		getDialogPath(),
-	        		RichcallService.FEATURE_TAGS_VIDEO_SHARE,
-					getDialogPath().getLocalContent());
-
-	        // Set the Authorization header
-	        getAuthenticationAgent().setAuthorizationHeader(invite);
-
-	        // Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-
-	        // Send INVITE request
-	        sendInvite(invite);
-
-	    } catch(Exception e) {
-	    	if (logger.isActivated()) {
-	    		logger.error("Session initiation has failed", e);
-	    	}
-
-	    	// Unexpected error
-			handleError(new ContentSharingError(ContentSharingError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-	    }
+    public void startMediaSession() throws Exception {
+        // Start the media player
+        player.start();
     }
 
 	/**

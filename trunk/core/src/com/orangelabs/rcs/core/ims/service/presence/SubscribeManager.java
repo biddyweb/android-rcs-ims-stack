@@ -23,7 +23,6 @@ import java.util.Vector;
 import javax2.sip.header.ExpiresHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
@@ -349,12 +348,6 @@ public abstract class SubscribeManager extends PeriodicRefresher {
         // Send SUBSCRIBE request
         SipTransactionContext ctx = imsModule.getSipManager().sendSipMessageAndWait(subscribe);
 
-        // Wait response
-        if (logger.isActivated()) {
-        	logger.info("Wait response");
-        }
-        ctx.waitResponse(SipManager.TIMEOUT);
-        
         // Analyze the received response 
         if (ctx.isSipResponse()) {
         	// A response has been received

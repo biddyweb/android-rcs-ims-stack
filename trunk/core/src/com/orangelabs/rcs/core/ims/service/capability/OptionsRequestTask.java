@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.capability;
 import java.util.List;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -140,12 +139,6 @@ public class OptionsRequestTask implements Runnable {
         // Send OPTIONS request
         SipTransactionContext ctx = imsModule.getSipManager().sendSipMessageAndWait(options);
 
-        // Wait response
-        if (logger.isActivated()) {
-        	logger.info("Wait response");
-        }
-        ctx.waitResponse(SipManager.TIMEOUT);
-        
         // Analyze the received response 
         if (ctx.isSipResponse()) {
         	// A response has been received

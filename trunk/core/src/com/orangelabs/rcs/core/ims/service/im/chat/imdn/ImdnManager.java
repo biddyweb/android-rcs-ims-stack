@@ -18,7 +18,6 @@
 package com.orangelabs.rcs.core.ims.service.im.chat.imdn;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -53,7 +52,7 @@ public class ImdnManager extends Thread {
 	 */
 	private boolean activated;
 
-	/**
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -145,12 +144,41 @@ public class ImdnManager extends Thread {
 		thread.start();
 	}
 
+    /**
+     * Send a message delivery status immediately
+     * 
+     * @param contact Contact
+     * @param msgId Message ID
+     * @param status Delivery status
+     */
+    public void sendMessageDeliveryStatusImmediately(String contact, String msgId, String status, final String remoteInstanceId) {
+        // Execute request in background
+        final DeliveryStatus delivery = new DeliveryStatus(contact, msgId, status);
+        Thread thread = new Thread(){
+            public void run() {
+                // Send SIP MESSAGE
+                sendSipMessageDeliveryStatus(delivery, remoteInstanceId);
+            }
+        };
+        thread.start();
+    }
+
+    /**
+     * Send message delivery status via SIP MESSAGE
+     * 
+     * @param deliveryStatus Delivery status
+     */
+    private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus) {
+        sendSipMessageDeliveryStatus(deliveryStatus, null);
+    }
+
 	/**
 	 * Send message delivery status via SIP MESSAGE
-	 * 
+	 *
 	 * @param deliveryStatus Delivery status
+	 * @param remoteInstanceId Remote SIP instance
 	 */
-	private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus) {
+	private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus, String remoteInstanceId) {
 		try {
 			if (logger.isActivated()) {
        			logger.debug("Send delivery status " + deliveryStatus.getStatus() + " for message " + deliveryStatus.getMsgId());
@@ -174,7 +202,8 @@ public class ImdnManager extends Thread {
     				ImsModule.IMS_USER_PROFILE.getPublicUri(),
     				deliveryStatus.getContact(),
     				imsService.getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
-        	
+            dialogPath.setRemoteSipInstance(remoteInstanceId);
+
 	        // Create MESSAGE request
         	if (logger.isActivated()) {
         		logger.info("Send first MESSAGE");
@@ -183,13 +212,7 @@ public class ImdnManager extends Thread {
 	        
 	        // Send MESSAGE request
 	        SipTransactionContext ctx = imsService.getImsModule().getSipManager().sendSipMessageAndWait(msg);
-	
-	        // Wait response
-        	if (logger.isActivated()) {
-        		logger.info("Wait response");
-        	}
-	        ctx.waitResponse(SipManager.TIMEOUT);
-	
+
 	        // Analyze received message
             if (ctx.getStatusCode() == 407) {
                 // 407 response received
@@ -214,12 +237,6 @@ public class ImdnManager extends Thread {
                 
                 // Send MESSAGE request
     	        ctx = imsService.getImsModule().getSipManager().sendSipMessageAndWait(msg);
-
-                // Wait response
-                if (logger.isActivated()) {
-                	logger.info("Wait response");
-                }
-                ctx.waitResponse(SipManager.TIMEOUT);
 
                 // Analyze received message
                 if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {
