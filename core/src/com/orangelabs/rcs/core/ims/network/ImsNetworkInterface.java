@@ -485,7 +485,7 @@ public abstract class ImsNetworkInterface {
 			}
 			
 			// Initialize the SIP stack
-            sip.initStack(access.getIpAddress(), resolvedIpAddress, resolvedPort, imsProxyProtocol);
+            sip.initStack(access.getIpAddress(), resolvedIpAddress, resolvedPort, imsProxyProtocol, getType());
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {

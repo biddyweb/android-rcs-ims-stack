@@ -24,7 +24,6 @@ import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
@@ -258,12 +257,6 @@ public class TermsConditionsService extends ImsService {
 	        // Send MESSAGE request
 	        SipTransactionContext ctx = getImsModule().getSipManager().sendSipMessageAndWait(msg);
 	
-	        // Wait response
-        	if (logger.isActivated()) {
-        		logger.info("Wait response");
-        	}
-	        ctx.waitResponse(SipManager.TIMEOUT);
-	
 	        // Analyze received message
             if (ctx.getStatusCode() == 407) {
                 // 407 response received
@@ -288,12 +281,6 @@ public class TermsConditionsService extends ImsService {
                 
                 // Send MESSAGE request
     	        ctx = getImsModule().getSipManager().sendSipMessageAndWait(msg);
-
-                // Wait response
-                if (logger.isActivated()) {
-                	logger.info("Wait response");
-                }
-                ctx.waitResponse(SipManager.TIMEOUT);
 
                 // Analyze received message
                 if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {

@@ -22,6 +22,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
+import javax2.sip.header.ContactHeader;
+
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -372,9 +374,14 @@ public class InstantMessagingService extends ImsService {
 				// Check notification disposition
 				String msgId = ChatUtils.getMessageId(invite);
 				if (msgId != null) {
+                    String remoteInstanceId = null;
+                    ContactHeader inviteContactHeader = (ContactHeader)invite.getHeader(ContactHeader.NAME);
+                    if (inviteContactHeader != null) {
+                        remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+                    }
 					// Send message delivery status via a SIP MESSAGE
 					getImdnManager().sendMessageDeliveryStatusImmediately(SipUtils.getAssertedIdentity(invite),
-							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+							msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED, remoteInstanceId);
 				}
 			}
 			

@@ -59,11 +59,12 @@ public abstract class NetworkFactory {
 	}
 
 	/**
-	 * Returns the local IP address
+	 * Returns the local IP address of a given network interface
 	 * 
+	 * @param type Network interface type
 	 * @return Address
 	 */
-	public abstract String getLocalIpAddress();
+	public abstract String getLocalIpAddress(int type);
 	
 	/**
 	 * Create a datagram connection

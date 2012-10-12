@@ -18,11 +18,15 @@
 
 package com.orangelabs.rcs.core.ims;
 
+import java.util.Enumeration;
+
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.CoreListener;
 import com.orangelabs.rcs.core.ims.network.ImsConnectionManager;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
+import com.orangelabs.rcs.core.ims.network.MobileNetworkInterface;
+import com.orangelabs.rcs.core.ims.network.WifiNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.gsm.CallManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpConnection;
@@ -41,8 +45,6 @@ import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.core.ims.userprofile.UserProfile;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Enumeration;
 
 /**
  * IMS module
@@ -163,6 +165,24 @@ public class ImsModule implements SipEventListener {
 		return connectionManager.getCurrentNetworkInterface();
 	}
 	
+	/**
+     * Is connected to a Wi-Fi access
+     * 
+     * @return Boolean
+     */
+	public boolean isConnectedToWifiAccess() {
+		return connectionManager.isConnectedToWifi();
+	}
+	
+	/**
+     * Is connected to a mobile access
+     * 
+     * @return Boolean
+     */
+	public boolean isConnectedToMobileAccess() {
+		return connectionManager.isConnectedToMobile();
+	}
+
 	/**
 	 * Returns the ImsConnectionManager
 	 * 

@@ -40,6 +40,11 @@ public class MsrpClientConnection extends MsrpConnection {
 	 */
 	private int remotePort; 
 	
+    /**
+     * Secured connection
+     */
+    private boolean secured = false;
+
 	/**
 	 * The logger
 	 */
@@ -58,6 +63,29 @@ public class MsrpClientConnection extends MsrpConnection {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
 	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param session MSRP session
+	 * @param remoteAddress Remote IP address
+	 * @param remotePort Remote port number
+	 * @param secured Secured media flag
+	 */
+	public MsrpClientConnection(MsrpSession session, String remoteAddress, int remotePort, boolean secured) {
+		this(session, remoteAddress, remotePort);
+		
+		this.secured = secured;
+	}	
+	
+	/**
+	 * Is secured connection
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isSecured() {
+		return secured;
+	}
 
 	/**
 	 * Returns the socket connection
@@ -70,7 +98,8 @@ public class MsrpClientConnection extends MsrpConnection {
 			logger.debug("Open client socket to " + remoteAddress + ":" + remotePort);
 		}
 		SocketConnection socket = NetworkFactory.getFactory().createSocketClientConnection();
-		socket.open(remoteAddress, remotePort);		
+		socket.open(remoteAddress, remotePort);
+		// TODO: use SSL socket if secured
 		if (logger.isActivated()) {
 			logger.debug("Socket connected to " + socket.getRemoteAddress() + ":" + socket.getRemotePort());
 		}

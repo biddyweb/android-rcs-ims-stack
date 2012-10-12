@@ -39,7 +39,7 @@ public class DeviceUtils {
 	 * @param context Context 
 	 * @return UUID
 	 */
-	public static UUID getDeviceUUID(Context context) {
+    public static UUID getDeviceUUID(Context context) {
 		if (context == null) {
 			return null;
 		}

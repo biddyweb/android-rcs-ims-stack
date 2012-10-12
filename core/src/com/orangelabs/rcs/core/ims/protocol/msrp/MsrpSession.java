@@ -88,6 +88,11 @@ public class MsrpSession {
 	private ReportTransaction reportTransaction = null;
 
     /**
+     * MSRP transaction
+     */
+    private MsrpTransaction msrpTransaction = null;
+
+    /**
 	 * The logger
 	 */
 	private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -240,6 +245,11 @@ public class MsrpSession {
 		if (reportTransaction != null) {
 			reportTransaction.terminate();
 		}
+
+        // Unblock MSRP transaction
+        if (msrpTransaction != null) {
+            msrpTransaction.terminate();
+        }
 	}
 
 	/**
@@ -279,7 +289,12 @@ public class MsrpSession {
 			} else {
 				reportTransaction = null;
 			}
-			
+            if (failureReportOption) {
+                msrpTransaction = new MsrpTransaction();
+            } else {
+                msrpTransaction = null;
+            }
+
 			// Send data chunk by chunk
 			for (int i = inputStream.read(data); (!cancelTransfer) & (i>-1); i=inputStream.read(data)) {
 				// Update upper byte range
@@ -302,8 +317,21 @@ public class MsrpSession {
 				return;
 			}
 
-			// Test if waiting report is needed
-			if (reportTransaction != null) {
+            // Waiting msrpTransaction
+            if (msrpTransaction != null) {
+                // Wait until all data have been reported
+                msrpTransaction.waitAllResponses();
+
+                // Notify event listener
+                if (msrpTransaction.isAllResponsesReceived()) {
+                    msrpEventListener.msrpDataTransfered(msgId);
+                } else {
+                    msrpEventListener.msrpTransferError("report timeout");
+                }
+            }
+
+            // Waiting reportTransaction
+            if (reportTransaction != null) {
 				// Wait until all data have been reported
 				long lastReport = reportTransaction.getReportedSize();
 				while(reportTransaction.getReportedSize() < totalSize) {
@@ -311,14 +339,14 @@ public class MsrpSession {
 					if (lastReport == reportTransaction.getReportedSize()) {
 						// Timeout
 						break;
-					}					
+					}
 					if (reportTransaction.getStatusCode() != 200) {
 						// Error
 						break;
-					}					
+					}
 					lastReport = reportTransaction.getReportedSize();
 				}
-				
+
 	            // Notify event listener
 	            if ((reportTransaction.getStatusCode() == 200) &&
 	            		(reportTransaction.getReportedSize() == totalSize)) {
@@ -326,8 +354,11 @@ public class MsrpSession {
 	            } else {
 	                msrpEventListener.msrpTransferError("report timeout");
 	            }
-			} else {
-	            // Notify event listener
+			}
+
+            // No transaction
+            if (msrpTransaction == null && reportTransaction == null) {
+                // Notify event listener
                 msrpEventListener.msrpDataTransfered(msgId);
 			}
 		} catch(Exception e) {
@@ -394,7 +425,7 @@ public class MsrpSession {
 		// Create request
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
 		buffer.reset();
-		buffer.write(MsrpConstants.MSRP_PROTOCOL.getBytes());
+		buffer.write(MsrpConstants.MSRP_HEADER.getBytes());
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write(txId.getBytes());
 		buffer.write((" " + MsrpConstants.METHOD_SEND).getBytes());
@@ -448,16 +479,26 @@ public class MsrpSession {
 		
 		// Send chunk
 		if (failureReportOption) {
-			requestTransaction = new RequestTransaction();
+            if (msrpTransaction != null) {
+                msrpTransaction.handleRequest();
+                requestTransaction = null;
+            } else {
+                requestTransaction = new RequestTransaction();
+            }
 			connection.sendChunk(buffer.toByteArray());
 			buffer.close();
-			requestTransaction.waitResponse();
-			if (!requestTransaction.isResponseReceived()) {
-				throw new MsrpException("timeout");
-			}
+            if (requestTransaction != null) {
+                requestTransaction.waitResponse();
+                if (!requestTransaction.isResponseReceived()) {
+                    throw new MsrpException("timeout");
+                }
+            }
 		} else {
 			connection.sendChunk(buffer.toByteArray());
 			buffer.close();
+            if (msrpTransaction != null) {
+                msrpTransaction.handleRequest();
+            }
 		}
 	}
 	
@@ -475,7 +516,7 @@ public class MsrpSession {
 		// Create request
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
 		buffer.reset();
-		buffer.write(MsrpConstants.MSRP_PROTOCOL.getBytes());
+		buffer.write(MsrpConstants.MSRP_HEADER.getBytes());
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write(txId.getBytes());
 		buffer.write((" " + MsrpConstants.METHOD_SEND).getBytes());
@@ -515,7 +556,7 @@ public class MsrpSession {
 	 */
 	private void sendMsrpResponse(String code, String txId, Hashtable<String, String> headers) throws IOException {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
-		buffer.write(MsrpConstants.MSRP_PROTOCOL .getBytes());
+		buffer.write(MsrpConstants.MSRP_HEADER .getBytes());
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write(txId.getBytes());
 		buffer.write(MsrpConstants.CHAR_SP);
@@ -565,7 +606,7 @@ public class MsrpSession {
 		// Create request
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(4000);
 		buffer.reset();
-		buffer.write(MsrpConstants.MSRP_PROTOCOL.getBytes());
+		buffer.write(MsrpConstants.MSRP_HEADER.getBytes());
 		buffer.write(MsrpConstants.CHAR_SP);
 		buffer.write(txId.getBytes());
 		buffer.write((" " + MsrpConstants.METHOD_REPORT).getBytes());
@@ -729,7 +770,12 @@ public class MsrpSession {
 		if (requestTransaction != null) {
 			requestTransaction.notifyResponse(code, headers);
 		}
-		
+
+        // Notify MSRP transaction
+        if (msrpTransaction != null) {
+            msrpTransaction.handleResponse();
+        }
+
         // Notify event listener
 		if (code != 200) {
 			msrpEventListener.msrpTransferError(code + " response received");

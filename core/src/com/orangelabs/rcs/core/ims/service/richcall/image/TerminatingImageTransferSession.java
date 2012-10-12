@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -37,8 +36,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -118,9 +117,9 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 					logger.debug("Session has been rejected on timeout");
 				}
 
-				// Ringing period timeout
-				send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
+                // Ringing period timeout
+                send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
 
@@ -129,8 +128,14 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 		    		getListeners().get(i).handleSessionAborted();
 		        }
 				return;
-			}
-			
+			} else
+            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been canceled");
+                }
+                return;
+            }
+
 	    	// Parse the remote SDP part
         	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
@@ -226,16 +231,13 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
             		RichcallService.FEATURE_TAGS_IMAGE_SHARE, sdp);
-            
+
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
 	        // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-    		
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
-            
             // Analyze the received response 
             if (ctx.isSipAck()) {
     	        // ACK received
@@ -302,33 +304,6 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	   		}
 		}
 	}	
-
-	/**
-	 * Handle error 
-	 * 
-	 * @param error Error
-	 */
-	public void handleError(ContentSharingError error) {
-		if (isInterrupted()) {
-			return;
-		}
-		
-		// Error	
-    	if (logger.isActivated()) {
-    		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
-    	}
-
-    	// Close the MSRP session
-    	closeMsrpSession();
-
-		// Remove the current session
-    	getImsService().removeSession(this);
-
-		// Notify listeners
-    	for(int j=0; j < getListeners().size(); j++) {
-    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(error);
-        }
-	}
 
 	/**
 	 * Data has been transfered
@@ -432,24 +407,35 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
         }
 	}
-	
-	/**
-	 * Close the MSRP session
-	 */
-	private void closeMsrpSession() {
-    	if (msrpMgr != null) {
-    		msrpMgr.closeSession();
-    	}
-		if (logger.isActivated()) {
-			logger.debug("MSRP session has been closed");
-		}
-	}
 
-	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Close MSRP session
-		closeMsrpSession();
-	}
+    /**
+     * Prepare media session
+     * 
+     * @throws Exception 
+     */
+    public void prepareMediaSession() throws Exception {
+        // Nothing to do in terminating side
+    }
+
+    /**
+     * Start media session
+     * 
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        // Nothing to do in terminating side
+    }
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Close the MSRP session
+        if (msrpMgr != null) {
+            msrpMgr.closeSession();
+        }
+        if (logger.isActivated()) {
+            logger.debug("MSRP session has been closed");
+        }
+    }
 }

@@ -19,23 +19,26 @@
 package com.orangelabs.rcs.ri.messaging;
 
 import java.util.List;
+import java.util.Vector;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.format.DateUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
@@ -55,11 +58,6 @@ public class ChatList extends Activity implements ClientApiListener {
 	 */
 	private MessagingApi messagingApi;
     
-    /**
-	 * Chat log adapter
-	 */
-	private ChatLogAdapter chatLogAdapter; 
-   
 	/**
 	 * Rejoin chat manager
 	 */
@@ -87,14 +85,10 @@ public class ChatList extends Activity implements ClientApiListener {
 		messagingApi.connectApi();
         
         // Set list adapter
-		chatLogAdapter = new ChatLogAdapter(this);
         ListView view = (ListView)findViewById(android.R.id.list);
         TextView emptyView = (TextView)findViewById(android.R.id.empty);
         view.setEmptyView(emptyView);
-        view.setAdapter(chatLogAdapter);		
-
-		// Update data list
-		updateDataSet();
+        view.setAdapter(createChatListAdapter());		
 	}
 	
 	@Override
@@ -112,21 +106,137 @@ public class ChatList extends Activity implements ClientApiListener {
 	}
 		
 	/**
-	 * Update data
+	 * Create chat list adapter with unique chat ID entries
 	 */
-	private void updateDataSet() {
-		// Get all chat sessions
+	private ChatListAdapter createChatListAdapter() {
 		Uri uri = RichMessagingData.CONTENT_URI;
-		String where = "(" + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + " OR " + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE +
-			") AND (" +
-			RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + " OR " + RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED + ")"; 
-		Cursor result = getContentResolver().query(uri,	null, where, null, null);
-		chatLogAdapter.changeCursor(result);
-		
-		// Notify list adapter
-		chatLogAdapter.notifyDataSetChanged();
+	    String[] PROJECTION = new String[] {
+	    		RichMessagingData.KEY_ID,
+	    		RichMessagingData.KEY_CHAT_ID,
+	    		RichMessagingData.KEY_CHAT_SESSION_ID,
+	    		RichMessagingData.KEY_TYPE,
+	    		RichMessagingData.KEY_CONTACT,
+	    		RichMessagingData.KEY_DATA,
+	    		RichMessagingData.KEY_TIMESTAMP
+	    };
+        String sortOrder = RichMessagingData.KEY_TIMESTAMP + " DESC ";
+		String where = "(" + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + " OR " + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE + ") AND (" +
+			RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + " OR " + RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED + ")";
+		Cursor cursor = getContentResolver().query(uri, PROJECTION, where, null, sortOrder);
+
+		Vector<String> items = new Vector<String>();
+		MatrixCursor matrix = new MatrixCursor(PROJECTION);
+		while (cursor.moveToNext()){
+    		String chatId = cursor.getString(1);
+			if (!items.contains(chatId)) {
+				matrix.addRow(new Object[]{
+						cursor.getInt(0), 
+						cursor.getString(1), 
+						cursor.getString(2),
+						cursor.getInt(3),
+						cursor.getString(4),
+						cursor.getString(5),
+						cursor.getString(6)});
+				items.add(chatId);
+			}
+		}
+		cursor.close();
+
+		return new ChatListAdapter(this, matrix);
 	}
 	
+    /**
+     * Chat list adapter
+     */
+    private class ChatListAdapter extends CursorAdapter {
+    	private Drawable mDrawableChat;
+
+    	/**
+    	 * Constructor
+    	 * 
+    	 * @param context Context
+    	 * @param c Cursor
+    	 */
+    	public ChatListAdapter(Context context, Cursor c) {
+            super(context, c);
+
+    		// Load the drawables
+    		mDrawableChat = context.getResources().getDrawable(R.drawable.ri_eventlog_chat);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View view = inflater.inflate(R.layout.messaging_chat_list_item, parent, false);
+            view.setOnClickListener(clickItemListener);
+            
+    		ChatListItemCache cache = new ChatListItemCache();
+    		cache.chatId = cursor.getString(1);
+    		cache.sessionId = cursor.getString(2);
+    		cache.type = cursor.getInt(3);
+    		cache.contact = cursor.getString(4);
+    		cache.data = cursor.getString(5);
+    		cache.date = cursor.getLong(6);
+            view.setTag(cache);
+            
+            return view;
+        }
+        
+    	@Override
+    	public void bindView(View view, Context context, Cursor cursor) {
+    		TextView line1View = (TextView)view.findViewById(R.id.line1); 
+    		TextView numberView = (TextView)view.findViewById(R.id.number);
+    		TextView dateView = (TextView)view.findViewById(R.id.date);
+    		ImageView eventIconView = (ImageView)view.findViewById(R.id.call_icon);            
+    		ChatListItemCache cache = (ChatListItemCache)view.getTag();
+
+    		// Set icon
+			eventIconView.setImageDrawable(mDrawableChat);
+
+			// Set the date/time field by mixing relative and absolute times
+		
+    		dateView.setText(DateUtils.getRelativeTimeSpanString(cache.date,
+    				System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS,
+    				DateUtils.FORMAT_ABBREV_RELATIVE));
+    		
+			// Set the label
+    		switch(cache.type) {
+    			case EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE:
+    			case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+	    		case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
+	    			line1View.setText(R.string.label_eventlog_chat);
+	        		numberView.setText(cache.contact);
+	        		numberView.setVisibility(View.VISIBLE);
+	    			break;
+				case EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE:
+	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
+	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+	    			line1View.setText(R.string.label_eventlog_group_chat);
+	        		numberView.setText(cache.data);
+	        		numberView.setVisibility(View.VISIBLE);
+	    			break;
+    		}
+    	}
+    }
+
+    /**
+     * Chat list item in cache
+     */
+	private class ChatListItemCache {
+		private String chatId;
+		private String sessionId;
+		private int type;
+		private String contact;
+		private long date;
+		private String data;
+		
+		public boolean isGroupChat() {
+			return (type == EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE) ||
+				(type == EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE) ||
+					(type == EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE);
+		}
+	}    
+    
     /**
      * API disabled
      */
@@ -147,81 +257,7 @@ public class ChatList extends Activity implements ClientApiListener {
 	public void handleApiDisconnected() {
 		apiEnabled = false;
 	}
-	
-    /**
-     * Chat log adapter
-     */
-    private class ChatLogAdapter extends ResourceCursorAdapter {
-    	private Drawable mDrawableChat;
-    	
-    	public ChatLogAdapter(Context context) {
-    		super(context, R.layout.messaging_chat_list_item, null);
-    		
-    		// Load the drawables
-    		mDrawableChat = context.getResources().getDrawable(R.drawable.ri_eventlog_chat);
-    	}
-    	
-    	@Override
-    	public void bindView(View view, Context context, Cursor cursor) {
-            final ChatListItemCache tag = (ChatListItemCache)view.getTag();
-    		TextView line1View = tag.line1View;; 
-    		TextView numberView = tag.numberView;
-    		TextView dateView = tag.dateView;
-    		ImageView eventIconView = tag.eventIconView;
-
-    		// Get database value
-    		tag.sessionId = cursor.getString(EventsLogApi.CHAT_SESSION_ID_COLUMN);
-    		tag.chatId = cursor.getString(EventsLogApi.CHAT_ID_COLUMN);
-    		tag.type = cursor.getInt(EventsLogApi.TYPE_COLUMN);
-    		tag.number = cursor.getString(EventsLogApi.CONTACT_COLUMN);
-    		
-    		// Set icon
-			eventIconView.setImageDrawable(mDrawableChat);
-
-			// Set the date/time field by mixing relative and absolute times
-    		long date = cursor.getLong(EventsLogApi.DATE_COLUMN);		
-    		dateView.setText(DateUtils.getRelativeTimeSpanString(date,
-    				System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS,
-    				DateUtils.FORMAT_ABBREV_RELATIVE));
-    		
-			// Set the label
-    		switch(tag.type) {
-    			case EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE:
-    			case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
-	    		case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
-	    			tag.isGroupChat = false;
-	    			line1View.setText(R.string.label_eventlog_chat);
-	        		numberView.setText(tag.number);
-	        		numberView.setVisibility(View.VISIBLE);
-	    			break;
-				case EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE:
-	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
-	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
-	    			tag.isGroupChat = true;
-	    			line1View.setText(R.string.label_eventlog_group_chat);
-	        		String subject = cursor.getString(EventsLogApi.DATA_COLUMN);
-	        		numberView.setText(subject);
-	        		numberView.setVisibility(View.VISIBLE);
-	    			break;
-    		}
-    	}
-    	
-    	@Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = super.newView(context, cursor, parent);
-            view.setOnClickListener(clickItemListener);
-
-            ChatListItemCache cache = new ChatListItemCache();
-            cache.line1View = (TextView)view.findViewById(R.id.line1); 
-            cache.numberView = (TextView)view.findViewById(R.id.number);
-            cache.dateView = (TextView)view.findViewById(R.id.date);
-            cache.eventIconView = (ImageView)view.findViewById(R.id.call_icon);            
-            view.setTag(cache);
-
-            return view;
-        }
-    }
-
+    
     /**
      * Is group chat active
      * 
@@ -285,11 +321,10 @@ public class ChatList extends Activity implements ClientApiListener {
 			}
 			
 			// Get selected item
-			final ChatListItemCache tag = (ChatListItemCache)v.getTag();
-
-			if (tag.isGroupChat) {
+			ChatListItemCache cache = (ChatListItemCache)v.getTag();
+			if (cache.isGroupChat()) {
 				// Group chat
-				IChatSession session = isGroupChatActive(tag.chatId);
+				IChatSession session = isGroupChatActive(cache.chatId);
 				if (session != null) {
 					// Session already active on the device: just reload it in the UI
 					try {
@@ -303,12 +338,12 @@ public class ChatList extends Activity implements ClientApiListener {
 					}
 				} else {
 					// Session terminated on the device: try to rejoin the session
-					rejoinChat = new RejoinChat(ChatList.this, messagingApi, tag.chatId);
+					rejoinChat = new RejoinChat(ChatList.this, messagingApi, cache.chatId);
 					rejoinChat.start();
 				}
 			} else {
 				// 1-1 chat
-				IChatSession session = isChatSessionActive(tag.sessionId);
+				IChatSession session = isChatSessionActive(cache.sessionId);
 				if (session != null) {
 					// Session already active on the device: just reload it in the UI
 					try {
@@ -324,26 +359,10 @@ public class ChatList extends Activity implements ClientApiListener {
 					// Session terminated on the device: create a new one on the first message
 		    		Intent intent = new Intent(ChatList.this, OneToOneChatView.class);
 		        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	            	intent.putExtra("contact", tag.number);
+	            	intent.putExtra("contact", cache.contact);
 		    		startActivity(intent);
 				}
 			}
 		}
     };
-
-    /**
-     * Chat list item
-     */
-	private class ChatListItemCache {
-		public TextView line1View; 
-		public TextView numberView;
-		public TextView dateView;
-		public ImageView eventIconView; 
-
-		public String number;
-		public String sessionId;
-		public String chatId;
-		public int type;
-		public boolean isGroupChat;
-	}
 }

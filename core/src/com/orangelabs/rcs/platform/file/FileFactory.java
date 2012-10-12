@@ -91,27 +91,6 @@ public abstract class FileFactory {
 	public abstract FileDescription getFileDescription(String url) throws IOException;
 	
 	/**
-	 * Returns the root directory for photos
-	 * 
-	 *  @return Directory path
-	 */
-	public abstract String getPhotoRootDirectory();
-
-	/**
-	 * Returns the root directory for videos
-	 * 
-	 *  @return Directory path
-	 */
-	public abstract String getVideoRootDirectory();
-	
-	/**
-	 * Returns the root directory for files
-	 * 
-	 *  @return Directory path
-	 */
-	public abstract String getFileRootDirectory();
-	
-	/**
 	 * Update the media storage
 	 * 
 	 * @param url New URL to be added

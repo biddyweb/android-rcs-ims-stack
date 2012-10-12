@@ -27,21 +27,16 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceError;
  */
 public class PresenceError extends ImsServiceError {
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * Unexpected exception occurs in the module (e.g. internal exception)
-	 */
-	public final static int UNEXPECTED_EXCEPTION = 0x01;
-	
+
 	/**
 	 * Subscription has failed (e.g. 404 not found)
 	 */
-	public final static int SUBSCRIBE_FAILED = 0x02;
+	public final static int SUBSCRIBE_FAILED = PRESENCE_ERROR_CODES + 1;
 	
 	/**
 	 * Publish has failed (e.g. 408 timeout)
 	 */
-	public final static int PUBLISH_FAILED = 0x03;
+	public final static int PUBLISH_FAILED = PRESENCE_ERROR_CODES + 2;
 	
 	/**
 	 * Constructor

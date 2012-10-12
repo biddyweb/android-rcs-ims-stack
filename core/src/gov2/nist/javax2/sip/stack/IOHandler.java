@@ -101,13 +101,33 @@ class IOHandler {
      * from multiple threads. We write in chunks to allow the other side to synchronize for large
      * sized writes.
      */
+    // Changed by Deutsche Telekom
+    // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
     private void writeChunks(OutputStream outputStream, byte[] bytes, int length)
+            throws IOException {
+        //don't do the 34727 work around by default
+        writeChunks(outputStream, bytes, length, false);
+    }
+
+    /**
+     * A private function to write things out. This needs to be synchronized as writes can occur
+     * from multiple threads. We write in chunks to allow the other side to synchronize for large
+     * sized writes.
+     */
+    // Changed by Deutsche Telekom
+    // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
+    private void writeChunks(OutputStream outputStream, byte[] bytes, int length, boolean smallChunks)
             throws IOException {
         // Chunk size is 16K - this hack is for large
         // writes over slow connections.
         synchronized (outputStream) {
             // outputStream.write(bytes,0,length);
+            // Changed by Deutsche Telekom
+            // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
             int chunksize = 8 * 1024;
+            if (smallChunks) {
+                chunksize = 512;
+            }
             for (int p = 0; p < length; p += chunksize) {
                 int chunk = p + chunksize < length ? chunksize : length - p;
                 outputStream.write(bytes, p, chunk);
@@ -204,13 +224,23 @@ class IOHandler {
                         clientSock = sipStack.getNetworkLayer().createSocket(receiverAddress,
                                 contactPort, senderAddress);
                         OutputStream outputStream = clientSock.getOutputStream();
-                        writeChunks(outputStream, bytes, length);
+                        // Changed by Deutsche Telekom
+                        // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
+                        boolean doIssue34727workarround = false;
+                        if (clientSock.getLocalPort()==5060 || contactPort==5060)
+                            doIssue34727workarround = true;
+                        writeChunks(outputStream, bytes, length, doIssue34727workarround);
                         putSocket(key, clientSock);
                         break;
                     } else {
                         try {
                             OutputStream outputStream = clientSock.getOutputStream();
-                            writeChunks(outputStream, bytes, length);
+                            // Changed by Deutsche Telekom
+                            // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
+                            boolean doIssue34727workarround = false;
+                            if (clientSock.getLocalPort()==5060 || contactPort==5060)
+                                doIssue34727workarround = true;
+                            writeChunks(outputStream, bytes, length, doIssue34727workarround);
                             break;
                         } catch (IOException ex) {
                             if (sipStack.isLoggingEnabled())
@@ -277,14 +307,24 @@ class IOHandler {
                         sslsock.setEnabledProtocols(sipStack.getEnabledProtocols());
                         sslsock.startHandshake();
 
+                        // Changed by Deutsche Telekom
+                        // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
+                        boolean doIssue34727workarround = false;
+                        if (clientSock.getLocalPort()==5060 || contactPort==5060)
+                            doIssue34727workarround = true;
                         OutputStream outputStream = clientSock.getOutputStream();
-                        writeChunks(outputStream, bytes, length);
+                        writeChunks(outputStream, bytes, length, doIssue34727workarround);
                         putSocket(key, clientSock);
                         break;
                     } else {
                         try {
+                            // Changed by Deutsche Telekom
+                            // ***###*** DTAG, AS 2012-09-10; work around Android issue 34727 (large TCP packets from or to port 5060 not send)
+                            boolean doIssue34727workarround = false;
+                            if (clientSock.getLocalPort()==5060 || contactPort==5060)
+                                doIssue34727workarround = true;
                             OutputStream outputStream = clientSock.getOutputStream();
-                            writeChunks(outputStream, bytes, length);
+                            writeChunks(outputStream, bytes, length, doIssue34727workarround);
                             break;
                         } catch (IOException ex) {
                             if (sipStack.isLoggingEnabled())

@@ -1,7 +1,5 @@
-/**
- * 
- */
-package com.orangelabs.rcs.test;
+
+package com.orangelabs.rcs.utils;
 
 import com.orangelabs.rcs.utils.IpAddressUtils;
 

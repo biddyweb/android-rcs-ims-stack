@@ -26,7 +26,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
  * Reassembles H264 RTP packets into H264 frames, as per RFC 3984 Complete
  * frames are sent to decoder once reassembled
  *
- * @author Deutsche Telekom
+ * @author Deutsche Telekom AG
  */
 public class JavaDepacketizer extends VideoCodec {
 

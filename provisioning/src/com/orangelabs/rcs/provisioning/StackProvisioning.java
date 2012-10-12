@@ -176,8 +176,14 @@ public class StackProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.SipListeningPort);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_DEFAULT_PORT));
 
-        txt = (EditText)this.findViewById(R.id.SipTimer);
+        txt = (EditText)this.findViewById(R.id.SipTimerT1);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TIMER_T1));
+
+        txt = (EditText)this.findViewById(R.id.SipTimerT2);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TIMER_T2));
+
+        txt = (EditText)this.findViewById(R.id.SipTimerT4);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TIMER_T4));
 
         txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT));
@@ -250,6 +256,12 @@ public class StackProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.CpuAlwaysOn);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CPU_ALWAYS_ON)));
+
+        check = (CheckBox)this.findViewById(R.id.SecureMsrpOverWifi);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SECURE_MSRP_OVER_WIFI)));
+
+        check = (CheckBox)this.findViewById(R.id.SecureRtpOverWifi);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI)));
     }
 
     @Override
@@ -312,8 +324,14 @@ public class StackProvisioning extends Activity {
 		        EditText txt = (EditText)this.findViewById(R.id.SipListeningPort);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PORT, txt.getText().toString());
 
-		        txt = (EditText)this.findViewById(R.id.SipTimer);
+		        txt = (EditText)this.findViewById(R.id.SipTimerT1);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TIMER_T1, txt.getText().toString());
+
+                txt = (EditText)this.findViewById(R.id.SipTimerT2);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TIMER_T2, txt.getText().toString());
+
+                txt = (EditText)this.findViewById(R.id.SipTimerT4);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TIMER_T4, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.SipTransactionTimeout);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRANSACTION_TIMEOUT, txt.getText().toString());
@@ -387,7 +405,13 @@ public class StackProvisioning extends Activity {
                 check = (CheckBox)this.findViewById(R.id.CpuAlwaysOn);
                 RcsSettings.getInstance().writeParameter(RcsSettingsData.CPU_ALWAYS_ON, Boolean.toString(check.isChecked()));
 
-				Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
+                check = (CheckBox)this.findViewById(R.id.SecureMsrpOverWifi);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_MSRP_OVER_WIFI, Boolean.toString(check.isChecked()));
+
+                check = (CheckBox)this.findViewById(R.id.SecureRtpOverWifi);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI, Boolean.toString(check.isChecked()));
+
+                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 				break;
 		}
 		return true;

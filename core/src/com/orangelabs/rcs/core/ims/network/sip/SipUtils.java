@@ -137,7 +137,12 @@ public class SipUtils {
 	 * Min-SE header
 	 */
 	public static final String HEADER_MIN_SE = "Min-SE";
-		
+
+	/**
+	 * SIP instance parameter
+	 */
+	public static final String SIP_INSTANCE_PARAM = "+sip.instance";
+	
 	/**
 	 * Extract the URI part of a SIP address
 	 * 
@@ -172,6 +177,7 @@ public class SipUtils {
      * Build User-Agent header
      * 
      * @param Header
+     * @throws Exception
      */
 	public static Header buildUserAgentHeader() throws Exception {
 	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductName() + "/" + TerminalInfo.getProductVersion();
@@ -194,6 +200,7 @@ public class SipUtils {
 	 * Build Allow header
 	 * 
 	 * @param msg SIP message
+	 * @throws Exception
 	 */
 	public static void buildAllowHeader(Message msg) throws Exception {
 		msg.addHeader(HEADER_FACTORY.createAllowHeader(Request.INVITE));
@@ -461,5 +468,72 @@ public class SipUtils {
 		} else {
 			return referredByHeader.getValue();
 		}
+    }
+
+    /**
+     * Get remote SIP instance ID
+     * 
+	 * @param message SIP message
+     * @return ID or null
+     */
+    public static String getRemoteInstanceID(SipMessage message) {
+        String instanceId = null;
+        ContactHeader contactHeader = (ContactHeader)message.getHeader(ContactHeader.NAME);
+        if (contactHeader != null) {
+            instanceId = contactHeader.getParameter(SIP_INSTANCE_PARAM);
+        }
+    	return instanceId;
+    }
+    
+    
+    /**
+     * Get SIP instance ID of an incoming message
+     * 
+	 * @param request SIP message
+     * @return ID or null
+     */
+    public static String getInstanceID(SipMessage message) {
+	    String instanceId = null;
+	    ExtensionHeader acceptHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+	    if (acceptHeader == null) {
+	        // Check contracted form
+	        acceptHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
+	    }
+	    if (acceptHeader != null) {
+	        String[] pnames = acceptHeader.getValue().split(";");
+	        if (pnames.length > 1) {
+	            // Start at index 1 to bypass the address
+	            for (int i = 1; i < pnames.length; i++) {
+	                if (pnames[i].startsWith(SipUtils.SIP_INSTANCE_PARAM)){
+	                    instanceId = pnames[i].substring(SipUtils.SIP_INSTANCE_PARAM.length()+1, pnames[i].length());
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	    return instanceId;
+    }
+    
+    /**
+     * Set remote SIP instance ID of a message
+     * 
+	 * @param message SIP message
+     * @param instanceId SIP instance ID
+	 * @throws Exception
+     */
+    public static void setRemoteInstanceID(Message message, String instanceId) throws Exception {
+	    if (instanceId != null) {
+	        ExtensionHeader acceptHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+	        if (acceptHeader != null) {
+	        	// Update existing header with SIP instance
+		        acceptHeader.setValue(acceptHeader.getValue() + ";" +
+		        		SipUtils.SIP_INSTANCE_PARAM + "=" + instanceId);
+	        } else {
+	        	// Add header with SIP instance
+	            Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, "*;" +
+	            		SipUtils.SIP_INSTANCE_PARAM + "=" + instanceId);
+	            message.addHeader(header);
+	        }
+	    }
     }
 }

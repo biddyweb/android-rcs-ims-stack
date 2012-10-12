@@ -1618,7 +1618,7 @@ public class RcsSettings {
      * @return SIP trace file
      */
     public String getSipTraceFile() {
-        String result = "/sdcard/sip.txt";
+        String result = Environment.getExternalStorageDirectory().getPath() + "sip.txt";
         if (instance != null) {
             try {
                 result = readParameter(RcsSettingsData.SIP_TRACE_FILE);
@@ -2150,4 +2150,102 @@ public class RcsSettings {
     		e.printStackTrace();
     	}
     }
+    
+	/**
+	 * Get the root directory for photos
+	 * 
+	 *  @return Directory path
+	 */
+	public String getPhotoRootDirectory() {
+        String result = Environment.getExternalStorageDirectory().toString();
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS);
+        }
+        return result;
+	}
+
+	/**
+	 * Set the root directory for photos
+	 * 
+	 *  @param path Directory path
+	 */
+	public void setPhotoRootDirectory(String path) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS, path);
+        }
+	}
+
+	/**
+	 * Get the root directory for videos
+	 * 
+	 *  @return Directory path
+	 */
+	public String getVideoRootDirectory() {
+        String result = Environment.getExternalStorageDirectory().toString();
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.DIRECTORY_PATH_VIDEOS);
+        }
+        return result;
+	}
+	
+	/**
+	 * Set the root directory for videos
+	 * 
+	 *  @param path Directory path
+	 */
+	public void setVideoRootDirectory(String path) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.DIRECTORY_PATH_VIDEOS, path);
+        }
+	}
+	
+	/**
+	 * Get the root directory for files
+	 * 
+	 *  @return Directory path
+	 */
+	public String getFileRootDirectory() {	
+        String result = Environment.getExternalStorageDirectory().toString();
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.DIRECTORY_PATH_FILES);
+        }
+        return result;
+	}
+    
+	/**
+	 * Set the root directory for files
+	 * 
+	 *  @param path Directory path
+	 */
+	public void setFileRootDirectory(String path) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.DIRECTORY_PATH_FILES, path);
+        }
+	}
+	
+	/**
+	 * Is secure MSRP media over Wi-Fi
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isSecureMsrpOverWifi() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.SECURE_MSRP_OVER_WIFI));
+        }
+        return result;
+	}
+
+	/**
+	 * Is secure RTP media over Wi-Fi
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isSecureRtpOverWifi() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI));
+        }
+        return result;
+	}
 }

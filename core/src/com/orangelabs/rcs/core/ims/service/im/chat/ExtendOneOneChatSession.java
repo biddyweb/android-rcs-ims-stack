@@ -20,24 +20,17 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Vector;
 
 import javax2.sip.header.RequireHeader;
 
@@ -186,264 +179,45 @@ public class ExtendOneOneChatSession extends GroupChatSession {
         return invite;
 	}
 
-	/**
-	 * Send INVITE message
-	 * 
-	 * @param invite SIP INVITE
-	 * @throws SipException
-	 */
-	private void sendInvite(SipRequest invite) throws SipException {
-		// Send INVITE request
-		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(invite);
-		
-        // Wait response
-        ctx.waitResponse(getResponseTimeout());
+    /**
+     * Create an INVITE request
+     *
+     * @return the INVITE request
+     * @throws SipException 
+     */
+    public SipRequest createInvite() throws SipException {
+        return createInviteRequest(getDialogPath().getLocalContent());
+    }
 
-		// Analyze the received response 
-        if (ctx.isSipResponse()) {
-        	// A response has been received
-            if (ctx.getStatusCode() == 200) {
-            	// 200 OK
-            	handle200OK(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 407) {
-            	// 407 Proxy Authentication Required
-            	handle407Authentication(ctx.getSipResponse());
-            } else
-            if (ctx.getStatusCode() == 422) {
-            	// 422 Session Interval Too Small
-            	handle422SessionTooSmall(ctx.getSipResponse());
-            } else
-            if ((ctx.getStatusCode() == 486) || (ctx.getStatusCode() == 480)) {
-            	// 486 busy or 480 Temporarily Unavailable 
-            	handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED,
-    					ctx.getReasonPhrase()));
-            } else
-            if (ctx.getStatusCode() == 487) {
-            	// 487 Invitation cancelled
-            	handleError(new ChatError(ChatError.SESSION_INITIATION_CANCELLED,
-    					ctx.getReasonPhrase()));
-            } else {
-            	// Other error response
-    			handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED,
-    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
-            }
-        } else {
-    		if (logger.isActivated()) {
-        		logger.debug("No response received for INVITE");
-        	}
+    /**
+     * Start media session
+     * @throws Exception 
+     */
+    public void startMediaSession() throws Exception {
+        super.startMediaSession();
 
-    		// No response received: timeout
-        	handleError(new ChatError(ChatError.SESSION_INITIATION_FAILED));
+        // Notify 1-1 session listeners
+        for(int i=0; i < oneoneSession.getListeners().size(); i++) {
+            ((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantSuccessful();
         }
-	}	
-
-	/**
-	 * Handle 200 0K response 
-	 * 
-	 * @param resp 200 OK response
-	 */
-	public void handle200OK(SipResponse resp) {
-		try {
-	        // 200 OK received
-			if (logger.isActivated()) {
-				logger.info("200 OK response received");
-			}
-
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
-
-	        // Set the remote tag
-	        getDialogPath().setRemoteTag(resp.getToTag());
         
-	        // Set the target
-	        getDialogPath().setTarget(resp.getContactURI());
-	
-	        // Set the route path with the Record-Route header
-	        Vector<String> newRoute = SipUtils.routeProcessing(resp, true);
-			getDialogPath().setRoute(newRoute);
-			
-	        // Set the remote SDP part
-	        getDialogPath().setRemoteContent(resp.getContent());
-	        
-	        // Parse the remote SDP part
-        	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-        	Vector<MediaDescription> media = parser.getMediaDescriptions();
-    		MediaDescription mediaDesc = media.elementAt(0);
-    		MediaAttribute attr = mediaDesc.getMediaAttribute("path");
-    		String remoteMsrpPath = attr.getValue();
-    		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
-    		int remotePort = mediaDesc.port;
+        // Notify listener
+        getImsService().getImsModule().getCore().getListener().handleOneOneChatSessionExtended(this, oneoneSession);
+    }
 
-	        // Send ACK request
-	        if (logger.isActivated()) {
-	        	logger.info("Send ACK");
-	        }
-	        getImsService().getImsModule().getSipManager().sendSipAck(getDialogPath());
-	        
-        	// The session is established
-	        getDialogPath().sessionEstablished();
-
-        	// Create the MSRP session
-			MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
-			session.setFailureReportOption(false);
-			session.setSuccessReportOption(false);
-			
-			// Open the MSRP session
-			getMsrpMgr().openMsrpSession();
-			
-	        // Send an empty packet
-        	sendEmptyDataChunk();
-        	
-			// Notify 1-1 session listeners
-	    	for(int i=0; i < oneoneSession.getListeners().size(); i++) {
-	    		((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantSuccessful();
-			}
-	        
-			// Notify listener
-			getImsService().getImsModule().getCore().getListener().handleOneOneChatSessionExtended(this, oneoneSession);
-			
-			// Notify listeners
-	    	for(int i=0; i < getListeners().size(); i++) {
-	    		getListeners().get(i).handleSessionStarted();
-	        }
-
-	    	// Subscribe to event package
-        	getConferenceEventSubscriber().subscribe();
-
-        	// Start session timer
-        	if (getSessionTimerManager().isSessionTimerActivated(resp)) {
-        		getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
-        	}
-			
-			// Start the activity manager
-			getActivityManager().start();
-	    	
-		} catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Session initiation has failed", e);
-        	}
-
-        	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
+    /**
+     * Handle error
+     * 
+     * @param error Error
+     */
+    public void handleError(ImsServiceError error) {
+        // Notify 1-1 session listeners
+        for (int i = 0; i < oneoneSession.getListeners().size(); i++) {
+            ((ChatSessionListener) oneoneSession.getListeners().get(i))
+                    .handleAddParticipantFailed(error.getMessage());
         }
-	}
-	
-	/**
-	 * Handle 407 Proxy Authentication Required 
-	 * 
-	 * @param resp 407 response
-	 */
-	public void handle407Authentication(SipResponse resp) {
-		try {
-	        if (logger.isActivated()) {
-	        	logger.info("407 response received");
-	        }
-	
-	        // Set the remote tag
-	        getDialogPath().setRemoteTag(resp.getToTag());
-	
-	        // Update the authentication agent
-	    	getAuthenticationAgent().readProxyAuthenticateHeader(resp);            
-	
-	        // Increment the Cseq number of the dialog path
-	        getDialogPath().incrementCseq();
-	
-	        // Create a second INVITE request with the right token
-	        if (logger.isActivated()) {
-	        	logger.info("Send second INVITE");
-	        }
-	        SipRequest invite = createInviteRequest(getDialogPath().getLocalContent());
-	               
-	        // Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-	        
-	        // Set the Proxy-Authorization header
-	        getAuthenticationAgent().setProxyAuthorizationHeader(invite);
-	
-	        // Send INVITE request
-	        sendInvite(invite);
-	        
-        } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Session initiation has failed", e);
-        	}
 
-        	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
-        }
-	}
-
-	/**
-	 * Handle 422 response 
-	 * 
-	 * @param resp 422 response
-	 */
-	private void handle422SessionTooSmall(SipResponse resp) {
-		try {
-			// 422 response received
-	    	if (logger.isActivated()) {
-	    		logger.info("422 response received");
-	    	}
-	
-	        // Extract the Min-SE value
-	        int minExpire = SipUtils.getMinSessionExpirePeriod(resp);
-	        if (minExpire == -1) {
-	            if (logger.isActivated()) {
-	            	logger.error("Can't read the Min-SE value");
-	            }
-	        	handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, "No Min-SE value found"));
-	        	return;
-	        }
-	        
-	        // Set the min expire value
-	        getDialogPath().setMinSessionExpireTime(minExpire);
-
-	        // Set the expire value
-	        getDialogPath().setSessionExpireTime(minExpire);
-	
-	        // Increment the Cseq number of the dialog path
-	        getDialogPath().incrementCseq();
-
-	        // Create a new INVITE with the right expire period
-	        if (logger.isActivated()) {
-	        	logger.info("Send new INVITE");
-	        }
-	        SipRequest invite = createInviteRequest(getDialogPath().getLocalContent());
-
-	        // Set the Authorization header
-	        getAuthenticationAgent().setAuthorizationHeader(invite);
-
-	        // Reset initial request in the dialog path
-	        getDialogPath().setInvite(invite);
-	        
-	        // Send INVITE request
-	        sendInvite(invite);
-	        
-	    } catch(Exception e) {
-	    	if (logger.isActivated()) {
-	    		logger.error("Session initiation has failed", e);
-	    	}
-	
-	    	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
-	    }
-	}
-	
-	/**
-	 * Handle error 
-	 * 
-	 * @param error Error
-	 */
-	public void handleError(ChatError error) {
-		// Notify 1-1 session listeners
-    	for(int i=0; i < oneoneSession.getListeners().size(); i++) {
-    		((ChatSessionListener)oneoneSession.getListeners().get(i)).handleAddParticipantFailed(error.getMessage());
-		}
-	    
-	    // Error
-	    super.handleError(error);
-	}	
+        // Error
+        super.handleError(error);
+    }
 }

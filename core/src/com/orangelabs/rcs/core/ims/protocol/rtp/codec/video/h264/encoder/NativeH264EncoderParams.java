@@ -21,7 +21,7 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder;
 /**
  * H264 Encoder settings
  *
- * @author Deutsche Telekom
+ * @author Deutsche Telekom AG
  */
 public class NativeH264EncoderParams {
 

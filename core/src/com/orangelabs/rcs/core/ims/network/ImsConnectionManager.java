@@ -42,8 +42,9 @@ import java.util.Random;
 
 /**
  * IMS connection manager
- * 
+ *
  * @author JM. Auffret
+ * @author Deutsche Telekom
  */
 public class ImsConnectionManager implements Runnable {
 	/**
@@ -67,9 +68,9 @@ public class ImsConnectionManager implements Runnable {
     private Thread imsPollingThread = null;
 
     /**
-     * IMS activation flag
+     * IMS polling thread Id
      */
-    private boolean imsActivationFlag = false;
+    private long imsPollingThreadID = -1;
 
     /**
      * Connectivity manager
@@ -159,6 +160,32 @@ public class ImsConnectionManager implements Runnable {
 	}
 	
 	/**
+     * Is connected to Wi-Fi
+     * 
+     * @return Boolean
+     */
+	public boolean isConnectedToWifi() {
+		if (currentNetworkInterface == getWifiNetworkInterface()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+     * Is connected to mobile
+     * 
+     * @return Boolean
+     */
+	public boolean isConnectedToMobile() {
+		if (currentNetworkInterface == getMobileNetworkInterface()) {
+			return true;
+		} else {
+			return false;
+		}
+	}	
+	
+	/**
 	 * Load the user profile associated to the network interface
 	 */
 	private void loadUserProfile() {
@@ -239,9 +266,9 @@ public class ImsConnectionManager implements Runnable {
             }
 
 			// Get the current local IP address
-			String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress();
+			String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(networkInfo.getType());
 			if (logger.isActivated()) {
-				logger.debug("Local IP address is " + localIpAddr);
+				logger.debug("Local IP address for interface " + networkInfo.getTypeName() + " is " + localIpAddr);
 			}   				
 
 			// Check if the network access type has changed 
@@ -401,7 +428,7 @@ public class ImsConnectionManager implements Runnable {
 	 * Start the IMS connection
 	 */
 	private synchronized void startImsConnection() {
-		if (imsActivationFlag) {
+		if (imsPollingThreadID >= 0) {
 			// Already connected
 			return;
 		}
@@ -410,11 +437,11 @@ public class ImsConnectionManager implements Runnable {
     	if (logger.isActivated()) {
     		logger.info("Start the IMS connection manager");
     	}
-		imsActivationFlag = true;
-    	
-		// Start background polling thread
+
+    	// Start background polling thread
 		try {
 			imsPollingThread = new Thread(this);
+            imsPollingThreadID = imsPollingThread.getId();
 			imsPollingThread.start();
 		} catch(Exception e) {
 			if (logger.isActivated()) {
@@ -427,7 +454,7 @@ public class ImsConnectionManager implements Runnable {
 	 * Stop the IMS connection
 	 */
 	private synchronized void stopImsConnection() {
-		if (!imsActivationFlag) {
+		if (imsPollingThreadID == -1) {
 			// Already disconnected
 			return;
 		}
@@ -436,7 +463,7 @@ public class ImsConnectionManager implements Runnable {
 		if (logger.isActivated()) {
     		logger.info("Stop the IMS connection manager");
     	}
-		imsActivationFlag = false;
+        imsPollingThreadID = -1;
 
     	// Stop background polling thread
 		try {
@@ -466,7 +493,7 @@ public class ImsConnectionManager implements Runnable {
 		Random random = new Random();
 		int nbFailures = 0;
 
-		while(imsActivationFlag) {
+        while (imsPollingThreadID == Thread.currentThread().getId()) {
 	    	if (logger.isActivated()) {
 	    		logger.debug("Polling: check IMS connection");
 	    	}
@@ -510,6 +537,13 @@ public class ImsConnectionManager implements Runnable {
 		    	}
 			}
 
+            // InterruptedException thrown by stopImsConnection() may be caught by one
+            // of the methods used in currentNetworkInterface.register() above
+            if (imsPollingThreadID != Thread.currentThread().getId()) {
+                logger.debug("IMS connection polling thread race condition");
+                break;
+            }
+
 			// Make a pause before the next polling
 	    	try {
     			if (!currentNetworkInterface.isRegistered()) {
@@ -527,7 +561,7 @@ public class ImsConnectionManager implements Runnable {
 	    		}
             } catch(InterruptedException e) {
                 break;
-            }		    	
+            }
 		}
 
 		if (logger.isActivated()) {

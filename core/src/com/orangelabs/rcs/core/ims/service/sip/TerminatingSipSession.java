@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.sip;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -97,8 +96,14 @@ public class TerminatingSipSession extends GenericSipSession {
     	    		getListeners().get(j).handleSessionAborted();
 		        }
 				return;
-			}
-			
+			} else
+            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been canceled");
+                }
+                return;
+            }
+
             // Check if a local SDP has been set
             if (getLocalSdp() == null) {
                 handleError(new SipSessionError(SipSessionError.SDP_NOT_INITIALIZED));
@@ -119,14 +124,11 @@ public class TerminatingSipSession extends GenericSipSession {
 	        		new String [] { getFeatureTag() },
 					getLocalSdp());
 
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
 	        // Send response
 	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
-
-			// Wait response
-			ctx.waitResponse(SipManager.TIMEOUT);
 
 			// Analyze the received response 
 			if (ctx.isSipAck()) {
@@ -163,38 +165,7 @@ public class TerminatingSipSession extends GenericSipSession {
         	// Unexpected error
 			handleError(new SipSessionError(SipSessionError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
-		}		
-	}
-
-	/**
-	 * Handle error 
-	 * 
-	 * @param error Error
-	 */
-	public void handleError(SipSessionError error) {
-        // Error	
-    	if (logger.isActivated()) {
-    		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
-    	}
-
-    	// Close media session
-    	closeMediaSession();
-      
-    	// Remove the current session
-    	getImsService().removeSession(this);
-
-		// Notify listeners
-    	if (!isInterrupted()) {
-	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((SipSessionListener)getListeners().get(j)).handleSessionError(error);
-	    	}
-    	}
-	}
-
-	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
+		}
 	}
 }
 

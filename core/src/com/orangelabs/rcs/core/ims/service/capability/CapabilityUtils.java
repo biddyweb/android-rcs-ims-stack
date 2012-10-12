@@ -193,7 +193,7 @@ public class CapabilityUtils {
     	            String[] types = attr.getValue().split(" ");
     	            for(int j = 0; j < types.length; j++) {
     	            	String fmt = types[j];
-    	            	if (MimeManager.isMimeTypeSupported(fmt)) {
+    	            	if ((fmt != null) && MimeManager.isMimeTypeSupported(fmt)) { // Changed by Deutsche Telekom AG
     	            		imgFormats.addElement(fmt);
     	            	}
     	    		}

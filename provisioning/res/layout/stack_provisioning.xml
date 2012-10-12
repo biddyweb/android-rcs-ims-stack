@@ -96,18 +96,48 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
 
-       	<TextView android:text="SIP timer base (milliseconds):"
+       	<TextView android:text="SIP timer base T1 (milliseconds):"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
-		<EditText android:id="@+id/SipTimer"
+		<EditText android:id="@+id/SipTimerT1"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
 
-       	<TextView android:text="SIP keep-alive period (seconds):"
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="5dip"
+            android:text="SIP timer T2 (milliseconds):" />
+        <EditText
+            android:id="@+id/SipTimerT2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:inputType="number"
+            android:lines="1"
+            android:maxLength="5" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="5dip"
+            android:text="SIP timer T4 (milliseconds):" />
+        <EditText
+            android:id="@+id/SipTimerT4"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:inputType="number"
+            android:lines="1"
+            android:maxLength="5" />
+
+		<TextView android:text="SIP keep-alive period (seconds):"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
@@ -342,6 +372,22 @@
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
         android:text="CPU Always on"/>
+
+        <CheckBox android:id="@+id/SecureMsrpOverWifi"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="Secure MSRP over Wi-Fi access"
+        android:enabled="false"/>
+
+        <CheckBox android:id="@+id/SecureRtpOverWifi"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="Secure RTP over Wi-Fi access"
+        android:enabled="false"/>
 </LinearLayout>
 
 </ScrollView>

@@ -22,6 +22,8 @@ public interface Transaction extends Serializable {
     int getRetransmitTimer() throws UnsupportedOperationException;
     void setRetransmitTimer(int retransmitTimer)
             throws UnsupportedOperationException;
+    void setRetransmitTimers(int timer_T1, int timer_T2, int timer_T4)
+            throws UnsupportedOperationException; 	// Bug fix OrangeLabs, JOGUET Benoit
 
     void terminate() throws ObjectInUseException;
 }

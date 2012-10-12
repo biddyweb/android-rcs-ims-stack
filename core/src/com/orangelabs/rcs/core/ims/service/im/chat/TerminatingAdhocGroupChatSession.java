@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -128,7 +127,13 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
         	    		getListeners().get(i).handleSessionAborted();
     		        }
     				return;
-    			}
+    			} else
+                if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                    if (logger.isActivated()) {
+                        logger.debug("Session has been canceled");
+                    }
+                    return;
+                }
             }
 
 			// Extract the SDP part
@@ -245,15 +250,12 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
             		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
 
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
 	        // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-    		
-	        // The signalisation is established
-	        getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
-            
             // Analyze the received response 
             if (ctx.isSipAck()) {
     	        // ACK received
@@ -311,5 +313,5 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
 					e.getMessage()));
 		}		
-	}	
+	}
 }

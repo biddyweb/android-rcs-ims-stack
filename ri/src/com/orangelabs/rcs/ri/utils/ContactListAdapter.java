@@ -18,23 +18,22 @@
 
 package com.orangelabs.rcs.ri.utils;
 
-import com.orangelabs.rcs.ri.R;
-
 import android.content.Context;
 import android.database.Cursor;
-import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.Contacts;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
-import android.widget.Filterable;
 import android.widget.TextView;
+
+import com.orangelabs.rcs.ri.R;
 
 /**
  * Contact list adapter 
  */
-public class ContactListAdapter extends CursorAdapter implements Filterable {
+public class ContactListAdapter extends CursorAdapter {
 	
 	/**
 	 * Constructor
@@ -50,16 +49,14 @@ public class ContactListAdapter extends CursorAdapter implements Filterable {
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         LayoutInflater inflater = LayoutInflater.from(context);
         TextView view = (TextView) inflater.inflate(R.layout.utils_spinner_item, parent, false);
-        view.setText(formatText(context, cursor));
         return view;
     }
     
     @Override
     public View newDropDownView(Context context, Cursor cursor, ViewGroup parent) {
-    	 LayoutInflater inflater = LayoutInflater.from(context);
-    	 TextView view = (TextView) inflater.inflate(android.R.layout.simple_dropdown_item_1line, parent, false);
-         view.setText(formatText(context, cursor));
-    	return view;
+		LayoutInflater inflater = LayoutInflater.from(context);
+		TextView view = (TextView) inflater.inflate(android.R.layout.simple_dropdown_item_1line, parent, false);
+		return view;
     }
 
     @Override
@@ -68,14 +65,14 @@ public class ContactListAdapter extends CursorAdapter implements Filterable {
     }
     
     /**
-     * Format the item to be displayed
+     * Format the item to be displayed. The user name + label is displayed if not null,
+     * else the phone number is used
      * 
      * @param context Context
      * @param c Cursor
      * @return String
      */
     private String formatText(Context context, Cursor c) {
-    	// The user name + label is displayed if not null, else the phone number is used
     	// Get phone label
     	String label = c.getString(2);
     	if (label==null){
@@ -85,6 +82,7 @@ public class ContactListAdapter extends CursorAdapter implements Filterable {
 		}
     	
     	String name = null;
+    	
     	// Get contact name from contact id
     	Cursor personCursor = context.getContentResolver().query(Contacts.CONTENT_URI, 
     			new String[]{Contacts.DISPLAY_NAME}, 

@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.service.im.chat.standfw;
 import java.io.IOException;
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -35,15 +34,17 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatActivityManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -53,7 +54,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession implements MsrpEventListener {
+public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession implements MsrpEventListener {
 	/**
 	 * MSRP manager
 	 */
@@ -82,6 +83,9 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+		if (parent.getImsModule().isConnectedToWifiAccess()) {
+			msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
+		}
 		
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -189,15 +193,12 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
             		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
 
+            // The signalisation is established
+            getDialogPath().sigEstablished();
+
             // Send response
             SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
-    		
-            // The signalisation is established
-	        getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
-            
             // Analyze the received response 
             if (ctx.isSipAck()) {
     	        // ACK received
@@ -281,7 +282,7 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
 	 * 
 	 * @param error Error
 	 */
-	public void handleError(ChatError error) {
+	public void handleError(ImsServiceError error) {
         // Error	
     	if (logger.isActivated()) {
     		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
@@ -413,5 +414,5 @@ public class TerminatingStoreAndForwardNotifSession extends ImsServiceSession im
     			logger.error("Can't parse IMDN document", e);
     		}
     	}
-    }	
+    }
 }

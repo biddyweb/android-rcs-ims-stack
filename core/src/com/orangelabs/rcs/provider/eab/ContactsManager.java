@@ -62,7 +62,7 @@ import java.util.List;
  * Contains utility methods for interfacing with the Android SDK ContactsProvider.
  * 
  * @author jexa7410
- * @author Deutsche Telekom
+ * @author Deutsche Telekom AG
  */
 public final class ContactsManager {
 

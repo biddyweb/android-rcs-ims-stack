@@ -96,7 +96,12 @@ public class SipDialogPath {
 	 * Remote content
 	 */
 	private String remoteContent = null;
-	
+
+    /**
+     * Remote sip instance
+     */
+    private String remoteSipInstance = null;
+
 	/**
 	 * Route path
 	 */
@@ -314,6 +319,24 @@ public class SipDialogPath {
 	public void setLocalContent(String local) {
 		this.localContent = local;
 	}
+
+    /**
+     * Returns the remote SIP instance ID
+     *
+     * @return String
+     */
+    public String getRemoteSipInstance() {
+        return remoteSipInstance;
+    }
+
+    /**
+     * Sets the remote SIP instance ID
+     *
+     * @param instanceId SIP instance ID
+     */
+    public void setRemoteSipInstance(String instanceId) {
+        this.remoteSipInstance = instanceId;
+    }
 
 	/**
 	 * Sets the remote content

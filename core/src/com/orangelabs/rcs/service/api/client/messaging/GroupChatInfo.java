@@ -41,7 +41,7 @@ public class GroupChatInfo {
 	private String contributionId;
 	
 	/**
-	 * List of participoants
+	 * List of initial participants
 	 */
 	private List<String> participants;
 	

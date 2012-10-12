@@ -76,7 +76,7 @@ public class InitiateFileTransfer extends Activity {
 	private String filename;
 	
 	/**
-	 * Selected filesize
+	 * Selected filesize (kB)
 	 */
 	private long filesize = -1;
 	
@@ -98,6 +98,8 @@ public class InitiateFileTransfer extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        RcsSettings.createInstance(getApplicationContext());
 
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -170,7 +172,7 @@ public class InitiateFileTransfer extends Activity {
      */
     private OnClickListener btnInviteListener = new OnClickListener() {
         public void onClick(View v) {
-            if (filesize >= (RcsSettings.getInstance().getWarningMaxFileTransferSize()*1024)) {
+            if (filesize >= (RcsSettings.getInstance().getWarningMaxFileTransferSize())) {
 				// Display a warning message
             	AlertDialog.Builder builder = new AlertDialog.Builder(InitiateFileTransfer.this);
             	builder.setMessage(getString(R.string.label_sharing_warn_size, filesize));

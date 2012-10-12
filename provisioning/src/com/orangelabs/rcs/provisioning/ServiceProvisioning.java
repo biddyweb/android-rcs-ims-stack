@@ -99,6 +99,15 @@ public class ServiceProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES));
 
+        txt = (EditText)this.findViewById(R.id.DirectoryPathPhotos);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS));
+
+        txt = (EditText)this.findViewById(R.id.DirectoryPathVideos);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.DIRECTORY_PATH_VIDEOS));
+
+        txt = (EditText)this.findViewById(R.id.DirectoryPathFiles);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.DIRECTORY_PATH_FILES));
+
         Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -177,6 +186,15 @@ public class ServiceProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES, txt.getText().toString());
 				
+		        txt = (EditText)this.findViewById(R.id.DirectoryPathPhotos);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.DirectoryPathVideos);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.DIRECTORY_PATH_VIDEOS, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.DirectoryPathFiles);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.DIRECTORY_PATH_FILES, txt.getText().toString());
+
 				Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 				if (spinner.getSelectedItemId() == 0) {
 					RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "1");

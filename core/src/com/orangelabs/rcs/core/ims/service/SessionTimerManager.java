@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.service;
 import javax2.sip.Dialog;
 
 import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
@@ -208,11 +207,8 @@ public class SessionTimerManager extends PeriodicRefresher {
         }
         // Send RE-INVITE request
         SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager()
-                .sendSipMessageAndWait(reInvite);
+                .sendSipMessageAndWait(reInvite, session.getResponseTimeout());
 
-        // Wait response
-        ctx.waitResponse(session.getResponseTimeout());
- 
         // Analyze the received response
         if (ctx.isSipResponse()) {
             // A response has been received
@@ -345,13 +341,12 @@ public class SessionTimerManager extends PeriodicRefresher {
                 logger.debug("Send 200 OK");
             }
             SipResponse resp = SipMessageFactory.create200OkReInviteResponse(session.getDialogPath(), reInvite);
-            SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
 
             // The signalisation is established
             session.getDialogPath().sigEstablished();
 
-            // Wait response
-            ctx.waitResponse(SipManager.TIMEOUT);
+            // Send response
+            SipTransactionContext ctx = session.getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
 
             // Analyze the received response 
             if (ctx.isSipAck()) {

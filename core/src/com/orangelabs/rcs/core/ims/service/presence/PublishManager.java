@@ -24,7 +24,6 @@ import javax2.sip.header.ExpiresHeader;
 import javax2.sip.header.SIPETagHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
@@ -257,12 +256,6 @@ public class PublishManager extends PeriodicRefresher {
         // Send PUBLISH request
         SipTransactionContext ctx = imsModule.getSipManager().sendSipMessageAndWait(publish);
 
-        // Wait response
-        if (logger.isActivated()) {
-        	logger.info("Wait response");
-        }
-        ctx.waitResponse(SipManager.TIMEOUT);
-        
         // Analyze the received response 
         if (ctx.isSipResponse()) {
         	// A response has been received
