@@ -17,6 +17,8 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.util.UUID;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -24,13 +26,13 @@ import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.utils.DeviceUtils;
 
 /**
- * Contribution ID generator
+ * Contribution ID generator based on RFC draft-kaplan-dispatch-session-id-03
  * 
  * @author jexa7410
  */
 public class ContributionIdGenerator {
 	/**
-     * Secret Key
+     * Secret key
      */
     private static byte[] secretKey = generateSecretKey();
 
@@ -39,7 +41,14 @@ public class ContributionIdGenerator {
      */
     private static byte[] generateSecretKey() {
         // Get device ID
-        byte[] key = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext()).toString().getBytes();
+    	UUID uuid = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext());
+    	byte[] key;
+    	if (uuid != null) {
+            key = uuid.toString().getBytes();
+    	} else {
+    		String t = "" + System.currentTimeMillis(); 
+            key = t.getBytes();
+    	}
 
         // Keep only 128 bits
         byte[] secretKey = new byte[16];

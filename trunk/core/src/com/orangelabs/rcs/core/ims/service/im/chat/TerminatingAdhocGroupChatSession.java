@@ -199,7 +199,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
 	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +

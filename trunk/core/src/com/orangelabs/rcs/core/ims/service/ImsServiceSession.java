@@ -32,8 +32,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.IdGenerator;
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -138,7 +136,7 @@ public abstract class ImsServiceSession extends Thread {
     			callId,
 				1,
 				getRemoteContact(),
-				ImsModule.IMS_USER_PROFILE.getPublicUri(),
+				ImsModule.IMS_USER_PROFILE.getPublicAddress(),
 				getRemoteContact(),
 				route);
     	
@@ -287,14 +285,7 @@ public abstract class ImsServiceSession extends Thread {
 	 * @return String
 	 */
 	public String getRemoteDisplayName() {
-		String displayName = null;
-		try {
-			String from = getDialogPath().getInvite().getFrom();
-			displayName = PhoneUtils.extractDisplayNameFromUri(from);
-		} catch(Exception e) {
-			displayName = null;
-		}
-		return displayName;
+		return SipUtils.getDisplayNameFromUri(getDialogPath().getInvite().getFrom());
 	}
 
 	/**
@@ -545,7 +536,8 @@ public abstract class ImsServiceSession extends Thread {
 	    	if (logger.isActivated()) {
 	    		logger.info("Send 487 Request terminated");
 	    	}
-	        SipResponse terminatedResp = SipMessageFactory.createResponse(getDialogPath().getInvite(), IdGenerator.getIdentifier(), 487);
+	        SipResponse terminatedResp = SipMessageFactory.createResponse(getDialogPath().getInvite(),
+	        		getDialogPath().getLocalTag(), 487);
 	        getImsService().getImsModule().getSipManager().sendSipResponse(terminatedResp);
 		} catch(Exception e) {
 	    	if (logger.isActivated()) {
@@ -558,6 +550,11 @@ public abstract class ImsServiceSession extends Thread {
 
         // Set invitation status
         invitationStatus = ImsServiceSession.INVITATION_CANCELED;
+
+        // Unblock semaphore
+        synchronized(waitUserAnswer) {
+            waitUserAnswer.notifyAll();
+        }
 
 		// Notify listeners
     	for(int i=0; i < getListeners().size(); i++) {

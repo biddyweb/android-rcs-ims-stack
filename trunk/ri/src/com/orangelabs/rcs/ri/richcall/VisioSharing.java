@@ -409,8 +409,13 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     @Override
     public void onPause() {
         super.onPause();
+        
         // Unregister intent receiver
-        unregisterReceiver(sharingIntentReceiver);
+        try {
+        	unregisterReceiver(sharingIntentReceiver);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
     }
 
     @Override

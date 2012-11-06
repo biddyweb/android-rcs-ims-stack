@@ -41,11 +41,13 @@ import javax2.sip.message.Message;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.utils.StringUtils;
 
 /**
  * SIP message
  * 
  * @author jexa7410
+ * @author Deutsche Telekom AG
  */
 public abstract class SipMessage {
 	
@@ -266,7 +268,12 @@ public abstract class SipMessage {
 	public String getBoundaryContentType() {
 		ContentTypeHeader header = (ContentTypeHeader)stackMessage.getHeader(ContentTypeHeader.NAME);
 		if (header != null) {
-			return header.getParameter("boundary");
+            String value = header.getParameter("boundary");
+            if (value != null) {
+            	// Remove quotes
+                value = StringUtils.removeQuotes(value);
+            }
+            return value;
 		} else {
 			return null;
 		}
@@ -321,45 +328,84 @@ public abstract class SipMessage {
 	 */
 	public ArrayList<String> getFeatureTags() {
 		ArrayList<String> tags = new ArrayList<String>();
+		ArrayList<String> temp = new ArrayList<String>();
 		
 		// Read Contact header
 		ContactHeader contactHeader = (ContactHeader)stackMessage.getHeader(ContactHeader.NAME);
 		if (contactHeader != null) {
-	        for(Iterator i = contactHeader.getParameterNames(); i.hasNext();) {
+			// Extract header parameters
+	        for(Iterator<?> i = contactHeader.getParameterNames(); i.hasNext();) {
+	        	// Extract parameter name & value 
 	        	String pname = (String)i.next();
-	        	String value = contactHeader.getParameter(pname);
-        		if ((value == null) || (value.length() == 0)) {
-        			tags.add(pname);	        		
+	        	String pvalue = contactHeader.getParameter(pname);
+        		if ((pvalue == null) || (pvalue.length() == 0)) {
+					// Add single parameter
+        			temp.add(pname);
 	        	} else {
-		        	String[] values = value.split(",");
+	        		// Add pair parameters
+		        	String[] values = pvalue.split(",");
 		        	for(int j=0; j < values.length; j++) {
 		        		String tag = values[j].trim();
-		        		if (!tags.contains(tag)){
-		        			tags.add(tag);
-		        		}
+	        			temp.add(pname + "=\"" + tag + "\"");
 		        	}
 	        	}
 	        }
 		}
-		
-		// Read Accept-Contact header
-		ExtensionHeader acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
-		if (acceptHeader == null) {
-			// Check contracted form
-			acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
-		}
-		if (acceptHeader != null) {
-			String[] pnames = acceptHeader.getValue().split(";");
-			if (pnames.length > 1) {
-				// Start at index 1 to bypass the address
-				for(int i=1; i < pnames.length; i++) {
-					if (!tags.contains(pnames[i])){
-						tags.add(pnames[i]);
-					}
-				}
+
+        // Read Accept-Contact header
+        ExtensionHeader acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+        if (acceptHeader == null) {
+            // Check contracted form
+            acceptHeader = (ExtensionHeader)stackMessage.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
+        }
+
+        if (acceptHeader != null) {
+			// Extract header parameters
+            String acceptHeaderValue = acceptHeader.getValue();
+            String[] parameters = acceptHeaderValue.split(";");
+            for (int i = 0; i < parameters.length; i++) {
+	        	// Extract parameter name & value 
+                String[] param = parameters[i].split("=");
+                String pname = param[0];
+                String pvalue = null;
+                if (param.length == 2){
+                    pvalue = param[1];
+                }
+                if ((pvalue == null) || (pvalue.length() == 0)) {
+					// Add single parameter
+                    temp.add(pname);
+                } else {
+					// Add pair parameter
+                	pvalue = pvalue.replace("\"", "");
+		        	String[] values = pvalue.split(",");
+		        	for(int j=0; j < values.length; j++) {
+		        		String tag = values[j].trim();
+	        			temp.add(pname + "=\"" + tag + "\"");
+		        	}
+                }
+            }
+        }
+
+        // Filter results
+        for(int i=0; i < temp.size(); i++) {
+	        String tag = temp.get(i);
+			
+	        // Reject parameter not starting with a +
+			if (!tag.startsWith("+")) {
+				continue;
 			}
-		}		
-		
+
+			// Reject sip.instance parameter
+			if (tag.startsWith(SipUtils.SIP_INSTANCE_PARAM)) {
+				continue;
+			}
+			
+			// Avoid duplicate
+            if (!tags.contains(tag)){
+                tags.add(tag);
+            }
+        }
+        
 		return tags;
 	}
 	

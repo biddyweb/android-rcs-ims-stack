@@ -1003,7 +1003,9 @@ public class ProvisioningParser {
 
                 if (deviceID == null) {
                     if ((deviceID = getValueByParamName("deviceID", childnode)) != null) {
-                        // Not used (only UUID is used)
+                        RcsSettings.getInstance().writeParameter(
+                                RcsSettingsData.USE_IMEI_AS_DEVICE_ID, deviceID.equals("0") ?
+                                RcsSettingsData.TRUE : RcsSettingsData.FALSE);
                         continue;
                     }
                 }

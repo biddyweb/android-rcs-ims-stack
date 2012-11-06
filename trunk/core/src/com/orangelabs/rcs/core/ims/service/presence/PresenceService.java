@@ -751,10 +751,8 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 			// Extract the Etag value in the 200 OK response
 			String etag = response.getHeader("Etag");
 			if (etag != null) {
-				// Removed separators
-				if (etag.startsWith("\"")) {
-					etag = etag.substring(1, etag.length()-1);
-				}
+				// Removed quotes
+				etag = StringUtils.removeQuotes(etag);
 			} else {
 				etag = "" + System.currentTimeMillis();
 			}

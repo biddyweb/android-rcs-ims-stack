@@ -75,12 +75,15 @@ public class SipTermsRequest extends Activity implements ClientApiListener {
         msg.setText(getIntent().getStringExtra("text"));
 		setTitle(getIntent().getStringExtra("title"));
 		id = getIntent().getStringExtra("id");
-		
+
+
 		// Set button callback
         Button acceptBtn = (Button)findViewById(R.id.accept_btn);
         acceptBtn.setEnabled(false);
+        acceptBtn.setText(getIntent().getStringExtra("acceptButtonLabel"));
         acceptBtn.setOnClickListener(acceptBtnListener);
         Button declineBtn = (Button)findViewById(R.id.decline_btn);
+        declineBtn.setText(getIntent().getStringExtra("rejectButtonLabel"));
         declineBtn.setOnClickListener(declineBtnListener);
         declineBtn.setEnabled(false);
         

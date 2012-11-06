@@ -83,10 +83,18 @@ public abstract class ClientApi {
      */
     public void disconnectApi() {
 		// Unregister the broadcast receiver
-    	ctx.unregisterReceiver(imsConnectionReceiver);
+    	try {
+	    	ctx.unregisterReceiver(imsConnectionReceiver);
+	    } catch (IllegalArgumentException e) {
+	    	// Nothing to do
+	    }
 
     	// Disconnect from IMS API
-    	ctx.unbindService(imsApiConnection);
+	    try {
+	    	ctx.unbindService(imsApiConnection);
+		} catch (IllegalArgumentException e) {
+			// Nothing to do
+		}
     }
 	
 	/**

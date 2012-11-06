@@ -29,6 +29,7 @@ import android.widget.TextView;
 
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * EventLog Adapter based on a ResourceCursorAdapter which gets its data from 
@@ -61,7 +62,7 @@ public class SpamBoxResourceCursorAdapter extends ResourceCursorAdapter{
 		ImageView eventIconView = (ImageView) view.findViewById(R.id.call_icon);
 		
 		/* Set the number */
-		String number = cursor.getString(EventsLogApi.CONTACT_COLUMN);
+		String number = PhoneUtils.extractNumberFromUri(cursor.getString(EventsLogApi.CONTACT_COLUMN));
 		numberView.setText(number);
 		numberView.setVisibility(View.VISIBLE);
 		

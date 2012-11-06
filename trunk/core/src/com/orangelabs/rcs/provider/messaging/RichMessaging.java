@@ -45,6 +45,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * Rich messaging history. This content provider removes old messages if there is no enough space.
  * 
  * @author mhsm6403
+ * @author Deutsche Telekom AG
  */
 public class RichMessaging {
 	/**
@@ -494,6 +495,41 @@ public class RichMessaging {
 		c.close();
 	}
 
+    /**
+     * Delete spam message
+     *
+     * @param Message ID
+     */
+    public void deleteSpamMessage(String msgId) {
+        Cursor c = cr.query(databaseUri,
+                new String[]{RichMessagingData.KEY_ID},
+                RichMessagingData.KEY_MESSAGE_ID +" = \""+msgId+"\"" +" AND " + RichMessagingData.KEY_IS_SPAM + " = \"" + EventsLogApi.MESSAGE_IS_SPAM +"\"",
+                null,
+                null);
+        if (c != null) {
+            if (c.moveToFirst()) {
+                long rowId = c.getLong(0);
+                if (logger.isActivated()) {
+                    logger.debug("Deleting spam message { msgId: " + msgId + " }");
+                }
+                deleteEntry(rowId);
+            }
+            c.close();
+        }
+    }
+
+    /**
+     * Clear spam messages for a given contact
+     *
+     * @param contact Contact
+     */
+    public void clearSpamMessages(String contact) {
+        int deletedRows = cr.delete(databaseUri, RichMessagingData.KEY_CONTACT+"= \""+contact+"\"" + " AND " + RichMessagingData.KEY_IS_SPAM + " = \"" + EventsLogApi.MESSAGE_IS_SPAM +"\"", null);
+        if (logger.isActivated()) {
+            logger.debug("Clear spam messages of contact " + contact + ": deleted rows =" + deletedRows);
+        }
+    }
+
 	/**
 	 * Add a new entry (chat event, chat message or file transfer)
 	 * 
@@ -777,7 +813,22 @@ public class RichMessaging {
 			logger.debug("DeleteSession: deleted rows : "+deletedRows);
 		}	
 	}
-	
+
+    /**
+     * Delete a group chat conversation
+     *
+     * @param chatId chat ID
+     */
+    public void deleteGroupChatConversation(String chatId) {
+        // Delete entry
+        int deletedRows = cr.delete(databaseUri,
+                RichMessagingData.KEY_CHAT_ID + "=\"" + chatId + "\"",
+                null);
+        if (logger.isActivated()) {
+            logger.debug("Delete group chat conversation: " + deletedRows + " rows deleted");
+        }
+    }
+
 	/**
 	 * Delete a chat session. If file transfer is enclosed in the session, it will also be deleted.
 	 * 
@@ -922,8 +973,8 @@ public class RichMessaging {
 			// Check if this message has the same sessionID, timestamp and content as the one to be deleted
 			String sessionId = count.getString(count.getColumnIndexOrThrow(RichMessagingData.KEY_CHAT_SESSION_ID));
 			long date = count.getLong(count.getColumnIndexOrThrow(RichMessagingData.KEY_TIMESTAMP));
-			String message = count.getString(count.getColumnIndexOrThrow(RichMessagingData.KEY_DATA));
-			if(sessionId.equals(lastSessionId) && (date == maxDate) && message.equals(c.getString(3))){
+			String message = "" + count.getString(count.getColumnIndexOrThrow(RichMessagingData.KEY_DATA));
+			if(sessionId.equals(lastSessionId) && (date == maxDate) && message.equals("" + c.getString(3))){
 				/* It's the lastest message for this contact, 
 				 * find the previous message for the same contact */
 				if(logger.isActivated()){
@@ -1165,7 +1216,8 @@ public class RichMessaging {
     			},
     			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
     				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT + ")", 
+                    RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + " OR " +
+                    RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED + ")",
     			null, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
     	if (cursor.moveToFirst()) {

@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.network.registration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.UUID;
 import java.util.Vector;
 
 import javax2.sip.header.ContactHeader;
@@ -129,12 +128,9 @@ public class RegistrationManager extends PeriodicRefresher {
         this.featureTags = getAllSupportedFeatureTags();
 
         if (RcsSettings.getInstance().isGruuSupported()) {
-	        UUID uuid = DeviceUtils.getDeviceUUID(AndroidFactory.getApplicationContext());
-	        if (uuid != null) {
-	        	this.instanceId = uuid.toString();
-	        }
+            this.instanceId = DeviceUtils.getInstanceId(AndroidFactory.getApplicationContext());
         }
-        
+
     	int defaultExpirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
     	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
     	if ((minExpireValue != -1) && (defaultExpirePeriod < minExpireValue)) {

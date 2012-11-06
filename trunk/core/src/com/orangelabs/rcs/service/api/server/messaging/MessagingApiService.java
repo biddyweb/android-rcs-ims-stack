@@ -239,7 +239,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     }
     
 	/**
-	 * Get a file transfer session from its session id
+	 * Get current file transfer session from its session id
 	 * 
 	 * @param id Session ID
 	 * @return Session
@@ -261,7 +261,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}
 	
 	/**
-	 * Get list of file transfer sessions with a contact
+	 * Get list of current file transfer sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return List of sessions
@@ -295,7 +295,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}	
 
 	/**
-	 * Get list of file transfer sessions
+	 * Get list of current file transfer sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ServerApiException
@@ -541,7 +541,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}	
 
 	/**
-	 * Get a chat session from its session id
+	 * Get current chat session from its session id
 	 * 
 	 * @param id Session ID
 	 * @return Session
@@ -563,7 +563,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}
 	
 	/**
-	 * Get list of chat sessions with a contact
+	 * Get list of current chat sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return Session
@@ -597,7 +597,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	}
 	
 	/**
-	 * Get list of chat sessions
+	 * Get list of current chat sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ServerApiException
@@ -619,6 +619,77 @@ public class MessagingApiService extends IMessagingApi.Stub {
 				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
 					IChatSession sessionApi = (IChatSession)e.nextElement() ;
 					result.add(sessionApi.asBinder());
+				}
+				return result;
+			} catch(Exception e) {
+				throw new ServerApiException(e.getMessage());
+			}
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
+	}
+
+	/**
+	 * Get list of current group chat sessions
+	 * 
+	 * @return List of sessions
+	 * @throws ServerApiException
+	 */
+	public List<IBinder> getGroupChatSessions() throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get group chat sessions");
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
+		ServerApiUtils.testCore();
+		
+		try {
+			try {
+				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+					IChatSession sessionApi = (IChatSession)e.nextElement() ;
+					if (sessionApi.isGroupChat()) {
+						result.add(sessionApi.asBinder());
+					}
+				}
+				return result;
+			} catch(Exception e) {
+				throw new ServerApiException(e.getMessage());
+			}
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
+	}
+
+	/** 
+	 * Get list of current group chat sessions for a given conversation
+	 * 
+	 * @return List of sessions
+	 * @throws ServerApiException
+	 */
+	public List<IBinder> getGroupChatSessionsWith(String chatId) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Get group chat sessions");
+		}
+
+		// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test core availability
+		ServerApiUtils.testCore();
+		
+		try {
+			try {
+				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+					IChatSession sessionApi = (IChatSession)e.nextElement() ;
+					String id = sessionApi.getChatID(); 
+					if (sessionApi.isGroupChat() && id.equals(chatId)) {
+						result.add(sessionApi.asBinder());
+					}
 				}
 				return result;
 			} catch(Exception e) {

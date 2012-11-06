@@ -101,7 +101,7 @@ public class HttpResponse {
 	}
 
 	/**
-	 * Is a successfull response
+	 * Is a successful response
 	 * 
 	 * @return Boolean
 	 */

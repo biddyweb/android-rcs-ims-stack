@@ -104,7 +104,7 @@ public class RestartGroupChatSession extends GroupChatSession {
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
@@ -112,8 +112,7 @@ public class RestartGroupChatSession extends GroupChatSession {
 	    		"a=sendrecv" + SipUtils.CRLF;
 
 	        // Generate the resource list for given participants
-	        String resourceList =
-	        	ChatUtils.generateChatResourceList(getParticipants().getList());
+	        String resourceList = ChatUtils.generateChatResourceList(getParticipants().getList());
 	    	
 	    	// Build multipart
 	    	String multipart =

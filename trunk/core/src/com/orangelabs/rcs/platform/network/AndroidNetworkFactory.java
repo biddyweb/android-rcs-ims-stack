@@ -82,6 +82,15 @@ public class AndroidNetworkFactory extends NetworkFactory {
 		return new AndroidSocketConnection();
 	}
 
+	/**
+	 * Create a secure socket client connection
+	 * 
+	 * @return Socket connection
+	 */
+	public SocketConnection createSecureSocketClientConnection() {
+		return new AndroidSecureSocketConnection();
+	}
+	
     /**
      * Create a socket server connection
      * 

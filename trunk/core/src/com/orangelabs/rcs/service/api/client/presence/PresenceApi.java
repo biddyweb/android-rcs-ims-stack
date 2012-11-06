@@ -73,7 +73,11 @@ public class PresenceApi extends ClientApi {
     public void disconnectApi() {
     	super.disconnectApi();
 		
-    	ctx.unbindService(apiConnection);
+    	try {
+    		ctx.unbindService(apiConnection);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
     }
 
 	/**

@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.capability;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -113,19 +114,27 @@ public class OptionsManager implements DiscoveryManager {
 	    	return false;
 		}
     }
-    
+
     /**
      * Request capabilities for a list of contacts
-     * 
+     *
      * @param contactList Contact list
      */
 	public void requestCapabilities(List<String> contactList) {
-    	if (logger.isActivated()) {
-    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
-    	}
+        if (contactList == null || contactList.size() == 0) {
+            if (logger.isActivated()) {
+                logger.debug("Invalid request capabilities. No contacts present.");
+            }
+            return;
+        }
 
-    	for (int i=0; i < contactList.size(); i++) {
-			String contact = contactList.get(i);
+        // Remove duplicate values
+        HashSet<String> setContacts = new HashSet<String>(contactList);
+        if (logger.isActivated()) {
+            logger.debug("Request capabilities for " + setContacts.size() + " contacts");
+        }
+
+        for (String contact : setContacts) {
 			if (!requestCapabilities(contact)) {
 		    	if (logger.isActivated()) {
 		    		logger.debug("Processing has been stopped");
@@ -134,8 +143,7 @@ public class OptionsManager implements DiscoveryManager {
 			}
         }
 	}
-    
-    
+
     /**
      * Receive a capability request (options procedure)
      * 

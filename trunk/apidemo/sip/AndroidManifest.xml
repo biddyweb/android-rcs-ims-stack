@@ -38,6 +38,18 @@
 		<activity android:name=".SessionsList" />
 		
 		<activity android:name=".SessionSettings" android:windowSoftInputMode="stateAlwaysHidden"/>		
+
+		<activity android:name=".SendInstantMessage"/>
+
+        <receiver android:name=".InstantMessageReceiver">
+	        <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.sip.INSTANT_MESSAGE" />
+                <data android:mimeType="+g.3gpp.iari-ref/urn%3aurn-7%3a3gpp-application.ims.iari.rcse.orange.imdemo" />
+        		<category android:name="android.intent.category.LAUNCHER" />
+        		<category android:name="android.intent.category.DEFAULT" />
+	        </intent-filter>
+        </receiver>	
+
 </application>
 
 </manifest>

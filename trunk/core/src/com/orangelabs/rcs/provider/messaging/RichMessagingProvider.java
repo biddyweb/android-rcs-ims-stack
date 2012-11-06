@@ -134,7 +134,7 @@ public class RichMessagingProvider extends ContentProvider {
         int match = uriMatcher.match(uri);
         switch (match) {
 	        case MESSAGING:
-	            count = db.update(TABLE, values, where, null);
+	            count = db.update(TABLE, values, where, whereArgs);
 	            break;
             case MESSAGING_ID:
                 String segment = uri.getPathSegments().get(1);

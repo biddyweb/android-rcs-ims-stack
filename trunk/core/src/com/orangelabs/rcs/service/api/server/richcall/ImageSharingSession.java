@@ -25,8 +25,8 @@ import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSessionListener;
 import com.orangelabs.rcs.provider.sharing.RichCall;
+import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.service.api.client.SessionState;
-import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
@@ -136,7 +136,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 		}
 
 		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
 
 		// Reject invitation
 		session.rejectSession(603);
@@ -159,7 +159,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 		session.abortSession();
 
 		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			}
 	
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -261,7 +261,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	  		}
 			
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TERMINATED);
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -293,7 +293,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			}
 	
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -352,7 +352,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			}
 	
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), EventsLogApi.STATUS_TERMINATED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TERMINATED);
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();

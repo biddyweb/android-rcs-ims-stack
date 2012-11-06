@@ -17,6 +17,9 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.network.gsm;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.content.Context;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -189,16 +192,15 @@ public class CallManager {
 					// Both parties are connected
 					callState = CallManager.CONNECTED;
 
-                    // Sleep 2s before sending the option request
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        // Nothing to do
-                    }
-
-                    // Request capabilities
-                    requestCapabilities(remoteParty);
-
+                    // Delay option request 2 seconds according to implementation guideline ID_4_20
+                    Timer timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            // Request capabilities
+                            requestCapabilities(remoteParty);
+                        }
+                    }, 2000);
 					break;
 
 				default:
@@ -247,7 +249,7 @@ public class CallManager {
      * @return Boolean
      */
 	public boolean isCallConnected() {
-		return (callState == CONNECTED || callState == RINGING);
+		return (callState == CONNECTED);
 	}
 
 	/**

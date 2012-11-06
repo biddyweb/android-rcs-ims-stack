@@ -65,7 +65,11 @@ public class SipApi extends ClientApi {
     public void disconnectApi() {
     	super.disconnectApi();
     	
-		ctx.unbindService(apiConnection);
+    	try {
+    		ctx.unbindService(apiConnection);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
     }
 
 	/**
@@ -109,7 +113,7 @@ public class SipApi extends ClientApi {
 	}
 
 	/**
-	 * Get a SIP session from its session ID
+	 * Get current SIP session from its session ID
 	 *
 	 * @param id Session ID
 	 * @return Session
@@ -128,7 +132,7 @@ public class SipApi extends ClientApi {
 	}
 
 	/**
-	 * Get list of SIP sessions with a contact
+	 * Get list of current SIP sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return Session
@@ -147,7 +151,7 @@ public class SipApi extends ClientApi {
 	}
 
 	/**
-	 * Get list of current established SIP sessions
+	 * Get list of current SIP sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ClientApiException
@@ -156,6 +160,28 @@ public class SipApi extends ClientApi {
 		if (coreApi != null) {
 			try {
 		    	return coreApi.getSessions();
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+	
+	/**
+	 * Send an instant message (SIP MESSAGE)
+	 * 
+     * @param contact Contact
+	 * @param featureTag Feature tag of the service
+     * @param content Content
+     * @param contentType Content type
+	 * @return True if successful else returns false
+	 * @throws ClientApiException
+	 */
+	public boolean sendSipInstantMessage(String contact, String featureTag, String content, String contentType) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	return coreApi.sendSipInstantMessage(contact, featureTag, content, contentType);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

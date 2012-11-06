@@ -27,7 +27,6 @@ import android.widget.ListView;
 
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.logger.AndroidAppender;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Appender;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -65,6 +64,7 @@ public class SipApiDemo extends ListActivity {
         		getString(R.string.menu_initiate_session),
         		getString(R.string.menu_list_session),	
         		getString(R.string.menu_session_settings),
+        		getString(R.string.menu_send_im)
 		};
     	setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -80,6 +80,9 @@ public class SipApiDemo extends ListActivity {
 	            break;
 	        case 2:
 	        	startActivity(new Intent(this, SessionSettings.class));
+	            break;
+	        case 3:
+	        	startActivity(new Intent(this, SendInstantMessage.class));
 	            break;
     	}
     }

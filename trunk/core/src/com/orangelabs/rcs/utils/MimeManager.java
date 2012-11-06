@@ -99,7 +99,11 @@ public class MimeManager {
 	 * @return MIME type
 	 */
     public static String getMimeType(String ext) {
-    	return mimeTable.get(ext.toLowerCase());
+    	if (ext != null) {
+    		return mimeTable.get(ext.toLowerCase());
+    	} else {
+    		return null;
+    	}
     }
     
 	/**
@@ -111,9 +115,9 @@ public class MimeManager {
 	public static String getFileExtension(String url) {
 		if ((url != null) && (url.indexOf('.')!=-1)) {
 			return url.substring(url.lastIndexOf('.')+1);
+		} else {
+			return null;
 		}
-		
-		return "";
 	}	
     
 	/**

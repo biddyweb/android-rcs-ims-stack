@@ -31,11 +31,17 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class DummyPacketSourceStream extends Thread implements ProcessorInputStream {
-	/**
-	 * Source period (in seconds)
-	 */
-	public final static int DUMMY_SOURCE_PERIOD = 5;
-	
+
+    /**
+     * Source period for the opening phase (in milliseconds)
+     */
+    public final static int DUMMY_SOURCE_OPENING_PERIOD = 100;
+
+    /**
+     * Source period (in milliseconds)
+     */
+    public final static int DUMMY_SOURCE_PERIOD = 15000;
+
 	/**
 	 * Input format
 	 */
@@ -65,7 +71,12 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
      * Interruption flag
      */
     private boolean interrupted = false;
-    
+
+    /**
+     * Incoming stream is started ?
+     */
+    private boolean incomingStarted = false;
+
     /**
 	 * Constructor
 	 */
@@ -110,7 +121,6 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
      * Background processing
      */
     public void run() {
-        boolean first = true;
     	while(!interrupted) {
 	    	try {
 	    		// Build a new dummy packet
@@ -125,11 +135,10 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
 	        	fifo.addObject(packet);
 
                 // Make a pause
-                if (first) {
-                    Thread.sleep(1000);
-                    first = false;
+                if (!incomingStarted) {
+                    Thread.sleep(DUMMY_SOURCE_OPENING_PERIOD);
                 } else {
-                    Thread.sleep(DUMMY_SOURCE_PERIOD * 1000);
+                    Thread.sleep(DUMMY_SOURCE_PERIOD);
                 }
 	    	} catch(Exception e) {
 	    		if (logger.isActivated()) {
@@ -146,8 +155,15 @@ public class DummyPacketSourceStream extends Thread implements ProcessorInputStr
      * @throws Exception
      */
     public Buffer read() throws Exception {
-    	// Read the FIFO the buffer	        	    	
-    	Buffer buffer = (Buffer)fifo.getObject();  
+    	// Read the FIFO the buffer
+    	Buffer buffer = (Buffer)fifo.getObject();
     	return buffer;  
+    }
+
+    /**
+     * Set incomingStarted.
+     */
+    public void incomingStarted() {
+        incomingStarted = true;
     }
 }

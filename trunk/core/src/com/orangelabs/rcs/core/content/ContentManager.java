@@ -102,15 +102,7 @@ public class ContentManager{
 	public static MmContent createMmContentFromUrl(String url, long size) {
 		String ext = MimeManager.getFileExtension(url);
 		String mime = MimeManager.getMimeType(ext);
-		if (mime != null) {
-			if (mime.startsWith("image/")) {
-				return new PhotoContent(url, mime, size);
-			}
-			if (mime.startsWith("video/")) {
-				return new VideoContent(url, mime, size);
-			}
-        }
-		return new FileContent(url, size);
+		return createMmContentFromMime(url, mime, size);
 	}
 
     /**
@@ -122,18 +114,20 @@ public class ContentManager{
      * @return Content instance
      */
 	public static MmContent createMmContentFromMime(String url, String mime, long size) {
-    	if (mime.startsWith("image/")) {
-    		// Photo content
-    		return new PhotoContent(url, mime, size);
-        }
-    	if (mime.startsWith("video/")) {
-    		// Video content
-    		return new VideoContent(url, mime, size);
-        }
-    	if (mime.startsWith("application/")) {
-    		// File content
-    		return new FileContent(url, size);
-    	}
+		if (mime != null) {
+	    	if (mime.startsWith("image/")) {
+	    		// Photo content
+	    		return new PhotoContent(url, mime, size);
+	        }
+	    	if (mime.startsWith("video/")) {
+	    		// Video content
+	    		return new VideoContent(url, mime, size);
+	        }
+	    	if (mime.startsWith("application/")) {
+	    		// File content
+	    		return new FileContent(url, size);
+	    	}
+		}
 		return null;
 	}
 

@@ -114,7 +114,7 @@ public class SipMessageFactory {
 	        // Set Contact header
 	        ContactHeader contact = dialog.getSipStack().getLocalContact();
 	        if (instanceId != null) {
-	        	contact.setParameter(SipUtils.SIP_INSTANCE_PARAM, "\"<urn:uuid:" + instanceId + ">\"");
+	        	contact.setParameter(SipUtils.SIP_INSTANCE_PARAM, instanceId);
 	        }
 	        register.addHeader(contact);
 
@@ -232,7 +232,7 @@ public class SipMessageFactory {
     }	
 
     /**
-	 * Create a SIP MESSAGE request
+	 * Create a SIP MESSAGE request with a feature tag
 	 * 
 	 * @param dialog SIP dialog path
 	 * @param contentType Content type
@@ -241,6 +241,20 @@ public class SipMessageFactory {
 	 * @throws SipException
 	 */
 	public static SipRequest createMessage(SipDialogPath dialog, String contentType, String content) throws SipException {
+		return createMessage(dialog, null, contentType, content);
+	}
+	
+	/**
+	 * Create a SIP MESSAGE request with a feature tag
+	 * 
+	 * @param dialog SIP dialog path
+	 * @param featureTag Feature tag
+	 * @param contentType Content type
+	 * @param content Content
+	 * @return SIP request
+	 * @throws SipException
+	 */
+	public static SipRequest createMessage(SipDialogPath dialog, String featureTag, String contentType, String content) throws SipException {
 		try {			
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -285,17 +299,18 @@ public class SipMessageFactory {
 	        // Set Contact header
 			message.addHeader(dialog.getSipStack().getContact());	        
 			
-            // Set feature tags
-	        String[] tags = {FeatureTags.FEATURE_OMA_IM };
-            SipUtils.setFeatureTags(message, tags);
-
             // Add remote SIP instance ID
             SipUtils.setRemoteInstanceID(message, dialog.getRemoteSipInstance());
 
 	        // Set User-Agent header
 	        message.addHeader(SipUtils.buildUserAgentHeader());
 	
-			// Set the message content
+	        // Set feature tags
+	        if (featureTag != null) {
+	        	SipUtils.setFeatureTags(message, new String [] { featureTag });
+	        }
+	        
+	        // Set the message content
 	        String[] type = contentType.split("/");
 			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader(type[0], type[1]);
 	        message.setContent(content, contentTypeHeader);

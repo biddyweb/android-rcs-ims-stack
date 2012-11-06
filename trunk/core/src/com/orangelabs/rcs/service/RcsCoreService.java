@@ -50,7 +50,7 @@ import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
-import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
+import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
@@ -163,15 +163,13 @@ public class RcsCoreService extends Service implements CoreListener {
     @Override
     public void onDestroy() {
         // Unregister account changed broadcast receiver
-        try {
-            if (accountChangedReceiver != null) {
-            	unregisterReceiver(accountChangedReceiver);
-            }
-        } catch (IllegalArgumentException e) {
-            if (logger.isActivated()){
-                logger.error("Receiver not registered");
-            }
-        }
+	    if (accountChangedReceiver != null) {
+	        try {
+	        	unregisterReceiver(accountChangedReceiver);
+	        } catch (IllegalArgumentException e) {
+	        	// Nothing to do
+	        }
+	    }
 
     	// Close APIs
     	imsApi.close();
@@ -212,25 +210,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTING);
 			getApplicationContext().sendBroadcast(intent);
-
-			// Instantiate the settings manager
-            RcsSettings.createInstance(getApplicationContext());
             
-            // Set the logger properties
-    		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
-    		String traceLevel = RcsSettings.getInstance().getTraceLevel();
-    		if (traceLevel.equalsIgnoreCase("DEBUG")) {
-        		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
-    		} else if (traceLevel.equalsIgnoreCase("INFO")) {
-        		Logger.traceLevel = Logger.INFO_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("WARN")) {
-        		Logger.traceLevel = Logger.WARN_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
-        		Logger.traceLevel = Logger.ERROR_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
-        		Logger.traceLevel = Logger.FATAL_LEVEL;
-    		}    		
-
             // Terminal version
             if (logger.isActivated()) {
                 logger.info("My RCS software release is " + TerminalInfo.getProductVersion());
@@ -1062,34 +1042,54 @@ public class RcsCoreService extends Service implements CoreListener {
     /**
      * New SIP session invitation
      * 
+	 * @param intent Resolved intent
      * @param session SIP session
      */
-    public void handleSipSessionInvitation(TerminatingSipSession session) {
+    public void handleSipSessionInvitation(Intent intent, GenericSipSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event receive SIP session invitation");
 		}
 		
 		// Broadcast the invitation
-		sipApi.receiveSipSessionInvitation(session);
+		sipApi.receiveSipSessionInvitation(intent, session);
     }    
 
-    /**
+	/**
+	 * New SIP instant message received
+	 * 
+	 * @param intent Resolved intent
+	 */
+    public void handleSipInstantMessageReceived(Intent intent) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event receive SIP instant message");
+		}
+		
+		// Broadcast the message
+		sipApi.receiveSipInstantMessage(intent);
+    }
+
+	/**
      * User terms confirmation request
-     * 
+     *
      * @param remote Remote server
      * @param id Request ID
      * @param type Type of request
      * @param pin PIN number requested
      * @param subject Subject
      * @param text Text
+     * @param btnLabelAccept Label of Accept button
+     * @param btnLabelReject Label of Reject button
+     * @param timeout Timeout request
      */
-    public void handleUserConfirmationRequest(String remote, String id, String type, boolean pin, String subject, String text) {
-		if (logger.isActivated()) {
-			logger.debug("Handle event user confirmation request");
+    public void handleUserConfirmationRequest(String remote, String id,
+    		String type, boolean pin, String subject, String text,
+    		String acceptButtonLabel, String rejectButtonLabel, int timeout) {
+        if (logger.isActivated()) {
+			logger.debug("Handle event user terms confirmation request");
 		}
 
 		// Notify listeners
-		termsApi.receiveTermsRequest(remote, id, type, pin, subject, text);
+        termsApi.receiveTermsRequest(remote, id, type, pin, subject, text, acceptButtonLabel, rejectButtonLabel, timeout);
     }
 
     /**
@@ -1103,11 +1103,29 @@ public class RcsCoreService extends Service implements CoreListener {
      */
     public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text) {
 		if (logger.isActivated()) {
-			logger.debug("Handle event user confirmation ack");
+			logger.debug("Handle event user terms confirmation ack");
 		}
 
 		// Notify listeners
 		termsApi.receiveTermsAck(remote, id, status, subject, text);
+    }
+
+    /**
+     * User terms notification
+     *
+     * @param remote Remote server
+     * @param id Request ID
+     * @param subject Subject
+     * @param text Text
+     * @param btnLabel Label of OK button
+     */
+    public void handleUserNotification(String remote, String id, String subject, String text, String okButtonLabel) {
+        if (logger.isActivated()) {
+            logger.debug("Handle event user terms notification");
+        }
+
+        // Notify listeners
+        termsApi.receiveUserNotification(remote, id, subject, text, okButtonLabel);
     }
 
     /**

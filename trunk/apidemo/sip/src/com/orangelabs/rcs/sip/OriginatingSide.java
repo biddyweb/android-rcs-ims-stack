@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionError;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.sip.ISipSession;
 import com.orangelabs.rcs.service.api.client.sip.ISipSessionEventListener;
 import com.orangelabs.rcs.service.api.client.sip.SipApi;
@@ -160,7 +161,7 @@ public class OriginatingSide extends Activity implements ClientApiListener {
 			final String remote = cursor.getString(1);
 
 			// Get feature tag
-			final String featureTag = SessionSettings.getFeatureTag(OriginatingSide.this);
+			final String featureTag = CapabilityApiIntents.RCSE_EXTENSION_BASE + "=\"" + CapabilityApiIntents.RCSE_EXTENSION_PREFIX + ".orange.sipdemo\"";
 
 			// Get SDP offer
 			final String sdpOffer = SessionSettings.getLocalSdp(OriginatingSide.this);

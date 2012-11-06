@@ -29,7 +29,12 @@ public class TermsApiIntents {
 	public final static String TERMS_SIP_REQUEST = "com.orangelabs.rcs.TERMS_SIP_REQUEST";
 
 	/**
-     * Terms and conditions ack via SIP
+     * Terms and conditions acknowledgement via SIP
 	 */ 
 	public final static String TERMS_SIP_ACK = "com.orangelabs.rcs.TERMS_SIP_ACK";
+
+    /**
+     * Terms and conditions user notification via SIP
+     */ 
+    public final static String TERMS_SIP_USER_NOTIFICATION = "com.orangelabs.rcs.TERMS_SIP_USER_NOTIFICATION";
 }

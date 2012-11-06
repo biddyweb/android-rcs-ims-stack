@@ -21,6 +21,9 @@ package com.orangelabs.rcs.core.ims.userprofile;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+
 import javax2.sip.header.ExtensionHeader;
 import javax2.sip.header.Header;
 
@@ -153,6 +156,20 @@ public class UserProfile {
 	}
 	
 	/**
+	 * Get the user public address
+	 * 
+	 * @return Public address
+	 */
+	public String getPublicAddress() {
+		String addr = getPublicUri();	 
+		String displayName = RcsSettings.getInstance().getUserProfileImsDisplayName();
+		if ((displayName != null) && (displayName.length() > 0)) {
+			addr = "\"" + displayName + "\" <" + addr + ">"; 
+		}
+		return addr;
+	}
+
+	/**
 	 * Set the user associated URIs
 	 * 
 	 * @param uris List of URIs
@@ -167,11 +184,13 @@ public class UserProfile {
 		while(uris.hasNext()) {
 			ExtensionHeader header = (ExtensionHeader)uris.next();
 			String value = header.getValue();
+			value = SipUtils.extractUriFromAddress(value);
 			associatedUriList.addElement(value);
-			if (value.startsWith("<sip:")) {
+
+			if (value.startsWith("sip:")) {
 				sipUri = value;
 			} else
-			if (value.startsWith("<tel:")) {
+			if (value.startsWith("tel:")) {
 				telUri = value;
 			}
 		}

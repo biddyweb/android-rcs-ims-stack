@@ -29,8 +29,10 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
@@ -54,6 +56,7 @@ import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -521,6 +524,12 @@ public class InstantMessagingService extends ImsService {
 			}
 			throw new CoreException("Group chat conversation not found in database");
 		}
+		if (groupChat.getRejoinId() == null) {
+			if (logger.isActivated()) {
+				logger.warn("Group chat " + chatId + " can't be rejoined: rejoin ID not found");
+			}
+			throw new CoreException("Rejoin ID not found in database");
+		}
 
 		// Create a new session
 		if (logger.isActivated()) {
@@ -626,7 +635,23 @@ public class InstantMessagingService extends ImsService {
      * @param message Received message
      */
     public void receiveMessageDeliveryStatus(SipRequest message) {
-    	ImdnDocument imdn = ChatUtils.parseCpimDeliveryReport(message.getContent());
+		// Send a 200 OK response
+		try {
+			if (logger.isActivated()) {
+				logger.info("Send 200 OK");
+			}
+	        SipResponse response = SipMessageFactory.createResponse(message,
+	        		IdGenerator.getIdentifier(), 200);
+			getImsModule().getSipManager().sendSipResponse(response);
+		} catch(Exception e) {
+	       	if (logger.isActivated()) {
+	    		logger.error("Can't send 200 OK response", e);
+	    	}
+	       	return;
+		}
+
+		// Parse received message
+		ImdnDocument imdn = ChatUtils.parseCpimDeliveryReport(message.getContent());
     	if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
 	    	String contact = SipUtils.getAssertedIdentity(message);
 	    	String status = imdn.getStatus();

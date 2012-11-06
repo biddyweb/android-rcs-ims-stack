@@ -101,7 +101,7 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " " + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +

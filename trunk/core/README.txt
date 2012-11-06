@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.9
+Release 2.4.10
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,10 +9,13 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Prepare secured media integration.
+- MSRP over TLS (only over Wi-Fi, only the active mode supported).
 - Merge Deutsche Telecom contributions.
 - GSMA Implementation Guidelines version 3.1 (hot fixes).
-- New settings to store paths of shared contents.
+- New SIP API methods for instant messages.
+- Feature tag API more generic.
+- Improve Terms to be conforming to RCSe Spec 1.2.2.
+
 
 
 Bugs fixed:
@@ -20,6 +23,11 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.10
+- Open source #85	Stack: PUBLISHed presence document contains illegal XML
+- Mantis #0016362	Stack: Bad local tag on 487 response after a CANCEL request
+
 
 v2.4.9
 - GSMA Guidelines 	Stack: ID_4_33_1: Multidevice support
@@ -385,5 +393,5 @@ Notes:
 
 Contact:
 --------
-OrangeLabs, ASC Devices
-jeanmarc.auffret@orange-ftgroup.com
+Orange Labs
+jeanmarc.auffret@orange.com

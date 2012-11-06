@@ -67,7 +67,7 @@ public class CapabilitiesDiscovery extends Activity {
 	 * Capability API
 	 */
     private CapabilityApi capabilityApi;
-    
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,7 +107,11 @@ public class CapabilitiesDiscovery extends Activity {
     	super.onDestroy();
     	
     	// Unregister intent receiver
-		unregisterReceiver(capabilitiesIntentReceiver);
+    	try {
+    		unregisterReceiver(capabilitiesIntentReceiver);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
 
 		// Disconnect contacts API
     	capabilityApi.disconnectApi();

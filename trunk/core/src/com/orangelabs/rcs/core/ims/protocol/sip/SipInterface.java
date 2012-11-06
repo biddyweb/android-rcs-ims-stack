@@ -45,12 +45,11 @@ import javax2.sip.header.Header;
 import javax2.sip.header.ViaHeader;
 
 import android.net.ConnectivityManager;
-import android.text.TextUtils;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.security.cert.KeyStoreManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.IpAddressUtils;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
@@ -202,6 +201,7 @@ public class SipInterface implements SipListener {
         this.listeningPort = NetworkRessourceManager.generateLocalSipPort();
         this.outboundProxyAddr = proxyAddr;
         this.outboundProxyPort = proxyPort;
+        
         // Set timers value from provisioning for 3G or default for Wifi
         if (networkType == ConnectivityManager.TYPE_MOBILE) {
             this.timerT1 = RcsSettings.getInstance().getSipTimerT1();
@@ -223,11 +223,6 @@ public class SipInterface implements SipListener {
             SipUtils.HEADER_FACTORY = sipFactory.createHeaderFactory();
             SipUtils.ADDR_FACTORY = sipFactory.createAddressFactory();
             SipUtils.MSG_FACTORY = sipFactory.createMessageFactory();
-
-            // Create the RCS keystore if not present
-            if (!KeyStoreManager.isKeystoreExists(KeyStoreManager.getKeystorePath())) {
-                KeyStoreManager.createKeyStore();
-            }
 
             // Set SIP stack properties
             Properties properties = new Properties();
@@ -252,11 +247,10 @@ public class SipInterface implements SipListener {
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
                 // Set SSL properties
                 properties.setProperty("gov2.nist.javax2.sip.TLS_CLIENT_PROTOCOLS", "SSLv3, TLSv1");
-                properties.setProperty("javax2.net.ssl.keyStoreType", KeyStoreManager.KEYSTORE_TYPE);
+                properties.setProperty("javax2.net.ssl.keyStoreType", KeyStoreManager.getKeystoreType());
                 properties.setProperty("javax2.net.ssl.keyStore", KeyStoreManager.getKeystorePath());
-                properties.setProperty("javax2.net.ssl.keyStorePassword", KeyStoreManager.KEYSTORE_PASSWORD);
-                properties.setProperty("javax2.net.ssl.trustStore",
-                        KeyStoreManager.getKeystorePath());
+                properties.setProperty("javax2.net.ssl.keyStorePassword", KeyStoreManager.getKeystorePassword());
+                properties.setProperty("javax2.net.ssl.trustStore", KeyStoreManager.getKeystorePath());
             }
 
             // Create the SIP stack
@@ -270,23 +264,6 @@ public class SipInterface implements SipListener {
 
             // Set the default SIP provider
             if (defaultProtocol.equals(ListeningPoint.TLS)) {
-                // Add certificates if not present
-                String certPathRoot = RcsSettings.getInstance().getTlsCertificateRoot();
-                if (!TextUtils.isEmpty(certPathRoot)) {
-                    certPathRoot = RcsSettingsData.CERTIFICATE_FOLDER_PATH + certPathRoot;
-                    if (!KeyStoreManager.isCertificateEntry(certPathRoot)) {
-                        KeyStoreManager.addCertificates(certPathRoot);
-                    }
-                }
-                String certPathIntermediate = RcsSettings.getInstance().getTlsCertificateIntermediate();
-                if (!TextUtils.isEmpty(certPathIntermediate)) {
-                    certPathIntermediate = RcsSettingsData.CERTIFICATE_FOLDER_PATH
-                            + certPathIntermediate;
-                    if (!KeyStoreManager.isCertificateEntry(certPathIntermediate)) {
-                        KeyStoreManager.addCertificates(certPathIntermediate);
-                    }
-                }
-
                 // Create TLS provider
                 ListeningPoint tls = sipStack.createListeningPoint(localIpAddress, listeningPort, ListeningPoint.TLS);
                 SipProvider tlsSipProvider = sipStack.createSipProvider(tls);
@@ -540,7 +517,7 @@ public class SipInterface implements SipListener {
         if (instanceId != null) {
             // Create a local contact with an instance ID
             contactHeader = getLocalContact();
-            contactHeader.setParameter(SipUtils.SIP_INSTANCE_PARAM, "\"<urn:uuid:" + instanceId + ">\"");
+            contactHeader.setParameter(SipUtils.SIP_INSTANCE_PARAM, instanceId);
         } else {
             // Create a local contact
             contactHeader = getLocalContact();

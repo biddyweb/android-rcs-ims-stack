@@ -35,7 +35,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.sip.utils.Utils;
 
 /**
@@ -55,11 +54,6 @@ public class SessionSettings extends Activity {
 	public static final String APP_PREFERENCES = "SipDemo";
 	
 	/**
-	 * Feature tag settings
-	 */
-	public static final String SETTINGS_FEATURE_TAG = "Tag";
-
-	/**
 	 * SDP settings
 	 */
 	public static final String SETTINGS_SDP = "Sdp";
@@ -76,8 +70,6 @@ public class SessionSettings extends Activity {
 		setTitle(R.string.title_session_settings);
 		
 		// Set text listeners
-		EditText tagEdit = (EditText)findViewById(R.id.feature_tag);
-		tagEdit.setOnTouchListener(onEditTextTouchListener);
 		EditText sdpEdit = (EditText)findViewById(R.id.local_sdp);
 		sdpEdit.setOnTouchListener(onEditTextTouchListener);
 		
@@ -130,40 +122,9 @@ public class SessionSettings extends Activity {
 	}
 	
 	/**
-	 * Returns feature tag
-	 * 
-	 * @param ctx Context
-	 * @return SDP
-	 */
-	public static String getFeatureTag(Context ctx) {
-		String tag = CapabilityApiIntents.RCSE_EXTENSION_PREFIX + ".orange.sipdemo";
-		SharedPreferences preferences = ctx.getSharedPreferences(SessionSettings.APP_PREFERENCES, MODE_PRIVATE);	
-		return preferences.getString(SessionSettings.SETTINGS_FEATURE_TAG, tag);
-	}
-	
-	/**
-	 * Set feature tag
-	 * 
-	 * @param ctx Context
-	 * @param tag Feature tag
-	 */
-	public static void setFeatureTag(Context ctx, String tag) {
-		SharedPreferences preferences =ctx.getSharedPreferences(SessionSettings.APP_PREFERENCES, MODE_PRIVATE);	
-		Editor editor = preferences.edit();
-		if (tag == null) {
-			editor.remove(SETTINGS_FEATURE_TAG);
-		} else {
-			editor.putString(SETTINGS_FEATURE_TAG, tag);
-		}
-		editor.commit();
-	}	
-	
-	/**
 	 * Show settings
 	 */
 	public void showSettings() {
-		EditText tagEdit = (EditText)findViewById(R.id.feature_tag);
-		tagEdit.setText(getFeatureTag(this));
 		EditText sdpEdit = (EditText)findViewById(R.id.local_sdp);
 		sdpEdit.setText(getLocalSdp(this));
 	}
@@ -174,8 +135,6 @@ public class SessionSettings extends Activity {
 	private OnClickListener btnSaveListener = new OnClickListener() {
 		public void onClick(View v) {
 			// Save SDP values
-			EditText tagEdit = (EditText)findViewById(R.id.feature_tag);
-			setFeatureTag(SessionSettings.this, tagEdit.getText().toString());
 			EditText sdpEdit = (EditText)findViewById(R.id.local_sdp);
 			setLocalSdp(SessionSettings.this, sdpEdit.getText().toString());
 			Toast.makeText(SessionSettings.this, R.string.label_preferences_saved, Toast.LENGTH_SHORT).show();
@@ -188,7 +147,6 @@ public class SessionSettings extends Activity {
 	private OnClickListener btnRestoreListener = new OnClickListener() {
 		public void onClick(View v) {
 			// Restore default SDP values
-			setFeatureTag(SessionSettings.this, null);
 			setLocalSdp(SessionSettings.this, null);
 			Toast.makeText(SessionSettings.this, R.string.label_preferences_restored, Toast.LENGTH_SHORT).show();
 			
@@ -212,12 +170,6 @@ public class SessionSettings extends Activity {
 				AlertDialog.Builder builder = new Builder(SessionSettings.this);
 				internalEditText.setText(externalEditText.getText().toString());
 				builder.setView(internalEditText);
-				if (externalEditText.getId() == R.id.feature_tag){
-					builder.setTitle(SETTINGS_FEATURE_TAG);
-				} else
-				if (externalEditText.getId() == R.id.local_sdp){
-					builder.setTitle(SETTINGS_SDP);
-				}
 				builder.setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {

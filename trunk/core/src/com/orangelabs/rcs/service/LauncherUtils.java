@@ -55,7 +55,25 @@ public class LauncherUtils {
      * @param boot Boot flag
      */
     public static void launchRcsService(Context context, boolean boot) {
-        if (logger.isActivated()) {
+		// Instantiate the settings manager
+        RcsSettings.createInstance(context);
+
+        // Set the logger properties
+		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
+		String traceLevel = RcsSettings.getInstance().getTraceLevel();
+		if (traceLevel.equalsIgnoreCase("DEBUG")) {
+    		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
+		} else if (traceLevel.equalsIgnoreCase("INFO")) {
+    		Logger.traceLevel = Logger.INFO_LEVEL;
+		} else if (traceLevel.equalsIgnoreCase("WARN")) {
+    		Logger.traceLevel = Logger.WARN_LEVEL;
+		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
+    		Logger.traceLevel = Logger.ERROR_LEVEL;
+		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
+    		Logger.traceLevel = Logger.FATAL_LEVEL;
+		}    		
+
+		if (logger.isActivated()) {
             logger.debug("Launch RCS service");
         }
         Intent intent = new Intent(ClientApiUtils.STARTUP_SERVICE_NAME);
