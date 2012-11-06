@@ -266,10 +266,10 @@ public class ChatList extends Activity implements ClientApiListener {
      */
     private IChatSession isGroupChatActive(String chatId) {
 		try {
-			List<IBinder> chatSessionsBinder = messagingApi.getChatSessions();
+			List<IBinder> chatSessionsBinder = messagingApi.getGroupChatSessions();
 			for (IBinder binder : chatSessionsBinder) {
 				IChatSession chatSession = IChatSession.Stub.asInterface(binder);
-				if (chatSession.isGroupChat() && chatSession.getChatID().equals(chatId)) {
+				if (chatSession.getChatID().equals(chatId)) {
 					return chatSession;
 				}	
 			}

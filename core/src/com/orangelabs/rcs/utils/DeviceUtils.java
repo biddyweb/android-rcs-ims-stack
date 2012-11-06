@@ -19,6 +19,8 @@ package com.orangelabs.rcs.utils;
 
 import java.util.UUID;
 
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+
 import android.content.Context;
 import android.telephony.TelephonyManager;
 
@@ -43,15 +45,51 @@ public class DeviceUtils {
 		if (context == null) {
 			return null;
 		}
-		
-		if (uuid == null) {
-			TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-			String id = tm.getDeviceId();
-			if (id != null) { 
-				uuid = UUID.nameUUIDFromBytes(id.getBytes());
-			}
+
+        if (uuid == null) {
+            String imei = getImei(context);
+            if (imei != null) {
+                uuid = UUID.nameUUIDFromBytes(imei.getBytes());
+            }
 		}
 		
 		return uuid;
 	}
+
+    /**
+     * Returns instance ID
+     *
+     * @param context application context
+     * @return instance Id
+     */
+    public static String getInstanceId(Context context) {
+        if (context == null) {
+            return null;
+        }
+
+        String instanceId = null;
+        if (RcsSettings.getInstance().isImeiUsedAsDeviceId()) {
+            String imei = getImei(context);
+            if (imei != null) { 
+                instanceId = "\"<urn:gsma:imei:" + imei + ">\"";
+            }
+        } else {
+            UUID uuid = getDeviceUUID(context);
+            if (uuid != null) {
+                instanceId = "\"<urn:uuid:" + uuid.toString() + ">\"";
+            }
+        }
+        return instanceId;
+    }
+
+    /**
+     * Returns the IMEI of the device
+     *
+     * @param context application context
+     * @return IMEI of the device
+     */
+    private static String getImei(Context context) {
+        TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        return tm.getDeviceId();
+    }
 }

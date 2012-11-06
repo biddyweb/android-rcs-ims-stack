@@ -27,16 +27,13 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import com.orangelabs.rcs.core.Core;
-import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.service.api.client.sip.ISipApi;
 import com.orangelabs.rcs.service.api.client.sip.ISipSession;
-import com.orangelabs.rcs.service.api.client.sip.SipApiIntents;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -99,23 +96,15 @@ public class SipApiService extends ISipApi.Stub {
 	/**
 	 * Receive a new SIP session invitation
 	 * 
-	 * @param session SIP session
+	 * @param intent Resolved intent
+     * @param session SIP session
 	 */
-	public void receiveSipSessionInvitation(GenericSipSession session) {
-		// Extract number from contact 
-		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-	
+	public void receiveSipSessionInvitation(Intent intent, GenericSipSession session) {
 		// Add session in the list
 		SipSession sessionApi = new SipSession(session);
 		SipApiService.addSipSession(sessionApi);
 		
 		// Broadcast intent related to the received invitation
-		Intent intent = new Intent(SipApiIntents.SESSION_INVITATION);
-		String mime = FeatureTags.FEATURE_RCSE + "/" + session.getFeatureTag(); 
-		intent.setType(mime.toLowerCase());
-		intent.putExtra("contact", number);
-		intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
-		intent.putExtra("sessionId", session.getSessionID());
 		AndroidFactory.getApplicationContext().sendBroadcast(intent);    	
 	}
 	
@@ -140,7 +129,8 @@ public class SipApiService extends ISipApi.Stub {
 
 		try {
 			// Initiate a new session
-			GenericSipSession session = Core.getInstance().getSipService().initiateSession(contact, featureTag, sdpOffer);
+			GenericSipSession session = Core.getInstance().getSipService().initiateSession(contact,
+					featureTag, sdpOffer);
 			
 			// Add session in the list
 			SipSession sessionApi = new SipSession(session);
@@ -152,7 +142,7 @@ public class SipApiService extends ISipApi.Stub {
 	}
 
 	/**
-	 * Get a SIP session from its session ID
+	 * Get current SIP session from its session ID
 	 *
 	 * @param id Session ID
 	 * @return Session
@@ -174,7 +164,7 @@ public class SipApiService extends ISipApi.Stub {
 	}
 	
 	/**
-	 * Get list of SIP sessions with a contact
+	 * Get list of current SIP sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return List of sessions
@@ -208,7 +198,7 @@ public class SipApiService extends ISipApi.Stub {
 	}
 
 	/**
-	 * Get list of current established SIP sessions
+	 * Get list of current SIP sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ServerApiException
@@ -242,5 +232,44 @@ public class SipApiService extends ISipApi.Stub {
 		} catch(Exception e) {
 			throw new ServerApiException(e.getMessage());
 		}
+	}
+
+	/**
+	 * Send an instant message (SIP MESSAGE)
+	 * 
+     * @param contact Contact
+	 * @param featureTag Feature tag of the service
+     * @param content Content
+     * @param contentType Content type
+	 * @return True if successful else returns false
+	 * @throws ServerApiException
+	 */
+	public boolean sendSipInstantMessage(String contact, String featureTag, String content, String contentType) throws ServerApiException {
+		if (logger.isActivated()) {
+			logger.info("Send an instant message to " + contact);
+		}
+
+		// Check permission
+		ServerApiUtils.testPermissionForExtensions();
+
+		// Test core availability
+		ServerApiUtils.testCore();
+		
+		try {
+			return Core.getInstance().getSipService().sendInstantMessage(contact,
+					featureTag, content, contentType);
+		} catch(Exception e) {
+			throw new ServerApiException(e.getMessage());
+		}
+	}
+	
+	/**
+	 * Receive an instant message (SIP MESSAGE)
+	 *  
+	 * @param intent Resolved intent
+	 */
+	public void receiveSipInstantMessage(Intent intent) {
+		// Broadcast intent related to the received message
+		AndroidFactory.getApplicationContext().sendBroadcast(intent);
 	}
 }

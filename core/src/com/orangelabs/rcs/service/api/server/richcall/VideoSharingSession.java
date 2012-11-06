@@ -120,7 +120,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 		}
 		
 		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
+		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
 
 		// Reject invitation
 		session.rejectSession(603);
@@ -215,7 +215,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 			}
 	
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();

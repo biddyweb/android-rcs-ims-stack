@@ -67,7 +67,26 @@ public class ContactsApi {
     public List<String> getRcsContactsWithSocialPresence(){
     	return ContactsManager.getInstance().getRcsContactsWithSocialPresence();
     }
-    
+
+    /**
+     * Get a list of all contacts that have been at least queried once for capabilities
+     *
+     * @return list of all contacts checked for capabilities
+     */
+    public List<String> getAllContacts(){
+        return ContactsManager.getInstance().getAllContacts();
+    }
+
+    /**
+     * Get all the contacts in the contact contract provider that have a RCS raw contact
+     * (include duplicated phone numbers)
+     *
+     * @return list containing all contacts with phone numbers that have been at least queried once for capabilities
+     */
+    public List<String[]> getAllContactsInformation(){
+        return ContactsManager.getInstance().getAllContactsInformation();
+    }
+
     /**
      * Get a list of all RCS contacts
      * 
@@ -121,7 +140,17 @@ public class ContactsApi {
     public List<String> getRcsCancelledContacts(){
     	return ContactsManager.getInstance().getRcsCancelledContacts();
     }
-    
+
+    /**
+     * Check if the given number is valid to be treated as an RCS contact
+     * 
+     * @param phoneNumber Number to be checked
+     * @return true if the number is valid, false otherwise
+     */
+    public boolean isRcsValidNumber(String phoneNumber){
+        return ContactsManager.getInstance().isRcsValidNumber(phoneNumber);
+    }
+
     /**
      * Get the IM-blocked status of a contact
      * 

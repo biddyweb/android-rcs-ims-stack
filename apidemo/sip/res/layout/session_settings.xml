@@ -11,16 +11,6 @@
 		android:stretchColumns="1">
 	    
 		<TableRow android:paddingTop="5dip">
-	        <TextView android:text="@string/label_feature_tag"
- 			 android:layout_marginLeft="5dip"
-	         android:gravity="right"/>
-			<EditText android:id="@+id/feature_tag"
-			 android:layout_marginLeft="5dip"
-			 android:layout_marginRight="5dip"
-			 android:maxLength="100"/>
-	    </TableRow>
-
-		<TableRow android:paddingTop="5dip">
 	        <TextView android:text="@string/label_local_sdp"
  			 android:layout_marginLeft="5dip"
 	         android:gravity="right"/>

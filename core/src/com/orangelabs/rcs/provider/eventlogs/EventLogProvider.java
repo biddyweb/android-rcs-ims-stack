@@ -118,13 +118,12 @@ public class EventLogProvider extends ContentProvider {
 	 * sortOrder must be (EventLogData.KEY_EVENT_SESSION_ID+ " DESC , "+EventLogData.KEY_EVENT_DATE + " DESC ")
 	 */
 	@Override
-	public Cursor query(Uri uri, String[] projection, String selection,
-		String[] selectionArgs, String sortOrder) {
+    public Cursor query(Uri uri, String[] projection, String selection,
+            String[] selectionArgs, String sortOrderOriginal) {
 		SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
 		SQLiteDatabase db = openHelper.getWritableDatabase();
-
 		String limit = null;
-		sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " DESC , "+EventLogData.KEY_EVENT_DATE + " DESC ";
+		String sortOrder = EventLogData.KEY_EVENT_SESSION_ID + " DESC , " + EventLogData.KEY_EVENT_DATE + " DESC ";
 		Cursor sortCursor = null;
 		Cursor unionCursor = null;
 		Cursor callCursor = null;
@@ -132,25 +131,38 @@ public class EventLogProvider extends ContentProvider {
 		String unionQuery = null;
 		String richMessagingSelectQuery = null;
 		String richCallSelectQuery = null;
-
 		int match = uriMatcher.match(uri);
-        
+
         switch(match) {
+
         case EventsLogApi.MODE_SPAM_BOX:
-        	// Do not take the "terminated" entries
-        	String extraSelection="NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND status = "+EventsLogApi.STATUS_TERMINATED+" )";
-			// Filter the logs where this contact was involved in a group chat with us
-			extraSelection += " AND NOT ( type = "+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
-				+ " OR type = "+EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
-				+ " OR type = "+EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE+	" )";
-			// Take only the spam messages
-			extraSelection +=" AND ( "+RichMessagingData.KEY_IS_SPAM+"="+EventsLogApi.MESSAGE_IS_SPAM+ " )";
-        	
-			sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " DESC , "+EventLogData.KEY_EVENT_DATE + " DESC ";
-			richMessagingSelectQuery = buildChatQuery(extraSelection, false, true);
+            String extraSelection = "";
+            if (selection != null && selection.length() > 0) {
+                extraSelection += " AND ";
+            } else {
+                selection = "";
+            }
+            // Do not take the "terminated" entries
+            extraSelection = "NOT ((type = " + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE 
+                    + ") AND status = " + EventsLogApi.STATUS_TERMINATED + " )";
+            // Filter the logs where this contact was involved in a group chat with us
+            extraSelection += " AND NOT ( type = " + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
+                    + " OR type = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
+                    + " OR type = " + EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE + " )";
+            // Take only the spam messages
+            extraSelection += " AND ( " + RichMessagingData.KEY_IS_SPAM + "=" + EventsLogApi.MESSAGE_IS_SPAM + " )";
+
+            if (sortOrderOriginal != null && sortOrderOriginal.length() > 0) {
+                sortOrder = sortOrderOriginal;
+            } else {
+                sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " DESC , "+EventLogData.KEY_EVENT_DATE + " DESC ";
+            }
+
+			richMessagingSelectQuery = buildChatQuery(selection + extraSelection, false, true);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
         	break;
+
         case EventsLogApi.MODE_ONE_TO_ONE_CHAT:
         	// Do not take the "terminated" entries
         	extraSelection=" AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND status = "+EventsLogApi.STATUS_TERMINATED+" )";
@@ -160,12 +172,17 @@ public class EventLogProvider extends ContentProvider {
 				+ " OR type = "+EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE+	" )";
 			// Do not take the spam messages
 			extraSelection +=" AND NOT( "+RichMessagingData.KEY_IS_SPAM+"="+EventsLogApi.MESSAGE_IS_SPAM+ " )";
-			
-        	sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
+
+            if (sortOrderOriginal != null) {
+                sortOrder = sortOrderOriginal;
+            } else {
+                sortOrder = EventLogData.KEY_EVENT_SESSION_ID + " ASC , " + EventLogData.KEY_EVENT_DATE + " ASC ";
+            }
 			richMessagingSelectQuery = buildChatQuery(selection + extraSelection, false, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
         	break;
+
         case EventsLogApi.MODE_GROUP_CHAT:
 			extraSelection = "";
         	sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
@@ -173,6 +190,7 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
         	break;
+
         case EventsLogApi.MODE_NONE:
 			/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
@@ -185,7 +203,8 @@ public class EventLogProvider extends ContentProvider {
 			/* Build a SortCursor with all cursors sorted by Date */
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,callCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-    	case EventsLogApi.MODE_RC_CHAT_FT_SMS:
+
+        case EventsLogApi.MODE_RC_CHAT_FT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
     		/* Query for Rich Messaging */
@@ -196,7 +215,8 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-		case EventsLogApi.MODE_RC_CHAT_FT:
+
+        case EventsLogApi.MODE_RC_CHAT_FT:
 			/* Query for Rich Messaging */
 			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, false);
 			/* Query for RichCALL */
@@ -204,7 +224,8 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_RC_CHAT_SMS:
+
+        case EventsLogApi.MODE_RC_CHAT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
     		/* Query for Rich Messaging */
@@ -215,7 +236,8 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-    	case EventsLogApi.MODE_RC_CHAT:
+
+        case EventsLogApi.MODE_RC_CHAT:
     		/* Query for Rich Messaging */
 			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
 			/* Query for RichCALL */
@@ -223,7 +245,8 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_RC_FT_SMS:
+
+        case EventsLogApi.MODE_RC_FT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
     		/* Query for Rich Messaging */
@@ -234,7 +257,8 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-    	case EventsLogApi.MODE_RC_FT:
+
+        case EventsLogApi.MODE_RC_FT:
     		/* Query for Rich Messaging */
 			richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
 			/* Query for RichCALL */
@@ -242,7 +266,8 @@ public class EventLogProvider extends ContentProvider {
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery,richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-		case EventsLogApi.MODE_RC_SMS:
+
+        case EventsLogApi.MODE_RC_SMS:
 			/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
 			/* Query for Rich Messaging */
@@ -251,13 +276,15 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-		case EventsLogApi.MODE_RC:
+
+        case EventsLogApi.MODE_RC:
 			/* Query for RichCALL */
 			richCallSelectQuery = buildRichCallQuery(selection);
 			unionQuery = builder.buildUnionQuery(new String[] { richCallSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-		case EventsLogApi.MODE_CHAT_FT_SMS: 	
+
+        case EventsLogApi.MODE_CHAT_FT_SMS:
 			/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
 			/* Query for Rich Messaging */
@@ -266,13 +293,15 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-		case EventsLogApi.MODE_CHAT_FT: 
+
+        case EventsLogApi.MODE_CHAT_FT:
 			/* Query for Rich Messaging */
 			richMessagingSelectQuery = buildRichMessagingQuery(selection, false, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
-    	case EventsLogApi.MODE_CHAT_SMS:
+ 
+        case EventsLogApi.MODE_CHAT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
 			/* Query for Rich Messaging */
@@ -281,12 +310,14 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-    	case EventsLogApi.MODE_CHAT:
+
+        case EventsLogApi.MODE_CHAT:
     		richMessagingSelectQuery = buildRichMessagingQuery(selection, false, true);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
     		break;
-    	case EventsLogApi.MODE_FT_SMS:
+
+        case EventsLogApi.MODE_FT_SMS:
     		/* Query the sms/mms table */
 			smsCursor = queryMmsSmsTable(selection, sortOrder);
 			/* Query for Rich Messaging */
@@ -295,16 +326,19 @@ public class EventLogProvider extends ContentProvider {
 			unionCursor = db.rawQuery(unionQuery, null);
 			sortCursor = new SortCursor(new Cursor[]{unionCursor,smsCursor},EventLogData.KEY_EVENT_DATE,SortCursor.TYPE_NUMERIC,false);
 			break;
-    	case EventsLogApi.MODE_FT:
+
+        case EventsLogApi.MODE_FT:
     		richMessagingSelectQuery = buildRichMessagingQuery(selection, true, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
     		break;
-		case EventsLogApi.MODE_SMS:
+
+        case EventsLogApi.MODE_SMS:
 			/* Query the sms/mms table */
 			sortCursor = queryMmsSmsTable(selection, sortOrder);
 			break;
-		default:
+
+        default:
 	        throw new IllegalArgumentException("Unknown URI " + uri);
 		}
         

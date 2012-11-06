@@ -16,22 +16,21 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.protocol.sip;
+package com.orangelabs.rcs.ri.terms;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 
 /**
- * Media exception
- * 
- * @author B. Joguet
+ * SIP terms notification receiver
+ *
+ * @author hlxn7157
  */
-public class KeyStoreManagerException extends java.lang.Exception {
-    static final long serialVersionUID = 1L;
-
-    /**
-     * Constructor
-     * 
-     * @param error Error message
-     */
-    public KeyStoreManagerException(String error) {
-        super(error);
+public class SipTermsNotificationReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        // Display notification
+        SipTermsNotification.addNotification(context, intent);
     }
 }

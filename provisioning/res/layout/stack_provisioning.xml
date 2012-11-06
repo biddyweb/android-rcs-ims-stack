@@ -378,8 +378,7 @@
 		android:layout_width="fill_parent"
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
-        android:text="Secure MSRP over Wi-Fi access"
-        android:enabled="false"/>
+        android:text="Secure MSRP over Wi-Fi access"/>
 
         <CheckBox android:id="@+id/SecureRtpOverWifi"
 		android:layout_height="wrap_content"
@@ -388,6 +387,13 @@
 		android:layout_marginRight="5dip"
         android:text="Secure RTP over Wi-Fi access"
         android:enabled="false"/>
+
+        <CheckBox android:id="@+id/ImeiAsDeviceId"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="IMEI as device ID"/>
 </LinearLayout>
 
 </ScrollView>

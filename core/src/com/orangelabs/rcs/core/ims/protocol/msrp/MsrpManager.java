@@ -82,6 +82,19 @@ public class MsrpManager {
 	}
     
     /**
+     * Get the local socket protocol path
+     * 
+     * @return Protocol
+     */
+    public String getLocalSocketProtocol() {
+    	if (secured) {
+    		return "TCP/TLS/MSRP";
+    	} else {
+    		return "TCP/MSRP";
+    	}
+    }
+
+	/**
      * Get the local MSRP path
      * 
      * @return MSRP path

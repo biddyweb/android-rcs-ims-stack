@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.network.sip;
 
-import com.orangelabs.rcs.core.TerminalInfo;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +39,10 @@ import javax2.sip.header.UserAgentHeader;
 import javax2.sip.message.Message;
 import javax2.sip.message.MessageFactory;
 import javax2.sip.message.Request;
+
+import com.orangelabs.rcs.core.TerminalInfo;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 
 /**
  * SIP utility functions
@@ -180,8 +180,8 @@ public class SipUtils {
      * @throws Exception
      */
 	public static Header buildUserAgentHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductName() + "/" + TerminalInfo.getProductVersion();
-	    Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductInfo();
+        Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
 	    return userAgentHeader;
     }
 	
@@ -192,7 +192,7 @@ public class SipUtils {
      * @throws Exception
      */
 	public static Header buildServerHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductName() + "/" + TerminalInfo.getProductVersion();
+	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductInfo();
 		return HEADER_FACTORY.createHeader(ServerHeader.NAME, value);
     }
     
@@ -347,12 +347,19 @@ public class SipUtils {
      * Is a feature tag present or not in SIP message
      * 
      * @param request Request
-     * @param featuretag Feature tag to be checked
+     * @param featureTag Feature tag to be checked
      * @return Boolean
      */
-    public static boolean isFeatureTagPresent(SipRequest request, String featuretag) {
-    	ArrayList<String> featureTags = request.getFeatureTags();
-    	return featureTags.contains(featuretag);
+    public static boolean isFeatureTagPresent(SipRequest request, String featureTag) {
+    	boolean result = false;
+    	ArrayList<String> tags = request.getFeatureTags();
+    	for(int i=0; i < tags.size(); i++) {
+    		if (tags.get(i).contains(featureTag)) {
+        		result = true;
+        		break;
+        	}
+    	}
+    	return result;
     }	
 
     /**
@@ -535,5 +542,29 @@ public class SipUtils {
 	            message.addHeader(header);
 	        }
 	    }
+    }
+    
+    /**
+     * Get display name from URI
+     * 
+     * @param uri URI
+     * @return Display name or null
+     */
+    public static String getDisplayNameFromUri(String uri) {
+		if (uri == null) {
+			return null;
+		}
+		try {
+			int index0 = uri.indexOf("\"");
+			if (index0 != -1) {
+				int index1 = uri.indexOf("\"", index0+1);
+				if (index1 > 0) {
+					return uri.substring(index0+1, index1);
+				}
+			}			
+			return null;
+		} catch(Exception e) {
+			return null;
+		}
     }
 }

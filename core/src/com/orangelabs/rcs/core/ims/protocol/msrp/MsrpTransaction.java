@@ -29,7 +29,7 @@ public class MsrpTransaction extends Object {
     /**
      * MRSP report transaction timeout (in seconds)
      */
-    private final static int TIMEOUT = 60; // TODO: which value ?
+    private final static int TIMEOUT = 30;
 
     /**
      * Count number of sent requests without response 

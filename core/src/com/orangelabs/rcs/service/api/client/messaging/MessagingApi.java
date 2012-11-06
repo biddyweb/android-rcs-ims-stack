@@ -66,7 +66,11 @@ public class MessagingApi extends ClientApi {
     public void disconnectApi() {
     	super.disconnectApi();
     	
-    	ctx.unbindService(apiConnection);
+    	try {
+    		ctx.unbindService(apiConnection);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
     }
     
 	/**
@@ -110,7 +114,7 @@ public class MessagingApi extends ClientApi {
     }
 
 	/**
-	 * Get the file transfer session from its session ID
+	 * Get current file transfer session from its session ID
 	 * 
 	 * @param id Session ID
 	 * @return Session
@@ -129,7 +133,7 @@ public class MessagingApi extends ClientApi {
 	}
 	
 	/**
-	 * Get list of file transfer sessions with a contact
+	 * Get list of current file transfer sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return List of sessions
@@ -148,7 +152,7 @@ public class MessagingApi extends ClientApi {
     }
 	
 	/**
-	 * Get list of file transfer sessions
+	 * Get list of current file transfer sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ClientApiException
@@ -255,7 +259,7 @@ public class MessagingApi extends ClientApi {
 	}	
 	
 	/**
-	 * Get a chat session from its session ID
+	 * Get current chat session from its session ID
 	 * 
 	 * @param id Session ID
 	 * @return Session
@@ -274,7 +278,7 @@ public class MessagingApi extends ClientApi {
 	}	
 	
 	/**
-	 * Get list of chat sessions with a contact
+	 * Get list of current chat sessions with a contact
 	 * 
 	 * @param contact Contact
 	 * @return Session
@@ -293,7 +297,7 @@ public class MessagingApi extends ClientApi {
 	}
 
 	/**
-	 * Get list of chat sessions
+	 * Get list of current chat sessions
 	 * 
 	 * @return List of sessions
 	 * @throws ClientApiException
@@ -302,6 +306,42 @@ public class MessagingApi extends ClientApi {
 		if (coreApi != null) {
 			try {
 		    	return coreApi.getChatSessions();
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+
+	/**
+	 * Get list of current group chat sessions
+	 * 
+	 * @return List of sessions
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getGroupChatSessions() throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	return coreApi.getGroupChatSessions();
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+
+	/** 
+	 * Get list of current group chat sessions for a given conversation
+	 * 
+	 * @return List of sessions
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getGroupChatSessionsWith(String chatId) throws ClientApiException {
+		if (coreApi != null) {
+			try {
+		    	return coreApi.getGroupChatSessionsWith(chatId);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

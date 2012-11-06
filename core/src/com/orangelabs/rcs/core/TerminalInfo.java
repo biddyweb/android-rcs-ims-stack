@@ -22,9 +22,9 @@ package com.orangelabs.rcs.core;
  * Terminal information
  * 
  * @author JM. Auffret
+ * @author Deutsche Telekom AG
  */
 public class TerminalInfo {
-	
 	/**
 	 * Product name
 	 */
@@ -61,4 +61,13 @@ public class TerminalInfo {
 	public static void setProductVersion(String version) {
 		TerminalInfo.productVersion = version;
 	}
+
+    /**
+     * Returns the product name + version
+     *
+     * @return product information
+     */
+    public static String getProductInfo() {
+        return productName + "/" + productVersion;
+    }
 }

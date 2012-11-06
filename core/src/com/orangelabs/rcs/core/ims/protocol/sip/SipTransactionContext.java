@@ -101,9 +101,9 @@ public class SipTransactionContext extends Object {
 	}
 
 	/**
-	 * Determine if the received message is a successfull response
+	 * Determine if the received message is a successful response
 	 * 
-	 * @return Returns True if it's a successfull response else returns False
+	 * @return Returns True if it's a successful response else returns False
 	 */
 	public boolean isSipSuccessfullResponse() {
 		int code = getStatusCode();

@@ -18,13 +18,13 @@ interface IRichCallApi {
 	// Initiate a pre-recorded video sharing session
 	IVideoSharingSession initiateVideoSharing(in String contact, in String file, in IMediaPlayer player);
 
-	// Get a video sharing session from its session ID
+	// Get current video sharing session from its session ID
 	IVideoSharingSession getVideoSharingSession(in String id);
 
 	// Initiate an image sharing session
 	IImageSharingSession initiateImageSharing(in String contact, in String file);
 
-	// Get an image sharing session from its session ID
+	// Get current image sharing session from its session ID
 	IImageSharingSession getImageSharingSession(in String id);
 
 	// Set multiparty call

@@ -126,4 +126,11 @@ public class DummyPacketGenerator {
         if (outputStream != null)
             outputStream.close();
     }
+
+    /**
+     * Set incomingStarted.
+     */
+    public void incomingStarted() {
+        inputStream.incomingStarted();
+    }
 }

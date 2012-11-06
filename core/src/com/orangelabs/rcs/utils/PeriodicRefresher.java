@@ -145,7 +145,11 @@ public abstract class PeriodicRefresher {
 		am.cancel(alarmIntent);
 
 		// Unregister the alarm receiver
-		AndroidFactory.getApplicationContext().unregisterReceiver(alarmReceiver);
+		try {
+			AndroidFactory.getApplicationContext().unregisterReceiver(alarmReceiver);
+	    } catch (IllegalArgumentException e) {
+	    	// Nothing to do
+	    }
     }
 
     /**

@@ -117,8 +117,13 @@ public class TermsApiService extends ITermsApi.Stub {
      * @param pin PIN number requested
      * @param subject Subject
      * @param text Text
+     * @param acceptButtonLabel 
+     * @param rejectButtonLabel 
+     * @param timeout 
      */
-    public void receiveTermsRequest(String remote, String id, String type, boolean pin, String subject, String text) {
+    public void receiveTermsRequest(String remote, String id, String type,
+            boolean pin, String subject, String text, String acceptButtonLabel,
+            String rejectButtonLabel, int timeout) {
 		// Broadcast intent related to the received request
     	Intent intent = new Intent(TermsApiIntents.TERMS_SIP_REQUEST);
     	intent.putExtra("id", id);
@@ -126,6 +131,9 @@ public class TermsApiService extends ITermsApi.Stub {
     	intent.putExtra("pin", pin);
     	intent.putExtra("subject", subject);
     	intent.putExtra("text", text);
+        intent.putExtra("acceptButtonLabel", acceptButtonLabel);
+        intent.putExtra("rejectButtonLabel", rejectButtonLabel);
+        intent.putExtra("timeout", timeout);
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 
@@ -146,5 +154,24 @@ public class TermsApiService extends ITermsApi.Stub {
     	intent.putExtra("subject", subject);
     	intent.putExtra("text", text);
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
+
+    /**
+     * Receive user notification via SIP
+     *
+     * @param remote Remote server
+     * @param id Request ID
+     * @param subject Subject
+     * @param text Text
+     * @param okButtonLabel Label of OK button
+     */
+    public void receiveUserNotification(String remote, String id, String subject, String text, String okButtonLabel) {
+        // Broadcast intent related to the received request
+        Intent intent = new Intent(TermsApiIntents.TERMS_SIP_USER_NOTIFICATION);
+    	intent.putExtra("id", id);
+        intent.putExtra("subject", subject);
+        intent.putExtra("text", text);
+        intent.putExtra("okButtonLabel", okButtonLabel);
+        AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 }

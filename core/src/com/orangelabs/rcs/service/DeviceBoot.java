@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.service;
 
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -30,16 +28,8 @@ import android.content.Intent;
  * @author jexa7410
  */
 public class DeviceBoot extends BroadcastReceiver {
-	/**
-	 * The logger
-	 */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     @Override
-	public void onReceive(Context context, Intent intent) {
-		if (logger.isActivated()) {
-			logger.debug("Device boot");
-		}
+    public void onReceive(Context context, Intent intent) {
         LauncherUtils.launchRcsService(context, true);
     }
 }

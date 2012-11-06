@@ -1195,16 +1195,13 @@ public final class ContactsManager {
 	
 	/**
 	 * Get all the contacts in the contact contract provider that have a RCS raw contact
-	 * 
-	 * @return list containing all contacts that have been at least queried once for capabilities 
+	 *
+	 * @return list containing all contacts that have been at least queried once for capabilities
 	 */
 	public List<String> getAllContacts(){
 		List<String> numbers = new ArrayList<String>();
 		String[] projection = {
-                Data._ID, 
-                Data.MIMETYPE, 
-                Data.DATA1, 
-                Data.DATA2          
+                Data.DATA1
         };
 
         // Filter the mime types 
@@ -1220,7 +1217,7 @@ public final class ContactsManager {
         		null);
 		
 		while (cur.moveToNext()) {
-			String number = cur.getString(2);
+			String number = cur.getString(0);
 			if (!numbers.contains(number)){
 				numbers.add(number);
 			}
@@ -1229,7 +1226,45 @@ public final class ContactsManager {
 		return numbers;
 	}
 	
-	/**
+    /**
+     * Get all the contacts in the contact contract provider that have a RCS raw contact
+     * (include duplicated phone numbers)
+     *
+     * @return list containing all contacts with phone numbers that have been at least queried once for capabilities
+     */
+    public ArrayList<String[]> getAllContactsInformation() {
+        ArrayList<String[]> contacts = new ArrayList<String[]>();
+        String[] projection = {
+                Data.CONTACT_ID,
+                Data.DISPLAY_NAME,
+                Data.DATA1,
+        };
+
+        // Filter the mime types
+        String selection = Data.MIMETYPE + "=?";
+        String[] selectionArgs = {
+                MIMETYPE_NUMBER
+        };
+
+        Cursor cur = ctx.getContentResolver().query(Data.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null);
+
+        if (cur != null) {
+            while (cur.moveToNext()) {
+                String id = cur.getString(cur.getColumnIndex(Data.CONTACT_ID));
+                String displayName = cur.getString(cur.getColumnIndex(Data.DISPLAY_NAME));
+                String number = cur.getString(cur.getColumnIndex(Data.DATA1));
+                contacts.add(new String[] {id, displayName, number});
+            }
+            cur.close();
+        }
+        return contacts;
+    }
+
+    /**
 	 * Get the RCS contacts in the rich address book provider
 	 * 
 	 * @return list containing all RCS blocked contacts
@@ -2846,9 +2881,11 @@ public final class ContactsManager {
      * @return list of contactIds, empty list if none was found
      */
     private List<Long> getRcsRawContactIdFromPhoneNumber(String phoneNumber) {
-    	List<Long> contactsIds = new ArrayList<Long>();
-    	
-        String[] projection = { Data.RAW_CONTACT_ID };
+        List<Long> contactsIds = new ArrayList<Long>();
+        String[] projection = {
+                Data.RAW_CONTACT_ID,
+                Data.DATA1
+                };
         String selection = Data.MIMETYPE + "=? AND PHONE_NUMBERS_EQUAL(" + Phone.NUMBER + ", ?)";
         String[] selectionArgs = { MIMETYPE_NUMBER, phoneNumber };
         String sortOrder = Data.RAW_CONTACT_ID;
@@ -2860,8 +2897,13 @@ public final class ContactsManager {
                 sortOrder);
         if (cur != null) {
             while (cur.moveToNext()) {
-            	long rcsRawContactId = cur.getLong(cur.getColumnIndex(Data.RAW_CONTACT_ID));
-            	contactsIds.add(rcsRawContactId);
+                long rcsRawContactId = cur.getLong(cur.getColumnIndex(Data.RAW_CONTACT_ID));
+                String phone = cur.getString(cur.getColumnIndex(Data.DATA1));
+                String interPhone = PhoneUtils.formatNumberToInternational(phone);
+                if (phoneNumber.equals(interPhone)) {
+                    contactsIds.add(rcsRawContactId);
+                    break;
+                }
             }
             cur.close();
         }
@@ -3136,7 +3178,7 @@ public final class ContactsManager {
      * @return list of raw contact ids associated to this contact
      */
     private List<Long> getRcsRawContactIdsFromContact(final String contact){
-    	if (contact.equalsIgnoreCase(MYSELF)){
+    	if (MYSELF.equalsIgnoreCase(contact)){
     		List<Long> rawContactId = new ArrayList<Long>();
     		rawContactId.add(getRawContactIdForMe());
     		return rawContactId;

@@ -39,7 +39,17 @@ public class ReportTransaction extends Object {
      * Status code
      */
     private int statusCode = -1;
-    
+
+    /**
+     * Indicate if received the Byte-Range header
+     */
+    private boolean receivedByteRangeHeader;
+
+    /**
+     * Indicate if the report was notified
+     */
+    private boolean isNotified = false;
+
     /**
 	 * Constructor
 	 */
@@ -53,6 +63,9 @@ public class ReportTransaction extends Object {
 	 */
 	public void notifyReport(Hashtable<String, String> headers) {
 		synchronized(this) {
+            receivedByteRangeHeader = false;
+            isNotified = true;
+
 			// Get status code
 			String status = headers.get(MsrpConstants.HEADER_STATUS);
 			if ((status != null) && (status.startsWith("000 "))) {
@@ -70,6 +83,7 @@ public class ReportTransaction extends Object {
 			String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
 			if (byteRange != null) {
 				reportedSize = MsrpUtils.getChunkSize(byteRange);
+                receivedByteRangeHeader = true;
 			}
 
 			// Unblock semaphore
@@ -118,4 +132,22 @@ public class ReportTransaction extends Object {
 	public int getStatusCode() {
 		return statusCode;
 	}
+
+    /**
+     * Verifies if the transaction is finished.
+     * @param totalSize Transaction total size.
+     * @return <code>True</code> if transaction is finished, <code>false</code> otherwise.
+     */
+    public boolean isTransactionFinished(long totalSize) {
+        if (isNotified) {
+            if (!receivedByteRangeHeader) {
+                return true;
+            }
+            if (reportedSize == totalSize) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

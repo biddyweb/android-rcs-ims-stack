@@ -25,14 +25,14 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.CoreListener;
 import com.orangelabs.rcs.core.ims.network.ImsConnectionManager;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
-import com.orangelabs.rcs.core.ims.network.MobileNetworkInterface;
-import com.orangelabs.rcs.core.ims.network.WifiNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.gsm.CallManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpConnection;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpSource;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipEventListener;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.security.cert.KeyStoreManager;
+import com.orangelabs.rcs.core.ims.security.cert.KeyStoreManagerException;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceDispatcher;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
@@ -115,6 +115,16 @@ public class ImsModule implements SipEventListener {
 		RtpSource.CNAME = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		MsrpConnection.MSRP_TRACE_ENABLED = RcsSettings.getInstance().isMediaTraceActivated();
 
+		// Load keystore for certificates
+		try {
+			KeyStoreManager.loadKeyStore();
+		} catch(KeyStoreManagerException e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("Can't load keystore manager", e);
+	    	}
+	    	throw new CoreException("Keystore manager exeception");			
+		}
+		
 		// Instanciates the IMS services
         services = new ImsService[6];
         

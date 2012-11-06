@@ -128,8 +128,11 @@ public class StartService extends Service {
     public void onDestroy() {
         // Unregister network state listener
         if (networkStateListener != null) {
-            unregisterReceiver(networkStateListener);
-            networkStateListener = null;
+        	try {
+	            unregisterReceiver(networkStateListener);
+	        } catch (IllegalArgumentException e) {
+	        	// Nothing to do
+	        }
         }
     }
 
@@ -193,7 +196,11 @@ public class StartService extends Service {
                 
                 // Stop Network listener
                 if (networkStateListener != null) {
-                	unregisterReceiver(networkStateListener);
+                	try {
+	                	unregisterReceiver(networkStateListener);
+	    	        } catch (IllegalArgumentException e) {
+	    	        	// Nothing to do
+	    	        }
                 	networkStateListener = null;
                 }
             }

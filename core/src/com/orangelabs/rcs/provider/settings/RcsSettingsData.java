@@ -20,7 +20,6 @@ package com.orangelabs.rcs.provider.settings;
 
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.Environment;
 
 /**
  * RCS settings data constants
@@ -52,6 +51,11 @@ public class RcsSettingsData {
 	// Constants
 	// ---------------------------------------------------------------------------
 
+	/**
+	 * Default group chat conference URI
+	 */
+	public static final String DEFAULT_GROUP_CHAT_URI = "sip:foo@bar";
+	
 	/**
 	 * Boolean value "true"
 	 */
@@ -86,11 +90,6 @@ public class RcsSettingsData {
 	 * Wi-Fi access
 	 */
     public static final int WIFI_ACCESS = ConnectivityManager.TYPE_WIFI;
-
-    /**
-     * Folder path for certificate
-     */
-    public static final String CERTIFICATE_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
 
     /**
      * File type for certificate
@@ -632,6 +631,11 @@ public class RcsSettingsData {
 	 * GRUU support
 	 */
 	public static final String GRUU = "GRUU";
+
+    /**
+     * IMEI used as device ID
+     */
+    public static final String USE_IMEI_AS_DEVICE_ID = "ImeiDeviceId";
 
     /**
      * CPU always_on support

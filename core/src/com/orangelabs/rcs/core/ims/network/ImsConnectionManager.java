@@ -201,8 +201,12 @@ public class ImsConnectionManager implements Runnable {
     	}
 
 		// Unregister network state listener
-		AndroidFactory.getApplicationContext().unregisterReceiver(networkStateListener);
-    	
+    	try {
+    		AndroidFactory.getApplicationContext().unregisterReceiver(networkStateListener);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
+        }
+        
     	// Stop the IMS connection manager
     	stopImsConnection();
     	

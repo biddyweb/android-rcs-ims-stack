@@ -18,16 +18,25 @@
 
 package com.orangelabs.rcs.core.ims.service.sip;
 
-import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.utils.PhoneUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
-
 import java.util.Enumeration;
 import java.util.Vector;
+
+import android.content.Intent;
+
+import com.orangelabs.rcs.core.CoreException;
+import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
+import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
+import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * SIP service
@@ -104,11 +113,12 @@ public class SipService extends ImsService {
 	}
 
     /**
-     * Reveive a session invitation
+     * Receive a session invitation
      * 
+     * @param intent Resolved intent
      * @param invite Initial invite
      */
-	public void receiveSessionInvitation(SipRequest invite) {
+	public void receiveSessionInvitation(Intent intent, SipRequest invite) {
 		// Create a new session
     	TerminatingSipSession session = new TerminatingSipSession(
 					this,
@@ -117,8 +127,14 @@ public class SipService extends ImsService {
 		// Start the session
 		session.startSession();
 
+		// Update intent
+		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+		intent.putExtra("contact", number);
+		intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
+		intent.putExtra("sessionId", session.getSessionID());
+
 		// Notify listener
-		getImsModule().getCore().getListener().handleSipSessionInvitation(session);
+		getImsModule().getCore().getListener().handleSipSessionInvitation(intent, session);
 	}
 
     /**
@@ -159,4 +175,140 @@ public class SipService extends ImsService {
 
 		return result;
     }
+
+	/**
+	 * Send an instant message (SIP MESSAGE)
+	 * 
+     * @param contact Contact
+	 * @param featureTag Feature tag of the service
+     * @param content Content
+     * @param contentType Content type
+	 * @return True if successful else returns false
+	 */
+	public boolean sendInstantMessage(String contact, String featureTag, String content, String contentType) {
+		boolean result = false;
+		try {
+			if (logger.isActivated()) {
+       			logger.debug("Send instant message to " + contact);
+       		}
+			
+		    // Create authentication agent 
+       		SessionAuthenticationAgent authenticationAgent = new SessionAuthenticationAgent(getImsModule());
+       		
+       		// Create a dialog path
+        	String contactUri = PhoneUtils.formatNumberToSipUri(contact);
+        	SipDialogPath dialogPath = new SipDialogPath(
+        			getImsModule().getSipManager().getSipStack(),
+        			getImsModule().getSipManager().getSipStack().generateCallId(),
+    				1,
+    				contactUri,
+    				ImsModule.IMS_USER_PROFILE.getPublicUri(),
+    				contactUri,
+    				getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
+        	
+	        // Create MESSAGE request
+        	if (logger.isActivated()) {
+        		logger.info("Send first MESSAGE");
+        	}
+	        SipRequest msg = SipMessageFactory.createMessage(dialogPath,
+	        		featureTag,	contentType, content);
+	        
+	        // Send MESSAGE request
+	        SipTransactionContext ctx = getImsModule().getSipManager().sendSipMessageAndWait(msg);
+	
+	        // Analyze received message
+            if (ctx.getStatusCode() == 407) {
+                // 407 response received
+            	if (logger.isActivated()) {
+            		logger.info("407 response received");
+            	}
+
+    	        // Set the Proxy-Authorization header
+            	authenticationAgent.readProxyAuthenticateHeader(ctx.getSipResponse());
+
+                // Increment the Cseq number of the dialog path
+                dialogPath.incrementCseq();
+
+                // Create a second MESSAGE request with the right token
+                if (logger.isActivated()) {
+                	logger.info("Send second MESSAGE");
+                }
+    	        msg = SipMessageFactory.createMessage(dialogPath,
+    	        		featureTag,	contentType, content);
+
+    	        // Set the Authorization header
+    	        authenticationAgent.setProxyAuthorizationHeader(msg);
+                
+                // Send MESSAGE request
+    	        ctx = getImsModule().getSipManager().sendSipMessageAndWait(msg);
+
+                // Analyze received message
+                if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {
+                    // 200 OK response
+                	if (logger.isActivated()) {
+                		logger.info("20x OK response received");
+                	}
+                	result = true;
+                } else {
+                    // Error
+                	if (logger.isActivated()) {
+                		logger.info("Send instant message has failed: " + ctx.getStatusCode()
+    	                    + " response received");
+                	}
+                }
+            } else
+            if ((ctx.getStatusCode() == 200) || (ctx.getStatusCode() == 202)) {
+	            // 200 OK received
+            	if (logger.isActivated()) {
+            		logger.info("20x OK response received");
+            	}
+            	result = true;
+	        } else {
+	            // Error responses
+            	if (logger.isActivated()) {
+            		logger.info("Send instant message has failed: " + ctx.getStatusCode()
+	                    + " response received");
+            	}
+	        }
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Can't send MESSAGE request", e);
+        	}
+        }
+        return result;
+	}
+
+    /**
+     * Receive an instant message
+     * 
+     * @param intent Resolved intent
+     * @param message Instant message request
+     */
+	public void receiveInstantMessage(Intent intent, SipRequest message) {
+		// Send a 200 OK response
+		try {
+			if (logger.isActivated()) {
+				logger.info("Send 200 OK");
+			}
+	        SipResponse response = SipMessageFactory.createResponse(message,
+	        		IdGenerator.getIdentifier(), 200);
+			getImsModule().getSipManager().sendSipResponse(response);
+		} catch(Exception e) {
+	       	if (logger.isActivated()) {
+	    		logger.error("Can't send 200 OK response", e);
+	    	}
+	       	return;
+		}
+
+		// Update intent
+		String contact = SipUtils.getAssertedIdentity(message);
+		String number = PhoneUtils.extractNumberFromUri(contact);
+		intent.putExtra("contact", number);
+		intent.putExtra("contactDisplayname", SipUtils.getDisplayNameFromUri(message.getFrom()));
+		intent.putExtra("content", message.getContent());
+		intent.putExtra("contentType", message.getContentType());
+		
+		// Notify listener
+		getImsModule().getCore().getListener().handleSipInstantMessageReceived(intent);
+	}
 }

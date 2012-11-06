@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core;
 
+import android.content.Intent;
+
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
@@ -26,9 +28,9 @@ import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
-import com.orangelabs.rcs.core.ims.service.sip.TerminatingSipSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 
 /**
@@ -158,21 +160,34 @@ public interface CoreListener {
     /**
      * New SIP session invitation
      * 
+	 * @param intent Resolved intent
      * @param session SIP session
      */
-    public void handleSipSessionInvitation(TerminatingSipSession session);
+    public void handleSipSessionInvitation(Intent intent, GenericSipSession session);
     
-    /**
+	/**
+	 * New SIP instant message received
+	 * 
+	 * @param intent Resolved intent
+	 */
+    public void handleSipInstantMessageReceived(Intent intent);
+
+	/**
      * User terms confirmation request
-     * 
+     *
      * @param remote Remote server
      * @param id Request ID
      * @param type Type of request
      * @param pin PIN number requested
      * @param subject Subject
      * @param text Text
+     * @param btnLabelAccept Label of Accept button
+     * @param btnLabelReject Label of Reject button
+     * @param timeout Timeout request
      */
-    public void handleUserConfirmationRequest(String remote, String id, String type, boolean pin, String subject, String text);
+    public void handleUserConfirmationRequest(String remote, String id,
+            String type, boolean pin, String subject, String text,
+            String btnLabelAccept, String btnLabelReject, int timeout);
 
     /**
      * User terms confirmation acknowledge
@@ -184,6 +199,17 @@ public interface CoreListener {
      * @param text Text
      */
     public void handleUserConfirmationAck(String remote, String id, String status, String subject, String text);
+
+    /**
+     * User terms notification
+     *
+     * @param remote Remote server
+     * @param id Request ID
+     * @param subject Subject
+     * @param text Text
+     * @param btnLabel Label of OK button
+     */
+    public void handleUserNotification(String remote, String id, String subject, String text, String btnLabel);
 
     /**
      * SIM has changed

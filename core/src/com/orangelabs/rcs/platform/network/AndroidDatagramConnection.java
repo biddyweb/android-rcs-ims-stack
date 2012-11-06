@@ -33,7 +33,12 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	/**
 	 * Datagram connection
 	 */
-	private DatagramSocket connection = null; 
+	private DatagramSocket connection = null;
+	
+	/**
+	 * Internal buffer
+	 */
+	private byte[] buf = new byte[DatagramConnection.DEFAULT_DATAGRAM_SIZE];
 	
 	/**
 	 * Constructor
@@ -81,7 +86,11 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	 */
 	public byte[] receive(int bufferSize) throws IOException {
 		if (connection != null) {
-			byte[] buf = new byte[bufferSize];
+		    // Increase buffer size if necessary
+		    if (bufferSize > buf.length)  {
+		        buf = new byte[bufferSize];
+		    }
+
 			DatagramPacket packet = new DatagramPacket(buf, bufferSize);
 			connection.receive(packet);
 			

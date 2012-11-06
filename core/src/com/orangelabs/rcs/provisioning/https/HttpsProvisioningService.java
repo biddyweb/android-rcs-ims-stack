@@ -77,6 +77,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * HTTPS auto configuration service
  * 
  * @author hlxn7157
+ * @author G. LE PESSOT
+ * @author Deutsche Telekom AG
  */
 public class HttpsProvisioningService extends Service {
     /**
@@ -153,11 +155,19 @@ public class HttpsProvisioningService extends Service {
     public void onDestroy() {
 		// Unregister network state listener
         if (networkStateListener != null) {
-            unregisterReceiver(networkStateListener);
+        	try {
+	            unregisterReceiver(networkStateListener);
+	        } catch (IllegalArgumentException e) {
+	        	// Nothing to do
+	        }
         }
 
-        // Unregister Retry 
-        unregisterReceiver(retryReceiver);
+        // Unregister retry receiver
+        try {
+	        unregisterReceiver(retryReceiver);
+	    } catch (IllegalArgumentException e) {
+	    	// Nothing to do
+	    }
     }
 
     @Override
@@ -241,7 +251,11 @@ public class HttpsProvisioningService extends Service {
     				
                     // Unregister network state listener
                     if (networkStateListener != null) {
-                        unregisterReceiver(networkStateListener);
+                    	try {
+	                        unregisterReceiver(networkStateListener);
+	                    } catch (IllegalArgumentException e) {
+	                    	// Nothing to do
+	                    }
                         networkStateListener = null;
                     }
                     isPending = false;
@@ -473,6 +487,13 @@ public class HttpsProvisioningService extends Service {
 	    	// Get SIM info
 	    	TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 	    	String ope = tm.getSimOperator();
+            // Cancel operation if no valid SIM operator
+            if (ope == null || ope.length() < 4) {
+                if (logger.isActivated()) {
+                    logger.warn("Can not read network operator from SIM card!");
+                }
+                return null;
+            }
             String mnc = ope.substring(3);
             String mcc = ope.substring(0, 3);
             String oldRequestUri = "config." + mcc + mnc + ".rcse";
@@ -540,16 +561,26 @@ public class HttpsProvisioningService extends Service {
                 return result;
             }
 
-			// Execute second HTTPS request
+			// Format second HTTPS request
 			String args = "?vers=" + RcsSettings.getInstance().getProvisioningVersion()
                     + "&client_vendor=" + getClientVendor()
                     + "&client_version=" + getClientVersion()
                     + "&terminal_vendor=" + HttpUtils.encodeURL(getTerminalVendor())
                     + "&terminal_model=" + HttpUtils.encodeURL(getTerminalModel())
-                    + "&terminal_sw_version=" + HttpUtils.encodeURL(getTerminalSoftwareVersion())
-                    + "&IMSI=" + imsi
-                    + "&IMEI=" + imei;
-            response = executeRequest("https",requestUri + args, client, localContext);
+                    + "&terminal_sw_version=" + HttpUtils.encodeURL(getTerminalSoftwareVersion());
+            if (imsi != null) { // add optional parameter IMSI only if available
+                args += "&IMSI=" + imsi;
+            }
+            if (imei != null) { // add optional parameter IMEI only if available
+                args += "&IMEI=" + imei;
+            } 
+            String request = requestUri + args;
+            if (logger.isActivated()) {
+                logger.info("Request provisioning: "+ request);
+            }
+
+            // Execute second HTTPS request
+            response = executeRequest("https", request, client, localContext);
 			result.code = response.getStatusLine().getStatusCode();
 			if (result.code != 200) {
                 if (result.code == 503) {

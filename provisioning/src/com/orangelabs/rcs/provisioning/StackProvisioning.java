@@ -24,6 +24,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -38,10 +39,15 @@ import java.io.FilenameFilter;
 
 /**
  * Stack parameters provisioning
- *
+ *File
  * @author jexa7410
  */
 public class StackProvisioning extends Activity {
+    /**
+     * Folder path for certificate
+     */
+    public static final String CERTIFICATE_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
+
 	/**
 	 * Auto config mode
 	 */
@@ -142,7 +148,7 @@ public class StackProvisioning extends Activity {
         boolean found = false;
         String certRoot = RcsSettings.getInstance().getTlsCertificateRoot();
         for (int i = 0; i < certificates.length; i++) {
-            if (certRoot.equals(certificates[i])) {
+        	if (certRoot.contains(certificates[i])) {
                 spinner.setSelection(i);
                 found = true;
             }
@@ -160,7 +166,7 @@ public class StackProvisioning extends Activity {
         found = false;
         String certInt = RcsSettings.getInstance().getTlsCertificateIntermediate();
         for (int i = 0; i < certificates.length; i++) {
-            if (certInt.equals(certificates[i])) {
+            if (certInt.contains(certificates[i])) {
                 spinner.setSelection(i);
                 found = true;
             }
@@ -262,6 +268,9 @@ public class StackProvisioning extends Activity {
 
         check = (CheckBox)this.findViewById(R.id.SecureRtpOverWifi);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI)));
+
+        check = (CheckBox)this.findViewById(R.id.ImeiAsDeviceId);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.USE_IMEI_AS_DEVICE_ID)));
     }
 
     @Override
@@ -297,14 +306,16 @@ public class StackProvisioning extends Activity {
                 if (spinner.getSelectedItemPosition() == 0) {
                     RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, "");
                 } else {
-                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, (String) spinner.getSelectedItem());
+                	String path = CERTIFICATE_FOLDER_PATH + File.separator + (String)spinner.getSelectedItem();
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_ROOT, path);
                 }
 
                 spinner = (Spinner) findViewById(R.id.TlsCertificateIntermediate);
                 if (spinner.getSelectedItemPosition() == 0) {
                     RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, "");
                 } else {
-                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, (String) spinner.getSelectedItem());
+                	String path = CERTIFICATE_FOLDER_PATH + File.separator + (String)spinner.getSelectedItem();
+                    RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, path);
                 }
                 
 				spinner = (Spinner)findViewById(R.id.NetworkAccess);
@@ -411,6 +422,9 @@ public class StackProvisioning extends Activity {
                 check = (CheckBox)this.findViewById(R.id.SecureRtpOverWifi);
                 RcsSettings.getInstance().writeParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI, Boolean.toString(check.isChecked()));
 
+                check = (CheckBox)this.findViewById(R.id.ImeiAsDeviceId);
+                RcsSettings.getInstance().writeParameter(RcsSettingsData.USE_IMEI_AS_DEVICE_ID, Boolean.toString(check.isChecked()));
+
                 Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 				break;
 		}
@@ -418,13 +432,13 @@ public class StackProvisioning extends Activity {
 	}
 
     /**
-     * Load a list of certificate file in the sd card
+     * Load a list of certificates from the SDCARD
      * 
-     * @return
+     * @return List of certificates
      */
     private String[] loadCertificatesList() {
         String[] files = null;
-        File folder = new File(RcsSettingsData.CERTIFICATE_FOLDER_PATH);
+        File folder = new File(CERTIFICATE_FOLDER_PATH);
         try {
             folder.mkdirs();
             if (folder.exists()) {
@@ -439,16 +453,18 @@ public class StackProvisioning extends Activity {
         } catch (SecurityException e) {
             // intentionally blank
         }
-        // Add an empty string on first position
         if (files == null) {
+        	// No certificate
             return new String[] {
                 getString(R.string.label_no_certificate)
             };
         } else {
-            String[] temp = new String[files.length + 1];
+        	// Add certificates in the list
+        	String[] temp = new String[files.length + 1];
             temp[0] = getString(R.string.label_no_certificate);
-            if (files.length > 0)
+            if (files.length > 0) {
                 System.arraycopy(files, 0, temp, 1, files.length);
+            }
             return temp;
         }
     }

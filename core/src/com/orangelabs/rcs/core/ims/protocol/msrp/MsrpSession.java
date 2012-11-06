@@ -332,29 +332,22 @@ public class MsrpSession {
 
             // Waiting reportTransaction
             if (reportTransaction != null) {
-				// Wait until all data have been reported
-				long lastReport = reportTransaction.getReportedSize();
-				while(reportTransaction.getReportedSize() < totalSize) {
-					reportTransaction.waitReport();
-					if (lastReport == reportTransaction.getReportedSize()) {
-						// Timeout
-						break;
-					}
-					if (reportTransaction.getStatusCode() != 200) {
-						// Error
-						break;
-					}
-					lastReport = reportTransaction.getReportedSize();
-				}
+                // Wait until all data have been reported
+                while(!reportTransaction.isTransactionFinished(totalSize)) {
+                    reportTransaction.waitReport();
+                    if (reportTransaction.getStatusCode() != 200) {
+                        // Error
+                        break;
+                    }
+                }
 
-	            // Notify event listener
-	            if ((reportTransaction.getStatusCode() == 200) &&
-	            		(reportTransaction.getReportedSize() == totalSize)) {
-	                msrpEventListener.msrpDataTransfered(msgId);
-	            } else {
-	                msrpEventListener.msrpTransferError("report timeout");
-	            }
-			}
+                // Notify event listener
+                if (reportTransaction.getStatusCode() == 200) {
+                    msrpEventListener.msrpDataTransfered(msgId);
+                } else {
+                    msrpEventListener.msrpTransferError("report timeout");
+                }
+            }
 
             // No transaction
             if (msrpTransaction == null && reportTransaction == null) {

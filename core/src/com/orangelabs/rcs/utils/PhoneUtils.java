@@ -132,21 +132,6 @@ public class PhoneUtils {
 	}
 
 	/**
-	 * Format a phone number to a SIP address
-	 * 
-	 * @param number Phone number
-	 * @return SIP address
-	 */
-	public static String formatNumberToSipAddress(String number) {
-		String addr = formatNumberToSipUri(number);	 
-		String displayName = RcsSettings.getInstance().getUserProfileImsDisplayName();
-		if ((displayName != null) && (displayName.length() > 0)) {
-			addr = "\"" + displayName + "\" <" + addr + ">"; 
-		}
-		return addr;
-	}
-	
-	/**
 	 * Extract user part phone number from a SIP-URI or Tel-URI or SIP address
 	 * 
 	 * @param uri SIP or Tel URI
@@ -185,32 +170,6 @@ public class PhoneUtils {
 			
 			// Format the extracted number (username part of the URI)
 			return formatNumberToInternational(uri);
-		} catch(Exception e) {
-			return null;
-		}
-	}
-
-	/**
-	 * Extract display name from URI
-	 * 
-	 * @param uri URI
-	 * @return Display name or null
-	 */
-	public static String extractDisplayNameFromUri(String uri) {
-		if (uri == null) {
-			return null;
-		}
-
-		try {
-			int index0 = uri.indexOf("\"");
-			if (index0 != -1) {
-				int index1 = uri.indexOf("\"", index0+1);
-				if (index1 > 0) {
-					return uri.substring(index0+1, index1);
-				}
-			}			
-			
-			return null;
 		} catch(Exception e) {
 			return null;
 		}

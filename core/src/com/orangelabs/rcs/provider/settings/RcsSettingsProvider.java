@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 64;
+        private static final int DATABASE_VERSION = 65;
 
         private Context ctx;
 
@@ -138,7 +138,7 @@ public class RcsSettingsProvider extends ContentProvider {
 		    addParameter(db, RcsSettingsData.XDM_SERVER, 						"");
 		    addParameter(db, RcsSettingsData.XDM_LOGIN,							"");
 		    addParameter(db, RcsSettingsData.XDM_PASSWORD, 						"");
-            addParameter(db, RcsSettingsData.IM_CONF_URI, 						"");
+            addParameter(db, RcsSettingsData.IM_CONF_URI, 						RcsSettingsData.DEFAULT_GROUP_CHAT_URI);
             addParameter(db, RcsSettingsData.ENDUSER_CONFIRMATION_URI,			"");
             addParameter(db, RcsSettingsData.COUNTRY_CODE,						"+33");
             addParameter(db, RcsSettingsData.COUNTRY_AREA_CODE,					"0");
@@ -194,8 +194,9 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"500");
             addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.USE_IMEI_AS_DEVICE_ID,             RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CPU_ALWAYS_ON,                     RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.NO_AUTO_CONFIG);
+            addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
             addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				Environment.getExternalStorageDirectory() + "/joyn/photos");

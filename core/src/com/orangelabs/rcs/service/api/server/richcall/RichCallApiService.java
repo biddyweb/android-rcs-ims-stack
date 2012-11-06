@@ -268,7 +268,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	}
 
 	/**
-	 * Get a video sharing session from its session ID
+	 * Get current video sharing session from its session ID
 	 *
 	 * @param id Session ID
 	 * @return Session
@@ -363,7 +363,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	}
 
     /**
-     * Get an image sharing session from its session ID
+     * Get current image sharing session from its session ID
      * 
      * @param id Session ID
      * @return Session

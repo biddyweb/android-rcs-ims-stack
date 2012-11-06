@@ -24,6 +24,8 @@ import javax2.sip.header.ContactHeader;
 import javax2.sip.header.EventHeader;
 import javax2.sip.message.Request;
 
+import android.content.Intent;
+
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -282,12 +284,13 @@ public class ImsServiceDispatcher extends Thread {
 					sendFinalResponse(request, 603);
 	    		}
     		} else {
-	    		if (intentMgr.isSipIntentResolved(request)) {
+    			Intent intent = intentMgr.isSipRequestResolved(request);
+	    		if (intent != null) {
 	    			// Generic SIP session
 		    		if (logger.isActivated()) {
 		    			logger.debug("Generic SIP session invitation");
 		    		}
-	    			imsModule.getSipService().receiveSessionInvitation(request);
+	    			imsModule.getSipService().receiveSessionInvitation(intent, request);
 		    	} else {
 					// Unknown service: reject the invitation with a 606 Not Acceptable
 					if (logger.isActivated()) {
@@ -298,21 +301,7 @@ public class ImsServiceDispatcher extends Thread {
     		}
 		} else
     	if (request.getMethod().equals(Request.MESSAGE)) {
-	        // MESSAGE received
-
-			// Send a 200 OK response
-			try {
-				if (logger.isActivated()) {
-					logger.info("Send 200 OK");
-				}
-		        SipResponse response = SipMessageFactory.createResponse(request, IdGenerator.getIdentifier(), 200);
-				imsModule.getSipManager().sendSipResponse(response);
-			} catch(Exception e) {
-		       	if (logger.isActivated()) {
-		    		logger.error("Can't send 200 OK response", e);
-		    	}
-			}
-    		
+	        // MESSAGE received    		
     		if (ChatUtils.isImdnService(request)) {
 	    		// IMDN service
 				imsModule.getInstantMessagingService().receiveMessageDeliveryStatus(request);
@@ -321,8 +310,20 @@ public class ImsServiceDispatcher extends Thread {
 	    		// Terms & conditions service
 	    		imsModule.getTermsConditionsService().receiveMessage(request);
 	    	} else {
-	    		// Broadcast the request
-	    		// TODO
+	    		Intent intent = intentMgr.isSipRequestResolved(request); 
+	    		if (intent != null) {
+	    			// Generic SIP instant message
+		    		if (logger.isActivated()) {
+		    			logger.debug("Generic instant message");
+		    		}
+	    			imsModule.getSipService().receiveInstantMessage(intent, request);
+		    	} else {
+					// Unknown service: reject the message with a 606 Not Acceptable
+					if (logger.isActivated()) {
+						logger.debug("Unknown IMS service: automatically reject");
+					}
+					sendFinalResponse(request, 606);
+		    	}
 	    	}
 		} else
 	    if (request.getMethod().equals(Request.NOTIFY)) {

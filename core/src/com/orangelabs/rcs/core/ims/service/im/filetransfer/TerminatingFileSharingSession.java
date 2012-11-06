@@ -196,7 +196,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " " + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +

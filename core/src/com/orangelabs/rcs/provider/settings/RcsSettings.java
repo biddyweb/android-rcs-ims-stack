@@ -1952,7 +1952,20 @@ public class RcsSettings {
 		}
 		return result;
 	}
-	
+
+    /**
+     * Is IMEI used as device ID
+     *
+     * @return Boolean
+     */
+    public boolean isImeiUsedAsDeviceId() {
+        boolean result = true;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.USE_IMEI_AS_DEVICE_ID));
+        }
+        return result;
+    }
+
     /**
      * Is CPU Always_on activated
      *
@@ -2087,7 +2100,9 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			String value = getImConferenceUri();
-			if ((value != null) && (value.length() > 0) && !value.equals("sip:foo@bar")) {
+			if ((value != null) &&
+					(value.length() > 0) &&
+						!value.equals(RcsSettingsData.DEFAULT_GROUP_CHAT_URI)) {
 				result = true;
 			}
 		}

@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.terms;
 
 import java.io.ByteArrayInputStream;
+import java.util.Locale;
 
 import org.xml.sax.InputSource;
 
@@ -28,14 +29,16 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Terms & conditions service
+ * Terms & conditions service via SIP
  * 
  * @author jexa7410
  */
@@ -46,10 +49,15 @@ public class TermsConditionsService extends ImsService {
 	private final static String REQUEST_MIME_TYPE = "application/end-user-confirmation-request+xml";
 	
 	/**
-	 * Request MIME type
+	 * Ack MIME type
 	 */
 	private final static String ACK_MIME_TYPE = "application/end-user-confirmation-ack+xml";
-	
+
+    /**
+     * User notification MIME type
+     */
+    private final static String USER_NOTIFICATION_MIME_TYPE = "application/end-user-notification-request+xml";
+
 	/**
 	 * Response MIME type
 	 */
@@ -126,11 +134,28 @@ public class TermsConditionsService extends ImsService {
     		logger.debug("Receive terms message");
     	}
     	
-    	try {
+		// Send a 200 OK response
+		try {
+			if (logger.isActivated()) {
+				logger.info("Send 200 OK");
+			}
+	        SipResponse response = SipMessageFactory.createResponse(message,
+	        		IdGenerator.getIdentifier(), 200);
+			getImsModule().getSipManager().sendSipResponse(response);
+		} catch(Exception e) {
+	       	if (logger.isActivated()) {
+	    		logger.error("Can't send 200 OK response", e);
+	    	}
+	       	return;
+		}
+
+		// Parse received message
+		try {
+		    String lang = Locale.getDefault().getLanguage();
 	    	if (message.getContentType().equals(REQUEST_MIME_TYPE)) {
 		    	// Parse terms request
 				InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
-				TermsRequestParser parser = new TermsRequestParser(input);
+				TermsRequestParser parser = new TermsRequestParser(input, lang);
 
 				// Notify listener
 	    		getImsModule().getCore().getListener().handleUserConfirmationRequest(
@@ -139,24 +164,41 @@ public class TermsConditionsService extends ImsService {
 	    				parser.getType(),
 	    				parser.getPin(),
 	    				parser.getSubject(),
-	    				parser.getText());
+	    				parser.getText(),
+                        parser.getButtonAccept(),
+                        parser.getButtonReject(),
+                        parser.getTimeout()
+                        );
 	    	} else
 	    	if (message.getContentType().equals(ACK_MIME_TYPE)) {
 		    	// Parse terms ack
 				InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
 				TermsAckParser parser = new TermsAckParser(input);
 
-				// Notify listener
-	    		getImsModule().getCore().getListener().handleUserConfirmationAck(
-	    				getRemoteIdentity(message),
-	    				parser.getId(),
-	    				parser.getStatus(),
-	    				parser.getSubject(),
-	    				parser.getText());
-	    	} else {
-	    		if (logger.isActivated()) {
-	    			logger.debug("Unknown terms request");
-	    		}
+                // Notify listener
+                getImsModule().getCore().getListener().handleUserConfirmationAck(
+                        getRemoteIdentity(message),
+                        parser.getId(),
+                        parser.getStatus(),
+                        parser.getSubject(),
+                        parser.getText());
+            } else
+            if (message.getContentType().equals(USER_NOTIFICATION_MIME_TYPE)) {
+                // Parse terms notification
+                InputSource input = new InputSource(new ByteArrayInputStream(message.getContentBytes()));
+                EndUserNotificationParser parser = new EndUserNotificationParser(input, lang);
+
+                // Notify listener
+                getImsModule().getCore().getListener().handleUserNotification(
+                        getRemoteIdentity(message),
+                        parser.getId(),
+                        parser.getSubject(),
+                        parser.getText(),
+                        parser.getButtonOk());
+            } else {
+                if (logger.isActivated()) {
+                    logger.warn("Unknown terms request " + message.getContentType());
+                }
 	    	}
     	} catch(Exception e) {
     		if (logger.isActivated()) {
@@ -338,7 +380,7 @@ public class TermsConditionsService extends ImsService {
 	public static boolean isTermsRequest(SipRequest request) {
     	String contentType = request.getContentType();
     	if ((contentType != null) &&
-    			contentType.startsWith("application/end-user-confirmation")) {
+                contentType.startsWith("application/end-user")) {
     		return true;
     	} else {
     		return false;

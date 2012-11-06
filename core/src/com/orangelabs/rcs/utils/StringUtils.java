@@ -179,4 +179,17 @@ public class StringUtils {
 		
 	    return text;
 	}
+
+	/**
+	 * Remove quotes delimiters
+	 * 
+	 * @param input Input
+	 * @return String without quotes
+	 */
+	public static String removeQuotes(String input) {
+		if ((input != null) && input.startsWith("\"") && input.endsWith("\"")) {
+			input = input.substring(1, input.length()-1);
+		}
+		return input;
+	}
 }

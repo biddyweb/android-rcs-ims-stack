@@ -150,7 +150,8 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_TERMINATED = 1;
 	public static final int STATUS_FAILED = 2;
 	public static final int STATUS_IN_PROGRESS = 3;
-	
+    public static final int STATUS_CANCELED = 20;
+
 	// Messages
 	public static final int STATUS_SENT = 4;
 	public static final int STATUS_RECEIVED = 5;
@@ -171,7 +172,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int EVENT_FAILED = 17; // Contact has declined the invitation or any other reason
 	public static final int EVENT_BUSY = 18; // Contact is busy
 	public static final int EVENT_DECLINED = 19; // Contact has declined the invitation
-	
+
 	// Is Spam
 	public static final int MESSAGE_IS_NOT_SPAM = 0;
 	public static final int MESSAGE_IS_SPAM = 1;
@@ -332,16 +333,26 @@ public class EventsLogApi extends ClientApi {
     public void deleteMessagingLogForContact(String contact){
     	RichMessaging.getInstance().deleteContactHistory(contact);
     }
+
+    /**
+     * Delete a group chat conversation
+     *
+     * @param chatId Chat ID
+     */
+    public void deleteGroupChatConversation(String chatId){
+        RichMessaging.getInstance().deleteGroupChatConversation(chatId);
+    }
     
+
     /**
      * Delete an IM session
      * 
-     * @param sessionId
+     * @param sessionId Session ID
      */
     public void deleteImSessionEntry(String sessionId){
     	RichMessaging.getInstance().deleteChatSession(sessionId);
     }
-    
+
     /**
      * Get a cursor on the given chat session
      * 
@@ -409,17 +420,26 @@ public class EventsLogApi extends ClientApi {
     	cursor.close();
     	return result;
     }
-    
+
+    /**
+     * Get spam messages log (Spam Box)
+     *
+     * @return uri
+     */
+    public Uri getSpamMessagesProviderUri() {
+        return getEventLogContentProviderUri(MODE_SPAM_BOX);
+    }
+
     /**
      * Mark message as spam
-     * 
+     *
      * @param msgId
      * @param isSpam
      */
     public void markChatMessageAsSpam(String msgId, boolean isSpam){
     	RichMessaging.getInstance().markChatMessageAsSpam(msgId, isSpam);
     }
-    
+
     /**
      * Mark message as read
      * 
@@ -464,11 +484,31 @@ public class EventsLogApi extends ClientApi {
     	// Result is the difference
     	return (messagesNumber - readMessages);
     }
-    
+
     /**
      * Delete all spams
      */
     public void deleteAllSpams(){
     	RichMessaging.getInstance().deleteAllSpams();
     }
+
+    /**
+     * Delete spam message
+     *
+     * @param msgId Spam message Id
+     */
+    public void deleteSpamMessage(String msgId) {
+        RichMessaging.getInstance().deleteSpamMessage(msgId);
+    }
+
+    // Changed by Deutsche Telekom
+    /**
+     * Clear the spam messages of a given contact
+     *
+     * @param contact
+     */
+    public void clearSpamMessagesForContact(String contact) {
+        RichMessaging.getInstance().clearSpamMessages(PhoneUtils.formatNumberToInternational(contact));
+    }
+
 }

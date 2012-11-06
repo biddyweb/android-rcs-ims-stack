@@ -137,7 +137,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		}
 		
 		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
 
   		// Reject invitation
 		session.rejectSession(603);
@@ -160,7 +160,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		session.abortSession();
 
 		// Update rich messaging history
-		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
 	}
 	
 	/**
@@ -227,7 +227,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();

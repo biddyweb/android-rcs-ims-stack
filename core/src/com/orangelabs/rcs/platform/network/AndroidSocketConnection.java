@@ -62,6 +62,24 @@ public class AndroidSocketConnection implements SocketConnection {
 	}
 
 	/**
+	 * Set the socket
+	 * 
+	 * @param socket Socket
+	 */
+	public void setSocket(Socket socket) {
+		this.socket = socket;
+	}
+
+	/**
+	 * Get the socket
+	 * 
+	 * @return Socket
+	 */
+	public Socket getSocket() {
+		return this.socket;
+	}
+
+	/**
 	 * Close the socket
 	 * 
 	 * @throws IOException

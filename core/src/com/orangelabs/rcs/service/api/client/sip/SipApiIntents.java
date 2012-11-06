@@ -36,4 +36,18 @@ public class SipApiIntents {
      * </ul>
      */
 	public final static String SESSION_INVITATION = "com.orangelabs.rcs.sip.SESSION_INVITATION";
+	
+	/**
+     * Intent broadcasted when a new instant message has been received
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     *   <li><em>content</em> - Content of the message.</li>
+     *   <li><em>contentType</em> - Content type of the message.</li>
+     * </ul>
+     * </ul>
+     */
+	public final static String INSTANT_MESSAGE = "com.orangelabs.rcs.sip.INSTANT_MESSAGE";
 }

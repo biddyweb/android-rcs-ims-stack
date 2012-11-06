@@ -565,6 +565,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          * @param sample Sample
          */
         public void writeSample(MediaSample sample) {
+            rtpDummySender.incomingStarted();
             if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
             	if ((surface != null) && (decodedFrame.length > 0)) {
 	            	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,

@@ -96,10 +96,14 @@ public class MsrpClientConnection extends MsrpConnection {
 	public SocketConnection getSocketConnection() throws IOException {
 		if (logger.isActivated()) {
 			logger.debug("Open client socket to " + remoteAddress + ":" + remotePort);
+		}		
+		SocketConnection socket;
+		if (secured) {
+			socket = NetworkFactory.getFactory().createSecureSocketClientConnection();
+		} else {
+			socket = NetworkFactory.getFactory().createSocketClientConnection();
 		}
-		SocketConnection socket = NetworkFactory.getFactory().createSocketClientConnection();
 		socket.open(remoteAddress, remotePort);
-		// TODO: use SSL socket if secured
 		if (logger.isActivated()) {
 			logger.debug("Socket connected to " + socket.getRemoteAddress() + ":" + socket.getRemotePort());
 		}

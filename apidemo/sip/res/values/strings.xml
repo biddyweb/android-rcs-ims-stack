@@ -50,5 +50,14 @@
 <string name="label_session_initiation_canceled">SIP session initiation has been canceled</string>
 <string name="title_recv_session_invitation">SIP session invitation</string>
 
-</resources>
+<!-- Instant message -->
+<string name="menu_send_im">Send instant message</string>
+<string name="title_send_im">Send instant message</string>
+<string name="label_message">Message:</string>
+<string name="label_send">Send</string>
+<string name="label_send_im">Instant message is sent in background...</string>
+<string name="label_send_im_success">Instant message sent with success</string>
+<string name="label_send_im_failed">Instant message has failed</string>
+<string name="label_recv_im">Instant message from %s:</string>
 
+</resources>

@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -137,21 +138,21 @@ public class Utils {
 	/**
 	 * Display a toast
 	 * 
-	 * @param activity Activity
+	 * @param context Context
 	 * @param message Message to be displayed
 	 */
-    public static void displayToast(Activity activity, String message) {
-        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+    public static void displayToast(Context context, String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 
 	/**
 	 * Display a long toast
 	 * 
-	 * @param activity Activity
+	 * @param context Context
 	 * @param message Message to be displayed
 	 */
-    public static void displayLongToast(Activity activity, String message) {
-        Toast.makeText(activity, message, Toast.LENGTH_LONG).show();
+    public static void displayLongToast(Context context, String message) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
     }
     
     /**

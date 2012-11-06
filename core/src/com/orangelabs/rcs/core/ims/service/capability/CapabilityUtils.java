@@ -119,36 +119,36 @@ public class CapabilityUtils {
     	ArrayList<String> tags = msg.getFeatureTags();
     	for(int i=0; i < tags.size(); i++) {
     		String tag = tags.get(i);
-    		if (tag.equals(FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
+    		if (tag.contains(FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
         		// Support video share service
         		capabilities.setVideoSharingSupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_RCSE_IMAGE_SHARE)) {
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_IMAGE_SHARE)) {
         		// Support image share service
         		capabilities.setImageSharingSupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_RCSE_CHAT)) {
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_CHAT)) {
         		// Support IM service
         		capabilities.setImSessionSupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_RCSE_FT)) {
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_FT)) {
         		// Support FT service
         		capabilities.setFileTransferSupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_OMA_IM)) {
+        	if (tag.contains(FeatureTags.FEATURE_OMA_IM)) {
         		// Support both IM & FT services
         		capabilities.setImSessionSupport(true);
         		capabilities.setFileTransferSupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY)) {
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_PRESENCE_DISCOVERY)) {
         		// Support capability discovery via presence service
         		capabilities.setPresenceDiscoverySupport(true);
         	} else
-        	if (tag.equals(FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE)) {
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE)) {
         		// Support social presence service
         		capabilities.setSocialPresenceSupport(true);
         	} else
-    		if (tag.startsWith(FeatureTags.FEATURE_RCSE_EXTENSION)) {
+    		if (tag.contains(FeatureTags.FEATURE_RCSE_EXTENSION)) {
     			// Support a RCS extension
     			capabilities.addSupportedExtension(tag);
     		}

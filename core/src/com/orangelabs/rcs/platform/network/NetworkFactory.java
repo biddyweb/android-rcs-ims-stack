@@ -81,6 +81,13 @@ public abstract class NetworkFactory {
 	public abstract SocketConnection createSocketClientConnection();
 
 	/**
+	 * Create a secure socket client connection
+	 * 
+	 * @return Socket connection
+	 */
+	public abstract SocketConnection createSecureSocketClientConnection();
+
+	/**
 	 * Create a socket server connection
 	 * 
 	 * @return Socket server connection
