@@ -278,7 +278,7 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "NSN Brune", "NSN Lannion", "Margaux", "VCOM1", "VCOM2", "RCS", "Kamailio1", "MargauxIPv6", "Huawei"
+                        "Default"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -311,109 +311,17 @@ public class ProfileProvisioning extends Activity {
 	            			String enduserConfirmUri = "";
 	                        String privateSipUri = "";
 	                        switch(index) {
-	                        	case 0: // NSN Brune
-			            			homeDomain = "rcs.brune.com";
+	                        	case 0: // Default
+			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 		            				privateSipUri = sipUri;
-			            			imsPwd = "nsnims2008";
-			            			imsAddrForMobile = "80.12.197.74";
+			            			imsPwd = "";
+			            			imsAddrForMobile = "127.0.0.1";
 			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "80.12.197.74";
+			            			imsAddrForWifi = "127.0.0.1";
 			            			imsPortForWifi = 5060;
 			            			confUri = "sip:Conference-Factory@" + homeDomain;
 			            			break;
-	                        	case 1: // NSN Lannion
-			            			homeDomain = "rcs.lannion.com";
-			            			sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-			            			imsPwd = "alu2012";
-			            			imsAddrForMobile = "80.12.197.184";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "80.12.197.184";
-			            			imsPortForWifi = 5060;
-			            			confUri = "sip:Conference-Factory@" + homeDomain;
-			            			break;
-                                case 2: // Margaux
-                                    homeDomain = "sip.mobistar.com";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5080;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 3: // VCO1
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "asbc.sip.france.fr";
-			            			imsPortForMobile = 5080;
-			            			imsAddrForWifi = "asbc.sip.france.fr";
-			            			imsPortForWifi = 5080;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 4: // VCO2
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.114.42";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.114.42";
-			            			imsPortForWifi = 5060;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 5: // RCS
-                                    homeDomain = "sip.france.fr";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "imt30imt30";
-			            			imsAddrForMobile = "172.20.84.114";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.84.114";
-			            			imsPortForWifi = 5060;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 6: // Kamailio1
-                                    homeDomain = "rcs.kamailio1.com";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "password";
-			            			imsAddrForMobile = "172.20.14.43";
-			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "172.20.14.43";
-			            			imsPortForWifi = 5060;
-			            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 7: // Margaux IPv6
-                                    homeDomain = "sip.mobistar.com";
-                                    sipUri = number + "@" + homeDomain;
-		            				privateSipUri = sipUri;
-                                    imsPwd = "imt30imt30";
-                                    imsAddrForMobile = "2a01:cf00:74:410f::14";
-                                    imsPortForMobile = 5060;
-                                    imsAddrForWifi = "2a01:cf00:74:410f::14";
-                                    imsPortForWifi = 5060;
-                                    confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
-                                case 8: // Huawei
-                                    homeDomain = "sip.osk.com";
-                                    sipUri = number + "@" + homeDomain;
-                                    if (sipUri.startsWith("+")) {
-                                    	privateSipUri = sipUri.substring(1);
-                                    } else {
-                                    	privateSipUri = sipUri;
-                                    }
-                                    imsPwd = "huawei";
-                                    imsAddrForMobile = "172.20.114.0";
-                                    imsPortForMobile = 5060;
-                                    imsAddrForWifi = "172.20.114.0";
-                                    imsPortForWifi = 5060;
-                                    confUri  = "sip:Conference-Factory@" + homeDomain;
-                                    break;
 	            			}
 
 	            			// Update UI
