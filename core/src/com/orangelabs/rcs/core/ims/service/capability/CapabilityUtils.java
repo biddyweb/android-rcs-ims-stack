@@ -40,6 +40,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
+import com.orangelabs.rcs.utils.StringUtils;
 
 /**
  * Capability utility functions
@@ -148,9 +149,10 @@ public class CapabilityUtils {
         		// Support social presence service
         		capabilities.setSocialPresenceSupport(true);
         	} else
-    		if (tag.contains(FeatureTags.FEATURE_RCSE_EXTENSION)) {
+    		if (tag.startsWith(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_EXTENSION)) {
     			// Support a RCS extension
-    			capabilities.addSupportedExtension(tag);
+    			String[] value = tag.split("=");
+				capabilities.addSupportedExtension(StringUtils.removeQuotes(value[1]));
     		}
     	}
     	
@@ -225,12 +227,9 @@ public class CapabilityUtils {
 			for(int i=0; i < list.size(); i++) {
 				ResolveInfo info = list.get(i);
 				for(int j =0; j < info.filter.countDataTypes(); j++) {
-					String value = info.filter.getDataType(j);
-					int index = value.indexOf(FeatureTags.FEATURE_RCSE_EXTENSION);
-					if (index != -1) {
-						String tag = value.substring(index);
-						extensions.append("," + tag);
-					}
+					String tag = info.filter.getDataType(j);
+					String[] value = tag.split("/");
+					extensions.append("," + value[1]);
 				}
 			}
 			if ((extensions.length() > 0) && (extensions.charAt(0) == ',')) {
