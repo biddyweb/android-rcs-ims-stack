@@ -245,7 +245,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 			}
 	
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TRANSFERED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TERMINATED);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();

@@ -56,8 +56,13 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * List of supported video codecs
      */
     public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H264Config.CODEC_NAME, H264VideoFormat.PAYLOAD, H264Config.CLOCK_RATE, H264Config.CODEC_PARAMS,
-                    H264Config.FRAME_RATE, H264Config.BIT_RATE, H264Config.VIDEO_WIDTH,
+            new VideoCodec(H264Config.CODEC_NAME,
+            		H264VideoFormat.PAYLOAD,
+            		H264Config.CLOCK_RATE,
+            		H264Config.CODEC_PARAMS,
+                    H264Config.FRAME_RATE,
+                    H264Config.BIT_RATE,
+                    H264Config.VIDEO_WIDTH,
                     H264Config.VIDEO_HEIGHT).getMediaCodec()
     };
 

@@ -178,6 +178,9 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Cancel session");
 		}
 		
+		// Update rich messaging history
+		RichMessaging.getInstance().addChatSessionTerminationByUser(session);
+
 		// Abort the session
 		session.abortSession();
 	}

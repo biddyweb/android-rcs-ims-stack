@@ -530,6 +530,13 @@ public class InstantMessagingService extends ImsService {
 			}
 			throw new CoreException("Rejoin ID not found in database");
 		}
+		List<String> participants = groupChat.getParticipants(); // Added by Deutsche Telekom AG
+		if (participants.size() == 0) {
+			if (logger.isActivated()) {
+				logger.warn("Group chat " + chatId + " can't be rejoined: participants not found");
+			}
+			throw new CoreException("Group chat participants not found in database");
+		}
 
 		// Create a new session
 		if (logger.isActivated()) {

@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.10
+Release 2.4.11
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,13 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- MSRP over TLS (only over Wi-Fi, only the active mode supported).
-- Merge Deutsche Telecom contributions.
-- GSMA Implementation Guidelines version 3.1 (hot fixes).
-- New SIP API methods for instant messages.
-- Feature tag API more generic.
-- Improve Terms to be conforming to RCSe Spec 1.2.2.
-
+- Remove inactivity timeout from group chat.
+- Add reason on BYE request sent by the client.
 
 
 Bugs fixed:
@@ -23,6 +18,12 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.11
+- Mantis #0016549	Stack: Can't test APN under OS 4.2
+- Mantis #0016402	Stack: No transport in Contact header so IMS switch to UDP instead of TCP for terminating usecases
+- Mantis #0016401	Stack: Bad entry in the address book after the initial capability check for contacts without first or last name
+- Mantis #0016370	Stack: Bad file transfer API event after a session cancel
 
 v2.4.10
 - Open source #85	Stack: PUBLISHed presence document contains illegal XML

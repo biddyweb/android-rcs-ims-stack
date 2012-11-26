@@ -81,77 +81,85 @@ public class EventsLogApi extends ClientApi {
 	 * <br>Holds IMDN id for chat messages or file transfer session id for file transfers
 	 */
 	public static final int MESSAGE_ID_COLUMN = 7;
-	
+
+    /**
+     * Mime-type of the content
+     * 
+     * <br>Only relevant for file transfer
+     */
+    public static final int MIMETYPE_COLUMN = 8;
+
+    /**
+     * Name of the content
+     * 
+     * <br>Only relevant for file transfer
+     */
+    public static final int NAME_COLUMN = 9;
+
+    /**
+     * Size already transfered
+     * 
+     * <br>Only relevant for file transfer or rich call
+     */
+    public static final int SIZE_COLUMN = 10;
+
+    /**
+     * Total size of the file
+     *   
+     * <br>Only relevant for file transfer or rich call
+     */
+    public static final int TOTAL_SIZE_COLUMN = 11;
+
 	/**
 	 * Spam flag
 	 */
-	public static final int IS_SPAM_COLUMN = 8;
+	public static final int IS_SPAM_COLUMN = 12;
 
 	/**
 	 * Id of the chat 
 	 */
-	public static final int CHAT_ID_COLUMN = 9;
+	public static final int CHAT_ID_COLUMN = 13;
 
 	/**
 	 * Rejoin ID 
 	 */
-	public static final int CHAT_REJOIN_ID_COLUMN = 10;
+	public static final int CHAT_REJOIN_ID_COLUMN = 14;
 
-	/**
-	 * Mime-type of the content
-	 * 
-	 * <br>Only relevant for file transfer
-	 */
-	public static final int MIMETYPE_COLUMN = 11;
-	
-	/**
-	 * Name of the content
-	 * 
-	 * <br>Only relevant for file transfer
-	 */
-	public static final int NAME_COLUMN = 12;
-	
-	/**
-	 * Size already transfered
-	 * 
-	 * <br>Only relevant for file transfer or rich call
-	 */
-	public static final int SIZE_COLUMN = 13;
-	
-	/**
-	 * Total size of the file
-	 * 	 
-	 * <br>Only relevant for file transfer or rich call
-	 */
-	public static final int TOTAL_SIZE_COLUMN = 14;
 	
 	// Entry types
+	
 	// One to one chat
 	public static final int TYPE_INCOMING_CHAT_MESSAGE = 0;
 	public static final int TYPE_OUTGOING_CHAT_MESSAGE = 1;
 	public static final int TYPE_CHAT_SYSTEM_MESSAGE = 2;
+	
 	// Group chat
 	public static final int TYPE_INCOMING_GROUP_CHAT_MESSAGE = 3;
 	public static final int TYPE_OUTGOING_GROUP_CHAT_MESSAGE = 4;
 	public static final int TYPE_GROUP_CHAT_SYSTEM_MESSAGE = 5;
+	
 	// File transfer
 	public static final int TYPE_INCOMING_FILE_TRANSFER = 6;
 	public static final int TYPE_OUTGOING_FILE_TRANSFER = 7;
+	
 	// Rich call
 	public static final int TYPE_INCOMING_RICH_CALL = 8;
 	public static final int TYPE_OUTGOING_RICH_CALL = 9;	
+	
 	// SMS
 	public static final int TYPE_INCOMING_SMS = 10; 
 	public static final int TYPE_OUTGOING_SMS = 11;
 
 	// Possible status values
+	
 	// Sessions
 	public static final int STATUS_STARTED = 0;
 	public static final int STATUS_TERMINATED = 1;
 	public static final int STATUS_FAILED = 2;
 	public static final int STATUS_IN_PROGRESS = 3;
     public static final int STATUS_CANCELED = 20;
-
+	public static final int STATUS_TERMINATED_BY_USER = 21;
+	
 	// Messages
 	public static final int STATUS_SENT = 4;
 	public static final int STATUS_RECEIVED = 5;
@@ -162,7 +170,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_DISPLAYED = 8; // the IMDN "displayed" report has been received (sender side) or the user has read the received message (receiver side)  
 	public static final int STATUS_ALL_DISPLAYED = 9; // sender side
 	public static final int STATUS_REPORT_REQUESTED = 10; // receiver side : the sender has requested a "displayed" report when the message will be displayed
-	
+
 	// Possible data for chat system event
 	public static final int EVENT_JOINED_CHAT = 12; // Contact has joined
 	public static final int EVENT_LEFT_CHAT = 13; // Contact is departed
@@ -172,8 +180,8 @@ public class EventsLogApi extends ClientApi {
 	public static final int EVENT_FAILED = 17; // Contact has declined the invitation or any other reason
 	public static final int EVENT_BUSY = 18; // Contact is busy
 	public static final int EVENT_DECLINED = 19; // Contact has declined the invitation
-
-	// Is Spam
+	
+	// Is spam
 	public static final int MESSAGE_IS_NOT_SPAM = 0;
 	public static final int MESSAGE_IS_SPAM = 1;
 	
@@ -361,9 +369,10 @@ public class EventsLogApi extends ClientApi {
      */
     public Cursor getChatSessionCursor(String sessionId){
     	// Do not take the chat terminated messages
-    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED+"))";
-    	chatTerminatedExcludedSelection +=" AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_GROUP_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED+"))";
-
+    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED +
+    		" OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
+    	chatTerminatedExcludedSelection +=" AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_GROUP_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED +
+    		" OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
     	return ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
 				null,
 				RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'"+chatTerminatedExcludedSelection, 
@@ -379,7 +388,8 @@ public class EventsLogApi extends ClientApi {
      */
     public Cursor getChatContactCursor(String contact){
     	// Do not take the chat terminated messages
-    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED+"))";
+    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED+" OR " + 
+    		RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
     	// Do not take the group chat entries concerning this contact
     	chatTerminatedExcludedSelection +=" AND NOT("+RichMessagingData.KEY_TYPE + "=="+ TYPE_GROUP_CHAT_SYSTEM_MESSAGE +")";
     	    	

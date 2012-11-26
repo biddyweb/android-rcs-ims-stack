@@ -39,6 +39,7 @@ import javax2.sip.header.EventHeader;
 import javax2.sip.header.ExpiresHeader;
 import javax2.sip.header.FromHeader;
 import javax2.sip.header.Header;
+import javax2.sip.header.ReasonHeader;
 import javax2.sip.header.ReferToHeader;
 import javax2.sip.header.RequireHeader;
 import javax2.sip.header.RouteHeader;
@@ -776,6 +777,10 @@ public class SipMessageFactory {
 			// Create the request
 			Request bye = dialog.getStackDialog().createRequest(Request.BYE);
 	
+			// Set reason phrase
+			ReasonHeader reasonHeader = SipUtils.HEADER_FACTORY.createReasonHeader("SIP", 200, "Call completed");
+			bye.addHeader(reasonHeader);
+			
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)bye.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();

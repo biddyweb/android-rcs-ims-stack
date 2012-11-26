@@ -42,6 +42,11 @@ public class MsrpTransaction extends Object {
     private boolean isWaiting = false;
 
     /**
+     * is MSRP session terminated ? 
+     */
+    private boolean isTerminated = false;
+
+    /**
      * Timer
      */
     private Timer timer = new Timer();
@@ -107,10 +112,20 @@ public class MsrpTransaction extends Object {
      * Terminate transaction
      */
     public synchronized void terminate() {
+        isTerminated = true;
         // Unblock semaphore
         super.notify();
         // Stop timer
         stopTimer();
+    }
+
+    /** 
+     * Return isTerminated status.
+     *
+     * @return true if terminated
+     */
+    public boolean isTerminated() {
+        return isTerminated;
     }
 
     /**

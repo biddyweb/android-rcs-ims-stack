@@ -36,8 +36,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -62,9 +62,9 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     private ImsModule imsModule;
     
     /**
-     * IM session
+     * Group chat session
      */
-    private ChatSession session;
+    private GroupChatSession session;
     
     /**
      * Dialog path
@@ -99,9 +99,9 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     /**
      * Constructor
      * 
-     * @param session IM session
+     * @param session Group chat session
      */
-    public ConferenceEventSubscribeManager(ChatSession session) {
+    public ConferenceEventSubscribeManager(GroupChatSession session) {
     	this.session  = session;
     	this.imsModule = session.getImsService().getImsModule();
 		this.authenticationAgent = new SessionAuthenticationAgent(imsModule);
@@ -172,6 +172,11 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    	for(int i=0; i < users.size(); i++) {
 			    		User user = (User)users.elementAt(i);
 			    		String entity = PhoneUtils.extractNumberFromUri(user.getEntity());
+			    		if (entity == null) {
+			    			// Null entity
+			    			continue;
+			    		}
+			    		
 				    	if (logger.isActivated()) {
 				    		logger.debug("Conference info notification for " + entity);
 				    	}

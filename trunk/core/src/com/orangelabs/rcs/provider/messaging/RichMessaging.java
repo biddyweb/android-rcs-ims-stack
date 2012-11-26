@@ -355,6 +355,19 @@ public class RichMessaging {
 	}
 	
 	/**
+	 * Add chat session termination by end user
+	 * 
+	 * @param session Chat session
+	 */
+	public void addChatSessionTerminationByUser(ChatSession session) {
+		String sessionId = session.getSessionID();
+		String chatId = session.getContributionID();
+		String participants = getParticipants(session);
+		int type = getChatSystemEventType(session);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
+	}
+
+	/**
 	 * Add a chat session error
 	 * 
 	 * @param session Chat session
@@ -1034,7 +1047,7 @@ public class RichMessaging {
 				RichMessagingData.KEY_TIMESTAMP + " DESC");
 		if(cursor.moveToFirst()){
 			int status = cursor.getInt(0);
-			if(status==EventsLogApi.STATUS_TERMINATED){
+			if ((status==EventsLogApi.STATUS_TERMINATED) || (status==EventsLogApi.STATUS_TERMINATED_BY_USER)) {
 				cursor.close();
 				return true;
 			}

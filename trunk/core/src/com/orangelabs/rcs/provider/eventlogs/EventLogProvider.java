@@ -143,8 +143,8 @@ public class EventLogProvider extends ContentProvider {
                 selection = "";
             }
             // Do not take the "terminated" entries
-            extraSelection = "NOT ((type = " + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE 
-                    + ") AND status = " + EventsLogApi.STATUS_TERMINATED + " )";
+            extraSelection += "NOT ((type = " + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE + ") AND ((status = " +
+            	EventsLogApi.STATUS_TERMINATED + " ) OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
             // Filter the logs where this contact was involved in a group chat with us
             extraSelection += " AND NOT ( type = " + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
                     + " OR type = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
@@ -165,7 +165,8 @@ public class EventLogProvider extends ContentProvider {
 
         case EventsLogApi.MODE_ONE_TO_ONE_CHAT:
         	// Do not take the "terminated" entries
-        	extraSelection=" AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND status = "+EventsLogApi.STATUS_TERMINATED+" )";
+        	extraSelection=" AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND ((status = "+
+        		EventsLogApi.STATUS_TERMINATED + ") OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
 			// Filter the logs where this contact was involved in a group chat with us
 			extraSelection += " AND NOT ( type = "+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
 				+ " OR type = "+EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
@@ -184,7 +185,11 @@ public class EventLogProvider extends ContentProvider {
         	break;
 
         case EventsLogApi.MODE_GROUP_CHAT:
-			extraSelection = "";
+            extraSelection = " AND NOT type = "+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE;
+			if (sortOrderOriginal != null)
+				sortOrder = sortOrderOriginal;
+			else
+				sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
         	sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
 			richMessagingSelectQuery = buildChatQuery(selection + extraSelection, false, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
@@ -400,7 +405,8 @@ public class EventLogProvider extends ContentProvider {
 			RichMessagingData.KEY_NAME+" AS "+EventLogData.KEY_EVENT_NAME,
 			RichMessagingData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_SIZE,
 			RichMessagingData.KEY_TOTAL_SIZE+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-			RichMessagingData.KEY_IS_SPAM+" AS "+EventLogData.KEY_EVENT_IS_SPAM
+			RichMessagingData.KEY_IS_SPAM+" AS "+EventLogData.KEY_EVENT_IS_SPAM,
+            RichMessagingData.KEY_CHAT_ID + " AS " + EventLogData.KEY_EVENT_CHAT_ID
 		};
 	
 	private static Set<String> columnsPresentInRichMessagingTable = new HashSet<String>(Arrays.asList(new String[]{
@@ -417,7 +423,7 @@ public class EventLogProvider extends ContentProvider {
 			RichMessagingData.KEY_MIME_TYPE,
 			RichMessagingData.KEY_NAME,
 			RichMessagingData.KEY_SIZE,
-			RichMessagingData.KEY_TOTAL_SIZE,		
+			RichMessagingData.KEY_TOTAL_SIZE,
 			RichMessagingData.KEY_IS_SPAM,
 			// Additional fields for chat
 			RichMessagingData.KEY_CHAT_ID
@@ -436,7 +442,8 @@ public class EventLogProvider extends ContentProvider {
 			RichCallData.KEY_NAME+" AS "+EventLogData.KEY_EVENT_NAME,
 			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_SIZE,
 			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_TOTAL_SIZE,
-			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_IS_SPAM
+			RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_IS_SPAM,
+            RichCallData.KEY_SIZE+" AS "+EventLogData.KEY_EVENT_CHAT_ID
 	};
 	
 	private static Set<String> columnsPresentInRichCallTable = new HashSet<String>(Arrays.asList(new String []{
@@ -452,7 +459,8 @@ public class EventLogProvider extends ContentProvider {
 			RichCallData.KEY_NAME,
 			RichCallData.KEY_SIZE,
 			RichCallData.KEY_SIZE,
-			RichCallData.KEY_SIZE
+			RichCallData.KEY_SIZE,
+            RichCallData.KEY_SIZE
 	}));
 
 	/**
@@ -642,11 +650,11 @@ public class EventLogProvider extends ContentProvider {
 	 * @return
 	 */
 	private String buildRichMessagingQuery(String selection, boolean chatFiltered, boolean fileTransferFiltered){
-
 		// Do not take the "terminated" rows for chat sessions
-		String selectionFilter = " NOT ("+RichMessagingData.KEY_TYPE+">="+EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE
-			+" AND "+RichMessagingData.KEY_TYPE+"<="+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+" AND "+RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED +")";
-
+		String selectionFilter = " NOT ("+RichMessagingData.KEY_TYPE+">="+EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE + " AND "+
+			RichMessagingData.KEY_TYPE+"<="+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+" AND ("+
+	        RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED +" OR "+
+	        RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED_BY_USER + "))";
 		// Do not take the spam messages
 		selectionFilter +=" AND NOT( "+RichMessagingData.KEY_IS_SPAM+"="+EventsLogApi.MESSAGE_IS_SPAM+ " )";
 		

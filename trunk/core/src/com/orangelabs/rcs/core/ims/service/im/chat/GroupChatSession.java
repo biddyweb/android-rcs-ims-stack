@@ -128,7 +128,15 @@ public abstract class GroupChatSession extends ChatSession {
 		return conferenceSubscriber;
 	}	
 
-	/**
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Close MSRP session
+        closeMsrpSession();
+    }
+
+    /**
 	 * Terminate session 
 	 */
 	public void terminateSession() {
@@ -137,6 +145,32 @@ public abstract class GroupChatSession extends ChatSession {
 		
 		// Terminate session
 		super.terminateSession();
+	}	
+	
+    /**
+     * Receive BYE request 
+     * 
+     * @param bye BYE request
+     */
+    public void receiveBye(SipRequest bye) {
+        // Stop conference subscription
+        conferenceSubscriber.terminate();
+        
+        // Receive BYE request
+        super.receiveBye(bye);
+    }
+    
+    /**
+     * Receive CANCEL request 
+     * 
+     * @param cancel CANCEL request
+     */
+    public void receiveCancel(SipRequest cancel) {
+        // Stop conference subscription
+        conferenceSubscriber.terminate();
+        
+        // Receive CANCEL request
+        super.receiveCancel(cancel);
 	}	
 	
 	/**
@@ -438,8 +472,5 @@ public abstract class GroupChatSession extends ChatSession {
 
         // Subscribe to event package
         getConferenceEventSubscriber().subscribe();
-
-        // Start the activity manager
-        getActivityManager().start();
     }
 }

@@ -36,7 +36,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatActivityManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
@@ -59,11 +58,6 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 	 * MSRP manager
 	 */
 	private MsrpManager msrpMgr = null;
-
-	/**
-	 * Chat activity manager
-	 */
-	private ChatActivityManager activityMgr = new ChatActivityManager(this);
 
 	/**
      * The logger
@@ -224,7 +218,7 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
                 }
                 
     			// Start the activity manager
-    			activityMgr.start();
+    			getActivityManager().start();
                 
             } else {
         		if (logger.isActivated()) {
@@ -267,17 +261,6 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 	}	
 	
 	/**
-	 * Close media session
-	 */
-	public void closeMediaSession() {
-		// Stop the activity manager
-		activityMgr.stop();
-		
-		// Close MSRP session
-		closeMsrpSession();
-	}
-	
-	/**
 	 * Handle error 
 	 * 
 	 * @param error Error
@@ -317,7 +300,7 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
     	}
     	
 		// Update the activity manager
-		activityMgr.updateActivity();
+    	getActivityManager().updateActivity();
     	
     	if ((data == null) || (data.length == 0)) {
     		// By-pass empty data

@@ -73,6 +73,10 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		// Set contribution ID
 		String id = ChatUtils.getContributionId(invite);
 		setContributionID(id);				
+
+		// Set participants
+		ListOfParticipant participants = ChatUtils.getListOfParticipants(invite);
+		setParticipants(participants);
 	}
 
 	/**
@@ -144,14 +148,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		    if (multi.isMultipart()) {
 		    	// SDP
 		    	remoteSdp = multi.getPart("application/sdp").getBytes(); 
-		    	
-				// Resource list
-		    	String listPart = multi.getPart("application/resource-lists+xml");
-		    	if (listPart != null) {
-					ListOfParticipant participants = new ListOfParticipant(listPart);
-					participants.addParticipant(getRemoteContact());
-					setParticipants(participants);
-		    	}
 		    } else {
 		    	// SDP
 		    	remoteSdp = content.getBytes();
@@ -292,9 +288,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
-
-    			// Start the activity manager
-    			getActivityManager().start();
     	    	
             } else {
         		if (logger.isActivated()) {
