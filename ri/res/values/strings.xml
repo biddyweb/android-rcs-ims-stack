@@ -181,6 +181,7 @@
 <string name="label_chat_restart_canceled">Restart chat conversation has been canceled</string>
 <string name="label_restart_chat_terminated_by_remote">Restart session terminated by remote</string>
 <string name="label_sharing_warn_size">Do you confirm sending a file of %d KB?</string>
+<string name="label_rejoin_unauthorized">You can\'t rejoin the session because you have left the session voluntary</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>

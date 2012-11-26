@@ -43,10 +43,10 @@ import com.orangelabs.rcs.utils.StringUtils;
  * @author jexa7410
  */
 public abstract class OneOneChatSession extends ChatSession {
-    /**
-     * Boundary delimiter
-     */
-    protected final static String boundary = "boundary1";
+	/**
+	 * Boundary tag
+	 */
+	private final static String BOUNDARY_TAG = "boundary1";
 
 	/**
 	 * Constructor
@@ -80,6 +80,17 @@ public abstract class OneOneChatSession extends ChatSession {
     public ListOfParticipant getConnectedParticipants() {
 		return getParticipants();
 	}
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Stop the activity manager
+        getActivityManager().stop();
+
+        // Close MSRP session
+        closeMsrpSession();
+    }
     
 	/**
 	 * Send a text message
@@ -203,7 +214,7 @@ public abstract class OneOneChatSession extends ChatSession {
         SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
                 InstantMessagingService.CHAT_FEATURE_TAGS, 
                 content,
-                boundary);
+                BOUNDARY_TAG);
 
         // Test if there is a first message
         if (getFirstMessage() != null) {

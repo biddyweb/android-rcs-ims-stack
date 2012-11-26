@@ -76,7 +76,13 @@ public class ListOfParticipant {
 	    		for(int i=0; i < entries.size(); i++) {
 	    			String entry = entries.elementAt(i); 
 					if (!PhoneUtils.compareNumbers(entry, ImsModule.IMS_USER_PROFILE.getPublicUri())) {
-	    				list.add(PhoneUtils.extractNumberFromUri(entry));
+						String number = PhoneUtils.extractNumberFromUri(entry);
+						if ((number != null) && (!list.contains(number))) {
+					    	if (logger.isActivated()) {
+					    		logger.debug("Add participant " + number + " to the list");
+					    	}	
+							list.add(number);
+						}
 	    			}
 	    		}
 	    	}
@@ -94,7 +100,7 @@ public class ListOfParticipant {
 	 */
 	public void addParticipant(String participant) {
 		String number = PhoneUtils.extractNumberFromUri(participant);
-		if (!list.contains(participant)) {
+		if ((number != null) && (!list.contains(number))) {
 	    	if (logger.isActivated()) {
 	    		logger.debug("Add participant " + number + " to the list");
 	    	}	

@@ -43,6 +43,7 @@ import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
+import com.orangelabs.rcs.utils.StringUtils;
 
 /**
  * Extensions capabilities
@@ -102,9 +103,8 @@ public class ExtensionsCapabilities extends ListActivity implements OnItemClickL
 
 				// Intent query on current installed extension
 				Intent intent = new Intent(CapabilityApiIntents.RCS_EXTENSIONS);
-				int index = extension.lastIndexOf(".");
-				String mimeType = extension.substring(0, index)+"/"+extension.substring(index+1);
-				intent.setType(mimeType);
+				String mime = formatIntentMimeType(extension);
+				intent.setType(mime);
 				List<ResolveInfo> list = packageManager.queryIntentActivities(intent, PackageManager.GET_RESOLVED_FILTER);
 				for(int j=0; j < list.size(); j++) {
 					resolveInfos.add(list.get(j));
@@ -153,12 +153,13 @@ public class ExtensionsCapabilities extends ListActivity implements OnItemClickL
 			public TextView name;
 		
 			public void initViews(View root){
-				this.icon = (ImageView) root.findViewById(R.id.icon);
-				this.name = (TextView) root.findViewById(R.id.name);
+				icon = (ImageView)root.findViewById(R.id.icon);
+				name = (TextView)root.findViewById(R.id.name);
 			}
 			
 			public void update(ResolveInfo resolveInfo){
 				name.setText(resolveInfo.loadLabel(getPackageManager()));
+				
 				icon.setImageDrawable(resolveInfo.loadIcon(getPackageManager()));
 			}
 		}
@@ -175,4 +176,23 @@ public class ExtensionsCapabilities extends ListActivity implements OnItemClickL
 		finish();
 	}
 
+	/**
+	 * Format intent MIME type
+	 * 
+	 * @param tag Feature tag
+	 * @return Intent MIME type
+	 */
+	private static String formatIntentMimeType(String tag) { 
+		String mime;
+		if (tag.contains("=")) {
+			String[] submime = tag.split("=");
+			mime = submime[0] + "/" + StringUtils.removeQuotes(submime[1]);
+		} else
+		if (tag.startsWith("+")) {
+			mime = tag + "/*";
+		} else {
+			mime = "+g.3gpp.iari-ref/" + tag;
+		}
+		return mime;
+	}
 }

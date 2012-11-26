@@ -184,11 +184,13 @@ public class ChatUtils {
 		StringBuffer uriList = new StringBuffer();
 		for(int i=0; i < participants.size(); i++) {
 			String contact = participants.get(i);
-			uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF);
+			uriList.append(" <entry uri=\"" +
+					PhoneUtils.formatNumberToSipUri(contact) + "\" cp:copyControl=\"to\"/>" 
+					+ CRLF);
 		}
-		
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
-			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
+			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\" " +
+			"xmlns:cp=\"urn:ietf:params:xml:ns:copycontrol\">" +
 			"<list>" + CRLF +
 			uriList.toString() +
 			"</list></resource-lists>";
@@ -610,5 +612,36 @@ public class ChatUtils {
 			message = null;
 		}
 		return message;
+    }
+
+    /**
+     * Get list of participants from 'resource-list' present in XML document and
+     * include the 'remote' as participant.
+     * 
+     * @return {@link ListOfParticipant} participant list
+     * @author Deutsche Telekom AG
+     */
+    public static ListOfParticipant getListOfParticipants(SipRequest request) {
+        ListOfParticipant participants = new ListOfParticipant();
+        try {
+            String content = request.getContent();
+            String boundary = request.getBoundaryContentType();
+            Multipart multi = new Multipart(content, boundary);
+            if (multi.isMultipart()) {
+                // Extract resource-lists
+                String listPart = multi.getPart("application/resource-lists+xml");
+                if (listPart != null) {
+                	// Create list from XML
+                    participants = new ListOfParticipant(listPart);
+
+                    // Include remote contact
+                    String remote = getReferredIdentity(request);
+                    participants.addParticipant(remote);
+                }
+            }
+        } catch (Exception e) {
+	    	// Nothing to do
+        }
+        return participants;
     }
 }

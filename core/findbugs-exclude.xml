@@ -122,6 +122,11 @@
         <Bug pattern="REC_CATCH_EXCEPTION" />
     </Match>
     <Match>
+        <Class name="com.orangelabs.rcs.core.ims.service.im.chat.RestartGroupChatSession" />
+        <Method name="run" />
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+    </Match>
+    <Match>
         <Class name="com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager" />
         <Method name="sendSipMessageDeliveryStatus" />
         <Bug pattern="REC_CATCH_EXCEPTION" />

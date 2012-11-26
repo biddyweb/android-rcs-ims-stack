@@ -152,7 +152,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		}
 		
 		if (session.isFileTransfered()) {
-			// Automatically closed after transfer
+			// File already transfered and session automatically closed after transfer
 			return;
 		}
 

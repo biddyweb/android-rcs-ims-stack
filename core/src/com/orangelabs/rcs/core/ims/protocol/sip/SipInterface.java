@@ -490,13 +490,15 @@ public class SipInterface implements SipListener {
      * @throws Exception
      */
     public ContactHeader getLocalContact() throws Exception {
-        // Set the contact with the terminal IP address and SIP port
+        // Set the contact with the terminal IP address, port and transport
         SipURI contactURI = (SipURI)SipUtils.ADDR_FACTORY.createSipURI(null, localIpAddress);
         contactURI.setPort(listeningPort);
+        contactURI.setParameter("transport", defaultProtocol);
 
         // Create the Contact header
         Address contactAddress = SipUtils.ADDR_FACTORY.createAddress(contactURI);
         ContactHeader contactHeader = SipUtils.HEADER_FACTORY.createContactHeader(contactAddress);
+
         return contactHeader;
     }
 

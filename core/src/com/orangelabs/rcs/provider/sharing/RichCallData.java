@@ -50,8 +50,8 @@ public class RichCallData {
 	
 	// Status values
 	public static final int STATUS_STARTED = EventsLogApi.STATUS_STARTED; 
-	public static final int STATUS_TRANSFERED = EventsLogApi.STATUS_TERMINATED;
 	public static final int STATUS_FAILED = EventsLogApi.STATUS_FAILED;
 	public static final int STATUS_CANCELED = EventsLogApi.STATUS_CANCELED;
 	public static final int STATUS_TERMINATED = EventsLogApi.STATUS_TERMINATED;
+	public static final int STATUS_TERMINATED_BY_USER = EventsLogApi.STATUS_TERMINATED_BY_USER;
 }

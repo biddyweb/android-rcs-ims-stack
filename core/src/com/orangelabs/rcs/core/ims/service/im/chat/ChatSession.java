@@ -654,17 +654,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         sendEmptyDataChunk();
     }
 
-    /**
-     * Close media session
-     */
-    public void closeMediaSession() {
-        // Stop the activity manager
-        getActivityManager().stop();
-
-        // Close MSRP session
-        closeMsrpSession();
-    }
-
 	/**
 	 * Reject the session invitation
 	 */

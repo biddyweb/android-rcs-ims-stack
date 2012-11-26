@@ -41,6 +41,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -80,6 +81,7 @@ public class ChatList extends Activity implements ClientApiListener {
         setTitle(getString(R.string.menu_chat_list));
 
         // Instantiate messaging API
+        RichMessaging.createInstance(getApplicationContext());
 		messagingApi = new MessagingApi(getApplicationContext());
 		messagingApi.addApiEventListener(this);
 		messagingApi.connectApi();
@@ -337,6 +339,13 @@ public class ChatList extends Activity implements ClientApiListener {
 						Utils.showMessage(ChatList.this, getString(R.string.label_api_failed));
 					}
 				} else {
+					// Test if the session may be rejoined or not
+					int status = RichMessaging.getInstance().getGroupChatStatus(cache.chatId);
+					if (status == EventsLogApi.STATUS_TERMINATED_BY_USER) {
+						Utils.showMessage(ChatList.this, getString(R.string.label_rejoin_unauthorized));
+						return;
+					}
+					
 					// Session terminated on the device: try to rejoin the session
 					rejoinChat = new RejoinChat(ChatList.this, messagingApi, cache.chatId);
 					rejoinChat.start();

@@ -326,7 +326,9 @@ public class MsrpSession {
                 if (msrpTransaction.isAllResponsesReceived()) {
                     msrpEventListener.msrpDataTransfered(msgId);
                 } else {
-                    msrpEventListener.msrpTransferError("report timeout");
+                    if (!msrpTransaction.isTerminated()) {
+                        msrpEventListener.msrpTransferError("request transaction timeout");
+                    }
                 }
             }
 
@@ -345,7 +347,7 @@ public class MsrpSession {
                 if (reportTransaction.getStatusCode() == 200) {
                     msrpEventListener.msrpDataTransfered(msgId);
                 } else {
-                    msrpEventListener.msrpTransferError("report timeout");
+                    msrpEventListener.msrpTransferError("report transaction timeout");
                 }
             }
 
@@ -723,7 +725,7 @@ public class MsrpSession {
 					}
 					
 					// Notify event listener
-					msrpEventListener.msrpTransferError("report timeout");			
+					msrpEventListener.msrpTransferError("success report timeout");
 				}
 			}
 		} else

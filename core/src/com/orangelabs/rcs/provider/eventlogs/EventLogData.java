@@ -53,6 +53,7 @@ public class EventLogData {
 	public static final String KEY_EVENT_NAME = "name";
 	public static final String KEY_EVENT_SIZE = "size";
 	public static final String KEY_EVENT_TOTAL_SIZE = "total_size";
+	public static final String KEY_EVENT_CHAT_ID = "chat_id";
 	
 	/**
 	 * Values representing the direction of the event.

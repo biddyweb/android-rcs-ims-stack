@@ -41,14 +41,14 @@ import javax2.sip.header.RequireHeader;
  */
 public class ExtendOneOneChatSession extends GroupChatSession {
 	/**
+	 * Boundary tag
+	 */
+	private final static String BOUNDARY_TAG = "boundary1";
+
+	/**
 	 * One-to-one session
 	 */
 	private OneOneChatSession oneoneSession;
-	
-	/**
-	 * Boundary delimiter
-	 */
-	private final static String boundary = "boundary1";
 	
 	/**
      * The logger
@@ -116,18 +116,18 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 	    	
 	    	// Build multipart
 	    	String multipart =
-	    		Multipart.BOUNDARY_DELIMITER + boundary + SipUtils.CRLF +
+	    		Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
 	    		"Content-Type: application/sdp" + SipUtils.CRLF +
     			"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
 	    		SipUtils.CRLF +
 	    		sdp + SipUtils.CRLF +
-	    		Multipart.BOUNDARY_DELIMITER + boundary + SipUtils.CRLF +
+	    		Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
 	    		"Content-Type: application/resource-lists+xml" + SipUtils.CRLF +
     			"Content-Length: " + resourceList.getBytes().length + SipUtils.CRLF +
 	    		"Content-Disposition: recipient-list" + SipUtils.CRLF +
 	    		SipUtils.CRLF +
 	    		resourceList + SipUtils.CRLF +
-	    		Multipart.BOUNDARY_DELIMITER + boundary + Multipart.BOUNDARY_DELIMITER;
+	    		Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + Multipart.BOUNDARY_DELIMITER;
 
 			// Set the local SDP part in the dialog path
 	    	getDialogPath().setLocalContent(multipart);
@@ -168,7 +168,7 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 		// Create multipart INVITE
         SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
         		InstantMessagingService.CHAT_FEATURE_TAGS,
-        		content, boundary);
+        		content, BOUNDARY_TAG);
 
         // Add a require header
         invite.addHeader(RequireHeader.NAME, "recipient-list-invite");

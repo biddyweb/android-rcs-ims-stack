@@ -56,8 +56,13 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
      * List of supported video codecs
      */
     public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H263Config.CODEC_NAME, H263VideoFormat.PAYLOAD, H263Config.CLOCK_RATE, H263Config.CODEC_PARAMS,
-                    H263Config.FRAME_RATE, H263Config.BIT_RATE, H263Config.VIDEO_WIDTH,
+            new VideoCodec(H263Config.CODEC_NAME,
+            		H263VideoFormat.PAYLOAD,
+            		H263Config.CLOCK_RATE,
+            		H263Config.CODEC_PARAMS,
+                    H263Config.FRAME_RATE,
+                    H263Config.BIT_RATE,
+                    H263Config.VIDEO_WIDTH,
                     H263Config.VIDEO_HEIGHT).getMediaCodec()
     };
 
