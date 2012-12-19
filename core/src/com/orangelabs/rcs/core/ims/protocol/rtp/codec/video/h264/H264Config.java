@@ -27,7 +27,7 @@ public class H264Config {
     /**
      * H264 Codec Name
      */
-    public final static String CODEC_NAME = "h264";
+    public final static String CODEC_NAME = "H264";
 
     /**
      * Default clock rate

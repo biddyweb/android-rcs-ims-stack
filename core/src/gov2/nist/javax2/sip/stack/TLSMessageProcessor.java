@@ -156,22 +156,26 @@ public class TLSMessageProcessor extends MessageProcessor {
                 incomingTlsMessageChannels.add(new TLSMessageChannel(newsock, sipStack, this));
             } catch (SocketException ex) {
                 if ( this.isRunning ) {
-                  sipStack.getStackLogger().logError(
-                    "Fatal - SocketException occured while Accepting connection", ex);
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logError(
+                    			"Fatal - SocketException occured while Accepting connection", ex);
                   this.isRunning = false;
                   break;
                 }
             } catch (SSLException ex) {
                 this.isRunning = false;
-                sipStack.getStackLogger().logError(
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logError(
                         "Fatal - SSSLException occured while Accepting connection", ex);
                 break;
             } catch (IOException ex) {
                 // Problem accepting connection.
-                sipStack.getStackLogger().logError("Problem Accepting Connection", ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logError("Problem Accepting Connection", ex);
                 continue;
             } catch (Exception ex) {
-                sipStack.getStackLogger().logError("Unexpected Exception!", ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logError("Unexpected Exception!", ex);
             }
         }
     }

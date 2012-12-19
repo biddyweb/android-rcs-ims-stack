@@ -78,16 +78,6 @@ public class ContactsApi {
     }
 
     /**
-     * Get all the contacts in the contact contract provider that have a RCS raw contact
-     * (include duplicated phone numbers)
-     *
-     * @return list containing all contacts with phone numbers that have been at least queried once for capabilities
-     */
-    public List<String[]> getAllContactsInformation(){
-        return ContactsManager.getInstance().getAllContactsInformation();
-    }
-
-    /**
      * Get a list of all RCS contacts
      * 
      * @return list of all RCS contacts
@@ -249,26 +239,7 @@ public class ContactsApi {
 	public List<String> getRichcallCapableContacts(){
 		return ContactsManager.getInstance().getRichcallCapableContacts();
 	}
-	
-	/**
-	 * Set the weblink visited flag to true for given contact
-	 * 
-	 * @param contact
-	 */
-	public void setWeblinkVisitedForContact(String contact){
-		ContactsManager.getInstance().setWeblinkUpdatedFlag(contact, false);
-	}
-	
-	/**
-	 * Get the weblink visited flag
-	 * 
-	 * @param contact
-	 * @return true if the weblink has been updated since last visit
-	 */
-	public boolean hasWeblinkBeenUpdatedForContact(String contact){
-		return ContactsManager.getInstance().getWeblinkUpdatedFlag(contact);
-	}
-	
+
 	/**
 	 * Remove a cancelled presence invitation
 	 * 

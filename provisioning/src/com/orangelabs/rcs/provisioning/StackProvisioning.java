@@ -95,6 +95,9 @@ public class StackProvisioning extends Activity {
             spinner.setSelection(0);
         }
 
+        EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.PROVISIONING_ADDRESS));
+
         spinner = (Spinner)findViewById(R.id.NetworkAccess);
         adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, NETWORK_ACCESS);
@@ -176,7 +179,7 @@ public class StackProvisioning extends Activity {
             RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, "");
         }
 
-        EditText txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
+        txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_SERVICE_POLLING_PERIOD));
 
         txt = (EditText)this.findViewById(R.id.SipListeningPort);
@@ -332,7 +335,10 @@ public class StackProvisioning extends Activity {
 						break;
                 }
 
-		        EditText txt = (EditText)this.findViewById(R.id.SipListeningPort);
+		        EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.PROVISIONING_ADDRESS, txt.getText().toString());
+
+				txt = (EditText)this.findViewById(R.id.SipListeningPort);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PORT, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.SipTimerT1);

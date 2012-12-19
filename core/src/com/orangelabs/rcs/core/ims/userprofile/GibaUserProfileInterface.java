@@ -47,9 +47,10 @@ public class GibaUserProfileInterface extends UserProfileInterface {
 		// The user profile will be complete during the registration procedure
 		return new UserProfile(
 				null,  // User name derived from GIBA procedure
+				null,  // Domain derived from GIBA procedure
 				null,  // No private ID with GIBA procedure
 				null,  // No password with GIBA procedure
-				null,  // Domain derived from GIBA procedure
+				null,  // No realm with GIBA procedure
 				xdmServer,
 				null,  // Login derived from GIBA procedure
 				xdmPassword,

@@ -21,6 +21,7 @@ package com.orangelabs.rcs.service.api.server.sip;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionError;
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionListener;
@@ -159,7 +160,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 		}
 
 		// Abort the session
-		session.abortSession();
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 
 	/**
@@ -218,8 +219,10 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
     
     /**
      * Session has been aborted
+     * 
+	 * @param status Termination status
      */
-    public void handleSessionAborted() {
+    public void handleSessionAborted(int status) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Session aborted");

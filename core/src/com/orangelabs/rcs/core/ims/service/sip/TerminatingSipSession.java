@@ -76,7 +76,7 @@ public class TerminatingSipSession extends GenericSipSession {
 
 		    	// Notify listeners
 		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
 		        }
 				return;
 			} else
@@ -93,7 +93,7 @@ public class TerminatingSipSession extends GenericSipSession {
 
 		    	// Notify listeners
     	    	for(int j=0; j < getListeners().size(); j++) {
-    	    		getListeners().get(j).handleSessionAborted();
+    	    		getListeners().get(j).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 		        }
 				return;
 			} else

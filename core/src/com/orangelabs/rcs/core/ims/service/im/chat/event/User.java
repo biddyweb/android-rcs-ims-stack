@@ -26,7 +26,8 @@ public class User {
 	public final static String STATE_FAILED = "failed";
 	public final static String STATE_BUSY = "busy";
 	public final static String STATE_DECLINED = "declined";
-
+	public final static String STATE_PENDING = "pending";
+	
 	private String entity;
 	
 	private boolean me;
@@ -96,12 +97,10 @@ public class User {
 	}
 
 	public static boolean isConnected(String state) {
-		return state.equals(User.STATE_CONNECTED);
+		return (state.equals(User.STATE_CONNECTED) || state.equals(User.STATE_BOOTED));
 	}
 	
 	public static boolean isDisconnected(String state) {
-		return (state.equals(User.STATE_DISCONNECTED) ||
-					state.equals(User.STATE_DEPARTED) ||
-						state.equals(User.STATE_BOOTED));
+		return (state.equals(User.STATE_DISCONNECTED) || state.equals(User.STATE_DEPARTED));
 	}
 }

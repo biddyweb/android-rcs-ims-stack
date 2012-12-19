@@ -28,6 +28,7 @@ import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.im.chat.resourcelist.ResourceListDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.resourcelist.ResourceListParser;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -77,7 +78,7 @@ public class ListOfParticipant {
 	    			String entry = entries.elementAt(i); 
 					if (!PhoneUtils.compareNumbers(entry, ImsModule.IMS_USER_PROFILE.getPublicUri())) {
 						String number = PhoneUtils.extractNumberFromUri(entry);
-						if ((number != null) && (!list.contains(number))) {
+						if ((!StringUtils.isEmpty(number)) && (!list.contains(number))) {
 					    	if (logger.isActivated()) {
 					    		logger.debug("Add participant " + number + " to the list");
 					    	}	
@@ -100,7 +101,7 @@ public class ListOfParticipant {
 	 */
 	public void addParticipant(String participant) {
 		String number = PhoneUtils.extractNumberFromUri(participant);
-		if ((number != null) && (!list.contains(number))) {
+		if ((!StringUtils.isEmpty(number)) && (!list.contains(number))) {
 	    	if (logger.isActivated()) {
 	    		logger.debug("Add participant " + number + " to the list");
 	    	}	

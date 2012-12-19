@@ -33,7 +33,6 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
@@ -188,28 +187,6 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
     public void startMediaSession() throws Exception {
         // Open the MSRP session
         msrpMgr.openMsrpSession();
-    }
-
-    /**
-     * Close media session
-     */
-    public void closeMediaSession() {
-        // Close the MSRP session
-        if (msrpMgr != null) {
-            msrpMgr.closeSession();
-        }
-        if (logger.isActivated()) {
-            logger.debug("MSRP session has been closed");
-        }
-    }
-
-    /**
-     * Handle 200 0K response 
-     *
-     * @param resp 200 OK response
-     */
-    public void handle200OK(SipResponse resp) {
-        super.handle200OK(resp);
 
         try {
             // Start sending data chunks
@@ -231,6 +208,19 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
             }
             handleError(new ImsServiceError(ImsServiceError.UNEXPECTED_EXCEPTION,
                     e.getMessage()));
+        }
+    }
+
+    /**
+     * Close media session
+     */
+    public void closeMediaSession() {
+        // Close the MSRP session
+        if (msrpMgr != null) {
+            msrpMgr.closeSession();
+        }
+        if (logger.isActivated()) {
+            logger.debug("MSRP session has been closed");
         }
     }
 
@@ -286,6 +276,18 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
         }
 	}	
 
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        // Not used in originating side
+        return false;
+    }
+
 	/**
 	 * Data transfer has been aborted
 	 */
@@ -295,18 +297,19 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
     	}
 	}	
 
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
-		if (isInterrupted()) {
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
+    	if (isInterrupted()) {
 			return;
 		}
 
 		if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
+            logger.info("Data transfer error " + error);
     	}
 
         // Close the media session

@@ -192,4 +192,14 @@ public class StringUtils {
 		}
 		return input;
 	}
+	
+	/**
+	 * Is empty string
+	 * 
+	 * @param str String
+	 * @return Boolean
+	 */
+	public static boolean isEmpty(String str) {
+		return (str == null) || (str.trim().length() == 0);
+	}
 }

@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -42,7 +41,7 @@ public class ChatActivityManager extends PeriodicRefresher {
     /**
      * IM session
      */
-    private ImsServiceSession session;
+    private ChatSession session;
     
     /**
      * The logger
@@ -54,7 +53,7 @@ public class ChatActivityManager extends PeriodicRefresher {
      * 
      * @param session IM session
      */    
-    public ChatActivityManager(ImsServiceSession session) {
+    public ChatActivityManager(ChatSession session) {
     	this.session = session;
     	this.timeout = RcsSettings.getInstance().getChatIdleDuration();
     }
@@ -108,11 +107,7 @@ public class ChatActivityManager extends PeriodicRefresher {
         	if (logger.isActivated()){
         		logger.debug("No activity on the session during " + timeout + "s: abort the session");
         	}
-	
-        	// Abort the session
-    		if (session != null) {
-    			session.abortSession();
-    		}
+        	session.handleChatInactivityEvent();
     	} else {
         	// Restart timer
         	startTimer(remainingPeriod, 1.0);

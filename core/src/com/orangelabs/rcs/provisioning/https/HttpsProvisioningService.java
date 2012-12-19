@@ -486,22 +486,26 @@ public class HttpsProvisioningService extends Service {
 
 	    	// Get SIM info
 	    	TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-	    	String ope = tm.getSimOperator();
-            // Cancel operation if no valid SIM operator
-            if (ope == null || ope.length() < 4) {
-                if (logger.isActivated()) {
-                    logger.warn("Can not read network operator from SIM card!");
+            // Build provisioning address if empty in settings 
+            String requestUri = RcsSettings.getInstance().getProvisioningAddress();
+            String oldRequestUri = "";
+            if (requestUri.length() == 0) {
+    	    	String ope = tm.getSimOperator();
+                // Cancel operation if no valid SIM operator
+                if (ope == null || ope.length() < 4) {
+                    if (logger.isActivated()) {
+                        logger.warn("Can not read network operator from SIM card!");
+                    }
+                    return null;
                 }
-                return null;
+                String mnc = ope.substring(3);
+                String mcc = ope.substring(0, 3);
+                oldRequestUri = "config." + mcc + mnc + ".rcse";
+                while (mnc.length() < 3) { // Set mnc on 3 digits
+                    mnc = "0" + mnc;
+                }
+                requestUri = "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
             }
-            String mnc = ope.substring(3);
-            String mcc = ope.substring(0, 3);
-            String oldRequestUri = "config." + mcc + mnc + ".rcse";
-            while (mnc.length() < 3) { // Set mnc on 3 digits
-                mnc = "0" + mnc;
-            }
-            String requestUri = "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
-
 			String imsi = tm.getSubscriberId();
 			String imei = tm.getDeviceId();
 	    	tm = null;

@@ -422,6 +422,18 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Not used by chat
 	}
 
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        // Not used by chat
+        return false;
+    }
+
 	/**
 	 * Data transfer has been aborted
 	 */
@@ -429,20 +441,32 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     	// Not used by chat
 	}	
 
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
-    	if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
-    	}
-    	
-		// Notify listeners
-    	for(int i=0; i < getListeners().size(); i++) {
-    		((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MEDIA_SESSION_FAILED));
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
+		if (isInterrupted()) {
+			return;
 		}
+		
+		if (logger.isActivated()) {
+            logger.info("Data transfer error " + error);
+        }
+
+        if (msgId != null) {
+            // Notify listeners
+	        for(int i=0; i < getListeners().size(); i++) {
+                ((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+	        }
+        } else {
+            // Notify listeners
+	        for(int i=0; i < getListeners().size(); i++) {
+                ((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MEDIA_SESSION_FAILED, error));
+	        }
+        }
     }
 
 	/**
@@ -658,4 +682,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * Reject the session invitation
 	 */
 	public abstract void rejectSession();
+	
+	/**
+	 * Chat inactivity event
+	 */
+	public void handleChatInactivityEvent() {
+        if (logger.isActivated()) {
+        	logger.debug("Chat inactivity event");
+        }
+
+        // Abort the session
+        abortSession(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+	}
 }

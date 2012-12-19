@@ -186,9 +186,9 @@ public class OptionsRequestTask implements Runnable {
         ContactInfo info = ContactsManager.getInstance().getContactInfo(contact);
         if (info.getRcsStatus() == ContactInfo.NO_INFO) {
         	// If we do not have already some info on this contact
-        	// We update the database with empty capabilities
+        	// We update the database with empty capabilities and status RCS_CAPABLE
         	Capabilities capabilities = new Capabilities();
-        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, info.getRcsStatus(), ContactInfo.REGISTRATION_STATUS_UNKNOWN);
+        	ContactsManager.getInstance().setContactCapabilities(contact, capabilities, ContactInfo.NO_INFO, ContactInfo.REGISTRATION_STATUS_OFFLINE);
     	} else {
     		// We have some info on this contact
     		// We update the database with its previous infos and set the registration state to offline

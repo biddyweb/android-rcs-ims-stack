@@ -327,7 +327,7 @@ public class MsrpSession {
                     msrpEventListener.msrpDataTransfered(msgId);
                 } else {
                     if (!msrpTransaction.isTerminated()) {
-                        msrpEventListener.msrpTransferError("request transaction timeout");
+                        msrpEventListener.msrpTransferError(msgId, "response timeout");
                     }
                 }
             }
@@ -347,7 +347,7 @@ public class MsrpSession {
                 if (reportTransaction.getStatusCode() == 200) {
                     msrpEventListener.msrpDataTransfered(msgId);
                 } else {
-                    msrpEventListener.msrpTransferError("report transaction timeout");
+                    msrpEventListener.msrpTransferError(msgId, "error report " + reportTransaction.getStatusCode());
                 }
             }
 
@@ -660,7 +660,7 @@ public class MsrpSession {
 	 * @param totalSize Total size of the content
 	 * @throws IOException
 	 */
-	public void receiveMsrpSend(String txId, Hashtable<String, String> headers, int flag, byte[] data, long totalSize) throws IOException {
+	public void receiveMsrpSend(String txId, Hashtable<String, String> headers, int flag, byte[] data, long totalSize) throws IOException, MsrpException {
 		// Receive a SEND request
 		if (logger.isActivated()) {
 			logger.debug("SEND request received (flag=" + flag + ", transaction=" + txId + ")");
@@ -725,7 +725,7 @@ public class MsrpSession {
 					}
 					
 					// Notify event listener
-					msrpEventListener.msrpTransferError("success report timeout");
+					msrpEventListener.msrpTransferError(msgId, e.getMessage());
 				}
 			}
 		} else
@@ -743,9 +743,17 @@ public class MsrpSession {
 			if (logger.isActivated()) {
 				logger.debug("Transfer in progress...");
 			}
+            byte[] dataContent = receivedChunks.getReceivedData();
 
-			// Notify event listener
-			msrpEventListener.msrpTransferProgress(receivedChunks.getCurrentSize(), totalSize);
+            // Notify event listener
+            boolean resetCache = msrpEventListener.msrpTransferProgress(receivedChunks.getCurrentSize(), totalSize,
+                    dataContent);
+
+            // Data are only consumed chunk by chunk in file transfer & image share.
+            // In a chat session only the whole message is consumed after receiving the last chunk.
+            if (resetCache) {
+                receivedChunks.resetCache();
+            }
 		}
 	}
 
@@ -773,7 +781,7 @@ public class MsrpSession {
 
         // Notify event listener
 		if (code != 200) {
-			msrpEventListener.msrpTransferError(code + " response received");
+			msrpEventListener.msrpTransferError(headers.get(MsrpConstants.HEADER_MESSAGE_ID), "error response " + code);
 		}
 	}
 	
@@ -788,10 +796,16 @@ public class MsrpSession {
 		if (logger.isActivated()) {
 			logger.info("REPORT request received (transaction=" + txId + ")");
 		}
-		
+
+        // Check status code
+        int statusCode = ReportTransaction.parseStatusCode(headers);
+        if (statusCode != 200) {
+            msrpEventListener.msrpTransferError(headers.get(MsrpConstants.HEADER_MESSAGE_ID), "error report " + statusCode);
+        }
+
 		// Notify report transaction
 		if (reportTransaction != null) {
-			reportTransaction.notifyReport(headers);
+			reportTransaction.notifyReport(statusCode, headers);
 		}
 	}
 }

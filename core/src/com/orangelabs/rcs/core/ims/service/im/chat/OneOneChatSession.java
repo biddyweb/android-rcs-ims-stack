@@ -48,7 +48,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	private final static String BOUNDARY_TAG = "boundary1";
 
-	/**
+    /**
 	 * Constructor
 	 * 
 	 * @param parent IMS service
@@ -274,5 +274,4 @@ public abstract class OneOneChatSession extends ChatSession {
         // Start the activity manager
         getActivityManager().start();
     }
-
 }

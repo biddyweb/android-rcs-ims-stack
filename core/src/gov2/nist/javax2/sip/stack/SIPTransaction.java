@@ -1165,7 +1165,8 @@ public abstract class SIPTransaction extends MessageChannel implements
                     "acquireSem() returning : " + retval);
             return retval;
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Unexpected exception acquiring sem",
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Unexpected exception acquiring sem",
                     ex);
             InternalErrorHandler.handleException(ex);
             return false;
@@ -1186,7 +1187,8 @@ public abstract class SIPTransaction extends MessageChannel implements
             this.semRelease();
 
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Unexpected exception releasing sem",
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Unexpected exception releasing sem",
                     ex);
 
         }
@@ -1203,7 +1205,8 @@ public abstract class SIPTransaction extends MessageChannel implements
             this.semaphore.release();
 
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Unexpected exception releasing sem",
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Unexpected exception releasing sem",
                     ex);
 
         }

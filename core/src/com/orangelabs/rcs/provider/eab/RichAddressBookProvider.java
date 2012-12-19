@@ -82,7 +82,7 @@ public class RichAddressBookProvider extends ContentProvider {
      */
 	private static class DatabaseHelper extends SQLiteOpenHelper{
 		private static final String DATABASE_NAME = "eab.db";
-		private static final int DATABASE_VERSION = 11;
+		private static final int DATABASE_VERSION = 14;
 		
         public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -116,12 +116,37 @@ public class RichAddressBookProvider extends ContentProvider {
 			// Create the eab_contacts table
 			createDb(db);
 		}
-		
-		private void createDb(SQLiteDatabase db){
+
+		private void createDb(SQLiteDatabase db) {
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + EAB_TABLE + " ("
 					+ RichAddressBookData.KEY_ID + " integer primary key autoincrement, "
 					+ RichAddressBookData.KEY_CONTACT_NUMBER + " TEXT, "
-					+ RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + " TEXT, "
+					+ RichAddressBookData.KEY_RCS_STATUS + " TEXT, "
+                    + RichAddressBookData.KEY_RCS_STATUS_TIMESTAMP + " long, "
+                    + RichAddressBookData.KEY_REGISTRATION_STATE + " integer, "
+                    + RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_FREE_TEXT + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_WEBLINK_NAME + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_WEBLINK_URL + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_PHOTO_EXIST_FLAG + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_PHOTO_ETAG + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_PHOTO_DATA + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_GEOLOC_EXIST_FLAG + " TEXT, "
+                    + RichAddressBookData.KEY_PRESENCE_GEOLOC_LATITUDE + " double, "
+                    + RichAddressBookData.KEY_PRESENCE_GEOLOC_LONGITUDE + " double, "
+                    + RichAddressBookData.KEY_PRESENCE_GEOLOC_ALTITUDE + " double, "
+                    + RichAddressBookData.KEY_PRESENCE_TIMESTAMP + " long, "
+					+ RichAddressBookData.KEY_CAPABILITY_TIMESTAMP + " long, "
+					+ RichAddressBookData.KEY_CAPABILITY_CS_VIDEO + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_IMAGE_SHARING + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_IM_SESSION + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_EXTENSIONS + " TEXT, "
+					+ RichAddressBookData.KEY_IM_BLOCKED + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_IM_BLOCKED_TIMESTAMP + " long, "
 					+ RichAddressBookData.KEY_TIMESTAMP + " long)");
 			db.execSQL("CREATE TABLE IF NOT EXISTS " + AGGREGATION_TABLE + " ("
 					+ AggregationData.KEY_ID + " integer primary key autoincrement, "
@@ -129,7 +154,6 @@ public class RichAddressBookProvider extends ContentProvider {
 					+ AggregationData.KEY_RAW_CONTACT_ID + " long, "
 					+ AggregationData.KEY_RCS_RAW_CONTACT_ID + " long)");
 		}
-		
 	}
 
 	@Override 
@@ -203,11 +227,25 @@ public class RichAddressBookProvider extends ContentProvider {
 
 	    		// Return a URI to the newly inserted row on success
 	    		if (rowID > 0) {
+                    if (!initialValues.containsKey(RichAddressBookData.KEY_PRESENCE_PHOTO_DATA)) {
+                        try {
+                            String filename = "photoData" + rowID;
+                            getContext().openFileOutput(filename, Context.MODE_PRIVATE).close();
+                            String path = getContext().getFileStreamPath(filename).getAbsolutePath();
+                            initialValues.put(RichAddressBookData.KEY_PRESENCE_PHOTO_DATA, path);
+                            initialValues.put(RichAddressBookData.KEY_PRESENCE_PHOTO_EXIST_FLAG, RichAddressBookData.FALSE_VALUE);
+                        } catch(Exception e) {
+                            if (logger.isActivated()) {
+                                logger.error("Problem while creating photoData", e);
+                            }
+                        }
+                    }
+                    rowID = db.update(EAB_TABLE, initialValues, RichAddressBookData.KEY_ID + "=" + rowID, null);
+
 	    		    Uri newUri = ContentUris.withAppendedId(RichAddressBookData.CONTENT_URI, rowID);
 	    		    getContext().getContentResolver().notifyChange(newUri, null);
 	    		    return newUri;
 	    		}
-	        	
 	        	break;
 	        case AGGREGATIONS:
 	        case AGGREGATION_ID:

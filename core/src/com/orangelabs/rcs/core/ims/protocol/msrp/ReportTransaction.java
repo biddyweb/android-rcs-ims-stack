@@ -59,26 +59,15 @@ public class ReportTransaction extends Object {
 	/**
 	 * Notify report
 	 * 
+	 * @param status Status code
 	 * @param headers MSRP headers
 	 */
-	public void notifyReport(Hashtable<String, String> headers) {
+	public void notifyReport(int status, Hashtable<String, String> headers) {
 		synchronized(this) {
             receivedByteRangeHeader = false;
             isNotified = true;
+            statusCode = status;
 
-			// Get status code
-			String status = headers.get(MsrpConstants.HEADER_STATUS);
-			if ((status != null) && (status.startsWith("000 "))) {
-				String[] parts = status.split(" "); 
-				if (parts.length > 0) {
-					try {
-						statusCode = Integer.parseInt(parts[1]);
-					} catch(NumberFormatException e) {
-						statusCode = -1;
-					}
-				}
-			}
-			
 			// Get reported size
 			String byteRange = headers.get(MsrpConstants.HEADER_BYTE_RANGE);
 			if (byteRange != null) {
@@ -150,4 +139,25 @@ public class ReportTransaction extends Object {
         return false;
     }
 
+    /**
+     * Get the status code
+     *
+     * @param headers
+     * @return 
+     */
+    public static int parseStatusCode(Hashtable<String, String> headers) {
+        int statusCode = -1;
+        String status = headers.get(MsrpConstants.HEADER_STATUS);
+        if ((status != null) && (status.startsWith("000 "))) {
+            String[] parts = status.split(" "); 
+            if (parts.length > 0) {
+                try {
+                    statusCode = Integer.parseInt(parts[1]);
+                } catch(NumberFormatException e) {
+                    // Nothing to do
+                }
+            }
+        }
+        return statusCode;
+    }
 }

@@ -40,14 +40,19 @@ public class UserProfile {
 	private String username;
 
 	/**
-	 * User private ID
+	 * Private ID for HTTP digest
 	 */
 	private String privateID;
 
 	/**
-	 * User password
+	 * Password for HTTP digest
 	 */
 	private String password;
+
+	/**
+	 * Realm for HTTP digest
+	 */
+	private String realm;
 
 	/**
 	 * Home domain
@@ -88,26 +93,29 @@ public class UserProfile {
 	 * Constructor
 	 * 
 	 * @param username Username
+	 * @param homeDomain Home domain
 	 * @param privateID Private id
 	 * @param password Password
-	 * @param homeDomain Home domain
+	 * @param realm Realm
 	 * @param xdmServerAddr XDM server address
 	 * @param xdmServerLogin Outbound proxy address
 	 * @param xdmServerPassword Outbound proxy address
 	 * @param imConferenceUri IM conference factory URI
 	 */
 	public UserProfile(String username,
+			String homeDomain,
 			String privateID,
 			String password,
-			String homeDomain,
+			String realm,
 			String xdmServerAddr,
 			String xdmServerLogin,
 			String xdmServerPassword,
 			String imConferenceUri) {
 		this.username = username;
+		this.homeDomain = homeDomain;
 		this.privateID = privateID;
 		this.password = password;
-		this.homeDomain = homeDomain;
+		this.realm = realm;
 		this.xdmServerAddr = xdmServerAddr;
 		this.xdmServerLogin = xdmServerLogin;
 		this.xdmServerPassword = xdmServerPassword;
@@ -207,7 +215,7 @@ public class UserProfile {
 	}
 	
 	/**
-	 * Get the user private ID
+	 * Get the private ID used for HTTP Digest authentication
 	 * 
 	 * @return Private ID
 	 */
@@ -216,12 +224,21 @@ public class UserProfile {
 	}
 	
 	/**
-	 * Returns the user password
+	 * Returns the password used for HTTP Digest authentication
 	 * 
 	 * @return Password
 	 */
 	public String getPassword() {
 		return password;
+	}
+
+	/**
+	 * Returns the realm used for HTTP Digest authentication
+	 * 
+	 * @return Realm
+	 */
+	public String getRealm() {
+		return realm;
 	}
 
 	/**

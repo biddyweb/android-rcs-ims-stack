@@ -297,7 +297,8 @@ public class UDPMessageChannel extends MessageChannel implements
                 processIncomingDataPacket(packet);
             } catch (Exception e) {
 
-                sipStack.getStackLogger().logError(
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logError(
                         "Error while processing incoming UDP packet", e);
             }
 
@@ -363,7 +364,8 @@ public class UDPMessageChannel extends MessageChannel implements
                         this.sendMessage(badReqRes.getBytes(), peerAddress,
                                 packet.getPort(), "UDP", false);
                     } catch (IOException e) {
-                        this.sipStack.getStackLogger().logException(e);
+                        if (sipStack.isLoggingEnabled())
+                        	this.sipStack.getStackLogger().logException(e);
                     }
                 } else {
                     if (sipStack.isLoggingEnabled()) {
@@ -656,7 +658,8 @@ public class UDPMessageChannel extends MessageChannel implements
         } catch (IOException ex) {
             throw ex;
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("An exception occured while sending message",ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("An exception occured while sending message",ex);
             throw new IOException(
                     "An exception occured while sending message");
         } finally {

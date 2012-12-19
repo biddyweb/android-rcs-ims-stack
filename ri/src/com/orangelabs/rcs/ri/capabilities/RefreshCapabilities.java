@@ -80,7 +80,7 @@ public class RefreshCapabilities extends Activity implements ClientApiListener {
     public void onDestroy() {
     	super.onDestroy();
     	
-		// Disconnect contacts API
+		// Disconnect capability API
     	capabilityApi.disconnectApi();    	
     }
     

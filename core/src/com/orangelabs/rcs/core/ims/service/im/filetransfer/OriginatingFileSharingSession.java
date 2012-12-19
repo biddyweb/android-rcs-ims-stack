@@ -32,7 +32,6 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
@@ -187,15 +186,6 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
     public void startMediaSession() throws Exception {
         // Open the MSRP session
         msrpMgr.openMsrpSession();
-    }
-
-    /**
-     * Handle 200 0K response 
-     *
-     * @param resp 200 OK response
-     */
-    public void handle200OK(SipResponse resp) {
-        super.handle200OK(resp);
 
         try {
             // Start sending data chunks
@@ -271,6 +261,18 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
         }
 	}	
 
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        // Not used in originating side
+        return false;
+    }
+
 	/**
 	 * Data transfer has been aborted
 	 */
@@ -280,18 +282,19 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
     	}
 	}	
 
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
 		if (isInterrupted()) {
 			return;
 		}
 
 		if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
+            logger.info("Data transfer error " + error);
     	}
     	
         // Close the media session

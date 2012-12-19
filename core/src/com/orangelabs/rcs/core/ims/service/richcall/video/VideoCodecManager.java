@@ -152,7 +152,7 @@ public class VideoCodecManager {
 	
 	        // Extract encoding name
 	        String encoding = rtpmap.substring(rtpmap.indexOf(media.payload)
-	        		+ media.payload.length() + 1).toLowerCase().trim();
+	        		+ media.payload.length() + 1).trim();
 	        String codecName = encoding;
 	
 	        // Extract clock rate

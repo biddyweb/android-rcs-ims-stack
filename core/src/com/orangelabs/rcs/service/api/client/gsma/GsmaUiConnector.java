@@ -119,7 +119,7 @@ public class GsmaUiConnector {
 	
 	/**
 	 * Intent to load the chat application or chat view. Input: the data contains the
-	 * URI (e.g. content://chats/ x) of the chat conversation. If no data the main entry
+	 * URI (e.g. content://chats/x) of the chat conversation. If no data the main entry
 	 * of the chat application is displayed. 
 	 */
 	public static final String ACTION_VIEW_CHAT = "android.net.rcs.VIEW_CHAT";

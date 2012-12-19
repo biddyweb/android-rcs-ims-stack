@@ -117,7 +117,7 @@ public class ChunkSender extends Thread {
 				}
 				
 				// Notify the msrp session listener that an error has occured
-				connection.getSession().getMsrpEventListener().msrpTransferError(e.getMessage());
+				connection.getSession().getMsrpEventListener().msrpTransferError(null, e.getMessage());
 			}
 		}
 	}

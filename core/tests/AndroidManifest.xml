@@ -19,6 +19,6 @@
 
     <instrumentation android:name="android.test.InstrumentationTestRunner"
 			android:targetPackage="com.orangelabs.rcs" 
- 			android:label="Tests for rcsCore"/>
+ 			android:label="Uniraty tests for RCS core"/>
  
 </manifest>

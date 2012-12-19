@@ -108,7 +108,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 
 		    	// Notify listeners
 		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
 		        }
 				return;
 			} else
@@ -125,7 +125,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 
 		    	// Notify listeners
 		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 		        }
 				return;
 			} else
@@ -245,8 +245,10 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     				logger.info("ACK request received");
     			}
 
-    	        // The session is established
-    	        getDialogPath().sessionEstablished();
+                // Notify listeners
+                for(int i=0; i < getListeners().size(); i++) {
+                    getListeners().get(i).handleSessionStarted();
+                }
 
     	        // Create the MSRP client session
                 if (localSetup.equals("active")) {
@@ -259,16 +261,14 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	    	        // Send an empty packet
 	            	sendEmptyDataChunk();
                 }
-                
+
+                // The session is established
+                getDialogPath().sessionEstablished();
+
             	// Start session timer
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
-
-            	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionStarted();
-		        }
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");
@@ -318,7 +318,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	 * Data transfer has been received
 	 * 
 	 * @param msgId Message ID
-	 * @param data Received data
+     * @param data Last received data chunk
 	 * @param mimeType Data mime-type 
 	 */
 	public void msrpDataReceived(String msgId, byte[] data, String mimeType) {
@@ -330,16 +330,16 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     	imageTransfered();
 	
 	   	try {
-	    	// Update the content with the received data 
-	    	getContent().setData(data);
+            // Save data to file
+            getContent().writeData2File(data);
+            getContent().closeFile();
 
-	    	// Save data into a filename
-	    	ContentManager.saveContent(getContent());
-	    	
 	    	// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleContentTransfered(getContent().getUrl());
-	    	}	   	
+	    	}
+
+            deleteFile();
 	   	} catch(IOException e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Can't save received image", e);
@@ -348,12 +348,14 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	   		// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_SAVING_FAILED));
-	        }	   		
+	    	}
 	   	} catch(Exception e) {
 	   		// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED));
-	        }	   		
+	    	}
+            deleteFile();
+            //TODO [SD card Exception Handling] -  terminate session (e.g. sd card dismounted)
 	   	}
 	}
     
@@ -364,11 +366,37 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	 * @param totalSize Total size in bytes
 	 */
 	public void msrpTransferProgress(long currentSize, long totalSize) {
-		// Notify listeners
-    	for(int j=0; j < getListeners().size(); j++) {
-    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
+        // Not used
+    }
+
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        try {
+            getContent().writeData2File(data);
+
+            // Notify listeners
+            for (int j = 0; j < getListeners().size(); j++) {
+                ((ImageTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
+            }
+        } catch (IOException e) {
+            if (logger.isActivated()) {
+                logger.error("Can't save received image", e);
+            }
+            deleteFile();
+            // Notify listeners
+            for (int j = 0; j < getListeners().size(); j++) {
+                ((ImageTransferSessionListener) getListeners().get(j)).handleSharingError(new ContentSharingError(
+                        ContentSharingError.MEDIA_SAVING_FAILED));
+            }
         }
-	}	
+        return true;
+	}
 
 	/**
 	 * Data transfer has been aborted
@@ -377,20 +405,22 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     	if (logger.isActivated()) {
     		logger.info("Data transfer aborted");
     	}
-	}	
+        deleteFile();
+	}
 
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
 		if (isInterrupted()) {
 			return;
 		}
 
 		if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
+            logger.info("Data transfer error " + error);
     	}
 
         // Close the media session
@@ -437,5 +467,25 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
         if (logger.isActivated()) {
             logger.debug("MSRP session has been closed");
         }
+        if (!isImageTransfered()) {
+            deleteFile();
+        }
+    }
+
+    /**
+     * Delete file
+     */
+    private void deleteFile() {
+        if (logger.isActivated()) {
+            logger.debug("Delete (incomplete) received image");
+        }
+        try {
+            getContent().deleteFile();
+        } catch (IOException e) {
+            if (logger.isActivated()) {
+                logger.error("Can't delete received image", e);
+            }
+        }
     }
 }
+

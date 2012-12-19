@@ -21,6 +21,7 @@ package com.orangelabs.rcs.service.api.server.messaging;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
@@ -157,10 +158,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		}
 
 		// Abort the session
-		session.abortSession();
-
-		// Update rich messaging history
-		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 	
 	/**
@@ -219,8 +217,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     
     /**
      * Session has been aborted
-     */
-    public void handleSessionAborted() {
+     * 
+	 * @param status Termination status
+	 */
+    public void handleSessionAborted(int status) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Session aborted");

@@ -354,15 +354,16 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 	}	
 
 	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
-    	if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
-    	}
-	}
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
+		if (logger.isActivated()) {
+            logger.info("Data transfer error " + error);
+        }
+    }
 	
 	/**
 	 * Send an empty data chunk

@@ -495,7 +495,7 @@ public class PresenceService extends ImsService implements AddressBookEventListe
 			     "    <gp:location-info><gml:location>" + SipUtils.CRLF +
 			     "        <gml:Point srsDimension=\"3\"><gml:pos>" + geolocInfo.getLatitude() + " " +
 			     				geolocInfo.getLongitude() + " " +
-			     				geolocInfo.getLongitude() + "</gml:pos>" + SipUtils.CRLF +
+			     				geolocInfo.getAltitude() + "</gml:pos>" + SipUtils.CRLF +
 			     "        </gml:Point></gml:location>" + SipUtils.CRLF +
 			     "    </gp:location-info>" + SipUtils.CRLF +
 			     "    <gp:method>GPS</gp:method>" + SipUtils.CRLF +

@@ -23,6 +23,7 @@ import java.util.List;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
@@ -178,11 +179,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			logger.info("Cancel session");
 		}
 		
-		// Update rich messaging history
-		RichMessaging.getInstance().addChatSessionTerminationByUser(session);
-
 		// Abort the session
-		session.abortSession();
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 	
 	/**
@@ -367,15 +365,19 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
     
     /**
      * Session has been aborted
-     */
-    public void handleSessionAborted() {
+     * 
+	 * @param status Termination status
+	 */
+    public void handleSessionAborted(int status) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Session aborted");
 			}
 	
 			// Update rich messaging history
-			if (!RichMessaging.getInstance().isSessionTerminated(session.getSessionID())){
+			if (status == ImsServiceSession.TERMINATION_BY_USER) {
+				RichMessaging.getInstance().addChatSessionTerminationByUser(session);
+			} else {
 				RichMessaging.getInstance().addChatSessionTermination(session);
 			}
 			
@@ -407,7 +409,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().addChatSessionTermination(session);
+			RichMessaging.getInstance().addChatSessionTerminationByRemote(session);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -474,7 +476,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	    			// These errors are not logged
 	    			break;
 		    	case ChatError.SESSION_INITIATION_DECLINED:
-					RichMessaging.getInstance().addChatSessionTermination(session);
+					RichMessaging.getInstance().addChatSessionTerminationByUser(session);
 		    		break;
 		    	case ChatError.SESSION_INITIATION_FAILED:
 		    	case ChatError.SESSION_INITIATION_CANCELLED:
@@ -638,7 +640,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	            	}
 	            }
 	        }
-	        listeners.finishBroadcast();    	
+	        listeners.finishBroadcast();
 	    }  
     }
 }

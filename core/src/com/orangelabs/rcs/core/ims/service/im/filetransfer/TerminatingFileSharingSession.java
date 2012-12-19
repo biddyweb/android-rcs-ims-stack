@@ -117,7 +117,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	
 			    	// Notify listeners
 			    	for(int i=0; i < getListeners().size(); i++) {
-			    		getListeners().get(i).handleSessionAborted();
+			    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
 			        }
 					return;
 				} else
@@ -134,7 +134,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	
 			    	// Notify listeners
 	            	for(int j=0; j < getListeners().size(); j++) {
-	            		getListeners().get(j).handleSessionAborted();
+	            		getListeners().get(j).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 			        }
 					return;
 				} else
@@ -255,6 +255,11 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     				logger.info("ACK request received");
     			}
 
+                // Notify listeners
+                for(int j=0; j < getListeners().size(); j++) {
+                    getListeners().get(j).handleSessionStarted();
+                }
+
         		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
@@ -274,11 +279,6 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
-
-            	// Notify listeners
-            	for(int j=0; j < getListeners().size(); j++) {
-            		getListeners().get(j).handleSessionStarted();
-    	        }
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");
@@ -367,12 +367,10 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     	fileTransfered();
 	
     	try {
-	    	// Update the content with the received data 
-	    	getContent().setData(data);
+            // Save data into a filename
+            getContent().writeData2File(data);
+            getContent().closeFile();
 
-	    	// Save data into a filename
-	    	ContentManager.saveContent(getContent());
-	    	
 	    	// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
@@ -385,6 +383,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	   		if (logger.isActivated()) {
 	   			logger.error("Can't save received file", e);
 	   		}
+            deleteFile();
 	   	}
 	}
     
@@ -395,12 +394,38 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	 * @param totalSize Total size in bytes
 	 */
 	public void msrpTransferProgress(long currentSize, long totalSize) {
-    	// Notify listeners
-		if (!isInterrupted()) {
-	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
-	        }
-		}
+        // Not used
+	}
+
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        try {
+            getContent().writeData2File(data);
+            // Notify listeners
+            if (!isInterrupted()) {
+                for(int j = 0; j < getListeners().size(); j++) {
+                    ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
+                }
+            }
+        } catch (Exception e) {
+            // Notify listeners
+            for (int j = 0; j < getListeners().size(); j++) {
+                ((FileSharingSessionListener) getListeners().get(j)).handleTransferError(new FileSharingError(
+                        FileSharingError.MEDIA_SAVING_FAILED, e.getMessage()));
+            }
+            if (logger.isActivated()) {
+                logger.error("Can not save data chunk to file", e);
+            }
+            deleteFile();
+            //TODO  [SD card Exception Handling] -  terminate session (e.g. sd card dismounted)
+        }
+        return true;
 	}	
 
 	/**
@@ -410,16 +435,24 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     	if (logger.isActivated()) {
     		logger.info("Data transfer aborted");
     	}
+        if (!isFileTransfered()) {
+            deleteFile();
+        }
 	}	
 
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error) {
-    	if (logger.isActivated()) {
-    		logger.info("Data transfer error: " + error);
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
+		if (isInterrupted()) {
+			return;
+		}
+		
+		if (logger.isActivated()) {
+            logger.info("Data transfer error " + error);
     	}
 
     	try {
@@ -430,7 +463,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 			terminateSession();
 	   	} catch(Exception e) {
 	   		if (logger.isActivated()) {
-	   			logger.error("Can't close correctly the CSh session", e);
+	   			logger.error("Can't close correctly the file transfer session", e);
 	   		}
 	   	}
 
@@ -472,6 +505,25 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
             msrpMgr.closeSession();
             if (logger.isActivated()) {
                 logger.debug("MSRP session has been closed");
+            }
+        }
+        if (!isFileTransfered()) {
+            deleteFile();
+        }
+    }
+
+    /**
+     * Delete file
+     */
+    private void deleteFile() {
+        if (logger.isActivated()) {
+            logger.debug("Delete (incomplete) received file");
+        }
+        try {
+            getContent().deleteFile();
+        } catch (IOException e) {
+            if (logger.isActivated()) {
+                logger.error("Can't delete received file", e);
             }
         }
     }

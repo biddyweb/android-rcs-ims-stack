@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 65;
+        private static final int DATABASE_VERSION = 67;
 
         private Context ctx;
 
@@ -128,9 +128,10 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.IM_SESSION_START,	 				"1");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_USERNAME, 			"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, 		"");
+            addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, 		"");
             addParameter(db, RcsSettingsData.USERPROFILE_IMS_PASSWORD, 			"");
-            addParameter(db, RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, 		"");
+            addParameter(db, RcsSettingsData.USERPROFILE_IMS_REALM,		 		"");
 		    addParameter(db, RcsSettingsData.IMS_PROXY_ADDR_MOBILE,				"");
 		    addParameter(db, RcsSettingsData.IMS_PROXY_PORT_MOBILE,				"5060");
 		    addParameter(db, RcsSettingsData.IMS_PROXY_ADDR_WIFI,				"");
@@ -199,6 +200,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.AUTO_CONFIG_MODE,					""+RcsSettingsData.HTTPS_AUTO_CONFIG);
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
+            addParameter(db, RcsSettingsData.PROVISIONING_ADDRESS,              "");
             addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				Environment.getExternalStorageDirectory() + "/joyn/photos");
             addParameter(db, RcsSettingsData.DIRECTORY_PATH_VIDEOS,				Environment.getExternalStorageDirectory() + "/joyn/videos");
             addParameter(db, RcsSettingsData.DIRECTORY_PATH_FILES,				Environment.getExternalStorageDirectory() + "/joyn/files");

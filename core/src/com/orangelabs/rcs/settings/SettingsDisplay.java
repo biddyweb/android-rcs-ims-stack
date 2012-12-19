@@ -351,8 +351,11 @@ public class SettingsDisplay extends PreferenceActivity {
 		try {
 			ConnectivityManager connectivityMgr = (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 			NetworkInfo netInfo = connectivityMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-			return netInfo.isRoaming();
+            if (netInfo != null) {
+                result = netInfo.isRoaming();
+            }
 		} catch(Exception e) {
+            // Nothing to do
 		}
 		return result;
 	}

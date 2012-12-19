@@ -114,7 +114,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 
 		    	// Notify listeners
 		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted();
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
 		        }
 				return;
 			} else
@@ -131,7 +131,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 
 		    	// Notify listeners
     	    	for(int i=0; i < getListeners().size(); i++) {
-    	    		getListeners().get(i).handleSessionAborted();
+    	    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 		        }
 				return;
 			} else
