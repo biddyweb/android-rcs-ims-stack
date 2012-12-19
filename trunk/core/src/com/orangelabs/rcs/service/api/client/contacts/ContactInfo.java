@@ -313,7 +313,17 @@ public class ContactInfo implements Parcelable {
 	public long getRcsStatusTimestamp(){
 		return rcsStatusTimestamp;
 	}
-	
+
+    /**
+     * Is RCS contact ?
+     *
+     * @return true if the contact is RCS
+     */
+    public boolean isRcsContact() {
+        return (rcsStatus != ContactInfo.NO_INFO && rcsStatus != ContactInfo.NOT_RCS);
+
+    }
+
 	/**
 	 * Returns a string representation of the object
 	 * 

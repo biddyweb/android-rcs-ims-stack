@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.IdGenerator;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -249,14 +250,14 @@ public class TermsConditionsService extends ImsService {
 	 * @return Boolean result
 	 */
 	private boolean sendSipMessage(String remote, String id, String value, String pin) {
-		if ((remote == null) || (remote.length() == 0)) {
+		if (StringUtils.isEmpty(remote)) {
 			if (logger.isActivated()) {
        			logger.error("Remote URI not set");
        		}
 			return false;
 		}
 		
-		if ((id == null) || (id.length() == 0)) {
+		if (StringUtils.isEmpty(id)) {
 			if (logger.isActivated()) {
        			logger.error("Request ID not set");
        		}

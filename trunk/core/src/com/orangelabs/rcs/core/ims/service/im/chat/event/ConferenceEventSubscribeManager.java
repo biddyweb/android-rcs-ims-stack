@@ -43,6 +43,7 @@ import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -172,8 +173,8 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    	for(int i=0; i < users.size(); i++) {
 			    		User user = (User)users.elementAt(i);
 			    		String entity = PhoneUtils.extractNumberFromUri(user.getEntity());
-			    		if (entity == null) {
-			    			// Null entity
+			    		if (StringUtils.isEmpty(entity)) {
+			    			// Empty entity
 			    			continue;
 			    		}
 			    		

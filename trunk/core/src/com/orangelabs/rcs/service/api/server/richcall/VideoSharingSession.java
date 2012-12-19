@@ -21,6 +21,7 @@ package com.orangelabs.rcs.service.api.server.richcall;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSessionListener;
@@ -135,7 +136,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 		}
 
 		// Abort the session
-		session.abortSession();
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 
 	/**
@@ -207,8 +208,10 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
     
     /**
      * Session has been aborted
-     */
-    public void handleSessionAborted() {
+     * 
+	 * @param status Termination status
+	 */
+    public void handleSessionAborted(int status) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Session aborted");

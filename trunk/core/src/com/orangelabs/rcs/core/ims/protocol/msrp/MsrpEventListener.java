@@ -22,6 +22,7 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
  * MSRP event listener
  * 
  * @author jexa7410
+ * @author Deutsche Telekom AG
  */
 public interface MsrpEventListener {
 	/**
@@ -47,16 +48,28 @@ public interface MsrpEventListener {
 	 * @param totalSize Total size in bytes
 	 */
 	public void msrpTransferProgress(long currentSize, long totalSize);	
-	
+
+    /**
+     * Data transfer in progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     * @param data received data chunk
+     * @return true if data are processed and can be delete in cache. If false, so data were stored in
+     *         MsrpSession cache until msrpDataReceived is called.
+     */
+    public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data);
+
 	/**
 	 * Data transfer has been aborted
 	 */
 	public void msrpTransferAborted();
-	
-	/**
-	 * Data transfer error
-	 * 
-	 * @param error Error
-	 */
-	public void msrpTransferError(String error);
+
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error);
 }

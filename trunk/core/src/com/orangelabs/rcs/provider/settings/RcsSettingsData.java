@@ -308,7 +308,12 @@ public class RcsSettingsData {
      */
 	public static final String USERPROFILE_IMS_DISPLAY_NAME = "ImsDisplayName";
 
-    /**
+	/**
+	 * IMS home domain
+	 */
+	public static final String USERPROFILE_IMS_HOME_DOMAIN = "ImsHomeDomain";
+
+	/**
      * IMS private URI or IMPI (for HTTP Digest only)
      */
 	public static final String USERPROFILE_IMS_PRIVATE_ID = "ImsPrivateId";
@@ -319,9 +324,9 @@ public class RcsSettingsData {
 	public static final String USERPROFILE_IMS_PASSWORD = "ImsPassword";
 
 	/**
-	 * IMS home domain (for HTTP Digest only)
-	 */
-	public static final String USERPROFILE_IMS_HOME_DOMAIN = "ImsHomeDomain";
+     * IMS realm (for HTTP Digest only)
+     */
+	public static final String USERPROFILE_IMS_REALM = "ImsRealm";
 
 	/**
 	 * P-CSCF or outbound proxy address for mobile access
@@ -656,7 +661,13 @@ public class RcsSettingsData {
      * Provisioning version
      */
     public static final String PROVISIONING_VERSION = "ProvisioningVersion";
-    
+
+    /**
+     * Provisioning address.
+     * The provisioning address can be set in settings for test purpose.
+     */
+    public static final String PROVISIONING_ADDRESS = "ProvisioningAddress";
+
     /**
      * Directory path for photos
      */

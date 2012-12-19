@@ -21,21 +21,12 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import com.orangelabs.rcs.utils.logger.Logger;
-
 /**
  * Data chunks
- * 
+ *
  * @author jexa7410
  */
 public class DataChunks {
-	
-	/**
-	 * The logger
-	 */
-	private Logger logger = Logger.getLogger(this.getClass().getName());
-
-	
     /**
      * Current transfered size in bytes
      */
@@ -54,40 +45,43 @@ public class DataChunks {
 	
 	/**
 	 * Add a new chunk
-	 * 
+	 *
 	 * @param data Data chunk
 	 */
-	public void addChunk(byte[] data) throws IOException {
-		cache.write(data, 0, data.length);		
+	public void addChunk(byte[] data) throws IOException, MsrpException {
+        try {
+		cache.write(data, 0, data.length);
+        } catch (OutOfMemoryError e) {
+            throw new MsrpException("Not enough memory to save data");
+        }
 		currentSize += data.length;
 	}
 
 	/**
      * Get received data
-     * 
+     *
      * @return Byte array
      */
-    public byte[] getReceivedData() {
+    public byte[] getReceivedData() throws IOException, MsrpException {
     	byte[] result=null;
     	try {
 			result = cache.toByteArray();
 		} catch (OutOfMemoryError e) {
-			logger.error("Not enough memory to save data", e);
+            throw new MsrpException("Not enough memory to copy data");
 		}
         return result;
     }
-	
+
 	/**
-     * Rset the cache
+     * Reset the cache
      */
     public void resetCache() {
     	cache.reset();
-    	currentSize = 0;
     }
-    
+
     /**
 	 * Returns the current size of the received chunks
-	 * 
+	 *
 	 * @return Size in bytes
 	 */
 	public int getCurrentSize() {

@@ -27,7 +27,7 @@ public class H263Config {
     /**
      * H263 Codec Name
      */
-    public final static String CODEC_NAME = "h263-2000";
+    public final static String CODEC_NAME = "H263-2000";
 
     /**
      * Default clock rate

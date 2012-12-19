@@ -343,7 +343,8 @@ class EventScanner implements Runnable {
                     // We cannot let this thread die under any
                     // circumstances. Protect ourselves by logging
                     // errors to the console but continue.
-                    sipStack.getStackLogger().logException(ex);
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logException(ex);
                 }
                 // The original request is not needed except for INVITE
                 // transactions -- null the pointers to the transactions so
@@ -378,7 +379,8 @@ class EventScanner implements Runnable {
                 // We cannot let this thread die under any
                 // circumstances. Protect ourselves by logging
                 // errors to the console but continue.
-                sipStack.getStackLogger().logException(ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logException(ex);
             }
 
         } else if (sipEvent instanceof DialogTimeoutEvent) {
@@ -391,7 +393,8 @@ class EventScanner implements Runnable {
                 // We cannot let this thread die under any
                 // circumstances. Protect ourselves by logging
                 // errors to the console but continue.
-                sipStack.getStackLogger().logException(ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logException(ex);
             }
 
         } else if (sipEvent instanceof IOExceptionEvent) {
@@ -399,7 +402,8 @@ class EventScanner implements Runnable {
                 if (sipListener != null)
                     sipListener.processIOException((IOExceptionEvent) sipEvent);
             } catch (Exception ex) {
-                sipStack.getStackLogger().logException(ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logException(ex);
             }
         } else if (sipEvent instanceof TransactionTerminatedEvent) {
             try {
@@ -427,7 +431,8 @@ class EventScanner implements Runnable {
                         .logWarning(
                                 "Unable to call sipListener.processTransactionTerminated");
             } catch (Exception ex) {
-                sipStack.getStackLogger().logException(ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logException(ex);
             }
         } else if (sipEvent instanceof DialogTerminatedEvent) {
             try {
@@ -440,11 +445,12 @@ class EventScanner implements Runnable {
             		sipStack.getStackLogger().logWarning(
                         "Unable to call sipListener.processDialogTerminated");
             } catch (Exception ex) {
-                sipStack.getStackLogger().logException(ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logException(ex);
             }
         } else {
-
-            sipStack.getStackLogger().logFatalError("bad event" + sipEvent);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logFatalError("bad event" + sipEvent);
         }
 
     }

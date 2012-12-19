@@ -293,7 +293,8 @@ public class SIPDialog implements javax2.sip.Dialog, DialogExt {
                 ctx.terminate();
                 Thread.currentThread().interrupt();
             } catch (ObjectInUseException e) {
-                sipStack.getStackLogger().logError("unexpected error", e);
+            	if (sipStack.isLoggingEnabled())
+            		sipStack.getStackLogger().logError("unexpected error", e);
             }
         }
 
@@ -359,7 +360,8 @@ public class SIPDialog implements javax2.sip.Dialog, DialogExt {
                 if (sipStack.isLoggingEnabled())
                 	sipStack.getStackLogger().logDebug("re-INVITE successfully sent");
             } catch (Exception ex) {
-                sipStack.getStackLogger().logError("Error sending re-INVITE", ex);
+            	if (sipStack.isLoggingEnabled())
+            		sipStack.getStackLogger().logError("Error sending re-INVITE", ex);
             } finally {
                 this.ctx = null;
             }
@@ -3222,7 +3224,8 @@ public class SIPDialog implements javax2.sip.Dialog, DialogExt {
             }
             
         } catch (InterruptedException ex) {
-            sipStack.getStackLogger().logError("Cannot aquire ACK semaphore");
+        	if (sipStack.isLoggingEnabled())
+        		sipStack.getStackLogger().logError("Cannot aquire ACK semaphore");
             return false;
 
         }

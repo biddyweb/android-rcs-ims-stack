@@ -159,6 +159,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_IN_PROGRESS = 3;
     public static final int STATUS_CANCELED = 20;
 	public static final int STATUS_TERMINATED_BY_USER = 21;
+	public static final int STATUS_TERMINATED_BY_REMOTE = 22;
 	
 	// Messages
 	public static final int STATUS_SENT = 4;
@@ -180,6 +181,7 @@ public class EventsLogApi extends ClientApi {
 	public static final int EVENT_FAILED = 17; // Contact has declined the invitation or any other reason
 	public static final int EVENT_BUSY = 18; // Contact is busy
 	public static final int EVENT_DECLINED = 19; // Contact has declined the invitation
+	public static final int EVENT_PENDING = 20; // Contact invitation is pending
 	
 	// Is spam
 	public static final int MESSAGE_IS_NOT_SPAM = 0;
@@ -369,10 +371,10 @@ public class EventsLogApi extends ClientApi {
      */
     public Cursor getChatSessionCursor(String sessionId){
     	// Do not take the chat terminated messages
-    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED +
-    		" OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
+    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"=="+STATUS_TERMINATED +
+    		" OR " + RichMessagingData.KEY_STATUS+"=="+STATUS_TERMINATED_BY_REMOTE + " OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
     	chatTerminatedExcludedSelection +=" AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_GROUP_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED +
-    		" OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
+    		" OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_REMOTE + " OR " + RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
     	return ctx.getContentResolver().query(RichMessagingData.CONTENT_URI, 
 				null,
 				RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'"+chatTerminatedExcludedSelection, 
@@ -388,8 +390,8 @@ public class EventsLogApi extends ClientApi {
      */
     public Cursor getChatContactCursor(String contact){
     	// Do not take the chat terminated messages
-    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"== "+STATUS_TERMINATED+" OR " + 
-    		RichMessagingData.KEY_STATUS + "== " + STATUS_TERMINATED_BY_USER + "))";
+    	String chatTerminatedExcludedSelection = " AND NOT(("+RichMessagingData.KEY_TYPE + "=="+ TYPE_CHAT_SYSTEM_MESSAGE +") AND ("+RichMessagingData.KEY_STATUS+"=="+STATUS_TERMINATED + " OR " + 
+    	RichMessagingData.KEY_STATUS+"=="+STATUS_TERMINATED_BY_REMOTE + " OR " + RichMessagingData.KEY_STATUS + "==" + STATUS_TERMINATED_BY_USER + "))";
     	// Do not take the group chat entries concerning this contact
     	chatTerminatedExcludedSelection +=" AND NOT("+RichMessagingData.KEY_TYPE + "=="+ TYPE_GROUP_CHAT_SYSTEM_MESSAGE +")";
     	    	
@@ -399,7 +401,7 @@ public class EventsLogApi extends ClientApi {
 				+ PhoneUtils.formatNumberToInternational(contact) + "'"+chatTerminatedExcludedSelection, null,
 				RichMessagingData.KEY_TIMESTAMP + " ASC");
     }
-    
+
     /**
      * Get the last message from a given chat session
      * 

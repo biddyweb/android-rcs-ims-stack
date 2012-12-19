@@ -421,7 +421,7 @@ public class ImsModule implements SipEventListener {
 				if (logger.isActivated()) {
 					logger.debug("Abort session " + session.getSessionID());
 				}
-				session.abortSession();
+				session.abortSession(ImsServiceSession.TERMINATION_BY_STACK);
 			}
 		}
 	}		

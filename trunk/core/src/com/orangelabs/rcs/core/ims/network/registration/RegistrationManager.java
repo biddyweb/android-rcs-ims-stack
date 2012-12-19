@@ -520,9 +520,6 @@ public class RegistrationManager extends PeriodicRefresher {
 				ctx.getTransaction().getRequest().getExpires().getExpires(),
 				instanceId);
 
-		// Set the security header
-		registrationProcedure.writeSecurityHeader(register);
-
 		// Send REGISTER request
 		sendRegister(register);
 	}	
@@ -569,9 +566,6 @@ public class RegistrationManager extends PeriodicRefresher {
         		expirePeriod,
         		instanceId);
         
-        // Set the security header
-        registrationProcedure.writeSecurityHeader(register);
-
         // Send REGISTER request
         sendRegister(register);
 	}	

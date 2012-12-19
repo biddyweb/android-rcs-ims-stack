@@ -365,7 +365,8 @@ public final class TLSMessageChannel extends MessageChannel implements SIPMessag
                         this.sendMessage(badReqRes.getBytes(), this.getPeerInetAddress(), this
                                 .getPeerPort(), false);
                     } catch (IOException e) {
-                        this.sipStack.getStackLogger().logException(e);
+                        if (sipStack.isLoggingEnabled())
+                        	this.sipStack.getStackLogger().logException(e);
                     }
                 } else {
                     if (sipStack.isLoggingEnabled()) {
@@ -557,7 +558,8 @@ public final class TLSMessageChannel extends MessageChannel implements SIPMessag
                         }
                     }
                 } else {
-                    sipStack.getStackLogger().logWarning("Could not get semaphore... dropping response");
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logWarning("Could not get semaphore... dropping response");
                 }
             }
         } finally {

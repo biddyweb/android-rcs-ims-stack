@@ -253,8 +253,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
         // Set layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // no remove bar
+ //       getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+   //             WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.richcall_visio_sharing);
 

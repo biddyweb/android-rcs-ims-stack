@@ -144,7 +144,8 @@ public class EventLogProvider extends ContentProvider {
             }
             // Do not take the "terminated" entries
             extraSelection += "NOT ((type = " + EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE + ") AND ((status = " +
-            	EventsLogApi.STATUS_TERMINATED + " ) OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
+            	EventsLogApi.STATUS_TERMINATED + " ) OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_REMOTE + ") OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
+
             // Filter the logs where this contact was involved in a group chat with us
             extraSelection += " AND NOT ( type = " + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
                     + " OR type = " + EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
@@ -166,7 +167,7 @@ public class EventLogProvider extends ContentProvider {
         case EventsLogApi.MODE_ONE_TO_ONE_CHAT:
         	// Do not take the "terminated" entries
         	extraSelection=" AND NOT ((type = "+EventsLogApi.TYPE_CHAT_SYSTEM_MESSAGE+") AND ((status = "+
-        		EventsLogApi.STATUS_TERMINATED + ") OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
+        		EventsLogApi.STATUS_TERMINATED + ") OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_REMOTE + ") OR (status = " + EventsLogApi.STATUS_TERMINATED_BY_USER + ")))";
 			// Filter the logs where this contact was involved in a group chat with us
 			extraSelection += " AND NOT ( type = "+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE
 				+ " OR type = "+EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE
@@ -190,7 +191,6 @@ public class EventLogProvider extends ContentProvider {
 				sortOrder = sortOrderOriginal;
 			else
 				sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
-        	sortOrder = EventLogData.KEY_EVENT_SESSION_ID+ " ASC , "+EventLogData.KEY_EVENT_DATE + " ASC ";
 			richMessagingSelectQuery = buildChatQuery(selection + extraSelection, false, false);
 			unionQuery = builder.buildUnionQuery(new String[] { richMessagingSelectQuery },sortOrder,limit);
 			sortCursor = db.rawQuery(unionQuery, null);
@@ -652,9 +652,8 @@ public class EventLogProvider extends ContentProvider {
 	private String buildRichMessagingQuery(String selection, boolean chatFiltered, boolean fileTransferFiltered){
 		// Do not take the "terminated" rows for chat sessions
 		String selectionFilter = " NOT ("+RichMessagingData.KEY_TYPE+">="+EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE + " AND "+
-			RichMessagingData.KEY_TYPE+"<="+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+" AND ("+
-	        RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED +" OR "+
-	        RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED_BY_USER + "))";
+			RichMessagingData.KEY_TYPE+"<="+EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE+" AND ("+ RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED +
+			" OR "+ RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED_BY_REMOTE +" OR "+ RichMessagingData.KEY_STATUS+" == "+EventsLogApi.STATUS_TERMINATED_BY_USER + "))";
 		// Do not take the spam messages
 		selectionFilter +=" AND NOT( "+RichMessagingData.KEY_IS_SPAM+"="+EventsLogApi.MESSAGE_IS_SPAM+ " )";
 		

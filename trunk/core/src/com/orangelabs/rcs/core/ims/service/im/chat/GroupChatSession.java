@@ -472,5 +472,8 @@ public abstract class GroupChatSession extends ChatSession {
 
         // Subscribe to event package
         getConferenceEventSubscriber().subscribe();
+
+        // Start the activity manager
+        getActivityManager().start();
     }
 }

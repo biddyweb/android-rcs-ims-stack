@@ -94,7 +94,7 @@ public class HttpDigestRegistrationProcedure extends RegistrationProcedure {
             if (digest.getRealm() != null) {
                 realm = digest.getRealm();
             } else {
-                realm = ImsModule.IMS_USER_PROFILE.getHomeDomain();
+                realm = ImsModule.IMS_USER_PROFILE.getRealm();
             }
 
             // Update nonce parameters

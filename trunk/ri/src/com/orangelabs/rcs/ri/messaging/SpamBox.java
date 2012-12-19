@@ -56,7 +56,7 @@ public class SpamBox extends Activity{
 	/**
 	 * Events log API
 	 */
-	EventsLogApi eventsLogApi;
+	private EventsLogApi eventsLogApi;
 	
 	/**
 	 * Delete spam menu id

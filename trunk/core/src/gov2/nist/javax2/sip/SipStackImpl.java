@@ -890,7 +890,8 @@ public class SipStackImpl extends SIPTransactionStack implements
 				.getProperty("gov2.nist.javax2.sip.STUN_SERVER");
 
 		if (stunAddr != null)
-			this.getStackLogger().logWarning(
+			if (isLoggingEnabled())
+				this.getStackLogger().logWarning(
 					"Ignoring obsolete property "
 							+ "gov2.nist.javax2.sip.STUN_SERVER");
 

@@ -31,8 +31,10 @@ public interface ImsSessionListener {
 
     /**
      * Session has been aborted
+     * 
+	 * @param status Termination status
      */
-    public void handleSessionAborted();
+    public void handleSessionAborted(int status);
     
     /**
      * Session has been terminated by remote

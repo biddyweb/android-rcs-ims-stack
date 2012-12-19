@@ -267,7 +267,9 @@ public class AuthenticationHelperImpl implements AuthenticationHelper {
         } catch (SipException ex) {
             throw ex;
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Unexpected exception ", ex);
+            if (sipStack.isLoggingEnabled()) {
+            	sipStack.getStackLogger().logError("Unexpected exception ", ex);
+            }
             throw new SipException("Unexpected exception ", ex);
         }
     }

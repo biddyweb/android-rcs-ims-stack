@@ -71,6 +71,10 @@ public class ExtendOneOneChatSession extends GroupChatSession {
 		
 		// Save one-to-one session
 		this.oneoneSession = oneoneSession;
+		
+		// Set contribution ID
+		String id = ContributionIdGenerator.getContributionId(getDialogPath().getCallId());
+		setContributionID(id);				
 	}
 	
 	/**

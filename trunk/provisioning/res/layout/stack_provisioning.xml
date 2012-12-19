@@ -19,6 +19,18 @@
 		android:layout_marginRight="5dip"
 		android:drawSelectorOnTop="true"/>
 
+        <TextView android:text="Provisioning server:"
+        android:paddingTop="5dip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+        <EditText android:id="@+id/ProvisioningAddress"
+        android:hint="let blank for automatic address"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip"
+        android:maxLength="100" android:lines="1"/>
+
        	<TextView android:text="Network access:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"

@@ -272,7 +272,7 @@ public class SessionTimerManager extends PeriodicRefresher {
                 }
 
                 // Close the session
-                session.abortSession();
+                session.abortSession(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 
                 // Request capabilities to the remote
                 session.getImsService().getImsModule().getCapabilityService().requestContactCapabilities(session.getDialogPath().getRemoteParty());
@@ -300,7 +300,7 @@ public class SessionTimerManager extends PeriodicRefresher {
 				}
 
 				// Close the session
-		    	session.abortSession();
+		    	session.abortSession(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 		    	
 	        	// Request capabilities to the remote
 				session.getImsService().getImsModule().getCapabilityService().requestContactCapabilities(session.getDialogPath().getRemoteParty());
@@ -317,8 +317,9 @@ public class SessionTimerManager extends PeriodicRefresher {
 			if (logger.isActivated()) {
 				logger.error("Session timer refresh has failed", e);
 			}
+			
 	    	// Close the session
-	    	session.abortSession();
+	    	session.abortSession(ImsServiceSession.TERMINATION_BY_STACK);
 	    }
     }
 

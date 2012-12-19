@@ -49,6 +49,13 @@ public abstract class ImsServiceSession extends Thread {
     public final static int INVITATION_CANCELED = 3; 
 
 	/**
+	 * Session termination status
+	 */
+    public final static int TERMINATION_BY_STACK = 0;
+    public final static int TERMINATION_BY_USER = 1;
+    public final static int TERMINATION_BY_TIMEOUT = 2;
+    
+	/**
      * IMS service
      */
     private ImsService imsService;
@@ -409,8 +416,10 @@ public abstract class ImsServiceSession extends Thread {
 	
 	/**
 	 * Abort the session
+	 * 
+	 * @param status Termination status
 	 */
-	public void abortSession(){
+	public void abortSession(int status) {
     	if (logger.isActivated()) {
     		logger.info("Abort the session");
     	}
@@ -429,7 +438,7 @@ public abstract class ImsServiceSession extends Thread {
 
     	// Notify listeners
     	for(int i=0; i < getListeners().size(); i++) {
-    		getListeners().get(i).handleSessionAborted();
+    		getListeners().get(i).handleSessionAborted(status);
         }
 	}
 
@@ -869,17 +878,17 @@ public abstract class ImsServiceSession extends Thread {
             // The session is established
             getDialogPath().sessionEstablished();
 
+            // Notify listeners
+            for(int i=0; i < getListeners().size(); i++) {
+                getListeners().get(i).handleSessionStarted();
+            }
+
             // Start Media Session
             startMediaSession();
 
             // Start session timer
             if (getSessionTimerManager().isSessionTimerActivated(resp)) {
                 getSessionTimerManager().start(resp.getSessionTimerRefresher(), resp.getSessionTimerExpire());
-            }
-
-            // Notify listeners
-            for(int i=0; i < getListeners().size(); i++) {
-                getListeners().get(i).handleSessionStarted();
             }
         } catch(Exception e) {
             // Unexpected error

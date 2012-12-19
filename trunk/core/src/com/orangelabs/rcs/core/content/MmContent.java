@@ -18,11 +18,18 @@
 
 package com.orangelabs.rcs.core.content;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.IOException;
+
+import com.orangelabs.rcs.platform.file.FileFactory;
+
 
 /**
  * Multimedia content
  *
  * @author jexa7410
+ * @author Deutsche Telekom AG
  */
 public abstract class MmContent {
 	/**
@@ -49,6 +56,11 @@ public abstract class MmContent {
 	 * Content name
 	 */
 	private String name = null;
+
+    /**
+     * Stream to write received data direct to file.
+     */
+    private BufferedOutputStream out = null;  
 
     /**
      * Constructor
@@ -189,4 +201,50 @@ public abstract class MmContent {
 	public void setData(byte[] data) {
 		this.data = data;
 	}
+
+    /**
+     * Write data chunk to file.
+     *
+     * @param data Data to append to file.
+     * @throws IOException
+     */
+    public void writeData2File(byte[] data) throws IOException, IllegalArgumentException {
+        if (out == null) {
+            // To optimize I/O set buffer size to 8kBytes 
+            out = new BufferedOutputStream(FileFactory.getFactory().openFileOutputStream(getUrl()), 8*1024);
+        }
+        out.write(data);
+    }
+
+    /**
+     * Close written file and update media storage.
+     *
+     * @throws IOException
+     */
+    public void closeFile() throws IOException {
+        if (out != null) {
+            out.flush();
+            out.close();
+            out = null;
+            FileFactory.getFactory().updateMediaStorage(getUrl());
+        }
+    }
+
+    /**
+     * Delete File.
+     *
+     * @throws IOException
+     */
+    public void deleteFile() throws IOException {
+        if (out != null) {
+            out.close();
+            out = null;
+            File file = new File(getUrl());
+            if (file != null) {
+                if (!file.delete()) {
+                    throw new IOException("Unable to delete file: " + file.getAbsolutePath());
+                }
+            }
+        }
+    }
 }

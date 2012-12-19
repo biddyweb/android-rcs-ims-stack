@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.11
+Release 2.4.12
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,8 +9,13 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Remove inactivity timeout from group chat.
-- Add reason on BYE request sent by the client.
+- Group chat termination management.
+- GSMA Guidelines 3.2.
+- Add R/W permission in database providers.
+- New settings for HTTPS provisioning server address.
+- Contacts database optimizations:
+  -> Create native raw contact only for RCS Contacts.
+  -> Improve RichAddressBook with capabilities and presence informations.
 
 
 Bugs fixed:
@@ -18,6 +23,21 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.4.12
+- Mantis #0016653	Stack: SDP small h is used instead of H for H.264 format
+- GSMA Guidelines 	Stack: ID_4_36: Idle group chat sessions should be cleared from the controlling function
+- GSMA Guidelines 	Stack: ID_4_35: Include a Reason Code in the BYE requests
+- Mantis #0016645	Stack: Bad nonce count value after 401 response during registration
+- Deutsche Telecom	Stack: Improve MSRP failure reports handling
+- Mantis #0016636	Stack: Contribution-ID is null when extending a 1-1 chat session to a group chat session
+- Mantis #0016615	Stack: Potential issue with list of group chat participants
+- Open source #63	Stack: Request rejected because IP doesn't match (NAT)
+- Deutsche Telecom	Stack: Save FT in files to avoid Out-of-Memory problem
+- Mantis #0016512	Stack: Separate "realm" and "home domain" in the IMS parameters
+- Deutsche Telecom	Stack: Support of MSRP chunk Byte-Range with "*" (e.g. 1-*/22123)
+- Mantis #0015046	Stack: Adressbook issue on Samsung 2.3.6
+
 
 v2.4.11
 - Mantis #0016549	Stack: Can't test APN under OS 4.2
@@ -316,8 +336,7 @@ v2.2.4
 - Mantis #0011249	Display only capable contacts for FT, chat and rich call
 
 v2.2.3
-- Mantis #0011436	Service is not started when air plane mode is disabled
-- Mantis #0010849	Chat not well displayed in event log
+- Mantis #0011436	Service is not started when air plane mode is disabled- Mantis #0010849	Chat not well displayed in event log
 - Mantis #0010368	Video preview error on LG Optimus
 
 v2.2.2

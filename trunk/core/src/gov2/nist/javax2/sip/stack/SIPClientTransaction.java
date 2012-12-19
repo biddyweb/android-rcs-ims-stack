@@ -787,7 +787,8 @@ public class SIPClientTransaction extends SIPTransaction implements ServerRespon
                     sendMessage((SIPRequest) createErrorAck());
 
                 } catch (Exception ex) {
-                    sipStack.getStackLogger().logError(
+                	if (sipStack.isLoggingEnabled())
+                		sipStack.getStackLogger().logError(
                             "Unexpected Exception sending ACK -- sending error AcK ", ex);
 
                 }
@@ -1428,7 +1429,8 @@ public class SIPClientTransaction extends SIPTransaction implements ServerRespon
                             if ( dialog != null ) {
                                 this.setDialog(dialog, dialog.getDialogId());
                             } else {
-                                sipStack.getStackLogger().logError("dialog is unexpectedly null",new NullPointerException());
+                            	if (sipStack.isLoggingEnabled())
+                            		sipStack.getStackLogger().logError("dialog is unexpectedly null",new NullPointerException());
                             }
                         } else {
                             throw new RuntimeException("Response without from-tag");

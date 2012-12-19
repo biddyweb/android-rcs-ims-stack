@@ -21,6 +21,7 @@ package com.orangelabs.rcs.service.api.server.richcall;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSessionListener;
@@ -156,10 +157,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 		}
 		
 		// Abort the session
-		session.abortSession();
-
-		// Update rich call history
-		RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_CANCELED);
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 
 	/**
@@ -218,8 +216,10 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
     
     /**
      * Session has been aborted
+     * 
+	 * @param status Termination status
      */
-    public void handleSessionAborted() {
+    public void handleSessionAborted(int status) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Session aborted");

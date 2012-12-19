@@ -338,7 +338,7 @@ public abstract class SipMessage {
 	        	// Extract parameter name & value 
 	        	String pname = (String)i.next();
 	        	String pvalue = contactHeader.getParameter(pname);
-        		if ((pvalue == null) || (pvalue.length() == 0)) {
+        		if (StringUtils.isEmpty(pvalue)) {
 					// Add single parameter
         			temp.add(pname);
 	        	} else {

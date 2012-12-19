@@ -308,7 +308,8 @@ public class SIPServerTransaction extends SIPTransaction implements ServerReques
 
                 }
             } catch (Exception ex) {
-                sipStack.getStackLogger().logError("unexpected exception", ex);
+                if (sipStack.isLoggingEnabled())
+                	sipStack.getStackLogger().logError("unexpected exception", ex);
             }
         }
     }
@@ -1308,7 +1309,8 @@ public class SIPServerTransaction extends SIPTransaction implements ServerReques
                         throw new SipException("cannot send response -- unacked povisional");
                     }
                 } catch (Exception ex) {
-                    this.sipStack.getStackLogger().logError("Could not acquire PRACK sem ", ex);
+                	if (sipStack.isLoggingEnabled())
+                		sipStack.getStackLogger().logError("Could not acquire PRACK sem ", ex);
                 }
             } else {
                 // Sending the final response cancels the

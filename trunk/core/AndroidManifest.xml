@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.11"
+ android:versionName="2.4.12"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"
@@ -28,6 +28,8 @@
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+	 
+	<uses-permission android:name="com.orangelabs.rcs.permission.RCS"/>	
 	 
 	<permission android:name="com.orangelabs.rcs.permission.RCS"
         android:label="@string/rcs_core_permission"
@@ -131,18 +133,28 @@
 		<!-- RCS data providers -->	
 
 		<provider android:authorities="com.orangelabs.rcs.settings"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.settings.RcsSettingsProvider"/>
 
 		<provider android:authorities="com.orangelabs.rcs.eab"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.eab.RichAddressBookProvider"/>
 
 		<provider android:authorities="com.orangelabs.rcs.messaging"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.messaging.RichMessagingProvider"/>
 			
 		<provider android:authorities="com.orangelabs.rcs.csh"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.sharing.RichCallProvider"/>
 			
 		<provider android:authorities="com.orangelabs.rcs.eventlogs"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.eventlogs.EventLogProvider"/>
 	
 		<!-- Device events receiver -->	

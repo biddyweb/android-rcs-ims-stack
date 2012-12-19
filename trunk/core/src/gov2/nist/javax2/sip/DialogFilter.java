@@ -122,7 +122,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
             transaction.sendResponse(sipResponse);
             transaction.releaseSem();
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Problem sending error response", ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Problem sending error response", ex);
             transaction.releaseSem();
             sipStack.removeTransaction(transaction);
         }
@@ -152,7 +153,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
             transaction.sendResponse(sipResponse);
             transaction.releaseSem();
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Problem sending error response", ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Problem sending error response", ex);
             transaction.releaseSem();
             sipStack.removeTransaction(transaction);
 
@@ -183,7 +185,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
             transaction.sendResponse(sipResponse);
             transaction.releaseSem();
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Problem sending error response", ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Problem sending error response", ex);
             transaction.releaseSem();
             sipStack.removeTransaction(transaction);
 
@@ -210,7 +213,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
             transaction.sendResponse(sipResponse);
             transaction.releaseSem();
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Problem sending error response", ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Problem sending error response", ex);
             transaction.releaseSem();
             sipStack.removeTransaction(transaction);
 
@@ -245,7 +249,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
             transaction.sendResponse(sipResponse);
             transaction.releaseSem();
         } catch (Exception ex) {
-            sipStack.getStackLogger().logError("Problem sending response", ex);
+            if (sipStack.isLoggingEnabled())
+            	sipStack.getStackLogger().logError("Problem sending response", ex);
             transaction.releaseSem();
             sipStack.removeTransaction(transaction);
         }
@@ -587,7 +592,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
                 try {
                     sipProvider.sendResponse(notExist);
                 } catch (SipException e) {
-                    sipStack.getStackLogger().logError("error sending response", e);
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logError("error sending response", e);
                 }
                 if (transaction != null) {
                     sipStack.removeTransaction(transaction);
@@ -660,7 +666,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
                 try {
                     transaction.sendResponse(response);
                 } catch (SipException ex) {
-                    sipStack.getStackLogger().logError("Error in sending response", ex);
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logError("Error in sending response", ex);
                 }
                 // If the stack knows about the tx, then remove it.
                 if (transaction != null) {
@@ -967,7 +974,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
                     return;
 
                 } catch (Exception ex) {
-                    sipStack.getStackLogger().logError(
+                    if (sipStack.isLoggingEnabled())
+                    	sipStack.getStackLogger().logError(
                             "Exception while sending error response statelessly", ex);
                     return;
                 }
@@ -1201,7 +1209,8 @@ class DialogFilter implements ServerRequestInterface, ServerResponseInterface {
                             return;
                         } catch (SipException ex) {
                             // What to do here ?? kill the dialog?
-                            sipStack.getStackLogger().logError("could not resend ack", ex);
+                            if (sipStack.isLoggingEnabled())
+                            	sipStack.getStackLogger().logError("could not resend ack", ex);
                         }
                     }
                 }

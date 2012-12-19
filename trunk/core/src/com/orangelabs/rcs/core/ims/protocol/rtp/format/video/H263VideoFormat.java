@@ -28,7 +28,7 @@ public class H263VideoFormat extends VideoFormat {
 	/**
 	 * Encoding name
 	 */
-	public static final String ENCODING = "h263-2000";
+	public static final String ENCODING = "H263-2000";
 
 	/**
 	 * Payload type

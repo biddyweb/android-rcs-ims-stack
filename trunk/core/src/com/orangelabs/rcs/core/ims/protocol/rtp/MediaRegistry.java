@@ -104,18 +104,19 @@ public class MediaRegistry {
      * @return Codec chain
      */
     public static Codec[] generateEncodingCodecChain(String encoding) {
-    	if (encoding.toLowerCase().equalsIgnoreCase(H263VideoFormat.ENCODING)) {
+    	if (encoding.equalsIgnoreCase(H264VideoFormat.ENCODING)) { 
+	        // Java H264 packetizer
+	        Codec[] chain = {
+	            new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer()
+	        };
+	        return chain;
+    	} else
+    	if (encoding.equalsIgnoreCase(H263VideoFormat.ENCODING)) {
     		// Java H263 packetizer
     		Codec[] chain = {
     			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaPacketizer()
     		};
     		return chain;
-        } else if (encoding.toLowerCase().equalsIgnoreCase(H264VideoFormat.ENCODING)) { 
-            // Java H264 packetizer
-            Codec[] chain = {
-                new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer()
-            };
-            return chain;
 		} else { 
 			// Codec implemented in the native part
 			return new Codec[0];
@@ -129,19 +130,20 @@ public class MediaRegistry {
 	 * @return Codec chain
 	 */
 	public static Codec[] generateDecodingCodecChain(String encoding) {
-    	if (encoding.toLowerCase().equalsIgnoreCase(H263VideoFormat.ENCODING)) {
+		if (encoding.equalsIgnoreCase(H264VideoFormat.ENCODING)) {
+	        // Java H264 depacketizer
+	        Codec[] chain = {
+	            new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaDepacketizer()
+	        };
+	        return chain;
+		} else
+    	if (encoding.equalsIgnoreCase(H263VideoFormat.ENCODING)) {
     		// Java H263 depacketizer
     		Codec[] chain = {
     			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaDepacketizer()
     		};
-    		return chain;
-        } else if (encoding.toLowerCase().equalsIgnoreCase(H264VideoFormat.ENCODING)) {
-            // Java H264 depacketizer
-            Codec[] chain = {
-                new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaDepacketizer()
-            };
-            return chain;
-		} else { 
+    		return chain;        
+		} else {
 			// Codec implemented in the native part
 			return new Codec[0];
 		}

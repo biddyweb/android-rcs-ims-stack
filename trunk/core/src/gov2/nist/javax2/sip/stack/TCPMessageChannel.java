@@ -389,7 +389,8 @@ public class TCPMessageChannel extends MessageChannel implements SIPMessageListe
                         this.sendMessage(badReqRes.getBytes(), this.getPeerInetAddress(), this
                                 .getPeerPort(), false);
                     } catch (IOException e) {
-                        this.sipStack.getStackLogger().logException(e);
+                        if (sipStack.isLoggingEnabled())
+                        	this.sipStack.getStackLogger().logException(e);
                     }
                 } else {
                     if (sipStack.isLoggingEnabled()) {

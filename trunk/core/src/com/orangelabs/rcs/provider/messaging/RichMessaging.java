@@ -168,6 +168,10 @@ public class RichMessaging {
 			// Contact is busy
 			event = EventsLogApi.EVENT_BUSY;
 		} else
+		if (state.equals(User.STATE_PENDING)) {
+			// Contact is busy
+			event = EventsLogApi.EVENT_PENDING;
+		} else
 		if (state.equals(User.STATE_DECLINED)) {
 			// Contact has declined the invitation
 			event = EventsLogApi.EVENT_DECLINED;
@@ -365,6 +369,19 @@ public class RichMessaging {
 		String participants = getParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
+	}
+
+	/**
+	 * Add chat session termination by remote
+	 * 
+	 * @param session Chat session
+	 */
+	public void addChatSessionTerminationByRemote(ChatSession session) {
+		String sessionId = session.getSessionID();
+		String chatId = session.getContributionID();
+		String participants = getParticipants(session);
+		int type = getChatSystemEventType(session);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_REMOTE);
 	}
 
 	/**
@@ -1047,7 +1064,7 @@ public class RichMessaging {
 				RichMessagingData.KEY_TIMESTAMP + " DESC");
 		if(cursor.moveToFirst()){
 			int status = cursor.getInt(0);
-			if ((status==EventsLogApi.STATUS_TERMINATED) || (status==EventsLogApi.STATUS_TERMINATED_BY_USER)) {
+			if ((status==EventsLogApi.STATUS_TERMINATED) || (status==EventsLogApi.STATUS_TERMINATED_BY_REMOTE) || (status==EventsLogApi.STATUS_TERMINATED_BY_USER)) {
 				cursor.close();
 				return true;
 			}

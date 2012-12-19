@@ -59,13 +59,11 @@
 	<string name="rcs_settings_label_default_freetext_3">At work</string>
 	<string name="rcs_settings_label_default_freetext_4">On vacation</string>
 
-	<string name="rcs_settings_label_default_video_format">h264</string>
+	<string name="rcs_settings_label_default_video_format">H264</string>
     <string-array name="rcs_settings_list_video_format_value">
-        <!-- <item>h263-2000</item>-->
-        <item>h264</item>
+        <item>H264</item>
     </string-array>
     <string-array name="rcs_settings_list_video_format_label">
-        <!-- <item>H.263</item>  -->
         <item>H.264</item>
     </string-array>
 
@@ -75,7 +73,7 @@
         <!-- <item>QVGA</item> -->
     </string-array>
     <string-array name="rcs_settings_list_video_size_label">
-        <item>Low  (176x144)</item>
+        <item>Low (176x144)</item>
         <!-- <item>High (320x240)</item> -->
     </string-array>
 

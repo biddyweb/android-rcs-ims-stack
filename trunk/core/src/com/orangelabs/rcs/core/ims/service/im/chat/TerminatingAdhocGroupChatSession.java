@@ -111,7 +111,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     
     		    	// Notify listeners
     		    	for(int i=0; i < getListeners().size(); i++) {
-    		    		getListeners().get(i).handleSessionAborted();
+    		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
     		        }
     				return;
     			} else
@@ -128,7 +128,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     
     		    	// Notify listeners
         	    	for(int i=0; i < getListeners().size(); i++) {
-        	    		getListeners().get(i).handleSessionAborted();
+        	    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
     		        }
     				return;
     			} else
@@ -289,6 +289,8 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
     	    	
+    			// Start the activity manager
+    			getActivityManager().start();
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

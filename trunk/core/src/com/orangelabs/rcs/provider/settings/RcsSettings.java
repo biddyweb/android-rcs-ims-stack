@@ -647,6 +647,30 @@ public class RcsSettings {
     }
 
 	/**
+     * Get user profile IMS realm
+     *
+     * @return String
+     */
+	public String getUserProfileImsRealm() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.USERPROFILE_IMS_REALM);
+		}
+		return result;
+    }
+
+	/**
+     * Set user profile IMS realm
+     *
+     * @param realm Realm
+     */
+	public void setUserProfileImsRealm(String realm) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.USERPROFILE_IMS_REALM, realm);
+		}
+    }
+
+	/**
      * Get user profile IMS home domain
      *
      * @return Domain
@@ -2041,6 +2065,19 @@ public class RcsSettings {
             writeParameter(RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,
                     Boolean.toString(state));
         }
+    }
+
+    /**
+     * Get provisioning address
+     *
+     * @return Version
+     */
+    public String getProvisioningAddress() {
+        String result = "";
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.PROVISIONING_ADDRESS);
+        }
+        return result;
     }
 
     /**
