@@ -99,14 +99,17 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.ImsDisplayName);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME));
 
+		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
+
 		txt = (EditText)this.findViewById(R.id.ImsPrivateId);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID));
 
 		txt = (EditText)this.findViewById(R.id.ImsPassword);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD));
 
-		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
-		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
+		txt = (EditText)this.findViewById(R.id.ImsRealm);
+		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_REALM));
 
         txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE));
@@ -194,14 +197,17 @@ public class ProfileProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.ImsDisplayName);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, txt.getText().toString());
 
+		        txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, txt.getText().toString());
+
 		        txt = (EditText)this.findViewById(R.id.ImsPrivateId);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsPassword);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD, txt.getText().toString());
 
-		        txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
-		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, txt.getText().toString());
+		        txt = (EditText)this.findViewById(R.id.ImsRealm);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_REALM, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE, txt.getText().toString());
@@ -298,8 +304,10 @@ public class ProfileProvisioning extends Activity {
 	        	            int index = spinner.getSelectedItemPosition();
 
 	            			String sipUri = "";
-	            			String imsPwd = "";
 	            			String homeDomain = "";
+	                        String privateSipUri = "";
+	            			String imsPwd = "";
+	            			String imsRealm = "";
 	            			String imsAddrForMobile = "";
 	            			int imsPortForMobile = 5060;
                             String imsAddrForWifi = "";
@@ -309,19 +317,19 @@ public class ProfileProvisioning extends Activity {
 	            			String xdmsLogin = "";
 	            			String confUri = "";
 	            			String enduserConfirmUri = "";
-	                        String privateSipUri = "";
 	                        switch(index) {
-	                        	case 0: // Default
+                                case 0: // Default
 			            			homeDomain = "domain.com";
 		            				sipUri = number + "@" + homeDomain;
 		            				privateSipUri = sipUri;
 			            			imsPwd = "";
+			            			imsRealm = "domain.com";
 			            			imsAddrForMobile = "127.0.0.1";
 			            			imsPortForMobile = 5060;
 			            			imsAddrForWifi = "127.0.0.1";
 			            			imsPortForWifi = 5060;
 			            			confUri = "sip:Conference-Factory@" + homeDomain;
-			            			break;
+			            			break;                                    
 	            			}
 
 	            			// Update UI
@@ -329,12 +337,14 @@ public class ProfileProvisioning extends Activity {
 	        				txt.setText(number);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsDisplayName);
 	        				txt.setText(number);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
+	        		        txt.setText(homeDomain);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPrivateId);
                             txt.setText(privateSipUri);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPassword);
 	        		        txt.setText(imsPwd);
-	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
-	        		        txt.setText(homeDomain);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsRealm);
+	        		        txt.setText(imsRealm);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
                             txt.setText(imsAddrForMobile);
 					        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForMobile);
