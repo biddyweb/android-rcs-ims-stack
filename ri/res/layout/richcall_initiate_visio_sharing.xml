@@ -3,29 +3,34 @@
 	android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
-	<TableLayout android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"
-	    android:stretchColumns="1"
-	    android:paddingTop="10dip">
+    <LinearLayout 
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:orientation="vertical">
 
-        <Spinner android:id="@+id/contact"
-			android:layout_marginLeft="5dip"
-			android:layout_marginRight="5dip"
+        <Spinner
+            android:id="@+id/contact"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip" />
 
-	    <TableRow android:padding="5dip"></TableRow>
+        <Button
+            android:id="@+id/dial_btn"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:text="@string/label_dial" />
 
-		<Button android:text="@string/label_dial"
-		 android:id="@+id/dial_btn"
-		 android:layout_marginLeft="5dip"
- 		 android:layout_marginRight="5dip"/>
+        <Button
+            android:id="@+id/invite_btn"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+            android:text="@string/label_initiate_sharing" />
 
-		<Button android:text="@string/label_initiate_sharing"
-		 android:id="@+id/invite_btn"
-		 android:layout_marginLeft="5dip"
- 		 android:layout_marginRight="5dip"/>
-
-	</TableLayout>
+    </LinearLayout>
 
 </ScrollView>

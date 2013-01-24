@@ -171,7 +171,8 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:lines="1" android:inputType="numberSigned"/>
+	 	android:lines="1"
+	 	android:inputType="textUri"/>
 
        	<TextView android:text="Directory path to store videos:"
 	    android:paddingTop="5dip"
@@ -182,7 +183,8 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:lines="1" android:inputType="numberSigned"/>
+	 	android:lines="1"
+	 	android:inputType="textUri"/>
 
        	<TextView android:text="Directory path to store files:"
 	    android:paddingTop="5dip"
@@ -193,7 +195,8 @@
 	    android:layout_height="wrap_content"
 	 	android:layout_marginLeft="5dip"
 	 	android:layout_marginRight="5dip"
-	 	android:lines="1" android:inputType="numberSigned"/>
+	 	android:lines="1"
+	 	android:inputType="textUri"/>
 
         <CheckBox android:id="@+id/SmsFallbackService"
 		android:layout_height="wrap_content"

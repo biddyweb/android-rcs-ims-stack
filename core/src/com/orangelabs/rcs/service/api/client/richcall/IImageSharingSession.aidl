@@ -21,6 +21,9 @@ interface IImageSharingSession {
 	// Get filesize
 	long getFilesize();
 
+    // Get file thumbnail
+    String getFileThumbnail();
+
 	// Accept the session invitation
 	void acceptSession();
 

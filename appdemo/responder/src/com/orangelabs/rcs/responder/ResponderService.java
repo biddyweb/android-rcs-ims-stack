@@ -155,7 +155,7 @@ public class ResponderService extends Service implements ClientApiListener {
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			// Nothing to do
 		}
 	    

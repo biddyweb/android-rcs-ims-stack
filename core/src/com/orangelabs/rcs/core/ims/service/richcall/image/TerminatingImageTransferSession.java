@@ -118,7 +118,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 				}
 
                 // Ringing period timeout
-                send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 
 		    	// Remove the current session
 		    	getImsService().removeSession(this);
@@ -427,7 +427,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
         closeMediaSession();
         
 		// Terminate session
-		terminateSession();
+		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
     	// Remove the current session
     	getImsService().removeSession(this);

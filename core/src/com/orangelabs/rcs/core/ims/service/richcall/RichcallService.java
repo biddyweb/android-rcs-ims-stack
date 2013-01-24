@@ -508,7 +508,7 @@ public class RichcallService extends ImsService {
 			if (logger.isActivated()) {
 				logger.debug("Abort pending session " + session.getSessionID());
 			}
-			session.abortSession(ImsServiceSession.TERMINATION_BY_STACK);
+			session.abortSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 		}
     }
 }

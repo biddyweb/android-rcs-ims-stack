@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp;
 
-import java.util.List;
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.ProcessorOutputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
@@ -100,8 +98,9 @@ public class CodecChain {
 				// Write data to the output stream
                 if (input.isFragmented()) {
                     // Write data from sub-buffers to the output stream
-                    final List<Buffer> fragments = input.getFragments();
-                    for (Buffer fragment : fragments) {
+                    final Buffer[] fragments = input.getFragments();
+                    for (int i = 0; i < input.getFragmentsSize(); i++) {
+                    	Buffer fragment = fragments[i];
                         renderer.write(fragment);
                         fragment.setData(null);
                     }
@@ -121,12 +120,18 @@ public class CodecChain {
 				try {
 					returnVal = codec.process(input, buffers[codecNo]);
 				} catch (Exception e) {
+                    if (logger.isActivated()) {
+                        logger.error("Codec processing exception", e);
+                    }
 					return Codec.BUFFER_PROCESSED_FAILED;
 				}
-
-				if (returnVal == Codec.BUFFER_PROCESSED_FAILED)
+                if (returnVal == Codec.BUFFER_PROCESSED_FAILED) {
+                    if (logger.isActivated()) {
+                        logger.error("Codec processing error " + returnVal);
+                    }
 					return Codec.BUFFER_PROCESSED_FAILED;
-				
+                }
+
 				if ((returnVal & Codec.OUTPUT_BUFFER_NOT_FILLED) == 0) {
 					if (!(buffers[codecNo].isDiscard() || buffers[codecNo].isEOM())) {
 						doProcess(codecNo + 1, buffers[codecNo]);

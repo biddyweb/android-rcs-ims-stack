@@ -34,18 +34,18 @@ public class JavaDepacketizer extends VideoCodec {
      * Collection of frameAssemblers. Allows the construction of several frames
      * if incoming packets are out of order
      */
-    FrameAssemblerCollection assemblersCollection = new FrameAssemblerCollection();
+    private FrameAssemblerCollection assemblersCollection = new FrameAssemblerCollection();
 
     /**
      * Max frame size to give for next module, as some decoder have frame size
      * limits
      */
-    private static int MAX_H264_FRAME_SIZE = 8192;
+    private static final int MAX_H264_FRAME_SIZE = 8192;
 
     /**
      * Video decoder max payloads chunks mask
      */
-    private static byte VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK = 0x1F;
+    private static final byte VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK = 0x1F;
 
     /**
      * Constructor
@@ -99,6 +99,7 @@ public class JavaDepacketizer extends VideoCodec {
         private byte reassembledDataNALHeader = 0; // Final frame NAL header
         private long timeStamp = -1;
         private Format format = null;
+        private byte[] finalData = new byte[MAX_H264_FRAME_SIZE];
 
         /**
          * Add the buffer (which contains a fragment) to the assembler.
@@ -133,7 +134,7 @@ public class JavaDepacketizer extends VideoCodec {
                 reassembledDataNALHeader = h264RtpHeaders.getNALHeader();
 
                 // Copy packet data to reassembledData
-                reassembledData = new byte[JavaPacketizer.H264_MAX_RTP_PKTS][JavaPacketizer.H264_MAX_FRAME_SIZE];
+                reassembledData = new byte[JavaPacketizer.H264_MAX_RTP_PKTS][JavaPacketizer.H264_MAX_PACKET_FRAME_SIZE];
                 reassembledDataSize = new int[JavaPacketizer.H264_MAX_RTP_PKTS];
                 reassembledDataHasStart = false;
                 reassembledDataHasEnd = false;
@@ -201,7 +202,8 @@ public class JavaDepacketizer extends VideoCodec {
 
             // Validate chunk sizes between start and end pos
             int posCurrent = reassembledDataPosSeqStart;
-            while (posCurrent != reassembledDataPosSeqEnd) { // need more data?
+            while ((posCurrent & VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK) != reassembledDataPosSeqEnd) {
+                // need more data?
                 if (reassembledDataSize[posCurrent & VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK] <= 0) {
                     return false;
                 }
@@ -226,7 +228,7 @@ public class JavaDepacketizer extends VideoCodec {
 
             if (reassembledDataFullSize <= MAX_H264_FRAME_SIZE) {
                 // + 1 because of the header size
-                byte[] finalData = new byte[reassembledDataFullSize + 1];
+                int finalDataLength = reassembledDataFullSize + 1;
                 int finalDataPos = 0;
 
                 // Copy NAL header
@@ -236,7 +238,8 @@ public class JavaDepacketizer extends VideoCodec {
                 // Copy chunk data between start and end pos
                 int posCurrent = reassembledDataPosSeqStart;
                 int posSeq = 0;
-                while (posCurrent != reassembledDataPosSeqEnd) { // need more data?
+                while ((posCurrent & VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK) != reassembledDataPosSeqEnd) {
+                    // need more data?
                     posSeq = posCurrent & VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK;
 
                     // Copy data
@@ -255,15 +258,35 @@ public class JavaDepacketizer extends VideoCodec {
                 // reassembled frame size not too big
                 // Set buffer
                 bDest.setData(finalData);
-                bDest.setLength(finalData.length);
+                bDest.setLength(finalDataLength);
                 bDest.setOffset(0);
                 bDest.setTimeStamp(timeStamp);
                 bDest.setFormat(format);
-                bDest.setFlags(Buffer.FLAG_RTP_MARKER);
+                bDest.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
             }
 
             // Set reassembledData to null
             reassembledData = null;
+        }
+
+        /**
+         * Reset the FrameAssembler
+         *
+         * It as package access instead of private for improved performance.
+         * See: http://developer.android.com/guide/practices/performance.html 
+         *   Consider Package Instead of Private Access with Private Inner Classes
+         */
+        private void reset() {
+            reassembledData = null;
+            reassembledDataSize = null;
+            reassembledDataFullSize = 0;
+            reassembledDataHasStart = false;
+            reassembledDataHasEnd = false;
+            reassembledDataPosSeqStart = Integer.MAX_VALUE;
+            reassembledDataPosSeqEnd = Integer.MIN_VALUE;
+            reassembledDataNALHeader = 0;
+            timeStamp = -1;
+            format = null;
         }
 
         /**
@@ -330,14 +353,18 @@ public class JavaDepacketizer extends VideoCodec {
                 for (int i = numberOfAssemblers; i > spot; i--) {
                     assemblers[i] = assemblers[i - 1];
                 }
-                assemblers[spot] = new FrameAssembler();
+                if (assemblers[spot] == null) {
+                    assemblers[spot] = new FrameAssembler();
+                } else {
+                    assemblers[spot].reset();
+                }
             } else {
                 // Not enough space, we destroy the oldest assembler
                 for (int i = 1; i < NUMBER_OF_ASSEMBLERS; i++) {
                     assemblers[i - 1] = assemblers[i];
                 }
                 // Last spot is for the new assembler
-                assemblers[NUMBER_OF_ASSEMBLERS - 1] = new FrameAssembler();
+                assemblers[NUMBER_OF_ASSEMBLERS - 1].reset();
                 spot = numberOfAssemblers;
             }
             return spot;

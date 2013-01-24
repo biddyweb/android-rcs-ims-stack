@@ -157,16 +157,19 @@ public class RestartChat {
 		public void handleSessionStarted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Display chat view
 					try {
-						Intent intent = new Intent(activity, GroupChatView.class);
+	                    // Hide progress dialog
+						hideProgressDialog();
+	
+						// Remove listener now
+                		chatSession.removeSessionListener(chatSessionListener);
+
+						// Display chat view
+                		Intent intent = new Intent(activity, GroupChatView.class);
 			        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		            	intent.putExtra("subject", chatSession.getSubject());
 			    		intent.putExtra("sessionId", chatSession.getSessionID());
-			    		activity.startActivity(intent);				
+			    		activity.startActivity(intent);
 					} catch(Exception e) {
 						Utils.showMessage(activity, activity.getString(R.string.label_api_failed));
 					}
@@ -188,7 +191,7 @@ public class RestartChat {
 		}	
 		
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog

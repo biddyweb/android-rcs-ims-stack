@@ -776,10 +776,14 @@ public class SipMessageFactory {
 		try {
 			// Create the request
 			Request bye = dialog.getStackDialog().createRequest(Request.BYE);
-	
-			// Set reason phrase
-			ReasonHeader reasonHeader = SipUtils.HEADER_FACTORY.createReasonHeader("SIP", 200, "Call completed");
-			bye.addHeader(reasonHeader);
+
+			// Set termination reason
+			int reasonCode = dialog.getSessionTerminationReasonCode(); 
+			if (reasonCode != -1) {
+				ReasonHeader reasonHeader = SipUtils.HEADER_FACTORY.createReasonHeader("SIP",
+						reasonCode, dialog.getSessionTerminationReasonPhrase());
+				bye.addHeader(reasonHeader);
+			}
 			
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)bye.getHeader(ViaHeader.NAME);
@@ -807,7 +811,15 @@ public class SipMessageFactory {
 		    ClientTransaction transaction = (ClientTransaction)dialog.getInvite().getStackTransaction();
 		    Request cancel = transaction.createCancel();
 		    
-	        // Set "rport" (RFC3581)
+			// Set termination reason
+			int reasonCode = dialog.getSessionTerminationReasonCode(); 
+			if (reasonCode != -1) {
+				ReasonHeader reasonHeader = SipUtils.HEADER_FACTORY.createReasonHeader("SIP",
+						reasonCode, dialog.getSessionTerminationReasonPhrase());
+				cancel.addHeader(reasonHeader);
+			}
+
+			// Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)cancel.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
 		    
@@ -1175,7 +1187,9 @@ public class SipMessageFactory {
 
             // Add Session-Timer header
             Header sessionExpiresHeader = request.getHeader(SipUtils.HEADER_SESSION_EXPIRES);
-            response.addHeader(sessionExpiresHeader);
+            if (sessionExpiresHeader != null) {
+            	response.addHeader(sessionExpiresHeader);
+            }
 
             SipResponse resp = new SipResponse(response);
             resp.setStackTransaction(request.getStackTransaction());
@@ -1246,7 +1260,9 @@ public class SipMessageFactory {
 	
 			// Add Session-Timer header
 			Header sessionExpiresHeader = request.getHeader(SipUtils.HEADER_SESSION_EXPIRES);
-			response.addHeader(sessionExpiresHeader);
+			if (sessionExpiresHeader != null) {
+				response.addHeader(sessionExpiresHeader);
+			}
 			
 			SipResponse resp = new SipResponse(response);
 			resp.setStackTransaction(request.getStackTransaction());

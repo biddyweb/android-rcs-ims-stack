@@ -31,7 +31,7 @@ interface IMediaRenderer {
 	// Get supported media codecs
 	MediaCodec[] getSupportedMediaCodecs();
 
-    	// Get media codec
+	// Get media codec
 	MediaCodec getMediaCodec();
 
 	// Set media codec

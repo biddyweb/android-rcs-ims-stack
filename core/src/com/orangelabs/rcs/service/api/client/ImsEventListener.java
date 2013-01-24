@@ -22,14 +22,17 @@ package com.orangelabs.rcs.service.api.client;
  * IMS event listener
  */
 public interface ImsEventListener {
+    
     /**
-     * Service is connected to the IMS
+     * Client is connected to the IMS
      */
     public void handleImsConnected();
     
     /**
-     * Service is disconnected from the IMS
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-    public void handleImsDisconnected();
+    public void handleImsDisconnected(int reason);
     
 }

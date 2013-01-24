@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.4.12
+Release 2.5.0
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,13 +9,11 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Group chat termination management.
-- GSMA Guidelines 3.2.
-- Add R/W permission in database providers.
-- New settings for HTTPS provisioning server address.
-- Contacts database optimizations:
-  -> Create native raw contact only for RCS Contacts.
-  -> Improve RichAddressBook with capabilities and presence informations.
+- Add reason code in methods handleSessionAborted of the RCS API.
+- Video codecs management depending of the network coverage.
+- Support of new video formats: H264 level 1.2 and 1.3.
+- Disconnect Joyn if battery low.
+- Blackbird API preparation.
 
 
 Bugs fixed:
@@ -23,6 +21,16 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.0
+- Mantis #0016782	Stack: Difference in progress for file transfer between originating and terminating
+- Mantis #0016779	Stack: When a session invitation has no response from the end user a 486 error should be sent instead of a 603
+- Mantis #0016616	Stack: QCIF video size from camera not always supported
+- Mantis #0016775	Stack: Codec chain processing error
+- Mantis #0016761	Stack: NullPointerException when transfering an unkown file MIME type
+- Mantis #0016717	Stack: Reason code "Call completed" should be sent only if the session is terminated by the end user itself
+- Mantis #0016716	Stack: Stack doesn't restart in some cases
+- Mantis #0016715	Stack: Application exception not well catched by AIDL server part in listener methods
 
 v2.4.12
 - Mantis #0016653	Stack: SDP small h is used instead of H for H.264 format

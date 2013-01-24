@@ -11,6 +11,7 @@
 <string name="label_ab_not_found">The address book is not found, launch it manually from your device home screen.</string>
 <string name="label_sms_not_found">The SMS/MMS application is not found, launch it manually from applications list.</string>
 <string name="label_presence_service_not_activated">The presence service is not activated</string>
+<string name="label_battery_running_low">Battery running low (less than %d%%)\nStopping joyn services</string>
 
 <!-- Commons -->
 <string name="menu_close_session">Quit</string>
@@ -40,7 +41,8 @@
 
 <!-- About menu -->
 <string name="label_about_title">RCS-e Reference Implementation</string>
-<string name="label_about_release">Release</string>
+<string name="label_about_release">Release %s</string>
+<string name="label_about_api">API %s</string>
 <string name="label_about_more_info">More info at http://code.google.com/p/android-rcs-ims-stack/</string>
 
 <!-- capabilities menu -->
@@ -181,7 +183,7 @@
 <string name="label_chat_restart_canceled">Restart chat conversation has been canceled</string>
 <string name="label_restart_chat_terminated_by_remote">Restart session terminated by remote</string>
 <string name="label_sharing_warn_size">Do you confirm sending a file of %d KB?</string>
-<string name="label_rejoin_unauthorized">You can\'t rejoin the session because you have left the session voluntary</string>
+<string name="label_rejoin_unauthorized">You can\'t rejoin or restart the session because you have left the session voluntary</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
@@ -196,6 +198,11 @@
 <string name="label_invitation_declined">Sharing invitation has been declined</string>
 <string name="label_sharing_terminated_by_remote">Sharing terminated by remote</string>
 <string name="label_dial">Dial</string>
+<string name="label_codecs">Select codecs (if none, default stack codecs will be used)</string>
+<string name="label_codec0">H264 1.B QCIF 12 96k</string>
+<string name="label_codec1">H264 1.2 QVGA 10 176k</string>
+<string name="label_codec2">H264 1.2 CIF  10 176k</string>
+<string name="label_codec3">H264 1.3 CIF  15 384k</string>
 <string name="label_select_picture">Select picture</string>
 <string name="label_selected_img">Selected picture:</string>
 <string name="label_select_video">Select video</string>

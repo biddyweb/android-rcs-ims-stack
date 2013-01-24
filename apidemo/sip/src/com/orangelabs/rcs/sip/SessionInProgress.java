@@ -157,7 +157,7 @@ public class SessionInProgress extends Activity implements ClientApiListener {
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable(){
 				public void run(){
 					Utils.showMessageAndExit(SessionInProgress.this, getString(R.string.label_session_aborted));

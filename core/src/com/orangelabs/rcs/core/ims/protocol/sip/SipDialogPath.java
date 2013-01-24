@@ -138,6 +138,16 @@ public class SipDialogPath {
 	private boolean sessionTerminated = false;
 
 	/**
+	 * Session termination reason code
+	 */
+	private int sessionTerminationReasonCode = -1;
+	
+	/**
+	 * Session termination reason phrase
+	 */
+	private String sessionTerminationReasonPhrase = null;
+	
+	/**
 	 * Constructor
 	 * 
 	 * @param stack SIP stack interface
@@ -411,8 +421,40 @@ public class SipDialogPath {
 	 */
 	public synchronized void sessionTerminated() {
 		this.sessionTerminated = true;
+		this.sessionTerminationReasonCode = -1;
+		this.sessionTerminationReasonPhrase = null;
 	}
 	
+	/**
+	 * Session is terminated with a specific reason code
+	 * 
+	 * @param reason Reason code
+	 * @param phrase Reason phrase
+	 */
+	public synchronized void sessionTerminated(int code, String phrase) {
+		this.sessionTerminated = true;
+		this.sessionTerminationReasonCode = code;
+		this.sessionTerminationReasonPhrase = phrase;
+	}
+
+	/**
+	 * Get session termination reason code
+	 * 
+	 * @return Reason code
+	 */
+	public int getSessionTerminationReasonCode() {
+		return sessionTerminationReasonCode;
+	}
+
+	/**
+	 * Get session termination reason phrase
+	 * 
+	 * @return Reason phrase
+	 */
+	public String getSessionTerminationReasonPhrase() {
+		return sessionTerminationReasonPhrase;
+	}
+
 	/**
 	 * Is signalisation established with success
 	 * 

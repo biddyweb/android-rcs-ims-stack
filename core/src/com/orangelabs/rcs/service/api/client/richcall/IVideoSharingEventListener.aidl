@@ -9,7 +9,7 @@ interface IVideoSharingEventListener {
 	void handleSessionStarted();
 
 	// Session has been aborted
-	void handleSessionAborted();
+	void handleSessionAborted(in int reason);
     
 	// Session has been terminated by remote
 	void handleSessionTerminatedByRemote();

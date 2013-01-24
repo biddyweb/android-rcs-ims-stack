@@ -11,6 +11,14 @@
 		android:title="@string/rcs_settings_label_rcs_roaming"
 		android:summary="@string/rcs_settings_summary_rcs_roaming"/>
 
+    <ListPreference
+        android:key="min_battery_level"
+        android:title="@string/rcs_settings_label_min_battery_level"
+        android:summary="@string/rcs_settings_summary_min_battery_level"
+        android:entries="@array/rcs_settings_list_battery_level_label"
+        android:entryValues="@array/rcs_settings_list_battery_level_value"
+        android:dialogTitle="@string/rcs_settings_label_min_battery_level" />
+
     <PreferenceScreen
         android:key="userprofile_settings"
         android:title="@string/rcs_settings_title_userprofile_settings"

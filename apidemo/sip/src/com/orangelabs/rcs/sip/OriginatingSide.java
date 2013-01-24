@@ -247,7 +247,7 @@ public class OriginatingSide extends Activity implements ClientApiListener {
 		}
 
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog

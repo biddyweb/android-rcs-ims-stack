@@ -25,23 +25,5 @@
 			android:summary="@string/rcs_settings_summary_csh_ringtone"
 		/>
 	</PreferenceCategory>
-	
-	<PreferenceCategory android:title="@string/rcs_settings_title_video_settings">
-	
-    	<ListPreference android:key="csh_video_format"
-			android:title="@string/rcs_settings_label_video_format"
-			android:summary="@string/rcs_settings_summary_video_format"
-			android:entries="@array/rcs_settings_list_video_format_label"
-			android:entryValues="@array/rcs_settings_list_video_format_value"
-			android:dialogTitle="@string/rcs_settings_label_video_format" />
-		
-    	<ListPreference android:key="csh_video_size"
-			android:title="@string/rcs_settings_label_video_size"
-			android:summary="@string/rcs_settings_summary_video_size"
-			android:entries="@array/rcs_settings_list_video_size_label"
-			android:entryValues="@array/rcs_settings_list_video_size_value"
-			android:dialogTitle="@string/rcs_settings_label_video_size" />
-		
-	</PreferenceCategory>
-	
+
 </PreferenceScreen>

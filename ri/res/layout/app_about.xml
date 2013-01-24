@@ -24,10 +24,17 @@
 		
 		<TextView android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textAppearance="?android:attr/textAppearanceMedium"
 		android:gravity="center_vertical|center_horizontal"
 		android:layout_marginBottom="10px"
         android:id="@+id/release"/>
+		
+		<TextView android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+		android:gravity="center_vertical|center_horizontal"
+		android:layout_marginBottom="10px"
+        android:id="@+id/api"/>
 		
 		<TextView android:layout_width="fill_parent"
 		android:gravity="center_vertical|center_horizontal"

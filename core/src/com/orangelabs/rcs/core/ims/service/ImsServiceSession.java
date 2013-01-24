@@ -49,9 +49,9 @@ public abstract class ImsServiceSession extends Thread {
     public final static int INVITATION_CANCELED = 3; 
 
 	/**
-	 * Session termination status
+	 * Session termination reason
 	 */
-    public final static int TERMINATION_BY_STACK = 0;
+    public final static int TERMINATION_BY_SYSTEM = 0;
     public final static int TERMINATION_BY_USER = 1;
     public final static int TERMINATION_BY_TIMEOUT = 2;
     
@@ -417,9 +417,9 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Abort the session
 	 * 
-	 * @param status Termination status
+	 * @param reason Termination reason
 	 */
-	public void abortSession(int status) {
+	public void abortSession(int reason) {
     	if (logger.isActivated()) {
     		logger.info("Abort the session");
     	}
@@ -428,7 +428,7 @@ public abstract class ImsServiceSession extends Thread {
     	interruptSession();
 
         // Terminate session
-		terminateSession();
+		terminateSession(reason);
 
     	// Close media session
     	closeMediaSession();
@@ -438,16 +438,18 @@ public abstract class ImsServiceSession extends Thread {
 
     	// Notify listeners
     	for(int i=0; i < getListeners().size(); i++) {
-    		getListeners().get(i).handleSessionAborted(status);
+    		getListeners().get(i).handleSessionAborted(reason);
         }
 	}
-
+	
 	/**
-	 * Terminate session 
+	 * Terminate session
+	 * 
+	 * @param reason Reason
 	 */
-	public void terminateSession() {
+	public void terminateSession(int reason) {
 		if (logger.isActivated()) {
-			logger.debug("Terminate the session");
+			logger.debug("Terminate the session (reason " + reason + ")");
 		}
 		
 		if (dialogPath.isSessionTerminated()) {
@@ -460,6 +462,11 @@ public abstract class ImsServiceSession extends Thread {
 
 		// Update dialog path
 		dialogPath.sessionTerminated();
+    	if (reason == ImsServiceSession.TERMINATION_BY_USER) {
+    		dialogPath.sessionTerminated(200, "Call completed");
+    	} else {
+    		dialogPath.sessionTerminated();
+    	}
 
 		// Unblock semaphore (used for terminating side only)
 		synchronized(waitUserAnswer) {

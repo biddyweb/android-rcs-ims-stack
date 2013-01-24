@@ -24,7 +24,6 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 
@@ -60,44 +59,28 @@ public class VideoCodecManager {
      */
     public static String createCodecSdpPart(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuffer result = new StringBuffer();
-    	String prefCodec = RcsSettings.getInstance().getCShVideoFormat();
 
-    	// Add the preferred codec in first
-    	Vector<VideoCodec> codecs = new Vector<VideoCodec>();
-    	for (int i=0; i < supportedCodecs.length; i++) {
-    		VideoCodec videoCodec = new VideoCodec(supportedCodecs[i]);
-    		if (supportedCodecs[i].getCodecName().equalsIgnoreCase(prefCodec)) {
-    			codecs.insertElementAt(videoCodec, 0);
-    		} else {
-    			codecs.add(videoCodec);
-    		}
-    	}
-    	
+        // Insert codecs
+        Vector<VideoCodec> codecs = new Vector<VideoCodec>();
+        for (int i = 0; i < supportedCodecs.length; i++) {
+            codecs.insertElementAt(new VideoCodec(supportedCodecs[i]), 0);
+        }
+
         result.append("m=video " + localRtpPort + " RTP/AVP");
         for (int i = 0; i < codecs.size(); i++) {
         	VideoCodec videoCodec = codecs.elementAt(i);
             result.append(" " + videoCodec.getPayload());
         }
         result.append(SipUtils.CRLF);
-        int framerate = 0;
         for (int i = 0; i < codecs.size(); i++) {
-        	VideoCodec videoCodec = codecs.elementAt(i);
-            if (videoCodec.getFramerate() > framerate) {
-                framerate = videoCodec.getFramerate();
-            }
-        }
-        result.append("a=framerate:" + framerate + SipUtils.CRLF);
-        for (int i = 0; i < codecs.size(); i++) {
-        	VideoCodec videoCodec = codecs.elementAt(i);
+            VideoCodec videoCodec = codecs.elementAt(i);
             result.append(
-            	"a=rtpmap:" + videoCodec.getPayload() + " " +
-            		videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF +
-                "a=framesize:" + videoCodec.getPayload() + " " +
-                	videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF +
-                "a=fmtp:" + videoCodec.getPayload() + " " +
-                	videoCodec.getCodecParams() + SipUtils.CRLF);    	
-        }    	
-    	
+                    "a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF +
+                    "a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF +
+                    "a=framerate:" + videoCodec.getPayload() + " " + videoCodec.getFramerate() + SipUtils.CRLF +
+                    "a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF);
+        }
+
         return result.toString();
     }
 
@@ -109,31 +92,28 @@ public class VideoCodecManager {
      * @return Selected codec or null if no codec supported
      */
     public static VideoCodec negociateVideoCodec(MediaCodec[] supportedCodecs, Vector<VideoCodec> proposedCodecs) {
-    	VideoCodec selectedCodec = null;
-    	String prefCodec = RcsSettings.getInstance().getCShVideoFormat();
-    	for (int i = 0; i < proposedCodecs.size(); i++) {
+        VideoCodec selectedCodec = null;
+        int pref = -1;
+        for (int i = 0; i < proposedCodecs.size(); i++) {
             for (int j = 0; j < supportedCodecs.length; j++) {
                 VideoCodec videoCodec = new VideoCodec(supportedCodecs[j]);
+                int videoCodecPref = supportedCodecs.length - 1 - j;
                 VideoCodec proposedCodec = proposedCodecs.get(i);
-                if (proposedCodec.compare(videoCodec)) {
-            		VideoCodec codec = new VideoCodec(
-                            proposedCodec.getCodecName(),
-                            (proposedCodec.getPayload()==0)?videoCodec.getPayload():proposedCodec.getPayload(),
-                            (proposedCodec.getClockRate()==0)?videoCodec.getClockRate():proposedCodec.getClockRate(),
-                            (proposedCodec.getCodecParams().length()==0)?videoCodec.getCodecParams():proposedCodec.getCodecParams(),
-                            (proposedCodec.getFramerate()==0)?videoCodec.getFramerate():proposedCodec.getFramerate(),
-                            (proposedCodec.getBitrate()==0)?videoCodec.getBitrate():proposedCodec.getBitrate(),
-                            proposedCodec.getWidth(),
-                            proposedCodec.getHeight());
-            		
-                	if (selectedCodec == null) {
-                		// Select the first proposed and supported codec by default
-                		selectedCodec = codec;
-                	} else
-                	if (codec.getCodecName().equalsIgnoreCase(prefCodec)) {
-                		// Select the preferred codec if several propositions
-                		selectedCodec = codec;
-                	}
+                // Compare Codec name and size + Profile/Level + Bitrate
+                if ((proposedCodec.compare(videoCodec)) 
+                        && (H264Config.getCodecProfileLevelId(videoCodec.getCodecParams()).compareToIgnoreCase(H264Config.getCodecProfileLevelId(proposedCodec.getCodecParams())) == 0)
+                        && (videoCodec.getBitrate() >= proposedCodec.getBitrate())) {
+                    if (videoCodecPref > pref) {
+                        pref = videoCodecPref;
+                        selectedCodec = new VideoCodec(proposedCodec.getCodecName(),
+                                (proposedCodec.getPayload() == 0) ? videoCodec.getPayload() : proposedCodec.getPayload(),
+                                (proposedCodec.getClockRate() == 0) ? videoCodec.getClockRate() : proposedCodec.getClockRate(),
+                                (proposedCodec.getCodecParams().length() == 0) ? videoCodec.getCodecParams() : proposedCodec.getCodecParams(),
+                                (proposedCodec.getFramerate() == 0) ? videoCodec.getFramerate() : proposedCodec.getFramerate(),
+                                (proposedCodec.getBitrate() == 0) ? videoCodec.getBitrate() : proposedCodec.getBitrate(),
+                                proposedCodec.getWidth(),
+                                proposedCodec.getHeight());
+                    }
                 }
             }
         }
@@ -170,11 +150,11 @@ public class VideoCodecManager {
 	        if (frameSize != null) {
 	        	try {
 		            String value = frameSize.getValue();
-		            int index2 = value.indexOf(media.payload);
+		            index = value.indexOf(media.payload);
 		            int separator = value.indexOf('-');
-		            if ((index2 != -1) && (separator != -1)) {
+		            if ((index != -1) && (separator != -1)) {
 			            videoWidth = Integer.parseInt(
-			            		value.substring(index2 + media.payload.length() + 1,
+			            		value.substring(index + media.payload.length() + 1,
 			                    separator));
 			            videoHeight = Integer.parseInt(value.substring(separator + 1));
 		            }
@@ -182,31 +162,42 @@ public class VideoCodecManager {
 	        		// Use default value
 	        	}
 	        }
-	        
+
 	        // Extract frame rate
 	        MediaAttribute attr = media.getMediaAttribute("framerate");
 	        int frameRate = H264Config.FRAME_RATE; // default value
 	        if (attr != null) {
-	            frameRate = Integer.parseInt(attr.getValue());
-	        }
-	
+	            try {
+	                String value = attr.getValue();
+                    index = value.indexOf(media.payload);
+                    if ((index != -1) && (value.length() > media.payload.length())) {
+                        frameRate = Integer.parseInt(value.substring(index + media.payload.length() + 1));
+                    } else {
+                        frameRate = Integer.parseInt(value);
+                    }
+                } catch(NumberFormatException e) {
+                    // Use default value
+                }
+            }
+
 	        // Extract the video codec parameters.
 	        MediaAttribute fmtp = media.getMediaAttribute("fmtp");
 	        String codecParameters = "";
 	        if (fmtp != null) {
-	            String value = fmtp.getValue();
-	            int index2 = value.indexOf(media.payload);
-	            if ((index2 > 0) && (value.length() > media.payload.length())) {
-	            	codecParameters = value.substring(index2 + media.payload.length() + 1);
-	            }
-	        }
+                String value = fmtp.getValue();
+                index = 0; // value.indexOf(media.payload);
+                if ((index != -1) && (value.length() > media.payload.length())) {
+                    codecParameters = value.substring(index + media.payload.length() + 1);
+                }
+            }
 
 	        // Create a video codec
 	        VideoCodec videoCodec = new VideoCodec(codecName,
 	        		Integer.parseInt(media.payload), clockRate,
 	        		codecParameters, frameRate, 0,
 	                videoWidth, videoHeight);
-	        return videoCodec;
+
+            return videoCodec;
     	} catch(NullPointerException e) {
         	return null;
 		} catch(IndexOutOfBoundsException e) {

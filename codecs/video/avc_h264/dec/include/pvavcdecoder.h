@@ -26,16 +26,14 @@
 #include "pvavcdecoderinterface.h"
 #endif
 
-//+ OrangeLabs
 #include "avcdec_api.h"
-//- OrangeLabs
 
 // AVC video decoder
 class PVAVCDecoder : public PVAVCDecoderInterface
 {
     public:
-        virtual ~PVAVCDecoder();
-        static  PVAVCDecoder* New(void);
+        virtual         ~PVAVCDecoder();
+        static          PVAVCDecoder* New(void);
         virtual bool    InitAVCDecoder(FunctionType_SPS, FunctionType_Alloc, FunctionType_Unbind,
                                        FunctionType_Malloc, FunctionType_Free, void *);
         virtual void    CleanUpAVCDecoder(void);
@@ -47,13 +45,13 @@ class PVAVCDecoder : public PVAVCDecoderInterface
         virtual bool    GetDecOutput(int *indx, int *release, AVCFrameIO* output); // OrangeLabs
         virtual void    GetSeqInfo(AVCDecSPSInfo *); //orangeLabs
         virtual void    GetVideoDimensions(int32 *width, int32 *height, int32 *top, int32 *left, int32 *bottom, int32 *right);
-        int     AVC_Malloc(int32 size, int attribute);
-        void    AVC_Free(int mem);
+        int             AVC_Malloc(int32 size, int attribute);
+        void            AVC_Free(int mem);
 
     private:
-        PVAVCDecoder();
-        bool Construct(void);
-        void *iAVCHandle;
+                        PVAVCDecoder();
+        bool            Construct(void);
+        void            *iAVCHandle;
 };
 
 #endif

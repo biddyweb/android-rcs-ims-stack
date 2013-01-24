@@ -113,6 +113,27 @@ public class MessagingApi extends ClientApi {
 		}
     }
 
+    /**
+     * Transfer a file to a group of contacts
+     *
+     * @param contacts List of Contacts
+     * @param file File to be transfered
+     * @return File transfer session
+     * @throws ClientApiException
+     */
+    public IFileTransferSession transferFileToGroup(List<String> contacts, String file) throws ClientApiException { 
+        if (coreApi != null) {
+            try {
+                IFileTransferSession session = coreApi.transferFileToGroup(contacts, file);
+                return session;
+            } catch(Exception e) {
+                throw new ClientApiException(e.getMessage());
+            }
+        } else {
+            throw new CoreServiceNotAvailableException();
+        }
+    }
+
 	/**
 	 * Get current file transfer session from its session ID
 	 * 

@@ -127,7 +127,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 					}
 	
                     // Ringing period timeout
-                    send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+    				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 
 			    	// Remove the current session
 			    	getImsService().removeSession(this);
@@ -460,7 +460,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
             closeMediaSession();
 				
 			// Terminate session
-			terminateSession();
+			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 	   	} catch(Exception e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Can't close correctly the file transfer session", e);

@@ -12,7 +12,7 @@ extern "C" {
  * Method:    InitDecoder
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_InitDecoder
-  (JNIEnv *, jclass, jint, jint);
+  (JNIEnv *, jclass);
 
 /*
  * Method:    DeinitDecoder

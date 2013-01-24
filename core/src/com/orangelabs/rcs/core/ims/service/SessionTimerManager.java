@@ -319,7 +319,7 @@ public class SessionTimerManager extends PeriodicRefresher {
 			}
 			
 	    	// Close the session
-	    	session.abortSession(ImsServiceSession.TERMINATION_BY_STACK);
+	    	session.abortSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 	    }
     }
 

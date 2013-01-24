@@ -25,7 +25,7 @@ public class NativeH264Decoder
     {
     }
 
-    public static native int InitDecoder(int width, int height);
+    public static native int InitDecoder();
 
     public static native int DeinitDecoder();
 

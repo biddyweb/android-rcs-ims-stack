@@ -235,15 +235,17 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	}
 
     /**
-     * IMS connected
+     * Client is connected to the IMS
      */
 	public void handleImsConnected() {
 	}
 
     /**
-     * IMS disconnected
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-	public void handleImsDisconnected() {
+	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
@@ -290,7 +292,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable() { 
 				public void run() {
 					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
@@ -341,7 +343,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				}
 			});
 		}
-    };    
+    };
 
     /**
      * Show the transfer progress

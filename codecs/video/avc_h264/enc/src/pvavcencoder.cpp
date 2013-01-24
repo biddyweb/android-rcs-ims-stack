@@ -1117,3 +1117,9 @@ int PVAVCEncoder::AVC_FrameBind(int indx, uint8** yuv)
     return 1;
 }
 
+/* AVCHandle handle getter to access to the iAvcHandle object in the InitEncoder method */
+AVCHandle PVAVCEncoder::GetAVCHandle(void)
+{
+    return this->iAvcHandle;
+}
+

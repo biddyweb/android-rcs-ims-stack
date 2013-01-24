@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 67;
+        private static final int DATABASE_VERSION = 69;
 
         private Context ctx;
 
@@ -99,8 +99,6 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CSH_INVITATION_RINGTONE, 			"");
             addParameter(db, RcsSettingsData.CSH_INVITATION_VIBRATE, 			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CSH_AVAILABLE_BEEP, 				RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.CSH_VIDEO_FORMAT, 					ctx.getString(R.string.rcs_settings_label_default_video_format));
-            addParameter(db, RcsSettingsData.CSH_VIDEO_SIZE, 					ctx.getString(R.string.rcs_settings_label_default_video_size));
             addParameter(db, RcsSettingsData.FILETRANSFER_INVITATION_RINGTONE, 	"");
             addParameter(db, RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE, 	RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CHAT_INVITATION_RINGTONE, 			"");
@@ -109,6 +107,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.FREETEXT2, 						ctx.getString(R.string.rcs_settings_label_default_freetext_2));
             addParameter(db, RcsSettingsData.FREETEXT3,							ctx.getString(R.string.rcs_settings_label_default_freetext_3));
             addParameter(db, RcsSettingsData.FREETEXT4,							ctx.getString(R.string.rcs_settings_label_default_freetext_4));
+            addParameter(db, RcsSettingsData.MIN_BATTERY_LEVEL,                 "0");
             addParameter(db, RcsSettingsData.MAX_PHOTO_ICON_SIZE, 				"256");
             addParameter(db, RcsSettingsData.MAX_FREETXT_LENGTH, 				"100");
             addParameter(db, RcsSettingsData.MAX_CHAT_PARTICIPANTS, 			"10");
@@ -201,9 +200,9 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.PROVISIONING_TERMS_ACCEPTED,       RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PROVISIONING_VERSION,				"0");
             addParameter(db, RcsSettingsData.PROVISIONING_ADDRESS,              "");
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				Environment.getExternalStorageDirectory() + "/joyn/photos");
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_VIDEOS,				Environment.getExternalStorageDirectory() + "/joyn/videos");
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_FILES,				Environment.getExternalStorageDirectory() + "/joyn/files");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				Environment.getExternalStorageDirectory() + "/joyn/photos/");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_VIDEOS,				Environment.getExternalStorageDirectory() + "/joyn/videos/");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_FILES,				Environment.getExternalStorageDirectory() + "/joyn/files/");
             addParameter(db, RcsSettingsData.SECURE_MSRP_OVER_WIFI,	     		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.SECURE_RTP_OVER_WIFI,				RcsSettingsData.FALSE);
         }

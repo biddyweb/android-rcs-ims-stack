@@ -61,6 +61,9 @@ class PVAVCEncoder : public PVAVCEncoderInterface
         int     AVC_FrameBind(int indx, uint8** yuv);
         void    AVC_FrameUnbind(int indx);
 
+        /* AVCHandle handle getter to access to the iAvcHandle object in the InitEncoder method */
+        AVCHandle   GetAVCHandle(void);
+
     private:
 
         PVAVCEncoder();

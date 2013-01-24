@@ -32,6 +32,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 
 /**
  * Rejoin a group chat session
@@ -164,6 +165,10 @@ public class RejoinGroupChatSession extends GroupChatSession {
      * @param resp 404 response
      */
     public void handle404SessionNotFound(SipResponse resp) {
+		// Rejoin session has failed, we update the database with sttaus terminted by remote
+        RichMessaging.getInstance().addChatSessionTerminationByRemote(this);
+
+		// Notify listener
         handleError(new ChatError(ChatError.SESSION_NOT_FOUND, resp.getReasonPhrase()));
     }
 }

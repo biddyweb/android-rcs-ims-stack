@@ -30,6 +30,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
@@ -48,7 +49,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class SettingsDisplay extends PreferenceActivity {
+public class SettingsDisplay extends PreferenceActivity implements Preference.OnPreferenceChangeListener {
     // Dialog IDs
     private final static int SERVICE_DEACTIVATION_CONFIRMATION_DIALOG = 1;
     private final static int ROAMING_DEACTIVATION_CONFIRMATION_DIALOG = 2;
@@ -62,6 +63,11 @@ public class SettingsDisplay extends PreferenceActivity {
      * Roaming flag
      */
     private CheckBoxPreference roamingCheckbox;
+
+    /**
+     * Battery level
+     */
+    private ListPreference batteryLevel;
 
     /**
      * User profile preference
@@ -94,11 +100,17 @@ public class SettingsDisplay extends PreferenceActivity {
         RcsSettings.createInstance(getApplicationContext());
         
         // Save user profile preference the first time
-		presencePref = (Preference)getPreferenceScreen().findPreference("presence_settings");		
-        
+		presencePref = (Preference)getPreferenceScreen().findPreference("presence_settings");
+
+        // Battery level
+        batteryLevel = (ListPreference) findPreference("min_battery_level");
+        batteryLevel.setPersistent(false);
+        batteryLevel.setOnPreferenceChangeListener(this);
+        batteryLevel.setValue("" + RcsSettings.getInstance().getMinBatteryLevel());
+
     	// Modify the intents so the activities can be launched even if not defined in this application (i.e. RCS apps)
     	int totalNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
-    	for (int i=2; i<totalNumberOfPreferences; i++) {
+    	for (int i=3; i<totalNumberOfPreferences; i++) {
         	Preference preference = getPreferenceScreen().getPreference(i);
         	Intent preferenceIntent = preference.getIntent();
         	String className = preferenceIntent.getComponent().getClassName();
@@ -340,7 +352,22 @@ public class SettingsDisplay extends PreferenceActivity {
         }
         return super.onCreateDialog(id);
     }
-    
+
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object objValue) {
+        if (preference.getKey().equals("min_battery_level")) {
+            // Set the min battery level
+            int level = 0;
+            try {
+                level = Integer.parseInt((String)objValue);
+            } catch (Exception e) {
+                // Nothing to do
+            }
+            RcsSettings.getInstance().setMinBatteryLevel(level);
+        }
+        return true;
+    }
+
 	/**
 	 * Is mobile connected in roaming
 	 * 

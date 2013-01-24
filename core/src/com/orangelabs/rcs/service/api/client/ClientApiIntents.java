@@ -48,7 +48,7 @@ public class ClientApiIntents {
      * Service status "failed"
      */
 	public final static int SERVICE_STATUS_FAILED = 4;
-	
+
 	/**
      * Intent which permits to load the RCS settings application 
      */
@@ -63,5 +63,5 @@ public class ClientApiIntents {
      * </ul>
      * </ul>
      */
-	public final static String SERVICE_STATUS = "com.orangelabs.rcs.SERVICE_STATUS";	
+	public final static String SERVICE_STATUS = "com.orangelabs.rcs.SERVICE_STATUS";
 }

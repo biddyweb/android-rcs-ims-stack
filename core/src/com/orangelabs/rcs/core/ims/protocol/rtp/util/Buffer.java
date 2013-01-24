@@ -18,8 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.util;
 
-import java.util.List;
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 
 /**
@@ -43,6 +41,12 @@ public class Buffer {
      * This is a marker bit for RTP
      */
     public final static int FLAG_RTP_MARKER = (1 << 11);
+
+    /**
+     * Indicates that the buffer carries a time stamp that's in RTP (NTP)
+     * time units
+     */
+    public final static int FLAG_RTP_TIME = (1 << 12);
 
 	/**
 	 * Default value if the time stamp of the media is not known
@@ -95,9 +99,14 @@ public class Buffer {
 	protected long sequenceNumber = SEQUENCE_UNKNOWN;
 
     /**
-     * The list of buffer fragments
+     * The array of buffer fragments
      */
-    protected List<Buffer> fragments = null;
+    protected Buffer[] fragments = null;
+
+    /**
+     * The size of used items from array of buffer fragments
+     */
+    protected int fragmentsSize = 0;
 
 	/**
 	 * Get the data format
@@ -308,20 +317,38 @@ public class Buffer {
 
     /**
      * Get the buffer fragments
-     * 
+     *
      * @return the fragments
      */
-    public List<Buffer> getFragments() {
+    public Buffer[] getFragments() {
         return fragments;
     }
 
     /**
      * Set the buffer fragments
-     * 
+     *
      * @param fragments the fragments to set
      */
-    public void setFragments(List<Buffer> fragments) {
+    public void setFragments(Buffer[] fragments) {
         this.fragments = fragments;
+    }
+
+    /**
+     * Get the buffer fragments size
+     *
+     * @return the fragments size
+     */
+    public int getFragmentsSize() {
+        return fragmentsSize;
+    }
+
+    /**
+     * Set the buffer fragments size
+     *
+     * @param fragments the fragments size to set
+     */
+    public void setFragmentsSize(int fragmentsSize) {
+        this.fragmentsSize = fragmentsSize;
     }
 
     /**
@@ -331,6 +358,6 @@ public class Buffer {
      *         <code>false</code>
      */
     public boolean isFragmented() {
-        return (fragments != null && fragments.size() > 0);
+        return (fragments != null && fragments.length > 0 && fragmentsSize > 0);
     }
 }

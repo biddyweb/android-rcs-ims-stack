@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -241,7 +242,7 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
         closeMediaSession();
 		
 		// Terminate session
-		terminateSession();
+		terminateSession(ImsServiceSession.TERMINATION_BY_USER);
 	   	
     	// Remove the current session
     	getImsService().removeSession(this);
@@ -316,7 +317,7 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
         closeMediaSession();
 
 		// Terminate session
-		terminateSession();
+		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
 		// Remove the current session
     	getImsService().removeSession(this);

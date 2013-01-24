@@ -9,8 +9,6 @@ import android.preference.PreferenceActivity;
 
 /**
  * Text-To-Speech for incoming chat and group chat invitation
- * 
- * TODO: detect TTS engine installation
  *  
  * @author jexa7410
  */

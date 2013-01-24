@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Random;
+import java.util.Vector;
 
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -91,6 +92,16 @@ public class MsrpSession {
      * MSRP transaction
      */
     private MsrpTransaction msrpTransaction = null;
+
+    /**
+     * File transfer progress
+     */
+    private Vector<Long> progress = new Vector<Long>();
+
+    /**
+     * File transfer progress
+     */
+    private long totalSize;
 
     /**
 	 * The logger
@@ -277,7 +288,9 @@ public class MsrpSession {
 		if (connection == null) {
 			throw new MsrpException("No connection set");
 		}
-		
+
+        this.totalSize = totalSize;
+
 		// Send content over MSRP 
 		try {
 			byte data[] = new byte[MsrpConstants.CHUNK_MAX_SIZE];
@@ -305,11 +318,17 @@ public class MsrpSession {
 
 				// Update lower byte range
 				firstByte += i;
-				
-				if (!cancelTransfer) {
-					// Notify event listener
-					msrpEventListener.msrpTransferProgress(lastByte, totalSize);
-				}
+
+                // Progress management
+                if (failureReportOption) {
+                    // Add value in progress vector 
+                    progress.add(lastByte);
+                } else {
+                    // Direct notification
+                    if (!cancelTransfer) {
+                        msrpEventListener.msrpTransferProgress(lastByte, totalSize);
+                    }
+                }
 			}
 			
 			if (cancelTransfer) {
@@ -768,7 +787,15 @@ public class MsrpSession {
 		if (logger.isActivated()) {
 			logger.info("Response received (code=" + code + ", transaction=" + txId + ")");
 		}
-		
+
+        if (failureReportOption) {
+            // Notify progress
+            if (!cancelTransfer && progress.size() > 0) {
+                msrpEventListener.msrpTransferProgress(progress.elementAt(0), totalSize);
+                progress.removeElementAt(0);
+            }
+        }
+
 		// Notify request transaction
 		if (requestTransaction != null) {
 			requestTransaction.notifyResponse(code, headers);

@@ -145,16 +145,6 @@ public class RcsSettingsData {
      */
 	public static final String CSH_AVAILABLE_BEEP = "CShAvailableBeep";
 
-    /**
-     * Video format for video share
-     */
-	public static final String CSH_VIDEO_FORMAT = "CShVideoFormat";
-
-	/**
-     * Video size for video share
-     */
-	public static final String CSH_VIDEO_SIZE = "CShVideoSize";
-
 	/**
      * Ringtone which is played when a file transfer invitation is received
      */
@@ -194,6 +184,11 @@ public class RcsSettingsData {
      * Predefined freetext
      */
 	public static final String FREETEXT4 = "Freetext4";
+
+    /**
+     * Battery level minimum
+     */
+    public static final String MIN_BATTERY_LEVEL = "MinBatteryLevel";
 
 	// ---------------------------------------------------------------------------
 	// Service settings
