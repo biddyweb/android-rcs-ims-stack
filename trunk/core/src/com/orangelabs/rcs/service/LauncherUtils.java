@@ -137,7 +137,7 @@ public class LauncherUtils {
         context.stopService(new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME));
         context.stopService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
     }
-    
+
     /**
      * Reset RCS config
      *

@@ -156,7 +156,6 @@ bool PVAVCDecoder::GetDecOutput(int *indx, int *release)
     return (PVAVCDecGetOutput((AVCHandle *)iAVCHandle, indx, release, &output) != AVCDEC_SUCCESS) ? false : true;
 }
 
-// OrangeLabs : addition to be compliant with existing code
 bool PVAVCDecoder::GetDecOutput(int *indx, int *release, AVCFrameIO* output)
 {
     return (PVAVCDecGetOutput((AVCHandle *)iAVCHandle, indx, release, output) != AVCDEC_SUCCESS) ? false : true;

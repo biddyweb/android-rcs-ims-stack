@@ -18,8 +18,9 @@
 
 package com.orangelabs.rcs.service.api.server.messaging;
 
+import java.util.List;
+
 import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
@@ -115,7 +116,47 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	public long getFilesize() {
 		return session.getContent().getSize();
 	}	
-	
+
+    /**
+     * Get file thumbnail
+     *
+     * @return String
+     */
+    public String getFileThumbnail() {
+        // TODO: NOT YET IMPLEMENTED
+        return null;
+    }
+
+    /**
+     * Is group transfer
+     *
+     * @return Boolean
+     */
+    public boolean isGroupTransfer() {
+        // TODO: NOT YET IMPLEMENTED
+        return false;
+    }
+
+    /**
+     * Is HTTP transfer
+     *
+     * @return Boolean
+     */
+    public boolean isHttpTransfer() {
+        // TODO: NOT YET IMPLEMENTED
+        return false;
+    }
+
+    /**
+     * Get list of contacts (only for group transfer)
+     *
+     * @return List of contacts
+     */
+    public List<String> getContacts() {
+        // TODO: NOT YET IMPLEMENTED
+        return null;
+    }
+
 	/**
 	 * Accept the session invitation
 	 */
@@ -160,7 +201,14 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		// Abort the session
 		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
-	
+
+    /**
+     * Resume the session (only for HTTP transfer)
+     */
+    public void resumeSession() {
+        // TODO: NOT YET IMPLEMENTED
+    }
+
 	/**
 	 * Add session listener
 	 * 
@@ -205,7 +253,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionStarted();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -218,12 +266,12 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     /**
      * Session has been aborted
      * 
-	 * @param status Termination status
+	 * @param reason Termination reason
 	 */
-    public void handleSessionAborted(int status) {
+    public void handleSessionAborted(int reason) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session aborted");
+				logger.info("Session aborted (reason " + reason + ")");
 			}
 	
 			// Update rich messaging history
@@ -233,8 +281,8 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleSessionAborted();
-	            } catch (RemoteException e) {
+	            	listeners.getBroadcastItem(i).handleSessionAborted(reason);
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -257,7 +305,8 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 	
 	  		if (session.isFileTransfered()) {
-	  			// The file has been received, so do nothing
+				// The file has been received, so only remove session from the list
+				MessagingApiService.removeFileTransferSession(session.getSessionID());
 	  			return;
 	  		}
 	  		
@@ -269,7 +318,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -301,7 +350,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleTransferError(error.getErrorCode());
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -334,7 +383,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleTransferProgress(currentSize, totalSize);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -363,7 +412,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleFileTransfered(filename);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}

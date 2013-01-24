@@ -8,8 +8,8 @@
 #include "pvavcdecoder.h"
 #include "3GPVideoParser.h"
 
-#include "avcapi_common.h" //+OrangeLabs
-#include "oscl_mem.h" //+OrangeLabs
+#include "avcapi_common.h"
+#include "oscl_mem.h"
 #include "avcdec_api.h"
 #include "yuv2rgb.h"
 
@@ -17,29 +17,26 @@
 
 /* ------------------------------------------------------------------------------------- */
 /*  Callback declaration for pvAvcDecoder                                                */
-/*                                                                                       */
 /* ------------------------------------------------------------------------------------- */
-#define AVC_DEC_TIMESTAMP_ARRAY_SIZE 17    // don't ask me why :) look at avc_dev.h
+
+#define AVC_DEC_TIMESTAMP_ARRAY_SIZE 17 // don't ask me why :) look at avc_dev.h
 
 typedef struct s_decoderData {
-    uint32          FrameSize;
-    uint8*          pDpbBuffer;
-    uint32   	    DisplayTimestampArray[AVC_DEC_TIMESTAMP_ARRAY_SIZE];
-    uint32     		CurrInputTimestamp;
-
-    PVAVCDecoder *  pvAvDec;
-    AVCDecSPSInfo   SeqInfo;
+    uint32 FrameSize;
+    uint8* pDpbBuffer;
+    uint32 DisplayTimestampArray[AVC_DEC_TIMESTAMP_ARRAY_SIZE];
+    uint32 CurrInputTimestamp;
+    PVAVCDecoder * pvAvDec;
+    AVCDecSPSInfo SeqInfo;
 } DecoderData;
 
-DecoderData    gDecodeData = {0};
+DecoderData gDecodeData = { 0 };
 
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
+
 int cb_AVC_init_SPS(void *userData, uint aSizeInMbs, uint aNumBuffers) {
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB init_SPS");
+    __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB init_SPS");
 
-	DecoderData *avcDec = (DecoderData*) userData;
+    DecoderData *avcDec = (DecoderData*) userData;
     if (NULL == avcDec) {
         return 0;
     }
@@ -54,28 +51,19 @@ int cb_AVC_init_SPS(void *userData, uint aSizeInMbs, uint aNumBuffers) {
     return 1;
 }
 
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
 int cb_AVC_Malloc(void *userData, int32 size, int attribute) {
-	DecoderData *avcDec = (DecoderData*) userData;
+    DecoderData *avcDec = (DecoderData*) userData;
     return avcDec->pvAvDec->AVC_Malloc(size, attribute);
 }
 
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
 void cb_AVC_Free(void *userData, int mem) {
-	DecoderData *avcDec = (DecoderData*) userData;
-	avcDec->pvAvDec->AVC_Free(mem);
+    DecoderData *avcDec = (DecoderData*) userData;
+    avcDec->pvAvDec->AVC_Free(mem);
 }
 
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
 int cb_AVC_DPBAlloc(void* userData, int32 i, uint8** aYuvBuffer) {
-	//__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB cb_AVC_DPBAlloc");
-	DecoderData *avcDec = (DecoderData*) userData;
+    //__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "CB cb_AVC_DPBAlloc");
+    DecoderData *avcDec = (DecoderData*) userData;
     if (NULL == avcDec) {
         return 0;
     }
@@ -87,9 +75,6 @@ int cb_AVC_DPBAlloc(void* userData, int32 i, uint8** aYuvBuffer) {
     return 1;
 }
 
-/* ------------------------------------------------------------------------------------- */
-/*                                                                                       */
-/* ------------------------------------------------------------------------------------- */
 void cb_AVC_FrameUnbind(void *userData, int indx) {
     OSCL_UNUSED_ARG(userData);
     OSCL_UNUSED_ARG(indx);
@@ -97,10 +82,8 @@ void cb_AVC_FrameUnbind(void *userData, int indx) {
 }
 
 /* ------------------------------------------------------------------------------------- */
-/*  JNI wrapper                                                                          */
-/*                                                                                       */
+/* Global variables                                                                      */
 /* ------------------------------------------------------------------------------------- */
-
 /* Packet video decoder */
 PVAVCDecoder *decoder;
 
@@ -116,11 +99,18 @@ uint8* aConcatBuf;
 /* Size of the concatenated buffer */
 int32 aConcatSize;
 
-/* Live video Width */
-int32 videoWidth;
+/* Protection mutex */
+pthread_mutex_t iMutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* Live video Height */
-int32 videoHeight;
+/** Returned values. */
+enum INIT_RETVAL {
+    SUCCESS             = 0,
+    FAIL                = -1
+};
+
+/* ------------------------------------------------------------------------------------- */
+/* Methods                                                                               */
+/* ------------------------------------------------------------------------------------- */
 
 /**
  * Method:    Decode
@@ -136,6 +126,7 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
         case 7: // SPS
             if ((status = decoder->DecodeSPS(input, size)) != AVCDEC_SUCCESS) {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Failed decode SPS: %ld", status);
+                pthread_mutex_unlock(&iMutex);
                 return 0;
             }
             __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Receive SPS");
@@ -144,6 +135,7 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
         case 8: // PPS
             if ((status = decoder->DecodePPS(input, size)) != AVCDEC_SUCCESS) {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Failed to decode PPS: %ld", status);
+                pthread_mutex_unlock(&iMutex);
                 return 0;
             }
             __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Receive PPS");
@@ -157,34 +149,37 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
                 AVCFrameIO outVid;
                 decoder->GetDecOutput(&indexFrame, &releaseFrame, &outVid);
 
-                //+OrangeLabs
-                //if (releaseFrame == 1) {
-                //      decoder->AVC_FrameUnbind(indexFrame);
-                //  }
-                //+OrangeLabs
+                int width = outVid.pitch;
+                int height = outVid.height;
+                if(aOutBuffer == NULL) {
+                    aOutBuffer = (uint8*)malloc(width*height*3/2);
+                }
 
                 // Copy result to YUV array
-                memcpy(aOutBuffer, outVid.YCbCr[0], videoWidth * videoHeight);
-                memcpy(aOutBuffer + (videoWidth * videoHeight), outVid.YCbCr[1], (videoWidth * videoHeight) / 4);
-                memcpy(aOutBuffer + (videoWidth * videoHeight) + ((videoWidth * videoHeight) / 4), outVid.YCbCr[2], (videoWidth * videoHeight) / 4);
+                memcpy(aOutBuffer, outVid.YCbCr[0], width * height);
+                memcpy(aOutBuffer + (width * height), outVid.YCbCr[1], (width * height) / 4);
+                memcpy(aOutBuffer + (width * height) + ((width * height) / 4), outVid.YCbCr[2], (width * height) / 4);
 
                 // Create the output buffer
-                uint32* resultBuffer = (uint32*) malloc(videoWidth * videoHeight * sizeof(uint32));
+                uint32* resultBuffer = (uint32*) malloc(width * height * sizeof(uint32));
                 if (resultBuffer == NULL) {
+                    pthread_mutex_unlock(&iMutex);
                     return 0;
 				}
 
                 // Convert to RGB
-                convert(videoWidth, videoHeight, aOutBuffer, resultBuffer);
+                convert(width, height, aOutBuffer, resultBuffer);
 
-                (env)->SetIntArrayRegion(decoded, 0, videoWidth * videoHeight, (const jint*) resultBuffer);
+                (env)->SetIntArrayRegion(decoded, 0, width * height, (const jint*) resultBuffer);
                 free(resultBuffer);
             } else {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Decoder error %ld", status);
+                pthread_mutex_unlock(&iMutex);
                 return 0;
             }
             break;
     }
+    pthread_mutex_unlock(&iMutex);
     return 1;
 }
 
@@ -193,14 +188,10 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
  * Method:    InitDecoder
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_InitDecoder
-  (JNIEnv * env, jclass clazz, jint width, jint height) {
-    videoWidth = width;
-    videoHeight = height;
-
-    aOutBuffer = (uint8*)malloc(videoWidth * videoHeight * 3/2);
+  (JNIEnv * env, jclass clazz) {
+    aOutBuffer = NULL;
     decoder = PVAVCDecoder::New();
 
-    //+OrangeLabs
     memset (&gDecodeData, '\0', sizeof(DecoderData));
 
     gDecodeData.pvAvDec = decoder;
@@ -211,10 +202,8 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
             &cb_AVC_Malloc,
             &cb_AVC_Free,
             &gDecodeData);
-    //-OrangeLabs
 
-	return (decoder!=NULL)?1:0;
-//    return ((decoder!=NULL)? 0:1);  //OrangeLabs invert 0 and 1 to have the same behaviour as enc
+    return (decoder!=NULL)?SUCCESS:FAIL;
 }
 
 /**
@@ -222,9 +211,14 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DeinitDecoder
   (JNIEnv * env, jclass clazz) {
+    pthread_mutex_lock(&iMutex);
+
     free(aOutBuffer);
     delete(decoder);
-    return 1;
+
+    pthread_mutex_unlock(&iMutex);
+
+    return SUCCESS;
 }
 
 /**
@@ -232,6 +226,8 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
   (JNIEnv *env, jclass clazz, jbyteArray h264Frame, jintArray decoded) {
+    pthread_mutex_lock(&iMutex);
+
     int32 size = 0;
     jint len = env->GetArrayLength(h264Frame);
     jbyte data[len];

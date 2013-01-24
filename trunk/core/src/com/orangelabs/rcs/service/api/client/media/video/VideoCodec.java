@@ -69,7 +69,7 @@ public class VideoCodec {
 
     /**
      * Constructor
-     * 
+     *
      * @param codecName Codec name
      * @param clockRate Clock rate
      * @param codecParams Codec parameters
@@ -187,12 +187,12 @@ public class VideoCodec {
      * @return True if codecs are equals
      */
     public boolean compare(VideoCodec codec) {
-        if (getCodecName().equalsIgnoreCase(codec.getCodecName()) &&
-        		getWidth() == codec.getWidth() &&
-        			getHeight() == codec.getHeight()) {
+        if (getCodecName().equalsIgnoreCase(codec.getCodecName()) 
+                && getWidth() == codec.getWidth()
+                && getHeight() == codec.getHeight()) {
             return true;
         } else {
-        	return false;
+            return false;
         }
     }
 
@@ -210,5 +210,13 @@ public class VideoCodec {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Codec " + getCodecName() + " " + getPayload() + " " +
+                getClockRate() + " " + getCodecParams() + " " +
+                getFramerate() + " " + getBitrate() + " " +
+                getWidth() + "x" + getHeight();
     }
 }

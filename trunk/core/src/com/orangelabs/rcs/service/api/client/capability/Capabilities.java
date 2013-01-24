@@ -64,6 +64,16 @@ public class Capabilities implements Parcelable {
 	 */
 	private boolean socialPresence = false;	
 
+    /**
+     * File transfer over HTTP support
+     */
+    private boolean fileTransferHttp = false;
+
+    /**
+     * Geolocation push support
+     */
+    private boolean geolocationPush = false;
+
 	/**
 	 * List of supported extensions
 	 */
@@ -93,6 +103,8 @@ public class Capabilities implements Parcelable {
 		this.csVideo = source.readInt() != 0;
 		this.presenceDiscovery = source.readInt() != 0;
 		this.socialPresence = source.readInt() != 0;
+        this.fileTransferHttp = source.readInt() != 0;
+        this.geolocationPush = source.readInt() != 0;
 		this.timestamp = source.readLong();
 		source.readStringList(this.extensions);
     }
@@ -121,6 +133,8 @@ public class Capabilities implements Parcelable {
     	dest.writeInt(csVideo ? 1 : 0);
     	dest.writeInt(presenceDiscovery ? 1 : 0);
     	dest.writeInt(socialPresence ? 1 : 0);
+        dest.writeInt(fileTransferHttp ? 1 : 0);
+        dest.writeInt(geolocationPush ? 1 : 0);
     	dest.writeLong(timestamp);
 		if (extensions!=null && extensions.size()>0){
 			dest.writeStringList(extensions);
@@ -267,6 +281,42 @@ public class Capabilities implements Parcelable {
 		this.socialPresence = supported;
 	}
 
+    /**
+     * Is file transfer over HTTP supported
+     *
+     * @return Boolean
+     */
+    public boolean isFileTransferHttpSupported() {
+        return fileTransferHttp;
+    }
+
+    /**
+     * Set the file transfer over HTTP support
+     *
+     * @param supported Supported 
+     */
+    public void setFileTransferHttpSupport(boolean supported) {
+        this.fileTransferHttp = supported;
+    }
+
+    /**
+     * Is Geolocation Push supported
+     *
+     * @return Boolean
+     */
+    public boolean isGeolocationPushSupported() {
+        return geolocationPush;
+    }
+
+    /**
+     * Set the Geolocation Push support
+     *
+     * @param supported Supported 
+     */
+    public void setGeolocationPushSupport(boolean supported) {
+        this.geolocationPush = supported;
+    }
+
 	/**
 	 * Add supported extension
 	 * 
@@ -316,6 +366,8 @@ public class Capabilities implements Parcelable {
 			", CS_video=" + csVideo +
 			", Presence_discovery=" + presenceDiscovery +
 			", Social_presence=" + socialPresence +
+            ", FToHttp=" + fileTransferHttp +
+            ", GeolocationPush=" + geolocationPush +
 			", Timestamp=" + timestamp;
 	}
 }

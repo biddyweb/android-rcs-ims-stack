@@ -21,9 +21,6 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.VideoCodec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Reassembles H264 RTP packets into H264 frames, as per RFC 3984
  *
@@ -34,17 +31,17 @@ public class JavaPacketizer extends VideoCodec {
     /**
      * Enable/disable packetization mode 1
      */
-    public static boolean H264_ENABLED_PACKETIZATION_MODE_1 = true;
+    public static final boolean H264_ENABLED_PACKETIZATION_MODE_1 = true;
 
     /**
      * Max frame size to H264
      */
-    public static int H264_MAX_FRAME_SIZE = 1300; // TODO remove the rtp size...
+    public static int H264_MAX_PACKET_FRAME_SIZE = 1300; // TODO remove the rtp size...
 
     /**
      * Max number of packets to H264
      */
-    public static int H264_MAX_RTP_PKTS = 32;
+    public static final int H264_MAX_RTP_PKTS = 32;
 
     /**
      * Buffer size for FU Indicator and Header
@@ -62,6 +59,26 @@ public class JavaPacketizer extends VideoCodec {
     public static final int AVC_NALTYPE_PPS = 8;
 
     /**
+     * Full frame auxiliary buffer (No Packetization)
+     */
+    private byte fullFrameData[] = new byte[H264_MAX_PACKET_FRAME_SIZE];
+
+    /**
+     * Full frame temporary packets buffer (With Packetization)
+     */
+    private byte packetsData[][] = new byte[H264_MAX_RTP_PKTS][H264_MAX_PACKET_FRAME_SIZE];
+
+    /**
+     * Full frame final chunks buffer (With Packetization)
+     */
+    private Buffer[] outputs = new Buffer[H264_MAX_RTP_PKTS];
+
+    /**
+     * Buffer for FU Indicator and Header
+     */
+    private byte[] h264FU = new byte[H264_FU_HEADER_SIZE];
+
+    /**
      * Because packets can come out of order, it is possible that some packets
      * for a newer frame may arrive while an older frame is still incomplete.
      * However, in the case where we get nothing but incomplete frames, we don't
@@ -77,34 +94,28 @@ public class JavaPacketizer extends VideoCodec {
         }
 
         if (!input.isDiscard()) {
-
-            if (input.getLength() < H264_MAX_FRAME_SIZE || !H264_ENABLED_PACKETIZATION_MODE_1) {
-
-                byte[] bufferData = (byte[]) input.getData();
-                byte data[] = new byte[bufferData.length];
-
-                System.arraycopy(bufferData, 0, data, 0, bufferData.length);
-
-                if (data.length > 0) {
+            byte[] bufferData = (byte[]) input.getData();
+            int bufferDataLength = input.getLength();
+            if (input.getLength() < H264_MAX_PACKET_FRAME_SIZE || !H264_ENABLED_PACKETIZATION_MODE_1) {
+                if ((fullFrameData == null) || (fullFrameData.length < bufferDataLength)) {
+                    fullFrameData = new byte[bufferDataLength];
+                }
+                System.arraycopy(bufferData, 0, fullFrameData, 0, bufferDataLength);
+                if (fullFrameData.length > 0) {
                     // Copy to buffer
                     output.setFormat(input.getFormat());
-                    output.setData(data);
-                    output.setLength(data.length);
+                    output.setData(fullFrameData);
+                    output.setLength(bufferDataLength);
                     output.setOffset(0);
                     output.setTimeStamp(input.getTimeStamp());
-                    output.setFlags(Buffer.FLAG_RTP_MARKER);
+                    output.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
+//                    output.setFlags(Buffer.FLAG_RTP_MARKER);
                 }
-
                 return BUFFER_PROCESSED_OK;
             }
 
-            List<Buffer> outputs = new ArrayList<Buffer>();
             output.setFragments(outputs);
-
-            byte[] bufferData = (byte[]) input.getData();
-
-            // buffer for FU Indicator and Header
-            byte[] h264FU = new byte[H264_FU_HEADER_SIZE];
+            output.setFragmentsSize(0);
 
             /*
              * First Header - The FU indicator octet has the following format:
@@ -138,41 +149,41 @@ public class JavaPacketizer extends VideoCodec {
             // Split frame into pkts
             // for FU-A, we need to consume the first byte with the NAL header
             int startPosBufferData = 1;
-            int available = bufferData.length - 1;// see comment above
+            int available = bufferDataLength - 1;// see comment above
             // define max size (not counting with the fuIndicator and fuHeader)
-            int maxSize = H264_MAX_FRAME_SIZE - h264FU.length;
+            int maxSize = H264_MAX_PACKET_FRAME_SIZE - h264FU.length;
             int numberOfRtpPkts = 0;
             while (available > maxSize) {
 
                 // >>>>>>>>>>>> create packet >>>>>>>>>>>>
-                byte data[] = new byte[maxSize + h264FU.length];
+                // Write h264 payload
+                System.arraycopy(h264FU, 0, packetsData[numberOfRtpPkts], 0, h264FU.length);
 
-                // write h264 payload
-                System.arraycopy(h264FU, 0, data, 0, h264FU.length);
+                // Write frame data
+                System.arraycopy(bufferData, startPosBufferData, packetsData[numberOfRtpPkts], h264FU.length, maxSize);
 
-                // write frame data
-                System.arraycopy(bufferData, startPosBufferData, data, h264FU.length, maxSize);
-
-                if (data.length > 0) {
-                    // copy to buffer
-                    Buffer buffer = new Buffer();
-                    buffer.setFormat(input.getFormat());
-                    buffer.setData(data);
-                    buffer.setLength(data.length);
-                    buffer.setOffset(0);
-                    buffer.setTimeStamp(input.getTimeStamp());
-
-                    // add data buffer to outputs
-                    outputs.add(buffer);
-
-                    // increment number of rtp pkts
-                    numberOfRtpPkts++;
+                // Copy to buffer
+                Buffer buffer = outputs[numberOfRtpPkts];
+                if (buffer == null) {
+                    buffer = new Buffer();
                 }
+                buffer.setFormat(input.getFormat());
+                buffer.setData(packetsData[numberOfRtpPkts]);
+                buffer.setLength(H264_MAX_PACKET_FRAME_SIZE); // Max packet frame size
+                buffer.setOffset(0);
+                buffer.setTimeStamp(input.getTimeStamp());
+                buffer.setFlags(Buffer.FLAG_RTP_TIME);
+
+                // Add data buffer to outputs
+                outputs[numberOfRtpPkts] = buffer;
+
+                // Increment number of rtp pkts
+                numberOfRtpPkts++;
                 // <<<<<<<<<<<< create packet <<<<<<<<<<<<
 
                 // -1 to leave room for the last pkt
                 if (numberOfRtpPkts >= H264_MAX_RTP_PKTS - 1) {
-                    outputs.clear();
+                    output.setFragments(null);
                     output.setData(null);
                     output.setDiscard(true);
                     return OUTPUT_BUFFER_NOT_FILLED;
@@ -197,27 +208,32 @@ public class JavaPacketizer extends VideoCodec {
             h264FU[1] |= 0x40;// we need to switch the end bit on
 
             // >>>>>>>>>>>> create packet >>>>>>>>>>>>
-            byte data[] = new byte[available + h264FU.length];
-
             // write h264 payload
-            System.arraycopy(h264FU, 0, data, 0, h264FU.length);
+            System.arraycopy(h264FU, 0, packetsData[numberOfRtpPkts], 0, h264FU.length);
 
             // write frame data
-            System.arraycopy(bufferData, startPosBufferData, data, h264FU.length, available);
+            System.arraycopy(bufferData, startPosBufferData, packetsData[numberOfRtpPkts], h264FU.length, available);
 
-            if (data.length > 0) {
-                // copy to buffer
-                Buffer buffer = new Buffer();
-                buffer.setFormat(input.getFormat());
-                buffer.setData(data);
-                buffer.setLength(data.length);
-                buffer.setOffset(0);
-                buffer.setTimeStamp(input.getTimeStamp());
-                buffer.setFlags(Buffer.FLAG_RTP_MARKER);
-
-                // add data buffer to outputs
-                outputs.add(buffer);
+            // copy to buffer
+            Buffer buffer = outputs[numberOfRtpPkts];
+            if (buffer == null) {
+                buffer = new Buffer();
             }
+            buffer.setFormat(input.getFormat());
+            buffer.setData(packetsData[numberOfRtpPkts]);
+            buffer.setLength(h264FU.length + available); // H264FU header length + remaining frame chunk size
+            buffer.setOffset(0);
+            buffer.setTimeStamp(input.getTimeStamp());
+            buffer.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
+
+            // add data buffer to outputs
+            outputs[numberOfRtpPkts] = buffer;
+            
+            // increment number of rtp pkts
+            numberOfRtpPkts++;
+            
+            // Set outputs size
+            output.setFragmentsSize(numberOfRtpPkts);
             // <<<<<<<<<<<< create packet <<<<<<<<<<<<
 
             return BUFFER_PROCESSED_OK;

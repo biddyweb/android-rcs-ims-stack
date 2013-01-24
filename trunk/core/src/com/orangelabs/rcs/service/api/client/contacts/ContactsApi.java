@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.service.api.client.contacts;
 
 import java.util.List;
-
 import android.content.Context;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
@@ -247,5 +246,35 @@ public class ContactsApi {
 	 */
 	public void removeCancelledPresenceInvitation(String contact){
 		ContactsManager.getInstance().removeCancelledPresenceInvitation(contact);
-	}	
+	}
+
+    /**
+     * Block a specific capability for a contact
+     *
+     * @param contact Contact
+     * @param capability Capability to be blocked
+     */
+    public void blockCapability(String contact, String capability) {
+        // TODO: NOT YET IMPLEMETED
+    }
+
+    /**
+     * Block all the capabilities for a contact
+     *
+     * @param contact Contact
+     */
+    public void blockAllCapabilities(String contact) {
+        // TODO: NOT YET IMPLEMETED
+    }
+
+    /**
+     * Get list of blocked capabilities for a contact
+     *
+     * @param contact Contact
+     * @return List of capabilities
+     */
+    public List<String> getBlockedCapabilities(String contact) {
+        // TODO: NOT YET IMPLEMETED
+        return null;
+    }
 }

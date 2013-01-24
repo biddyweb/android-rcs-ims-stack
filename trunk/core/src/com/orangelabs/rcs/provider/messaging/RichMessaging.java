@@ -1229,6 +1229,7 @@ public class RichMessaging {
     			result.add(participant);
     		}
     	}
+    	cursor.close();
     	return result;
 	}
 	

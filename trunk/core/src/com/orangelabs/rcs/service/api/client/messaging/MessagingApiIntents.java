@@ -37,6 +37,7 @@ public interface MessagingApiIntents {
      *   <li><em>filename</em> - Name of the file.</li>
      *   <li><em>filesize</em> - Size of the file in bytes.</li>
      *   <li><em>filetype</em> - Type of file encoding.</li>
+     *   <li><em>thumbnail</em> - Path for the file thumbnail.</li>
      * </ul>
      * </ul>
      */

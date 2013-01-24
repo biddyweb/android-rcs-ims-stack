@@ -32,7 +32,6 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264EncoderParams;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
@@ -43,6 +42,7 @@ import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
+import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -53,18 +53,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback {
 
     /**
-     * List of supported video codecs
+     * List of supported video codecs.
      */
-    public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H264Config.CODEC_NAME,
-            		H264VideoFormat.PAYLOAD,
-            		H264Config.CLOCK_RATE,
-            		H264Config.CODEC_PARAMS,
-                    H264Config.FRAME_RATE,
-                    H264Config.BIT_RATE,
-                    H264Config.VIDEO_WIDTH,
-                    H264Config.VIDEO_HEIGHT).getMediaCodec()
-    };
+    private MediaCodec[] supportedMediaCodecs = null; 
 
     /**
      * Selected video codec
@@ -150,7 +141,17 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * NAL repeat MAX value
      */
     private static final int NALREPEATMAX = 20;
-    
+
+    /**
+     * Scaling factor for encoding
+     */
+    private float scaleFactor = 1;
+
+    /**
+     * Mirroring (horizontal and vertival) for encoding
+     */
+    private boolean mirroring = false;
+
     /**
      * The logger
      */
@@ -163,38 +164,32 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     	// Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
+
+        // Init codecs
+        supportedMediaCodecs = CodecsUtils.getSupportedCodecList(); 
+
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+            setMediaCodec(supportedMediaCodecs[0]);
+        }
     }
 
     /**
-     * Constructor. Force a video codec.
+     * Constructor. Force a list of video codecs.
      *
-     * @param codec Video codec
+     * @param codecs ordered codecs list (prefered codec in first)
      */
-    public LiveVideoPlayer(VideoCodec codec) {
+    public LiveVideoPlayer(MediaCodec[] codecs) {
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
 
-        // Set the media codec
-        setMediaCodec(codec.getMediaCodec());
-    }
+        // Init codecs
+        supportedMediaCodecs = codecs;
 
-    /**
-     * Constructor. Force a video codec.
-     *
-     * @param codec Video codec name
-     */
-    public LiveVideoPlayer(String codec) {
-        // Set the local RTP port
-        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
-
-        // Set the media codec
-        for (int i = 0; i < supportedMediaCodecs.length ; i++) {
-            if (codec.toLowerCase().contains(supportedMediaCodecs[i].getCodecName().toLowerCase())) {
-                setMediaCodec(supportedMediaCodecs[i]);
-                break;
-            }
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+            setMediaCodec(supportedMediaCodecs[0]);
         }
     }
 
@@ -285,24 +280,28 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         try {
             timestampInc = 90000 / selectedVideoCodec.getFramerate();
             NativeH264EncoderParams nativeH264EncoderParams = new NativeH264EncoderParams();
+
+            // Codec dimensions
             nativeH264EncoderParams.setFrameWidth(selectedVideoCodec.getWidth());
             nativeH264EncoderParams.setFrameHeight(selectedVideoCodec.getHeight());
             nativeH264EncoderParams.setFrameRate(selectedVideoCodec.getFramerate());
             nativeH264EncoderParams.setBitRate(selectedVideoCodec.getBitrate());
 
-            // Codec profile level
-            nativeH264EncoderParams.setProfile(NativeH264EncoderParams.PROFILE_BASELINE);
-            nativeH264EncoderParams.setLevel(NativeH264EncoderParams.LEVEL_1B);
+            // Codec profile and level
+            nativeH264EncoderParams.setProfilesAndLevel(selectedVideoCodec.getCodecParams());
 
             // Codec settings optimization
-            nativeH264EncoderParams.setBitRate(96000);
-            nativeH264EncoderParams.setFrameRate(10);
             nativeH264EncoderParams.setEncMode(NativeH264EncoderParams.ENCODING_MODE_STREAMING);
-            nativeH264EncoderParams.setPacketSize(JavaPacketizer.H264_MAX_FRAME_SIZE);
+//            nativeH264EncoderParams.setPacketSize(JavaPacketizer.H264_MAX_PACKET_FRAME_SIZE);
             nativeH264EncoderParams.setSceneDetection(true);
             nativeH264EncoderParams.setIFrameInterval(10);
             nativeH264EncoderParams.setFrameOrientation(0);
 
+            if (logger.isActivated()) {
+                logger.info("Init H264Encoder " + selectedVideoCodec.getCodecParams() + " " +
+                        selectedVideoCodec.getWidth() + "x" + selectedVideoCodec.getHeight() + " " +
+                        selectedVideoCodec.getFramerate() + " "+ selectedVideoCodec.getBitrate());
+            }
             int result = NativeH264Encoder.InitEncoder(nativeH264EncoderParams);
             if (result != 0) {
                notifyPlayerEventError("Encoder init failed with error code " + result);
@@ -480,6 +479,30 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
+     * Get media codec width
+     *
+     * @return Media Codec
+     */
+    public int getMediaCodecWidth() {
+        if (selectedVideoCodec == null)
+            return H264Config.VIDEO_WIDTH;
+        else
+            return new VideoCodec(selectedVideoCodec.getMediaCodec()).getWidth();
+    }
+
+    /**
+     * Get media codec height
+     *
+     * @return Media Codec
+     */
+    public int getMediaCodecHeight() {
+        if (selectedVideoCodec == null)
+            return H264Config.VIDEO_HEIGHT;
+        else
+            return new VideoCodec(selectedVideoCodec.getMediaCodec()).getHeight();
+    }
+
+    /**
      * Set media codec
      *
      * @param mediaCodec Media codec
@@ -491,6 +514,24 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         } else {
             notifyPlayerEventError("Codec not supported");
         }
+    }
+
+    /**
+     * Set the scaling factor
+     *
+     * @param scaleFactor new scaling factor
+     */
+    public void setScalingFactor(float scaleFactor) {
+        this.scaleFactor = scaleFactor;
+    }
+
+    /**
+     * Set the mirroring value
+     *
+     * @param mirroring new mirroring value
+     */
+    public void setScalingFactor(boolean mirroring) {
+        this.mirroring = mirroring;
     }
 
     /**
@@ -622,8 +663,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 			nalInit = true;
 		} 
 
-		// Encode frame 
-		byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp);
+        // Encode frame
+        byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp, mirroring, scaleFactor);
 		int encodeResult = NativeH264Encoder.getLastEncodeStatus();
 		if ((encodeResult == 0) && (encoded.length > 0)) {
 			rtpInput.addFrame(encoded, timeStamp, true);

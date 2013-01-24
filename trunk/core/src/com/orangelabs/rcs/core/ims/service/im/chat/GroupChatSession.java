@@ -137,14 +137,16 @@ public abstract class GroupChatSession extends ChatSession {
     }
 
     /**
-	 * Terminate session 
+	 * Terminate session
+	 *  
+	 * @param reason Reason
 	 */
-	public void terminateSession() {
+	public void terminateSession(int reason) {
 		// Stop conference subscription
 		conferenceSubscriber.terminate();
 		
 		// Terminate session
-		super.terminateSession();
+		super.terminateSession(reason);
 	}	
 	
     /**

@@ -226,15 +226,26 @@ public class SdpParser extends Parser {
                     String nameAttribute = line.substring(0, index);
                     String valueAttribute = line.substring(index + 1);
                     MediaAttribute attribute = new MediaAttribute(nameAttribute, valueAttribute);
+
                     // Dispatch for specific payload
-                    if ((nameAttribute.equalsIgnoreCase("rtpmap")) && (valueAttribute.indexOf(' ') != -1)) {
+                    if (valueAttribute.indexOf(' ') != -1) {
                         // Add the attribute only for same payload
+                        boolean payloadFound = false;
                         for (int i = 0; i < descs.size(); i++) {
+                            // Check if first element is a payload 
                             if (valueAttribute.startsWith(descs.elementAt(i).payload)) {
+                                descs.elementAt(i).mediaAttributes.addElement(attribute);
+                                payloadFound = true;
+                            }
+                        }
+                        // Add for all if first element is not a payload
+                        if (!payloadFound) {
+                            for (int i = 0; i < descs.size(); i++) {
                                 descs.elementAt(i).mediaAttributes.addElement(attribute);
                             }
                         }
                     } else {
+                        // Add for all
                         for (int i = 0; i < descs.size(); i++) {
                             descs.elementAt(i).mediaAttributes.addElement(attribute);
                         }

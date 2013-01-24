@@ -28,6 +28,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
@@ -153,7 +154,9 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
             }
             
             // Terminate session
-            terminateSession();
+            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+            
+			// Report error
             handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
             return;
         }
@@ -262,7 +265,7 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
             closeMediaSession();
 
             // Terminate session
-            terminateSession();
+            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
             // Remove the current session
             getImsService().removeSession(session);
@@ -270,9 +273,8 @@ public class OriginatingLiveVideoStreamingSession extends VideoStreamingSession 
             // Notify listeners
             if (!isInterrupted()) {
                 for (int i = 0; i < getListeners().size(); i++) {
-                    ((VideoStreamingSessionListener) getListeners().get(i))
-                            .handleSharingError(new ContentSharingError(
-                                    ContentSharingError.MEDIA_STREAMING_FAILED, error));
+                    ((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(
+                    		new ContentSharingError(ContentSharingError.MEDIA_STREAMING_FAILED, error));
                 }
             }
         }

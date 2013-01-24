@@ -315,7 +315,7 @@ public class ContactInfo implements Parcelable {
 	}
 
     /**
-     * Is RCS contact ?
+     * Is a RCS contact
      *
      * @return true if the contact is RCS
      */

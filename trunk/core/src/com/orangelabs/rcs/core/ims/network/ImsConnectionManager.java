@@ -36,6 +36,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
@@ -93,11 +94,50 @@ public class ImsConnectionManager implements Runnable {
 	 */
 	private String apn;
 
-	/**
+    /**
+     * Launch state
+     */
+    private boolean disconnectedByBattery = false;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-    
+
+    /**
+     * Network state listener
+     */
+    private BroadcastReceiver batteryLevelObserver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (RcsSettings.getInstance().isServiceActivated()) {
+                int batteryLimit = RcsSettings.getInstance().getMinBatteryLevel();
+                if (batteryLimit > 0) {
+                    int batteryLevel = intent.getIntExtra("level", 0);
+                    int batteryPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 1);
+                    if (logger.isActivated()) {
+                        logger.info("Battery level: " + batteryLevel + "% plugged: " + Integer.toString(batteryPlugged));
+                    }
+                    if (batteryLevel <= batteryLimit && batteryPlugged == 0) {
+                        if (!disconnectedByBattery) {
+                            // Disconnect
+                            disconnectedByBattery = true;
+                            disconnectFromIms();
+                        }
+                    } else {
+                        if (disconnectedByBattery) {
+                            disconnectedByBattery = false;
+                            // Launch connection with a connection event
+                            connectionEvent(new Intent(ConnectivityManager.CONNECTIVITY_ACTION));
+                        }
+                    }
+                } else {
+                    disconnectedByBattery = false;
+                }
+            }
+        }
+    };
+
     /**
 	 * Constructor
 	 * 
@@ -131,6 +171,9 @@ public class ImsConnectionManager implements Runnable {
 		IntentFilter intentFilter = new IntentFilter();
 		intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
 		AndroidFactory.getApplicationContext().registerReceiver(networkStateListener, intentFilter);
+
+        // Battery management
+        AndroidFactory.getApplicationContext().registerReceiver(batteryLevelObserver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); 
 	}
 	
 	/**
@@ -185,7 +228,16 @@ public class ImsConnectionManager implements Runnable {
 			return false;
 		}
 	}	
-	
+
+    /**
+     * Is disconnected by battery.
+     *
+     * @return true if disconnected by battery
+     */
+    public boolean isDisconnectedByBattery() {
+        return disconnectedByBattery;
+    }
+
 	/**
 	 * Load the user profile associated to the network interface
 	 */
@@ -207,7 +259,14 @@ public class ImsConnectionManager implements Runnable {
         } catch (IllegalArgumentException e) {
         	// Nothing to do
         }
-        
+
+        // Unregister battery listener
+        try {
+            AndroidFactory.getApplicationContext().unregisterReceiver(batteryLevelObserver);
+        } catch (IllegalArgumentException e) {
+            // Nothing to do
+        }
+
     	// Stop the IMS connection manager
     	stopImsConnection();
     	
@@ -240,7 +299,7 @@ public class ImsConnectionManager implements Runnable {
      * @param intent Intent
      */
     private synchronized void connectionEvent(Intent intent) {
-		if (intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+		if (!disconnectedByBattery && intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
 			
 			boolean connectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
             String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);

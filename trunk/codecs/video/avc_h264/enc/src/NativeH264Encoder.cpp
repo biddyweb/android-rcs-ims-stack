@@ -15,21 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
- 
+
 #define LOG_TAG "NativeEnc"
 #include "NativeH264Encoder.h"
 #include "pvavcencoder.h"
 #include "android/log.h"
 
-int FrameSize;
+/* ------------------------------------------------------------------------------------- */
+/* Global variables                                                                      */
+/* ------------------------------------------------------------------------------------- */
 
-/** variables needed in operation */
+/** Native encoder */
 PVAVCEncoder *encoder;
+
+/** Global size of one frame */
+int iFrameSize;
+
+/** Format of the input data */
 TAVCEIInputFormat *iInputFormat;
+
+/** Encoder settings */
 TAVCEIEncodeParam *iEncodeParam;
+
+/** Input buffer */
 TAVCEIInputData *iInData;
+
+/** Output buffer */
 TAVCEIOutputData *iOutData;
-TAVCEI_RETVAL status;
+
+/** Return value from encoder */
+TAVCEI_RETVAL iStatus;
+
+/** Protection mutex */
+pthread_mutex_t iMutex = PTHREAD_MUTEX_INITIALIZER;
+
+/** Source buffer */
+uint8* iSrcBuffer = NULL;
+int iSrcBufferLen = 0;
+
+/** Destination buffer */
+uint8* iDestBuffer = NULL;
+int iDestBufferLen = 0;
 
 /** Returned values. */
 enum INIT_RETVAL {
@@ -43,6 +69,16 @@ enum INIT_RETVAL {
     MALLOC_FAIL         = -7,
     GETFIELD_FAIL       = -8
 };
+
+/** Scaling method */
+void scaleFrame(uint8* sourceBuffer, uint8* destBuffer, int destWidth, int destHeight, float scalingFactor);
+
+/** Mirroring method */
+void mirrorFrame(uint8* sourceBuffer, uint8* destBuffer, int width, int height);
+
+/* ------------------------------------------------------------------------------------- */
+/* Methods                                                                               */
+/* ------------------------------------------------------------------------------------- */
 
 /*
  * Method:    InitEncoder
@@ -59,20 +95,20 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     if (iFrameWidth == NULL) {
         return FRAMEWIDTH_FAIL;
     }
-    int iSrcWidth = (env)->GetIntField(params,iFrameWidth);
+    int srcWidth = (env)->GetIntField(params,iFrameWidth);
 
     jfieldID iFrameHeight = (env)->GetFieldID(objClass,"frameHeight","I");
     if (iFrameHeight == NULL) {
         return FRAMEHEIGHT_FAIL;
     }
-    int iSrcHeight = (env)->GetIntField(params,iFrameHeight);
+    int srcHeight = (env)->GetIntField(params,iFrameHeight);
 
     jfieldID iFrameRate = (env)->GetFieldID(objClass,"frameRate","F");
     if (iFrameRate == NULL) {
         return FRAMERATE_FAIL;
     }
-    int iSrcFrameRate = (env)->GetFloatField(params,iFrameRate);
-    FrameSize = (iSrcWidth*iSrcHeight*3)>>1;
+    int srcFrameRate = (env)->GetFloatField(params,iFrameRate);
+    iFrameSize = (srcWidth*srcHeight*3)>>1;
 
     encoder = PVAVCEncoder::New();
     if (encoder==NULL) {
@@ -108,13 +144,13 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
       delete(encoder);
       return MALLOC_FAIL;
     }
-    iOutData->iBitstream = (uint8*)malloc(FrameSize);
-    iOutData->iBitstreamSize = FrameSize;
+    iOutData->iBitstream = (uint8*)malloc(iFrameSize);
+    iOutData->iBitstreamSize = iFrameSize;
 
     // Set Encoder params
-    iInputFormat->iFrameWidth = iSrcWidth;
-    iInputFormat->iFrameHeight = iSrcHeight;
-    iInputFormat->iFrameRate = (OsclFloat)(iSrcFrameRate);
+    iInputFormat->iFrameWidth = srcWidth;
+    iInputFormat->iFrameHeight = srcHeight;
+    iInputFormat->iFrameRate = (OsclFloat)(srcFrameRate);
 
 
     jfieldID iFrameOrientation = (env)->GetFieldID(objClass,"frameOrientation","I");
@@ -222,40 +258,6 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     jint result = encoder->Initialize(iInputFormat,iEncodeParam);
     __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Init encoder %d", result);
     return result;
-	
-
-    // Set Encoder params
-    /*
-	iInputFormat->iFrameWidth = width;
-    iInputFormat->iFrameHeight = height;
-    iInputFormat->iFrameRate = (OsclFloat)(framerate);
-    iInputFormat->iFrameOrientation = 0;
-    iInputFormat->iVideoFormat = EAVCEI_VDOFMT_YUV420SEMIPLANAR;
-
-    iEncodeParam->iEncodeID = 0;
-    iEncodeParam->iProfile = EAVCEI_PROFILE_BASELINE;
-    iEncodeParam->iLevel = EAVCEI_LEVEL_13 ;// EAVCEI_LEVEL_1B;
-    iEncodeParam->iNumLayer = 1;
-    iEncodeParam->iFrameWidth[0] = iInputFormat->iFrameWidth;
-    iEncodeParam->iFrameHeight[0] = iInputFormat->iFrameHeight;
-    iEncodeParam->iBitRate[0] = 96000;
-    iEncodeParam->iFrameRate[0] = (OsclFloat)iInputFormat->iFrameRate;
-    iEncodeParam->iEncMode = EAVCEI_ENCMODE_TWOWAY;  // EAVCEI_ENCMODE_STREAMING EAVCEI_ENCMODE_TWOWAY;
-    iEncodeParam->iOutOfBandParamSet = true;
-    iEncodeParam->iOutputFormat = EAVCEI_OUTPUT_RTP;
-    iEncodeParam->iPacketSize = 1400;
-    iEncodeParam->iRateControlType = EAVCEI_RC_CBR_1;
-    iEncodeParam->iBufferDelay = (OsclFloat)2.0;
-    iEncodeParam->iIquant[0]=15;
-    iEncodeParam->iPquant[0]=12;
-    iEncodeParam->iBquant[0]=0;
-    iEncodeParam->iSceneDetection = true; //false;
-    iEncodeParam->iIFrameInterval = 3; //15;
-    iEncodeParam->iNumIntraMBRefresh = 50;
-    iEncodeParam->iClipDuration = 0;
-    iEncodeParam->iFSIBuff = NULL;
-    iEncodeParam->iFSIBuffLength = 0;
-	*/
 }
 
 /*
@@ -272,7 +274,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
         result = (env)->NewByteArray(NalSize);
         (env)->SetByteArrayRegion(result, 0, NalSize, (jbyte*)NalBuff);
     } else {
-        __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,  "NAL fail with code: %d",status);
+        __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "NAL fail with code: %d", iStatus);
         result = (env)->NewByteArray(0);
     }
     free(NalBuff);
@@ -283,39 +285,68 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
  * Method:    EncodeFrame
  */
 JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_EncodeFrame
-  (JNIEnv *env, jclass iclass, jbyteArray frame, jlong timestamp)
+  (JNIEnv *env, jclass iclass, jbyteArray frame, jlong timestamp, jboolean mirroring, jfloat scalingFactor)
 {
+    pthread_mutex_lock(&iMutex);
+
     jbyteArray result;
+    jint frameLength = env->GetArrayLength(frame);
+    if (frameLength > iSrcBufferLen) {
+        iSrcBuffer = (uint8*)realloc(iSrcBuffer, frameLength);
+        iSrcBufferLen = frameLength;
+    }
+    env->GetByteArrayRegion (frame, (jint)0, (jint)frameLength, (jbyte*)iSrcBuffer);
 
-    // EncodeFrame
-    jint len = env->GetArrayLength(frame);
-    uint8* data = (uint8*)malloc(len);
-    env->GetByteArrayRegion (frame, (jint)0, (jint)len, (jbyte*)data);
+    // Scale the frame
+    if (scalingFactor != 1) {
+        frameLength = frameLength * scalingFactor * scalingFactor;
+        if (frameLength > iDestBufferLen) {
+            iDestBuffer = (uint8*)realloc(iDestBuffer, frameLength);
+            iDestBufferLen = frameLength;
+        }
+        scaleFrame(iSrcBuffer, iDestBuffer, iInputFormat->iFrameWidth, iInputFormat->iFrameHeight, scalingFactor);
+        if (frameLength > iSrcBufferLen) {
+            iSrcBuffer = (uint8*)realloc(iSrcBuffer, frameLength);
+            iSrcBufferLen = frameLength;
+        }
+        memcpy(iSrcBuffer, iDestBuffer, frameLength);
+    }
 
-    iInData->iSource=(uint8*)data;
+    // Mirror the frame
+    if (mirroring == JNI_TRUE) {
+        if (frameLength > iDestBufferLen) {
+            iDestBuffer = (uint8*)realloc(iDestBuffer, frameLength);
+            iDestBufferLen = frameLength;
+        }
+
+        mirrorFrame(iSrcBuffer, iDestBuffer, iInputFormat->iFrameWidth, iInputFormat->iFrameHeight);
+        memcpy(iSrcBuffer, iDestBuffer, frameLength);
+    }
+
+    iInData->iSource = iSrcBuffer;
     iInData->iTimeStamp = timestamp;
-    status = encoder->Encode(iInData);
-    if(status != EAVCEI_SUCCESS){
-        __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Encode fail with code: %d",status);
+    iStatus = encoder->Encode(iInData);
+    if(iStatus != EAVCEI_SUCCESS){
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Encode fail with code: %d", iStatus);
         result=(env)->NewByteArray(0);
-        free(data);
+        pthread_mutex_unlock(&iMutex);
         return result;
     }
 
     int remainingByte = 0;
-    iOutData->iBitstreamSize = FrameSize;
-    status = encoder->GetOutput(iOutData,&remainingByte);
-    if(status != EAVCEI_SUCCESS){
-        __android_log_print(ANDROID_LOG_INFO, LOG_TAG,  "Get output fail with code: %d",status);
+    iOutData->iBitstreamSize = iFrameSize;
+    iStatus = encoder->GetOutput(iOutData,&remainingByte);
+    if(iStatus != EAVCEI_SUCCESS){
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Get output fail with code: %d", iStatus);
         result=(env)->NewByteArray(0);
-        free(data);
+        pthread_mutex_unlock(&iMutex);
         return result;
     }
 
     // Copy aOutBuffer into result
     result=(env)->NewByteArray(iOutData->iBitstreamSize);
     (env)->SetByteArrayRegion(result, 0, iOutData->iBitstreamSize, (jbyte*)iOutData->iBitstream);
-    free(data);
+    pthread_mutex_unlock(&iMutex);
     return result;
 }
 
@@ -324,7 +355,7 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_getLastEncodeStatus
   (JNIEnv *env, jclass clazz){
-    return status;
+    return iStatus;
 }
 
 /*
@@ -332,11 +363,23 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
  */
 JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_DeinitEncoder
   (JNIEnv *env, jclass clazz){
+    pthread_mutex_lock(&iMutex);
     delete(encoder);
     free(iInputFormat);
+    if (iSrcBuffer != NULL) {
+        free(iSrcBuffer);
+        iSrcBuffer = NULL;
+        iSrcBufferLen = 0;
+    }
+    if (iDestBuffer != NULL) {
+        free(iDestBuffer);
+        iDestBuffer = NULL;
+        iDestBufferLen = 0;
+    }
     free(iEncodeParam);
     free(iInData);
     free(iOutData);
+    pthread_mutex_unlock(&iMutex);
     return 1;
 }
 
@@ -357,3 +400,104 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 bail:
     return result;
 }
+
+/*
+ * Scale method
+ * @author Deutsche Telekom
+ */
+void scaleFrame(uint8* sourceBuffer, uint8* destBuffer, int destWidth, int destHeight, float scalingFactor) {
+    int i, j;
+
+    int sourceWidth = destWidth / scalingFactor;
+    int sourceHeight = destHeight / scalingFactor;
+
+    int uvBeginSource = sourceWidth * sourceHeight;
+    int uvBeginDest = destWidth * destHeight;
+
+    int offset1 = 2 * destWidth;
+    int offset2 = 4 * destWidth;
+
+    uint8 pixel1;
+    uint8 pixel2;
+    uint8 pixel3;
+    uint8 pixel4;
+
+    // Y value
+    for (i = 0; i < destHeight; i++) {
+        for (j = 0; j < destWidth; j++) {
+            pixel1 = sourceBuffer[i * offset2 + 2 * j];
+            pixel2 = sourceBuffer[i * offset2 + 2 * j + 1];
+            pixel3 = sourceBuffer[i * offset2 + offset1 + 2 * j];
+            pixel4 = sourceBuffer[i * offset2 + offset1 + 2 * j + 1];
+
+            // Calculate average of the 4 pixels
+            destBuffer[i * destWidth + j] = (uint8)(((int)pixel1 + pixel2 + pixel3 + pixel4) / 4);
+        }
+    }
+
+    // UV value
+    for (i = 0; i < destHeight / 2; i++) {
+        for (j = 0; j < destWidth / 2; j++) {
+            // U value
+            pixel1 = sourceBuffer[uvBeginSource + i * offset2 + 4 * j];
+            pixel2 = sourceBuffer[uvBeginSource + i * offset2 + 4 * j + 2];
+            pixel3 = sourceBuffer[uvBeginSource + i * offset2 + offset1 + 4 * j];
+            pixel4 = sourceBuffer[uvBeginSource + i * offset2 + offset1 + 4 * j + 2];
+
+            // Calculate average of the 4 pixels
+            destBuffer[uvBeginDest + i * destWidth + 2 * j] = (uint8)(((int)pixel1 + pixel2 + pixel3 + pixel4) / 4);
+
+            // V value
+            pixel1 = sourceBuffer[uvBeginSource + i * offset2 + 4 * j + 1];
+            pixel2 = sourceBuffer[uvBeginSource + i * offset2 + 4 * j + 3];
+            pixel3 = sourceBuffer[uvBeginSource + i * offset2 + offset1 + 4 * j + 1];
+            pixel4 = sourceBuffer[uvBeginSource + i * offset2 + offset1 + 4 * j + 3];
+
+            // Calculate average of the 4 pixels
+            destBuffer[uvBeginDest + i * destWidth + 2 * j + 1] = (uint8)(((int)pixel1 + pixel2 + pixel3 + pixel4) / 4);
+        }
+    }
+}
+
+/*
+ * Mirroring method (horizontal and vertival)
+ * @author Deutsche Telekom
+ */
+void mirrorFrame(uint8* sourceBuffer, uint8* destBuffer, int width, int height) {
+    int i, j;
+    int uvBegin = height * width;
+
+    int mirYValueFrom = 0;
+    int mirYValueTo = 0;
+    int rotUValueFrom = 0;
+    int rotUValueTo = 0;
+    int rotVValueFrom = 0;
+    int rotVValueTo = 0;
+
+    int halfHeight = height >> 1;
+    int halfWidth = width >> 1;
+
+    // Y value
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            mirYValueFrom = (height - i) * width - j - 1;
+            mirYValueTo = i * width + j;
+
+            destBuffer[mirYValueTo] = sourceBuffer[mirYValueFrom];
+
+            // UV value
+            if ((i < halfHeight) && (j < halfWidth)) {
+                rotUValueFrom = uvBegin + (halfHeight - i) * width - 2 * j - 2;
+                rotUValueTo = uvBegin + i * width + 2 * j;
+                rotVValueFrom = uvBegin + (halfHeight - i) * width - 2 * j - 1;
+                rotVValueTo = uvBegin + i * width + 2 * j + 1;
+
+                // U value
+                destBuffer[rotUValueTo] = sourceBuffer[rotUValueFrom];
+                // V value
+                destBuffer[rotVValueTo] = sourceBuffer[rotVValueFrom];
+            }
+        }
+    }
+}
+

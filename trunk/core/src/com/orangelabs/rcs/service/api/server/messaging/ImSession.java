@@ -21,7 +21,6 @@ package com.orangelabs.rcs.service.api.server.messaging;
 import java.util.List;
 
 import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
@@ -32,6 +31,7 @@ import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -276,6 +276,17 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		return msgId;
 	}
 
+    /**
+     * Send a geolocation
+     * 
+     * @param geoloc Geolocation
+     * @return Message ID
+     */
+    public String sendGeolocation(GeolocPush geoloc) {
+        // TODO: NOT YET IMPLEMENTED
+        return null;
+    }
+
 	/**
 	 * Set is composing status
 	 * 
@@ -353,7 +364,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionStarted();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -366,16 +377,16 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
     /**
      * Session has been aborted
      * 
-	 * @param status Termination status
+	 * @param reason Termination reason
 	 */
-    public void handleSessionAborted(int status) {
+    public void handleSessionAborted(int reason) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session aborted");
+				logger.info("Session aborted (reason " + reason + ")");
 			}
 	
 			// Update rich messaging history
-			if (status == ImsServiceSession.TERMINATION_BY_USER) {
+			if (reason == ImsServiceSession.TERMINATION_BY_USER) {
 				RichMessaging.getInstance().addChatSessionTerminationByUser(session);
 			} else {
 				RichMessaging.getInstance().addChatSessionTermination(session);
@@ -385,8 +396,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleSessionAborted();
-	            } catch (RemoteException e) {
+	            	listeners.getBroadcastItem(i).handleSessionAborted(reason);
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -416,7 +427,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -448,7 +459,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleReceiveMessage(message);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -476,7 +487,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	    			// These errors are not logged
 	    			break;
 		    	case ChatError.SESSION_INITIATION_DECLINED:
-					RichMessaging.getInstance().addChatSessionTerminationByUser(session);
+					RichMessaging.getInstance().addChatSessionTermination(session);
 		    		break;
 		    	case ChatError.SESSION_INITIATION_FAILED:
 		    	case ChatError.SESSION_INITIATION_CANCELLED:
@@ -493,7 +504,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -523,7 +534,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleIsComposingEvent(contact, status);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -554,7 +565,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleConferenceEvent(contact, contactDisplayname, state);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -584,7 +595,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -608,7 +619,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleAddParticipantSuccessful();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -634,7 +645,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleAddParticipantFailed(reason);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}

@@ -534,11 +534,11 @@ public class SipUtils {
 	        if (acceptHeader != null) {
 	        	// Update existing header with SIP instance
 		        acceptHeader.setValue(acceptHeader.getValue() + ";" +
-		        		SipUtils.SIP_INSTANCE_PARAM + "=" + instanceId);
+	        		SipUtils.SIP_INSTANCE_PARAM + "=\"" + instanceId + "\"");
 	        } else {
 	        	// Add header with SIP instance
 	            Header header = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_ACCEPT_CONTACT, "*;" +
-	            		SipUtils.SIP_INSTANCE_PARAM + "=" + instanceId);
+            		SipUtils.SIP_INSTANCE_PARAM + "=\"" + instanceId + "\"");
 	            message.addHeader(header);
 	        }
 	    }

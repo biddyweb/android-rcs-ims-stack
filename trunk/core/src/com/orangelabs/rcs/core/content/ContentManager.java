@@ -123,12 +123,10 @@ public class ContentManager{
 	    		// Video content
 	    		return new VideoContent(url, mime, size);
 	        }
-	    	if (mime.startsWith("application/")) {
-	    		// File content
-	    		return new FileContent(url, size);
-	    	}
 		}
-		return null;
+		
+		// File content
+		return new FileContent(url, size);
 	}
 
     /**

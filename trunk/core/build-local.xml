@@ -27,10 +27,11 @@
 
 	<delete file="${terminal.api}"/>
     	
-	<jar destfile="${terminal.api}" basedir="${terminal.root}/bin"
+	<jar destfile="${terminal.api}" basedir="${terminal.root}/bin/classes"
 		includesfile="${terminal.root}/jarfiles.txt">
-    </jar>
-    
+	</jar>
     </target>
+
+
 </project>
 

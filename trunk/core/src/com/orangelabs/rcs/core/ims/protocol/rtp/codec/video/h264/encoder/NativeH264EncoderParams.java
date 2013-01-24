@@ -18,6 +18,12 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264TypeLevel;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264TypeLevel.H264ConstraintSetFlagType;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264TypeProfile;
+
 /**
  * H264 Encoder settings
  *
@@ -83,34 +89,180 @@ public class NativeH264EncoderParams {
 
     // ----- Properties -----
 
+    /**
+     * Contains the width in pixels of the input frame.
+     */
     private int frameWidth;
+
+    /**
+     * Contains the height in pixels of the input frame.
+     */
     private int frameHeight;
+
+    /**
+     * Contains the input frame rate in the unit of frame per second.
+     */
     private float frameRate;
+
+    /**
+     * Contains Frame Orientation. Used for RGB input. 1 means Bottom_UP RGB, 0
+     * means Top_Down RGB, -1 for video formats other than RGB
+     */
     private int frameOrientation; // TODO not implemented yet on the codec side
+
+    /**
+     * Contains the format of the input video, e.g., YUV 4:2:0, UYVY, RGB24,
+     * etc.
+     */
     private int videoFormat;
+
+    /**
+     * Specifies an ID that will be used to specify this encoder while returning
+     * the bitstream in asynchronous mode.
+     */
+
     private int encodeID;
+    /**
+     * Specifies the targeted profile, and will also specifies available tools
+     * for iEncMode. If default is used, encoder will choose its own preferred
+     * profile. If autodetect is used, encoder will check other settings and
+     * choose the right profile that doesn't have any conflicts.
+     */
     private int profile;
+
+    /**
+     * Specifies the targeted profile IOP, composed of the values of constraint
+     * flags
+     */
+    private byte profileIOP;
+
+    /**
+     * Specifies the target level When present, other settings will be checked
+     * against the range allowable by this target level. Fail will returned upon
+     * Initialize call. If not known, users must set it to autodetect. Encoder
+     * will calculate the right level that doesn't conflict with other settings.
+     */
     private int level;
+
+    /**
+     * Specifies whether base only (numLayer = 1) or base + enhancement layer
+     * (numLayer =2 ) is to be used.
+     */
     private int numLayer;
+
+    /**
+     * Specifies the bit rate in bit per second.
+     */
     private int bitRate;
+
+    /**
+     * Specifies the encoding mode. This translates to the complexity of
+     * encoding modes and error resilient tools.
+     */
     private int encMode;
+
+    /**
+     * Specifies that SPS and PPS are retrieved first and sent out-of-band
+     */
     private boolean outOfBandParamSet;
+
+    /**
+     * Specifies the desired output format.
+     */
     private int outputFormat;
+
+    /**
+     * Specifies the packet size in bytes which represents the desired number of
+     * bytes per NAL. If this number is set to 0, the encoder will encode the
+     * entire slice group as one NAL.
+     */
     private int packetSize;
+
+    /**
+     * Specifies the rate control algorithm among one of the following constant
+     * Q, CBR and VBR.
+     */
     private int rateControlType;
+
+    /**
+     * Specifies the VBV buffer size which determines the end-to-end delay
+     * between the encoder and the decoder. The size is in unit of seconds. For
+     * download application, the buffer size can be larger than the streaming
+     * application. For 2-way application, this buffer shall be kept minimal.
+     * For a special case, in VBR mode, iBufferDelay will be set to -1 to allow
+     * buffer underflow.
+     */
     private float bufferDelay;
+
+    /**
+     * Specifies the initial quantization parameter for the first I-frame. If
+     * constant Q rate control is used, this QP will be used for all the
+     * I-frames. This number must be set between 1 and 31, otherwise,
+     * Initialize() will fail.
+     */
     private int iquant;
+
+    /**
+     * Specifies the initial quantization parameter for the first P-frame. If
+     * constant Q rate control is used, this QP will be used for all the
+     * P-frames. This number must be set between 1 and 31, otherwise,
+     * Initialize() will fail.
+     */
     private int pquant;
+
+    /**
+     * Specifies the initial quantization parameter for the first B-frame. If
+     * constant Q rate control is used, this QP will be used for all the
+     * B-frames. This number must be set between 1 and 31, otherwise,
+     * Initialize() will fail.
+     */
     private int bquant;
+
+    /**
+     * Specifies automatic scene detection where I-frame will be used the the
+     * first frame in a new scene.
+     */
     private boolean sceneDetection;
+
+    /**
+     * Specifies the maximum period in seconds between 2 INTRA frames. An INTRA
+     * mode is forced to a frame once this interval is reached. When there is
+     * only one I-frame is present at the beginning of the clip, iFrameInterval
+     * should be set to -1. For all I-frames coding this number should be set to
+     * 0.
+     */
     private int iFrameInterval;
+
+    /**
+     * According to iIFrameInterval setting, the minimum number of intra MB per
+     * frame is optimally calculated for error resiliency. However, when
+     * iIFrameInterval is set to -1, numIntraMBRefresh must be specified to
+     * guarantee the minimum number of intra macroblocks per frame.
+     */
     private int numIntraMBRefresh;
+
+    /**
+     * Specifies the duration of the clip in millisecond, needed for VBR encode.
+     * Set to 0 if unknown.
+     */
     private int clipDuration;
+
+    /**
+     * Specify FSI Buffer input
+     */
     private byte[] fSIBuff;
+
+    /**
+     * Specify FSI Buffer Length
+     */
     private int fSIBuffLength;
 
-    // ----- Constructors -----
 
+// ----- Constructors -----
+
+    /**
+     * Constructor for native H264Encoder parameters
+     */
     public NativeH264EncoderParams() {
         // Default parameter that were being used in the codec, some of them
         // hard coded
@@ -121,6 +273,7 @@ public class NativeH264EncoderParams {
         this.videoFormat = VIDEO_FORMAT_YUV420SEMIPLANAR;
         this.encodeID = 0;
         this.profile = PROFILE_BASELINE;
+        this.profileIOP = 0;
         this.level = LEVEL_1B;
         this.numLayer = 1;
         this.bitRate = 64000;
@@ -141,8 +294,22 @@ public class NativeH264EncoderParams {
         this.fSIBuffLength = 0;
     }
 
-    public NativeH264EncoderParams(int profile, int level, int frameWidth, int frameHeight,
-    		int bitRate, float frameRate, int packetSize) {
+    /**
+     * Constructor for native H264Encoder parameters
+     * 
+     * @param profileType Profile type
+     * @param profileIOP Profile IOP
+     * @param levelType Profile level type
+     * @param frameWidth Width in pixels of the input frame
+     * @param frameHeight Height in pixels of the input frame
+     * @param bitRate Bit rate in bit per second
+     * @param frameRate Frame rate in the unit of frame per second
+     * @param packetSize Packet size in bytes which represents the desired
+     *            number of bytes per NAL
+     */
+    public NativeH264EncoderParams(H264TypeProfile profileType, byte profileIOP, H264TypeLevel levelType,
+            int frameWidth, int frameHeight,
+            int bitRate, float frameRate, int packetSize) {
         this(); // to fill the default parameters
 
         this.frameWidth = frameWidth;
@@ -150,11 +317,35 @@ public class NativeH264EncoderParams {
         this.bitRate = bitRate;
         this.frameRate = frameRate;
         this.packetSize = packetSize;
-        setProfile(profile);
-        setLevel(level);
+        setProfile(profileType);
+        setLevel(levelType);
+        this.profileIOP = profileIOP;
     }
 
     // ----- Getters and Setters -----
+
+    /**
+     * Method to set profiles and level from a given codec parameter string
+     *
+     * @param codecParams Codec parameters
+     */
+    public void setProfilesAndLevel(String codecParams) {
+        String profile_level_id = H264Config.getCodecProfileLevelId(codecParams);
+        Byte profile_idc = H264Profile.getProfileIDCFromLevelId(profile_level_id);
+        Byte profile_iop = H264Profile.getProfileIOPFromLevelId(profile_level_id);
+        Byte level_idc = H264Profile.getLevelIDCFromLevelId(profile_level_id);
+
+        if (profile_idc != null && profile_iop != null && level_idc != null) {
+            // constraintSet3Flag is the X bit on YYYX YYYY
+            int constraintSet3FlagValue = ((profile_iop >> 4) & 0x01);
+            H264ConstraintSetFlagType constraintSet3Flag = ((constraintSet3FlagValue == 1) ? H264ConstraintSetFlagType.TRUE
+                    : H264ConstraintSetFlagType.FALSE);
+
+            setProfileIOP(profile_iop < 0 ? 0 : profile_iop);
+            setProfile(H264TypeProfile.getH264ProfileType(profile_idc));
+            setLevel(H264TypeLevel.getH264LevelType(level_idc, constraintSet3Flag));
+        }
+    }
 
     public int getFrameWidth() {
         return frameWidth;
@@ -208,16 +399,24 @@ public class NativeH264EncoderParams {
         return profile;
     }
 
-    public void setProfile(int profile) {
-        this.profile = profile;
+    public void setProfile(H264TypeProfile profile) {
+        this.profile = parseH264TypeProfile(profile);
+    }
+
+    public byte getProfileIOP() {
+        return profileIOP;
+    }
+
+    public void setProfileIOP(byte profileIOP) {
+        this.profileIOP = profileIOP;
     }
 
     public int getLevel() {
         return level;
     }
 
-    public void setLevel(int level) {
-        this.level = level;
+    public void setLevel(H264TypeLevel level) {
+        this.level = parseH264TypeLevel(level);
     }
 
     public int getNumLayer() {
@@ -355,4 +554,75 @@ public class NativeH264EncoderParams {
     public void setFSIBuffLength(int fSIBuffLength) {
         this.fSIBuffLength = fSIBuffLength;
     }
+
+    /**
+     * Parse {@link H264TypeLevel} to map encode parameter 'Level'
+     *
+     * @param level
+     * @return map value if valid type, otherwise return <code>-1</code>
+     */
+    public static int parseH264TypeLevel(H264TypeLevel level) {
+        if (level == H264TypeLevel.LEVEL_1) {
+            return LEVEL_1;
+        } else if (level == H264TypeLevel.LEVEL_1B) {
+            return LEVEL_1B;
+        } else if (level == H264TypeLevel.LEVEL_1_1) {
+            return LEVEL_11;
+        } else if (level == H264TypeLevel.LEVEL_1_2) {
+            return LEVEL_12;
+        } else if (level == H264TypeLevel.LEVEL_1_3) {
+            return LEVEL_13;
+        } else if (level == H264TypeLevel.LEVEL_2) {
+            return LEVEL_2;
+        } else if (level == H264TypeLevel.LEVEL_2_1) {
+            return LEVEL_21;
+        } else if (level == H264TypeLevel.LEVEL_2_2) {
+            return LEVEL_22;
+        } else if (level == H264TypeLevel.LEVEL_3) {
+            return LEVEL_3;
+        } else if (level == H264TypeLevel.LEVEL_3_1) {
+            return LEVEL_31;
+        } else if (level == H264TypeLevel.LEVEL_3_2) {
+            return LEVEL_32;
+        } else if (level == H264TypeLevel.LEVEL_4) {
+            return LEVEL_4;
+        } else if (level == H264TypeLevel.LEVEL_4_1) {
+            return LEVEL_41;
+        } else if (level == H264TypeLevel.LEVEL_4_2) {
+            return LEVEL_42;
+        } else if (level == H264TypeLevel.LEVEL_5) {
+            return LEVEL_5;
+        } else if (level == H264TypeLevel.LEVEL_5_1) {
+            return LEVEL_51;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Parse {@link H264TypeProfile} to map encode parameter 'Profile'
+     *
+     * @param profile
+     * @return map value if valid type, otherwise <code>PROFILE_DEFAULT<code>
+     */
+    public static int parseH264TypeProfile(H264TypeProfile profile) {
+        if (profile == H264TypeProfile.PROFILE_BASELINE) {
+            return PROFILE_BASELINE;
+        } else if (profile == H264TypeProfile.PROFILE_MAIN) {
+            return PROFILE_MAIN;
+        } else if (profile == H264TypeProfile.PROFILE_EXTENDED) {
+            return PROFILE_EXTENDED;
+        } else if (profile == H264TypeProfile.PROFILE_HIGH) {
+            return PROFILE_HIGH;
+        } else if (profile == H264TypeProfile.PROFILE_HIGH10) {
+            return PROFILE_HIGH10;
+        } else if (profile == H264TypeProfile.PROFILE_HIGH422) {
+            return PROFILE_HIGH422;
+        } else if (profile == H264TypeProfile.PROFILE_HIGH444) {
+            return PROFILE_HIGH444;
+        } else {
+            return PROFILE_DEFAULT;
+        }
+    }
+
 }

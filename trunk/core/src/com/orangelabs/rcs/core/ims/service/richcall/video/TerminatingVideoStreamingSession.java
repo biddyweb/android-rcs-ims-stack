@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.service.richcall.video;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.content.VideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -37,7 +36,6 @@ import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
-import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -85,26 +83,6 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             // Extract video codecs from SDP
             Vector<MediaDescription> medias = parser.getMediaDescriptions("video");
             Vector<VideoCodec> proposedCodecs = VideoCodecManager.extractVideoCodecsFromSdp(medias);
-
-            // Codec negotiation
-            VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    VideoRenderer.supportedMediaCodecs, proposedCodecs);
-            if (selectedVideoCodec == null) {
-                if (logger.isActivated()){
-                    logger.debug("Proposed codecs are not supported");
-                }
-                
-                // Send a 415 Unsupported media type response
-                send415Error(getDialogPath().getInvite());
-                
-                // Unsupported media type
-                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
-                return;
-            }
-            VideoContent content = (VideoContent)getContent();
-            content.setEncoding("video/" + selectedVideoCodec.getCodecName());
-            content.setWidth(selectedVideoCodec.getWidth());
-            content.setHeight(selectedVideoCodec.getHeight());
 
             // Notify listener
             getImsService().getImsModule().getCore().getListener().handleContentSharingStreamingInvitation(this);
@@ -155,6 +133,26 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                         ContentSharingError.MEDIA_RENDERER_NOT_INITIALIZED));
                 return;
             }
+
+            // Codec negotiation
+            VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
+                    getMediaRenderer().getSupportedMediaCodecs(), proposedCodecs);
+            if (selectedVideoCodec == null) {
+                if (logger.isActivated()){
+                    logger.debug("Proposed codecs are not supported");
+                }
+                
+                // Send a 415 Unsupported media type response
+                send415Error(getDialogPath().getInvite());
+                
+                // Unsupported media type
+                handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
+                return;
+            }
+//            VideoContent content = (VideoContent)getContent();
+//            content.setEncoding("video/" + selectedVideoCodec.getCodecName());
+//            content.setWidth(selectedVideoCodec.getWidth());
+//            content.setHeight(selectedVideoCodec.getHeight());
 
             // Set the media codec in media renderer
             getMediaRenderer().setMediaCodec(selectedVideoCodec.getMediaCodec());
@@ -345,7 +343,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             closeMediaSession();
 
             // Terminate session
-            terminateSession();
+            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
             // Remove the current session
             getImsService().removeSession(session);

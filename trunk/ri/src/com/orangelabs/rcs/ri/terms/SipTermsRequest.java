@@ -140,15 +140,17 @@ public class SipTermsRequest extends Activity implements ClientApiListener {
 	}
 
     /**
-     * IMS connected
+     * Client is connected to the IMS
      */
 	public void handleImsConnected() {
 	}
 
     /**
-     * IMS disconnected
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-	public void handleImsDisconnected() {
+	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
 		handler.post(new Runnable(){
 			public void run(){

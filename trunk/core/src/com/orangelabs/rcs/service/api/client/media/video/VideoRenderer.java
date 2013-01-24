@@ -29,9 +29,7 @@ import android.os.SystemClock;
 import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
@@ -42,6 +40,7 @@ import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
+import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -53,18 +52,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class VideoRenderer extends IMediaRenderer.Stub {
 
     /**
-     * List of supported video codecs
+     * List of supported video codecs.
      */
-    public static MediaCodec[] supportedMediaCodecs = {
-            new VideoCodec(H264Config.CODEC_NAME,
-            		H264VideoFormat.PAYLOAD,
-            		H264Config.CLOCK_RATE,
-            		H264Config.CODEC_PARAMS,
-                    H264Config.FRAME_RATE,
-                    H264Config.BIT_RATE,
-                    H264Config.VIDEO_WIDTH,
-                    H264Config.VIDEO_HEIGHT).getMediaCodec()
-    };
+    private MediaCodec[] supportedMediaCodecs = null;
 
     /**
      * Selected video codec
@@ -138,38 +128,32 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
+
+        // Init codecs
+        supportedMediaCodecs = CodecsUtils.getSupportedCodecList(); 
+
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+            setMediaCodec(supportedMediaCodecs[0]);
+        }
     }
 
     /**
-     * Constructor Force a video codec.
+     * Constructor Force a list of video codecs.
      *
-     * @param codec Video codec
+     * @param codecs ordered codecs list (prefered codec in first)
      */
-    public VideoRenderer(VideoCodec codec) {
+    public VideoRenderer(MediaCodec[] codecs) {
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
 
-        // Set the media codec
-        setMediaCodec(codec.getMediaCodec());
-    }
+        // Init codecs
+        supportedMediaCodecs = codecs;
 
-    /**
-     * Constructor Force a video codec.
-     *
-     * @param codec Video codec name
-     */
-    public VideoRenderer(String codec) {
-        // Set the local RTP port
-        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
-        reservePort(localRtpPort);
-        
-        // Set the media codec
-        for (int i = 0; i < supportedMediaCodecs.length; i++) {
-            if (codec.toLowerCase().contains(supportedMediaCodecs[i].getCodecName().toLowerCase())) {
-                setMediaCodec(supportedMediaCodecs[i]);
-                break;
-            }
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+            setMediaCodec(supportedMediaCodecs[0]);
         }
     }
 
@@ -267,9 +251,8 @@ public class VideoRenderer extends IMediaRenderer.Stub {
 
         try {
             // Init the video decoder
-            int result = NativeH264Decoder.InitDecoder(selectedVideoCodec.getWidth(),
-                    selectedVideoCodec.getHeight());
-            if (result == 0) {
+            int result = NativeH264Decoder.InitDecoder();
+            if (result != 0) {
                 notifyPlayerEventError("Decoder init failed with error code " + result);
                 return;
             }

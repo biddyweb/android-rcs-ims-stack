@@ -48,11 +48,11 @@ import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
@@ -69,6 +69,7 @@ import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Visio sharing activity - two half duplex live video sharing
@@ -228,16 +229,6 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	private Button stopIncomingBtn = null;
 
 	/**
-	 * Incoming video format
-	 */
-    private String incomingVideoFormat;
-
-	/**
-	 * Outgoing video format
-	 */
-    private String outgoingVideoFormat;
-
-	/**
 	 * Video width
 	 */
 	private int videoWidth;
@@ -247,44 +238,33 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 	 */
 	private int videoHeight;
 
+    /**
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Set layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        // no remove bar
- //       getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-   //             WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.richcall_visio_sharing);
 
         // Set title
         setTitle(R.string.title_video_sharing);
 
+        // Check if Prerecorded
         filename = getIntent().getStringExtra("filename");
         isPrerecordedSession = (filename!=null);
 
-        incomingVideoFormat = getIntent().getStringExtra("videotype");
-        
-        if (incomingVideoFormat == null) {
-            incomingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
-        }
-        
-        outgoingVideoFormat = RcsSettings.getInstance().getCShVideoFormat();
-        
+        // Video size
         videoWidth = getIntent().getIntExtra("videowidth", 0);
         videoHeight = getIntent().getIntExtra("videoheight", 0);
         if (videoHeight == 0 || videoWidth == 0) {
-            if (RcsSettings.getInstance().getCShVideoSize().equals("QVGA")) {
-                // QVGA
-            	videoWidth = 320;
-                videoHeight = 240;
-            } else {
-            	// QCIF
-                videoWidth = 176;
-                videoHeight = 144;
-            }
+            videoWidth = H264Config.VIDEO_WIDTH;
+            videoHeight = H264Config.VIDEO_HEIGHT;
         }
 
         // Texts and buttons
@@ -338,7 +318,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
         if (!isPrerecordedSession){
         	// Create the live video player
-            outgoingPlayer = new LiveVideoPlayer(outgoingVideoFormat);
+            outgoingPlayer = new LiveVideoPlayer();
+
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
             surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -355,7 +336,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (incomingVideoView == null) {
             incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
             incomingVideoView.setAspectRatio(videoWidth, videoHeight);
-            incomingRenderer = new VideoRenderer(incomingVideoFormat);
+            incomingRenderer = new VideoRenderer();
             incomingRenderer.setVideoSurface(incomingVideoView);
         }
 
@@ -526,15 +507,17 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     }
 
     /**
-     * IMS connected
+     * Client is connected to the IMS
      */
     public void handleImsConnected() {
     }
 
     /**
-     * IMS disconnected
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-    public void handleImsDisconnected() {
+    public void handleImsDisconnected(int reason) {
         // IMS has been disconnected
         handler.post(new Runnable() {
             public void run() {
@@ -576,21 +559,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (camera == null && !isPrerecordedSession) {
             // Start camera preview
             if (cam_num > 1) {
-                Method method = getCameraOpenMethod();
-                if (method != null) {
-                    try {
-                        camera = (Camera)method.invoke(camera, new Object[] {
-                            1
-                        });
-                        openedCameraId = 1;
-                    } catch (Exception e) {
-                        camera = Camera.open();
-                        openedCameraId = 0;
-                    }
-                } else {
-                    camera = Camera.open();
-                    openedCameraId = 0;
-                }
+                OpenCamera(1);
             } else {
                 camera = Camera.open();
                 openedCameraId = 0;
@@ -633,43 +602,59 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
      */
     private View.OnClickListener btnSwitchCamListener = new View.OnClickListener() {
         public void onClick(View v) {
-            // release camera
-            if (camera != null) {
-                camera.setPreviewCallback(null);
-                if (cameraPreviewRunning) {
-                    cameraPreviewRunning = false;
-                    camera.stopPreview();
-                }
-                camera.release();
-            }
-            // open the other camera
-            Method method = getCameraOpenMethod();
+            // Release camera
+            releaseCamera();
+
+            // Open the other camera
             if (openedCameraId == 0) {
-                try {
-                    camera = (Camera)method.invoke(camera, new Object[] {
-                        1
-                    });
-                    openedCameraId = 1;
-                } catch (Exception e) {
-                    camera = Camera.open();
-                    openedCameraId = 0;
-                }
+                OpenCamera(1);
             } else {
-                try {
-                    camera = (Camera)method.invoke(camera, new Object[] {
-                        0
-                    });
-                    openedCameraId = 0;
-                } catch (Exception e) {
-                    camera = Camera.open();
-                    openedCameraId = 0;
-                }
+                OpenCamera(0);
             }
-            // restart the preview
+
+            // Restart the preview
             startCameraPreview();
             camera.setPreviewCallback(outgoingPlayer);
         }
     };
+
+    /**
+     * Open a camera
+     *
+     * @param cameraId
+     */
+    private void OpenCamera(int cameraId) {
+        Method method = getCameraOpenMethod();
+        if (method != null) {
+            try {
+                camera = (Camera)method.invoke(camera, new Object[] {
+                    cameraId
+                });
+                openedCameraId = cameraId;
+            } catch (Exception e) {
+                camera = Camera.open();
+                openedCameraId = 0;
+            }
+        } else {
+            camera = Camera.open();
+            openedCameraId = 0;
+        }
+    }
+
+    /**
+     * Release the camera
+     */
+    private void releaseCamera() {
+        if (camera != null) {
+            camera.setPreviewCallback(null);
+            if (cameraPreviewRunning) {
+                cameraPreviewRunning = false;
+                camera.stopPreview();
+            }
+            camera.release();
+            camera = null;
+        }
+    }
 
     /**
      * Start outgoing session button listener
@@ -703,14 +688,15 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
      * Recreate the video player
      */
     private void recreateVideoPlayer(){
-    	if (!isPrerecordedSession){
+    	if (!isPrerecordedSession) {
     		// Create the live video player
-            outgoingPlayer = new LiveVideoPlayer(outgoingVideoFormat);
+            outgoingPlayer = new LiveVideoPlayer();
+            outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
             surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
             surface.addCallback(this);
     		camera.setPreviewCallback(outgoingPlayer);
-    	}else{
+        } else {
     		// Create the prerecorded video player
     		outgoingPrerecordedPlayer = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
     		outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
@@ -741,6 +727,11 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         public void handleSessionStarted() {
             handler.post(new Runnable() {
                 public void run() {
+                    // Update Camera
+                  videoHeight = outgoingPlayer.getMediaCodecHeight();
+                  videoWidth = outgoingPlayer.getMediaCodecWidth();
+                  reStartCameraPreview();
+
                     startOutgoingBtn.setEnabled(false);
                     stopOutgoingBtn.setEnabled(true);
                     hideProgressDialog();
@@ -749,7 +740,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
 
         // Session has been aborted
-        public void handleSessionAborted() {
+        public void handleSessionAborted(int reason) {
             handler.post(new Runnable() {
                 public void run() {
                     startOutgoingBtn.setEnabled(true);
@@ -809,7 +800,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
 
         // Session has been aborted
-        public void handleSessionAborted() {
+        public void handleSessionAborted(int reason) {
             handler.post(new Runnable() {
                 public void run() {
                     stopIncomingBtn.setEnabled(false);
@@ -996,8 +987,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             public void run() {
                 try {
                     // Initiate sharing
-                	if (!isPrerecordedSession){
-                		outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
+                	if (!isPrerecordedSession) {
+                        outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
                 	}else{
                 		outgoingCshSession = callApi.initiateVideoSharing(remoteContact, filename, outgoingPrerecordedPlayer);
                 	}
@@ -1052,21 +1043,48 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     /**
      * Start the camera preview
      */
+    private void reStartCameraPreview() {
+        if (camera != null) {
+            releaseCamera();
+            outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
+            OpenCamera(openedCameraId);
+        }
+        startCameraPreview();
+        camera.setPreviewCallback(outgoingPlayer);
+    }
+
+    /**
+     * Start the camera preview
+     */
     private void startCameraPreview() {
         if (camera != null) {
+            // Camera settings
             Camera.Parameters p = camera.getParameters();
-            // Init Camera
-            p.setPreviewSize(videoWidth, videoHeight);
-            p.setPreviewFormat(PixelFormat.YCbCr_420_SP);
-            // p.setPreviewFormat(ImageFormat.NV21);
-            // Try to set front camera if back camera doesn't support size
+            p.setPreviewFormat(PixelFormat.YCbCr_420_SP); //ImageFormat.NV21);
+
+            // Camera size
             List<Camera.Size> sizes = p.getSupportedPreviewSizes();
-            if (!sizes.contains(camera.new Size(videoWidth, videoHeight))) {
-                String cam_id = p.get("camera-id");
-                if (cam_id != null) {
-                    p.set("camera-id", 2);
-                    p.setRotation(270);
-                    p.setPreviewSize(videoHeight, videoWidth);
+            if (sizes.contains(camera.new Size(videoWidth, videoHeight))) {
+                p.setPreviewSize(videoWidth, videoHeight);
+                outgoingPlayer.setScalingFactor((float) 1);
+                if (logger.isActivated()) {
+                    logger.info("Camera preview initialized with size " + videoWidth + "x" + videoHeight + " with a 1 scale factor");
+                }
+            } else {
+                // Try to select double size and initialize scaling 0.5
+                if (sizes.contains(camera.new Size(2*videoWidth, 2*videoHeight))) {
+                    p.setPreviewSize(2*videoWidth, 2*videoHeight);
+                    outgoingPlayer.setScalingFactor((float) 0.5);
+                    if (logger.isActivated()) {
+                        logger.info("Camera preview initialized with size " + 2*videoWidth + "x" + 2*videoHeight + " with a 0.5 scale factor");
+                    }
+                } else {
+                    // Error
+                    if (logger.isActivated()) {
+                        logger.info("Camera preview can't be initialized with size " + videoWidth + "x" + videoHeight);
+                    }
+                    camera = null;
+                    return;
                 }
             }
             camera.setParameters(p);
@@ -1208,4 +1226,5 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 		}
 		return true;
 	}
+
 }

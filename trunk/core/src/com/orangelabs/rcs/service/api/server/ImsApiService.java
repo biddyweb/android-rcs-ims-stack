@@ -46,13 +46,13 @@ public class ImsApiService extends IImsApi.Stub {
 	}
     
 	/** 
-	 * Request IMS connection state
+	 * Is client connected to IMS
 	 * 
-	 * @return IMS connection state
+	 * @return Boolean
 	 */
     public boolean isImsConnected()throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Get IMS connection state");
+			logger.info("Is client connected to IMS");
 		}
 
 		try {

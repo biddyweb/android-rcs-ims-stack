@@ -504,15 +504,17 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     }  
     
     /**
-     * IMS connected
+     * Client is connected to the IMS
      */
 	public void handleImsConnected() {
 	}
 
     /**
-     * IMS disconnected
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-	public void handleImsDisconnected() {
+	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
@@ -562,7 +564,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable(){
 				public void run(){
 					// Session aborted

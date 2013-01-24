@@ -143,6 +143,11 @@ public class RcsCoreService extends Service implements CoreListener {
      */
     private AccountChangedReceiver accountChangedReceiver = null;
 
+    /**
+     * Stop by battery
+     */
+//    private boolean stopByBattery = false;
+
 	/**
 	 * The logger
 	 */
@@ -155,14 +160,14 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		// Set the terminal version
 		TerminalInfo.setProductVersion(getString(R.string.rcs_core_release_number));
-		
+
     	// Start the core
     	startCore();
     }
 
     @Override
     public void onDestroy() {
-        // Unregister account changed broadcast receiver
+        // Unregister broadcast receiver
 	    if (accountChangedReceiver != null) {
 	        try {
 	        	unregisterReceiver(accountChangedReceiver);
@@ -211,12 +216,30 @@ public class RcsCoreService extends Service implements CoreListener {
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTING);
 			getApplicationContext().sendBroadcast(intent);
             
-            // Terminal version
+			// Instantiate the settings manager
+            RcsSettings.createInstance(getApplicationContext());
+            
+            // Set the logger properties
+    		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
+    		String traceLevel = RcsSettings.getInstance().getTraceLevel();
+    		if (traceLevel.equalsIgnoreCase("DEBUG")) {
+        		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
+    		} else if (traceLevel.equalsIgnoreCase("INFO")) {
+        		Logger.traceLevel = Logger.INFO_LEVEL;
+    		} else if (traceLevel.equalsIgnoreCase("WARN")) {
+        		Logger.traceLevel = Logger.WARN_LEVEL;
+    		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
+        		Logger.traceLevel = Logger.ERROR_LEVEL;
+    		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
+        		Logger.traceLevel = Logger.FATAL_LEVEL;
+    		}
+
+    		// Terminal version
             if (logger.isActivated()) {
                 logger.info("My RCS software release is " + TerminalInfo.getProductVersion());
             }
-
-			// Instantiate the contacts manager
+    		
+    		// Instantiate the contacts manager
             ContactsManager.createInstance(getApplicationContext());
 
             // Instantiate the rich messaging history 
@@ -420,33 +443,42 @@ public class RcsCoreService extends Service implements CoreListener {
      * Core layer has been terminated
      */
     public void handleCoreLayerStopped() {
-		if (logger.isActivated()) {
-			logger.debug("Handle event core terminated");
-		}
-
-		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.rcs_core_stopped));
+        // Display a notification
+        if (logger.isActivated()) {
+            logger.debug("Handle event core terminated");
+        }
+        addRcsServiceNotification(false, getString(R.string.rcs_core_stopped));
     }
-    
+
     /**
      * Send registration status event
-     * 
+     *
      * @param status Status
      */
-    private void sendRegistrationStatusIntent(boolean status) {
+    private void sendRegistrationStatusIntent(boolean status, int reason) {
 		// TODO keep only one intent here
 
 		// Send registration intent
 		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
 		intent.putExtra("status", status);
+        intent.putExtra("reason", reason);
 		getApplicationContext().sendBroadcast(intent);
-		
+
 		// Send GSMA UI Connector intent
 		Intent intentGsma = new Intent(GsmaUiConnector.ACTION_REGISTRATION_CHANGED);
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_REGISTRATION_STATUS, status);
-		getApplicationContext().sendBroadcast(intentGsma);    	
+		getApplicationContext().sendBroadcast(intentGsma);
     }
-    
+
+    /**
+     * Send registration status event
+     *
+     * @param status Status
+     */
+    private void sendRegistrationStatusIntent(boolean status) {
+        sendRegistrationStatusIntent(status, ImsApiIntents.REASON_UNKNOWN);
+    }
+
 	/**
 	 * Handle "registration successful" event
 	 * 
@@ -485,15 +517,23 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * Handle "registration terminated" event
 	 */
 	public void handleRegistrationTerminated() {
-		if (logger.isActivated()) {
-			logger.debug("Handle event registration terminated");
-		}
-
-		// Send registration intent
-		sendRegistrationStatusIntent(false);
-
 		// Display a notification
-		addRcsServiceNotification(false, getString(R.string.rcs_core_ims_disconnected));
+	    
+        if (Core.getInstance().getImsModule().getImsConnectionManager().isDisconnectedByBattery()) {
+            if (logger.isActivated()) {
+                logger.debug("Handle event core terminated by battery");
+            }
+            // Send registration intent
+            sendRegistrationStatusIntent(false, ImsApiIntents.STOP_REASON_BATTERY_LOW);
+            addRcsServiceNotification(false, getString(R.string.rcs_core_ims_battery_disconnected));
+        } else {
+            if (logger.isActivated()) {
+                logger.debug("Handle event registration terminated");
+            }
+            // Send registration intent
+            sendRegistrationStatusIntent(false);
+            addRcsServiceNotification(false, getString(R.string.rcs_core_ims_disconnected));
+        }
 	}
 
     /**

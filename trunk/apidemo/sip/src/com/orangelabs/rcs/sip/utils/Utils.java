@@ -217,27 +217,6 @@ public class Utils {
 		return alert;
     }
     
-    /**
-	 * Show an info with a specific title
-	 * 
-	 * @param activity Activity
-	 * @param title Title of the dialog
-	 * @param items Items
-	 */
-    public static void showList(Activity activity, String title, CharSequence[] items) {
-        if (activity.isFinishing()) {
-        	return;
-        }
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-    	builder.setTitle(title);
-    	builder.setCancelable(false);
-    	builder.setPositiveButton(activity.getString(R.string.label_ok), null);
-        builder.setItems(items, null);
-        AlertDialog alert = builder.create();
-    	alert.show();
-    }
-    
 	/**
 	 * Show a progress dialog with the given parameters 
 	 * 

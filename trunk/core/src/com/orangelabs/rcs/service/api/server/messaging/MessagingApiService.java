@@ -27,7 +27,6 @@ import java.util.Vector;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
@@ -200,7 +199,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
      * @param File transfer session
      * @throws ServerApiException
      */
-    public IFileTransferSession transferFile(String contact, String file) throws ServerApiException {	
+    public IFileTransferSession transferFile(String contact, String file) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Transfer file " + file + " to " + contact);
 		}
@@ -237,7 +236,34 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			throw new ServerApiException(e.getMessage());
 		}
     }
-    
+
+    /**
+     * Transfer a file to a group of contacts
+     *
+     * @param contacts List of Contacts
+     * @param file File to be transfered
+     * @return File transfer session
+     * @throws ClientApiException
+     */
+    public IFileTransferSession transferFileToGroup(List<String> contacts, String file) throws ServerApiException {
+        if (logger.isActivated()) {
+            logger.info("Transfer file " + file + " to " + contacts.size() + " contacts");
+        }
+
+        // Check permission
+        ServerApiUtils.testPermission();
+
+        // Test IMS connection
+        ServerApiUtils.testIms();
+
+        try {
+            // TODO: NOT YET IMPLEMENTED
+            return null;
+        } catch (Exception e) {
+            throw new ServerApiException(e.getMessage());
+        }
+    }
+
 	/**
 	 * Get current file transfer session from its session id
 	 * 
@@ -775,7 +801,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}

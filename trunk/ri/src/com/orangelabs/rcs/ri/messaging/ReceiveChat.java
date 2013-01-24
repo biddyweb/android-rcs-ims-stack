@@ -187,15 +187,17 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
     }
     
     /**
-     * IMS connected
+     * Client is connected to the IMS
      */
 	public void handleImsConnected() {
 	}
 
     /**
-     * IMS disconnected
+     * Client is disconnected from the IMS
+     * 
+     * @param reason Disconnection reason
      */
-	public void handleImsDisconnected() {
+	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
 		handler.post(new Runnable(){
 			public void run(){
@@ -288,7 +290,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable(){
 				public void run(){
 					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_declined));

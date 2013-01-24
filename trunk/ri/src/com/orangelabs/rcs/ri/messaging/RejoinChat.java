@@ -167,11 +167,14 @@ public class RejoinChat {
 		public void handleSessionStarted() {
 			handler.post(new Runnable() { 
 				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Display chat view
 					try {
+	                    // Hide progress dialog
+						hideProgressDialog();
+	
+						// Remove listener now
+                		chatSession.removeSessionListener(chatSessionListener);
+
+						// Display chat view
 						Intent intent = new Intent(activity, GroupChatView.class);
 			        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		            	intent.putExtra("subject", chatSession.getSubject());
@@ -204,7 +207,7 @@ public class RejoinChat {
 		}	
 		
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog

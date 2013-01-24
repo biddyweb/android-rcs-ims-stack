@@ -2,6 +2,7 @@ package com.orangelabs.rcs.service.api.client.messaging;
 
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
  * Chat session interface
@@ -57,6 +58,9 @@ interface IChatSession {
 
 	// Send a text message
 	String sendMessage(in String text);
+
+	// Send a geolocation
+	String sendGeolocation(in GeolocPush geoloc);
 
 	// Set is composing status
 	void setIsComposingStatus(in boolean status);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.4.12"
+ android:versionName="2.5.0"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -18,8 +18,10 @@
 	<uses-permission android:name="com.android.browser.permission.READ_HISTORY_BOOKMARKS"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_CALL_LOG"/>
-	
-	<uses-permission android:name="com.orangelabs.rcs.permission.RCS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <uses-permission android:name="com.orangelabs.rcs.permission.RCS"/>
+
 
     <application android:icon="@drawable/ri_icon" android:label="@string/app_name">
 
@@ -43,6 +45,12 @@
                 <data android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.not-rcs-contact"/>
             </intent-filter>
         </activity>
+
+        <receiver android:name=".ReceiveImsStatus">
+            <intent-filter>
+                <action android:name="com.orangelabs.rcs.IMS_STATUS"/>
+            </intent-filter>
+        </receiver>
 
 		<!-- Terms RI -->
 

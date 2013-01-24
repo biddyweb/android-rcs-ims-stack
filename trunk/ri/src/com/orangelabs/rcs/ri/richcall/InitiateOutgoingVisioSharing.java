@@ -109,7 +109,6 @@ public class InitiateOutgoingVisioSharing extends Activity {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("contact", remote);
                     intent.putExtra("incoming", false);
-                    intent.putExtra("videotype", RcsSettings.getInstance().getCShVideoFormat());
                     getApplicationContext().startActivity(intent);
             	}
             };

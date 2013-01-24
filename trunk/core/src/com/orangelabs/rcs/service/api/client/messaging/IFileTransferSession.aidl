@@ -21,6 +21,18 @@ interface IFileTransferSession {
 	// Get filesize
 	long getFilesize();
 
+	// Get file thumbnail
+	String getFileThumbnail();
+
+	// Is group transfer
+	boolean isGroupTransfer();
+
+	// Is HTTP transfer
+	boolean isHttpTransfer();
+
+	// Get list of contacts (only for group transfer)
+	List<String> getContacts();
+
 	// Accept the session invitation
 	void acceptSession();
 
@@ -29,6 +41,9 @@ interface IFileTransferSession {
 
 	// Cancel the session
 	void cancelSession();
+
+	// Resume the session (only for HTTP transfer)
+	void resumeSession();
 
 	// Add session listener
 	void addSessionListener(in IFileTransferEventListener listener);

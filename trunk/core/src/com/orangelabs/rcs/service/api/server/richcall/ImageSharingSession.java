@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.service.api.server.richcall;
 
 import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
@@ -116,6 +115,19 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 		return session.getContent().getSize();
 	}
 
+    /**
+     * Get file thumbnail
+     * 
+     * @return String
+     */
+    public String getFileThumbnail() {
+        if (logger.isActivated()) {
+            logger.info("getFileThumbnail not yet implemented");
+        }
+        // TODO NOT YET IMPLEMENTED
+        return null;
+    }
+
 	/**
 	 * Accept the session invitation
 	 */
@@ -204,7 +216,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionStarted();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -217,12 +229,12 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
     /**
      * Session has been aborted
      * 
-	 * @param status Termination status
+	 * @param reason Termination reason
      */
-    public void handleSessionAborted(int status) {
+    public void handleSessionAborted(int reason) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session aborted");
+				logger.info("Session aborted (reason " + reason + ")");
 			}
 	
 			// Update rich call history
@@ -232,8 +244,8 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleSessionAborted();
-	            } catch (RemoteException e) {
+	            	listeners.getBroadcastItem(i).handleSessionAborted(reason);
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -256,19 +268,20 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 			}
 			
 	  		if (session.isImageTransfered()) {
-	  			// The image has been received, so do nothing
+				// The image has been received, so only remove session from the list
+		        RichCallApiService.removeImageSharingSession(session.getSessionID());
 	  			return;
 	  		}
 			
 			// Update rich call history
-			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TERMINATED);
+			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_FAILED);
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -300,7 +313,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSharingError(error.getErrorCode());
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -330,7 +343,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSharingProgress(currentSize, totalSize);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -359,7 +372,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleImageTransfered(filename);
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}

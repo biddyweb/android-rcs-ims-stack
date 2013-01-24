@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri;
 
+import com.orangelabs.rcs.service.api.client.Build;
+
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
@@ -42,8 +44,12 @@ public class AboutRI extends Activity {
         setTitle(R.string.menu_about);
         
         // Display release number
-        TextView textView = (TextView)findViewById(R.id.release);
-        textView.setText(getString(R.string.label_about_release) + " " +
-        		getString(R.string.release_number));
+        String appRelease = getString(R.string.release_number); 
+        TextView releaseView = (TextView)findViewById(R.id.release);
+        releaseView.setText(getString(R.string.label_about_release, appRelease));
+
+        String apiRelease = Build.GSMA_SUPPORTED_RELEASE + "_" + Build.API_CODENAME + "_" + Build.API_RELEASE;
+        TextView apiView = (TextView)findViewById(R.id.api);
+        apiView.setText(getString(R.string.label_about_api, apiRelease));
     }
 }

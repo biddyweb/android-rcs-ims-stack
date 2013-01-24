@@ -320,7 +320,7 @@ public class InitiateFileTransfer extends Activity {
 		}
 	
 		// Session has been aborted
-		public void handleSessionAborted() {
+		public void handleSessionAborted(int reason) {
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog

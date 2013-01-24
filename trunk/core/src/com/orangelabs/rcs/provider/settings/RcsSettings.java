@@ -311,54 +311,6 @@ public class RcsSettings {
     }
 
 	/**
-     * Get the CSh video format
-     *
-     * @return Video format as string
-     */
-	public String getCShVideoFormat() {
-		String result = null;
-		if (instance != null) {
-			result = readParameter(RcsSettingsData.CSH_VIDEO_FORMAT);
-		}
-		return result;
-	}
-
-	/**
-     * Set the CSh video format
-     *
-     * @param fmt Video format
-     */
-	public void setCShVideoFormat(String fmt) {
-		if (instance != null) {
-			writeParameter(RcsSettingsData.CSH_VIDEO_FORMAT, fmt);
-		}
-    }
-
-	/**
-     * Get the CSh video size
-     *
-     * @return Size (e.g. QCIF, QVGA)
-     */
-	public String getCShVideoSize() {
-		String result = null;
-		if (instance != null) {
-			result = readParameter(RcsSettingsData.CSH_VIDEO_SIZE);
-		}
-		return result;
-	}
-
-	/**
-     * Set the CSh video size
-     *
-     * @param size Video size
-     */
-	public void setCShVideoSize(String size) {
-		if (instance != null) {
-			writeParameter(RcsSettingsData.CSH_VIDEO_SIZE, size);
-		}
-    }
-
-	/**
      * Get the ringtone for file transfer invitation
      *
      * @return Ringtone URI or null if there is no ringtone
@@ -549,6 +501,32 @@ public class RcsSettings {
             writeParameter(RcsSettingsData.FREETEXT4, txt);
         }
 	}
+
+    /**
+     * Get the MinBatteryLevel
+     *
+     * @return int
+     */
+    public int getMinBatteryLevel() {
+        int result = 0;
+        if (instance != null) {
+            try {
+                result = Integer.parseInt(readParameter(RcsSettingsData.MIN_BATTERY_LEVEL));
+            } catch(Exception e) {}
+        }
+        return result;
+    }
+
+    /**
+     * Set the MinBatteryLevel
+     *
+     * @param int level
+     */
+    public void setMinBatteryLevel(int level) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.MIN_BATTERY_LEVEL, "" + level);
+        }
+    }
 
     /**
      * Get user profile username (i.e. username part of the IMPU)

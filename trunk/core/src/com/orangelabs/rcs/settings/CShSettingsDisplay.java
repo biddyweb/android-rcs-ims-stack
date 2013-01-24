@@ -20,7 +20,6 @@ package com.orangelabs.rcs.settings;
 
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
-import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
@@ -36,10 +35,6 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
 	private CheckBoxPreference beep;
 
 	private CheckBoxPreference vibrate;
-
-	private ListPreference videoFormat;
-	
-	private ListPreference videoSize;
 
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,16 +52,6 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
         vibrate.setPersistent(false);
         vibrate.setOnPreferenceChangeListener(this);
         vibrate.setChecked(RcsSettings.getInstance().isPhoneVibrateForCShInvitation());
-
-        videoFormat = (ListPreference)findPreference("csh_video_format");
-        videoFormat.setPersistent(false);
-        videoFormat.setOnPreferenceChangeListener(this);
-        videoFormat.setValue(RcsSettings.getInstance().getCShVideoFormat());
-
-        videoSize = (ListPreference)findPreference("csh_video_size");
-        videoSize.setPersistent(false);
-        videoSize.setOnPreferenceChangeListener(this);
-        videoSize.setValue(RcsSettings.getInstance().getCShVideoSize());
 	}
 
     public boolean onPreferenceChange(Preference preference, Object objValue) {
@@ -77,15 +62,7 @@ public class CShSettingsDisplay extends PreferenceActivity implements Preference
         if (preference.getKey().equals("csh_invitation_vibration")) {
         	Boolean state = (Boolean)objValue;
         	RcsSettings.getInstance().setPhoneVibrateForCShInvitation(state.booleanValue());
-    	} else
-        if (preference.getKey().equals("csh_video_format")) {
-        	String value = (String)objValue;
-        	RcsSettings.getInstance().setCShVideoFormat(value);
-    	} else
-        if (preference.getKey().equals("csh_video_size")) {
-        	String value = (String)objValue;
-        	RcsSettings.getInstance().setCShVideoSize(value);
-        }
+    	}
         return true;
     }    
 }

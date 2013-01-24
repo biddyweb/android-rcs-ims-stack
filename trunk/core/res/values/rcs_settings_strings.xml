@@ -4,7 +4,7 @@
 	<string name="rcs_settings_label_cancel">Cancel</string>
 
     <string name="rcs_settings_title_settings">Settings</string>
-	<string name="rcs_settings_title_about">About RCS</string>
+	<string name="rcs_settings_title_about">About Joyn</string>
 	<string name="rcs_settings_title_userprofile_settings">User profile settings</string>
 	<string name="rcs_settings_title_presence_settings">Presence settings</string>
 	<string name="rcs_settings_title_presence_invitation">Presence invitation settings</string>
@@ -16,7 +16,6 @@
 	<string name="rcs_settings_title_csh_settings">Content sharing settings</string>
 	<string name="rcs_settings_title_csh_invitation">Content sharing invitation settings</string>
 	<string name="rcs_settings_title_csh_available">Content sharing notification</string>
-	<string name="rcs_settings_title_video_settings">Video settings</string>
 
 	<string name="rcs_settings_menu_about">About</string>
 	<string name="rcs_settings_menu_help">More infos</string>
@@ -32,50 +31,46 @@
 	<string name="rcs_settings_summary_presence_ringtone">Ringtone for incoming presence sharing invitation</string>
 	<string name="rcs_settings_summary_filetransfer_ringtone">Ringtone for incoming file transfer invitation</string>
 	<string name="rcs_settings_summary_chat_ringtone">Ringtone for incoming chat invitation</string>
-	<string name="rcs_settings_summary_rcs_service_on">Select to turn off the RCS service</string>
-	<string name="rcs_settings_summary_rcs_service_off">Select to turn on the RCS service</string>
-	<string name="rcs_settings_summary_rcs_roaming">Connect to RCS service when roaming</string>
+	<string name="rcs_settings_summary_rcs_service_on">Select to turn off the Joyn service</string>
+	<string name="rcs_settings_summary_rcs_service_off">Select to turn on the Joyn service</string>
+	<string name="rcs_settings_summary_rcs_roaming">Connect to Joyn service when roaming</string>
 	<string name="rcs_settings_summary_edit_freetext">Edit your predefined free text</string>
 	<string name="rcs_settings_summary_csh_available">Beep when a content sharing may be initiated during the voice call</string>
 	<string name="rcs_settings_summary_video_format">Select the video codec</string>
 	<string name="rcs_settings_summary_video_size">Select the video display resolution</string>
-	
-	<string name="rcs_settings_label_video_format">Video format</string>
-	<string name="rcs_settings_label_video_size">Video resolution</string>
+    <string name="rcs_settings_summary_min_battery_level">Stop the Joyn service if battery low</string>
+
 	<string name="rcs_settings_label_beep">Phone beep</string>
     <string name="rcs_settings_label_vibrate">Phone vibrate</string>
     <string name="rcs_settings_label_ringtone">Phone ringtone</string>
-    <string name="rcs_settings_label_rcs_service">RCS service</string>
+    <string name="rcs_settings_label_rcs_service">Joyn service</string>
     <string name="rcs_settings_label_rcs_roaming">Roaming</string>
 	<string name="rcs_settings_label_confirm">Confirmation</string>
-	<string name="rcs_settings_label_rcs_service_shutdown">RCS service will be terminated</string>
-    <string name="rcs_settings_label_rcs_service_roaming_shutdown">You are currently in roaming, RCS service will be terminated</string>
-	<string name="rcs_settings_label_about">Rich Communication Suite application</string>
+	<string name="rcs_settings_label_rcs_service_shutdown">Joyn service will be terminated</string>
+    <string name="rcs_settings_label_rcs_service_roaming_shutdown">You are currently in roaming, Joyn service will be terminated</string>
+	<string name="rcs_settings_label_about">Joyn application</string>
 	<string name="rcs_settings_label_copyrights">Apache License Version 2.0</string>
 	<string name="rcs_settings_label_release">Release</string>
+
+    <string name="rcs_settings_label_min_battery_level">Minimum battery level</string>
+    <string name="rcs_settings_label_default_min_battery_level">0</string>
+    <string-array name="rcs_settings_list_battery_level_value">
+        <item>0</item>
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+    </string-array>
+    <string-array name="rcs_settings_list_battery_level_label">
+        <item>Never stop</item>
+        <item>5%</item>
+        <item>10%</item>
+        <item>20%</item>
+    </string-array>
 
 	<string name="rcs_settings_label_default_freetext_1">Hello world !</string>
 	<string name="rcs_settings_label_default_freetext_2">At Home</string>
 	<string name="rcs_settings_label_default_freetext_3">At work</string>
 	<string name="rcs_settings_label_default_freetext_4">On vacation</string>
-
-	<string name="rcs_settings_label_default_video_format">H264</string>
-    <string-array name="rcs_settings_list_video_format_value">
-        <item>H264</item>
-    </string-array>
-    <string-array name="rcs_settings_list_video_format_label">
-        <item>H.264</item>
-    </string-array>
-
-	<string name="rcs_settings_label_default_video_size">QCIF</string>
-    <string-array name="rcs_settings_list_video_size_value">
-        <item>QCIF</item>
-        <!-- <item>QVGA</item> -->
-    </string-array>
-    <string-array name="rcs_settings_list_video_size_label">
-        <item>Low (176x144)</item>
-        <!-- <item>High (320x240)</item> -->
-    </string-array>
 
 	<string name="rcs_settings_summary_userprofile_settings">Manage user profile settings</string>
 	<string name="rcs_settings_title_caller_id">Caller identity</string>

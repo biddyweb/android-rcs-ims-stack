@@ -207,7 +207,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionStarted();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -220,20 +220,20 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
     /**
      * Session has been aborted
      * 
-	 * @param status Termination status
+	 * @param reason Termination reason
      */
-    public void handleSessionAborted(int status) {
+    public void handleSessionAborted(int reason) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session aborted");
+				logger.info("Session aborted (reason " + reason + ")");
 			}
 	
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleSessionAborted();
-	            } catch (RemoteException e) {
+	            	listeners.getBroadcastItem(i).handleSessionAborted(reason);
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -260,7 +260,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionTerminatedByRemote();
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}
@@ -289,7 +289,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	        for (int i=0; i < N; i++) {
 	            try {
 	            	listeners.getBroadcastItem(i).handleSessionError(error.getErrorCode());
-	            } catch (RemoteException e) {
+	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
 	            	}

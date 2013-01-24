@@ -27,7 +27,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.os.RemoteException;
 
 /**
  * Client API
@@ -108,9 +107,10 @@ public abstract class ClientApi {
 				if (imsCoreApi.isImsConnected()) {
 					notifyEventImsConnected();
 				} else {
-					notifyEventImsDisconnected();
+					notifyEventImsDisconnected(ImsApiIntents.REASON_UNKNOWN);
 				}
-			} catch (RemoteException e) {
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
         }
 
@@ -203,7 +203,7 @@ public abstract class ClientApi {
 				notifyEventImsConnected();
 			} else {
 				// Disconnected from IMS
-				notifyEventImsDisconnected();
+				notifyEventImsDisconnected(intent.getIntExtra("reason", ImsApiIntents.REASON_UNKNOWN));
 			}
 		}
 	};	
@@ -221,10 +221,10 @@ public abstract class ClientApi {
 	/**
 	 * Notify listeners when service is not registered to the IMS
 	 */
-	private void notifyEventImsDisconnected() {
+	private void notifyEventImsDisconnected(int reason) {
 		for(int i=0; i < imsListeners.size(); i++) {
 			ImsEventListener imsListener = (ImsEventListener)imsListeners.elementAt(i);
-			imsListener.handleImsDisconnected();
+			imsListener.handleImsDisconnected(reason);
 		}
 	}	
 
