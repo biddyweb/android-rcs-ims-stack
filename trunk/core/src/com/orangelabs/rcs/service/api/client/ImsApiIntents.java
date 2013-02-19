@@ -24,22 +24,12 @@ package com.orangelabs.rcs.service.api.client;
  */
 public class ImsApiIntents {
     /**
-     * Stop reason "unknown"
-     */
-    public final static int REASON_UNKNOWN = 0;
-
-    /**
-     * Stop reason "battery low"
-     */
-    public final static int STOP_REASON_BATTERY_LOW = 1;
-
-    /**
      * Intent broadcasted when the IMS registration status has changed (see boolean attribute "status"). 
      * 
      * <p>The intent will have the following extra values:
      * <ul>
      *   <li><em>status</em> - Registration status.</li>
-     *   <li><em>reason</em> - Reason.</li>
+     *   <li><em>reason</em> - Disconnection reason.</li>
      * </ul>
      * </ul>
      */

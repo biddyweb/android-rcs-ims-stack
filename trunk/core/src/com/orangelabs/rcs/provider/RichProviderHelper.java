@@ -53,7 +53,7 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ RichMessagingData.KEY_NAME + " TEXT, "
 				+ RichMessagingData.KEY_SIZE + " long, "
 				+ RichMessagingData.KEY_TOTAL_SIZE + " long, "
-
+				
 				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer)"
 				);
 		

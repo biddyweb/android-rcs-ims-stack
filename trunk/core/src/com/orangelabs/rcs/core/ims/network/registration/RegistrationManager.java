@@ -39,7 +39,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.DeviceUtils;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
@@ -51,11 +50,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */
 public class RegistrationManager extends PeriodicRefresher {
-	/**
-	 * Last min expire period key
-	 */
-	private static final String REGISTRY_MIN_EXPIRE_PERIOD = "MinRegisterExpirePeriod";
-	
     /**
      * Expire period
      */
@@ -126,18 +120,11 @@ public class RegistrationManager extends PeriodicRefresher {
     	this.networkInterface = networkInterface;
         this.registrationProcedure = registrationProcedure;
         this.featureTags = getAllSupportedFeatureTags();
+		this.expirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
 
         if (RcsSettings.getInstance().isGruuSupported()) {
             this.instanceId = DeviceUtils.getInstanceId(AndroidFactory.getApplicationContext());
         }
-
-    	int defaultExpirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
-    	int minExpireValue = RegistryFactory.getFactory().readInteger(REGISTRY_MIN_EXPIRE_PERIOD, -1);
-    	if ((minExpireValue != -1) && (defaultExpirePeriod < minExpireValue)) {
-        	this.expirePeriod = minExpireValue;
-    	} else {
-    		this.expirePeriod = defaultExpirePeriod;
-    	}
     }
     
 	/**
@@ -254,7 +241,7 @@ public class RegistrationManager extends PeriodicRefresher {
             // Create REGISTER request
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
             		featureTags,
-            		expirePeriod,
+            		RcsSettings.getInstance().getRegisterExpirePeriod(),
             		instanceId);
 
             // Send REGISTER request
@@ -550,9 +537,6 @@ public class RegistrationManager extends PeriodicRefresher {
         	handleError(new ImsError(ImsError.UNEXPECTED_EXCEPTION, "No Min-Expires value found"));
         	return;
         }
-        
-        // Save the min expire value in the terminal registry
-        RegistryFactory.getFactory().writeInteger(REGISTRY_MIN_EXPIRE_PERIOD, minExpire);
         
         // Set the expire value
     	expirePeriod = minExpire;

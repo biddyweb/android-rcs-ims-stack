@@ -23,6 +23,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import org.xml.sax.InputSource;
+
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
@@ -37,13 +40,18 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -95,7 +103,22 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      */
     private String contributionId = null;
     
-	/**
+    /**
+     * Feature tags
+     */
+    private String[] featureTags = InstantMessagingService.CHAT_FEATURE_TAGS;
+    
+    /**
+     * Wrapped types
+     */
+    private String wrappedTypes = InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE;
+
+    /**
+     * Geolocation push supported by remote server
+     */
+    private boolean geolocSupportedByServer = false;
+    
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -109,6 +132,12 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public ChatSession(ImsService parent, String contact) {
 		super(parent, contact);
 
+		// Update feature tags if geolocation supported
+        if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
+        	featureTags = InstantMessagingService.CHAT_FEATURE_TAGS_GEOLOCATION;
+        }
+		
 		// Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
@@ -130,6 +159,24 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 
 		// Set the session participants
 		setParticipants(participants);
+	}
+	
+	/**
+	 * Get feature tags
+	 * 
+	 * @return Feature tags
+	 */
+	public String[] getFeatureTags() {
+		return featureTags;
+	}
+
+	/**
+	 * Get wrapped types
+	 * 
+	 * @return Wrapped types
+	 */
+	public String getWrappedTypes() {
+		return wrappedTypes;
 	}
 
 	/**
@@ -167,7 +214,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     public void setSubject(String subject) {
     	this.subject = subject;
     }	
-	
+    
 	/**
 	 * Returns the IMDN manager
 	 * 
@@ -249,6 +296,24 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public MsrpManager getMsrpMgr() {
 		return msrpMgr;
+	}
+	
+	/**
+	 * Is geolocation supported by server
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isGeolocSupportedByServer() {
+		return geolocSupportedByServer;
+	}	
+	
+	/**
+	 * Set geolocation supported by server
+	 * 
+	 * @param suppported Supported
+	 */
+	public void setGeolocSupportedByServer(boolean supported) {
+		this.geolocSupportedByServer = supported;
 	}
 	
 	/**
@@ -366,23 +431,22 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    		from = getRemoteContact();
 			    	}			    	
 			    	
+			    	// Check if the message needs a delivery report
+	    			boolean imdnDisplayedRequested = false;
+			    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
+			    	if (dispositionNotification != null) {
+			    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
+			    			// Positive delivery requested, send MSRP message with status "delivered" 
+			    			sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+			    		}
+			    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
+			    			imdnDisplayedRequested = true;
+			    		}			    		
+			    	}
+
+			    	// Analyze received message thanks to the MIME type 
 			    	if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
-			    		
-				    	// Check if the message needs a delivery report
-		    			boolean imdnDisplayedRequested = false;
-				    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
-				    	if (dispositionNotification != null) {
-				    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
-				    			// Positive delivery requested, send MSRP message with status "delivered" 
-				    			sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
-				    		}
-				    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
-				    			imdnDisplayedRequested = true;
-				    		}			    		
-				    	}
-				    	
-				    	// Get received text message
 		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
@@ -395,8 +459,12 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		    			receiveIsComposing(from, cpimMsg.getMessageContent().getBytes());
 			    	} else
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
-						// Receive a delivery report
+						// Delivery report
 						receiveMessageDeliveryStatus(cpimMsg.getMessageContent());
+			    	} else	
+			    	if (ChatUtils.isGeolocType(contentType)) {
+						// Geoloc message
+						receiveGeoloc(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -512,6 +580,43 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 
 	/**
+	 * Receive geoloc event
+	 * 
+	 * @param contact Contact
+	 * @param geolocDoc Geoloc document
+	 * @param msgId Message Id
+	 * @param flag indicating that an IMDN "displayed" is requested for this message
+	 * @param date Date of the message
+	 */
+	private void receiveGeoloc(String contact, String geolocDoc, String msgId, boolean imdnDisplayedRequested, Date date) {
+		// Is composing event is reset
+	    isComposingMgr.receiveIsComposingEvent(contact, false);
+	    
+		try {	
+		    InputSource geolocInput = new InputSource(new ByteArrayInputStream(geolocDoc.getBytes()));
+		    GeolocInfoParser geolocParser = new GeolocInfoParser(geolocInput);
+		    GeolocInfoDocument geolocDocument = geolocParser.getGeoLocInfo();		    
+		    if (geolocDocument != null) {			    
+			    GeolocPush geoloc = new GeolocPush(geolocDocument.getLabel(),
+			    		geolocDocument.getLatitude(),
+			    		geolocDocument.getLongitude(),
+			    		geolocDocument.getAltitude(),
+			    		geolocDocument.getExpiration());
+			    GeolocMessage geolocMsg = new GeolocMessage(msgId, contact, geoloc, imdnDisplayedRequested, date);
+			    
+			    // Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		((ChatSessionListener)getListeners().get(i)).handleReceiveGeoloc(geolocMsg);
+				}
+		    }
+		} catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Problem while receiving geolocation", e);
+            }
+		}
+	}
+	
+	/**
 	 * Send data chunk with a specified MIME type
 	 * 
 	 * @param msgId Message ID
@@ -552,6 +657,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			return false;
 		}
 	}
+	
+	/**
+	 * Send a GeoLoc message
+	 * 
+	 * @param msgId Message-ID
+	 * @param geoloc GeoLocation
+	 * @return Boolean result
+	 */
+	public abstract void sendGeolocMessage(String msgId, GeolocPush geoloc);
 	
 	/**
 	 * Send a text message
@@ -694,4 +808,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         // Abort the session
         abortSession(ImsServiceSession.TERMINATION_BY_TIMEOUT);
 	}
+	
+    /**
+     * Handle 200 0K response 
+     *
+     * @param resp 200 OK response
+     */
+    public void handle200OK(SipResponse resp) {
+        super.handle200OK(resp);
+                
+        // Check if geolocation push supported by server
+        setGeolocSupportedByServer(SipUtils.isFeatureTagPresent(resp, GeolocInfoDocument.MIME_TYPE));
+    }	
 }

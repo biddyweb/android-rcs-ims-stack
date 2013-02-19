@@ -44,6 +44,11 @@ public class FileSharingError extends ImsSessionBasedServiceError {
 	public final static int MEDIA_SAVING_FAILED = FT_ERROR_CODES + 3;
 
     /**
+     * Media file is too big
+     */
+    public final static int MEDIA_SIZE_TOO_BIG = FT_ERROR_CODES + 4;
+
+    /**
      * Constructor
      *
      * @param error Error

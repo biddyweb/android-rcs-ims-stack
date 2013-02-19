@@ -46,6 +46,9 @@ public class MimeManager {
     	mimeTable.put("mpeg4", "video/mp4");
     	mimeTable.put("mpeg", "video/mpeg");
     	mimeTable.put("mpg", "video/mpeg");
+    	
+    	// Visit Card type
+    	mimeTable.put("vcf", "text/vcard");
     }    
     
     /**

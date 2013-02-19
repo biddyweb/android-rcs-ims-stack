@@ -166,7 +166,10 @@ public class ProfileProvisioning extends Activity {
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY)));
 
         box = (CheckBox)findViewById(R.id.social_presence);
-        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE)));	
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE)));
+        
+        box = (CheckBox)findViewById(R.id.geolocation_push);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH)));	
 	}
 
     @Override
@@ -267,8 +270,10 @@ public class ProfileProvisioning extends Activity {
 		        box = (CheckBox)findViewById(R.id.social_presence);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(box.isChecked()));
 
-                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG)
-                        .show();
+		        box = (CheckBox)findViewById(R.id.geolocation_push);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(box.isChecked()));
+		        
+                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 		        break;
 		}
 		return true;
@@ -284,7 +289,9 @@ public class ProfileProvisioning extends Activity {
 	            textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
 	            final String[] platforms = {
-                        "Default"
+                        "NSN Brune", "NSN Lannion", "Margaux", "VCOM1", "VCOM2",
+                        "RCS", "Kamailio1", "MargauxIPv6", "Huawei",
+                        "ALU Poland"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -318,18 +325,134 @@ public class ProfileProvisioning extends Activity {
 	            			String confUri = "";
 	            			String enduserConfirmUri = "";
 	                        switch(index) {
-                                case 0: // Default
-			            			homeDomain = "domain.com";
+	                        	case 0: // NSN Brune
+			            			homeDomain = "rcs.brune.com";
 		            				sipUri = number + "@" + homeDomain;
 		            				privateSipUri = sipUri;
-			            			imsPwd = "";
-			            			imsRealm = "domain.com";
-			            			imsAddrForMobile = "127.0.0.1";
+			            			imsPwd = "nsnims2008";
+			            			imsRealm = "rcs.brune.com";
+			            			imsAddrForMobile = "80.12.197.74";
 			            			imsPortForMobile = 5060;
-			            			imsAddrForWifi = "127.0.0.1";
+			            			imsAddrForWifi = "80.12.197.74";
 			            			imsPortForWifi = 5060;
 			            			confUri = "sip:Conference-Factory@" + homeDomain;
-			            			break;                                    
+			            			break;
+	                        	case 1: // NSN Lannion
+			            			homeDomain = "rcs.lannion.com";
+			            			sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+			            			imsPwd = "alu2012";
+			            			imsRealm = "rcs.lannion.com";
+			            			imsAddrForMobile = "80.12.197.184";
+			            			imsPortForMobile = 5080;
+			            			imsAddrForWifi = "80.12.197.184";
+			            			imsPortForWifi = 5080;
+			            			confUri = "sip:Conference-Factory@" + homeDomain;
+			            			break;
+                                case 2: // Margaux
+                                    homeDomain = "sip.mobistar.com";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "imt30imt30";
+			            			imsRealm = "sip.mobistar.com";
+			            			imsAddrForMobile = "172.20.84.114";
+			            			imsPortForMobile = 5080;
+			            			imsAddrForWifi = "172.20.84.114";
+			            			imsPortForWifi = 5080;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 3: // VCO1
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "imt30imt30";
+			            			imsRealm = "sip.france.fr";
+			            			imsAddrForMobile = "asbc.sip.france.fr";
+			            			imsPortForMobile = 5080;
+			            			imsAddrForWifi = "asbc.sip.france.fr";
+			            			imsPortForWifi = 5080;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 4: // VCO2
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "imt30imt30";
+			            			imsRealm = "sip.france.fr";
+			            			imsAddrForMobile = "172.20.114.42";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.114.42";
+			            			imsPortForWifi = 5060;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 5: // RCS
+                                    homeDomain = "sip.france.fr";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "imt30imt30";
+			            			imsRealm = "sip.france.fr";
+			            			imsAddrForMobile = "172.20.84.114";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.84.114";
+			            			imsPortForWifi = 5060;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 6: // Kamailio1
+                                    homeDomain = "rcs.kamailio1.com";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "password";
+			            			imsRealm = "rcs.kamailio1.com";
+			            			imsAddrForMobile = "172.20.14.43";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "172.20.14.43";
+			            			imsPortForWifi = 5060;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 7: // Margaux IPv6
+                                    homeDomain = "sip.mobistar.com";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "imt30imt30";
+			            			imsRealm = "sip.mobistar.com";
+                                    imsAddrForMobile = "2a01:cf00:74:410f::14";
+                                    imsPortForMobile = 5060;
+                                    imsAddrForWifi = "2a01:cf00:74:410f::14";
+                                    imsPortForWifi = 5060;
+                                    confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 8: // Huawei
+                                    homeDomain = "sip.osk.com";
+                                    sipUri = number + "@" + homeDomain;
+                                    if (sipUri.startsWith("+")) {
+                                    	privateSipUri = sipUri.substring(1);
+                                    } else {
+                                    	privateSipUri = sipUri;
+                                    }
+                                    imsPwd = "huawei";
+			            			imsRealm = "sip.osk.com";
+                                    imsAddrForMobile = "172.20.114.0";
+                                    imsPortForMobile = 5060;
+                                    imsAddrForWifi = "172.20.114.0";
+                                    imsPortForWifi = 5060;
+                                    confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
+                                case 9: // ALU Poland
+                                    homeDomain = "neofon.tp.pl";
+                                    sipUri = number + "@" + homeDomain;
+                                    if (sipUri.startsWith("+")) {
+                                    	privateSipUri = sipUri.substring(1);
+                                    } else {
+                                    	privateSipUri = sipUri;
+                                    }
+                                    imsPwd = "aluims93";
+			            			imsRealm = "neofon.tp.pl";
+			            			imsAddrForMobile = "81.9.0.3";
+			            			imsPortForMobile = 5060;
+			            			imsAddrForWifi = "81.9.0.3";
+			            			imsPortForWifi = 5060;
+			            			confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
 	            			}
 
 	            			// Update UI

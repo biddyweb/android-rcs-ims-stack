@@ -20,12 +20,14 @@ package com.orangelabs.rcs.ri.messaging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -34,7 +36,6 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.os.Vibrator;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -63,6 +64,8 @@ import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
@@ -74,6 +77,21 @@ import com.orangelabs.rcs.utils.PhoneUtils;
  * Chat view
  */
 public abstract class ChatView extends ListActivity implements OnClickListener, OnKeyListener, ClientApiListener, ImsEventListener {
+	/**
+	 * Message prefix
+	 */
+	private static final String ME_PREFIX = "[Me] ";
+	
+	/**
+	 * Geoloc prefix
+	 */
+	private static final String GEOLOC_PREFIX = "Geoloc ";
+	
+	/**
+	 * Activity result constant
+	 */
+	public final static int SELECT_GEOLOCATION = 0;
+	
 	/**
 	 * Wizz message
 	 */
@@ -107,17 +125,17 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      /**
 	 * Message composer
 	 */
-    private EditText mUserText;
+    protected EditText composeText;
     
     /**
      * Message history adapter
      */
-    private ArrayAdapter<String> mAdapter;
+    private ArrayAdapter<String> historyAdapter;
     
     /**
      * Message history
      */
-    private ArrayList<String> mStrings = new ArrayList<String>();
+    private ArrayList<String> history = new ArrayList<String>();
     
 	/**
 	 * Contacts API
@@ -158,15 +176,16 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         setContentView(R.layout.messaging_chat_view);
         
         // Set the message list adapter
-        mAdapter = new ArrayAdapter<String>(this,  android.R.layout.simple_list_item_1, mStrings) {
+        historyAdapter = new ArrayAdapter<String>(this,  android.R.layout.simple_list_item_1, history) {
         	@Override
         	public View getView(int position, View convertView, android.view.ViewGroup parent) {
         		TextView v = (TextView)super.getView(position, convertView, parent);
         		v.setText(formatMessage(v.getText().toString()), BufferType.SPANNABLE);
+        		v.setOnClickListener(clickItemListener);
         		return v;
         	};
         };
-        setListAdapter(mAdapter);
+        setListAdapter(historyAdapter);
 
         // Instanciate settings
 		RcsSettings.createInstance(getApplicationContext());
@@ -178,17 +197,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		composingManager = new IsComposingManager();
         
         // Set message composer callbacks
-        mUserText = (EditText)findViewById(R.id.userText);
-        mUserText.setOnClickListener(this);
-        mUserText.setOnKeyListener(this);
-        mUserText.addTextChangedListener(mUserTextWatcher);
-        
-        // Set the message composer max length
-		int maxLength = RcsSettings.getInstance().getMaxChatMessageLength();
-		InputFilter[] filterArray = new InputFilter[1];
-		filterArray[0] = new InputFilter.LengthFilter(maxLength);
-		mUserText.setFilters(filterArray);
-        
+        composeText = (EditText)findViewById(R.id.userText);
+        composeText.setOnClickListener(this);
+        composeText.setOnKeyListener(this);
+        composeText.addTextChangedListener(mUserTextWatcher);
+                
 		// Set send button listener
         Button btn = (Button)findViewById(R.id.send_button);
         btn.setOnClickListener(this);
@@ -296,6 +309,20 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     }        
 
     /**
+     * Format geoloc
+     * 
+     * @param geoloc Geoloc info
+     */
+    private String formatGeoloc(GeolocPush geoloc) {
+    	String label = geoloc.getLabel();
+    	if ((label != null) && (label.length() > 0)) {
+    		return GEOLOC_PREFIX + geoloc.getLabel() + "," + geoloc.getLatitude() + "," + geoloc.getLongitude();   	
+    	} else {
+    		return GEOLOC_PREFIX + geoloc.getLatitude() + "," + geoloc.getLongitude();   	
+    	}
+    }
+    
+    /**
      * Update list view
      * 
      * @param cursor Cursor
@@ -304,65 +331,119 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		int type = cursor.getInt(EventsLogApi.TYPE_COLUMN);
 		String contact = cursor.getString(EventsLogApi.CONTACT_COLUMN);
 		String text = cursor.getString(EventsLogApi.DATA_COLUMN);
+		
 		if ((type == EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE) ||
 			(type == EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE)) {
-			mAdapter.add("[Me] " + text);
-		} else {
-			mAdapter.add("[" + PhoneUtils.extractNumberFromUri(contact) + "] " + text);
+			historyAdapter.add(ME_PREFIX + text);
+		}  else
+		if ((type == EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE) ||
+				(type == EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE)) {
+			historyAdapter.add("[" + PhoneUtils.extractNumberFromUri(contact) + "] " + text);
+		} else
+		if (type == EventsLogApi.TYPE_OUTGOING_GEOLOC ) {
+			GeolocPush geoloc = GeolocMessage.formatStrToGeoloc(text); 
+			historyAdapter.add(ME_PREFIX + formatGeoloc(geoloc));
+		} else
+		if (type == EventsLogApi.TYPE_INCOMING_GEOLOC) {
+			GeolocPush geoloc = GeolocMessage.formatStrToGeoloc(text); 
+			historyAdapter.add("[" + PhoneUtils.extractNumberFromUri(contact) + "] " + formatGeoloc(geoloc));
 		}
 	}    
     
-    /***
+    /**
      * Send message
      * 
      * @param msg Message
      */
     public void sendMessage(final String msg) {
-    	try {
+        try {
 			// Send the text to remote
 	    	chatSession.sendMessage(msg);
-    	} catch(Exception e) {
-    		// TODO
-    	}
-    	
-        // Warn the composing manager that the message was sent
-		composingManager.messageWasSent();
+	    	
+	        // Warn the composing manager that the message was sent
+			composingManager.messageWasSent();
+	    } catch(Exception e) {
+	    	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
+	    }
     }    
     
     /**
      * Send a text and display it
      */
     private void sendText() {
-        final String text = mUserText.getText().toString();
+        String text = composeText.getText().toString();
         if ((text == null) || (text.length() == 0)) {
         	return;
         }
-        
-        try {
-			// Send text message
-        	sendMessage(text);
-        	
-        	// Add text to the message history
-            mAdapter.add("[Me] " + text);
-            mUserText.setText(null);
-        } catch(Exception e) {
-        	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
-        }
+
+        // Send text message
+    	sendMessage(text);
+    	
+    	// Add text to the message history
+        historyAdapter.add(ME_PREFIX + text);
+        composeText.setText(null);
     }
 
     /**
      * Send a wizz and display it
      */
     private void sendWizz() {
-        try {
-			// Send text message
-        	sendMessage(WIZZ_MSG);
-        	
-			// Add text to the message history
-            mAdapter.add("[Me] " + getString(R.string.label_chat_wizz));
-        } catch(Exception e) {
-        	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
-        }
+		// Send text message
+    	sendMessage(WIZZ_MSG);
+    	
+		// Add text to the message history
+        historyAdapter.add(ME_PREFIX + getString(R.string.label_chat_wizz));
+    }
+    
+    /**
+     * Send geolocation push message
+     */
+    private void sendGeoLoc() {
+		// Start a new activity to send a geolocation
+    	startActivityForResult(new Intent(this, EditGeoloc.class), SELECT_GEOLOCATION);
+    }
+        
+    /**
+     * Show us in a map
+     */
+    private void showUsInMap(List<String> participants) {
+    	Intent intent = new Intent(this, ShowUsInMap.class);
+    	ArrayList<String> list = new ArrayList<String>(participants);
+    	intent.putStringArrayListExtra("contacts", list);
+    	startActivity(intent);
+    }
+
+    /**
+     * On activity result
+     * 
+     * @param requestCode Request code
+     * @param resultCode Result code
+     * @param data Data
+     */
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	if (resultCode != RESULT_OK) {
+    		return;
+    	}
+
+    	switch(requestCode) {
+	    	case SELECT_GEOLOCATION: {
+	    		String locationLabel = data.getStringExtra("label");
+	    		double latitude = data.getDoubleExtra("latitude", 0.0);
+	    		double longitude = data.getDoubleExtra("longitude", 0.0);
+	    		double altitude = data.getDoubleExtra("altitude", 0.0);
+	    		long expiration = System.currentTimeMillis() + RcsSettings.getInstance().getGeolocExpirationTime();
+    			try {
+    	        	// Add text to the message history
+    				GeolocPush geoloc = new GeolocPush(locationLabel, latitude, longitude, altitude, expiration);
+    	            historyAdapter.add(ME_PREFIX + formatGeoloc(geoloc));
+    	            composeText.setText(null);
+    				chatSession.sendGeoloc(geoloc);
+    			} catch (RemoteException e) {
+    				Utils.showMessage(ChatView.this, getString(R.string.label_send_geoloc_failed));
+    			}   
+	    	}             
+	    	break;
+    	}
     }
     
     /**
@@ -397,13 +478,13 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		String line = "[" + number + "] ";
 		if (txt.equals(WIZZ_MSG)) {
 	    	// Add Wizz to the message history
-	        mAdapter.add(line + getString(R.string.label_chat_wizz));
+	        historyAdapter.add(line + getString(R.string.label_chat_wizz));
 	        
 	        // Vibrate
 	        Vibrator vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
 	        vibrator.vibrate(600);
 		} else {
-	        mAdapter.add(line + txt);
+	        historyAdapter.add(line + txt);
 		}
     }
 
@@ -414,9 +495,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      */
     private void displayReceiveNotif(String notif) {
     	// Add text to the message history
-        mAdapter.add(notif);
+        historyAdapter.add(notif);
     }
-
+    
     /**
      * API disabled
      */
@@ -685,6 +766,16 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				}
 			});
 		}
+		
+		// New geoloc message received
+		public void handleReceiveGeoloc(final GeolocMessage geoloc) {
+			handler.post(new Runnable() { 
+				public void run() {
+					String number = PhoneUtils.extractNumberFromUri(geoloc.getRemote());	
+					historyAdapter.add("[" + number + "] " + formatGeoloc(geoloc.getGeoloc()));
+				}
+			});
+		}
     };
     
     /**
@@ -766,12 +857,26 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	}
     
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	try {
+			if ((chatSession != null) && !chatSession.isGeolocSupported()) {
+				menu.removeItem(R.id.menu_send_geoloc);
+			}
+		} catch(RemoteException e) {
+			menu.removeItem(R.id.menu_send_geoloc);
+		}
+    	
+    	super.onPrepareOptionsMenu(menu);
+    	return true;
+    }
+    
+    @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_insert_smiley:
 			Smileys.showSmileyDialog(
 					this, 
-					mUserText, 
+					composeText, 
 					getResources(), 
 					getString(R.string.menu_insert_smiley));
 			break;
@@ -801,6 +906,26 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			}
 			break;
 			
+		case R.id.menu_send_geoloc:
+			if (chatSession != null) {
+				sendGeoLoc();
+			} else {
+				Utils.showMessage(ChatView.this, getString(R.string.label_session_not_yet_started));
+			}
+			break;	
+						
+		case R.id.menu_showus_map:
+			try {
+				if (chatSession != null) {
+					showUsInMap(chatSession.getParticipants());
+				} else {
+					Utils.showMessage(ChatView.this, getString(R.string.label_session_not_yet_started));
+				}
+			} catch(Exception e) {
+				Utils.showMessage(ChatView.this, getString(R.string.label_api_failed));
+			}
+			break;	
+
 		case R.id.menu_close_session:
 			if (chatSession != null) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -934,14 +1059,50 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         builder.setItems(R.array.select_quicktext, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 String[] items = getResources().getStringArray(R.array.select_quicktext);
-        		mUserText.append(items[which]);
+        		composeText.append(items[which]);
             }
         });
         
         AlertDialog alert = builder.create();
     	alert.show();
     }
-
+    
+    /**
+     * Onclick list listener
+     */
+    private OnClickListener clickItemListener = new OnClickListener() {
+    	public void onClick(View v) {
+    		TextView tv = (TextView)v;
+    		String item = tv.getText().toString();
+    		if (item.contains(GEOLOC_PREFIX)) {
+    			int index = item.indexOf(GEOLOC_PREFIX); 
+    			String text = item.substring(index + GEOLOC_PREFIX.length());
+    	    	StringTokenizer items = new StringTokenizer(text, ",");
+    	    	String label = "";
+    	    	if (items.countTokens() > 2) {
+    	    		label = items.nextToken();
+    	    	}
+    			double latitude = Double.valueOf(items.nextToken());					
+    			double longitude = Double.valueOf(items.nextToken());					
+				displayInMap(label, latitude, longitude);
+    		}
+    	}
+    };
+    
+    /**
+     * Display geoloc in a map
+     * 
+     * @param label Label
+     * @param longitude Longitude
+     * @param latitude Latitude
+     */
+    private void displayInMap(String label, double latitude, double longitude) {	
+		Intent intent = new Intent(this, DisplayGeoloc.class);
+    	intent.putExtra("label", label);
+    	intent.putExtra("latitude", latitude);
+    	intent.putExtra("longitude", longitude);
+		startActivity(intent);
+    }    
     
     /**********************************************************************
      ******************	Deals with isComposing feature ********************
@@ -1007,6 +1168,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
             idleTimeOut = RcsSettings.getInstance().getIsComposingTimeout() * 1000;
         }
 
+		// Clock handler class
 		private class ClockHandler extends Handler {
 			public void handleMessage(Message msg){
 				switch(msg.what){

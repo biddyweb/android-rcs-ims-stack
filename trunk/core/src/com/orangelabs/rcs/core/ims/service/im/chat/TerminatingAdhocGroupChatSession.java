@@ -36,11 +36,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
-import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -185,7 +182,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	    	} else {
 	    		localMsrpPort = getMsrpMgr().getLocalMsrpPort();
 	    	}            
-            
+	    	
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
@@ -198,7 +195,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 
@@ -244,7 +241,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
         		logger.info("Send 200 OK");
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-            		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
+            		getFeatureTags(), sdp);
 
             // The signalisation is established
             getDialogPath().sigEstablished();
@@ -288,9 +285,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
             	}
-    	    	
-    			// Start the activity manager
-    			getActivityManager().start();
             } else {
         		if (logger.isActivated()) {
             		logger.debug("No ACK received for INVITE");

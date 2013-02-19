@@ -19,6 +19,14 @@
         android:entryValues="@array/rcs_settings_list_battery_level_value"
         android:dialogTitle="@string/rcs_settings_label_min_battery_level" />
 
+    <ListPreference
+        android:key="min_storage"
+        android:title="@string/rcs_settings_label_min_storage"
+        android:summary="@string/rcs_settings_summary_min_storage"
+        android:entries="@array/rcs_settings_list_storage_label"
+        android:entryValues="@array/rcs_settings_list_storage_value"
+        android:dialogTitle="@string/rcs_settings_label_min_storage" />
+
     <PreferenceScreen
         android:key="userprofile_settings"
         android:title="@string/rcs_settings_title_userprofile_settings"

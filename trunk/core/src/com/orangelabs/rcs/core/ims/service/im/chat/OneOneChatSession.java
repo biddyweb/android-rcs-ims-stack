@@ -31,9 +31,12 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 
@@ -71,7 +74,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	public boolean isGroupChat() {
 		return false;
 	}
-
+	
 	/**
 	 * Returns the list of participants currently connected to the session
 	 * 
@@ -103,6 +106,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		String mime = CpimMessage.MIME_TYPE;
 		String from = ChatUtils.ANOMYNOUS_URI;
 		String to = ChatUtils.ANOMYNOUS_URI;
+
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN
@@ -131,6 +135,47 @@ public abstract class OneOneChatSession extends ChatSession {
 		}
 	}
 
+	/**
+	 * Send a geoloc message
+	 * 
+	 * @param msgId Message ID
+	 * @param geoloc Geoloc info
+	 */
+	public void sendGeolocMessage(String msgId, GeolocPush geoloc) {
+		boolean useImdn = getImdnManager().isImdnActivated();
+		String mime = CpimMessage.MIME_TYPE;
+		String from = ChatUtils.ANOMYNOUS_URI;
+		String to = ChatUtils.ANOMYNOUS_URI;
+		String geoDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
+
+		String content;
+		if (useImdn) {
+			// Send message in CPIM + IMDN
+			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
+		} else {
+			// Send message in CPIM
+			content = ChatUtils.buildCpimMessage(from, to, geoDoc, GeolocInfoDocument.MIME_TYPE);
+		}
+
+		// Send content
+		boolean result = sendDataChunks(msgId, content, mime);
+
+		// Update rich messaging history
+		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn);
+		RichMessaging.getInstance().addOutgoingGeoloc(geolocMsg, this);
+
+		// Check if message has been sent with success or not
+		if (!result) {
+			// Update rich messaging history
+			RichMessaging.getInstance().markChatMessageFailed(msgId);
+			
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+			}
+		}
+	}
+	
 	/**
 	 * Send is composing status
 	 * 
@@ -211,10 +256,10 @@ public abstract class OneOneChatSession extends ChatSession {
      * @throws SipException
      */
     private SipRequest createMultipartInviteRequest(String content) throws SipException {
-        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
-                InstantMessagingService.CHAT_FEATURE_TAGS, 
-                content,
-                BOUNDARY_TAG);
+    	SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+                    getFeatureTags(), 
+                    content,
+                    BOUNDARY_TAG);
 
         // Test if there is a first message
         if (getFirstMessage() != null) {
@@ -236,9 +281,9 @@ public abstract class OneOneChatSession extends ChatSession {
      * @throws SipException
      */
     private SipRequest createInviteRequest(String content) throws SipException {
-        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(), 
-                InstantMessagingService.CHAT_FEATURE_TAGS, 
-                content);
+    	SipRequest invite = SipMessageFactory.createInvite(getDialogPath(), 
+                    InstantMessagingService.CHAT_FEATURE_TAGS, 
+                    content);
 
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID()); 

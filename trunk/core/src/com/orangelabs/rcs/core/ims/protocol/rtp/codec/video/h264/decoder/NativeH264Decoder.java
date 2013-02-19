@@ -29,7 +29,9 @@ public class NativeH264Decoder
 
     public static native int DeinitDecoder();
 
-    public static synchronized native int DecodeAndConvert(byte abyte0[], int ai[]);
+    public static synchronized native int[] DecodeAndConvert(byte abyte0[]);
+
+    public static synchronized native int getLastDecodeStatus();
 
     static 
     {

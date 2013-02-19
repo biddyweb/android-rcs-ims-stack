@@ -32,47 +32,67 @@ import android.telephony.TelephonyManager;
  */
 public class NetworkUtils {
     /**
-     * Network level
+     * Network access type unknown
      */
-    public static int NETWORK_LEVEL_UNKNOWN = -1;
-    public static int NETWORK_LEVEL_2G = 0;
-    public static int NETWORK_LEVEL_3G = 1;
-    public static int NETWORK_LEVEL_3GPLUS = 2;
-    public static int NETWORK_LEVEL_WIFI = 3;
-    public static int NETWORK_LEVEL_4G = 3; // Same level than wifi
+    public static int NETWORK_ACCESS_UNKNOWN = -1;
 
     /**
-     * Get Network Level
-     *
-     * @return network level
+     * Network access type 2G
      */
-    public static int getNetworkLevel() {
-        int result = NETWORK_LEVEL_UNKNOWN;
+    public static int NETWORK_ACCESS_2G = 0;
+    
+    /**
+     * Network access type 3G
+     */
+    public static int NETWORK_ACCESS_3G = 1;
+    
+    /**
+     * Network access type 3G+
+     */
+    public static int NETWORK_ACCESS_3GPLUS = 2;
+    
+    /**
+     * Network access type Wi-Fi
+     */
+    public static int NETWORK_ACCESS_WIFI = 3;
+    
+    /**
+     * Network access type 4G LTE
+     */
+    public static int NETWORK_ACCESS_4G = 4;
+
+    /**
+     * Get network access type
+     *
+     * @return Type
+     */
+    public static int getNetworkAccessType() {
+        int result = NETWORK_ACCESS_UNKNOWN;
         try {
             ConnectivityManager connectivityMgr = (ConnectivityManager) AndroidFactory.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
             if (networkInfo != null) {
                 int type = networkInfo.getType();
                 if (type == ConnectivityManager.TYPE_WIFI) {
-                    result = NETWORK_LEVEL_WIFI;
+                    result = NETWORK_ACCESS_WIFI;
                 } else if (type == ConnectivityManager.TYPE_MOBILE) {
                     int subtype = networkInfo.getSubtype();
                     switch (subtype) {
                         case TelephonyManager.NETWORK_TYPE_GPRS:
                         case TelephonyManager.NETWORK_TYPE_EDGE:
-                            result = NETWORK_LEVEL_2G;
+                            result = NETWORK_ACCESS_2G;
                             break;
                         case TelephonyManager.NETWORK_TYPE_UMTS:    // ~ 400-7000 kbps
                         case TelephonyManager.NETWORK_TYPE_HSPA:    // ~ 700-1700 kbps
-                            result = NETWORK_LEVEL_3G;
+                            result = NETWORK_ACCESS_3G;
                             break;
                         case TelephonyManager.NETWORK_TYPE_HSDPA:   // ~ 2-14 Mbps
                         case TelephonyManager.NETWORK_TYPE_HSUPA:   // ~ 1-23 Mbps
                         case 15: //TelephonyManager.NETWORK_TYPE_HSPAP (available on API level 13) // ~ 10-20 Mbps
-                            result = NETWORK_LEVEL_3GPLUS;
+                            result = NETWORK_ACCESS_3GPLUS;
                             break;
                         case 13: //TelephonyManager.NETWORK_TYPE_LTE (available on API level 11) // ~ 10+ Mbps
-                            result = NETWORK_LEVEL_4G;
+                            result = NETWORK_ACCESS_4G;
                             break;
                     }
                 }

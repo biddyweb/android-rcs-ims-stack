@@ -52,7 +52,18 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
 	
-       	<TextView android:text="Idle duration of a chat session (seconds):"
+       	<TextView android:text="Max length of a group chat message:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/MaxGroupChatMessageLength"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
+		
+		<TextView android:text="Idle duration of a chat session (seconds):"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
@@ -162,6 +173,28 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="4" android:lines="1" android:inputType="numberSigned"/>
 
+		<TextView android:text="Max length of a geolocation label:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/MaxGeolocLabelLength"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
+	
+       	<TextView android:text="Expiration time of a geolocation (seconds):"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/GeolocExpirationTime"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="10" android:inputType="number" android:lines="1"/>
+		
        	<TextView android:text="Directory path to store photos:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"

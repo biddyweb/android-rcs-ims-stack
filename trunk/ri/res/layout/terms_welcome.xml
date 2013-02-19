@@ -15,7 +15,7 @@
 		android:layout_gravity="center"
 		android:layout_marginTop="10px"
 		android:layout_marginBottom="10px"
-		android:src="@drawable/ri_icon">
+		android:src="@drawable/rcs_icon">
 		</ImageView>
 					 
 		<TextView android:layout_width="fill_parent"

@@ -9,23 +9,23 @@
 
 
 <!-- RCS status -->
-<string name="menu_is_joyn">Is device RCS compliant</string>
-<string name="label_rcs_compliant">Your device is RCS compliant</string>
-<string name="label_not_rcs_compliant">Your device is NOT RCS compliant</string>
+<string name="menu_is_joyn">Is device joyn compliant</string>
+<string name="label_rcs_compliant">Your device is joyn compliant</string>
+<string name="label_not_rcs_compliant">Your device is NOT joyn compliant</string>
 <string name="label_status">Status:</string>
 <string name="label_registration_event">UI connector: registration status: %s</string>
-<string name="menu_rcs_status">Get RCS status</string>
+<string name="menu_rcs_status">Get joyn status</string>
 <string name="label_rcs_status">Status:</string>
 <string name="label_registration_status">Registration:</string>
-<string name="label_rcs">RCS</string>
-<string name="label_not_rcs">not RCS</string>
+<string name="label_rcs">joyn</string>
+<string name="label_not_rcs">not joyn</string>
 <string name="label_registered">registered</string>
 <string name="label_unregistered">not registered</string>
-<string name="menu_is_activated">Is RCS client activated</string>
-<string name="label_client_activated">At least one RCS client is activated in the device</string>
-<string name="label_client_not_activated">No activated RCS client found in the device</string>
-<string name="label_client_settings_not_found">RCS client settings not found</string>
-<string name="label_client_not_found">RCS client not found</string>
+<string name="menu_is_activated">Is joyn client activated</string>
+<string name="label_client_activated">At least one joyn client is activated in the device</string>
+<string name="label_client_not_activated">No activated joyn client found in the device</string>
+<string name="label_client_settings_not_found">joyn client settings not found</string>
+<string name="label_client_not_found">joyn client not found</string>
 
 <!-- Capabilities -->
 <string name="menu_contact_capabilities">Contact capabilities</string>
@@ -49,7 +49,7 @@
 <string name="menu_view_group_chat">View group chat</string>
 <string name="menu_initiate_ft">Initiate file transfer</string>
 <string name="menu_view_ft">View file transfer</string>
-<string name="menu_rcs_settings">Load RCS client settings</string>
+<string name="menu_rcs_settings">Load joyn client settings</string>
 
 </resources>
 

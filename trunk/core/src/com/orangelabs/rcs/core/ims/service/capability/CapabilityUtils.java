@@ -40,6 +40,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
+import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 
 /**
@@ -71,12 +72,12 @@ public class CapabilityUtils {
 		}
 		
 		// FT support
-		if (RcsSettings.getInstance().isFileTransferSupported()) {
+		if (RcsSettings.getInstance().isFileTransferSupported() && isFileStorageAvailable()) {
 			supported += FeatureTags.FEATURE_RCSE_FT + ",";
 		}
 
 		// Image share support
-		if (RcsSettings.getInstance().isImageSharingSupported() && richcall) {
+		if (RcsSettings.getInstance().isImageSharingSupported() && richcall && isFileStorageAvailable()) {
 			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
 		}
 
@@ -90,6 +91,11 @@ public class CapabilityUtils {
 			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
 		}
 
+		// GeoLocation Push support
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
+		}
+		
 		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
 		if ((exts != null) && (exts.length() > 0)) {
@@ -148,6 +154,10 @@ public class CapabilityUtils {
         	if (tag.contains(FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE)) {
         		// Support social presence service
         		capabilities.setSocialPresenceSupport(true);
+        	} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH)) {
+        		// Support geolocation push service
+        		capabilities.setGeolocationPushSupport(true);
         	} else
     		if (tag.startsWith(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_EXTENSION)) {
     			// Support a RCS extension
@@ -280,7 +290,7 @@ public class CapabilityUtils {
 		        }
 	        
 				// Add image config
-		        if (image) {
+		        if (image && isFileStorageAvailable()) {
 					// Get supported image formats
 					Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
 					StringBuffer supportedImageFormats = new StringBuffer();
@@ -301,5 +311,21 @@ public class CapabilityUtils {
 	        }
 		}
 		return sdp;
-    } 
+    }
+
+    /**
+     * Is the current storage conditions allow to receive files
+     *
+     * @return <code>true</code> if supported, otherwise <code>false</code>
+     */
+    private static boolean isFileStorageAvailable() {
+        long minStockage = 1024 * (long)RcsSettings.getInstance().getMinStorageCapacity();
+        if (minStockage > 0) {
+            long freeSpace = StorageUtils.getExternalStorageFreeSpace();
+            if (freeSpace < minStockage) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

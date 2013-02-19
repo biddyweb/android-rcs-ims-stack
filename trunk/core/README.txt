@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.0
+Release 2.5.1
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,12 +8,11 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-
-- Add reason code in methods handleSessionAborted of the RCS API.
-- Video codecs management depending of the network coverage.
-- Support of new video formats: H264 level 1.2 and 1.3.
-- Disconnect Joyn if battery low.
-- Blackbird API preparation.
+- Geolocation Push.
+- Show us in map.
+- vCard sharing.
+- New Blackbird provisioning parameters.
+- Disable File transfer and Image sharing capabilities if memory low.
 
 
 Bugs fixed:
@@ -21,6 +20,13 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.1
+- Mantis #0016859	Stack: Parameter TimerIdle should be only used for 1-1 chat
+- Mantis #0016852	Stack: Max length of a group chat message not taken into account
+- Mantis #0016788	Stack: Autoprovisioning of IMS domain not well extracted
+- Mantis #0016833   	Stack: re-REGISTER should use the default expire value (600000s) instead the received one in 200 OK
+- Mantis #0010397   	Stack: Check size of FT and IS with max in RCS settings
 
 v2.5.0
 - Mantis #0016782	Stack: Difference in progress for file transfer between originating and terminating
@@ -37,13 +43,13 @@ v2.4.12
 - GSMA Guidelines 	Stack: ID_4_36: Idle group chat sessions should be cleared from the controlling function
 - GSMA Guidelines 	Stack: ID_4_35: Include a Reason Code in the BYE requests
 - Mantis #0016645	Stack: Bad nonce count value after 401 response during registration
-- Deutsche Telecom	Stack: Improve MSRP failure reports handling
+- Deutsche Telekom	Stack: Improve MSRP failure reports handling
 - Mantis #0016636	Stack: Contribution-ID is null when extending a 1-1 chat session to a group chat session
 - Mantis #0016615	Stack: Potential issue with list of group chat participants
 - Open source #63	Stack: Request rejected because IP doesn't match (NAT)
-- Deutsche Telecom	Stack: Save FT in files to avoid Out-of-Memory problem
+- Deutsche Telekom	Stack: Save FT in files to avoid Out-of-Memory problem
 - Mantis #0016512	Stack: Separate "realm" and "home domain" in the IMS parameters
-- Deutsche Telecom	Stack: Support of MSRP chunk Byte-Range with "*" (e.g. 1-*/22123)
+- Deutsche Telekom	Stack: Support of MSRP chunk Byte-Range with "*" (e.g. 1-*/22123)
 - Mantis #0015046	Stack: Adressbook issue on Samsung 2.3.6
 
 

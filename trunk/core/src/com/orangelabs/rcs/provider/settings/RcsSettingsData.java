@@ -215,6 +215,11 @@ public class RcsSettingsData {
 	public static final String MAX_CHAT_MSG_LENGTH = "MaxChatMessageLength";
 
 	/**
+	 * Max length of a group chat message
+	 */
+	public static final String MAX_GROUPCHAT_MSG_LENGTH = "MaxGroupChatMessageLength";
+
+	/**
 	 * Idle duration of a chat session
 	 */
 	public static final String CHAT_IDLE_DURATION = "ChatIdleDuration";
@@ -289,7 +294,22 @@ public class RcsSettingsData {
 	 */
 	public static final String MAX_RICHCALL_LOG_ENTRIES = "MaxRichcallLogEntries";	
 	
-	// ---------------------------------------------------------------------------
+	/**
+	 * Max length of a geolocation label
+	 */
+	public static final String MAX_GEOLOC_LABEL_LENGTH = "MaxGeolocLabelLength";
+	
+	/**
+	 * Geolocation expiration time
+	 */
+	public static final String GEOLOC_EXPIRATION_TIME = "GeolocExpirationTime";
+	
+    /**
+     * Minimum storage capacity
+     */
+    public static final String MIN_STORAGE_CAPACITY = "MinStorageCapacity";
+
+    // ---------------------------------------------------------------------------
 	// User profile settings
 	// ---------------------------------------------------------------------------
 
@@ -572,6 +592,11 @@ public class RcsSettingsData {
 	 */
 	public static final String CAPABILITY_SOCIAL_PRESENCE = "CapabilitySocialPresence";
 
+	/**
+	 * Geolocation push capability
+	 */
+	public static final String CAPABILITY_GEOLOCATION_PUSH = "CapabilityGeoLocationPush";
+	
     /**
      * RCS extensions capability
      */

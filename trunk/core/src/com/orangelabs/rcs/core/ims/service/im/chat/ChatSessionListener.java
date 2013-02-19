@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import com.orangelabs.rcs.core.ims.service.ImsSessionListener;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 
 /**
@@ -77,4 +78,11 @@ public interface ChatSessionListener extends ImsSessionListener {
      * @param reason Error reason
      */
     public void handleAddParticipantFailed(String reason);
+    
+    /**
+     * New geoloc message received
+     * 
+     * @param geoloc Geoloc message
+     */
+    public void handleReceiveGeoloc(GeolocMessage geoloc);
 }

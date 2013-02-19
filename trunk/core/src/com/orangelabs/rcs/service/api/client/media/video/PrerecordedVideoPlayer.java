@@ -152,7 +152,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
     /**
-     * Constructor use setting video codec.
+     * Constructor
      * 
      * @param codec Video codec
      * @param filename Video filename
@@ -168,7 +168,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     }
 
     /**
-     * Constructor Force a video codec.
+     * Constructor with a codec
      * 
      * @param codec Video codec
      * @param filename Video filename
@@ -188,7 +188,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     }
 
     /**
-     * Constructor Force a video codec.
+     * Constructor withe a codec
      * 
      * @param codec Video codec name
      * @param filename Video filename
@@ -221,9 +221,9 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     }
 
     /**
-     * Reserve a port.
+     * Reserve a port
      *
-     * @param port the port to reserve
+     * @param port Port to reserve
      */
     private void reservePort(int port) {
         if (temporaryConnection == null) {
@@ -237,7 +237,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     }
 
     /**
-     * Release the reserved port.
+     * Release the reserved port
      */
     private void releasePort() {
         if (temporaryConnection != null) {

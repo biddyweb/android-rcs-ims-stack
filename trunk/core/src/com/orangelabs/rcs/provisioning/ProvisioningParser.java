@@ -131,6 +131,10 @@ public class ProvisioningParser {
                                 parseAPN(childnode);
                             } else if (typenode.getNodeValue().equalsIgnoreCase("OTHER")) {
                                 parseOther(childnode);
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("SERVICES")) {
+                                parseServices(childnode);
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("SUPL")) {
+                                parseSupl(childnode);
                             }
                         }
                     }
@@ -498,6 +502,140 @@ public class ProvisioningParser {
     }
 
     /**
+     * Parse services
+     *
+     * @param node Node
+     */
+    private void parseServices(Node node) {
+        String presencePrfl = null;
+        String chatAuth = null;        
+        String ftAuth = null;
+        String standaloneMsgAuth = null;
+        String geolocPullAuth = null;
+        String geolocPushAuth = null;
+        String vsAuth = null;
+        String isAuth = null;
+        String beIPVoiceCallAuth = null;
+        String beIPVideoCallAuth = null;
+        if (node == null) {
+            return;
+        }
+        Node childnode = node.getFirstChild();
+
+        if (childnode != null) {
+            do {
+
+                if (chatAuth == null) {
+                    if ((chatAuth = getValueByParamName("ChatAuth", childnode)) != null) {
+                        if (chatAuth.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_IM_SESSION, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_IM_SESSION, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+
+                if (ftAuth == null) {
+                    if ((ftAuth = getValueByParamName("ftAuth", childnode)) != null) {
+                        if (ftAuth.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_FILE_TRANSFER, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_FILE_TRANSFER, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+
+                if (vsAuth == null) {
+                    if ((vsAuth = getValueByParamName("vsAuth", childnode)) != null) {
+                        if (vsAuth.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_VIDEO_SHARING, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_VIDEO_SHARING, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+
+                if (isAuth == null) {
+                    if ((isAuth = getValueByParamName("isAuth", childnode)) != null) {
+                        if (isAuth.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_IMAGE_SHARING, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_IMAGE_SHARING, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+                
+                if (geolocPushAuth == null) {
+                    if ((geolocPushAuth = getValueByParamName("geolocPushAuth", childnode)) != null) {
+                        if (geolocPushAuth.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+                
+                if (standaloneMsgAuth == null) {
+                    if ((standaloneMsgAuth = getValueByParamName("standaloneMsgAuth", childnode)) != null) {
+                    	// Not used
+                        continue;
+                    }
+                }
+                
+                if (presencePrfl == null) {
+                    if ((presencePrfl = getValueByParamName("presencePrfl", childnode)) != null) {
+                        if (presencePrfl.equals("1")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+                
+                if (geolocPullAuth == null) {
+                    if ((geolocPullAuth = getValueByParamName("geolocPullAuth", childnode)) != null) {
+                        // Not used
+                        continue;
+                    }
+                }
+                
+                if (beIPVoiceCallAuth == null) {
+                    if ((beIPVoiceCallAuth = getValueByParamName("beIPVoiceCallAuth", childnode)) != null) {
+                        // TODO
+                        continue;
+                    }
+                }
+                
+                if (beIPVideoCallAuth == null) {
+                    if ((beIPVideoCallAuth = getValueByParamName("beIPVideoCallAuth", childnode)) != null) {
+                        // TODO
+                        continue;
+                    }
+                }
+                
+            } while ((childnode = childnode.getNextSibling()) != null);
+        }
+    }
+    
+    /**
      * Parse XDMS
      *
      * @param node Node
@@ -561,6 +699,63 @@ public class ProvisioningParser {
         }
     }
 
+    /**
+     * Parse supl services
+     *
+     * @param node Node
+     */
+    private void parseSupl(Node node) {
+        String textMaxLength = null;
+        String locInfoMaxValidTime = null;
+        String geolocPullOpenValue = null;
+        String geolocPullApiGwAddress = null;
+        String geolocPullBlockTimer = null;
+        if (node == null) {
+            return;
+        }
+        Node childnode = node.getFirstChild();
+
+        if (childnode != null) {
+            do {
+                if (textMaxLength == null) {
+                    if ((textMaxLength = getValueByParamName("TextMaxLength", childnode)) != null) {
+                        RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH,
+                        		textMaxLength);
+                        continue;
+                    }
+                }
+
+                if (locInfoMaxValidTime == null) {
+                    if ((locInfoMaxValidTime = getValueByParamName("LocInfoMaxValidTime", childnode)) != null) {
+                        RcsSettings.getInstance().writeParameter(RcsSettingsData.GEOLOC_EXPIRATION_TIME, locInfoMaxValidTime);
+                        continue;
+                    }
+                }
+
+                if (geolocPullOpenValue == null) {
+                    if ((geolocPullOpenValue = getValueByParamName("geolocPullOpenValue", childnode)) != null) {
+                    	// Not used
+                        continue;
+                    }
+                }
+
+                if (geolocPullApiGwAddress == null) {
+                    if ((geolocPullApiGwAddress = getValueByParamName("geolocPullApiGwAddress", childnode)) != null) {
+                    	// Not used
+                        continue;
+                    }
+                }
+
+                if (geolocPullBlockTimer == null) {
+                    if ((geolocPullBlockTimer = getValueByParamName("geolocPullBlockTimer", childnode)) != null) {
+                        // Not used 
+                        continue;
+                    }
+                }
+            } while ((childnode = childnode.getNextSibling()) != null);
+        }
+    }
+    
     /**
      * Parse IM
      *
@@ -719,7 +914,8 @@ public class ProvisioningParser {
 
                 if (maxSize1toM == null) {
                     if ((maxSize1toM = getValueByParamName("MaxSize1toM", childnode)) != null) {
-                    	// Not used (same as "MaxSize1to1")
+                        RcsSettings.getInstance().writeParameter(
+                                RcsSettingsData.MAX_GROUPCHAT_MSG_LENGTH, maxSize1toM);
                         continue;
                     }
                 }
@@ -1087,6 +1283,7 @@ public class ProvisioningParser {
         String fileTranfer = null;
         String videoShare = null;
         String imageShare = null;
+        String geolocPush = null;
         if (node == null) {
             return;
         }
@@ -1155,6 +1352,19 @@ public class ProvisioningParser {
                         } else {
                             RcsSettings.getInstance().writeParameter(
                             		RcsSettingsData.CAPABILITY_IMAGE_SHARING, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+                
+                if (geolocPush == null) {
+                    if ((geolocPush = getValueByParamName("GeoLocPush", childnode)) != null) {
+                        if (geolocPush.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                            		RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, RcsSettingsData.FALSE);
                         }
                         continue;
                     }
@@ -1387,7 +1597,7 @@ public class ProvisioningParser {
                 if (realm == null) {
                     if ((realm = getValueByParamName("Realm", childnode)) != null) {
                         RcsSettings.getInstance().writeParameter(
-                                RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN, realm);
+                                RcsSettingsData.USERPROFILE_IMS_REALM, realm);
                         continue;
                     }
                 }
@@ -1448,6 +1658,10 @@ public class ProvisioningParser {
                                 parseAPN(childnode);
                             } else if (typenode.getNodeValue().equalsIgnoreCase("OTHER")) {
                                 parseOther(childnode);
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("SERVICES")) {
+                                parseServices(childnode);
+                            } else if (typenode.getNodeValue().equalsIgnoreCase("SUPL")) {
+                                parseSupl(childnode);
                             }
                         }
                     }

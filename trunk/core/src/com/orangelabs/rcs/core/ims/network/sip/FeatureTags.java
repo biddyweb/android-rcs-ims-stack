@@ -74,6 +74,11 @@ public class FeatureTags {
 	public final static String FEATURE_RCSE_SOCIAL_PRESENCE = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.sp";
 
 	/**
+	 * RCS-e geolocation push feature tag
+	 */
+	public final static String FEATURE_RCSE_GEOLOCATION_PUSH = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcs.geopush";
+	
+	/**
 	 * RCS-e extension feature tag prefix
 	 */
 	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";

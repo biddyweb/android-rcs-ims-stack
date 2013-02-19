@@ -43,7 +43,7 @@ public class GsmaClientConnector {
     	    for(int i=0; i < apps.size(); i++) {
     	    	ApplicationInfo info = apps.get(i);
     	        if (info.metaData != null) {
-    	        	if (info.metaData.getBoolean(GSMA_CLIENT, false) && !info.packageName.equals(me)) {
+    	        	if (info.metaData.getBoolean(GsmaClientConnector.GSMA_CLIENT, false) && !info.packageName.equals(me)) {
     	        		return true;
     	        	}
     	        }
@@ -68,7 +68,7 @@ public class GsmaClientConnector {
     	    for(int i=0; i < apps.size(); i++) {
     	    	ApplicationInfo info = apps.get(i);
     	        if (info.metaData != null) {
-    	        	if (info.metaData.getBoolean(GSMA_CLIENT, false) && !info.packageName.equals(me)) {
+    	        	if (info.metaData.getBoolean(GsmaClientConnector.GSMA_CLIENT, false) && !info.packageName.equals(me)) {
     	        		result.add(info);
     	        	}
     	        }

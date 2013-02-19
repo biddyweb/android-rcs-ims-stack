@@ -23,9 +23,11 @@ import android.content.DialogInterface.OnCancelListener;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
@@ -53,6 +55,11 @@ public class GroupChatView extends ChatView {
         } else  {
         	setTitle(getString(R.string.title_chat_view_group) + " " + subject);
         }
+        
+        // Set the message composer max length
+		InputFilter[] filterArray = new InputFilter[1];
+		filterArray[0] = new InputFilter.LengthFilter(RcsSettings.getInstance().getMaxGroupChatMessageLength());
+		composeText.setFilters(filterArray);
     }
     
     /**
@@ -112,9 +119,9 @@ public class GroupChatView extends ChatView {
 				int messageMessageType = cursor.getInt(EventsLogApi.TYPE_COLUMN);
 				switch (messageMessageType) {
 					case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
-						updateView(cursor);
-						break;
 					case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
+					case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
+					case EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC:
 						updateView(cursor);
 						break;
 				}

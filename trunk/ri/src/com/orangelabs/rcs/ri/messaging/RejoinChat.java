@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -256,6 +257,11 @@ public class RejoinChat {
 	    
 		// Request to add participant has failed
 		public void handleAddParticipantFailed(String reason) {
+			// Not used here
+		}
+		
+		// New geoloc message received
+		public void handleReceiveGeoloc(GeolocMessage geoloc) {
 			// Not used here
 		}
     };

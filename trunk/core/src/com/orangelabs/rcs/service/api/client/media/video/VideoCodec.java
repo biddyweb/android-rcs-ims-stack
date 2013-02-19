@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.service.api.client.media.video;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 
 /**
@@ -102,7 +103,7 @@ public class VideoCodec {
     /**
      * Get media codec
      * 
-     * @return media codec
+     * @return Media codec
      */
     public MediaCodec getMediaCodec() {
         return mediaCodec;
@@ -120,7 +121,7 @@ public class VideoCodec {
     /**
      * Get payload
      * 
-     * @return payload
+     * @return Payload
      */
     public int getPayload() {
         return mediaCodec.getIntParam(PAYLOAD, 96);
@@ -182,25 +183,33 @@ public class VideoCodec {
 
     /**
      * Compare codec encodings and resolutions
-     * 
+     *
      * @param codec Codec to compare
      * @return True if codecs are equals
      */
     public boolean compare(VideoCodec codec) {
+        boolean ret = false;
         if (getCodecName().equalsIgnoreCase(codec.getCodecName()) 
-                && getWidth() == codec.getWidth()
-                && getHeight() == codec.getHeight()) {
-            return true;
-        } else {
-            return false;
+                && (getWidth() == codec.getWidth() || getWidth() == 0 || codec.getWidth() == 0)
+                && (getHeight() == codec.getHeight() || getHeight() == 0 || codec.getHeight() == 0)) {
+            if (getCodecName().equalsIgnoreCase(H264Config.CODEC_NAME)) {
+                if (H264Config.getCodecProfileLevelId(getCodecParams()).compareToIgnoreCase(H264Config.getCodecProfileLevelId(codec.getCodecParams())) == 0) {
+                    ret =  true;
+                }
+            } else {
+                if (getCodecParams().equalsIgnoreCase(codec.getCodecParams())) {
+                    ret = true;
+                }
+            }
         }
+        return ret;
     }
 
     /**
      * Check if a codec is in a list
      *
-     * @param supportedCodecs list of supported codec
-     * @param codec selected codec
+     * @param supportedCodecs List of supported codec
+     * @param codec Selected codec
      * @return True if the codec is in the list
      */
     public static boolean checkVideoCodec(MediaCodec[] supportedCodecs, VideoCodec codec) {
@@ -212,7 +221,11 @@ public class VideoCodec {
         return false;
     }
 
-    @Override
+    /**
+     * Returns string representation of the video codec
+     * 
+     * @return String
+     */
     public String toString() {
         return "Codec " + getCodecName() + " " + getPayload() + " " +
                 getClockRate() + " " + getCodecParams() + " " +

@@ -59,8 +59,11 @@ interface IChatSession {
 	// Send a text message
 	String sendMessage(in String text);
 
-	// Send a geolocation
-	String sendGeolocation(in GeolocPush geoloc);
+	// Is geoloc supported
+	boolean isGeolocSupported();
+
+	// Send a geoloc message
+	String sendGeoloc(in GeolocPush geoloc);
 
 	// Set is composing status
 	void setIsComposingStatus(in boolean status);

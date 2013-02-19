@@ -27,6 +27,12 @@ import android.os.Parcelable;
  * @author Orange
  */
 public class GeolocPush implements Parcelable {
+    
+    /**
+     * Label associated to the location
+     */
+    private String label;
+
     /**
      * Latitude
      */
@@ -43,10 +49,10 @@ public class GeolocPush implements Parcelable {
     private double altitude;
 
     /**
-     * Label associated to the location
+     * Expiration date
      */
-    private String label;
-
+    private long expiration;
+    
     /**
      * Constructor
      *
@@ -54,12 +60,14 @@ public class GeolocPush implements Parcelable {
      * @param latitude Latitude
      * @param longitude Longitude
      * @param altitude Altitude
+     * @param expiration Expiration date
      */
-    public GeolocPush(String label, double latitude, double longitude, double altitude) {
+    public GeolocPush(String label, double latitude, double longitude, double altitude, long expiration) {
         this.label = label;
         this.latitude = latitude;
         this.longitude = longitude;
         this.altitude = altitude;
+        this.expiration = expiration;
     }
 
     /**
@@ -68,10 +76,11 @@ public class GeolocPush implements Parcelable {
      * @param source Parcelable source
      */
     public GeolocPush(Parcel source) {
-        this.label = source.readString();
-        this.latitude = source.readDouble();
-        this.longitude = source.readDouble();
-        this.altitude = source.readDouble();
+    	this.label = source.readString();
+    	this.latitude = source.readDouble(); 
+    	this.longitude = source.readDouble();     	    	                                              
+    	this.altitude = source.readDouble(); 
+    	this.expiration = source.readLong(); 
     }
 
     /**
@@ -91,10 +100,11 @@ public class GeolocPush implements Parcelable {
      * @param flags Additional flags about how the object should be written
      */
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(label);
+    	dest.writeString(label);
         dest.writeDouble(latitude);
         dest.writeDouble(longitude);
-        dest.writeDouble(altitude);
+    	dest.writeDouble(altitude);
+    	dest.writeLong(expiration);
     }
 
     /**
@@ -124,7 +134,7 @@ public class GeolocPush implements Parcelable {
      *
      * @param label Label
      */
-    public void getLabel(String label) {
+    public void setLabel(String label) {
         this.label = label;
     }
 
@@ -181,7 +191,25 @@ public class GeolocPush implements Parcelable {
     public void setAltitude(double altitude) {
         this.altitude = altitude;
     }
-
+    
+    /**
+     * Returns the expiration date
+     *
+     * @return Expiration date
+     */
+    public long getExpiration() {
+        return expiration;
+    }
+ 
+    /**
+     * Set the expiration
+     *
+     * @param expiration Expiration
+     */
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
+    }
+ 
     /**
      * Returns a string representation of the object
      *
@@ -191,6 +219,7 @@ public class GeolocPush implements Parcelable {
         return "Label=" + label +
                 ", Latitude=" + latitude +
                 ", Longitude=" + longitude +
-                ", Altitude=" + altitude;
+                ", Altitude=" + altitude +
+        		", Expiration=" + expiration;
     }
 }

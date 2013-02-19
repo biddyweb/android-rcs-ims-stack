@@ -503,9 +503,9 @@ public class RcsSettings {
 	}
 
     /**
-     * Get the MinBatteryLevel
+     * Get the min battery level
      *
-     * @return int
+     * @return Battery level in percentage
      */
     public int getMinBatteryLevel() {
         int result = 0;
@@ -518,13 +518,39 @@ public class RcsSettings {
     }
 
     /**
-     * Set the MinBatteryLevel
+     * Set the min battery level
      *
-     * @param int level
+     * @param level Battery level in percentage
      */
     public void setMinBatteryLevel(int level) {
         if (instance != null) {
             writeParameter(RcsSettingsData.MIN_BATTERY_LEVEL, "" + level);
+        }
+    }
+
+    /**
+     * Get the min storage capacity
+     *
+     * @return Capacity in kilobytes
+     */
+    public int getMinStorageCapacity() {
+        int result = 0;
+        if (instance != null) {
+            try {
+                result = Integer.parseInt(readParameter(RcsSettingsData.MIN_STORAGE_CAPACITY));
+            } catch(Exception e) {}
+        }
+        return result;
+    }
+
+    /**
+     * Set the min storage capacity
+     *
+     * @param capacity Capacity in kilobytes
+     */
+    public void setMinStorageCapacity(int capacity) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.MIN_STORAGE_CAPACITY, "" + capacity);
         }
     }
 
@@ -956,6 +982,7 @@ public class RcsSettings {
 		capabilities.setPresenceDiscoverySupport(isPresenceDiscoverySupported());
 		capabilities.setSocialPresenceSupport(isSocialPresenceSupported());
 		capabilities.setVideoSharingSupport(isVideoSharingSupported());
+		capabilities.setGeolocationPushSupport(isGeoLocationPushSupported());
 		capabilities.setTimestamp(System.currentTimeMillis());
 
 		// Add extensions
@@ -1030,7 +1057,22 @@ public class RcsSettings {
 		return result;
 	}
 
-    /**
+	/**
+     * Get max length of a group chat message
+     *
+     * @return Number of char
+     */
+	public int getMaxGroupChatMessageLength() {
+		int result = 100;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_GROUPCHAT_MSG_LENGTH));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+	
+	/**
      * Get idle duration of a chat session
      *
      * @return Duration in seconds
@@ -1778,6 +1820,19 @@ public class RcsSettings {
 		return result;
 	}
 
+    /**
+     * Is geolocation push supported
+     *
+     * @return Boolean
+     */
+	public boolean isGeoLocationPushSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH));
+		}
+		return result;
+	}
+	
 	/**
      * Get supported RCS extensions
      *
@@ -2277,5 +2332,35 @@ public class RcsSettings {
             result = Boolean.parseBoolean(readParameter(RcsSettingsData.SECURE_RTP_OVER_WIFI));
         }
         return result;
+	}
+	
+    /**
+     * Get max geolocation label length
+     *
+     * @return Number of char
+     */
+	public int getMaxGeolocLabelLength() {
+		int result = 100;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+	
+    /**
+     * Get geolocation expiration time
+     *
+     * @return Time in seconds
+     */
+	public int getGeolocExpirationTime() {
+		int result = 1800;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.GEOLOC_EXPIRATION_TIME));
+			} catch(Exception e) {}
+		}
+		return result;
 	}
 }

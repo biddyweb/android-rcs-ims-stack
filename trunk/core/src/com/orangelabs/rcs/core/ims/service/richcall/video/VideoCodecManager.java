@@ -43,11 +43,16 @@ public class VideoCodecManager {
      */
     public static String createCodecSdpPart(MediaCodec codec, int localRtpPort) {
     	VideoCodec videoCodec = new VideoCodec(codec);
-        String result = "m=video " + localRtpPort + " RTP/AVP" + " " + videoCodec.getPayload() + SipUtils.CRLF
-                + "a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF
-                + "a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF
-                + "a=framerate:" + videoCodec.getFramerate() + SipUtils.CRLF
-                + "a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF;
+        String result = "";
+        result += "m=video " + localRtpPort + " RTP/AVP" + " " + videoCodec.getPayload() + SipUtils.CRLF;
+        result += "a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF;
+        if (videoCodec.getWidth() != 0 && videoCodec.getHeight() != 0) {
+            result += "a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF;
+        }
+        if (videoCodec.getFramerate() != 0) {
+            result += "a=framerate:" + videoCodec.getFramerate() + SipUtils.CRLF;
+        }
+        result += "a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF;
         return result;
     }
 
@@ -60,10 +65,10 @@ public class VideoCodecManager {
     public static String createCodecSdpPart(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuffer result = new StringBuffer();
 
-        // Insert codecs
+        // Create video codec list
         Vector<VideoCodec> codecs = new Vector<VideoCodec>();
         for (int i = 0; i < supportedCodecs.length; i++) {
-            codecs.insertElementAt(new VideoCodec(supportedCodecs[i]), 0);
+            codecs.add(new VideoCodec(supportedCodecs[i]));
         }
 
         result.append("m=video " + localRtpPort + " RTP/AVP");
@@ -74,11 +79,14 @@ public class VideoCodecManager {
         result.append(SipUtils.CRLF);
         for (int i = 0; i < codecs.size(); i++) {
             VideoCodec videoCodec = codecs.elementAt(i);
-            result.append(
-                    "a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF +
-                    "a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF +
-                    "a=framerate:" + videoCodec.getPayload() + " " + videoCodec.getFramerate() + SipUtils.CRLF +
-                    "a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF);
+            result.append("a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF);
+            if (videoCodec.getWidth() != 0 && videoCodec.getHeight() != 0) {
+                result.append("a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF);
+            }
+            if (videoCodec.getFramerate() != 0) {
+                result.append("a=framerate:" + videoCodec.getFramerate() + SipUtils.CRLF);
+            }
+            result.append("a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF);
         }
 
         return result.toString();
@@ -95,14 +103,12 @@ public class VideoCodecManager {
         VideoCodec selectedCodec = null;
         int pref = -1;
         for (int i = 0; i < proposedCodecs.size(); i++) {
+            VideoCodec proposedCodec = proposedCodecs.get(i);
             for (int j = 0; j < supportedCodecs.length; j++) {
                 VideoCodec videoCodec = new VideoCodec(supportedCodecs[j]);
                 int videoCodecPref = supportedCodecs.length - 1 - j;
-                VideoCodec proposedCodec = proposedCodecs.get(i);
-                // Compare Codec name and size + Profile/Level + Bitrate
-                if ((proposedCodec.compare(videoCodec)) 
-                        && (H264Config.getCodecProfileLevelId(videoCodec.getCodecParams()).compareToIgnoreCase(H264Config.getCodecProfileLevelId(proposedCodec.getCodecParams())) == 0)
-                        && (videoCodec.getBitrate() >= proposedCodec.getBitrate())) {
+                // Compare Codec
+                if (proposedCodec.compare(videoCodec)) {
                     if (videoCodecPref > pref) {
                         pref = videoCodecPref;
                         selectedCodec = new VideoCodec(proposedCodec.getCodecName(),
@@ -111,14 +117,16 @@ public class VideoCodecManager {
                                 (proposedCodec.getCodecParams().length() == 0) ? videoCodec.getCodecParams() : proposedCodec.getCodecParams(),
                                 (proposedCodec.getFramerate() == 0) ? videoCodec.getFramerate() : proposedCodec.getFramerate(),
                                 (proposedCodec.getBitrate() == 0) ? videoCodec.getBitrate() : proposedCodec.getBitrate(),
-                                proposedCodec.getWidth(),
-                                proposedCodec.getHeight());
+                                (proposedCodec.getWidth() == 0) ? videoCodec.getWidth() : proposedCodec.getWidth(),
+                                (proposedCodec.getHeight() == 0) ? videoCodec.getHeight() : proposedCodec.getHeight());
                     }
                 }
             }
         }
         return selectedCodec;
     }
+
+    
 
     /**
      * Create a video codec from its SDP description
@@ -145,8 +153,8 @@ public class VideoCodecManager {
 	
 	        // Extract video size
 	        MediaAttribute frameSize = media.getMediaAttribute("framesize");
-	        int videoWidth = H264Config.VIDEO_WIDTH; // default value
-	        int videoHeight = H264Config.VIDEO_HEIGHT; // default value
+            int videoWidth = 0;
+            int videoHeight = 0;
 	        if (frameSize != null) {
 	        	try {
 		            String value = frameSize.getValue();

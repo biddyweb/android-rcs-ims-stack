@@ -13,8 +13,8 @@
 <string name="label_not_implemented">Not yet implemented</string>
 <string name="label_ims_disconnected">Service has been disconnected from the IMS</string>
 <string name="label_api_failed">Call API method has failed</string>
-<string name="label_api_disconnected">RCS service has been stopped</string>
-<string name="label_api_disabled">RCS service is not started</string>
+<string name="label_api_disconnected">joyn service has been stopped</string>
+<string name="label_api_disabled">joyn service is not started</string>
 <string name="label_ok">OK</string>
 <string name="label_cancel">Cancel</string>
 <string name="label_refresh">Refresh</string>

@@ -31,10 +31,12 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
@@ -165,6 +167,20 @@ public class ChatUtils {
     	}
     }
 
+    /**
+     * Is a geolocation event type
+     * 
+     * @param mime MIME type
+     * @return Boolean
+     */
+    public static boolean isGeolocType(String mime) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(GeolocInfoDocument.MIME_TYPE)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
     /**
      * Generate a unique message ID
      * 
@@ -489,6 +505,44 @@ public class ChatUtils {
 	        "<datetime>" + DateUtils.encodeDate(System.currentTimeMillis()) + "</datetime>" + CRLF +
 	        "<" + method + "><status><" + status + "/></status></" + method + ">" + CRLF +
 	        "</imdn>";
+	}
+	
+	/**
+	* Build a geoloc document
+	* 
+	* @param geoloc Geoloc info
+	* @param contact Contact
+	* @param msgId Message ID
+	* @return XML document
+	*/
+	public static String buildGeolocDocument(GeolocPush geoloc, String contact, String msgId) {		
+		String document= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
+				"<rcsenveloppe xmlns=\"urn:gsma:params:xml:ns:rcs:rcs:geolocation\"" +
+				" xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\"" +
+				" xmlns:gp=\"urn:ietf:params:xml:ns:pidf:geopriv10\"" +
+				" xmlns:gml=\"http://www.opengis.net/gml\"" +
+				" xmlns:gs=\"http://www.opengis.net/pidflo/1.0\"" +
+				" entity=\""+ contact +"\">" + CRLF;
+		String expire = DateUtils.encodeDate(geoloc.getExpiration());
+		document += "<rcspushlocation id=\""+ msgId +"\" label=\""+ geoloc.getLabel() +"\" >" +
+				"<rpid:place-type rpid:until=\""+ expire +"\">" +				
+				"</rpid:place-type>" + CRLF + 
+				"<rpid:time-offset rpid:until=\""+ expire +"\"></rpid:time-offset>" + CRLF +
+				"<gp:geopriv>" + CRLF + 
+				"<gp:location-info>" + CRLF +
+				"<gs:Circle srsName=\"urn:ogc:def:crs:EPSG::4326\">" + CRLF +
+				"<gml:pos>"+ geoloc.getLatitude()+" "+geoloc.getLongitude()+" "+geoloc.getAltitude() +"</gml:pos>" + CRLF +
+				"<gs:radius uom=\"urn:ogc:def:uom:EPSG::9001\">10</gs:radius>" + CRLF +
+				"</gs:Circle>" + CRLF +
+				"</gp:location-info>" + CRLF + 
+				"<gp:usage-rules>" + CRLF +
+				"<gp:retention-expiry>"+ expire +"</gp:retention-expiry>" + CRLF +
+				"</gp:usage-rules>" + CRLF + 
+				"</gp:geopriv>" + CRLF + 
+				"<timestamp>"+ DateUtils.encodeDate(System.currentTimeMillis()) +"</timestamp>" + CRLF + 
+				"</rcspushlocation>" + CRLF;
+		document += "</rcsenveloppe>" + CRLF;
+		return document;
 	}
 	
 	/**

@@ -95,7 +95,7 @@ public class ImsConnectionManager implements Runnable {
 	private String apn;
 
     /**
-     * Launch state
+     * Battery level state
      */
     private boolean disconnectedByBattery = false;
 
@@ -103,40 +103,6 @@ public class ImsConnectionManager implements Runnable {
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
-    /**
-     * Network state listener
-     */
-    private BroadcastReceiver batteryLevelObserver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (RcsSettings.getInstance().isServiceActivated()) {
-                int batteryLimit = RcsSettings.getInstance().getMinBatteryLevel();
-                if (batteryLimit > 0) {
-                    int batteryLevel = intent.getIntExtra("level", 0);
-                    int batteryPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 1);
-                    if (logger.isActivated()) {
-                        logger.info("Battery level: " + batteryLevel + "% plugged: " + Integer.toString(batteryPlugged));
-                    }
-                    if (batteryLevel <= batteryLimit && batteryPlugged == 0) {
-                        if (!disconnectedByBattery) {
-                            // Disconnect
-                            disconnectedByBattery = true;
-                            disconnectFromIms();
-                        }
-                    } else {
-                        if (disconnectedByBattery) {
-                            disconnectedByBattery = false;
-                            // Launch connection with a connection event
-                            connectionEvent(new Intent(ConnectivityManager.CONNECTIVITY_ACTION));
-                        }
-                    }
-                } else {
-                    disconnectedByBattery = false;
-                }
-            }
-        }
-    };
 
     /**
 	 * Constructor
@@ -230,19 +196,22 @@ public class ImsConnectionManager implements Runnable {
 	}	
 
     /**
-     * Is disconnected by battery.
+     * Is disconnected by battery
      *
-     * @return true if disconnected by battery
+     * @return Returns true if disconnected by battery, else returns false
      */
     public boolean isDisconnectedByBattery() {
         return disconnectedByBattery;
-    }
-
+    }	
+	
 	/**
 	 * Load the user profile associated to the network interface
 	 */
 	private void loadUserProfile() {
     	ImsModule.IMS_USER_PROFILE = currentNetworkInterface.getUserProfile();
+		if (logger.isActivated()) {
+			logger.debug("User profile has been reloaded");
+		}
 	}
 	
 	/**
@@ -253,18 +222,18 @@ public class ImsConnectionManager implements Runnable {
     		logger.info("Terminate the IMS connection manager");
     	}
 
-		// Unregister network state listener
-    	try {
-    		AndroidFactory.getApplicationContext().unregisterReceiver(networkStateListener);
-        } catch (IllegalArgumentException e) {
-        	// Nothing to do
-        }
-
         // Unregister battery listener
         try {
             AndroidFactory.getApplicationContext().unregisterReceiver(batteryLevelObserver);
         } catch (IllegalArgumentException e) {
             // Nothing to do
+        }
+
+        // Unregister network state listener
+    	try {
+    		AndroidFactory.getApplicationContext().unregisterReceiver(networkStateListener);
+        } catch (IllegalArgumentException e) {
+        	// Nothing to do
         }
 
     	// Stop the IMS connection manager
@@ -299,168 +268,170 @@ public class ImsConnectionManager implements Runnable {
      * @param intent Intent
      */
     private synchronized void connectionEvent(Intent intent) {
-		if (!disconnectedByBattery && intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-			
-			boolean connectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
-            String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
-            boolean failover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER, false);
+    	if (disconnectedByBattery) {
+    		return;
+    	}
+    	
+		if (!intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
+			return;
+		}
+		
+		boolean connectivity = intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY, false);
+        String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
+        boolean failover = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER, false);
+		if (logger.isActivated()) {
+			logger.debug("Connectivity event change: failover=" + failover + ", connectivity=" + !connectivity + ", reason=" + reason);
+		}
+
+		// Check received network info
+    	NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
+		if (networkInfo == null) {
+			// Disconnect from IMS network interface
 			if (logger.isActivated()) {
-				logger.debug("Connectivity event change: failover=" + failover + ", connectivity=" + !connectivity + ", reason=" + reason);
+				logger.debug("Disconnect from IMS: no network (e.g. air plane mode)");
+			}
+			disconnectFromIms();
+			return;
+		}
+
+        // Check if SIM account has changed
+        String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
+        String currentUserAccount = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
+        if (lastUserAccount != null) {
+            if ((currentUserAccount == null) || !currentUserAccount.equalsIgnoreCase(lastUserAccount)) {
+                imsModule.getCoreListener().handleSimHasChanged();
+                return;
+            }
+        }
+
+		// Get the current local IP address
+		String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(networkInfo.getType());
+		if (logger.isActivated()) {
+			logger.debug("Local IP address for interface " + networkInfo.getTypeName() + " is " + localIpAddr);
+		}   				
+
+		// Check if the network access type has changed 
+		if (networkInfo.getType() != currentNetworkInterface.getType()) {
+			// Network interface changed
+			if (logger.isActivated()) {
+				logger.info("Data connection state: NETWORK ACCESS CHANGED");
 			}
 
-			// Check received network info
-	    	NetworkInfo networkInfo = connectivityMgr.getActiveNetworkInfo();
-			if (networkInfo == null) {
-				// Disconnect from IMS network interface
+			// Disconnect from current IMS network interface
+			if (logger.isActivated()) {
+				logger.debug("Disconnect from IMS: network access has changed");
+			}
+			disconnectFromIms();
+
+			// Change current network interface
+			if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
 				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: no network (e.g. air plane mode)");
+					logger.debug("Change the network interface to mobile");
+				}
+				currentNetworkInterface = getMobileNetworkInterface();
+			} else
+			if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+				if (logger.isActivated()) {
+					logger.debug("Change the network interface to Wi-Fi");
+				}
+				currentNetworkInterface = getWifiNetworkInterface();
+			}				
+
+			// Load the user profile for the new network interface
+			loadUserProfile();
+		} else {
+			// Check if the IP address has changed
+			if ((localIpAddr != null) &&
+					!localIpAddr.equals(currentNetworkInterface.getNetworkAccess().getIpAddress())) {
+				// Disconnect from current IMS network interface
+				if (logger.isActivated()) {
+					logger.debug("Disconnect from IMS: IP address has changed");
 				}
 				disconnectFromIms();
+			}
+		}
+		
+		// Check if there is an IP connectivity
+		if (networkInfo.isConnected() && (localIpAddr != null)) {
+			if (logger.isActivated()) {
+				logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName());
+			}
+
+			// Test network access type
+			if ((network != RcsSettingsData.ANY_ACCESS) && (network != networkInfo.getType())) {
+				if (logger.isActivated()) {
+					logger.warn("Network access " + networkInfo.getTypeName() + " is not authorized");
+				}
 				return;
 			}
 
-            // Check if SIM account has changed
-            String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
-            String currentUserAccount = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
-            if (lastUserAccount != null) {
-                if ((currentUserAccount == null) || !currentUserAccount.equalsIgnoreCase(lastUserAccount)) {
-                    imsModule.getCoreListener().handleSimHasChanged();
-                    return;
-                }
-            }
-
-			// Get the current local IP address
-			String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(networkInfo.getType());
-			if (logger.isActivated()) {
-				logger.debug("Local IP address for interface " + networkInfo.getTypeName() + " is " + localIpAddr);
-			}   				
-
-			// Check if the network access type has changed 
-			if (networkInfo.getType() != currentNetworkInterface.getType()) {
-				// Network interface changed
-				if (logger.isActivated()) {
-					logger.info("Data connection state: NETWORK ACCESS CHANGED");
-				}
-
-				// Disconnect from current IMS network interface
-				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: network access has changed");
-				}
-				disconnectFromIms();
-
-				// Change current network interface
-				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+			// Test roaming flag if mobile network
+			if ((networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) && networkInfo.isRoaming()) {
+				if (!RcsSettings.getInstance().isRoamingAuthorized()) {
 					if (logger.isActivated()) {
-						logger.debug("Change the network interface to mobile");
-					}
-					currentNetworkInterface = getMobileNetworkInterface();
-				} else
-				if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
-					if (logger.isActivated()) {
-						logger.debug("Change the network interface to Wi-Fi");
-					}
-					currentNetworkInterface = getWifiNetworkInterface();
-				}				
-
-				// Load the user profile for the new network interface
-				loadUserProfile();
-				if (logger.isActivated()) {
-					logger.debug("User profile has been reloaded");
-				}
-			} else {
-				// Check if the IP address has changed
-				if ((localIpAddr != null) &&
-						!localIpAddr.equals(currentNetworkInterface.getNetworkAccess().getIpAddress())) {
-					// Disconnect from current IMS network interface
-					if (logger.isActivated()) {
-						logger.debug("Disconnect from IMS: IP address has changed");
-					}
-					disconnectFromIms();
-				}
-			}
-			
-			// Check if there is an IP connectivity
-			if (networkInfo.isConnected() && (localIpAddr != null)) {
-				if (logger.isActivated()) {
-					logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName());
-				}
-	
-				// Test network access type
-				if ((network != RcsSettingsData.ANY_ACCESS) && (network != networkInfo.getType())) {
-					if (logger.isActivated()) {
-						logger.warn("Network access " + networkInfo.getTypeName() + " is not authorized");
+						logger.warn("RCS not authorized in roaming");
 					}
 					return;
 				}
+			}
+			
+			// Test the operator id
+			TelephonyManager tm = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+			String currentOpe = tm.getSimOperatorName();
+			if ((operator.length() > 0) && !currentOpe.equalsIgnoreCase(operator)) {
+				if (logger.isActivated()) {
+					logger.warn("Operator not authorized");
+				}
+				return;
+			}
 
-				// Test roaming flag if mobile network
-				if ((networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) && networkInfo.isRoaming()) {
-					if (!RcsSettings.getInstance().isRoamingAuthorized()) {
+            if (Build.VERSION.SDK_INT < 17) { // From Android 4.2, the management of APN is only for system app 
+				// Test the default APN configuration if mobile network
+				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+					ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
+					String currentApn = null;
+					Cursor c = cr.query(Uri.parse("content://telephony/carriers/preferapn"),
+							new String[] { "apn" }, null, null, null);
+					if (c != null) {
+						final int apnIndex = c.getColumnIndexOrThrow("apn");
+						if (c.moveToFirst()) {
+							currentApn = c.getString(apnIndex);
+						}
+						c.close();
+					}
+					if ((apn.length() > 0) && !apn.equalsIgnoreCase(currentApn)) {
 						if (logger.isActivated()) {
-							logger.warn("RCS not authorized in roaming");
+							logger.warn("APN not authorized");
 						}
 						return;
 					}
 				}
-				
-				// Test the operator id
-				TelephonyManager tm = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-				String currentOpe = tm.getSimOperatorName();
-				if ((operator.length() > 0) && !currentOpe.equalsIgnoreCase(operator)) {
-					if (logger.isActivated()) {
-						logger.warn("Operator not authorized");
-					}
-					return;
-				}
+            }
 
-                if (Build.VERSION.SDK_INT < 17) { // From Android 4.2, the management of APN is only for system app 
-    				// Test the default APN configuration if mobile network
-    				if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
-    					ContentResolver cr = AndroidFactory.getApplicationContext().getContentResolver();
-    					String currentApn = null;
-    					Cursor c = cr.query(Uri.parse("content://telephony/carriers/preferapn"),
-    							new String[] { "apn" }, null, null, null);
-    					if (c != null) {
-    						final int apnIndex = c.getColumnIndexOrThrow("apn");
-    						if (c.moveToFirst()) {
-    							currentApn = c.getString(apnIndex);
-    						}
-    						c.close();
-    					}
-    					if ((apn.length() > 0) && !apn.equalsIgnoreCase(currentApn)) {
-    						if (logger.isActivated()) {
-    							logger.warn("APN not authorized");
-    						}
-    						return;
-    					}
-    				}
-                }
+			// Test the configuration
+			if (!currentNetworkInterface.isInterfaceConfigured()) {
+				if (logger.isActivated()) {
+					logger.warn("IMS network interface not well configured");
+				}
+				return;
+			}
 
-				// Test the configuration
-				if (!currentNetworkInterface.isInterfaceConfigured()) {
-					if (logger.isActivated()) {
-						logger.warn("IMS network interface not well configured");
-					}
-					return;
-				}
+			// Connect to IMS network interface
+			if (logger.isActivated()) {
+				logger.debug("Connect to IMS");
+			}
+			connectToIms(localIpAddr);
+		} else {
+			if (logger.isActivated()) {
+				logger.info("Data connection state: DISCONNECTED from " + networkInfo.getTypeName());
+			}
 
-				// Connect to IMS network interface
-				if (logger.isActivated()) {
-					logger.debug("Connect to IMS");
-				}
-				connectToIms(localIpAddr);
-			} else {
-				if (logger.isActivated()) {
-					logger.info("Data connection state: DISCONNECTED from " + networkInfo.getTypeName());
-				}
-	
-				// Disconnect from IMS network interface
-				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: IP connection lost");
-				}
-				disconnectFromIms();
-	    	}
-	    }
+			// Disconnect from IMS network interface
+			if (logger.isActivated()) {
+				logger.debug("Disconnect from IMS: IP connection lost");
+			}
+			disconnectFromIms();
+    	}
     }    
     
     /**
@@ -634,4 +605,38 @@ public class ImsConnectionManager implements Runnable {
     		logger.debug("IMS connection polling is terminated");
     	}
 	}
+
+    /**
+     * Battery level listener
+     */
+    private BroadcastReceiver batteryLevelObserver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int batteryLimit = RcsSettings.getInstance().getMinBatteryLevel();
+            if (batteryLimit > 0) {
+                int batteryLevel = intent.getIntExtra("level", 0);
+                int batteryPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 1);
+                if (logger.isActivated()) {
+                    logger.info("Battery level: " + batteryLevel + "% plugged: " + batteryPlugged);
+                }
+                if (/* batteryLevel <= batteryLimit && */ batteryPlugged == 0) {
+                    if (!disconnectedByBattery) {
+                        disconnectedByBattery = true;
+
+                        // Disconnect
+                        disconnectFromIms();
+                    }
+                } else {
+                    if (disconnectedByBattery) {
+                        disconnectedByBattery = false;
+                        
+                        // Reconnect with a connection event
+                        connectionEvent(new Intent(ConnectivityManager.CONNECTIVITY_ACTION));
+                    }
+                }
+            } else {
+                disconnectedByBattery = false;
+            }
+        }
+    };
 }

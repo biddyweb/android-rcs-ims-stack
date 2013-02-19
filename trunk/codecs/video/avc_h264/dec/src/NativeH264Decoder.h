@@ -23,9 +23,14 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
 /*
  * Method:    DecodeAndConvert
  */
-JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
-  (JNIEnv *, jclass, jbyteArray, jintArray);
+JNIEXPORT jintArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
+  (JNIEnv *, jclass, jbyteArray);
 
+/*
+ * Method:    GetLastDecodeStatus
+ */
+JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_getLastDecodeStatus
+  (JNIEnv *env, jclass clazz);
 
 #ifdef __cplusplus
 }

@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -39,6 +41,7 @@ import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -80,6 +83,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     private long fileSize;
     
     /**
+     * File type
+     */
+    private String fileType;
+    
+    /**
      * Auto accept
      */
     private boolean autoAccept = false;
@@ -101,6 +109,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		fileSize = getIntent().getLongExtra("filesize", -1);
+		fileType = getIntent().getStringExtra("filetype");
 		autoAccept = getIntent().getBooleanExtra("autoAccept", false);
 
 		// Remove the notification
@@ -322,11 +331,17 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		public void handleTransferError(final int error) {
 			handler.post(new Runnable() { 
 				public void run() {
-					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_transfer_failed, error));
+                    if (error == FileSharingError.MEDIA_SIZE_TOO_BIG) {
+                        Utils.showMessageAndExit(ReceiveFileTransfer.this,
+                                getString(R.string.label_transfer_failed_too_big));
+                    } else {
+                        Utils.showMessageAndExit(ReceiveFileTransfer.this,
+                                getString(R.string.label_transfer_failed, error));
+                    }
 				}
 			});
 		}
-		
+
 		// File has been transfered
 		public void handleFileTransfered(final String filename) {
 			handler.post(new Runnable() { 
@@ -338,8 +353,17 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progress_bar);
 			        progressBar.setProgress(progressBar.getMax());
 			        
-			        // Show the transfered image
-			        Utils.showPictureAndExit(ReceiveFileTransfer.this, filename);	
+			        if (fileType.equals("text/vcard")) {
+			        	// Show the transfered vCard
+			        	File file = new File(filename);
+			    		Uri uri = Uri.fromFile(file);
+			    		Intent intent = new Intent(Intent.ACTION_VIEW);
+			    		intent.setDataAndType(uri, "text/x-vcard");   		
+			    		startActivity(intent);
+			        } else {
+				        // Show the transfered image
+				        Utils.showPictureAndExit(ReceiveFileTransfer.this, filename);
+			        }
 				}
 			});
 		}

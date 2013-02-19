@@ -4,7 +4,7 @@
 	<string name="rcs_settings_label_cancel">Cancel</string>
 
     <string name="rcs_settings_title_settings">Settings</string>
-	<string name="rcs_settings_title_about">About Joyn</string>
+	<string name="rcs_settings_title_about">About joyn</string>
 	<string name="rcs_settings_title_userprofile_settings">User profile settings</string>
 	<string name="rcs_settings_title_presence_settings">Presence settings</string>
 	<string name="rcs_settings_title_presence_invitation">Presence invitation settings</string>
@@ -31,24 +31,25 @@
 	<string name="rcs_settings_summary_presence_ringtone">Ringtone for incoming presence sharing invitation</string>
 	<string name="rcs_settings_summary_filetransfer_ringtone">Ringtone for incoming file transfer invitation</string>
 	<string name="rcs_settings_summary_chat_ringtone">Ringtone for incoming chat invitation</string>
-	<string name="rcs_settings_summary_rcs_service_on">Select to turn off the Joyn service</string>
-	<string name="rcs_settings_summary_rcs_service_off">Select to turn on the Joyn service</string>
-	<string name="rcs_settings_summary_rcs_roaming">Connect to Joyn service when roaming</string>
+	<string name="rcs_settings_summary_rcs_service_on">Select to turn off the joyn service</string>
+	<string name="rcs_settings_summary_rcs_service_off">Select to turn on the joyn service</string>
+	<string name="rcs_settings_summary_rcs_roaming">Connect to joyn service when roaming</string>
 	<string name="rcs_settings_summary_edit_freetext">Edit your predefined free text</string>
 	<string name="rcs_settings_summary_csh_available">Beep when a content sharing may be initiated during the voice call</string>
 	<string name="rcs_settings_summary_video_format">Select the video codec</string>
 	<string name="rcs_settings_summary_video_size">Select the video display resolution</string>
-    <string name="rcs_settings_summary_min_battery_level">Stop the Joyn service if battery low</string>
+    <string name="rcs_settings_summary_min_battery_level">Stop the joyn service if battery low</string>
+    <string name="rcs_settings_summary_min_storage">Disable File transfer and Image sharing capabilities if memory low</string>
 
 	<string name="rcs_settings_label_beep">Phone beep</string>
     <string name="rcs_settings_label_vibrate">Phone vibrate</string>
     <string name="rcs_settings_label_ringtone">Phone ringtone</string>
-    <string name="rcs_settings_label_rcs_service">Joyn service</string>
+    <string name="rcs_settings_label_rcs_service">joyn service</string>
     <string name="rcs_settings_label_rcs_roaming">Roaming</string>
 	<string name="rcs_settings_label_confirm">Confirmation</string>
-	<string name="rcs_settings_label_rcs_service_shutdown">Joyn service will be terminated</string>
-    <string name="rcs_settings_label_rcs_service_roaming_shutdown">You are currently in roaming, Joyn service will be terminated</string>
-	<string name="rcs_settings_label_about">Joyn application</string>
+	<string name="rcs_settings_label_rcs_service_shutdown">joyn service will be terminated</string>
+    <string name="rcs_settings_label_rcs_service_roaming_shutdown">You are currently in roaming, joyn service will be terminated</string>
+	<string name="rcs_settings_label_about">joyn application</string>
 	<string name="rcs_settings_label_copyrights">Apache License Version 2.0</string>
 	<string name="rcs_settings_label_release">Release</string>
 
@@ -65,6 +66,21 @@
         <item>5%</item>
         <item>10%</item>
         <item>20%</item>
+    </string-array>
+
+    <string name="rcs_settings_label_min_storage">Minimum storage</string>
+    <string name="rcs_settings_label_default_min_storage">10240</string>
+    <string-array name="rcs_settings_list_storage_value">
+        <item>0</item>
+        <item>10240</item>
+        <item>51200</item>
+        <item>204800</item>
+    </string-array>
+    <string-array name="rcs_settings_list_storage_label">
+        <item>Never block</item>
+        <item>10MB</item>
+        <item>50MB</item>
+        <item>200MB</item>
     </string-array>
 
 	<string name="rcs_settings_label_default_freetext_1">Hello world !</string>

@@ -322,15 +322,10 @@ public class Utils {
         	return;
         }
         
-    	Bitmap bitmap = null;
     	try {
 	        File file = new File(url);
 	        FileInputStream stream =  new FileInputStream(file);
-	        bitmap = BitmapFactory.decodeStream(stream);
-		} catch(Exception e) {
-		}
-
-		if (bitmap != null) {
+	        Bitmap bitmap = BitmapFactory.decodeStream(stream);
 	        LayoutInflater factory = LayoutInflater.from(activity);
 	        final View view = factory.inflate(R.layout.utils_show_picture, null);
 	        ImageView imgView = (ImageView)view.findViewById(R.id.picture);
@@ -346,7 +341,8 @@ public class Utils {
 	    	});
 	    	AlertDialog alert = builder.create();
 	    	alert.show();
-		} else {
+		} catch(Exception e) {
+			e.printStackTrace();
 			// TODO: display error
 		}
     }
