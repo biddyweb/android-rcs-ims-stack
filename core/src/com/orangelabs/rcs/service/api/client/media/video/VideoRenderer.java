@@ -29,6 +29,7 @@ import android.os.SystemClock;
 import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
@@ -52,7 +53,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class VideoRenderer extends IMediaRenderer.Stub {
 
     /**
-     * List of supported video codecs.
+     * List of supported video codecs
      */
     private MediaCodec[] supportedMediaCodecs = null;
 
@@ -112,17 +113,17 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     private Vector<IMediaEventListener> listeners = new Vector<IMediaEventListener>();
 
     /**
-     * The logger
-     */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
-    /**
      * Temporary connection to reserve the port
      */
     private DatagramConnection temporaryConnection = null;
 
     /**
-     * Constructor.
+     * The logger
+     */
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    /**
+     * Constructor
      */
     public VideoRenderer() {
         // Set the local RTP port
@@ -139,9 +140,9 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     }
 
     /**
-     * Constructor Force a list of video codecs.
+     * Constructor with a list of video codecs
      *
-     * @param codecs ordered codecs list (prefered codec in first)
+     * @param codecs Ordered list of codecs (preferred codec in first)
      */
     public VideoRenderer(MediaCodec[] codecs) {
         // Set the local RTP port
@@ -185,9 +186,9 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     }
 
     /**
-     * Reserve a port.
+     * Reserve a port
      *
-     * @param port the port to reserve
+     * @param port Port to reserve
      */
     private void reservePort(int port) {
         if (temporaryConnection == null) {
@@ -354,9 +355,6 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         // Force black screen
     	surface.clearImage();
 
-        // Stop decoder
-        // TODO
-
         // Renderer is stopped
         started = false;
         videoStartTime = 0L;
@@ -495,7 +493,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
      */
     private void notifyPlayerEventError(String error) {
         if (logger.isActivated()) {
-            logger.debug("Player error: " + error);
+            logger.debug("Renderer error: " + error);
         }
 
         Iterator<IMediaEventListener> ite = listeners.iterator();
@@ -515,23 +513,15 @@ public class VideoRenderer extends IMediaRenderer.Stub {
      */
     private class MediaRtpOutput implements MediaOutput {
         /**
-         * Video frame
-         */
-        private int decodedFrame[];
-
-        /**
          * Bitmap frame
          */
-        private Bitmap rgbFrame;
+        private Bitmap rgbFrame = null;
 
         /**
          * Constructor
          */
         public MediaRtpOutput() {
-            decodedFrame = new int[selectedVideoCodec.getWidth() * selectedVideoCodec.getHeight()];
-            rgbFrame = Bitmap.createBitmap(selectedVideoCodec.getWidth(),
-                    selectedVideoCodec.getHeight(),
-                    Bitmap.Config.RGB_565);
+            // Nothing to do
         }
 
         /**
@@ -554,13 +544,39 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          */
         public void writeSample(MediaSample sample) {
             rtpDummySender.incomingStarted();
-            if (NativeH264Decoder.DecodeAndConvert(sample.getData(), decodedFrame) == 1) {
-            	if ((surface != null) && (decodedFrame.length > 0)) {
+            int[] decodedFrame = NativeH264Decoder.DecodeAndConvert(sample.getData());
+            if (NativeH264Decoder.getLastDecodeStatus() == 1) {
+                if ((surface != null) && (decodedFrame.length > 0)) {
+                    // Init rgbFrame with the size of first decoded frame
+                    if (rgbFrame == null) {
+                        init(decodedFrame.length);
+                    }
 	            	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
 	                        selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
                     surface.setImage(rgbFrame);
             	}
             }
+        }
+
+        /**
+         * Init RGB frame
+         *
+         * @param size of the decoded frame
+         */
+        private void init(int size) {
+            int width = H264Config.QCIF_WIDTH;
+            int height = H264Config.QCIF_HEIGHT;
+            if (size == H264Config.QCIF_WIDTH * H264Config.QCIF_HEIGHT) {
+                width = H264Config.QCIF_WIDTH;
+                height = H264Config.QCIF_HEIGHT;
+            } else if (size == H264Config.QVGA_WIDTH * H264Config.QVGA_HEIGHT) {
+                width = H264Config.QVGA_WIDTH;
+                height = H264Config.QVGA_HEIGHT;
+            } else if (size == H264Config.CIF_WIDTH * H264Config.CIF_HEIGHT) {
+                width = H264Config.CIF_WIDTH;
+                height = H264Config.CIF_HEIGHT;
+            }
+            rgbFrame = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         }
     }
 }

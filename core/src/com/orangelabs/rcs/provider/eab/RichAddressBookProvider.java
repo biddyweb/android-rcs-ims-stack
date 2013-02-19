@@ -82,7 +82,7 @@ public class RichAddressBookProvider extends ContentProvider {
      */
 	private static class DatabaseHelper extends SQLiteOpenHelper{
 		private static final String DATABASE_NAME = "eab.db";
-		private static final int DATABASE_VERSION = 14;
+		private static final int DATABASE_VERSION = 15;
 		
         public DatabaseHelper(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -96,25 +96,9 @@ public class RichAddressBookProvider extends ContentProvider {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			// Get all tables
-			final String SQL_GET_ALL_TABLES = "SELECT name FROM " + "sqlite_master WHERE type='table' ORDER BY name";
-			Cursor cursor = db.rawQuery(SQL_GET_ALL_TABLES,null);
-			// Cursor contains all table names
-			while (cursor.moveToNext()){
-				String tableName = cursor.getString(0);
-				// We want to drop all tables that starts with "eab_contacts"
-				if (tableName.startsWith(EAB_TABLE)){
-					Cursor cursor2 = db.rawQuery("DROP TABLE " + tableName, null);
-					cursor2.close();
-				}
-				if (tableName.startsWith(AGGREGATION_TABLE)){
-					Cursor cursor2 = db.rawQuery("DROP TABLE " + tableName, null);
-					cursor2.close();
-				}
-			}
-			cursor.close();
-			// Create the eab_contacts table
-			createDb(db);
+            db.execSQL("DROP TABLE IF EXISTS " + EAB_TABLE);
+            db.execSQL("DROP TABLE IF EXISTS " + AGGREGATION_TABLE);
+            onCreate(db);
 		}
 
 		private void createDb(SQLiteDatabase db) {
@@ -144,6 +128,7 @@ public class RichAddressBookProvider extends ContentProvider {
 					+ RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_EXTENSIONS + " TEXT, "
 					+ RichAddressBookData.KEY_IM_BLOCKED + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_IM_BLOCKED_TIMESTAMP + " long, "

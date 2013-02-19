@@ -55,6 +55,11 @@ public class ContentSharingError extends ImsSessionBasedServiceError {
 	public final static int MEDIA_SAVING_FAILED = RICHCALL_ERROR_CODES + 5;
 
     /**
+     * Media file is too big
+     */
+    public final static int MEDIA_SIZE_TOO_BIG = RICHCALL_ERROR_CODES + 6;
+
+    /**
      * Constructor
      *
      * @param error Error

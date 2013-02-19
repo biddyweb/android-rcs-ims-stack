@@ -121,13 +121,6 @@ public class OptionsManager implements DiscoveryManager {
      * @param contactList Contact list
      */
 	public void requestCapabilities(List<String> contactList) {
-        if (contactList == null || contactList.size() == 0) {
-            if (logger.isActivated()) {
-                logger.debug("Invalid request capabilities. No contacts present.");
-            }
-            return;
-        }
-
         // Remove duplicate values
         HashSet<String> setContacts = new HashSet<String>(contactList);
         if (logger.isActivated()) {

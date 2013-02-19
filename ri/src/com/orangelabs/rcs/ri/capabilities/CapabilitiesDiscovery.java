@@ -218,8 +218,9 @@ public class CapabilitiesDiscovery extends Activity {
     	CheckBox csVideo = (CheckBox)findViewById(R.id.cs_video);
     	CheckBox presenceDiscovery = (CheckBox)findViewById(R.id.presence_discovery);
     	CheckBox socialPresence = (CheckBox)findViewById(R.id.social_presence);
-    	TextView extensions = (TextView)findViewById(R.id.extensions);
-    	
+        CheckBox geolocationPush = (CheckBox)findViewById(R.id.geolocation_push);
+        TextView extensions = (TextView)findViewById(R.id.extensions);
+
     	if (capabilities != null) {
     		// Set timestamp
     		lastCapabilitiesModified.setText(Utils.formatDateToString(capabilities.getTimestamp()));
@@ -232,6 +233,7 @@ public class CapabilitiesDiscovery extends Activity {
     		csVideo.setVisibility(View.VISIBLE);
     		presenceDiscovery.setVisibility(View.VISIBLE);
     		socialPresence.setVisibility(View.VISIBLE);
+            geolocationPush.setVisibility(View.VISIBLE);
     		imageCSh.setChecked(capabilities.isImageSharingSupported());
     		videoCSh.setChecked(capabilities.isVideoSharingSupported());
     		ft.setChecked(capabilities.isFileTransferSupported());
@@ -239,7 +241,8 @@ public class CapabilitiesDiscovery extends Activity {
     		csVideo.setChecked(capabilities.isCsVideoSupported());
     		presenceDiscovery.setChecked(capabilities.isPresenceDiscoverySupported());
     		socialPresence.setChecked(capabilities.isSocialPresenceSupported());
-    		
+            geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
+
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
             String result = "";
@@ -258,6 +261,7 @@ public class CapabilitiesDiscovery extends Activity {
     		csVideo.setVisibility(View.GONE);
     		presenceDiscovery.setVisibility(View.GONE);
     		socialPresence.setVisibility(View.GONE);
+    		geolocationPush.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
     }

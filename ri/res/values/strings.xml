@@ -2,14 +2,13 @@
 <resources>
 
 <!-- Application -->
-<string name="app_name">RCS-e 1.2</string>
+<string name="app_name">RCS-e RI</string>
 <string name="menu_address_book">Address book</string>
 <string name="menu_eventlog">Event Log</string>
 <string name="menu_spambox">Spam box</string>
 <string name="menu_settings">Settings</string>
 <string name="menu_about">About</string>
 <string name="label_ab_not_found">The address book is not found, launch it manually from your device home screen.</string>
-<string name="label_sms_not_found">The SMS/MMS application is not found, launch it manually from applications list.</string>
 <string name="label_presence_service_not_activated">The presence service is not activated</string>
 <string name="label_battery_running_low">Battery running low (less than %d%%)\nStopping joyn services</string>
 
@@ -23,8 +22,8 @@
 <string name="label_not_implemented">Not yet implemented</string>
 <string name="label_ims_disconnected">Service has been disconnected from the IMS</string>
 <string name="label_api_failed">Call API method has failed</string>
-<string name="label_api_disconnected">RCS service has been stopped</string>
-<string name="label_api_disabled">RCS service is not started</string>
+<string name="label_api_disconnected">joyn service has been stopped</string>
+<string name="label_api_disabled">joyn service is not started</string>
 <string name="label_ok">OK</string>
 <string name="label_cancel">Cancel</string>
 <string name="label_delete">Delete</string>
@@ -38,6 +37,8 @@
 <string name="label_invitation_failed">Invitation has failed</string>
 <string name="label_yes">Yes</string>
 <string name="label_no">No</string>
+<string name="label_send">Send</string>
+<string name="label_select">Select</string>
 
 <!-- About menu -->
 <string name="label_about_title">RCS-e Reference Implementation</string>
@@ -61,7 +62,7 @@
 <string name="menu_presence">Presence</string>
 <string name="menu_presence_info">Edit my presence info</string>
 <string name="menu_eab">Enhanced Address Book</string>
-<string name="menu_manage_contacts">Manage my RCS contacts</string>
+<string name="menu_manage_contacts">Manage my joyn contacts</string>
 <string name="menu_granted_contacts">List of granted contacts</string>
 <string name="menu_blocked_contacts">List of blocked contacts</string>
 <string name="menu_revoked_contacts">List of revoked contacts</string>
@@ -81,6 +82,7 @@
 <string name="label_capabilities_im">IM session</string>
 <string name="label_capabilities_presence_discovery">Presence discovery</string>
 <string name="label_capabilities_social_presence">Social presence</string>
+<string name="label_capabilities_geolocation_push">Geolocation push</string>
 <string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_publish">Publish</string>
 <string name="label_select_photo">Select photo</string>
@@ -111,13 +113,13 @@
 <string name="label_browser_bookmarks">Browser bookmarks</string>
 <string name="label_predefined_freetext">Pre-defined freetext</string>
 <string name="title_presence_invitation">New invitation to share profile</string>
-<string name="label_rcs_contact">RCS</string>
-<string name="label_normal_contact">Not RCS</string>
+<string name="label_rcs_contact">joyn</string>
+<string name="label_normal_contact">Not joyn</string>
 <string name="label_presence_capabilities">Capabilities:</string>
 <string name="label_presence_info_changed">%s has changed his social presence info</string>
 <string name="label_presence_list_empty">Empty result</string>
 <string name="title_normal_contact">Contact</string>
-<string name="label_not_rcs_capable">This contact is not RCS capable</string>
+<string name="label_not_rcs_capable">This contact is not joyn capable</string>
 <string-array name="presence_status_label">
     <item>Available</item>
     <item>Offline</item>
@@ -153,6 +155,7 @@
 <string name="label_contacts">Contacts:</string>
 <string name="label_contact_is_composing">is typing...</string>
 <string name="label_transfer_failed">Transfer has failed or is aborted (error code %d)</string>
+<string name="label_transfer_failed_too_big">Transfer is aborted because file is too big</string>
 <string name="label_select_contacts">Select contacts</string>
 <string name="label_chat_wizz">Wizz</string>
 <string name="label_chat_initiation_canceled">Chat session has been canceled</string>
@@ -190,6 +193,7 @@
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
 <string name="menu_initiate_prerecorded_video_sharing">Initiate pre-recorded video sharing</string>
 <string name="menu_initiate_video_sharing">Initiate video sharing</string>
+<string name="menu_video_settings">Video settings</string>
 <string name="label_image_sharing_canceled">Image sharing session has been canceled</string>
 <string name="label_video_sharing_canceled">Video sharing session has been canceled</string>
 <string name="label_progress_status">Status:</string>
@@ -198,11 +202,6 @@
 <string name="label_invitation_declined">Sharing invitation has been declined</string>
 <string name="label_sharing_terminated_by_remote">Sharing terminated by remote</string>
 <string name="label_dial">Dial</string>
-<string name="label_codecs">Select codecs (if none, default stack codecs will be used)</string>
-<string name="label_codec0">H264 1.B QCIF 12 96k</string>
-<string name="label_codec1">H264 1.2 QVGA 10 176k</string>
-<string name="label_codec2">H264 1.2 CIF  10 176k</string>
-<string name="label_codec3">H264 1.3 CIF  15 384k</string>
 <string name="label_select_picture">Select picture</string>
 <string name="label_selected_img">Selected picture:</string>
 <string name="label_select_video">Select video</string>
@@ -210,8 +209,8 @@
 <string name="label_initiate_sharing">Invite</string>
 <string name="label_display">Display:</string>
 <string name="label_select_file">Select file</string>
-<string name="title_recv_image_sharing">New Image Sharing invitation</string>
-<string name="title_recv_video_sharing">New Video Sharing invitation</string>
+<string name="title_recv_image_sharing">New image Sharing invitation</string>
+<string name="title_recv_video_sharing">New video Sharing invitation</string>
 <string name="label_out_of_memory">No enough memory to display the image</string>
 <string name="label_csh_failed">Sharing has failed or is aborted (error code %d)</string>
 <string name="label_end_of_media">End of media</string>
@@ -228,6 +227,70 @@
 <string name="label_outgoing_sharing_aborted">Outgoing sharing aborted</string>
 <string name="label_outgoing_sharing_terminated_by_remote">Outgoing sharing terminated by remote</string>
 <string name="label_switch_camera">Switch camera</string>
+
+<string name="title_codecs_managed_by_stack">Codecs managed by stack</string>
+<string name="summary_codecs_managed_by_stack">If enable, the stack will offer codecs thanks to the network type. If disable, you must select your codecs and the highest level will be preferred.</string>
+<string name="title_codecs_selection">H264 Codecs (level, size, framerate, bitrate)</string>
+<string name="label_codec0">1.B, QCIF, 12, 96k</string>
+<string name ="summary_codec0">Default codec always enabled</string>
+<string name="label_codec1">1.2, QVGA, 10, 176k</string>
+<string name="label_codec2">1.2, CIF, 10, 176k</string>
+<string name="label_codec3">1.3, CIF, 15, 384k</string>
+<string name="label_codec4">Custom codec</string>
+<string name="label_custom_level">Custom level</string>
+<string name="label_custom_size">Custom size</string>
+<string name="label_custom_framerate">Custom framerate</string>
+<string name="label_custom_bitrate">Custom bitrate</string>
+<string-array name="list_level_label">
+    <item>H264 1B</item>
+    <item>H264 1.2</item>
+    <item>H264 1.3</item>
+</string-array>
+<string-array name="list_level_value">
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+</string-array>
+<string-array name="list_size_label">
+    <item>QCIF</item>
+    <item>QVGA</item>
+    <item>CIF</item>
+    <item>0</item>
+</string-array>
+<string-array name="list_size_value">
+    <item>0</item>
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+</string-array>
+<string-array name="list_framerate_label">
+    <item>10</item>
+    <item>12</item>
+    <item>15</item>
+    <item>20</item>
+</string-array>
+<string-array name="list_framerate_value">
+    <item>10</item>
+    <item>12</item>
+    <item>15</item>
+    <item>20</item>
+</string-array>
+<string-array name="list_bitrate_label">
+    <item>96</item>
+    <item>128</item>
+    <item>176</item>
+    <item>256</item>
+    <item>320</item>
+    <item>384</item>
+</string-array>
+<string-array name="list_bitrate_value">
+    <item>96</item>
+    <item>128</item>
+    <item>176</item>
+    <item>256</item>
+    <item>320</item>
+    <item>384</item>
+</string-array>
 
 <!-- Event Log -->
 <string name="menu_filter">Change filter</string>
@@ -247,7 +310,7 @@
 <string name="label_quick_ft">File transfer</string>
 <string name="label_quick_evtlog">Event log</string>
 <string name="label_quick_rcs_contact">Details</string>
-<string name="label_quick_normal_contact">RCS</string>
+<string name="label_quick_normal_contact">joyn</string>
 <string name="label_quick_invite">Invite</string>
 <string name="label_quick_me">Details</string>
 <string name="label_quick_extensions">Extensions</string>
@@ -256,6 +319,20 @@
 
 <string name="label_accept_terms_failed">Accept terms has failed, retry later</string>
 <string name="label_reject_terms_failed">Reject terms has failed, retry later</string>
+
+<!-- Geolocation push -->
+<string name="label_select_geoloc">Select from a map</string>
+<string name="menu_showus_map">Show us in a map</string>
+<string name="menu_send_geoloc">Send geoloc</string>
+<string name="title_edit_geoloc">Edit a geoloc</string>
+<string name="title_display_geoloc">Show a geoloc</string>
+<string name="label_send_geoloc_failed">Send geoloc has failed</string>
+<string name="label_location">Location label:</string>
+<string name="label_latitude">Latitude:</string>
+<string name="label_longitude">Longitude:</string>
+<string name="label_altitude">Altitude:</string>
+<string name="label_marker">Location label</string>
+<string name="label_select_geoloc_map">Use a long click to select a location on the map.</string>
 
 </resources>
 

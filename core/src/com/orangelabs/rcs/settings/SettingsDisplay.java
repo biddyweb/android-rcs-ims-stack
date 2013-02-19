@@ -70,6 +70,11 @@ public class SettingsDisplay extends PreferenceActivity implements Preference.On
     private ListPreference batteryLevel;
 
     /**
+     * Minimum storage capacity
+     */
+    private ListPreference minStorage;
+
+    /**
      * User profile preference
      */
     private static Preference presencePref = null;
@@ -108,9 +113,15 @@ public class SettingsDisplay extends PreferenceActivity implements Preference.On
         batteryLevel.setOnPreferenceChangeListener(this);
         batteryLevel.setValue("" + RcsSettings.getInstance().getMinBatteryLevel());
 
+        // Minimum storage
+        minStorage = (ListPreference) findPreference("min_storage");
+        minStorage.setPersistent(false);
+        minStorage.setOnPreferenceChangeListener(this);
+        minStorage.setValue("" + RcsSettings.getInstance().getMinStorageCapacity());
+
     	// Modify the intents so the activities can be launched even if not defined in this application (i.e. RCS apps)
     	int totalNumberOfPreferences = getPreferenceScreen().getPreferenceCount();
-    	for (int i=3; i<totalNumberOfPreferences; i++) {
+    	for (int i=4; i<totalNumberOfPreferences; i++) {
         	Preference preference = getPreferenceScreen().getPreference(i);
         	Intent preferenceIntent = preference.getIntent();
         	String className = preferenceIntent.getComponent().getClassName();
@@ -364,6 +375,16 @@ public class SettingsDisplay extends PreferenceActivity implements Preference.On
                 // Nothing to do
             }
             RcsSettings.getInstance().setMinBatteryLevel(level);
+        } else
+        if (preference.getKey().equals("min_storage")) {
+            // Set the min storage capacity
+            int value = 0;
+            try {
+                value = Integer.parseInt((String)objValue);
+            } catch (Exception e) {
+                // Nothing to do
+            }
+            RcsSettings.getInstance().setMinStorageCapacity(value);
         }
         return true;
     }

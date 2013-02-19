@@ -45,16 +45,16 @@ public class Provisioning extends TabActivity {
         // Set tabs
         final TabHost tabHost = getTabHost();
         tabHost.addTab(tabHost.newTabSpec("profile")
-                .setIndicator("Profile", getResources().getDrawable(R.drawable.param_icon))
+                .setIndicator("Profile", getResources().getDrawable(R.drawable.tabicon))
                 .setContent(new Intent(this, ProfileProvisioning.class)));
         tabHost.addTab(tabHost.newTabSpec("stack")
-                .setIndicator("Stack", getResources().getDrawable(R.drawable.param_icon))
+                .setIndicator("Stack", getResources().getDrawable(R.drawable.tabicon))
                 .setContent(new Intent(this, StackProvisioning.class)));
         tabHost.addTab(tabHost.newTabSpec("ui")
-                .setIndicator("Service", getResources().getDrawable(R.drawable.param_icon))
+                .setIndicator("Service", getResources().getDrawable(R.drawable.tabicon))
                 .setContent(new Intent(this, ServiceProvisioning.class)));
         tabHost.addTab(tabHost.newTabSpec("logger")
-                .setIndicator("Logger", getResources().getDrawable(R.drawable.param_icon))
+                .setIndicator("Logger", getResources().getDrawable(R.drawable.tabicon))
                 .setContent(new Intent(this, LoggerProvisioning.class)));
     }
 }

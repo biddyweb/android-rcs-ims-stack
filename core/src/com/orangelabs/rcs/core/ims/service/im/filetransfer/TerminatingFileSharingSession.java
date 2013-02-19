@@ -93,6 +93,20 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
         		return;
         	}
 
+            int maxSize = FileSharingSession.getMaxFileSharingSize();
+            if (maxSize > 0 && getContent().getSize() > maxSize) {
+                if (logger.isActivated()) {
+                    logger.debug("File is too big, reject file transfer invitation");
+                }
+
+                // Decline the invitation
+                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
+
+                // File too big
+                handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
+                return;
+            }
+
     		if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
     	    	if (logger.isActivated()) {
     	    		logger.debug("Auto accept file transfer invitation");
@@ -203,7 +217,6 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
-	    	int maxSize = FileSharingSession.getMaxFileSharingSize();
 	    	if (maxSize > 0) {
 	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
 	    	}

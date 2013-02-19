@@ -63,7 +63,7 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 		if (logger.isActivated()) {
 			logger.info("Request capabilities for contact " + contact);
 		}
-		
+
     	// Check permission
 		ServerApiUtils.testPermission();
 

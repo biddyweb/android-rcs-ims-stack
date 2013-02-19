@@ -30,6 +30,8 @@ import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.service.api.client.ClientApi;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 
@@ -150,6 +152,12 @@ public class EventsLogApi extends ClientApi {
 	public static final int TYPE_INCOMING_SMS = 10; 
 	public static final int TYPE_OUTGOING_SMS = 11;
 
+	// Geoloc
+	public static final int TYPE_INCOMING_GEOLOC = 12;
+	public static final int TYPE_OUTGOING_GEOLOC = 13;
+	public static final int TYPE_INCOMING_GROUP_GEOLOC = 14;
+	public static final int TYPE_OUTGOING_GROUP_GEOLOC = 15;
+	
 	// Possible status values
 	
 	// Sessions
@@ -433,6 +441,33 @@ public class EventsLogApi extends ClientApi {
     	return result;
     }
 
+    /**
+     * Get the last geoloc for a given contact
+     * 
+     * @param contact Contact
+     * @return Geoloc info
+     */
+    public GeolocPush getLastGeoloc(String contact) {
+		GeolocPush result = null;																	
+
+		String sortOrder = RichMessagingData.KEY_TIMESTAMP + " DESC ";
+		String where = RichMessagingData.KEY_CONTACT + "='" + PhoneUtils.extractNumberFromUri(contact) + "' AND (" +
+				RichMessagingData.KEY_TYPE +" = " + EventsLogApi.TYPE_INCOMING_GEOLOC + " OR " +
+				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC + ")";		
+		Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI,
+    			new String[] {RichMessagingData.KEY_DATA},
+				where,
+    			null,
+    			sortOrder);
+	    	
+    	if (cursor.moveToFirst()) {
+			result = GeolocMessage.formatStrToGeoloc(cursor.getString(0));																	
+    	}
+    	cursor.close();
+
+    	return result;
+    }
+    
     /**
      * Get spam messages log (Spam Box)
      *

@@ -18,17 +18,13 @@
 
 package com.orangelabs.rcs.provider.eab;
 
-import com.orangelabs.rcs.R;
-import com.orangelabs.rcs.addressbook.AuthenticationService;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.capability.Capabilities;
-import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
-import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
-import com.orangelabs.rcs.service.api.client.presence.Geoloc;
-import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
-import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
-import com.orangelabs.rcs.utils.PhoneUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.accounts.AccountManager;
 import android.content.ContentProviderOperation;
@@ -55,13 +51,17 @@ import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.StatusUpdates;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
+import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
+import com.orangelabs.rcs.service.api.client.presence.Geoloc;
+import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
+import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
+import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Contains utility methods for interfacing with the Android SDK ContactsProvider.
@@ -176,6 +176,11 @@ public final class ContactsManager {
     private static final String MIMETYPE_CAPABILITY_SOCIAL_PRESENCE = "vnd.android.cursor.item/com.orangelabs.rcs.capability.social-presence";
 
     /** 
+     * MIME type for social presence capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_GEOLOCATION_PUSH = "vnd.android.cursor.item/com.orangelabs.rcs.capability.geolocation-push";
+    
+    /** 
      * MIME type for RCS extensions 
      */
     private static final String MIMETYPE_CAPABILITY_EXTENSIONS = "vnd.android.cursor.item/com.orangelabs.rcs.capability.extensions";
@@ -205,11 +210,6 @@ public final class ContactsManager {
      */
     private static final String MIMETYPE_NOT_RCS_CONTACT = "vnd.android.cursor.item/com.orangelabs.rcs.not-rcs-contact";
 
-    /** 
-     * MIME type for event log 
-     */
-    private static final String MIMETYPE_EVENT_LOG = "vnd.android.cursor.item/com.orangelabs.rcs.event-log";
-    
     /** 
      * MIME type for block IM status 
      */
@@ -487,6 +487,7 @@ public final class ContactsManager {
 		values.put(RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY, Boolean.toString(newCapabilities.isPresenceDiscoverySupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(newCapabilities.isSocialPresenceSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING, Boolean.toString(newCapabilities.isVideoSharingSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(newCapabilities.isGeolocationPushSupported() && isRegistered));
 
 		// Save the capabilities extensions
 		ArrayList<String> newExtensions = newCapabilities.getSupportedExtensions();
@@ -652,6 +653,11 @@ public final class ContactsManager {
     			}
     			// Social presence
     			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_SOCIAL_PRESENCE, newInfo.getCapabilities().isSocialPresenceSupported() && isRegistered, oldInfo.getCapabilities().isSocialPresenceSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// Geolocation push
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_GEOLOCATION_PUSH, newInfo.getCapabilities().isGeolocationPushSupported() && isRegistered, oldInfo.getCapabilities().isGeolocationPushSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -860,6 +866,7 @@ public final class ContactsManager {
                 capabilities.setImSessionSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_IM_SESSION))));
                 capabilities.setPresenceDiscoverySupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY))));
                 capabilities.setSocialPresenceSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE))));
+                capabilities.setGeolocationPushSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH))));
                 capabilities.setVideoSharingSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING))));
 
                 // Set RCS extensions capability
@@ -1591,15 +1598,9 @@ public final class ContactsManager {
     		if (oldContactType==ContactInfo.RCS_CAPABLE){
     			// Remove mime-type capable
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CAPABLE_CONTACT));
-
-    			// Remove event log
-    			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_EVENT_LOG));
     		}else if (oldContactType==ContactInfo.RCS_ACTIVE){
     			// Remove mime-type rcs active
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CONTACT));
-
-    			// Remove event log
-    			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_EVENT_LOG));
     		}
 
     		// Add mime-type not capable
@@ -1615,9 +1616,6 @@ public final class ContactsManager {
     		}else if (oldContactType==ContactInfo.NOT_RCS || oldContactType==ContactInfo.NO_INFO){
     			// Remove mime-type not capable
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_NOT_RCS_CONTACT));
-
-    			// Add mime-type event log
-    			ops.add(insertMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_EVENT_LOG));
     		}
     		// Add mime-type active
     		ops.add(insertMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CONTACT));
@@ -1628,9 +1626,6 @@ public final class ContactsManager {
     		if (oldContactType==ContactInfo.NOT_RCS || oldContactType==ContactInfo.NO_INFO){
     			// Remove mime-type not capable active
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_NOT_RCS_CONTACT));
-
-    			// Add mime-type event log
-    			ops.add(insertMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_EVENT_LOG));
     		}else if (oldContactType==ContactInfo.RCS_ACTIVE){
     			// Remove mime-type active
     			ops.add(deleteMimeTypeForContact(rawContactId, rcsNumber, MIMETYPE_RCS_CONTACT));
@@ -2199,11 +2194,8 @@ public final class ContactsManager {
 		if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_CS_VIDEO)) {
 			return ctx.getString(R.string.rcs_core_contact_cs_video);
 		} else
-		if (mimeType.equalsIgnoreCase(MIMETYPE_EVENT_LOG)) {
-			return ctx.getString(R.string.rcs_core_contact_event_log);
-		} else
 		if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_COMMON_EXTENSION)) {
-			return ctx.getString(R.string.rcs_core_capability_common_extension);
+			return ctx.getString(R.string.rcs_core_contact_extensions);
 		} else 
 			return null;
 	}
@@ -2319,7 +2311,7 @@ public final class ContactsManager {
 	 * @param registrationState Three possible values : online/offline/unknown
 	 */
 	public void setContactCapabilities(String contact, Capabilities capabilities, int contactType, int registrationState) {
-		
+        
 		contact = PhoneUtils.extractNumberFromUri(contact);
 
 		// Get the current information on this contact 
@@ -2350,6 +2342,9 @@ public final class ContactsManager {
 		// Video sharing
 		capabilities.setVideoSharingSupport(capabilities.isVideoSharingSupported() && isRegistered);
 		
+		// Geolocation push
+		capabilities.setGeolocationPushSupport(capabilities.isGeolocationPushSupported() && isRegistered);
+
 		// Add the capabilities
 		newInfo.setCapabilities(capabilities);
 
@@ -2593,6 +2588,10 @@ public final class ContactsManager {
         if (capabilities.isSocialPresenceSupported()) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_SOCIAL_PRESENCE));
         }
+        // Geolocation push
+        if (capabilities.isGeolocationPushSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_GEOLOCATION_PUSH));
+        }
         // Insert extensions
 		boolean hasCommonExtensions = false;
 		StringBuffer extension = new StringBuffer();
@@ -2635,9 +2634,6 @@ public final class ContactsManager {
         if (info.getRcsStatus()==ContactInfo.RCS_ACTIVE) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_RCS_CONTACT));
 
-            // Add mime-type event log
-            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_EVENT_LOG));
-
             // Insert avatar, only if status is "active"
             // (we do not want a default RCS picture if we do not share our presence profile yet)
     		Bitmap rcsAvatar = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.rcs_core_default_portrait_icon);
@@ -2656,9 +2652,6 @@ public final class ContactsManager {
         } else if (info.getRcsStatus()!=ContactInfo.NO_INFO) {
             // In all other cases, contact is RCS capable
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_RCS_CAPABLE_CONTACT));
-
-            // Insert event log mime type
-            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_EVENT_LOG));
         }
         
         // Create the RCS raw contact and get its id        
@@ -3547,6 +3540,9 @@ public final class ContactsManager {
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_SOCIAL_PRESENCE)){
     			// Set capability social presence
 				capabilities.setSocialPresenceSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_GEOLOCATION_PUSH)){
+    			// Set capability social presence
+				capabilities.setGeolocationPushSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_EXTENSIONS)){
     			// Set RCS extensions capability
     			int columnIndex = cursor.getColumnIndex(Data.DATA2);
@@ -3745,14 +3741,6 @@ public final class ContactsManager {
     			.withValues(values)
     			.build());
     	
-    	// Update event log menu 
-    	values.clear();
-    	values.put(Data.DATA2, getMimeTypeDescription(MIMETYPE_EVENT_LOG));
-    	ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
-    			.withSelection(Data.MIMETYPE + "=?", new String[]{MIMETYPE_EVENT_LOG})
-    			.withValues(values)
-    			.build());
-
     	// Update extensions menu
     	values.clear();
     	values.put(Data.DATA2, getMimeTypeDescription(MIMETYPE_CAPABILITY_COMMON_EXTENSION));
@@ -3897,7 +3885,6 @@ public final class ContactsManager {
     		    MIMETYPE_RCS_CONTACT,
     		    MIMETYPE_RCS_CAPABLE_CONTACT,
     		    MIMETYPE_NOT_RCS_CONTACT,
-    		    MIMETYPE_EVENT_LOG,
     		    MIMETYPE_IM_BLOCKED
 		    };
     }

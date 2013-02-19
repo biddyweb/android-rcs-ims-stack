@@ -166,7 +166,7 @@ public class ShowEab extends Activity {
 		            Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
 		        	photoView.setImageBitmap(bmp);
 		        } else {
-		        	photoView.setImageResource(R.drawable.ri_no_photo_icon);
+		        	photoView.setImageResource(R.drawable.ri_default_portrait_icon);
 		        }
 		        
 		    	status.setText(presenceInfo.getPresenceStatus());

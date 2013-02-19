@@ -181,6 +181,14 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
      * @return Capabilities
      */
 	public synchronized Capabilities requestContactCapabilities(String contact) {
+        // Check if if it is a valid RCS number
+        if (!ContactsManager.getInstance().isRcsValidNumber(contact)) {
+            if (logger.isActivated()) {
+                logger.debug(contact + " is not a valid joyn number");
+            }
+            return null;
+        }
+
     	if (logger.isActivated()) {
     		logger.debug("Request capabilities to " + contact);
     	}
@@ -217,14 +225,15 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
     /**
      * Request capabilities for a list of contacts
      * 
-     * @param contactList Contact list
+     * @param contactList List of contacts
      */
 	public void requestContactCapabilities(List<String> contactList) {
-    	if (logger.isActivated()) {
-    		logger.debug("Request capabilities for " + contactList.size() + " contacts");
+    	if ((contactList != null) && (contactList.size() > 0)) {
+        	if (logger.isActivated()) {
+        		logger.debug("Request capabilities for " + contactList.size() + " contacts");
+        	}
+    		optionsManager.requestCapabilities(contactList);
     	}
-
-		optionsManager.requestCapabilities(contactList);
 	}	
 	
     /**

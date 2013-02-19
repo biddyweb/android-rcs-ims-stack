@@ -99,6 +99,9 @@ uint8* aConcatBuf;
 /* Size of the concatenated buffer */
 int32 aConcatSize;
 
+/** Return value from decoder */
+int iStatus;
+
 /* Protection mutex */
 pthread_mutex_t iMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -115,10 +118,11 @@ enum INIT_RETVAL {
 /**
  * Method:    Decode
  */
-jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
+jintArray Decode(JNIEnv * env, uint8* input, int32 size) {
     int32 status;
     int indexFrame;
     int releaseFrame;
+    jintArray decoded;
 
     // Get type of NAL
     u_int8_t type = input[0] & 0x1f;
@@ -126,18 +130,24 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
         case 7: // SPS
             if ((status = decoder->DecodeSPS(input, size)) != AVCDEC_SUCCESS) {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Failed decode SPS: %ld", status);
+                decoded = (env)->NewIntArray(0);
                 pthread_mutex_unlock(&iMutex);
-                return 0;
+                iStatus = 0;
+                return decoded;
             }
+            decoded = (env)->NewIntArray(0);
             __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Receive SPS");
             break;
 
         case 8: // PPS
             if ((status = decoder->DecodePPS(input, size)) != AVCDEC_SUCCESS) {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Failed to decode PPS: %ld", status);
+                decoded = (env)->NewIntArray(0);
                 pthread_mutex_unlock(&iMutex);
-                return 0;
+                iStatus = 0;
+                return decoded;
             }
+            decoded = (env)->NewIntArray(0);
             __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Receive PPS");
             break;
 
@@ -154,6 +164,7 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
                 if(aOutBuffer == NULL) {
                     aOutBuffer = (uint8*)malloc(width*height*3/2);
                 }
+                decoded = (env)->NewIntArray(width*height);
 
                 // Copy result to YUV array
                 memcpy(aOutBuffer, outVid.YCbCr[0], width * height);
@@ -163,8 +174,10 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
                 // Create the output buffer
                 uint32* resultBuffer = (uint32*) malloc(width * height * sizeof(uint32));
                 if (resultBuffer == NULL) {
+                    decoded = (env)->NewIntArray(0);
                     pthread_mutex_unlock(&iMutex);
-                    return 0;
+                    iStatus = 0;
+                    return decoded;
 				}
 
                 // Convert to RGB
@@ -174,13 +187,16 @@ jint Decode(JNIEnv * env, uint8* input, int32 size, jintArray decoded) {
                 free(resultBuffer);
             } else {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Decoder error %ld", status);
+                decoded = (env)->NewIntArray(0);
                 pthread_mutex_unlock(&iMutex);
-                return 0;
+                iStatus = 0;
+                return decoded;
             }
             break;
     }
     pthread_mutex_unlock(&iMutex);
-    return 1;
+    iStatus = 1;
+    return decoded;
 }
 
 
@@ -224,8 +240,8 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
 /**
  * Method:    DecodeAndConvert
  */
-JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
-  (JNIEnv *env, jclass clazz, jbyteArray h264Frame, jintArray decoded) {
+JNIEXPORT jintArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_DecodeAndConvert
+  (JNIEnv *env, jclass clazz, jbyteArray h264Frame) {
     pthread_mutex_lock(&iMutex);
 
     int32 size = 0;
@@ -239,7 +255,15 @@ JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video
     size = len;
 
     // Decode
-    return Decode(env, aInputBuf, size, decoded);
+    return Decode(env, aInputBuf, size);
+}
+
+/*
+ * Method:    getLastDecodeStatus
+ */
+JNIEXPORT jint JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_decoder_NativeH264Decoder_getLastDecodeStatus
+  (JNIEnv *env, jclass clazz){
+    return iStatus;
 }
 
 /**

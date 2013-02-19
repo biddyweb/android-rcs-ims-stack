@@ -29,6 +29,7 @@ import android.widget.ListView;
 import com.orangelabs.rcs.ri.richcall.InitiateImageSharing;
 import com.orangelabs.rcs.ri.richcall.InitiateOutgoingVisioSharing;
 import com.orangelabs.rcs.ri.richcall.InitiatePrerecordedVideoSharing;
+import com.orangelabs.rcs.ri.richcall.VideoSettings;
 
 /**
  * Rich call RI
@@ -47,7 +48,8 @@ public class RichCallRI extends ListActivity {
         String[] items = {
     		getString(R.string.menu_initiate_image_sharing),
     		getString(R.string.menu_initiate_video_sharing),
-    		getString(R.string.menu_initiate_prerecorded_video_sharing)
+    		getString(R.string.menu_initiate_prerecorded_video_sharing),
+            getString(R.string.menu_video_settings)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -66,6 +68,9 @@ public class RichCallRI extends ListActivity {
 	        case 2:
 	        	startActivity(new Intent(this, InitiatePrerecordedVideoSharing.class));
 	            break;
+            case 3 :
+                startActivity(new Intent(this, VideoSettings.class));
+                break;
         }
     }
 }

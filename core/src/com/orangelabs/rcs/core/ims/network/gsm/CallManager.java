@@ -102,7 +102,7 @@ public class CallManager {
 	public CallManager(ImsModule parent) throws CoreException {
 		this.imsModule = parent;
 
-		// Instanciate the telephony manager
+		// Instantiate the telephony manager
 		tm = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 	}
 
@@ -300,10 +300,8 @@ public class CallManager {
      * @param contact Contact
      */
 	private void requestCapabilities(String contact) {
-		 if ((contact != null) && (contact.length() > 0) && imsModule.getCapabilityService().isServiceStarted()) {
-			if (logger.isActivated()) {
-				logger.debug("Request capabilities to " + contact);
-			}
+        if ((contact != null) && (contact.length() > 0)
+                && (imsModule.getCapabilityService().isServiceStarted())) {
 			imsModule.getCapabilityService().requestContactCapabilities(contact);
 		 }
     }

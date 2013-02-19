@@ -282,5 +282,12 @@
 	    android:textStyle="bold"
 		android:enabled="true"
         android:text="Social presence" />
+		
+		<CheckBox android:id="@+id/geolocation_push"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:textStyle="bold"
+		android:enabled="true"
+        android:text="Geolocation push" />
 </LinearLayout>
 </ScrollView>

@@ -17,6 +17,14 @@
 		android:title="@string/menu_add_participant"
 		android:icon="@drawable/ri_menu_add_participant"/>
 
+	<item android:id="@+id/menu_send_geoloc"
+		android:title="@string/menu_send_geoloc"
+		android:icon="@drawable/ri_menu_send_geoloc"/>
+	
+	<item android:id="@+id/menu_showus_map"
+		android:title="@string/menu_showus_map"
+		android:icon="@drawable/ri_menu_showus_map"/>
+	
 	<item android:id="@+id/menu_quicktext"
 		android:title="@string/menu_quicktext"
 		android:icon="@drawable/ri_menu_quicktext"/>

@@ -76,6 +76,8 @@ public class MyCapabilities extends Activity {
         presenceDiscovery.setChecked(capabilities.isPresenceDiscoverySupported());
         CheckBox socialPresence = (CheckBox)findViewById(R.id.social_presence);
         socialPresence.setChecked(capabilities.isSocialPresenceSupported());
+        CheckBox geolocationPush = (CheckBox)findViewById(R.id.geolocaction_push);
+        geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
 
         // Set extensions
         TextView extensions = (TextView)findViewById(R.id.extensions);
@@ -85,6 +87,6 @@ public class MyCapabilities extends Activity {
         	String value = extensionList.get(i);
         	result += value.substring(Utils.FEATURE_RCSE_EXTENSION.length()+1) + "\n";
         }
-        extensions.setText(result);    		
+        extensions.setText(result);
     }
 }

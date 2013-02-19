@@ -28,10 +28,12 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -276,15 +278,29 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 		return msgId;
 	}
 
+	/**
+	 * Is geoloc supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isGeolocSupported() {
+		return RcsSettings.getInstance().isGeoLocationPushSupported(); // TODO && session.isGeolocSupportedByServer();
+	}
+	
     /**
-     * Send a geolocation
+     * Send a geoloc message
      * 
      * @param geoloc Geolocation
      * @return Message ID
      */
-    public String sendGeolocation(GeolocPush geoloc) {
-        // TODO: NOT YET IMPLEMENTED
-        return null;
+    public String sendGeoloc(GeolocPush geoloc) {
+		// Generate a message Id
+		String msgId = ChatUtils.generateMessageId();
+
+		// Send text message
+		session.sendGeolocMessage(msgId, geoloc);
+
+		return msgId;
     }
 
 	/**
@@ -653,5 +669,34 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        }
 	        listeners.finishBroadcast();
 	    }  
+    }
+
+    /**
+     * New geolocation info received
+     * 
+     * @param geoloc Geoloc message
+     */
+    public void handleReceiveGeoloc(GeolocMessage geoloc) {
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("New geoloc message received");
+			}
+
+			// Update rich messaging history
+			RichMessaging.getInstance().addIncomingGeoloc(geoloc, session);
+			
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleReceiveGeoloc(geoloc);
+	            } catch(Exception e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
+	    }
     }
 }

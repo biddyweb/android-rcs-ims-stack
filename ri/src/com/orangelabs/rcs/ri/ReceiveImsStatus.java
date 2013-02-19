@@ -19,7 +19,7 @@
 package com.orangelabs.rcs.ri;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.ImsApiIntents;
+import com.orangelabs.rcs.service.api.client.ImsDisconnectionReason;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,9 +36,9 @@ public class ReceiveImsStatus extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         boolean status = intent.getBooleanExtra("status", false);
         if (!status) {
-            int reason = intent.getIntExtra("reason", ImsApiIntents.REASON_UNKNOWN);
-            if (reason == ImsApiIntents.STOP_REASON_BATTERY_LOW) {
-                // Show disconnected reason
+            int reason = intent.getIntExtra("reason", ImsDisconnectionReason.UNKNOWN);
+            if (reason == ImsDisconnectionReason.BATTERY_LOW) {
+                // Show disconnected reason due to battery low
                 int batteryLimit = RcsSettings.getInstance().getMinBatteryLevel();
                 String msg = context.getString(R.string.label_battery_running_low, batteryLimit);
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show();

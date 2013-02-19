@@ -1,6 +1,7 @@
 package com.orangelabs.rcs.service.api.client.messaging;
 
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 
 /**
  * Chat event listener
@@ -35,4 +36,7 @@ interface IChatEventListener {
     
 	// Request to add participant has failed
 	void handleAddParticipantFailed(in String reason);
+	
+	// New geoloc message received
+	void handleReceiveGeoloc(in GeolocMessage geoloc);
 }

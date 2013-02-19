@@ -240,7 +240,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     /**
      * Transfer a file to a group of contacts
      *
-     * @param contacts List of Contacts
+     * @param contacts List of contacts
      * @param file File to be transfered
      * @return File transfer session
      * @throws ClientApiException

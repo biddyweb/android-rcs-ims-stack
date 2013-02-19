@@ -34,7 +34,6 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -149,10 +148,6 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
                 return;
             }
-//            VideoContent content = (VideoContent)getContent();
-//            content.setEncoding("video/" + selectedVideoCodec.getCodecName());
-//            content.setWidth(selectedVideoCodec.getWidth());
-//            content.setHeight(selectedVideoCodec.getHeight());
 
             // Set the media codec in media renderer
             getMediaRenderer().setMediaCodec(selectedVideoCodec.getMediaCodec());
@@ -271,88 +266,6 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Exception when closing the media renderer", e);
-            }
-        }
-    }
-
-    /**
-     * Media player event listener
-     */
-    private class MediaPlayerEventListener extends IMediaEventListener.Stub {
-        /**
-         * Streaming session
-         */
-        private VideoStreamingSession session;
-
-        /**
-         * Constructor
-         *
-         * @param session Streaming session
-         */
-        public MediaPlayerEventListener(VideoStreamingSession session) {
-            this.session = session;
-        }
-
-        /**
-         * Media player is opened
-         */
-        public void mediaOpened() {
-            if (logger.isActivated()) {
-                logger.debug("Media renderer is opened");
-            }
-        }
-
-        /**
-         * Media player is closed
-         */
-        public void mediaClosed() {
-            if (logger.isActivated()) {
-                logger.debug("Media renderer is closed");
-            }
-        }
-
-        /**
-         * Media player is started
-         */
-        public void mediaStarted() {
-            if (logger.isActivated()) {
-                logger.debug("Media renderer is started");
-            }
-        }
-
-        /**
-         * Media player is stopped
-         */
-        public void mediaStopped() {
-            if (logger.isActivated()) {
-                logger.debug("Media renderer is stopped");
-            }
-        }
-
-        /**
-         * Media player has failed
-         *
-         * @param error Error
-         */
-        public void mediaError(String error) {
-            if (logger.isActivated()) {
-                logger.error("Media renderer has failed: " + error);
-            }
-
-            // Close the media session
-            closeMediaSession();
-
-            // Terminate session
-            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-
-            // Remove the current session
-            getImsService().removeSession(session);
-
-            // Notify listeners
-            if (!isInterrupted()) {
-                for(int i=0; i < getListeners().size(); i++) {
-                    ((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_STREAMING_FAILED, error));
-                }
             }
         }
     }

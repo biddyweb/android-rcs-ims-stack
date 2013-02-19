@@ -36,6 +36,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.event.User;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -298,6 +299,51 @@ public class RichMessaging {
 				msg.getMessageId(), msg.getRemote(), msg.getTextMessage(),
 				InstantMessage.MIME_TYPE, msg.getRemote(),
 				msg.getTextMessage().getBytes().length, msg.getDate(), EventsLogApi.STATUS_SENT);			
+	}
+	
+	/**
+	 * Add incoming geoloc message
+	 * 
+	 * @param geoloc Geoloc message
+	 * @param session Chat session
+	 */
+	public void addIncomingGeoloc(GeolocMessage geoloc, ChatSession session) {
+		// Add message entry
+		int type;
+		if (session.isGroupChat()) {
+			type = EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC;
+		} else {
+			type = EventsLogApi.TYPE_INCOMING_GEOLOC;
+		}		
+		int status = EventsLogApi.STATUS_RECEIVED;
+		if (geoloc.isImdnDisplayedRequested()){
+			status = EventsLogApi.STATUS_REPORT_REQUESTED;
+		}
+		String geolocData = GeolocMessage.formatGeolocToStr(geoloc.getGeoloc());
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(),
+				geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
+				geolocData.length(), geoloc.getDate(), status);
+	}
+	
+	/**
+	 * Add outgoing geoloc message
+	 * 
+	 * @param geoloc Geoloc message
+	 * @param session Chat session
+	 */
+	public void addOutgoingGeoloc(GeolocMessage geoloc, ChatSession session) {
+		// Add session entry
+		int type;
+		if (session.isGroupChat()){
+			type = EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC;
+		} else {
+			type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
+		}
+		String geolocData = GeolocMessage.formatGeolocToStr(geoloc.getGeoloc());
+		addEntry(type, session.getSessionID(), session.getContributionID(),
+				geoloc.getMessageId(), geoloc.getRemote(), geolocData,
+				GeolocMessage.MIME_TYPE, geoloc.getRemote(),
+				geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);			
 	}
 	
 	/**
@@ -576,6 +622,9 @@ public class RichMessaging {
 	 * @return URI of the new entry
 	 */
 	private Uri addEntry(int type, String sessionId, String chatId, String messageId, String contact, String data, String mimeType, String name, long size, Date date, int status) {
+		
+		contact = PhoneUtils.extractNumberFromUri(contact);
+		
 		if (logger.isActivated()){
 			logger.debug("Add new entry: type=" + type + ", sessionID=" + sessionId +
 					", chatID=" + chatId + ", messageID=" + messageId + ", contact=" + contact +
@@ -601,7 +650,7 @@ public class RichMessaging {
 		}
 		return cr.insert(databaseUri, values);
 	}
-
+	
 	/**
 	 * Manage the max size of the history for a given contact
 	 * 

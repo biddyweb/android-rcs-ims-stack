@@ -106,7 +106,7 @@ public class PublishPresenceInfo extends Activity {
             Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
         	photoView.setImageBitmap(bmp);
         } else {
-        	photoView.setImageResource(R.drawable.ri_no_photo_icon);
+        	photoView.setImageResource(R.drawable.ri_default_portrait_icon);
         }
 
 		// Set buttons callback
@@ -163,7 +163,7 @@ public class PublishPresenceInfo extends Activity {
     private OnClickListener btnDeletePhotoListener = new OnClickListener() {
         public void onClick(View v) {
             ImageView photoView = (ImageView)findViewById(R.id.photo);
-            photoView.setImageResource(R.drawable.ri_no_photo_icon);
+            photoView.setImageResource(R.drawable.ri_default_portrait_icon);
             presenceInfo.setPhotoIcon(null);
         }
     };

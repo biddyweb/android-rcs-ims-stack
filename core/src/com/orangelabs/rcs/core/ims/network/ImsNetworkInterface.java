@@ -264,73 +264,43 @@ public abstract class ImsNetworkInterface {
     }
 
     /**
-     * Get DNS NAPTR records
+     * Get DNS records
      * 
      * @param domain Domain
      * @param resolver Resolver
-     * @return NAPTR records or null if no record
-     */
-    private Record[] getDnsNAPTR(String domain, ExtendedResolver resolver) {
-		try {
-			if (logger.isActivated()) {
-				logger.debug("DNS NAPTR lookup for " + domain);
-			}
-			Lookup lookup = new Lookup(domain, Type.NAPTR);
-			lookup.setResolver(resolver);
-			Record[] result = lookup.run();
-			int code = lookup.getResult();
-			if (code != Lookup.SUCCESSFUL) {
-				if (logger.isActivated()) {
-					logger.warn("Lookup error: " + code + "/" + lookup.getErrorString());
-				}
-			}
-			return result;
-        } catch(TextParseException e) {
-			if (logger.isActivated()) {
-				logger.debug("Not a valid DNS name");
-			}
-			return null;
-	    } catch(IllegalArgumentException e) {
-			if (logger.isActivated()) {
-				logger.debug("Not a valid DNS type");
-			}
-			return null;
-	    }
-    }
-    
-    /**
-     * Get DNS SRV records
-     * 
-     * @param domain Domain
-     * @param resolver Resolver
+     * @param type (Type.SRV or Type.NAPTR)
      * @return SRV records or null if no record
      */
-    private Record[] getDnsSRV(String domain, ExtendedResolver resolver) {
-		try {
-			if (logger.isActivated()) {
-				logger.debug("DNS SRV lookup for " + domain);
-			}
-			Lookup lookup = new Lookup(domain, Type.SRV);
-			lookup.setResolver(resolver);
-			Record[] result = lookup.run();
-			int code = lookup.getResult();
-			if (code != Lookup.SUCCESSFUL) {
-				if (logger.isActivated()) {
-					logger.warn("Lookup error: " + code + "/" + lookup.getErrorString());
-				}
-			}
-			return result;
-		} catch(TextParseException e) {
-			if (logger.isActivated()) {
-				logger.debug("Not a valid DNS name");
-			}
-			return null;
-	    } catch(IllegalArgumentException e) {
-			if (logger.isActivated()) {
-				logger.debug("Not a valid DNS type");
-			}
-			return null;
-	    }
+    private Record[] getDnsRequest(String domain, ExtendedResolver resolver, int type) {
+        try {
+            if (logger.isActivated()) {
+                if (type == Type.SRV) {
+                    logger.debug("DNS SRV lookup for " + domain);
+                } else if (type == Type.NAPTR) {
+                    logger.debug("DNS NAPTR lookup for " + domain);
+                }
+            }
+            Lookup lookup = new Lookup(domain, type);
+            lookup.setResolver(resolver);
+            Record[] result = lookup.run();
+            int code = lookup.getResult();
+            if (code != Lookup.SUCCESSFUL) {
+                if (logger.isActivated()) {
+                    logger.warn("Lookup error: " + code + "/" + lookup.getErrorString());
+                }
+            }
+            return result;
+        } catch(TextParseException e) {
+            if (logger.isActivated()) {
+                logger.debug("Not a valid DNS name");
+            }
+            return null;
+        } catch(IllegalArgumentException e) {
+            if (logger.isActivated()) {
+                logger.debug("Not a valid DNS type");
+            }
+            return null;
+        }
     }
 
     /**
@@ -426,7 +396,7 @@ public abstract class ImsNetworkInterface {
 		    	} else {
 					throw new SipException("Unkown SIP protocol");
 		    	}
-				Record[] naptrRecords = getDnsNAPTR(imsProxyAddr, resolver);
+				Record[] naptrRecords = getDnsRequest(imsProxyAddr, resolver, Type.NAPTR);
 				if ((naptrRecords != null) && (naptrRecords.length > 0)) {
 					if (logger.isActivated()) {
 						logger.debug("NAPTR records found: " + naptrRecords.length);
@@ -438,7 +408,7 @@ public abstract class ImsNetworkInterface {
 						}
 						if ((naptr != null) && naptr.getService().equalsIgnoreCase(service)) {
 					    	// DNS SRV lookup
-						    Record[] srvRecords = getDnsSRV(naptr.getReplacement().toString(), resolver);
+						    Record[] srvRecords = getDnsRequest(naptr.getReplacement().toString(), resolver, Type.SRV);
 							if ((srvRecords != null) && (srvRecords.length > 0)) {
 								SRVRecord srvRecord = getBestDnsSRV(srvRecords);
 								resolvedIpAddress = getDnsA(srvRecord.getTarget().toString());
@@ -460,7 +430,7 @@ public abstract class ImsNetworkInterface {
 				    } else {
 				    	query = "_sip._" + imsProxyProtocol.toLowerCase() + "." + imsProxyAddr;
 				    }
-				    Record[] srvRecords = getDnsSRV(query, resolver);
+				    Record[] srvRecords = getDnsRequest(query, resolver, Type.SRV);
 					if ((srvRecords != null) && (srvRecords.length > 0)) {
 						SRVRecord srvRecord = getBestDnsSRV(srvRecords);
 						resolvedIpAddress = getDnsA(srvRecord.getTarget().toString());

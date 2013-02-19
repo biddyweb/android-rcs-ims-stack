@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 69;
+        private static final int DATABASE_VERSION = 73;
 
         private Context ctx;
 
@@ -110,8 +110,12 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MIN_BATTERY_LEVEL,                 "0");
             addParameter(db, RcsSettingsData.MAX_PHOTO_ICON_SIZE, 				"256");
             addParameter(db, RcsSettingsData.MAX_FREETXT_LENGTH, 				"100");
+            addParameter(db, RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH,			"100");
+            addParameter(db, RcsSettingsData.GEOLOC_EXPIRATION_TIME,			"3600");
+            addParameter(db, RcsSettingsData.MIN_STORAGE_CAPACITY,				"10240");
             addParameter(db, RcsSettingsData.MAX_CHAT_PARTICIPANTS, 			"10");
             addParameter(db, RcsSettingsData.MAX_CHAT_MSG_LENGTH, 				"100");
+            addParameter(db, RcsSettingsData.MAX_GROUPCHAT_MSG_LENGTH,			"100");
             addParameter(db, RcsSettingsData.CHAT_IDLE_DURATION, 				"300");
             addParameter(db, RcsSettingsData.MAX_FILE_TRANSFER_SIZE, 			"3072");
             addParameter(db, RcsSettingsData.WARN_FILE_TRANSFER_SIZE, 			"2048");
@@ -149,6 +153,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
@@ -160,7 +165,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.MSRP_DEFAULT_PORT, 				"20000");
             addParameter(db, RcsSettingsData.RTP_DEFAULT_PORT, 					"10000");
             addParameter(db, RcsSettingsData.MSRP_TRANSACTION_TIMEOUT, 			"5");
-            addParameter(db, RcsSettingsData.REGISTER_EXPIRE_PERIOD, 			"3600");
+            addParameter(db, RcsSettingsData.REGISTER_EXPIRE_PERIOD, 			"600000");
             addParameter(db, RcsSettingsData.REGISTER_RETRY_BASE_TIME, 			"30");
             addParameter(db, RcsSettingsData.REGISTER_RETRY_MAX_TIME, 			"1800");
             addParameter(db, RcsSettingsData.PUBLISH_EXPIRE_PERIOD, 			"3600");

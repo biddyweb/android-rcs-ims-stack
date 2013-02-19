@@ -346,13 +346,13 @@ public class SipUtils {
     /**
      * Is a feature tag present or not in SIP message
      * 
-     * @param request Request
+     * @param msg SIP message
      * @param featureTag Feature tag to be checked
      * @return Boolean
      */
-    public static boolean isFeatureTagPresent(SipRequest request, String featureTag) {
+    public static boolean isFeatureTagPresent(SipMessage msg, String featureTag) {
     	boolean result = false;
-    	ArrayList<String> tags = request.getFeatureTags();
+    	ArrayList<String> tags = msg.getFeatureTags();
     	for(int i=0; i < tags.size(); i++) {
     		if (tags.get(i).contains(featureTag)) {
         		result = true;

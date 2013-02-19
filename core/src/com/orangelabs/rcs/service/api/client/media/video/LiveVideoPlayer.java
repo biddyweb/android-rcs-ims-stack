@@ -53,7 +53,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback {
 
     /**
-     * List of supported video codecs.
+     * List of supported video codecs
      */
     private MediaCodec[] supportedMediaCodecs = null; 
 
@@ -175,9 +175,9 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
-     * Constructor. Force a list of video codecs.
+     * Constructor with a list of video codecs
      *
-     * @param codecs ordered codecs list (prefered codec in first)
+     * @param codecs Ordered list of codecs (preferred codec in first)
      */
     public LiveVideoPlayer(MediaCodec[] codecs) {
         // Set the local RTP port
@@ -205,7 +205,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Reserve a port.
      *
-     * @param port the port to reserve
+     * @param port Port to reserve
      */
     private void reservePort(int port) {
         if (temporaryConnection == null) {
@@ -469,37 +469,40 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Get media codec
      *
-     * @return Media Codec
+     * @return Media codec
      */
     public MediaCodec getMediaCodec() {
-        if (selectedVideoCodec == null)
+        if (selectedVideoCodec == null) {
             return null;
-        else
+        } else {
             return selectedVideoCodec.getMediaCodec();
+        }
     }
 
     /**
      * Get media codec width
      *
-     * @return Media Codec
+     * @return Width
      */
     public int getMediaCodecWidth() {
-        if (selectedVideoCodec == null)
+        if (selectedVideoCodec == null) {
             return H264Config.VIDEO_WIDTH;
-        else
+        } else {
             return new VideoCodec(selectedVideoCodec.getMediaCodec()).getWidth();
+        }
     }
 
     /**
      * Get media codec height
      *
-     * @return Media Codec
+     * @return Height
      */
     public int getMediaCodecHeight() {
-        if (selectedVideoCodec == null)
+        if (selectedVideoCodec == null) {
             return H264Config.VIDEO_HEIGHT;
-        else
+        } else {
             return new VideoCodec(selectedVideoCodec.getMediaCodec()).getHeight();
+        }
     }
 
     /**
@@ -509,7 +512,19 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public void setMediaCodec(MediaCodec mediaCodec) {
         if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
-            selectedVideoCodec = new VideoCodec(mediaCodec);
+            VideoCodec codec = new VideoCodec(mediaCodec);
+            if (codec.getHeight() == 0 || codec.getWidth() == 0) {
+                selectedVideoCodec = new VideoCodec(codec.getCodecName(),
+                        codec.getPayload(),
+                        codec.getClockRate(),
+                        codec.getCodecParams(),
+                        codec.getFramerate(),
+                        codec.getBitrate(),
+                        H264Config.QCIF_WIDTH,
+                        H264Config.QCIF_HEIGHT);
+            } else {
+                selectedVideoCodec = codec;
+            }
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
         } else {
             notifyPlayerEventError("Codec not supported");
@@ -519,7 +534,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Set the scaling factor
      *
-     * @param scaleFactor new scaling factor
+     * @param scaleFactor New scaling factor
      */
     public void setScalingFactor(float scaleFactor) {
         this.scaleFactor = scaleFactor;
@@ -528,7 +543,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Set the mirroring value
      *
-     * @param mirroring new mirroring value
+     * @param mirroring New mirroring value
      */
     public void setScalingFactor(boolean mirroring) {
         this.mirroring = mirroring;

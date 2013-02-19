@@ -60,6 +60,7 @@ import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.service.api.client.IImsApi;
 import com.orangelabs.rcs.service.api.client.ImsApiIntents;
+import com.orangelabs.rcs.service.api.client.ImsDisconnectionReason;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
@@ -143,11 +144,6 @@ public class RcsCoreService extends Service implements CoreListener {
      */
     private AccountChangedReceiver accountChangedReceiver = null;
 
-    /**
-     * Stop by battery
-     */
-//    private boolean stopByBattery = false;
-
 	/**
 	 * The logger
 	 */
@@ -167,7 +163,7 @@ public class RcsCoreService extends Service implements CoreListener {
 
     @Override
     public void onDestroy() {
-        // Unregister broadcast receiver
+        // Unregister account changed broadcast receiver
 	    if (accountChangedReceiver != null) {
 	        try {
 	        	unregisterReceiver(accountChangedReceiver);
@@ -262,7 +258,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			// Init CPU manager
 			cpuManager.init();
 
-            // Create user account change receiver
+            // Register account changed event receiver
             if (accountChangedReceiver == null) {
                 accountChangedReceiver = new AccountChangedReceiver();
 
@@ -451,35 +447,43 @@ public class RcsCoreService extends Service implements CoreListener {
     }
 
     /**
-     * Send registration status event
-     *
-     * @param status Status
+     * Send IMS intent when registered
      */
-    private void sendRegistrationStatusIntent(boolean status, int reason) {
+    private void sendImsIntentRegistered() {
 		// TODO keep only one intent here
 
 		// Send registration intent
 		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
-		intent.putExtra("status", status);
-        intent.putExtra("reason", reason);
+		intent.putExtra("status", true);
 		getApplicationContext().sendBroadcast(intent);
 
 		// Send GSMA UI Connector intent
 		Intent intentGsma = new Intent(GsmaUiConnector.ACTION_REGISTRATION_CHANGED);
-		intentGsma.putExtra(GsmaUiConnector.EXTRA_REGISTRATION_STATUS, status);
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_REGISTRATION_STATUS, true);
 		getApplicationContext().sendBroadcast(intentGsma);
     }
 
     /**
-     * Send registration status event
+     * Send IMS intent when not registered
      *
-     * @param status Status
+     * @param reason Disconnection reason
      */
-    private void sendRegistrationStatusIntent(boolean status) {
-        sendRegistrationStatusIntent(status, ImsApiIntents.REASON_UNKNOWN);
-    }
+    private void sendImsIntentNotRegistered(int reason) {
+		// TODO keep only one intent here
 
-	/**
+		// Send registration intent
+		Intent intent = new Intent(ImsApiIntents.IMS_STATUS);
+		intent.putExtra("status", false);
+		intent.putExtra("reason", reason);
+		getApplicationContext().sendBroadcast(intent);
+
+		// Send GSMA UI Connector intent
+		Intent intentGsma = new Intent(GsmaUiConnector.ACTION_REGISTRATION_CHANGED);
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_REGISTRATION_STATUS, false);
+		getApplicationContext().sendBroadcast(intentGsma);
+    }
+    
+    /**
 	 * Handle "registration successful" event
 	 * 
 	 * @param registered Registration flag
@@ -490,7 +494,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 		
 		// Send registration intent
-		sendRegistrationStatusIntent(true);
+		sendImsIntentRegistered();
 		
 		// Display a notification
 		addRcsServiceNotification(true, getString(R.string.rcs_core_ims_connected));
@@ -507,8 +511,8 @@ public class RcsCoreService extends Service implements CoreListener {
 		}
 
 		// Send registration intent
-		sendRegistrationStatusIntent(false);
-
+		sendImsIntentNotRegistered(ImsDisconnectionReason.REGISTRATION_FAILED);
+		
 		// Display a notification
 		addRcsServiceNotification(false, getString(R.string.rcs_core_ims_connection_failed));
 	}
@@ -517,22 +521,22 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * Handle "registration terminated" event
 	 */
 	public void handleRegistrationTerminated() {
-		// Display a notification
-	    
+        if (logger.isActivated()) {
+            logger.debug("Handle event registration terminated");
+        }
+
         if (Core.getInstance().getImsModule().getImsConnectionManager().isDisconnectedByBattery()) {
-            if (logger.isActivated()) {
-                logger.debug("Handle event core terminated by battery");
-            }
-            // Send registration intent
-            sendRegistrationStatusIntent(false, ImsApiIntents.STOP_REASON_BATTERY_LOW);
+            // Display a notification
             addRcsServiceNotification(false, getString(R.string.rcs_core_ims_battery_disconnected));
-        } else {
-            if (logger.isActivated()) {
-                logger.debug("Handle event registration terminated");
-            }
+
             // Send registration intent
-            sendRegistrationStatusIntent(false);
-            addRcsServiceNotification(false, getString(R.string.rcs_core_ims_disconnected));
+            sendImsIntentNotRegistered(ImsDisconnectionReason.BATTERY_LOW);
+        } else {
+            // Display a notification
+        	addRcsServiceNotification(false, getString(R.string.rcs_core_ims_disconnected));
+
+        	// Send registration intent
+        	sendImsIntentNotRegistered(ImsDisconnectionReason.SERVICE_TERMINATED);
         }
 	}
 
@@ -792,8 +796,8 @@ public class RcsCoreService extends Service implements CoreListener {
 						presence.getGeopriv().getAltitude());
 				newPresenceInfo.setGeoloc(geoloc);
 			}
-			
 			newContactInfo.setPresenceInfo(newPresenceInfo);
+			
 	    	// Update contacts database
 			ContactsManager.getInstance().setContactInfo(newContactInfo, currentContactInfo);
 

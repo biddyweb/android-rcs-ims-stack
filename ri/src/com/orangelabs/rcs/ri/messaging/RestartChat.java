@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -214,22 +215,22 @@ public class RestartChat {
 		}
 
 		// New text message received
-		public void handleReceiveMessage(final InstantMessage msg) {
+		public void handleReceiveMessage(InstantMessage msg) {
 			// Not used here
 		}		
 
 		// Is composing event
-		public void handleIsComposingEvent(String contact, final boolean isComposing) {
+		public void handleIsComposingEvent(String contact, boolean isComposing) {
 			// Not used here
 		}
 
 		// Conference event
-	    public void handleConferenceEvent(final String contact, final String contactDisplayname, final String state) {
+	    public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
 			// Not used here
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(final String msgId, final String status) {
+		public void handleMessageDeliveryStatus(String msgId, String status) {
 			// Not used here
 		}
 		
@@ -240,7 +241,12 @@ public class RestartChat {
 	    
 		// Request to add participant has failed
 		public void handleAddParticipantFailed(String reason) {
-			// Not used here
+			// Not yet used here
+		}
+		
+		// New geoloc message received
+		public void handleReceiveGeoloc(GeolocMessage geoloc) {
+			// Not yet used here
 		}
     };
 

@@ -18,6 +18,9 @@
 
 package com.orangelabs.rcs.ri;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.ListActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -32,8 +35,10 @@ import com.orangelabs.rcs.ri.messaging.ChatList;
 import com.orangelabs.rcs.ri.messaging.InitiateChat;
 import com.orangelabs.rcs.ri.messaging.InitiateFileTransfer;
 import com.orangelabs.rcs.ri.messaging.InitiateGroupChat;
+import com.orangelabs.rcs.ri.messaging.ShowUsInMap;
 import com.orangelabs.rcs.ri.messaging.SpamBox;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 
 
 /**
@@ -57,7 +62,8 @@ public class MessagingRI extends ListActivity {
     		getString(R.string.menu_adhoc_group_chat),
     		getString(R.string.menu_chat_list),
     		getString(R.string.menu_block_contact),
-    		getString(R.string.menu_spambox)
+    		getString(R.string.menu_spambox),
+    		getString(R.string.menu_showus_map)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -97,6 +103,15 @@ public class MessagingRI extends ListActivity {
 
 	        case 6:
 	        	startActivity(new Intent(this, SpamBox.class));
+	        	break;
+
+	        case 7:
+	    		ContactsApi contactApi = new  ContactsApi(this);
+	    		List<String> contacts = contactApi.getRcsContacts();
+	        	Intent intent = new Intent(this, ShowUsInMap.class);
+	        	ArrayList<String> list = new ArrayList<String>(contacts); 
+	        	intent.putStringArrayListExtra("contacts", list);
+	        	startActivity(intent);
 	        	break;
         }
     }

@@ -33,9 +33,12 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.SessionAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.event.ConferenceEventSubscribeManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -193,6 +196,38 @@ public abstract class GroupChatSession extends ChatSession {
 		// Update rich messaging history
 		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, false);
 		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
+
+		// Check if message has been sent with success or not
+		if (!result) {
+			// Update rich messaging history
+			RichMessaging.getInstance().markChatMessageFailed(msgId);
+			
+			// Notify listeners
+	    	for(int i=0; i < getListeners().size(); i++) {
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+			}
+		}
+	}
+	
+	/**
+	 * Send a geoloc message
+	 * 
+	 * @param msgId Message ID
+	 * @param geoloc Geoloc info
+	 */ 
+	public void sendGeolocMessage(String msgId, GeolocPush geoloc) {
+		// Send message in CPIM
+		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+		String to = getRemoteContact();
+		String geoDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
+		String content = ChatUtils.buildCpimMessage(from, to, geoDoc, GeolocInfoDocument.MIME_TYPE);
+		
+		// Send data
+		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+
+		// Update rich messaging history
+		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, false);
+		RichMessaging.getInstance().addOutgoingGeoloc(geolocMsg, this);
 
 		// Check if message has been sent with success or not
 		if (!result) {
@@ -474,8 +509,5 @@ public abstract class GroupChatSession extends ChatSession {
 
         // Subscribe to event package
         getConferenceEventSubscriber().subscribe();
-
-        // Start the activity manager
-        getActivityManager().start();
     }
 }

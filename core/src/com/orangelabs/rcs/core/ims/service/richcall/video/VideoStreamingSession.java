@@ -24,9 +24,11 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
+import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -122,6 +124,91 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
                 ((VideoStreamingSessionListener) getListeners().get(i))
                         .handleSharingError(new ContentSharingError(error));
             }
+        }
+    }
+
+    /**
+     * Media player event listener
+     */
+    protected class MediaPlayerEventListener extends IMediaEventListener.Stub {
+        /**
+         * Streaming session
+         */
+        private VideoStreamingSession session;
+
+        /**
+         * Constructor
+         *
+         * @param session Streaming session
+         */
+        public MediaPlayerEventListener(VideoStreamingSession session) {
+            this.session = session;
+        }
+
+        /**
+         * Media player is opened
+         */
+        public void mediaOpened() {
+            if (logger.isActivated()) {
+                logger.debug("Media renderer is opened");
+            }
+        }
+
+        /**
+         * Media player is closed
+         */
+        public void mediaClosed() {
+            if (logger.isActivated()) {
+                logger.debug("Media renderer is closed");
+            }
+        }
+
+        /**
+         * Media player is started
+         */
+        public void mediaStarted() {
+            if (logger.isActivated()) {
+                logger.debug("Media renderer is started");
+            }
+        }
+
+        /**
+         * Media player is stopped
+         */
+        public void mediaStopped() {
+            if (logger.isActivated()) {
+                logger.debug("Media renderer is stopped");
+            }
+        }
+
+        /**
+         * Media player has failed
+         *
+         * @param error Error
+         */
+        public void mediaError(String error) {
+            if (logger.isActivated()) {
+                logger.error("Media renderer has failed: " + error);
+            }
+
+            // Close the media session
+            closeMediaSession();
+
+            // Terminate session
+            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+
+            // Remove the current session
+            getImsService().removeSession(session);
+
+            // Notify listeners
+            if (!isInterrupted()) {
+                for(int i=0; i < getListeners().size(); i++) {
+                    ((VideoStreamingSessionListener)getListeners().get(i)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_STREAMING_FAILED, error));
+                }
+            }
+
+            // Request capabilities to the remote
+            getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
         }
     }
 }

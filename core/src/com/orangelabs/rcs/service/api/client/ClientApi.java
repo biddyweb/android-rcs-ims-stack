@@ -107,7 +107,7 @@ public abstract class ClientApi {
 				if (imsCoreApi.isImsConnected()) {
 					notifyEventImsConnected();
 				} else {
-					notifyEventImsDisconnected(ImsApiIntents.REASON_UNKNOWN);
+					notifyEventImsDisconnected(ImsDisconnectionReason.UNKNOWN);
 				}
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -203,13 +203,13 @@ public abstract class ClientApi {
 				notifyEventImsConnected();
 			} else {
 				// Disconnected from IMS
-				notifyEventImsDisconnected(intent.getIntExtra("reason", ImsApiIntents.REASON_UNKNOWN));
+				notifyEventImsDisconnected(intent.getIntExtra("reason", ImsDisconnectionReason.UNKNOWN));
 			}
 		}
 	};	
 	
 	/**
-	 * Notify listeners when service is registered to the IMS
+	 * Notify listeners when client is registered to the IMS
 	 */
 	private void notifyEventImsConnected() {
 		for(int i=0; i < imsListeners.size(); i++) {
@@ -219,7 +219,9 @@ public abstract class ClientApi {
 	}
 
 	/**
-	 * Notify listeners when service is not registered to the IMS
+	 * Notify listeners when client is not registered to the IMS
+	 * 
+	 * @param reason Disconnection reason
 	 */
 	private void notifyEventImsDisconnected(int reason) {
 		for(int i=0; i < imsListeners.size(); i++) {

@@ -6,6 +6,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -196,6 +197,11 @@ public class ResponderService extends Service implements ClientApiListener {
 	    
 		// Request to add participant has failed
 		public void handleAddParticipantFailed(String reason) {
+			// Nothing to do
+		}
+		
+		// New geoloc message received
+		public void handleReceiveGeoloc(final GeolocMessage geoloc) {
 			// Nothing to do
 		}
     };

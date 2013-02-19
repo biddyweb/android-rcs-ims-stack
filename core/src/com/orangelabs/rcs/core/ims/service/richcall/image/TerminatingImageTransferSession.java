@@ -78,7 +78,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new sharing session as terminating");
 	    	}
-	
+
 	    	// Send a 180 Ringing response
 	    	send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 
@@ -95,7 +95,21 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 				handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
         		return;
         	}
-            
+
+            int maxSize = ImageTransferSession.getMaxImageSharingSize();
+            if (maxSize > 0 && getContent().getSize() > maxSize) {
+                if (logger.isActivated()) {
+                    logger.debug("Auto reject file transfer invitation");
+                }
+
+                // Decline the invitation
+                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
+
+                // File too big
+                handleError(new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG));
+                return;
+            }
+
 			// Wait invitation answer
 	    	int answer = waitInvitationAnswer();
 			if (answer == ImsServiceSession.INVITATION_REJECTED) {
@@ -193,7 +207,6 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
-	    	int maxSize = ImageTransferSession.getMaxImageSharingSize();
 	    	if (maxSize > 0) {
 	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
 	    	}

@@ -123,6 +123,10 @@ public class ContentManager{
 	    		// Video content
 	    		return new VideoContent(url, mime, size);
 	        }
+	    	if (mime.equals("text/vcard")) {
+	    		// Visit Card content
+	    		return new VisitCardContent(url, size);
+	        }
 		}
 		
 		// File content

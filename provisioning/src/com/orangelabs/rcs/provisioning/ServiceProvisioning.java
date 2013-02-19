@@ -72,6 +72,9 @@ public class ServiceProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.MaxChatMessageLength);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH));
 
+        txt = (EditText)this.findViewById(R.id.MaxGroupChatMessageLength);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_GROUPCHAT_MSG_LENGTH));
+
         txt = (EditText)this.findViewById(R.id.ChatIdleDuration);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CHAT_IDLE_DURATION));
 
@@ -108,6 +111,12 @@ public class ServiceProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.DirectoryPathFiles);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.DIRECTORY_PATH_FILES));
 
+        txt = (EditText)this.findViewById(R.id.MaxGeolocLabelLength);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH));
+        
+        txt = (EditText)this.findViewById(R.id.GeolocExpirationTime);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.GEOLOC_EXPIRATION_TIME));
+        
         Spinner spinner = (Spinner)findViewById(R.id.ImSessionStart);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -159,7 +168,10 @@ public class ServiceProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.MaxChatMessageLength);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_CHAT_MSG_LENGTH, txt.getText().toString());
 
-		        txt = (EditText)this.findViewById(R.id.ChatIdleDuration);
+		        txt = (EditText)this.findViewById(R.id.MaxGroupChatMessageLength);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_GROUPCHAT_MSG_LENGTH, txt.getText().toString());
+
+				txt = (EditText)this.findViewById(R.id.ChatIdleDuration);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.CHAT_IDLE_DURATION, txt.getText().toString());
 
 		        txt = (EditText)this.findViewById(R.id.MaxFileTransferSize);
@@ -185,6 +197,12 @@ public class ServiceProvisioning extends Activity {
 
 		        txt = (EditText)this.findViewById(R.id.MaxRichcallLogEntries);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES, txt.getText().toString());
+				
+		        txt = (EditText)this.findViewById(R.id.MaxGeolocLabelLength);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.GeolocExpirationTime);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.GEOLOC_EXPIRATION_TIME, txt.getText().toString());
 				
 		        txt = (EditText)this.findViewById(R.id.DirectoryPathPhotos);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS, txt.getText().toString());

@@ -39,6 +39,7 @@ import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -318,26 +319,37 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 
 		// Receive a message
 		public void handleReceiveMessage(InstantMessage msg) throws RemoteException {
+			// Not yet used here
 		}
 		
 		// Is composing event
 		public void handleIsComposingEvent(String contact, boolean isComposing) {
+			// Not yet used here
 		}
 		
 		// Conference event
 	    public void handleConferenceEvent(String contact, String contactDisplayname, String state) {
+			// Not yet used here
 		}
 	    
 		// Message delivery status
 		public void handleMessageDeliveryStatus(String msgId, String status) {
+			// Not yet used here
 		}
 		
 		// Request to add participant is successful
 		public void handleAddParticipantSuccessful() {
+			// Not yet used here
 		}
 	    
 		// Request to add participant has failed
 		public void handleAddParticipantFailed(String reason) {
+			// Not yet used here
+		}
+		
+		// New geoloc message received
+		public void handleReceiveGeoloc(GeolocMessage geoloc) {
+			// Not yet used here
 		}
 	};
     

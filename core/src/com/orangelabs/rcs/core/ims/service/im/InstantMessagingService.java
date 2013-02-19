@@ -72,6 +72,11 @@ public class InstantMessagingService extends ImsService {
     public final static String[] CHAT_FEATURE_TAGS = { FeatureTags.FEATURE_OMA_IM };
 
     /**
+     * Chat features tags with geolocation support
+     */
+    public final static String[] CHAT_FEATURE_TAGS_GEOLOCATION = { FeatureTags.FEATURE_OMA_IM, FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\""};
+    
+    /**
      * File transfer features tags
      */
     public final static String[] FT_FEATURE_TAGS = { FeatureTags.FEATURE_OMA_IM };
@@ -101,7 +106,7 @@ public class InstantMessagingService extends ImsService {
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
-    /**
+	/**
      * Constructor
      * 
      * @param parent IMS module
@@ -262,6 +267,15 @@ public class InstantMessagingService extends ImsService {
 			}
 			throw new CoreException("Max file transfer sessions achieved");
 		}
+
+        // Test max size
+        int maxSize = FileSharingSession.getMaxFileSharingSize();
+        if (maxSize > 0 && content.getSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("File exceeds max size: cancel the initiation");
+            }
+            throw new CoreException("File exceeds max size");
+        }
 
 		// Create a new session
 		OriginatingFileSharingSession session = new OriginatingFileSharingSession(

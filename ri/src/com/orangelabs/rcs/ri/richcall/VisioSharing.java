@@ -60,6 +60,7 @@ import com.orangelabs.rcs.ri.utils.CpuMonitor;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
+import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
@@ -318,7 +319,11 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         }
         if (!isPrerecordedSession){
         	// Create the live video player
-            outgoingPlayer = new LiveVideoPlayer();
+            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+                outgoingPlayer = new LiveVideoPlayer();
+            } else {
+                outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+            }
 
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
@@ -336,7 +341,11 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         if (incomingVideoView == null) {
             incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
             incomingVideoView.setAspectRatio(videoWidth, videoHeight);
-            incomingRenderer = new VideoRenderer();
+            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+                incomingRenderer = new VideoRenderer();
+            } else {
+                incomingRenderer = new VideoRenderer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+            }
             incomingRenderer.setVideoSurface(incomingVideoView);
         }
 
@@ -614,7 +623,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
             // Restart the preview
             startCameraPreview();
-            camera.setPreviewCallback(outgoingPlayer);
+            if (camera != null) {
+                camera.setPreviewCallback(outgoingPlayer);
+            }
         }
     };
 
@@ -690,7 +701,11 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     private void recreateVideoPlayer(){
     	if (!isPrerecordedSession) {
     		// Create the live video player
-            outgoingPlayer = new LiveVideoPlayer();
+            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+                outgoingPlayer = new LiveVideoPlayer();
+            } else {
+                outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+            }
             outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
             surface = outgoingVideoView.getHolder();
             surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -728,9 +743,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             handler.post(new Runnable() {
                 public void run() {
                     // Update Camera
-                  videoHeight = outgoingPlayer.getMediaCodecHeight();
-                  videoWidth = outgoingPlayer.getMediaCodecWidth();
-                  reStartCameraPreview();
+                    videoHeight = outgoingPlayer.getMediaCodecHeight();
+                    videoWidth = outgoingPlayer.getMediaCodecWidth();
+                    reStartCameraPreview();
 
                     startOutgoingBtn.setEnabled(false);
                     stopOutgoingBtn.setEnabled(true);
@@ -1050,7 +1065,9 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             OpenCamera(openedCameraId);
         }
         startCameraPreview();
-        camera.setPreviewCallback(outgoingPlayer);
+        if (camera != null) {
+            camera.setPreviewCallback(outgoingPlayer);
+        }
     }
 
     /**
@@ -1064,7 +1081,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
             // Camera size
             List<Camera.Size> sizes = p.getSupportedPreviewSizes();
-            if (sizes.contains(camera.new Size(videoWidth, videoHeight))) {
+            if (contains(sizes, videoWidth, videoHeight)) {
                 p.setPreviewSize(videoWidth, videoHeight);
                 outgoingPlayer.setScalingFactor((float) 1);
                 if (logger.isActivated()) {
@@ -1072,19 +1089,31 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 }
             } else {
                 // Try to select double size and initialize scaling 0.5
-                if (sizes.contains(camera.new Size(2*videoWidth, 2*videoHeight))) {
+                if (contains(sizes, 2*videoWidth, 2*videoHeight)) {
                     p.setPreviewSize(2*videoWidth, 2*videoHeight);
                     outgoingPlayer.setScalingFactor((float) 0.5);
                     if (logger.isActivated()) {
                         logger.info("Camera preview initialized with size " + 2*videoWidth + "x" + 2*videoHeight + " with a 0.5 scale factor");
                     }
                 } else {
-                    // Error
-                    if (logger.isActivated()) {
-                        logger.info("Camera preview can't be initialized with size " + videoWidth + "x" + videoHeight);
+                    // Try to set front camera if back camera doesn't support size
+                    String cam_id = p.get("camera-id");
+                    if (cam_id != null) {
+                        p.set("camera-id", 2);
+                        p.setRotation(270);
+                        p.setPreviewSize(videoWidth, videoHeight);
+                        outgoingPlayer.setScalingFactor((float) 1);
+                        if (logger.isActivated()) {
+                            logger.info("Camera preview initialized on front camera with size " + videoWidth + "x" + videoHeight + " with a 1 scale factor");
+                        }
+                    } else {
+                        // Error
+                        if (logger.isActivated()) {
+                            logger.warn("Camera preview can't be initialized with size " + videoWidth + "x" + videoHeight);
+                        }
+                        camera = null;
+                        return;
                     }
-                    camera = null;
-                    return;
                 }
             }
             camera.setParameters(p);
@@ -1096,6 +1125,24 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                 camera = null;
             }
         }
+    }
+
+    /**
+     * Test if size is in list.
+     * Can't use List.contains because it doesn't work with some devices.
+     *
+     * @param list
+     * @param width
+     * @param height
+     * @return boolean
+     */
+    private boolean contains(List<Camera.Size> list, int width, int height) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).width == width && list.get(i).height == height) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private BroadcastReceiver sharingIntentReceiver = new BroadcastReceiver() {
@@ -1227,4 +1274,31 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 		return true;
 	}
 
+    /**
+     * Create a list of supported video codecs
+     *
+     * @return codecs list
+     */
+    private MediaCodec[] createSupportedCodecList(boolean[] codecs) {
+        // Set number of codecs
+        int size = 0;
+        for (int i = 0; i < VideoSettings.CODECS_SIZE + 1; i++) {
+            size += ((codecs[i]) ? 1 : 0);
+        }
+        if (size == 0) {
+            return null;
+        }
+
+        // Add codecs settings (preferred in first)
+        MediaCodec[] supportedMediaCodecs = new MediaCodec[size];
+        for (int i = 0; i < VideoSettings.CODECS_SIZE; i++) {
+            if (codecs[i]) {
+                supportedMediaCodecs[--size] = VideoSettings.CODECS[i];
+            }
+        }
+        if (codecs[VideoSettings.CODECS_SIZE]) {
+            supportedMediaCodecs[--size] = VideoSettings.getCustomCodec(getApplicationContext());
+        }
+        return supportedMediaCodecs;
+    }
 }

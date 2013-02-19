@@ -37,31 +37,30 @@ public class CodecsUtils {
     /**
      * Get list of supported video codecs according to current network
      *
-     * @return codecs list
+     * @return Codecs list
      */
     public static MediaCodec[] getSupportedCodecList() {
-        int networkLevel = NetworkUtils.getNetworkLevel();
+        int networkLevel = NetworkUtils.getNetworkAccessType();
         int payload_count = H264VideoFormat.PAYLOAD - 1;
         int i = -1;
 
         // Set number of codecs
         int size = 1; // default
-        if (networkLevel == NetworkUtils.NETWORK_LEVEL_WIFI || networkLevel == NetworkUtils.NETWORK_LEVEL_4G) {
+        if (networkLevel == NetworkUtils.NETWORK_ACCESS_WIFI || networkLevel == NetworkUtils.NETWORK_ACCESS_4G) {
             size = 4;
-        } else if (networkLevel == NetworkUtils.NETWORK_LEVEL_3GPLUS) {
-            size = 3;
         }
         MediaCodec[] supportedMediaCodecs = new MediaCodec[size];
 
         // Add codecs settings (ordered list)
         /*
-         * 3G   -> level 1.B: PAYLOAD=96, profile-level-id=42900b, frame_rate=12, frame_size=QCIF, bit_rate=96k
-         * 3G+  -> level 1.2: profile-level-id=42800c, frame_rate=10, frame_size=QVGA, bit_rate=176k
-         * 3G+  -> level 1.2: profile-level-id=42800c, frame_rate=10, frame_size=CIF, bit_rate=176k
-         * WIFI -> level 1.3: profile-level-id=42800d, frame_rate=15, frame_size=CIF, bit_rate=384k
+         * 3G/3g+ -> level 1.B: profile-level-id=42900b, frame_rate=12, frame_size=QCIF, bit_rate=96k
+         *
+         * WIFI   -> level 1.2: profile-level-id=42800c, frame_rate=15, frame_size=QVGA, bit_rate=384k
+         * WIFI   -> level 1.2: profile-level-id=42800c, frame_rate=15, frame_size=CIF, bit_rate=384k
+         * WIFI   -> level 1.3: profile-level-id=42800d, frame_rate=15, frame_size=CIF, bit_rate=384k
          */
 
-        if (networkLevel == NetworkUtils.NETWORK_LEVEL_WIFI || networkLevel == NetworkUtils.NETWORK_LEVEL_4G) {
+        if (networkLevel == NetworkUtils.NETWORK_ACCESS_WIFI || networkLevel == NetworkUtils.NETWORK_ACCESS_4G) {
             supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                     ++payload_count,
                     H264Config.CLOCK_RATE,
@@ -70,8 +69,6 @@ public class CodecsUtils {
                     384000,
                     H264Config.CIF_WIDTH, 
                     H264Config.CIF_HEIGHT).getMediaCodec();
-        }
-        if (networkLevel >= NetworkUtils.NETWORK_LEVEL_3GPLUS) {
             supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                     ++payload_count,
                     H264Config.CLOCK_RATE,

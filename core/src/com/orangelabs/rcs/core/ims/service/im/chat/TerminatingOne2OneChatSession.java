@@ -36,7 +36,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
@@ -207,7 +206,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
@@ -254,7 +253,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
         		logger.info("Send 200 OK");
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-            		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
+            		getFeatureTags(), sdp);
 
             // The signalisation is established
             getDialogPath().sigEstablished();

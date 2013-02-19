@@ -28,10 +28,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
-import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -106,7 +103,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 
 	        // Generate the resource list for given participants
@@ -163,9 +160,10 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	 * @throws SipException
 	 */
 	private SipRequest createInviteRequest(String content) throws SipException {
-        SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
-        		InstantMessagingService.CHAT_FEATURE_TAGS,
-        		content, BOUNDARY_TAG);
+		SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
+                getFeatureTags(), 
+                content,
+                BOUNDARY_TAG);
 
     	// Test if there is a subject
     	if (getSubject() != null) {

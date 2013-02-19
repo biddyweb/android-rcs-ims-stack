@@ -45,8 +45,6 @@ import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-import android.os.RemoteException;
-
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -145,6 +143,15 @@ public class RichcallService extends ImsService {
 				logger.debug("Rich call not established: cancel the initiation");
 			}
             throw new CoreException("Call not established");
+        }
+
+        // Test max size
+        int maxSize = ImageTransferSession.getMaxImageSharingSize();
+        if (maxSize > 0 && content.getSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("File exceeds max size: cancel the initiation");
+            }
+            throw new CoreException("File exceeds max size");
         }
 
         // Reject if there are already 2 bidirectional sessions with a given contact
@@ -268,10 +275,8 @@ public class RichcallService extends ImsService {
      * @param player Media player
      * @return CSh session
      * @throws CoreException
-     * @throws RemoteException
      */
-    public VideoStreamingSession initiateLiveVideoSharingSession(String contact, IMediaPlayer player)
-            throws CoreException, RemoteException {
+    public VideoStreamingSession initiateLiveVideoSharingSession(String contact, IMediaPlayer player) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a live video sharing session");
 		}

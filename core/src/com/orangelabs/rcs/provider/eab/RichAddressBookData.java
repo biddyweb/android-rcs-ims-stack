@@ -164,6 +164,11 @@ public class RichAddressBookData {
 	/**
 	 * Column name
 	 */
+	static final String KEY_CAPABILITY_GEOLOCATION_PUSH = "capability_geolocation_push";
+	
+	/**
+	 * Column name
+	 */
 	static final String KEY_CAPABILITY_EXTENSIONS = "capability_extensions";
 	
 	/**
