@@ -128,6 +128,42 @@ public class H264RtpHeaders {
     }
 
     /**
+     * Verifies if packet is a code slice of a IDR picture
+     *
+     * @param packet packet to verify
+     * @return <code>True</code> if it is, <code>false</code> otherwise
+     */
+    public boolean isIDRSlice() {
+        if (FUI_TYPE == (byte) 0x05) {
+            return true;
+        }
+
+        if (isFrameNonInterleaved() && FUH_TYPE == (byte) 0x05) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Verifies if packet is a code slice of a NON IDR picture
+     *
+     * @param packet packet to verify
+     * @return <code>True</code> if it is, <code>false</code> otherwise
+     */
+    public boolean isNonIDRSlice() {
+        if (FUI_TYPE == (byte) 0x01) {
+            return true;
+        }
+        
+        if (isFrameNonInterleaved() && FUH_TYPE == (byte) 0x01) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * Get FUI_F
      *
      * @return FUI_F

@@ -666,7 +666,7 @@ public class HttpsProvisioningService extends Service {
 	/**
      * Returns the client version
      * 
-     * @return String(10)
+     * @return String(15)
      */
 	private String getClientVersion() {
 		String result = UNKNOWN;
@@ -679,7 +679,7 @@ public class HttpsProvisioningService extends Service {
 				result = version;
 			}
 		}
-		return StringUtils.truncate(result, 10);
+		return StringUtils.truncate(result, 15);
 	}
 
 	/**

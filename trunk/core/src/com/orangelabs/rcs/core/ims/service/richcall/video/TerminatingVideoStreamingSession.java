@@ -149,6 +149,12 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 return;
             }
 
+            // Set the OrientationHeaderID
+            SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
+            if (extensionHeader != null) {
+                getMediaRenderer().setOrientationHeaderId(extensionHeader.getExtensionId());
+            }
+
             // Set the media codec in media renderer
             getMediaRenderer().setMediaCodec(selectedVideoCodec.getMediaCodec());
 
@@ -161,7 +167,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            String videoSdp = VideoCodecManager.createCodecSdpPart(selectedVideoCodec.getMediaCodec(), getMediaRenderer().getLocalRtpPort()); 
+            String videoSdp = VideoSdpBuilder.buildResponseSdp(selectedVideoCodec.getMediaCodec(), getMediaRenderer().getLocalRtpPort(), mediaVideo); 
             String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +

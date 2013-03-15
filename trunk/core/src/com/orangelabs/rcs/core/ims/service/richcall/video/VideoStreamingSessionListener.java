@@ -32,5 +32,13 @@ public interface VideoStreamingSessionListener extends ImsSessionListener  {
      * 
      * @param error Error
      */
-    public void handleSharingError(ContentSharingError error);    
+    public void handleSharingError(ContentSharingError error);
+
+    /**
+     * The size of media has changed
+     *
+     * @param width
+     * @param height
+     */
+    public void handleMediaResized(int width, int height);
 }

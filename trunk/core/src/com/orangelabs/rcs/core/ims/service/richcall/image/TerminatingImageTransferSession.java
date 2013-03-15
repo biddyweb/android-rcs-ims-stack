@@ -36,6 +36,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
@@ -52,7 +53,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	 */
 	private MsrpManager msrpMgr = null;
 	
-    /**
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -63,8 +64,8 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	 * @param parent IMS service
 	 * @param invite Initial INVITE request
 	 */
-	public TerminatingImageTransferSession(ImsService parent, SipRequest invite) {
-		super(parent, ContentManager.createMmContentFromSdp(invite.getContent()), SipUtils.getAssertedIdentity(invite));
+	public TerminatingImageTransferSession(ImsService parent, SipRequest invite) {		
+		super(parent, ContentManager.createMmContentFromSdp(invite), SipUtils.getAssertedIdentity(invite), ChatUtils.extractFileThumbnail(invite));
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
@@ -95,20 +96,6 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 				handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE));
         		return;
         	}
-
-            int maxSize = ImageTransferSession.getMaxImageSharingSize();
-            if (maxSize > 0 && getContent().getSize() > maxSize) {
-                if (logger.isActivated()) {
-                    logger.debug("Auto reject file transfer invitation");
-                }
-
-                // Decline the invitation
-                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
-
-                // File too big
-                handleError(new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG));
-                return;
-            }
 
 			// Wait invitation answer
 	    	int answer = waitInvitationAnswer();
@@ -151,7 +138,8 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
             }
 
 	    	// Parse the remote SDP part
-        	SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
+			String remoteSdp = getDialogPath().getInvite().getSdpContent();
+        	SdpParser parser = new SdpParser(remoteSdp.getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
 			MediaDescription mediaDesc = media.elementAt(0);
 			MediaAttribute attr1 = mediaDesc.getMediaAttribute("file-selector");
@@ -207,6 +195,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;
+            int maxSize = ImageTransferSession.getMaxImageSharingSize();
 	    	if (maxSize > 0) {
 	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
 	    	}

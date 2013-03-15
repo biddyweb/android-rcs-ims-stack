@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaCaptureStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpOutputStream;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -81,7 +82,7 @@ public class MediaRtpSender {
      * @param remotePort Remote port
      * @throws RtpException
      */
-    public void prepareSession(MediaInput player, String remoteAddress, int remotePort)
+    public void prepareSession(MediaInput player, String remoteAddress, int remotePort, RtpStreamListener rtpStreamListener)
             throws RtpException {
     	try {
     		// Create the input stream
@@ -92,7 +93,8 @@ public class MediaRtpSender {
 			}
 
             // Create the output stream
-            outputStream = new RtpOutputStream(remoteAddress, remotePort, localRtpPort);
+            outputStream = new RtpOutputStream(remoteAddress, remotePort, localRtpPort, RtpOutputStream.RTCP_SOCKET_TIMEOUT);
+            outputStream.addRtpStreamListener(rtpStreamListener);
             outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());

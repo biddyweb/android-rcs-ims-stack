@@ -147,12 +147,23 @@ public class RtcpPacketTransmitter extends Thread {
 		if (logger.isActivated()) {
             logger.debug("RTCP transmitter closed");
 		}
+        // If the method start() was never invoked this Thread will be on NEW
+        // state and the resources won't be freed. We need to force the start()
+        // to allow it to die gracefully
+        if (this.getState() == State.NEW) {
+            this.start();
+        }
+
 	}
 
 	/**
 	 * Background processing
 	 */
 	public void run() {
+        if (closed) {
+            return;
+        }
+
 		try {
             // Send a SDES packet
             sendSdesPacket();
@@ -321,14 +332,14 @@ public class RtcpPacketTransmitter extends Thread {
         byte reportBlock[] = new byte[0];
         RtpSource source = rtcpSession.getMySource();
 
-        source.updateStatistics();
-        byte SSRC[] = RtcpPacketUtils.longToBytes((long)source.SSRC, 4);
-        byte fraction_lost[] = RtcpPacketUtils.longToBytes((long)source.fraction, 1);
-        byte pkts_lost[] = RtcpPacketUtils.longToBytes((long)source.lost, 3);
-        byte last_seq[] = RtcpPacketUtils.longToBytes((long)source.last_seq, 4);
-        byte jitter[] = RtcpPacketUtils.longToBytes((long)source.jitter, 4);
-        byte lst[] = RtcpPacketUtils.longToBytes((long)source.lst, 4);
-        byte dlsr[] = RtcpPacketUtils.longToBytes((long)source.dlsr, 4);
+        ReceptionReport rr = source.generateReceptionReport();
+        byte SSRC[] = RtcpPacketUtils.longToBytes((long)rr.getSsrc(), 4);
+        byte fraction_lost[] = RtcpPacketUtils.longToBytes((long)rr.getFractionLost(), 1);
+        byte pkts_lost[] = RtcpPacketUtils.longToBytes((long)rr.getCumulativeNumberOfPacketsLost(), 3);
+        byte last_seq[] = RtcpPacketUtils.longToBytes((long)rr.getExtendedHighestSequenceNumberReceived(), 4);
+        byte jitter[] = RtcpPacketUtils.longToBytes((long)rr.getInterarrivalJitter(), 4);
+        byte lst[] = RtcpPacketUtils.longToBytes((long)rr.getLastSenderReport(), 4);
+        byte dlsr[] = RtcpPacketUtils.longToBytes((long)rr.getDelaySinceLastSenderReport(), 4);
 
         reportBlock = RtcpPacketUtils.append(reportBlock, SSRC);
         reportBlock = RtcpPacketUtils.append(reportBlock, fraction_lost);

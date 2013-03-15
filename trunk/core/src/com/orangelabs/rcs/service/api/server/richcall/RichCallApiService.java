@@ -18,6 +18,10 @@
 
 package com.orangelabs.rcs.service.api.server.richcall;
 
+import java.util.Hashtable;
+
+import android.content.Intent;
+
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -38,10 +42,6 @@ import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import android.content.Intent;
-
-import java.util.Hashtable;
 
 /**
  * Rich call API service
@@ -320,6 +320,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		intent.putExtra("filename", session.getContent().getName());
 		intent.putExtra("filesize", session.getContent().getSize());
 		intent.putExtra("filetype", session.getContent().getEncoding());
+    	intent.putExtra("thumbnail", session.getThumbnail());		
         AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 
@@ -328,9 +329,10 @@ public class RichCallApiService extends IRichCallApi.Stub {
      * 
      * @param contact Contact
      * @param file Image file
+     * @param thumbnail Thumbnail option
      * @throws ServerApiException
      */
-	public IImageSharingSession initiateImageSharing(String contact, String file) throws ServerApiException {
+	public IImageSharingSession initiateImageSharing(String contact, String file, boolean thumbnail) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an image sharing session with " + contact);
 		}
@@ -345,7 +347,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 			// Create an image content
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			ImageTransferSession session = Core.getInstance().getRichcallService().initiateImageSharingSession(contact, content);
+			ImageTransferSession session = Core.getInstance().getRichcallService().initiateImageSharingSession(contact, content, thumbnail);
 
 			// Update rich call history
 			RichCall.getInstance().addCall(contact, session.getSessionID(),

@@ -1,7 +1,23 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright (C) 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.orangelabs.rcs.service.api.client.messaging;
 
 import java.util.Date;
-import java.util.StringTokenizer;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,41 +27,16 @@ import android.os.Parcelable;
  * 
  * @author jexa7410
  */
-public class GeolocMessage implements Parcelable {
+public class GeolocMessage extends InstantMessage implements Parcelable {
 	/**
 	 * MIME type
 	 */
 	public static final String MIME_TYPE = "text/geoloc";
 
 	/**
-	 * Remote user
-	 */
-	private String remote;
-	
-	/**
 	 * Geoloc info
 	 */
 	private GeolocPush geoloc = null;
-	
-	/**
-	 * Receipt date of the message
-	 */
-	private Date receiptAt;
-	
-	/**
-	 * Receipt date of the message on the server (i.e. CPIM date)
-	 */
-	private Date serverReceiptAt;
-
-	/**
-	 * Message Id
-	 */
-	private String msgId;
-	
-	/**
-	 * Flag indicating that an IMDN "displayed" is requested for this message
-	 */
-	private boolean imdnDisplayedRequested = false;
 		
     /**
      * Constructor for outgoing message
@@ -56,13 +47,9 @@ public class GeolocMessage implements Parcelable {
      * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
 	 */
 	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested) {
-		this.msgId = messageId;
-		this.remote = remote;
+		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested);
+		
 		this.geoloc = geoloc;
-		this.imdnDisplayedRequested = imdnDisplayedRequested;
-		Date date = new Date();
-		this.receiptAt = date;
-		this.serverReceiptAt = date;		
 	}
 	
 	/**
@@ -75,12 +62,9 @@ public class GeolocMessage implements Parcelable {
 	 * @param serverReceiptAt Receipt date of the message on the server
 	 */
 	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested, Date serverReceiptAt) {
-		this.msgId = messageId;
-		this.remote = remote;
+		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested, serverReceiptAt);
+		
 		this.geoloc = geoloc;
-		this.imdnDisplayedRequested = imdnDisplayedRequested;
-		this.receiptAt = new Date();
-		this.serverReceiptAt = serverReceiptAt;
 	}
 	
 	/**
@@ -89,12 +73,9 @@ public class GeolocMessage implements Parcelable {
 	 * @param source Parcelable source
 	 */
 	public GeolocMessage(Parcel source) {
-		this.remote = source.readString();
+		super(source);
+		
 		this.geoloc = new GeolocPush(source);
-		this.msgId = source.readString();
-		this.imdnDisplayedRequested = source.readInt() != 0;
-		this.receiptAt = new Date(source.readLong());
-		this.serverReceiptAt = new Date(source.readLong());
     }
 	
 	/**
@@ -114,12 +95,9 @@ public class GeolocMessage implements Parcelable {
 	 * @param flags Additional flags about how the object should be written
 	 */
     public void writeToParcel(Parcel dest, int flags) {
-    	dest.writeString(remote);
+    	super.writeToParcel(dest, flags);
+    	
     	geoloc.writeToParcel(dest, flags);
-    	dest.writeString(msgId);
-    	dest.writeInt(imdnDisplayedRequested ? 1 : 0);
-    	dest.writeLong(receiptAt.getTime());
-    	dest.writeLong(serverReceiptAt.getTime());
     }
 
     /**
@@ -144,87 +122,4 @@ public class GeolocMessage implements Parcelable {
 	public GeolocPush getGeoloc() {
 		return geoloc;
 	}
-	
-	/**
-	 * Returns the message Id
-	 * 
-	 * @return message Id
-	 */
-    public String getMessageId(){
-    	return msgId;
-    }
-	
-	/**
-	 * Returns the remote user
-	 * 
-	 * @return Remote user
-	 */
-	public String getRemote() {
-		return remote;
-	}
-	
-	/**
-	 * Returns true if the IMDN "displayed" has been requested 
-	 * 
-	 * @return Boolean
-	 */
-	public boolean isImdnDisplayedRequested() {
-		return imdnDisplayedRequested;
-	}
-	
-	/**
-	 * Returns the receipt date of the message
-	 * 
-	 * @return Date
-	 */
-	public Date getDate() {
-		return receiptAt;
-	}
-
-	/**
-	 * Returns the receipt date of the message on the server
-	 * 
-	 * @return Date
-	 */
-	public Date getServerDate() {
-		return serverReceiptAt;
-	}
-
-	/** 
-     * Format geoloc object to string
-     * 
-     * @param geoloc Geoloc object
-     * @return String
-     */
-    public static String formatGeolocToStr(GeolocPush geoloc) {
-    	String result = geoloc.getLatitude() + "," +
-    		   geoloc.getLongitude() + "," +
-    		   geoloc.getAltitude() + "," +
-    		   geoloc.getExpiration();
-    	String label = geoloc.getLabel();
-    	if ((label != null) && (label.length() > 0)) {
-    		result = label + "," + result;
-    	}
-    	return result;
-    	
-    }
-
-    /** 
-     * Format string to geoloc object
-     * 
-     * @param str String
-     * @return Geoloc object
-     */
-    public static GeolocPush formatStrToGeoloc(String str) {
-    	StringTokenizer items = new StringTokenizer(str, ",");
-    	String label = "";
-    	if (items.countTokens() > 4) {
-    		label = items.nextToken();
-    	}
-		double latitude = Double.valueOf(items.nextToken());					
-		double longitude = Double.valueOf(items.nextToken());
-		double altitude = Double.valueOf(items.nextToken());
-		long expiration = Long.valueOf(items.nextToken());
-    	return new GeolocPush(label, latitude, longitude, altitude, expiration);
-    }	
 }

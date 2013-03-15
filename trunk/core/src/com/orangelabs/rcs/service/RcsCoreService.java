@@ -138,6 +138,11 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * SIP API
 	 */
 	private SipApiService sipApi = new SipApiService(); 
+	
+	/**
+	 * IP call API
+	 */
+	// TODO : add here the VOIPApiService instanciation
 
     /**
      * Account changed broadcast receiver

@@ -32,10 +32,14 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264EncoderParams;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.Orientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
@@ -50,7 +54,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 /**
  * Live RTP video player based on H264 QCIF format
  */
-public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback {
+public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback, RtpStreamListener {
 
     /**
      * List of supported video codecs
@@ -151,6 +155,31 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Mirroring (horizontal and vertival) for encoding
      */
     private boolean mirroring = false;
+
+    /**
+     * Orientation header id.
+     */
+    private int orientationHeaderId = -1;
+
+    /**
+     * Camera ID
+     */
+    private int cameraId = CameraOptions.FRONT.getValue();
+
+    /**
+     * Video Orientation
+     */
+    private Orientation mOrientation = Orientation.NONE;
+
+    /**
+     * Frame process
+     */
+    private FrameProcess frameProcess;
+
+    /**
+     * Frame buffer
+     */
+    private FrameBuffer frameBuffer = new FrameBuffer();
 
     /**
      * The logger
@@ -318,7 +347,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
+            rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -353,6 +382,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Player is closed
         opened = false;
         notifyPlayerEventClosed();
+        listeners.clear();
     }
 
     /**
@@ -385,6 +415,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Player is started
         videoStartTime = SystemClock.uptimeMillis();
         started = true;
+        frameProcess = new FrameProcess(selectedVideoCodec.getFramerate());
+        frameProcess.start();
         notifyPlayerEventStarted();
     }
 
@@ -438,6 +470,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Player is stopped
         videoStartTime = 0L;
         started = false;
+        try {
+            frameProcess.interrupt();
+        } catch (Exception e) {
+            // Nothing to do
+        }
         notifyPlayerEventStopped();
     }
 
@@ -532,6 +569,33 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
+     * Set extension header orientation id
+     *
+     * @param headerId extension header orientation id
+     */
+    public void setOrientationHeaderId(int headerId) {
+        this.orientationHeaderId = headerId;
+    }
+
+    /**
+     * Set camera ID
+     *
+     * @param cameraId Camera ID
+     */
+    public void setCameraId(int cameraId) {
+        this.cameraId = cameraId;
+    }
+
+    /**
+     * Set video orientation
+     *
+     * @param orientation
+     */
+    public void setOrientation(Orientation orientation) {
+        mOrientation = orientation;
+    }
+
+    /**
      * Set the scaling factor
      *
      * @param scaleFactor New scaling factor
@@ -545,8 +609,15 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      *
      * @param mirroring New mirroring value
      */
-    public void setScalingFactor(boolean mirroring) {
+    public void setMirroring(boolean mirroring) {
         this.mirroring = mirroring;
+    }
+
+    /**
+     * Notify RTP aborted
+     */
+    public void rtpStreamAborted() {
+        notifyPlayerEventError("RTP session aborted");
     }
 
     /**
@@ -655,37 +726,124 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 		if (!started) {
 			return;
 		}
+        frameBuffer.setData(data);
+    };
 
+    /**
+     * encode a buffer and add in RTP input
+     *
+     * @param data
+     */
+    private void encode(byte[] data) {
         // Send SPS/PPS if necessary
         nalRepeat++;
         if (nalRepeat > NALREPEATMAX) {
             nalInit = false;
             nalRepeat = 0;
         }
-		if (!nalInit) {
-			if (logger.isActivated()) {
-				logger.debug("Send SPS");
-			}
-			rtpInput.addFrame(sps, timeStamp, false);
-			timeStamp += timestampInc;
+        if (!nalInit) {
+            if (logger.isActivated()) {
+                logger.debug("Send SPS");
+            }
+            rtpInput.addFrame(sps, timeStamp);
+            timeStamp += timestampInc;
 
-			if (logger.isActivated()) {
-				logger.debug("Send PPS");
-			}
-			rtpInput.addFrame(pps, timeStamp, false);
-			timeStamp += timestampInc;
-			
-			nalInit = true;
-		} 
+            if (logger.isActivated()) {
+                logger.debug("Send PPS");
+            }
+            rtpInput.addFrame(pps, timeStamp);
+            timeStamp += timestampInc;
+            
+            nalInit = true;
+        } 
 
         // Encode frame
         byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp, mirroring, scaleFactor);
-		int encodeResult = NativeH264Encoder.getLastEncodeStatus();
-		if ((encodeResult == 0) && (encoded.length > 0)) {
-			rtpInput.addFrame(encoded, timeStamp, true);
-			timeStamp += timestampInc;
-		}
-    };
+        int encodeResult = NativeH264Encoder.getLastEncodeStatus();
+        if ((encodeResult == 0) && (encoded.length > 0)) {
+            VideoOrientation videoOrientation = null;
+            if (orientationHeaderId > 0 ) {
+                videoOrientation = new VideoOrientation(
+                        orientationHeaderId,
+                        CameraOptions.convert(cameraId),
+                        mOrientation);
+            }
+            rtpInput.addFrame(encoded, timeStamp, videoOrientation);
+            timeStamp += timestampInc;
+        }
+    }
+
+    /**
+     * Frame process
+     */
+    private class FrameProcess extends Thread {
+        
+        /**
+         * Time between two frame
+         */
+        private int interframe = 1000 / 15;
+
+        /**
+         * Constructor
+         *
+         * @param framerate
+         */
+        public FrameProcess(int framerate) {
+            super();
+            interframe = 1000 / framerate;
+        }
+
+        @Override
+        public void run() {
+            byte[] frameData = null;
+            while (started) {
+                long time = System.currentTimeMillis();
+
+                // Encode
+                frameData = frameBuffer.getData();
+                if (frameData != null) {
+                    encode(frameData);
+                }
+
+                // Sleep between frames if necessary
+                long delta = System.currentTimeMillis() - time;
+                if (delta < interframe) {
+                    try {
+                        Thread.sleep((interframe - delta) - (((interframe - delta) * 10) / 100));
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Frame buffer
+     */
+    private class FrameBuffer {
+        /**
+         * Data
+         */
+        private byte[] data = null;
+
+        /**
+         * Get the data
+         *
+         * @return data
+         */
+        public synchronized byte[] getData() {
+            return data;
+        }
+
+        /**
+         * Set the data
+         *
+         * @param data
+         */
+        public synchronized void setData(byte[] data) {
+            this.data = data;
+        }
+    }
 
     /**
      * Media RTP input
@@ -709,10 +867,25 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          * @param timestamp Timestamp
          * @param marker Marker bit 
          */
-        public void addFrame(byte[] data, long timestamp, boolean marker) {
+        public void addFrame(byte[] data, long timestamp, VideoOrientation videoOrientation) {
             if (fifo != null) {
-                fifo.addObject(new MediaSample(data, timestamp, marker));
+                MediaSample sample = new MediaSample(data, timestamp);
+                if (videoOrientation != null) {
+                    sample.setVideoOrientation(videoOrientation);
+                }
+                fifo.addObject(sample);
             }
+        }
+
+        /**
+         * Add a new video frame
+         *
+         * @param data Data
+         * @param timestamp Timestamp
+         * @param marker Marker bit 
+         */
+        public void addFrame(byte[] data, long timestamp) {
+            addFrame(data, timestamp, null);
         }
 
         /**

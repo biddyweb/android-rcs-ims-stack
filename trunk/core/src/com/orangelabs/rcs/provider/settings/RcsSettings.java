@@ -983,6 +983,7 @@ public class RcsSettings {
 		capabilities.setSocialPresenceSupport(isSocialPresenceSupported());
 		capabilities.setVideoSharingSupport(isVideoSharingSupported());
 		capabilities.setGeolocationPushSupport(isGeoLocationPushSupported());
+		capabilities.setFileTransferThumbnailSupport(isFileTransferThumbnailSupported());
 		capabilities.setTimestamp(System.currentTimeMillis());
 
 		// Add extensions
@@ -1829,6 +1830,20 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH));
+		}
+		return result;
+	}
+	
+
+    /**
+     * Is file transfer thumbnail supported
+     *
+     * @return Boolean
+     */
+	public boolean isFileTransferThumbnailSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL));
 		}
 		return result;
 	}

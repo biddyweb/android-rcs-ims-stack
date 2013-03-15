@@ -18,11 +18,11 @@ interface IFileTransferSession {
 	// Get filename
 	String getFilename();
 	
-	// Get filesize
+	// Get file size
 	long getFilesize();
 
 	// Get file thumbnail
-	String getFileThumbnail();
+	byte[] getFileThumbnail();
 
 	// Is group transfer
 	boolean isGroupTransfer();

@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
@@ -35,9 +35,9 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.utils.Base64;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -47,11 +47,16 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class OriginatingFileSharingSession extends FileSharingSession implements MsrpEventListener {
 	/**
+	 * Boundary tag
+	 */
+	private final static String BOUNDARY_TAG = "boundary1";
+	
+	/**
 	 * MSRP manager
 	 */
 	private MsrpManager msrpMgr = null;
-
-    /**
+	
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -62,9 +67,10 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	 * @param parent IMS service
 	 * @param content Content to be shared
 	 * @param contact Remote contact
+	 * @param thumbnail Thumbnail
 	 */
-	public OriginatingFileSharingSession(ImsService parent, MmContent content, String contact) {
-		super(parent, content, contact);
+	public OriginatingFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail) {
+		super(parent, content, contact, thumbnail);
 		
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -95,6 +101,7 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
+	    	String encoding = getContent().getEncoding();
 	    	String sdp =
 	    		"v=0" + SipUtils.CRLF +
 	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -104,7 +111,7 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	            "m=message " + localMsrpPort + " " + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
-	            "a=accept-types: " + getContent().getEncoding() + SipUtils.CRLF +
+	            "a=accept-types: " + encoding + SipUtils.CRLF +
 	    		"a=file-transfer-id:" + getFileTransferId() + SipUtils.CRLF +
 	    		"a=file-disposition:attachment" + SipUtils.CRLF +
 	    		"a=sendonly" + SipUtils.CRLF;
@@ -124,23 +131,49 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	    	if (location != null) {
 	    		sdp += "a=file-location:" + location + SipUtils.CRLF;
 	    	}
-	   
-			// Set the local SDP part in the dialog path
-	    	getDialogPath().setLocalContent(sdp);
 
+	    	if (getThumbnail() != null) {
+	    		sdp += "a=file-icon:cid:image@joyn.com" + SipUtils.CRLF;
+
+	    		// Encode the thumbnail file
+	    	    String imageEncoded = Base64.encodeBase64ToString(getThumbnail());
+
+	    		// Build multipart
+	    		String multipart = 
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
+	    				"Content-Type: application/sdp" + SipUtils.CRLF +
+	    				"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
+	    				SipUtils.CRLF +
+	    				sdp + SipUtils.CRLF + 
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
+	    				"Content-Type: " + encoding + SipUtils.CRLF +
+	    				"Content-Transfer-Encoding: base64" + SipUtils.CRLF +
+	    				"Content-ID: <image@joyn.com>" + SipUtils.CRLF +
+	    				"Content-Length: "+ imageEncoded.length() + SipUtils.CRLF +
+	    				"Content-Disposition: icon" + SipUtils.CRLF +
+	    				SipUtils.CRLF +
+	    				imageEncoded + SipUtils.CRLF +
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + Multipart.BOUNDARY_DELIMITER;
+
+	    		// Set the local SDP part in the dialog path
+	    		getDialogPath().setLocalContent(multipart);	    		
+	    	} else {
+	    		// Set the local SDP part in the dialog path
+	    		getDialogPath().setLocalContent(sdp);
+	    	}
+	    	
 	        // Create an INVITE request
 	        if (logger.isActivated()) {
 	        	logger.info("Send INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-	        		InstantMessagingService.FT_FEATURE_TAGS, sdp);
+	        SipRequest invite = createInvite();
 	        
 	        // Set the Authorization header
 	        getAuthenticationAgent().setAuthorizationHeader(invite);
-	        
+	        	        
 	        // Set initial request in the dialog path
 	        getDialogPath().setInvite(invite);
-	        
+
 	        // Send INVITE request
 	        sendInvite(invite);	        
 		} catch(Exception e) {

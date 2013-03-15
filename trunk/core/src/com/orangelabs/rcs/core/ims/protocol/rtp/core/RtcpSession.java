@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
-import java.util.Date;
 import java.util.Random;
 
 /**
@@ -29,34 +28,34 @@ import java.util.Random;
 public class RtcpSession {
 
     /**
-     * minimum time between RTCP message (ms)
+     * Default minimum time between RTCP message (ms)
      */
-    private static final int RTCP_MIN_TIME = 5000;
+    private static final int DEFAULT_RTCP_MIN_TIME = 5000;
 
     /**
-     * fraction of RTCP sender messages
+     * Fraction of RTCP sender messages
      */
     private static final double RTCP_SENDER_BW_FRACTION = 0.25;
 
     /**
-     * fraction of RTCP receiver messages
+     * Fraction of RTCP receiver messages
      */
     private static final double RTCP_RCVR_BW_FRACTION = 0.75;
 
     /**
-     * bandwidth
+     * Bandwidth
      */
     private double bandwidth;
 
     /**
-     * rtcp bandwidth
+     * RTCP bandwidth
      */
     private double rtcp_bandwidth;
 
     /**
-     * minimum time between RTCP message (ms)
+     * Minimum time between RTCP message (ms)
      */
-    private int rtcp_min_time;
+    private int rtcp_min_time = DEFAULT_RTCP_MIN_TIME;
 
     /**
      * RTCP average packet size
@@ -64,32 +63,32 @@ public class RtcpSession {
     private int avgrtcpsize;
 
     /**
-     * no of members
+     * Number of members
      */
     private int members;
 
     /**
-     * no of senders
+     * Number of senders
      */
     private int senders;
 
     /**
-     * initial state
+     * Initial state
      */
-    private Boolean initial;
+    private boolean initial;
 
     /**
-     * is sender ?
+     * Is a sender
      */
-    private Boolean isSender;
+    private boolean isSender;
 
     /**
-     *   True if session instantiator requested a close.
+     * True if session instantiator requested a close.
      */
     public boolean isByeRequested = false;
 
     /**
-     *   Time this source last sent an RTP Packet
+     * Time this source last sent an RTP Packet
      */
     public double timeOfLastRTPSent = 0;
 
@@ -116,7 +115,7 @@ public class RtcpSession {
     /**
      * RTP Source
      */
-    RtpSource rtpSource;
+    private RtpSource rtpSource;
 
     /**
      * The current time.
@@ -151,7 +150,6 @@ public class RtcpSession {
         senders = 1;
         this.bandwidth = bandwidth;
         rtcp_bandwidth = 0.05 * bandwidth;
-        rtcp_min_time = RTCP_MIN_TIME;
         avgrtcpsize = 128;
         initial = true;
 
@@ -252,7 +250,7 @@ public class RtcpSession {
      * @return The current time.
      */
     public long currentTime() {
-        tc = (new Date()).getTime();
+        tc = System.currentTimeMillis();
         return (long)tc;
     }
 }

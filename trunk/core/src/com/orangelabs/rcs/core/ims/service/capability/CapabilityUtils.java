@@ -96,6 +96,11 @@ public class CapabilityUtils {
 			supported += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
 		}
 		
+		// FT thumbnail support
+		if (RcsSettings.getInstance().isFileTransferThumbnailSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_FT_THUMBNAIL + ",";
+		}
+		
 		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
 		if ((exts != null) && (exts.length() > 0)) {
@@ -159,6 +164,10 @@ public class CapabilityUtils {
         		// Support geolocation push service
         		capabilities.setGeolocationPushSupport(true);
         	} else
+    		if (tag.contains(FeatureTags.FEATURE_RCSE_FT_THUMBNAIL)) {
+    			// Support file transfer thumbnail service
+    			capabilities.setFileTransferThumbnailSupport(true);
+    		} else
     		if (tag.startsWith(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_EXTENSION)) {
     			// Support a RCS extension
     			String[] value = tag.split("=");

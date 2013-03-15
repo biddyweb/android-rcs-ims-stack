@@ -39,6 +39,7 @@
 <string name="label_no">No</string>
 <string name="label_send">Send</string>
 <string name="label_select">Select</string>
+<string name="label_receive_image">Received image %s</string>
 
 <!-- About menu -->
 <string name="label_about_title">RCS-e Reference Implementation</string>
@@ -52,6 +53,7 @@
 <string name="menu_capabilities_request">Request capabilities</string>
 <string name="menu_refresh_capabilities">Refresh all capabilities</string>
 <string name="menu_request_capabilities">Request capabilities</string>
+<string name="menu_block_capabilities">Block/unblock capabilities</string>
 <string name="label_refresh_failed">Could not refresh contacts</string>
 <string name="label_refresh_success">Contacts has been refreshed</string>
 <string name="label_capabilities">Capabilities:</string>
@@ -83,6 +85,7 @@
 <string name="label_capabilities_presence_discovery">Presence discovery</string>
 <string name="label_capabilities_social_presence">Social presence</string>
 <string name="label_capabilities_geolocation_push">Geolocation push</string>
+<string name="label_capabilities_file_transfer_thumbnail">File transfer thumbnail</string>
 <string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_publish">Publish</string>
 <string name="label_select_photo">Select photo</string>
@@ -187,6 +190,9 @@
 <string name="label_restart_chat_terminated_by_remote">Restart session terminated by remote</string>
 <string name="label_sharing_warn_size">Do you confirm sending a file of %d KB?</string>
 <string name="label_rejoin_unauthorized">You can\'t rejoin or restart the session because you have left the session voluntary</string>
+<string name="label_me">Me</string>
+<string name="label_geoloc_prefix">Geoloc</string>
+<string name="label_ft_thumb">File thumbnail</string>
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
@@ -327,12 +333,13 @@
 <string name="title_edit_geoloc">Edit a geoloc</string>
 <string name="title_display_geoloc">Show a geoloc</string>
 <string name="label_send_geoloc_failed">Send geoloc has failed</string>
-<string name="label_location">Location label:</string>
+<string name="label_location">Label:</string>
 <string name="label_latitude">Latitude:</string>
 <string name="label_longitude">Longitude:</string>
 <string name="label_altitude">Altitude:</string>
-<string name="label_marker">Location label</string>
+<string name="label_accuracy">Accuracy:</string>
 <string name="label_select_geoloc_map">Use a long click to select a location on the map.</string>
+<string name="label_geoloc_not_found">No geoloc info to display!</string>
 
 </resources>
 

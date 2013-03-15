@@ -35,6 +35,11 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public abstract class FileSharingSession extends ImsServiceSession {
 	/**
+	 * Boundary tag
+	 */
+	private final static String BOUNDARY_TAG = "boundary1";
+	
+	/**
 	 * Default SO_TIMEOUT value (in seconds)
 	 */
 	public final static int DEFAULT_SO_TIMEOUT = 30;
@@ -49,6 +54,11 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	private boolean fileTransfered = false;
 
+	/**
+	 * Thumbnail
+	 */
+	private byte[] thumbnail = null;
+	
     /**
      * The logger
      */
@@ -60,11 +70,13 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 * @param parent IMS service
 	 * @param content Content to be shared
 	 * @param contact Remote contact
+	 * @param thumbnail Thumbnail
 	 */
-	public FileSharingSession(ImsService parent, MmContent content, String contact) {
+	public FileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail) {
 		super(parent, contact);
 		
 		this.content = content;
+		this.thumbnail = thumbnail;
 	}
 	
 	/**
@@ -164,10 +176,18 @@ public abstract class FileSharingSession extends ImsServiceSession {
      * @throws SipException 
      */
     public SipRequest createInvite() throws SipException {
-        return SipMessageFactory.createInvite(
-                getDialogPath(),
-                InstantMessagingService.FT_FEATURE_TAGS,
-                getDialogPath().getLocalContent());
+    	if (thumbnail != null) {
+	        return SipMessageFactory.createMultipartInvite(
+	                getDialogPath(),
+	                InstantMessagingService.FT_FEATURE_TAGS,
+	                getDialogPath().getLocalContent(),
+	                BOUNDARY_TAG);
+    	} else {
+	        return SipMessageFactory.createInvite(
+	                getDialogPath(),
+	                InstantMessagingService.FT_FEATURE_TAGS,
+	                getDialogPath().getLocalContent());
+    	}
     }
 
     /**
@@ -195,5 +215,14 @@ public abstract class FileSharingSession extends ImsServiceSession {
         for(int j=0; j < getListeners().size(); j++) {
             ((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(error));
         }
+    }
+
+    /**
+     * Returns the thumbnail
+     * 
+     * @return Thumbnail
+     */
+    public byte[] getThumbnail() {
+    	return thumbnail;
     }
 }

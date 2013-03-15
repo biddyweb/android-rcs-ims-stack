@@ -18,15 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
-
-
-
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketTransmitter;
+import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpEvent;
+import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -37,7 +35,12 @@ import java.io.IOException;
  *
  * @author jexa7410
  */
-public class RtpOutputStream implements ProcessorOutputStream {
+public class RtpOutputStream implements ProcessorOutputStream, RtcpEventListener {
+    /**
+     * RTCP Socket Timeout
+     */
+    public static final int RTCP_SOCKET_TIMEOUT = 20000;
+
     /**
      * Remote address
      */
@@ -77,6 +80,16 @@ public class RtpOutputStream implements ProcessorOutputStream {
      * RTCP Session
      */
     private RtcpSession rtcpSession = null;
+
+    /**
+     * RTCP socket timeout
+     */
+    private int rtcpSocketTimeout = 0;
+
+    /**
+     * RTP stream listener
+     */
+    private RtpStreamListener rtpStreamListener;
 
     /**
      * RTP Input stream
@@ -121,11 +134,13 @@ public class RtpOutputStream implements ProcessorOutputStream {
      *
      * @param remoteAddress Remote address
      * @param remotePort Remote port
+     * @param rtcpTimeout RTCP timeout
      */
-    public RtpOutputStream(String remoteAddress, int remotePort, int localRtpPort) {
+    public RtpOutputStream(String remoteAddress, int remotePort, int localRtpPort, int rtcpTimeout) {
 		this.remoteAddress = remoteAddress;
 		this.remotePort = remotePort;
         this.localRtpPort = localRtpPort;
+        this.rtcpSocketTimeout = rtcpTimeout;
 
         rtcpSession = new RtcpSession(true, 16000);
     }
@@ -141,7 +156,8 @@ public class RtpOutputStream implements ProcessorOutputStream {
             rtpReceiver = new RtpPacketReceiver(localRtpPort, rtcpSession);
             
             // Create the RTCP receiver
-            rtcpReceiver = new RtcpPacketReceiver(localRtpPort + 1, rtcpSession);
+            rtcpReceiver = new RtcpPacketReceiver(localRtpPort + 1, rtcpSession, rtcpSocketTimeout);
+            rtcpReceiver.addRtcpListener(this);
             rtcpReceiver.start();
 
             // Create the RTP transmitter
@@ -193,6 +209,9 @@ public class RtpOutputStream implements ProcessorOutputStream {
             // Close the RTCP receiver
             if (rtcpReceiver != null)
                 rtcpReceiver.close();
+
+            // Remove rtpStreamListener
+            rtpStreamListener = null;
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't close correctly RTP ressources", e);
@@ -208,5 +227,26 @@ public class RtpOutputStream implements ProcessorOutputStream {
      */
     public void write(Buffer buffer) throws IOException {
 		rtpTransmitter.sendRtpPacket(buffer);
+    }
+
+    @Override
+    public void receiveRtcpEvent(RtcpEvent event) {
+        // Nothing to do 
+    }
+
+    @Override
+    public void connectionTimeout() {
+        if (rtpStreamListener != null) {
+            rtpStreamListener.rtpStreamAborted();
+        }
+    }
+
+    /**
+     * Adds the RTP stream listener
+     *
+     * @param rtpStreamListener
+     */
+    public void addRtpStreamListener(RtpStreamListener rtpStreamListener) {
+        this.rtpStreamListener = rtpStreamListener;
     }
 }

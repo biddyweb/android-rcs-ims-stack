@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 import java.io.IOException;
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
@@ -149,21 +148,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
                 }
             }
 
-			// Extract the SDP part
-			byte[] remoteSdp = null;
-		    String content = getDialogPath().getInvite().getContent();
-		    String boundary = getDialogPath().getInvite().getBoundaryContentType();
-			Multipart multi = new Multipart(content, boundary);
-		    if (multi.isMultipart()) {
-		    	// SDP
-		    	remoteSdp = multi.getPart("application/sdp").getBytes(); 
-		    } else {
-		    	// SDP
-		    	remoteSdp = content.getBytes();
-		    }
-			
         	// Parse the remote SDP part
-        	SdpParser parser = new SdpParser(remoteSdp);
+			String remoteSdp = getDialogPath().getInvite().getSdpContent();
+        	SdpParser parser = new SdpParser(remoteSdp.getBytes());
     		Vector<MediaDescription> media = parser.getMediaDescriptions();
 			MediaDescription mediaDesc = media.elementAt(0);
 			MediaAttribute attr1 = mediaDesc.getMediaAttribute("path");

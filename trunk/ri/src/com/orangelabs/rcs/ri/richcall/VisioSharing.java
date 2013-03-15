@@ -30,40 +30,42 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
+import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.TextUtils;
+import android.os.RemoteException;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.Orientation;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.CpuMonitor;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.LiveVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.PrerecordedVideoPlayer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoPlayerEventListener;
 import com.orangelabs.rcs.service.api.client.media.video.VideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
@@ -77,277 +79,112 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author hlxn7157
  */
-public class VisioSharing extends Activity implements SurfaceHolder.Callback, ClientApiListener, ImsEventListener {
+public class VisioSharing extends Activity implements SurfaceHolder.Callback,
+        ClientApiListener, ImsEventListener {
 
-	/**
-	 * UI handler
-	 */
-	private final Handler handler = new Handler();
-
-	/**
-	 * Rich call API
-	 */
-	private RichCallApi callApi = null;
-
-    /**
-     * Rich call API connected
-     */
-	private boolean isCallApiConnected = false;
-
-	/**
-	 * Outgoing video sharing session
-	 */
-	private IVideoSharingSession outgoingCshSession = null;
-
-	/**
-	 * Video player
-	 */
-	private LiveVideoPlayer outgoingPlayer;
-
-	/**
-	 * Prerecorded video player
-	 */
-	private PrerecordedVideoPlayer outgoingPrerecordedPlayer;
-
-	/**
-	 * Name of the file to be played
-	 */
-	private String filename = null;
-
-	/**
-	 * Flag indicating if the outgoing session is prerecorded or live
-	 */
-	private boolean isPrerecordedSession = false;
-
-	/**
-	 * Video preview
-	 */
-	private VideoSurfaceView outgoingVideoView = null;
-
-	/**
-	 * Video surface holder
-	 */
-	private SurfaceHolder surface;
-
-	/**
-	 * Camera
-	 */
-	private Camera camera = null;
-
-	/**
-	 * Camera preview started flag
-	 */
-	private boolean cameraPreviewRunning = false;
-
-	/**
-	 * Outgoing first launch
-	 */
-	private Boolean fisrtLaunchDone = false;
-
-    /**
-     * Progress dialog
-     */
-	private Dialog outgoingProgressDialog = null;
-
-	/**
-	 * CPU monitoring
-	 */
-	private CpuMonitor cpu = new CpuMonitor();
-
-	/**
-	 * Incoming video sharing session
-	 */
-	private IVideoSharingSession incomingCshSession = null;
-
-	/**
-	 * Incoming session ID
-	 */
-	private String incomingSessionId = null;
-
-	/**
-	 * RemoteContact
-	 */
-	private String remoteContact;
-
-	/**
-	 * Video renderer
-	 */
-	private VideoRenderer incomingRenderer = null;
-
-	/**
-	 * Video preview
-	 */
-	private VideoSurfaceView incomingVideoView = null;
-
-	/**
-	 * Direction
-	 */
-	private Boolean isIncoming;
-
-	/**
-	 * Wait API connected to do getIncomingSession
-	 */
-	private Boolean getIncomingSessionWhenApiConnected = false;
-
-	/**
-	 * Wait API connected to do startOutgoingSession
-	 */
-	private Boolean startOutgoingSessionWhenApiConnected = false;
-
-	/**
-	 * Switch camera button
-	 */
-	private Button switchCamBtn = null;
-
-	/**
-	 * Opened camera id
-	 */
-	private int openedCameraId = 0;
-
-	/**
-	 * Surface holder for video preview
-	 */
-	private SurfaceHolder video_holder = null;
-
-	/**
-	 * Number of cameras
-	 */
-	private int cam_num = 1;
-
-    /**
-     * Start outgoing button
-     */
-	private Button startOutgoingBtn = null;
-
-	/**
-	 * Stop outgoing button
-	 */
-	private Button stopOutgoingBtn = null;
-
-	/**
-	 * Stop incoming button
-	 */
-	private Button stopIncomingBtn = null;
-
-	/**
-	 * Video width
-	 */
-	private int videoWidth;
-
-	/**
-	 * Video height
-	 */
-	private int videoHeight;
-
-    /**
-     * The logger
-     */
+    /** The logger */
     private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    /** UI handler */
+    private final Handler handler = new Handler();
+
+    /** Switch camera button */
+    private Button switchCamBtn = null;
+
+    /** Outgoing button */
+    private Button outgoingBtn = null;
+
+    /** Incoming button */
+    private Button incomingBtn = null;
+
+    /** Camera */
+    private Camera camera = null;
+
+    /** Opened camera id */
+    private CameraOptions openedCameraId = CameraOptions.FRONT;
+
+    /** Camera preview started flag */
+    private boolean cameraPreviewRunning = false;
+
+    /** Number of cameras */
+    private int numberOfCameras = 1;
+
+    /** Rich call API */
+    private RichCallApi callApi = null;
+
+    /** Rich call API connected */
+    private boolean isCallApiConnected = false;
+
+    /** RemoteContact */
+    private String remoteContact;
+
+    /** Pending incoming session ? */
+    private boolean pendingIncomingSession = false;
+
+    /** Incoming video sharing session */
+    private IVideoSharingSession incomingCshSession = null;
+
+    /** Video renderer */
+    private VideoRenderer incomingRenderer = null;
+
+    /** Incoming Video preview */
+    private VideoSurfaceView incomingVideoView = null;
+
+    /** Incoming session ID */
+    private String incomingSessionId = "";
+
+    /** Incoming Video width */
+    private int incomingWidth = 0;
+
+    /** Incoming Video height */
+    private int incomingHeight = 0;
+
+    /** Pending outgoing session ? */
+    private boolean pendingOutgoingSession = false;
+
+    /** Outgoing video sharing session */
+    private IVideoSharingSession outgoingCshSession = null;
+
+    /** Outgoing Video player */
+    private LiveVideoPlayer outgoingPlayer;
+
+    /** Outgoing Video preview */
+    private VideoSurfaceView outgoingVideoView = null;
+
+    /** Outgoing session ID */
+    private String outgoingSessionId = "";
+
+    /** Outgoing Video width */
+    private int outgoingWidth = H264Config.QCIF_WIDTH;
+
+    /** Outgoing Video height */
+    private int outgoingHeight = H264Config.QCIF_HEIGHT;
+
+    /** Outgoing Video surface holder */
+    private SurfaceHolder surface;
+
+    /** Outgoing Progress dialog */
+    private Dialog outgoingProgressDialog = null;
+
+    /** Preview surface view is created */
+    private boolean isSurfaceCreated = false;
+
+    /* *****************************************
+     *                Activity
+     ***************************************** */
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Always on window
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
         // Set layout
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        setContentView(R.layout.richcall_visio_sharing);
-
-        // Set title
-        setTitle(R.string.title_video_sharing);
-
-        // Check if Prerecorded
-        filename = getIntent().getStringExtra("filename");
-        isPrerecordedSession = (filename!=null);
-
-        // Video size
-        videoWidth = getIntent().getIntExtra("videowidth", 0);
-        videoHeight = getIntent().getIntExtra("videoheight", 0);
-        if (videoHeight == 0 || videoWidth == 0) {
-            videoWidth = H264Config.VIDEO_WIDTH;
-            videoHeight = H264Config.VIDEO_HEIGHT;
-        }
-
-        // Texts and buttons
-        if (switchCamBtn == null && !isPrerecordedSession) {
-            switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
-            Method method = getCameraNumberOfCamerasMethod();
-            if (method != null) {
-                try {
-                    Integer ret = (Integer)method.invoke(null, (Object[])null);
-                    cam_num = ret.intValue();
-                } catch (Exception e) {
-                    cam_num = 1;
-                }
-            } else {
-                cam_num = 1;
-            }
-
-            if (cam_num > 1) {
-                switchCamBtn.setOnClickListener(btnSwitchCamListener);
-                switchCamBtn.setEnabled(true);
-            } else {
-                switchCamBtn.setVisibility(View.INVISIBLE);
-            }
-        }
-
-        if (isPrerecordedSession){
-        	// Hide switch camera button
-        	switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
-        	switchCamBtn.setVisibility(View.GONE);
-        }
-
-        if (startOutgoingBtn == null) {
-            startOutgoingBtn = (Button)findViewById(R.id.start_outgoing_btn);
-            startOutgoingBtn.setOnClickListener(btnStartOutgoingListener);
-            startOutgoingBtn.setEnabled(true);
-        }
-        if (stopOutgoingBtn == null) {
-            stopOutgoingBtn = (Button)findViewById(R.id.stop_outgoing_btn);
-            stopOutgoingBtn.setOnClickListener(btnStopOutgoingListener);
-            stopOutgoingBtn.setEnabled(false);
-        }
-        if (stopIncomingBtn == null) {
-            stopIncomingBtn = (Button)findViewById(R.id.stop_incoming_btn);
-            stopIncomingBtn.setOnClickListener(btnStopIncomingListener);
-            stopIncomingBtn.setEnabled(false);
-        }
-
-        // Set the video preview
-        if (outgoingVideoView == null) {
-            outgoingVideoView = (VideoSurfaceView)findViewById(R.id.outgoing_video_preview);
-        }
-        if (!isPrerecordedSession){
-        	// Create the live video player
-            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
-                outgoingPlayer = new LiveVideoPlayer();
-            } else {
-                outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
-            }
-
-            outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
-            surface = outgoingVideoView.getHolder();
-            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-            surface.addCallback(this);
-        }else{
-        	// Create the prerecorded video player
-        	outgoingPrerecordedPlayer = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
-        	outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
-        	// Force ratio for pre-recorded video
-        	outgoingVideoView.setAspectRatio(176, 144);
-        }
-
-        // Set incoming video preview
-        if (incomingVideoView == null) {
-            incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
-            incomingVideoView.setAspectRatio(videoWidth, videoHeight);
-            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
-                incomingRenderer = new VideoRenderer();
-            } else {
-                incomingRenderer = new VideoRenderer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
-            }
-            incomingRenderer.setVideoSurface(incomingVideoView);
-        }
+        setContentView(R.layout.richcall_visio_sharing2);
 
         // Instantiate rich call API
         if (callApi == null) {
@@ -357,8 +194,92 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             callApi.connectApi();
         }
 
-        // Start CPU monitoring
-        cpu.start();
+        // Instantiate buttons
+        incomingBtn = (Button)findViewById(R.id.incoming_btn);
+        incomingBtn.setOnClickListener(btnIncomingListener);
+        outgoingBtn = (Button)findViewById(R.id.outgoing_btn);
+        outgoingBtn.setOnClickListener(btnOutgoingListener);
+        switchCamBtn = (Button)findViewById(R.id.switch_cam_btn);
+
+        // Saved datas
+        if (savedInstanceState == null) {
+            numberOfCameras = getNumberOfCameras();
+
+            // Get invitation info
+            remoteContact = getIntent().getStringExtra("contact");
+            if (getIntent().getBooleanExtra("incoming", false)) {
+                extractIncomingInfo(getIntent());
+            } else {
+                handler.post(startOutgoingSessionRunnable);
+            }
+        } else {
+            numberOfCameras = savedInstanceState.getInt("numberOfCameras");
+            openedCameraId = CameraOptions.convert(savedInstanceState.getInt("openedCameraId"));
+            remoteContact = savedInstanceState.getString("remoteContact");
+            pendingIncomingSession = savedInstanceState.getBoolean("pendingIncomingSession");
+            incomingHeight = savedInstanceState.getInt("incomingHeight");
+            incomingWidth = savedInstanceState.getInt("incomingWidth");
+            incomingSessionId = savedInstanceState.getString("incomingSessionId");
+            pendingOutgoingSession = savedInstanceState.getBoolean("pendingOutgoingSession");
+            outgoingHeight = savedInstanceState.getInt("outgoingHeight");
+            outgoingWidth = savedInstanceState.getInt("outgoingWidth");
+            outgoingSessionId = savedInstanceState.getString("outgoingSessionId");
+        }
+
+        // Update
+        TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
+        fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
+        if (pendingIncomingSession) {
+            incomingBtn.setEnabled(true);
+        } else {
+            incomingBtn.setEnabled(false);
+        }
+        if (pendingOutgoingSession) {
+            outgoingBtn.setText(R.string.label_stop_outgoing_btn);
+            switchCamBtn.setEnabled(true);
+        } else {
+            outgoingBtn.setText(R.string.label_start_outgoing_btn);
+            switchCamBtn.setEnabled(false);
+        }
+        if (numberOfCameras > 1) {
+            switchCamBtn.setOnClickListener(btnSwitchCamListener);
+        } else {
+            switchCamBtn.setVisibility(View.INVISIBLE);
+        }
+
+        // Set incoming video preview
+        incomingVideoView = (VideoSurfaceView)findViewById(R.id.incoming_video_view);
+        if (incomingWidth != 0 && incomingHeight != 0) {
+            incomingVideoView.setAspectRatio(incomingWidth, incomingHeight);
+        }
+
+        // Create the live video player
+        outgoingVideoView = (VideoSurfaceView)findViewById(R.id.outgoing_video_preview);
+        if (outgoingWidth == 0 || outgoingHeight == 0) {
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                outgoingVideoView.setAspectRatio(H264Config.QCIF_WIDTH, H264Config.QCIF_HEIGHT);
+            } else {
+                outgoingVideoView.setAspectRatio(H264Config.QCIF_HEIGHT, H264Config.QCIF_WIDTH);
+            }
+        } else {
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                outgoingVideoView.setAspectRatio(outgoingWidth, outgoingHeight);
+            } else {
+                outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
+            }
+        }
+        surface = outgoingVideoView.getHolder();
+        surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        surface.setKeepScreenOn(true);
+        surface.addCallback(this);
+
+        if (pendingOutgoingSession) {
+            handler.post(continueOutgoingSessionRunnable);
+        }
+
+        if (pendingIncomingSession) {
+            handler.post(continueIncomingSessionRunnable);
+        }
     }
 
     @Override
@@ -367,45 +288,34 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
 
         // Set broadcast receiver
         IntentFilter filter = new IntentFilter(RichCallApiIntents.VIDEO_SHARING_INVITATION);
-        registerReceiver(sharingIntentReceiver, filter, null, handler);
-
-        // Get invitation info
-        String lastIncomingSessionId = incomingSessionId;
-        incomingSessionId = getIntent().getStringExtra("sessionId");
-        remoteContact = getIntent().getStringExtra("contact");
-        isIncoming = getIntent().getBooleanExtra("incoming", false);
-        if (incomingSessionId != null) {
-            removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
-        }
-    	TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
-        fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
-
-        if ((isIncoming) && (lastIncomingSessionId != incomingSessionId)) {
-            if (isCallApiConnected) {
-                getIncomingSession();
-            } else {
-                getIncomingSessionWhenApiConnected = true;
-            }
-        }
-        if ((!isIncoming) && (!fisrtLaunchDone)) {
-            if (isCallApiConnected) {
-                startOutgoingSession();
-            } else {
-                startOutgoingSessionWhenApiConnected = true;
-            }
-        }
-        fisrtLaunchDone = true;
+        registerReceiver(intentReceiver, filter, null, handler);
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("numberOfCameras", numberOfCameras);
+        outState.putInt("openedCameraId", openedCameraId.getValue());
+        outState.putString("remoteContact", remoteContact);
+        outState.putBoolean("pendingIncomingSession", pendingIncomingSession);
+        outState.putInt("incomingHeight", incomingHeight);
+        outState.putInt("incomingWidth", incomingWidth);
+        outState.putString("incomingSessionId", incomingSessionId);
+        outState.putBoolean("pendingOutgoingSession", pendingOutgoingSession);
+        outState.putInt("outgoingHeight", outgoingHeight);
+        outState.putInt("outgoingWidth", outgoingWidth);
+        outState.putString("outgoingSessionId", outgoingSessionId);
+    };
 
     @Override
     public void onPause() {
         super.onPause();
-        
+
         // Unregister intent receiver
         try {
-        	unregisterReceiver(sharingIntentReceiver);
+            unregisterReceiver(intentReceiver);
         } catch (IllegalArgumentException e) {
-        	// Nothing to do
+            // Nothing to do
         }
     }
 
@@ -419,33 +329,16 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     public void onDestroy() {
         super.onDestroy();
 
-        // Stop CPU monitoring
-        cpu.stop();
-
-        // hide ProgressDialog
-        hideProgressDialog();
-
-        // Remove session listener
-        if (incomingCshSession != null) {
-            try {
-                incomingCshSession.removeSessionListener(incomingSessionEventListener);
-                incomingCshSession.cancelSession();
-            } catch (Exception e) {
-            }
-        }
-        if (outgoingCshSession != null) {
-            try {
-                outgoingCshSession.removeSessionListener(outgoingSessionEventListener);
-                outgoingCshSession.cancelSession();
-            } catch (Exception e) {
-            }
-        }
-
-        // Release the camera
-        if (camera != null) {
-            camera.setPreviewCallback(null);
-            camera.stopPreview();
-            camera.release();
+        if (isFinishing()) {
+            // Close sessions
+            new Thread() {
+                public void run() {
+                    stopIncomingSession();
+                    stopOutgoingSession();
+                }
+            }.start();
+        } else {
+            releaseCamera();
         }
 
         // Disconnect rich call API
@@ -458,133 +351,41 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 // Quit session
-                Thread thread = new Thread() {
+                new Thread() {
                     public void run() {
                         stopIncomingSession();
                         stopOutgoingSession();
-                        exitActivityIfNoSession(null);
+                        exitIfNoSession(null);
                     }
-                };
-                thread.start();
+                }.start();
                 return true;
         }
 
         return super.onKeyDown(keyCode, event);
     }
 
-    /**
-     * API disabled
-     */
-    public void handleApiDisabled() {
-        isCallApiConnected = false;
-
-        handler.post(new Runnable() {
-            public void run() {
-                Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_disabled));
-            }
-        });
-    }
-
-    /**
-     * API connected
-     */
-    public void handleApiConnected() {
-        isCallApiConnected = true;
-        if (getIncomingSessionWhenApiConnected) {
-            getIncomingSession();
-            getIncomingSessionWhenApiConnected = false;
-        }
-        if (startOutgoingSessionWhenApiConnected) {
-            startOutgoingSession();
-            startOutgoingSessionWhenApiConnected = false;
-        }
-    }
-
-    /**
-     * API disconnected
-     */
-    public void handleApiDisconnected() {
-        isCallApiConnected = false;
-
-        // Service has been disconnected
-        handler.post(new Runnable() {
-            public void run() {
-                Utils.showMessageAndExit(VisioSharing.this,
-                        getString(R.string.label_api_disconnected));
-            }
-        });
-    }
-
-    /**
-     * Client is connected to the IMS
-     */
-    public void handleImsConnected() {
-    }
-
-    /**
-     * Client is disconnected from the IMS
-     * 
-     * @param reason Disconnection reason
-     */
-    public void handleImsDisconnected(int reason) {
-        // IMS has been disconnected
-        handler.post(new Runnable() {
-            public void run() {
-                Utils.showMessageAndExit(VisioSharing.this,
-                        getString(R.string.label_ims_disconnected));
-            }
-        });
-    }
-
-    /**
-     * Surface has been changed
-     *
-     * @param holder Surface holder
-     * @param format Format
-     * @param w Width
-     * @param h Height
-     */
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        video_holder = holder;
-        if (camera != null) {
-            if (cameraPreviewRunning) {
-                cameraPreviewRunning = false;
-                camera.stopPreview();
-            }
-        }
-        if (!isPrerecordedSession){
-        	startCameraPreview();
-        }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=new MenuInflater(getApplicationContext());
+        inflater.inflate(R.menu.menu_video_sharing, menu);
+        return true;
     }
 
-    /**
-     * Surface has been created
-     *
-     * @param holder Surface holder
-     */
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        if (camera == null && !isPrerecordedSession) {
-            // Start camera preview
-            if (cam_num > 1) {
-                OpenCamera(1);
-            } else {
-                camera = Camera.open();
-                openedCameraId = 0;
-            }
-            camera.setPreviewCallback(outgoingPlayer);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_close_session:
+                stopOutgoingSession();
+                stopIncomingSession();
+                exitIfNoSession(null);
+                break;
         }
+        return true;
     }
 
-    /**
-     * Surface has been destroyed
-     *
-     * @param holder Surface holder
-     */
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-    }
+    /* *****************************************
+     *              Button listener
+     ***************************************** */
 
     /**
      * Accept button listener
@@ -615,239 +416,59 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             releaseCamera();
 
             // Open the other camera
-            if (openedCameraId == 0) {
-                OpenCamera(1);
+            if (openedCameraId.getValue() == CameraOptions.BACK.getValue()) {
+                OpenCamera(CameraOptions.FRONT);
             } else {
-                OpenCamera(0);
+                OpenCamera(CameraOptions.BACK);
             }
 
             // Restart the preview
+            camera.setPreviewCallback(outgoingPlayer);
             startCameraPreview();
-            if (camera != null) {
-                camera.setPreviewCallback(outgoingPlayer);
-            }
         }
     };
 
     /**
-     * Open a camera
-     *
-     * @param cameraId
+     * Outgoing button listener
      */
-    private void OpenCamera(int cameraId) {
-        Method method = getCameraOpenMethod();
-        if (method != null) {
-            try {
-                camera = (Camera)method.invoke(camera, new Object[] {
-                    cameraId
-                });
-                openedCameraId = cameraId;
-            } catch (Exception e) {
-                camera = Camera.open();
-                openedCameraId = 0;
-            }
-        } else {
-            camera = Camera.open();
-            openedCameraId = 0;
-        }
-    }
-
-    /**
-     * Release the camera
-     */
-    private void releaseCamera() {
-        if (camera != null) {
-            camera.setPreviewCallback(null);
-            if (cameraPreviewRunning) {
-                cameraPreviewRunning = false;
-                camera.stopPreview();
-            }
-            camera.release();
-            camera = null;
-        }
-    }
-
-    /**
-     * Start outgoing session button listener
-     */
-    private View.OnClickListener btnStartOutgoingListener = new View.OnClickListener() {
+    private View.OnClickListener btnOutgoingListener = new View.OnClickListener() {
         public void onClick(View v) {
-            startOutgoingSession();
-        }
-    };
+            if (pendingOutgoingSession) {
+                // Stop the outgoing session
+                new Thread() {
+                    public void run() {
+                        stopOutgoingSession();
+                        exitIfNoSession(null);
 
-    /**
-     * Stop outgoing session button listener
-     */
-    private View.OnClickListener btnStopOutgoingListener = new View.OnClickListener() {
-        public void onClick(View v) {
-            Thread thread = new Thread() {
-                public void run() {
-                    stopOutgoingSession();
-                    exitActivityIfNoSession(null);
-
-                    recreateVideoPlayer();
-                }
-            };
-            thread.start();
-            startOutgoingBtn.setEnabled(true);
-            stopOutgoingBtn.setEnabled(false);
-        }
-    };
-
-    /**
-     * Recreate the video player
-     */
-    private void recreateVideoPlayer(){
-    	if (!isPrerecordedSession) {
-    		// Create the live video player
-            if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
-                outgoingPlayer = new LiveVideoPlayer();
-            } else {
-                outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
-            }
-            outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
-            surface = outgoingVideoView.getHolder();
-            surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-            surface.addCallback(this);
-    		camera.setPreviewCallback(outgoingPlayer);
-        } else {
-    		// Create the prerecorded video player
-    		outgoingPrerecordedPlayer = new PrerecordedVideoPlayer("h263-2000", filename, playerEventListener);
-    		outgoingPrerecordedPlayer.setVideoSurface(outgoingVideoView);
-    	}
-    }
-
-    /**
-     * Stop incoming session button listener
-     */
-    private View.OnClickListener btnStopIncomingListener = new View.OnClickListener() {
-        public void onClick(View v) {
-            Thread thread = new Thread() {
-                public void run() {
-                    stopIncomingSession();
-                    exitActivityIfNoSession(null);
-                }
-            };
-            thread.start();
-            stopIncomingBtn.setEnabled(false);
-        }
-    };
-
-    /**
-     * Outgoing video sharing session event listener
-     */
-    private IVideoSharingEventListener outgoingSessionEventListener = new IVideoSharingEventListener.Stub() {
-        // Session is started
-        public void handleSessionStarted() {
-            handler.post(new Runnable() {
-                public void run() {
-                    // Update Camera
-                    videoHeight = outgoingPlayer.getMediaCodecHeight();
-                    videoWidth = outgoingPlayer.getMediaCodecWidth();
-                    reStartCameraPreview();
-
-                    startOutgoingBtn.setEnabled(false);
-                    stopOutgoingBtn.setEnabled(true);
-                    hideProgressDialog();
-                }
-            });
-        }
-
-        // Session has been aborted
-        public void handleSessionAborted(int reason) {
-            handler.post(new Runnable() {
-                public void run() {
-                    startOutgoingBtn.setEnabled(true);
-                    stopOutgoingBtn.setEnabled(false);
-                    hideProgressDialog();
-                    stopOutgoingSession();
-                    exitActivityIfNoSession(getString(R.string.label_outgoing_sharing_aborted));
-                    recreateVideoPlayer();
-                }
-            });
-        }
-
-        // Session has been terminated by remote
-        public void handleSessionTerminatedByRemote() {
-            handler.post(new Runnable() {
-                public void run() {
-                    startOutgoingBtn.setEnabled(true);
-                    stopOutgoingBtn.setEnabled(false);
-                    hideProgressDialog();
-                    stopOutgoingSession();
-                    exitActivityIfNoSession(getString(R.string.label_outgoing_sharing_terminated_by_remote));
-                    recreateVideoPlayer();
-                }
-            });
-        }
-
-        // Content sharing error
-        public void handleSharingError(final int error) {
-            handler.post(new Runnable() {
-                public void run() {
-                    startOutgoingBtn.setEnabled(true);
-                    stopOutgoingBtn.setEnabled(false);
-                    hideProgressDialog();
-                    stopOutgoingSession();
-                    if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
-                        exitActivityIfNoSession(getString(R.string.label_invitation_declined));
-                    } else {
-                        exitActivityIfNoSession(getString(R.string.label_csh_failed, error));
+                        recreateVideoPlayer();
                     }
-                    recreateVideoPlayer();
-                }
-            });
+                }.start();
+            } else {
+                // Start a new outgoing session
+                handler.post(startOutgoingSessionRunnable);
+            }
         }
     };
 
     /**
-     * Incoming video sharing session event listener
+     * Incoming button listener
      */
-    private IVideoSharingEventListener incomingSessionEventListener = new IVideoSharingEventListener.Stub() {
-        // Session is started
-        public void handleSessionStarted() {
-            handler.post(new Runnable() {
-                public void run() {
-                    stopIncomingBtn.setEnabled(true);
-                }
-            });
-        }
-
-        // Session has been aborted
-        public void handleSessionAborted(int reason) {
-            handler.post(new Runnable() {
-                public void run() {
-                    stopIncomingBtn.setEnabled(false);
-                    stopIncomingSession();
-                    exitActivityIfNoSession(getString(R.string.label_incoming_sharing_aborted));
-                }
-            });
-        }
-
-        // Session has been terminated by remote
-        public void handleSessionTerminatedByRemote() {
-            handler.post(new Runnable() {
-                public void run() {
-                    stopIncomingBtn.setEnabled(false);
-                    stopIncomingSession();
-                    exitActivityIfNoSession(getString(R.string.label_incoming_sharing_terminated_by_remote));
-                }
-            });
-        }
-
-        // Sharing error
-        public void handleSharingError(final int error) {
-            handler.post(new Runnable() {
-                public void run() {
-                    stopIncomingBtn.setEnabled(false);
-                    stopIncomingSession();
-                    exitActivityIfNoSession(getString(R.string.label_csh_failed, error));
-                }
-            });
-
+    private View.OnClickListener btnIncomingListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            if (pendingOutgoingSession) {
+                new Thread() {
+                    public void run() {
+                        stopIncomingSession();
+                        exitIfNoSession(null);
+                    }
+                }.start();
+            }
         }
     };
+
+    /* *****************************************
+     *                Camera
+     ***************************************** */
 
     /**
      * Get Camera "open" Method
@@ -892,182 +513,46 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
     }
 
     /**
-     * Get incoming session.
-     */
-    private void getIncomingSession() {
-        try {
-            // Get the video sharing session
-            incomingCshSession = callApi.getVideoSharingSession(incomingSessionId);
-            incomingCshSession.addSessionListener(incomingSessionEventListener);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.title_recv_video_sharing);
-            builder.setMessage(getString(R.string.label_from) + " " + remoteContact);
-            builder.setCancelable(false);
-            builder.setIcon(R.drawable.ri_notif_csh_icon);
-            builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
-            builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
-            builder.show();
-        } catch (Exception e) {
-            Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
-        }
-    }
-
-    /**
-     * Accept incoming session.
-     */
-    private void acceptIncomingSession() {
-        // Accept the session in background
-        Thread thread = new Thread() {
-            public void run() {
-                try {
-                    // Accept the invitation
-                    incomingCshSession.setMediaRenderer(incomingRenderer);
-                    incomingCshSession.acceptSession();
-                } catch (Exception e) {
-                    handler.post(new Runnable() {
-    					public void run() {
-    						Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_invitation_failed));
-    					}
-    				});
-                }
-            }
-        };
-        thread.start();
-
-        stopIncomingBtn.setEnabled(true);
-    }
-
-    /**
-     * Decline incoming session.
-     */
-    private void declineIncomingSession() {
-        Thread thread = new Thread() {
-            public void run() {
-                try {
-                    // Reject the invitation
-                    incomingCshSession.removeSessionListener(incomingSessionEventListener);
-                    incomingCshSession.rejectSession();
-                    incomingCshSession = null;
-
-                    // Exit activity
-                    exitActivityIfNoSession(null);
-                } catch (Exception e) {
-                }
-            }
-        };
-        thread.start();
-    }
-
-    /**
-     * Exit activity if all sessions are stopped.
+     * Get number of cameras
      *
-     * @param message the message to display. Can be null for no message.
+     * @return number of cameras
      */
-    private void exitActivityIfNoSession(String message) {
-        if ((outgoingCshSession == null) && (incomingCshSession == null)) {
-            if (message == null) {
-                finish();
-            } else {
-                Utils.showMessageAndExit(VisioSharing.this, message);
+    private int getNumberOfCameras() {
+        Method method = getCameraNumberOfCamerasMethod();
+        if (method != null) {
+            try {
+                Integer ret = (Integer)method.invoke(null, (Object[])null);
+                return ret.intValue();
+            } catch (Exception e) {
+                return 1;
             }
         } else {
-            if (message != null) {
-                Utils.showMessage(VisioSharing.this, message);
-            }
+            return 1;
         }
     }
 
     /**
-     * Stop the incoming session
+     * Open a camera
+     *
+     * @param cameraId
      */
-    private void stopIncomingSession() {
-        // Stop sessions
-        if (incomingCshSession != null) {
+    private void OpenCamera(CameraOptions cameraId) {
+        Method method = getCameraOpenMethod();
+        if (numberOfCameras > 1 && method != null) {
             try {
-                incomingCshSession.removeSessionListener(incomingSessionEventListener);
-                incomingCshSession.cancelSession();
+                camera = (Camera)method.invoke(camera, new Object[] {
+                    cameraId.getValue()
+                });
+                openedCameraId = cameraId;
             } catch (Exception e) {
-                e.printStackTrace();
+                camera = Camera.open();
+                openedCameraId = CameraOptions.BACK;
             }
-            incomingCshSession = null;
+        } else {
+            camera = Camera.open();
+            openedCameraId = CameraOptions.BACK;
         }
-    }
-
-    /**
-     * Start the outgoing session
-     */
-    private void startOutgoingSession() {
-        Thread thread = new Thread() {
-            public void run() {
-                try {
-                    // Initiate sharing
-                	if (!isPrerecordedSession) {
-                        outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
-                	}else{
-                		outgoingCshSession = callApi.initiateVideoSharing(remoteContact, filename, outgoingPrerecordedPlayer);
-                	}
-                    outgoingCshSession.addSessionListener(outgoingSessionEventListener);
-                } catch (Exception e) {
-                    handler.post(new Runnable() {
-    					public void run() {
-    						Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_invitation_failed));
-    					}
-    				});
-                }
-            }
-        };
-        thread.start();
-        startOutgoingBtn.setEnabled(false);
-        // Display a progress dialog
-        outgoingProgressDialog = Utils.showProgressDialog(VisioSharing.this, getString(R.string.label_command_in_progress));
-        outgoingProgressDialog.setOnCancelListener(new OnCancelListener() {
-			public void onCancel(DialogInterface dialog) {
-				Toast.makeText(VisioSharing.this, getString(R.string.label_video_sharing_canceled), Toast.LENGTH_SHORT).show();
-				finish();
-			}
-		});
-    }
-
-    /**
-     * Stop the outgoing session
-     */
-    private void stopOutgoingSession() {
-        // Stop sessions
-        if (outgoingCshSession != null) {
-            try {
-                outgoingCshSession.removeSessionListener(outgoingSessionEventListener);
-                outgoingCshSession.cancelSession();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            outgoingCshSession = null;
-        }
-    }
-
-    /**
-     * Hide progress dialog
-     */
-    public void hideProgressDialog() {
-        if (outgoingProgressDialog != null && outgoingProgressDialog.isShowing()) {
-            outgoingProgressDialog.dismiss();
-            outgoingProgressDialog = null;
-        }
-    }
-
-    /**
-     * Start the camera preview
-     */
-    private void reStartCameraPreview() {
-        if (camera != null) {
-            releaseCamera();
-            outgoingVideoView.setAspectRatio(videoWidth, videoHeight);
-            OpenCamera(openedCameraId);
-        }
-        startCameraPreview();
-        if (camera != null) {
-            camera.setPreviewCallback(outgoingPlayer);
-        }
+        outgoingPlayer.setCameraId(openedCameraId.getValue());
     }
 
     /**
@@ -1079,21 +564,77 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             Camera.Parameters p = camera.getParameters();
             p.setPreviewFormat(PixelFormat.YCbCr_420_SP); //ImageFormat.NV21);
 
+            // Orientation
+            Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+            switch (display.getRotation()) {
+                case Surface.ROTATION_0:
+                    if (logger.isActivated()) {
+                        logger.debug("ROTATION_0");
+                    }
+                    if (openedCameraId == CameraOptions.FRONT) {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
+                    } else {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                        camera.setDisplayOrientation(90);
+                    } else {
+                        p.setRotation(90);
+                    }
+                    break;
+                case Surface.ROTATION_90:
+                    if (logger.isActivated()) {
+                        logger.debug("ROTATION_90");
+                    }
+                    outgoingPlayer.setOrientation(Orientation.NONE);
+                    break;
+                case Surface.ROTATION_180:
+                    if (logger.isActivated()) {
+                        logger.debug("ROTATION_180");
+                    }
+                    if (openedCameraId == CameraOptions.FRONT) {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
+                    } else {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                        camera.setDisplayOrientation(270);
+                    } else {
+                        p.setRotation(270);
+                    }
+                    break;
+                case Surface.ROTATION_270:
+                    if (logger.isActivated()) {
+                        logger.debug("ROTATION_270");
+                    }
+                    if (openedCameraId == CameraOptions.FRONT) {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_180);
+                    } else {
+                        outgoingPlayer.setOrientation(Orientation.ROTATE_180);
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                        camera.setDisplayOrientation(180);
+                    } else {
+                        p.setRotation(180);
+                    }
+                    break;
+            }
+
             // Camera size
             List<Camera.Size> sizes = p.getSupportedPreviewSizes();
-            if (contains(sizes, videoWidth, videoHeight)) {
-                p.setPreviewSize(videoWidth, videoHeight);
+            if (sizeContains(sizes, outgoingWidth, outgoingHeight)) {
+                p.setPreviewSize(outgoingWidth, outgoingHeight);
                 outgoingPlayer.setScalingFactor((float) 1);
                 if (logger.isActivated()) {
-                    logger.info("Camera preview initialized with size " + videoWidth + "x" + videoHeight + " with a 1 scale factor");
+                    logger.info("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight + " with a 1 scale factor");
                 }
             } else {
                 // Try to select double size and initialize scaling 0.5
-                if (contains(sizes, 2*videoWidth, 2*videoHeight)) {
-                    p.setPreviewSize(2*videoWidth, 2*videoHeight);
+                if (sizeContains(sizes, 2*outgoingWidth, 2*outgoingHeight)) {
+                    p.setPreviewSize(2*outgoingWidth, 2*outgoingHeight);
                     outgoingPlayer.setScalingFactor((float) 0.5);
                     if (logger.isActivated()) {
-                        logger.info("Camera preview initialized with size " + 2*videoWidth + "x" + 2*videoHeight + " with a 0.5 scale factor");
+                        logger.info("Camera preview initialized with size " + 2*outgoingWidth + "x" + 2*outgoingHeight + " with a 0.5 scale factor");
                     }
                 } else {
                     // Try to set front camera if back camera doesn't support size
@@ -1101,15 +642,15 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
                     if (cam_id != null) {
                         p.set("camera-id", 2);
                         p.setRotation(270);
-                        p.setPreviewSize(videoWidth, videoHeight);
+                        p.setPreviewSize(outgoingWidth, outgoingHeight);
                         outgoingPlayer.setScalingFactor((float) 1);
                         if (logger.isActivated()) {
-                            logger.info("Camera preview initialized on front camera with size " + videoWidth + "x" + videoHeight + " with a 1 scale factor");
+                            logger.info("Camera preview initialized on front camera with size " + outgoingWidth + "x" + outgoingHeight + " with a 1 scale factor");
                         }
                     } else {
                         // Error
                         if (logger.isActivated()) {
-                            logger.warn("Camera preview can't be initialized with size " + videoWidth + "x" + videoHeight);
+                            logger.warn("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
                         }
                         camera = null;
                         return;
@@ -1118,12 +659,27 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             }
             camera.setParameters(p);
             try {
-                camera.setPreviewDisplay(video_holder);
+                camera.setPreviewDisplay(outgoingVideoView.getHolder());
                 camera.startPreview();
                 cameraPreviewRunning = true;
             } catch (Exception e) {
                 camera = null;
             }
+        }
+    }
+
+    /**
+     * Release the camera
+     */
+    private void releaseCamera() {
+        if (camera != null) {
+            camera.setPreviewCallback(null);
+            if (cameraPreviewRunning) {
+                cameraPreviewRunning = false;
+                camera.stopPreview();
+            }
+            camera.release();
+            camera = null;
         }
     }
 
@@ -1136,7 +692,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
      * @param height
      * @return boolean
      */
-    private boolean contains(List<Camera.Size> list, int width, int height) {
+    private boolean sizeContains(List<Camera.Size> list, int width, int height) {
         for (int i = 0; i < list.size(); i++) {
             if (list.get(i).width == width && list.get(i).height == height) {
                 return true;
@@ -1145,134 +701,632 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
         return false;
     }
 
-    private BroadcastReceiver sharingIntentReceiver = new BroadcastReceiver() {
+    /**
+     * Start the camera
+     */
+    private void startCamera() {
+        if (camera == null) {
+            // Open camera
+            OpenCamera(openedCameraId);
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                outgoingVideoView.setAspectRatio(outgoingWidth, outgoingHeight);
+            } else {
+                outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
+            }
+            // Start camera
+            camera.setPreviewCallback(outgoingPlayer);
+            startCameraPreview();
+        } else {
+            if (logger.isActivated()) {
+                logger.error("Camera is not null");
+            }
+        }
+    }
+
+    /**
+     * ReStart the camera
+     */
+    private void reStartCamera() {
+        if (camera != null) {
+            releaseCamera();
+        }
+        startCamera();
+    }
+
+    /* *****************************************
+     *          SurfaceHolder.Callback
+     ***************************************** */
+
+    @Override
+    public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
+        isSurfaceCreated = true;
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder arg0) {
+        isSurfaceCreated = true;
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder arg0) {
+        isSurfaceCreated = false;
+    }
+
+    /* *****************************************
+     *            Intent BroadcastReceiver
+     ***************************************** */
+
+    /**
+     * Intent BroadcastReceiver
+     */
+    private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
+
+        @Override
         public void onReceive(Context context, final Intent intent) {
             handler.post(new Runnable() {
                 public void run() {
-                    // Get invitation info
-                    String lastIncomingSessionId = incomingSessionId;
-                    incomingSessionId = intent.getStringExtra("sessionId");
-                    remoteContact = intent.getStringExtra("contact");
-                    isIncoming = true;
-
-                    if (incomingSessionId != null) {
-                        removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
-                    }
-                	TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
-                    fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
-                    if (lastIncomingSessionId != incomingSessionId) {
-                        if (isCallApiConnected) {
-                            getIncomingSession();
-                        } else {
-                            getIncomingSessionWhenApiConnected = true;
-                        }
-                    }
+                    extractIncomingInfo(intent);
                 }
             });
         }
     };
 
-    /**
-    * Add video share notification
-    *
-    * @param context Context
-    * @param contact Contact
-    * @param sessionId Session ID
-    */
-    public static void addVideoSharingInvitationNotification(Context context, Intent invitation) {
-		// Initialize settings
-		RcsSettings.createInstance(context);
-
-        // Create notification
-        Intent intent = new Intent(invitation);
-        intent.setClass(context, VisioSharing.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		intent.putExtra("incoming", true);
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        String notifTitle = context.getString(R.string.title_recv_video_sharing);
-        Notification notif = new Notification(R.drawable.ri_notif_csh_icon, notifTitle,
-                System.currentTimeMillis());
-        notif.flags = Notification.FLAG_AUTO_CANCEL;
-        notif.setLatestEventInfo(context,
-        		notifTitle,
-        		context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
-        		contentIntent);
-
-        // Set ringtone
-        String ringtone = RcsSettings.getInstance().getCShInvitationRingtone();
-        if (!TextUtils.isEmpty(ringtone)) {
-            notif.sound = Uri.parse(ringtone);
-        }
-
-        // Set vibration
-        if (RcsSettings.getInstance().isPhoneVibrateForCShInvitation()) {
-            notif.defaults |= Notification.DEFAULT_VIBRATE;
-        }
-
-        // Send notification
-		String sessionId = invitation.getStringExtra("sessionId");
-        NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(sessionId, Utils.NOTIF_ID_VIDEO_SHARE, notif);
-    }
+    /* *****************************************
+     *              Incoming session
+     ***************************************** */
 
     /**
-     * Remove video share notification
+     * Extract incoming session information from intent
      *
-     * @param context Context
-     * @param sessionId Session ID
+     * @param intent
      */
-    public static void removeVideoSharingNotification(Context context, String sessionId) {
-        NotificationManager notificationManager = (NotificationManager)context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(sessionId, Utils.NOTIF_ID_VIDEO_SHARE);
+    private void extractIncomingInfo(Intent intent) {
+        String lastIncomingSessionId = incomingSessionId;
+        incomingSessionId = intent.getStringExtra("sessionId");
+        if (logger.isActivated()) {
+            logger.debug("Incoming session with incomingSessionId = " + incomingSessionId);
+        }
+
+        // Get incoming session
+        if (lastIncomingSessionId != incomingSessionId) {
+            handler.post(receiveIncomingSessionRunnable);
+        }
+        // Remove notification
+        removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
     }
 
     /**
-     * Player event listener for prerecorded sessions
+     * Runnable to Receive incoming session
      */
-    private VideoPlayerEventListener playerEventListener = new VideoPlayerEventListener() {
-	    /**
-	     * End of video stream event
-	     */
-		public void endOfStream() {
-			handler.post(new Runnable() {
-				public void run() {
-					Utils.displayToast(VisioSharing.this, getString(R.string.label_end_of_media));
-                    startOutgoingBtn.setEnabled(true);
-                    stopOutgoingBtn.setEnabled(false);
-				}
-			});
-			recreateVideoPlayer();
-		}
+    private Runnable receiveIncomingSessionRunnable = new Runnable() {
+        private int delay = 0;
+        @Override
+        public void run() {
+            if (isCallApiConnected) {
+                try {
+                    if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+                        incomingRenderer = new VideoRenderer();
+                    } else {
+                        incomingRenderer = new VideoRenderer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+                    }
+                    incomingRenderer.setVideoSurface(incomingVideoView);
 
-	    /**
-	     * Video stream progress event
-	     *
-	     * @param progress Progress
-	     */
-		public void updateDuration(long progress) {
-		}
+                    // Get the video sharing session
+                    incomingCshSession = callApi.getVideoSharingSession(incomingSessionId);
+                    incomingCshSession.addSessionListener(incomingSessionEventListener);
+                    showReceiveNotification();
+                } catch (Exception e) {
+                    Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
+                }
+            } else {
+                delay += 200;
+                handler.removeCallbacks(this);
+                if (delay < 2000) {
+                    if (logger.isActivated()){
+                        logger.error("Delaying Receive incoming session");
+                    }
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
     };
-    
+
+    private void showReceiveNotification() {
+        // User alert
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.title_recv_video_sharing)
+                .setMessage(getString(R.string.label_from) + " " + remoteContact)
+                .setCancelable(false)
+                .setIcon(R.drawable.ri_notif_csh_icon)
+                .setPositiveButton(getString(R.string.label_accept), acceptBtnListener)
+                .setNegativeButton(getString(R.string.label_decline), declineBtnListener)
+                .show();
+    }
+
+    /**
+     * Runnable to Continue incoming session
+     */
+    private Runnable continueIncomingSessionRunnable = new Runnable() {
+        private int delay = 0;
+        @Override
+        public void run() {
+            if (isCallApiConnected) {
+                try {
+                    // Get the video sharing session
+                    incomingCshSession = callApi.getVideoSharingSession(incomingSessionId);
+                    incomingCshSession.addSessionListener(incomingSessionEventListener);
+                    incomingRenderer = (VideoRenderer) incomingCshSession.getMediaRenderer();
+                    incomingRenderer.setVideoSurface(incomingVideoView);
+                } catch (Exception e) {
+                    Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
+                }
+            } else {
+                delay += 200;
+                handler.removeCallbacks(this);
+                if (delay < 2000) {
+                    if (logger.isActivated()){
+                        logger.error("Delaying Continue incoming session");
+                    }
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+    };
+
+    /**
+     * Stop the incoming session
+     */
+    private void stopIncomingSession() {
+        if (pendingIncomingSession && incomingCshSession != null) {
+            try {
+                incomingCshSession.removeSessionListener(incomingSessionEventListener);
+                incomingCshSession.cancelSession();
+            } catch (Exception e) {
+                Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
+            }
+            handler.post(new Runnable() {
+                public void run() {
+                    incomingBtn.setEnabled(false);
+                }
+            });
+            pendingIncomingSession = false;
+            incomingCshSession = null;
+        }
+    }
+
+    /**
+     * Accept incoming session.
+     */
+    private void acceptIncomingSession() {
+        // Accept the session in background
+        new Thread() {
+            public void run() {
+                try {
+                    // Accept the invitation
+                    incomingCshSession.setMediaRenderer(incomingRenderer);
+                    incomingCshSession.acceptSession();
+                } catch (Exception e) {
+                    handler.post(new Runnable() {
+                        public void run() {
+                            Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_invitation_failed));
+                        }
+                    });
+                }
+            }
+        }.start();
+    }
+
+    /**
+     * Decline incoming session.
+     */
+    private void declineIncomingSession() {
+        new Thread() {
+            public void run() {
+                try {
+                    // Reject the invitation
+                    incomingCshSession.removeSessionListener(incomingSessionEventListener);
+                    incomingCshSession.rejectSession();
+                    incomingCshSession = null;
+
+                    // Exit activity if no session
+                    exitIfNoSession(null);
+                } catch (Exception e) {
+                }
+            }
+        }.start();
+    }
+
+    /**
+     * Incoming video sharing session event listener
+     */
+    private IVideoSharingEventListener incomingSessionEventListener = new IVideoSharingEventListener.Stub() {
+        /**
+         * Session is started
+         */
+        public void handleSessionStarted() {
+            handler.post(new Runnable() {
+                public void run() {
+                    pendingIncomingSession = true;
+                    incomingBtn.setEnabled(true);
+                }
+            });
+        }
+
+        /**
+         * The size of media has changed
+         *
+         * @param width
+         * @param height
+         */
+        public void handleMediaResized(final int width, final int height) {
+            incomingWidth = width;
+            incomingHeight = height;
+            handler.post(new Runnable() {
+                public void run() {
+                    incomingVideoView.setAspectRatio(incomingWidth, incomingHeight);
+                }
+            });
+        }
+
+        /**
+         * Session has been aborted
+         */
+        public void handleSessionAborted(int reason) {
+            handler.post(new Runnable() {
+                public void run() {
+                    stopIncomingSession();
+                    exitIfNoSession(getString(R.string.label_incoming_sharing_aborted));
+                }
+            });
+        }
+
+        /**
+         * Session has been terminated by remote
+         */
+        public void handleSessionTerminatedByRemote() {
+            handler.post(new Runnable() {
+                public void run() {
+                    stopIncomingSession();
+                    exitIfNoSession(getString(R.string.label_incoming_sharing_terminated_by_remote));
+                }
+            });
+        }
+
+        /**
+         * Sharing error
+         */
+        public void handleSharingError(final int error) {
+            handler.post(new Runnable() {
+                public void run() {
+                    stopIncomingSession();
+                    exitIfNoSession(getString(R.string.label_csh_failed, error));
+                }
+            });
+
+        }
+    };
+
+    /* *****************************************
+     *              Outgoing session
+     ***************************************** */
+
+    /**
+     * Runnable to start outgoing session
+     */
+    private Runnable startOutgoingSessionRunnable = new Runnable() {
+        private int delay = 0;
+        @Override
+        public void run() {
+            if (isSurfaceCreated && isCallApiConnected) {
+                if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+                    outgoingPlayer = new LiveVideoPlayer();
+                } else {
+                    outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+                }
+
+                // Start camera
+                startCamera();
+
+                // Start outgoing session
+                startOutgoingSession();
+            } else {
+                delay += 200;
+                handler.removeCallbacks(this);
+                if (delay < 2000) {
+                    if (logger.isActivated()){
+                        logger.error("Delaying start outgoing session");
+                    }
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+    };
+
+    /**
+     * Start the outgoing session
+     */
+    private void startOutgoingSession() {
+        // Initiate session
+        new Thread() {
+            public void run() {
+                try {
+                    // Initiate sharing
+                    outgoingCshSession = callApi.initiateLiveVideoSharing(remoteContact, outgoingPlayer);
+                    outgoingCshSession.addSessionListener(outgoingSessionEventListener);
+                    outgoingSessionId = outgoingCshSession.getSessionID();
+                } catch (Exception e) {
+                    handler.post(new Runnable() {
+                        public void run() {
+                            Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_invitation_failed));
+                        }
+                    });
+                }
+            }
+        }.start();
+
+        pendingOutgoingSession = true;
+        outgoingBtn.setText(R.string.label_stop_outgoing_btn);
+        switchCamBtn.setEnabled(true);
+
+        // Display a progress dialog
+        outgoingProgressDialog = Utils.showProgressDialog(VisioSharing.this, getString(R.string.label_command_in_progress));
+        outgoingProgressDialog.setOnCancelListener(new OnCancelListener() {
+            public void onCancel(DialogInterface dialog) {
+                Toast.makeText(VisioSharing.this, getString(R.string.label_video_sharing_canceled), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+    }
+
+    /**
+     * Runnable to continue outgoing session
+     */
+    private Runnable continueOutgoingSessionRunnable = new Runnable() {
+        private int delay = 0;
+        @Override
+        public void run() {
+            if (isSurfaceCreated && isCallApiConnected) {
+                // Start outgoing session
+                continueOutgoingSession();
+            } else {
+                delay += 200;
+                handler.removeCallbacks(this);
+                if (delay < 2000) {
+                    if (logger.isActivated()){
+                        logger.error("Delaying continue Outgoing");
+                    }
+                    handler.postDelayed(this, delay);
+                }
+            }
+        }
+    };
+
+    /**
+     * Continue a pending outgoing session
+     */
+    private void continueOutgoingSession() {
+        try {
+            // continue sharing
+            outgoingCshSession = callApi.getVideoSharingSession(outgoingSessionId);
+            outgoingCshSession.addSessionListener(outgoingSessionEventListener);
+            outgoingPlayer = (LiveVideoPlayer) outgoingCshSession.getMediaPlayer();
+
+            // Start camera
+            startCamera();
+        } catch (Exception e) {
+            handler.post(new Runnable() {
+                public void run() {
+                    Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_outgoing_sharing_aborted));
+                }
+            });
+        }
+    }
+
+    /**
+     * Stop the outgoing session
+     */
+    private void stopOutgoingSession() {
+        if (outgoingCshSession != null && pendingOutgoingSession) {
+            hideProgressDialog();
+            new Thread() {
+                public void run() {
+                    try {
+                        outgoingCshSession.removeSessionListener(outgoingSessionEventListener);
+                        outgoingCshSession.cancelSession();
+                    } catch (RemoteException e) {
+                        Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
+                    }
+                }
+            }.start();
+            releaseCamera();
+            outgoingCshSession = null;
+            pendingOutgoingSession = false;
+            handler.post(new Runnable() {
+                public void run() {
+                    outgoingBtn.setText(R.string.label_start_outgoing_btn);
+                    switchCamBtn.setEnabled(false);
+                }
+            });
+        }
+    }
+
+    /**
+     * Hide progress dialog
+     */
+    private void hideProgressDialog() {
+        if (outgoingProgressDialog != null && outgoingProgressDialog.isShowing()) {
+            outgoingProgressDialog.dismiss();
+            outgoingProgressDialog = null;
+        }
+    }
+
+    /**
+     * Recreate the video player
+     */
+    private void recreateVideoPlayer(){
+        // Create the live video player
+        if (VideoSettings.isCodecsManagedByStack(getApplicationContext())) {
+            outgoingPlayer = new LiveVideoPlayer();
+        } else {
+            outgoingPlayer = new LiveVideoPlayer(createSupportedCodecList(VideoSettings.getCodecsList(getApplicationContext())));
+        }
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+            outgoingVideoView.setAspectRatio(outgoingWidth, outgoingHeight);
+        } else {
+            outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
+        }
+        surface = outgoingVideoView.getHolder();
+        surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        surface.addCallback(this);
+        if (camera != null) {
+            camera.setPreviewCallback(outgoingPlayer);
+        }
+    }
+
+    /**
+     * Outgoing video sharing session event listener
+     */
+    private IVideoSharingEventListener outgoingSessionEventListener = new IVideoSharingEventListener.Stub() {
+        // Session is started
+        public void handleSessionStarted() {
+            handler.post(new Runnable() {
+                public void run() {
+                    if (logger.isActivated()) {
+                        logger.info("Outgoing session started");
+                    }
+                    // Update Camera
+                    outgoingHeight = outgoingPlayer.getMediaCodecHeight();
+                    outgoingWidth = outgoingPlayer.getMediaCodecWidth();
+                    reStartCamera();
+
+                    // Hide progress bar
+                    hideProgressDialog();
+                }
+            });
+        }
+
+        // Session has been aborted
+        public void handleSessionAborted(int reason) {
+            handler.post(new Runnable() {
+                public void run() {
+                    hideProgressDialog();
+                    stopOutgoingSession();
+                    exitIfNoSession(getString(R.string.label_outgoing_sharing_aborted));
+
+                    recreateVideoPlayer();
+                }
+            });
+        }
+
+        // Session has been terminated by remote
+        public void handleSessionTerminatedByRemote() {
+            handler.post(new Runnable() {
+                public void run() {
+                    hideProgressDialog();
+                    stopOutgoingSession();
+                    exitIfNoSession(getString(R.string.label_outgoing_sharing_terminated_by_remote));
+
+                    recreateVideoPlayer();
+                }
+            });
+        }
+
+        // Content sharing error
+        public void handleSharingError(final int error) {
+            handler.post(new Runnable() {
+                public void run() {
+                    hideProgressDialog();
+                    stopOutgoingSession();
+                    if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
+                        exitIfNoSession(getString(R.string.label_invitation_declined));
+                    } else {
+                        exitIfNoSession(getString(R.string.label_csh_failed, error));
+                    }
+
+                    recreateVideoPlayer();
+                }
+            });
+        }
+
+        @Override
+        public void handleMediaResized(int arg0, int arg1) throws RemoteException {
+            // Not used
+        }
+    };
+
+    /* *****************************************
+     *              ImsEventListener
+     ***************************************** */
+
     @Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater=new MenuInflater(getApplicationContext());
-		inflater.inflate(R.menu.menu_video_sharing, menu);
-		return true;
-	}
-    
+    public void handleImsConnected() {
+        // Nothing to do
+    }
+
     @Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case R.id.menu_close_session:
-				// Quit sessions
-				stopOutgoingSession();
-                stopIncomingSession();
-                exitActivityIfNoSession(null);
-				break;
-		}
-		return true;
-	}
+    public void handleImsDisconnected(int reason) {
+        // IMS has been disconnected
+        handler.post(new Runnable() {
+            public void run() {
+                Utils.showMessageAndExit(VisioSharing.this,
+                        getString(R.string.label_ims_disconnected));
+            }
+        });
+    }
+
+    /* *****************************************
+     *             ClientApiListener
+     ***************************************** */
+
+    @Override
+    public void handleApiDisabled() {
+        isCallApiConnected = false;
+        handler.post(new Runnable() {
+            public void run() {
+                Utils.showMessageAndExit(VisioSharing.this,
+                        getString(R.string.label_api_disabled));
+            }
+        });
+    }
+
+    @Override
+    public void handleApiConnected() {
+        isCallApiConnected = true;
+    }
+
+    @Override
+    public void handleApiDisconnected() {
+        isCallApiConnected = false;
+        handler.post(new Runnable() {
+            public void run() {
+                Utils.showMessageAndExit(VisioSharing.this,
+                        getString(R.string.label_api_disconnected));
+            }
+        });
+    }
+
+    /* *****************************************
+     *            Private
+     ***************************************** */
+
+    /**
+     * Exit activity if all sessions are stopped.
+     *
+     * @param message the message to display. Can be null for no message.
+     */
+    private void exitIfNoSession(String message) {
+        if ((outgoingCshSession == null) && (incomingCshSession == null)) {
+            if (message == null) {
+                finish();
+            } else {
+                Utils.showMessageAndExit(VisioSharing.this, message);
+            }
+        } else {
+            if (message != null) {
+                Utils.showMessage(VisioSharing.this, message);
+            }
+        }
+    }
 
     /**
      * Create a list of supported video codecs
@@ -1300,5 +1354,57 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback, Cl
             supportedMediaCodecs[--size] = VideoSettings.getCustomCodec(getApplicationContext());
         }
         return supportedMediaCodecs;
+    }
+
+    /* *****************************************
+     *            Static
+     ***************************************** */
+
+    /**
+    * Add video share notification
+    *
+    * @param context Context
+    * @param contact Contact
+    * @param sessionId Session ID
+    */
+    public static void addVideoSharingInvitationNotification(Context context, Intent invitation) {
+        // Initialize settings
+        RcsSettings.createInstance(context);
+
+        // Create notification
+        Intent intent = new Intent(invitation);
+        intent.setClass(context, VisioSharing.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("incoming", true);
+        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        String notifTitle = context.getString(R.string.title_recv_video_sharing);
+        Notification notification = new Notification(R.drawable.ri_notif_csh_icon, notifTitle,
+                System.currentTimeMillis());
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+        notification.setLatestEventInfo(context,
+                notifTitle,
+                context.getString(R.string.label_from) + " " + Utils.formatCallerId(invitation),
+                contentIntent);
+        // Set vibration
+        if (RcsSettings.getInstance().isPhoneVibrateForCShInvitation()) {
+            notification.defaults |= Notification.DEFAULT_VIBRATE;
+        }
+
+        // Send notification
+        NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(invitation.getStringExtra("sessionId"), Utils.NOTIF_ID_VIDEO_SHARE, notification);
+    }
+
+    /**
+     * Remove video share notification
+     *
+     * @param context Context
+     * @param sessionId Session ID
+     */
+    public static void removeVideoSharingNotification(Context context, String sessionId) {
+        NotificationManager notificationManager = (NotificationManager)context
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(sessionId, Utils.NOTIF_ID_VIDEO_SHARE);
     }
 }

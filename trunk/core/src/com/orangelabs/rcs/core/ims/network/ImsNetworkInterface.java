@@ -367,8 +367,11 @@ public abstract class ImsNetworkInterface {
 		}
 
 		try {
-			String resolvedIpAddress = imsProxyAddr;  // Use IMS proxy address by default
-			int resolvedPort = imsProxyPort; // Use default port by default
+			// Use IMS proxy address by default
+			String resolvedIpAddress = imsProxyAddr;
+
+			// Use default port by default
+			int resolvedPort = imsProxyPort;
 
 			// TODO: use DNS only if a domain name is used
 			boolean useDns = true;

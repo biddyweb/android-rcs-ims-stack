@@ -28,6 +28,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.util.Packet;
  * Abstract RTP packet
  * 
  * @author jexa7410
+ * @author Deutsche Telekom
  */
 public class RtpPacket extends Packet {
 	public Packet base;
@@ -38,6 +39,8 @@ public class RtpPacket extends Packet {
 	public int ssrc;
 	public int payloadoffset;
 	public int payloadlength;
+    public boolean extension;
+    public RtpExtensionHeader extensionHeader;
 
 	public RtpPacket() {
 		super();
@@ -55,7 +58,12 @@ public class RtpPacket extends Packet {
 
 		ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream(length);
 		DataOutputStream dataoutputstream = new DataOutputStream(bytearrayoutputstream);
-		dataoutputstream.writeByte(128);
+        if (extension) {
+            dataoutputstream.writeByte(144);
+        } else {
+            dataoutputstream.writeByte(128);
+        }
+
 		int i = payloadType;
 		if (marker == 1) {
 			i = payloadType | 0x80;
@@ -64,7 +72,20 @@ public class RtpPacket extends Packet {
 		dataoutputstream.writeShort(seqnum);
 		dataoutputstream.writeInt((int) timestamp);
 		dataoutputstream.writeInt(ssrc);
-		dataoutputstream.write(base.data, payloadoffset, payloadlength);
+
+        if (extension && extensionHeader != null) {
+            // Write extension header id
+            dataoutputstream.writeShort(RtpExtensionHeader.RTP_EXTENSION_HEADER_ID);
+            // Write extension header length
+            dataoutputstream.writeShort(extensionHeader.elementsCount());
+            // Write extension element. For now we will only support the orientation element
+            for (RtpExtensionHeader.ExtensionElement element : extensionHeader) {
+                int orientationElement = (((((element.id & 0xff) << 4) | ((element.data.length - 1) & 0xff)) << 8)
+                        | (element.data[0] & 0xff)) << 16;
+                dataoutputstream.writeInt(orientationElement);
+            }
+        }
+        dataoutputstream.write(base.data, base.offset, base.length);
 		data = bytearrayoutputstream.toByteArray();
 	}
 

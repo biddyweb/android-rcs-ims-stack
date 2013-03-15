@@ -119,12 +119,11 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 
     /**
      * Get file thumbnail
-     *
-     * @return String
+     * 
+     * @return Thumbnail
      */
-    public String getFileThumbnail() {
-        // TODO: NOT YET IMPLEMENTED
-        return null;
+    public byte[] getFileThumbnail() {
+        return session.getThumbnail();
     }
 
     /**

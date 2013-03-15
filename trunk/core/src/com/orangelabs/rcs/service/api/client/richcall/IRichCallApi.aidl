@@ -4,6 +4,9 @@ import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
+import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
+
 /**
  * Rich call API
  */
@@ -22,7 +25,7 @@ interface IRichCallApi {
 	IVideoSharingSession getVideoSharingSession(in String id);
 
 	// Initiate an image sharing session
-	IImageSharingSession initiateImageSharing(in String contact, in String file);
+	IImageSharingSession initiateImageSharing(in String contact, in String file, in boolean thumbnail);
 
 	// Get current image sharing session from its session ID
 	IImageSharingSession getImageSharingSession(in String id);

@@ -442,7 +442,7 @@ public class EventsLogApi extends ClientApi {
     }
 
     /**
-     * Get the last geoloc for a given contact
+     * Get the last incoming geoloc for a given contact
      * 
      * @param contact Contact
      * @return Geoloc info
@@ -451,9 +451,10 @@ public class EventsLogApi extends ClientApi {
 		GeolocPush result = null;																	
 
 		String sortOrder = RichMessagingData.KEY_TIMESTAMP + " DESC ";
-		String where = RichMessagingData.KEY_CONTACT + "='" + PhoneUtils.extractNumberFromUri(contact) + "' AND (" +
-				RichMessagingData.KEY_TYPE +" = " + EventsLogApi.TYPE_INCOMING_GEOLOC + " OR " +
-				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC + ")";		
+		String where = RichMessagingData.KEY_CONTACT + "='" + PhoneUtils.extractNumberFromUri(contact) +
+				"' AND " +	RichMessagingData.KEY_MIME_TYPE +" = '" + GeolocMessage.MIME_TYPE +
+				"' AND (" +	RichMessagingData.KEY_TYPE +" = '" + EventsLogApi.TYPE_INCOMING_GEOLOC +
+				"' OR " +	RichMessagingData.KEY_TYPE +" = '" + EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC + "')";
 		Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI,
     			new String[] {RichMessagingData.KEY_DATA},
 				where,
@@ -461,7 +462,33 @@ public class EventsLogApi extends ClientApi {
     			sortOrder);
 	    	
     	if (cursor.moveToFirst()) {
-			result = GeolocMessage.formatStrToGeoloc(cursor.getString(0));																	
+			result = GeolocPush.formatStrToGeoloc(cursor.getString(0));																	
+    	}
+    	cursor.close();
+
+    	return result;
+    }
+    
+    /**
+     * Get my last geoloc
+     * 
+     * @return Geoloc info
+     */
+    public GeolocPush getMyLastGeoloc() {
+		GeolocPush result = null;																	
+
+		String sortOrder = RichMessagingData.KEY_TIMESTAMP + " DESC ";
+		String where = RichMessagingData.KEY_MIME_TYPE +" = '" + GeolocMessage.MIME_TYPE +
+				"' AND (" +	RichMessagingData.KEY_TYPE +" = '" + EventsLogApi.TYPE_OUTGOING_GEOLOC +
+				"' OR " +	RichMessagingData.KEY_TYPE +" = '" + EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC + "')";
+		Cursor cursor = ctx.getContentResolver().query(RichMessagingData.CONTENT_URI,
+    			new String[] {RichMessagingData.KEY_DATA},
+				where,
+    			null,
+    			sortOrder);
+	    	
+    	if (cursor.moveToFirst()) {
+			result = GeolocPush.formatStrToGeoloc(cursor.getString(0));																	
     	}
     	cursor.close();
 

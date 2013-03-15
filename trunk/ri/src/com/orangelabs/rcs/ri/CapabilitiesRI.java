@@ -26,6 +26,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.orangelabs.rcs.ri.capabilities.BlockCapablities;
 import com.orangelabs.rcs.ri.capabilities.CapabilitiesDiscovery;
 import com.orangelabs.rcs.ri.capabilities.MyCapabilities;
 import com.orangelabs.rcs.ri.capabilities.RefreshCapabilities;
@@ -48,7 +49,8 @@ public class CapabilitiesRI extends ListActivity {
         String[] items = {
     		getString(R.string.menu_my_capabilities),
     		getString(R.string.menu_capabilities_request),        		
-    		getString(R.string.menu_refresh_capabilities)        		
+    		getString(R.string.menu_refresh_capabilities),
+    		getString(R.string.menu_block_capabilities), 
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
     }
@@ -66,6 +68,10 @@ public class CapabilitiesRI extends ListActivity {
                 
 	        case 2:
             	startActivity(new Intent(this, RefreshCapabilities.class));
+                break;
+                
+	        case 3:
+            	startActivity(new Intent(this, BlockCapablities.class));
                 break;
         }
     }

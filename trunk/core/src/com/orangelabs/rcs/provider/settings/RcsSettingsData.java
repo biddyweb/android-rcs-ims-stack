@@ -597,6 +597,11 @@ public class RcsSettingsData {
 	 */
 	public static final String CAPABILITY_GEOLOCATION_PUSH = "CapabilityGeoLocationPush";
 	
+	/**
+	 * File transfer thumbnail capability
+	 */
+	public static final String CAPABILITY_FILE_TRANSFER_THUMBNAIL = "CapabilityFileTransferThumbnail";
+	
     /**
      * RCS extensions capability
      */

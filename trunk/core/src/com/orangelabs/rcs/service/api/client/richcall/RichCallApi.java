@@ -26,8 +26,8 @@ import android.os.IBinder;
 
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
+import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 
 /**
  * Rich call API
@@ -179,7 +179,28 @@ public class RichCallApi extends ClientApi {
 	public IImageSharingSession initiateImageSharing(String contact, String file) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateImageSharing(contact, file);
+		    	return coreApi.initiateImageSharing(contact, file, false);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+	
+	/**
+	 * Initiate an image sharing session
+	 * 
+	 * @param contact Contact
+	 * @param file Image file
+	 * @param thumbnail Thumbnail option
+	 * @return Image sharing session
+	 * @throws ClientApiException
+	 */
+	public IImageSharingSession initiateImageSharing(String contact, String file, boolean thumbnail) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.initiateImageSharing(contact, file, thumbnail);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 73;
+        private static final int DATABASE_VERSION = 74;
 
         private Context ctx;
 
@@ -153,7 +153,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL,RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
@@ -161,7 +162,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PROTOCOL_FOR_WIFI,     ListeningPoint.TCP);
             addParameter(db, RcsSettingsData.TLS_CERTIFICATE_ROOT,              "");
             addParameter(db, RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE,      "");
-            addParameter(db, RcsSettingsData.SIP_TRANSACTION_TIMEOUT, 			"30");
+            addParameter(db, RcsSettingsData.SIP_TRANSACTION_TIMEOUT, 			"120");
             addParameter(db, RcsSettingsData.MSRP_DEFAULT_PORT, 				"20000");
             addParameter(db, RcsSettingsData.RTP_DEFAULT_PORT, 					"10000");
             addParameter(db, RcsSettingsData.MSRP_TRANSACTION_TIMEOUT, 			"5");

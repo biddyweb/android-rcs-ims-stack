@@ -26,13 +26,18 @@ package com.orangelabs.rcs.core.content;
  */
 public class FileContent extends MmContent {
 	/**
+	 * Encoding type
+	 */
+	private static final String ENCODING = "application/octet-stream";
+	
+	/**
 	 * Constructor
 	 * 
 	 * @param url URL
 	 * @param size Content size
 	 */
 	public FileContent(String url, long size) {
-		super(url, "application/octet-stream", size);
+		super(url, ENCODING, size);
 	}
 
 	/**
@@ -41,6 +46,6 @@ public class FileContent extends MmContent {
 	 * @param url URL
 	 */
 	public FileContent(String url) {
-		super(url, "application/octet-stream");
+		super(url, ENCODING);
 	}
 }

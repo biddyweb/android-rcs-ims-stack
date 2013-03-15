@@ -169,7 +169,11 @@ public class ProfileProvisioning extends Activity {
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE)));
         
         box = (CheckBox)findViewById(R.id.geolocation_push);
-        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH)));	
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH)));
+        
+        box = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL)));	
+
 	}
 
     @Override
@@ -272,6 +276,9 @@ public class ProfileProvisioning extends Activity {
 
 		        box = (CheckBox)findViewById(R.id.geolocation_push);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(box.isChecked()));
+		        
+		        box = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(box.isChecked()));
 		        
                 Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 		        break;

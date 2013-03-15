@@ -59,6 +59,11 @@ public class GeolocInfoDocument {
 	private long expiration = 0;
 
 	/**
+	 * Radius in meters
+	 */
+	private float radius = 0;
+
+	/**
 	 * Constructor
 	 * 
 	 * @param entity Entity
@@ -113,5 +118,13 @@ public class GeolocInfoDocument {
 
 	public void setAltitude(double a) {
 		altitude = a;
+	}
+
+	public float getRadius() {
+		return radius;
+	}	
+
+	public void setRadius(float r) {
+		radius = r;
 	}
 }

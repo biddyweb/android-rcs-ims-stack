@@ -18,56 +18,42 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
-import java.util.Date;
-
 /**
  * RTP source
  *
  * @author jexa7410
+ * @author Deutsche Telekom
  */
 public class RtpSource {
+    /**
+     * RFC 3550: The dropout parameter MAX_DROPOUT should be a small fraction of
+     * the 16-bit sequence number space to give a reasonable probability that
+     * new sequence numbers after a restart will not fall in the acceptable
+     * range for sequence numbers from before the restart.
+     */
+    private static final int MAX_DROPOUT = 3000;
+
+    /**
+     * RFC 3550: the sequence number is considered valid if it is no more than
+     * MAX_DROPOUT ahead of maxSeq nor more than MAX_MISORDER behind
+     */
+    private static final int MAX_MISORDER = 100;
+
+    /**
+     * RFC 3550: RTP sequence number module
+     */
+    private static final int RTP_SEQ_MOD = (1 << 16);
+
 	/**
 	 * CNAME value
 	 */
     public static String CNAME = "anonymous@127.0.0.1";
 
-	/**
-	 * SSRC
-	 */
-    public int SSRC;
-
     /**
-     * Fraction of RTP data packets from source SSRC lost since the previous
-     * SR or RR packet was sent, expressed as a fixed point number with the
-     * binary point at the left edge of the field.  To get the actual fraction
-     * multiply by 256 and take the integral part
+     * Source is not valid until MIN_SEQUENTIAL packets with
+     * sequential sequence numbers have been received.
      */
-    public double fraction;
-
-    /**
-     * Cumulative number of packets lost (signed 24bits).
-     */
-    public long lost;
-
-    /**
-     * Extended highest sequence number received.
-     */
-    public long last_seq;
-
-    /**
-     * Interarrival jitter.
-     */
-    public long jitter;
-
-    /**
-     * Last SR Packet from this source.
-     */
-    public long lst;
-
-    /**
-     * Delay since last SR packet.
-     */
-    public double dlsr;
+    private static int MIN_SEQUENCIAL = 0;
 
     /**
      * Is this source and ActiveSender.
@@ -75,60 +61,60 @@ public class RtpSource {
     public boolean activeSender;
 
     /**
-     * Time the last RTCP Packet was received from this source.
+     * Source description
      */
-    public double timeOfLastRTCPArrival;
-
-    /**
-     * Time the last RTP Packet was received from this source.
-     */
-    public double timeOfLastRTPArrival;
-
-    /**
-     * Time the last Sender Report RTCP Packet was received from this source.
-     */
-    public double timeofLastSRRcvd;
-
-    /**
-     * Total Number of RTP Packets Received from this source
-     */
-    public int noOfRTPPacketsRcvd;
-
-    /**
-     * Sequence Number of the first RTP packet received from this source
-     */
-    public long base_seq;
-
-    /**
-     * Number of RTP Packets Expected from this source
-     */
-    public long expected;
-
-    /**
-     * No of  RTP Packets expected last time a Reception Report was sent
-     */
-    public long expected_prior;
-
-    /**
-     * No of  RTP Packets received last time a Reception Report was sent
-     */
-    public long received_prior;
+    public int ssrc;
 
     /**
      * Highest Sequence number received from this source
      */
-    public long max_seq;
+    private int maxSeq;
 
     /**
-     * Keep track of the wrapping around of RTP sequence numbers, since RTP Seq No. are
-     * only 16 bits
+     * Keep track of the wrapping around of RTP sequence numbers, since RTP Seq No. are only 16 bits
      */
-    public long cycles;
+    private int cycles;
 
     /**
-     * Since Packets lost is a 24 bit number, it should be clamped at WRAPMAX = 0xFFFFFFFF
+     * Sequence Number of the first RTP packet received from this source
      */
-    public long WRAPMAX = 0xFFFFFFFF;
+    private int baseSeq;
+
+    /**
+     * Last 'bad' sequence number + 1
+     */
+    private int badSeq;
+
+    /**
+     * Sequence packets till source is valid
+     */
+    private int probation;
+
+    /**
+     * Packets received
+     */
+    private int received;
+
+    /**
+     * Packet expected at last interval
+     */
+    private int expectedPrior;
+
+    /**
+     * Packet received at last interval
+     */
+    private int receivedPrior;
+
+    /**
+     * Estimated jitter.
+     */
+    public long jitter;
+    
+    /**
+     * Last SR Packet timestamp
+     */
+    private long lastSenderReport;
+
 
     /**
      * Constructor requires an SSRC for it to be a valid source. The constructor initializes
@@ -137,106 +123,187 @@ public class RtpSource {
      * @param   sourceSSRC SSRC of the new source
      */
     RtpSource(int sourceSSRC) {
-        long time = currentTime();
-        SSRC = sourceSSRC;
-        fraction = 0;
-        lost = 0;
-        last_seq = 0;
+        ssrc = sourceSSRC;
+        lastSenderReport = 0;
+        probation = MIN_SEQUENCIAL;
         jitter = 0;
-        lst = 0;
-        dlsr = 0;
-        activeSender = false;
-        timeOfLastRTCPArrival = time;
-        timeOfLastRTPArrival = time;
-        timeofLastSRRcvd = time;
-        noOfRTPPacketsRcvd = 0;
-        base_seq = 0;
-        expected_prior = 0;
-        received_prior = 0;
+        initSeq(-1);
     }
 
     /**
-     * Returns the extended maximum sequence for a source
-     * considering that sequences cycle.
+     * Generates the extended sequence number.
      *
-     * @return  Sequence Number
+     * @param seq Original sequence number
+     * @return Extended sequence number
      */
-
-    public long getExtendedMax() {
-        return (cycles + max_seq);
+    public int generateExtendedSequenceNumber(int seq) {
+        return seq + (RTP_SEQ_MOD * cycles);
     }
 
     /**
-     * This safe sequence update function will try to
-     * determine if seq has wrapped over resulting in a
-     * new cycle.  It sets the cycle -- source level
-     * variable which keeps track of wraparounds.
+     * Updates the statistics related to Sender Reports. Should be invoked when
+     * a RTCP Sender Report is received.
      *
-     * @param seq  Sequence Number
+     * @param srp Sender Report
      */
-    public void updateSeq(long seq) {
-        // If the diferrence between max_seq and seq
-        // is more than 1000, then we can assume that
-        // cycle has wrapped around.
-        if (max_seq == 0)
-            max_seq = seq;
-        else {
-            if (max_seq - seq > 0.5 * WRAPMAX)
-                cycles += WRAPMAX;
+    public void receivedSenderReport(RtcpSenderReportPacket srp) {
+        // RFC 3550: last SR timestamp (LSR): 32 bits - The middle 32 bits out
+        // of 64 in the NTP timestamp received as part of the most recent RTCP
+        // sender report
+        lastSenderReport = (((srp.ntptimestampmsw << 32) | srp.ntptimestamplsw) & 0x0000ffffffff0000L) >>> 16;
+    }
 
-            max_seq = seq;
+    /**
+     * Updates the statistics related to RTP packets Should be invoked every
+     * time this source receive an RTP Packet .
+     *
+     * @param packet
+     */
+    public void receiveRtpPacket(RtpPacket packet) {
+        if (baseSeq == -1) {
+            // First packet received
+            initSeq(packet.seqnum);
         }
-
+        updateSeq(packet.seqnum);
     }
 
     /**
-     * Updates the various statistics for this source e.g. Packets Lost, Fraction lost
-     * Delay since last SR etc, according to the data gathered since a last SR or RR was sent out.
-     * This method is called prior to sending a Sender Report(SR)or a Receiver Report(RR)
-     * which will include a Reception Report block about this source.
+     * Generate the Reception Report
+     *
+     * @return ReceptionReport
      */
-    public int updateStatistics() {
-        // Set all the relevant parameters
+    public ReceptionReport generateReceptionReport() {
+        ReceptionReport report = new ReceptionReport(ssrc);
+        updateReceptionReport(report);
+        return report;
+    }
 
-        // Calculate the highest sequence number received in an RTP Data Packet
-        // from this source
-        last_seq = getExtendedMax();
+    /**
+     * Updates the reception report with latest data. The statistics calculation
+     * is based on the algorithms present in RFC 3550
+     *
+     * @param report Reception report to update
+     */
+    public void updateReceptionReport(ReceptionReport report) {
+        // Calculate the number of packets lost
+        int extendedMax = getExtendedSequenceNumber();
+        int expected = extendedMax - baseSeq + 1;
+        report.setCumulativeNumberOfPacketsLost(expected - received);
 
-        // Number of Packets lost = Number of Packets expected - Number of
-        // Packets actually rcvd
-        expected = getExtendedMax() - base_seq + 1;
-        lost = expected - noOfRTPPacketsRcvd;
-
-        // Clamping at 0xffffff
-        if (lost > 0xffffff)
-            lost = 0xffffff;
+        // TODO : Calculate the delay after last sender report received
+        report.setDelaySinceLastSenderReport(0);
+        report.setExtendedHighestSequenceNumberReceived(getExtendedSequenceNumber());
 
         // Calculate the fraction lost
-        long expected_interval = expected - expected_prior;
-        expected_prior = expected;
+        long expectedInterval = expected - expectedPrior;
+        expectedPrior = expected;
+        int receivedInterval = received - receivedPrior;
+        receivedPrior = received;
+        long lostInterval = expectedInterval - receivedInterval;
+        if (expectedInterval == 0 || lostInterval <= 0) {
+            report.setFractionLost(0);
+        } else {
+            report.setFractionLost((lostInterval << 8) / (double) expectedInterval);
+        }
 
-        long received_interval = noOfRTPPacketsRcvd - received_prior;
-        received_prior = noOfRTPPacketsRcvd;
+        // TODO : Calculate jitter
+        report.setInterarrivalJitter(0);
 
-        long lost_interval = expected_interval - received_interval;
-
-        if (expected_interval == 0 || lost_interval <= 0)
-            fraction = 0;
-        else
-            fraction = (lost_interval << 8) / (double) expected_interval;
-
-        // dlsr - express it in units of 1/65336 seconds
-        dlsr = (timeofLastSRRcvd - currentTime()) / 65536;
-
-        return 0;
+        report.setLastSenderReport(lastSenderReport);
+        report.setSsrc(ssrc);
     }
 
     /**
-     * Returns current time from the Date().getTime() function.
+     * Set the Source description
      *
-     * @return The current time.
+     * @param ssrc
      */
-    private static long currentTime() {
-        return (long)((new Date()).getTime());
+    public void setSsrc(int ssrc) {
+        this.ssrc = ssrc;
+    }
+
+    /**
+     * Initiate sequence. RFC 3550
+     *
+     * @param sequenceNumber
+     */
+    private void initSeq(int sequenceNumber) {
+        baseSeq = sequenceNumber;
+        maxSeq = sequenceNumber;
+        badSeq = RTP_SEQ_MOD + 1; // so seq == bad_seq is false
+        cycles = 0;
+        received = 0;
+        receivedPrior = 0;
+        expectedPrior = 0;
+    }
+
+    /**
+     * Ensures that a source is declared valid only after MIN_SEQUENTIAL packets
+     * have been received in sequence.It also validates the sequence number seq
+     * of a newly received packet and updates the sequence state.
+     *
+     * Algorithm in the RFC 3550 (Appendix A.1)
+     *
+     * @param seq Sequence Number
+     */
+    private int updateSeq(int seq) {
+        long udelta = seq - maxSeq;
+
+        // Source is not valid until MIN_SEQUENTIAL packets with sequential
+        // sequence numbers have been received.
+        if (probation > 0) {
+            if (seq == maxSeq + 1) {
+                probation--;
+                maxSeq = seq;
+                if (probation == 0) {
+                    initSeq(seq);
+                    received++;
+                    return 1;
+                }
+            } else {
+                probation = MIN_SEQUENCIAL - 1;
+                maxSeq = seq;
+                return 1;
+            }
+            return 0;
+        } else if (udelta < MAX_DROPOUT) {
+            // in order, with permissible gap
+            if (seq < maxSeq && (udelta >= (MAX_MISORDER * -1))) {
+                // late packet within interval
+                received++;
+                return 1;
+            }
+
+            if (seq < maxSeq) {
+                // Sequence number wrapped - count another 64K cycle.
+                cycles++;
+            }
+            maxSeq = seq;
+        } else if (udelta <= RTP_SEQ_MOD - MAX_MISORDER) {
+            // the sequence number made a very large jump
+            if (seq == badSeq) {
+                // Two sequential packets -- assume that the other side
+                // restarted without telling us so just re-sync
+                // (i.e., pretend this was the first packet).
+                initSeq(seq);
+            } else {
+                badSeq = (seq + 1) & (RTP_SEQ_MOD - 1);
+                return 0;
+            }
+        } else {
+            // duplicate or reordered packet
+        }
+        received++;
+        return 1;
+    }
+
+    /**
+     * Return the extended sequence number for a source considering that
+     * sequences cycle.
+     *
+     * @return Extended sequence number
+     */
+    private int getExtendedSequenceNumber() {
+        return generateExtendedSequenceNumber(maxSeq);
     }
 }

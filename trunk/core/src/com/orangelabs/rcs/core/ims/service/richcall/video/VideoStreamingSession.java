@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
+import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -42,6 +43,11 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
 	 * Media renderer
 	 */
 	private IMediaRenderer renderer = null;
+
+    /**
+     * Media renderer
+     */
+    private IMediaPlayer player = null;
 
     /**
      * The logger
@@ -76,7 +82,25 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
 	public void setMediaRenderer(IMediaRenderer renderer) {
 		this.renderer = renderer;
 	}
-	
+
+    /**
+     * Get the media player
+     * 
+     * @return Player
+     */
+    public IMediaPlayer getMediaPlayer() {
+        return player;
+    }
+
+    /**
+     * Set the media player
+     *
+     * @param IMediaPlayer
+     */
+    public void setMediaPlayer(IMediaPlayer player) {
+        this.player = player;
+    }
+
 	/**
 	 * Receive BYE request 
 	 * 
@@ -118,6 +142,9 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
         // Remove the current session
         getImsService().removeSession(this);
 
+        // Request capabilities to the remote
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
         // Notify listeners
         if (!isInterrupted()) {
             for (int i = 0; i < getListeners().size(); i++) {
@@ -151,6 +178,25 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
         public void mediaOpened() {
             if (logger.isActivated()) {
                 logger.debug("Media renderer is opened");
+            }
+        }
+
+        /**
+         * The size of media has changed
+         *
+         * @param width
+         * @param height
+         */
+        public void mediaResized(int width, int height) {
+            if (logger.isActivated()) {
+                logger.debug("The size of media has changed " + width + "x" + height);
+            }
+            // Notify listeners
+            if (!isInterrupted()) {
+                for (int i = 0; i < getListeners().size(); i++) {
+                    ((VideoStreamingSessionListener) getListeners().get(i))
+                            .handleMediaResized(width, height);
+                }
             }
         }
 

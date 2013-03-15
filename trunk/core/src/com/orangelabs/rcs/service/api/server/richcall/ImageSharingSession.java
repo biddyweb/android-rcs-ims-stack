@@ -118,14 +118,10 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
     /**
      * Get file thumbnail
      * 
-     * @return String
+     * @return Thumbnail
      */
-    public String getFileThumbnail() {
-        if (logger.isActivated()) {
-            logger.info("getFileThumbnail not yet implemented");
-        }
-        // TODO NOT YET IMPLEMENTED
-        return null;
+    public byte[] getFileThumbnail() {
+        return session.getThumbnail();
     }
 
 	/**

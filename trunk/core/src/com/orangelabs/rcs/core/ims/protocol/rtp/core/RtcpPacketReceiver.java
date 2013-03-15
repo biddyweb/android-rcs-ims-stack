@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.core;
 
-
-
-
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpApplicationEvent;
 import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpByeEvent;
 import com.orangelabs.rcs.core.ims.protocol.rtp.event.RtcpEvent;
@@ -37,6 +33,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Vector;
 
 /**
@@ -65,6 +62,11 @@ public class RtcpPacketReceiver extends Thread {
      */
     private RtcpSession rtcpSession = null;
 
+    /**
+     * Signals that thread is interrupted
+     */
+    private boolean isInterrupted = false;
+
 	/**
 	 * The logger
 	 */
@@ -73,23 +75,35 @@ public class RtcpPacketReceiver extends Thread {
     /**
      * Constructor
      *
-     * @param port Listenning port
+     * @param port Listening port
      * @param rtcpSession the RTCP session
+     * @param socketTimeout
      * @throws IOException
      */
-    public RtcpPacketReceiver(int port, RtcpSession rtcpSession) throws IOException {
+    public RtcpPacketReceiver(int port, RtcpSession rtcpSession, int socketTimeout) throws IOException {
         super();
 
         this.rtcpSession = rtcpSession;
 
 		// Create the UDP server
-		datagramConnection = NetworkFactory.getFactory().createDatagramConnection();
+        datagramConnection = NetworkFactory.getFactory().createDatagramConnection(socketTimeout);
 		datagramConnection.open(port);
-		
-		if (logger.isActivated()) {	 
-			logger.debug("RTCP receiver created at port " + port);	 
-        }		
+
+		if (logger.isActivated()) {
+			logger.debug("RTCP receiver created at port " + port);
+        }
 	}
+
+    /**
+     * Constructor
+     *
+     * @param port Listening port
+     * @param rtcpSession the RTCP session
+     * @throws IOException
+     */
+    public RtcpPacketReceiver(int port, RtcpSession rtcpSession) throws IOException {
+        this(port, rtcpSession, 0);
+    }
 
 	/**
      * Close the receiver
@@ -97,8 +111,9 @@ public class RtcpPacketReceiver extends Thread {
      * @throws IOException
      */
 	public void close() throws IOException {
-		// Interrup the current thread processing
+		// Interrupt the current thread processing
 		try {
+            isInterrupted = true;
 			interrupt();
 		} catch(Exception e) {}
 
@@ -128,10 +143,17 @@ public class RtcpPacketReceiver extends Thread {
 		        // Process the received packet
 				handlePacket(packet);
 			}
+        } catch (SocketTimeoutException ex) {
+            if (logger.isActivated()) {
+                logger.error("RTCP Packet receiver socket error", ex);
+            }
+            notifyRtcpListenersOfTimeout();
 		} catch (Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Datagram socket server failed", e);
-			}
+            if (!isInterrupted) {
+                if (logger.isActivated()) {
+                    logger.error("Datagram socket server failed", e);
+                }
+            }
 		}
 	}
 
@@ -240,8 +262,9 @@ public class RtcpPacketReceiver extends Thread {
 						srp.reports = new RtcpReport[firstbyte];
 
                         RtpSource sourceSR = rtcpSession.getMySource();
-                        if (sourceSR != null)
-                            sourceSR.timeOfLastRTCPArrival = rtcpSession.currentTime();
+                        if (sourceSR != null) {
+                            sourceSR.receivedSenderReport(srp);
+                        }
 
 						for (int i = 0; i < srp.reports.length; i++) {
 							RtcpReport report = new RtcpReport();
@@ -274,10 +297,6 @@ public class RtcpPacketReceiver extends Thread {
 						subpacket = rrp;
 						rrp.ssrc = in.readInt();
 						rrp.reports = new RtcpReport[firstbyte];
-
-                        RtpSource sourceRR = rtcpSession.getMySource();
-                        if (sourceRR != null)
-                            sourceRR.timeOfLastRTCPArrival = rtcpSession.currentTime();
 
 						for (int i = 0; i < rrp.reports.length; i++) {
 							RtcpReport report = new RtcpReport();
@@ -493,6 +512,18 @@ public class RtcpPacketReceiver extends Thread {
 			listener.receiveRtcpEvent(event);
 		}
 	}
+
+    /**
+     * Notify timeout on RTCP listener
+     */
+    private void notifyRtcpListenersOfTimeout() {
+        for (RtcpEventListener listener : listeners) {
+            if (logger.isActivated()) {
+                logger.debug("RTCP connection timeout");
+            }
+            listener.connectionTimeout();
+        }
+    }
 
     /**
      * Returns the statistics of RTCP reception

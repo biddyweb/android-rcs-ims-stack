@@ -37,6 +37,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -319,7 +320,7 @@ public class RichMessaging {
 		if (geoloc.isImdnDisplayedRequested()){
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
-		String geolocData = GeolocMessage.formatGeolocToStr(geoloc.getGeoloc());
+		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
 		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(),
 				geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
 				geolocData.length(), geoloc.getDate(), status);
@@ -339,7 +340,7 @@ public class RichMessaging {
 		} else {
 			type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		}
-		String geolocData = GeolocMessage.formatGeolocToStr(geoloc.getGeoloc());
+		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
 		addEntry(type, session.getSessionID(), session.getContributionID(),
 				geoloc.getMessageId(), geoloc.getRemote(), geolocData,
 				GeolocMessage.MIME_TYPE, geoloc.getRemote(),

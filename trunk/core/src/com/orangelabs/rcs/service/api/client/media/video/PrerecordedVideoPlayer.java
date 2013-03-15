@@ -28,6 +28,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
@@ -50,7 +51,7 @@ import java.util.Vector;
  * 
  * @author jexa7410
  */
-public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
+public class PrerecordedVideoPlayer extends IMediaPlayer.Stub implements RtpStreamListener {
 
     /**
      * List of supported video codecs
@@ -145,6 +146,11 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
      * Temporary connection to reserve the port
      */
     private DatagramConnection temporaryConnection = null;
+
+    /**
+     * Extension header ID
+     */
+    private int orientationHeaderId;
 
     /**
      * The logger
@@ -360,7 +366,7 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
             rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            rtpSender.prepareSession(rtpInput, remoteHost, remotePort);
+            rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -488,6 +494,15 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
     }
 
     /**
+     * Set extension header orientation id
+     *
+     * @param headerId extension header orientation id
+     */
+    public void setOrientationHeaderId(int headerId) {
+        this.orientationHeaderId = headerId;
+    }
+
+    /**
      * Set media codec
      * 
      * @param mediaCodec Media codec
@@ -499,6 +514,13 @@ public class PrerecordedVideoPlayer extends IMediaPlayer.Stub {
         } else {
             notifyPlayerEventError("Codec not supported");
         }
+    }
+
+    /**
+     * Notify RTP aborted
+     */
+    public void rtpStreamAborted() {
+        notifyPlayerEventError("RTP session aborted");
     }
 
     /**

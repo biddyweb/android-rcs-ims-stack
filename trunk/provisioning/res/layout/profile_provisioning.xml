@@ -289,5 +289,12 @@
 	    android:textStyle="bold"
 		android:enabled="true"
         android:text="Geolocation push" />
+		
+		<CheckBox android:id="@+id/file_transfer_thumbnail"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+        android:textStyle="bold"
+		android:enabled="true"
+        android:text="File transfer thumbnail" />
 </LinearLayout>
 </ScrollView>

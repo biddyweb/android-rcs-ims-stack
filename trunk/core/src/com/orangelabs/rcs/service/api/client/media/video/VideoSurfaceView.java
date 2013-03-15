@@ -30,7 +30,7 @@ import android.view.SurfaceView;
  * 
  * @author jexa7410
  */
-public class VideoSurfaceView extends SurfaceView {    
+public class VideoSurfaceView extends SurfaceView implements VideoSurface {
 	/**
      * No aspect ratio
      */

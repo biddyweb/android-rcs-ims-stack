@@ -39,20 +39,35 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	 * Internal buffer
 	 */
 	private byte[] buf = new byte[DatagramConnection.DEFAULT_DATAGRAM_SIZE];
-	
+
+    /**
+     * Connection timeout
+     */
+    private int timeout = 0;
+
 	/**
 	 * Constructor
 	 */
 	public AndroidDatagramConnection() {
 	}
 
+    /**
+     * Constructor
+     *
+     * @param timeout SO Timeout
+     */
+    public AndroidDatagramConnection(int timeout) {
+        this.timeout = timeout;
+    }
+
 	/**
 	 * Open the datagram connection
-	 * 
+	 *
 	 * @throws IOException
 	 */
 	public void open() throws IOException {
 		connection = new DatagramSocket();
+        connection.setSoTimeout(timeout);
 	}
 
 	/**
@@ -63,6 +78,7 @@ public class AndroidDatagramConnection implements DatagramConnection {
 	 */
 	public void open(int port) throws IOException {
 		connection = new DatagramSocket(port);
+        connection.setSoTimeout(timeout);
 	}
 
 	/**

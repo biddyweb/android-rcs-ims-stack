@@ -20,13 +20,18 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
 
 
+import java.net.SocketTimeoutException;
+
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
+import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpExtensionHeader.ExtensionElement;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacket;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -35,6 +40,12 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class RtpInputStream implements ProcessorInputStream {
+    /**
+     * RTP Socket Timeout
+     * Used a 20s timeout value because the RTP packets can have a delay
+     */
+    private static final int RTP_SOCKET_TIMEOUT = 20000;
+
     /**
      * Remote address
      */
@@ -80,6 +91,16 @@ public class RtpInputStream implements ProcessorInputStream {
      */
     private RtcpSession rtcpSession = null;
 
+    /**
+     * RTP stream listener
+     */
+    private RtpStreamListener rtpStreamListener;
+
+    /**
+     * The negotiated orientation extension header id
+     */
+    private int extensionHeaderId = VideoSdpBuilder.DEFAULT_EXTENSION_ID;
+
 	/**
 	 * The logger
 	 */
@@ -107,8 +128,8 @@ public class RtpInputStream implements ProcessorInputStream {
      */
     public void open() throws Exception {
     	// Create the RTP receiver
-        rtpReceiver = new RtpPacketReceiver(localPort, rtcpSession);
-        
+        rtpReceiver = new RtpPacketReceiver(localPort, rtcpSession, RTP_SOCKET_TIMEOUT);
+
     	// Create the RTCP receiver
         rtcpReceiver = new RtcpPacketReceiver(localPort + 1, rtcpSession);
         rtcpReceiver.start();
@@ -171,23 +192,59 @@ public class RtpInputStream implements ProcessorInputStream {
      * @throws Exception
      */
     public Buffer read() throws Exception {
-    	// Wait and read a RTP packet
-    	RtpPacket rtpPacket = rtpReceiver.readRtpPacket();
-    	if (rtpPacket == null) {
-    		return null;
-    	}
+        try {
+        	// Wait and read a RTP packet
+        	RtpPacket rtpPacket = rtpReceiver.readRtpPacket();
+        	if (rtpPacket == null) {
+        		return null;
+        	}
+    
+        	// Create a buffer
+            buffer.setData(rtpPacket.data);
+            buffer.setLength(rtpPacket.payloadlength);
+            buffer.setOffset(0);
+            buffer.setFormat(inputFormat);
+        	buffer.setSequenceNumber(rtpPacket.seqnum);
+        	buffer.setRTPMarker(rtpPacket.marker!=0);
+        	buffer.setTimeStamp(rtpPacket.timestamp);
 
-    	// Create a buffer
-        buffer.setData(rtpPacket.data);
-        buffer.setLength(rtpPacket.payloadlength);
-        buffer.setOffset(0);
-        buffer.setFormat(inputFormat);
-    	buffer.setSequenceNumber(rtpPacket.seqnum);
-    	buffer.setRTPMarker(rtpPacket.marker!=0);
-    	buffer.setTimeStamp(rtpPacket.timestamp);
+            if (rtpPacket.extensionHeader != null) {
+                ExtensionElement element = rtpPacket.extensionHeader.getElementById(extensionHeaderId);
+                if (element != null) {
+                    buffer.setVideoOrientation(VideoOrientation.parse(element.data[0]));
+                }
+            }
 
-    	// Set inputFormat back to null
-    	inputFormat = null;
-    	return buffer;
+        	// Set inputFormat back to null
+        	inputFormat = null;
+        	return buffer;
+        } catch (SocketTimeoutException ex) {
+            if (logger.isActivated()) {
+                logger.error("RTP Packet receiver socket error", ex);
+            }
+            if (rtpStreamListener != null) {
+                rtpStreamListener.rtpStreamAborted();
+            }
+            return null;
+        }
     }
+
+    /**
+     * Adds the RTP stream listener
+     *
+     * @param rtpStreamListener
+     */
+    public void addRtpStreamListener(RtpStreamListener rtpStreamListener) {
+        this.rtpStreamListener = rtpStreamListener;
+    }
+
+    /**
+     * Sets the negotiated orientation extension header id
+     *
+     * @param extensionHeaderId Header id
+     */
+    public void setExtensionHeaderId(int extensionHeaderId) {
+        this.extensionHeaderId = extensionHeaderId;
+    }
+
 }

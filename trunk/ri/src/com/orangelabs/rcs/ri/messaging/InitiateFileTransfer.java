@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -29,12 +25,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Data;
@@ -46,6 +40,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -57,6 +52,7 @@ import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
@@ -97,6 +93,11 @@ public class InitiateFileTransfer extends Activity {
 	 */
     private MessagingApi messagingApi;
     
+	/**
+	 * Contact API
+	 */
+    private ContactsApi contactsApi;
+    
     /**
      * File transfer session
      */
@@ -135,10 +136,19 @@ public class InitiateFileTransfer extends Activity {
         if (spinner.getAdapter().getCount() == 0) {
         	selectBtn.setEnabled(false);
         }
+        	        
+        // Disable thumbnail option if not supported
+        CheckBox ftThumb = (CheckBox)findViewById(R.id.ft_thumb);
+        if (!RcsSettings.getInstance().isFileTransferThumbnailSupported()) {
+        	ftThumb.setEnabled(false);
+        }        	
 
-    	// Instanciate messaging API
+        // Instanciate messaging API
         messagingApi = new MessagingApi(getApplicationContext());
         messagingApi.connectApi();
+        
+        // Instantiate contact API
+        contactsApi = new ContactsApi(getApplicationContext());
         
         // Select the corresponding contact from the intent
         Intent intent = getIntent();
@@ -211,13 +221,17 @@ public class InitiateFileTransfer extends Activity {
         Spinner spinner = (Spinner)findViewById(R.id.contact);
         MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
         final String remote = cursor.getString(1);
-        
+
+        // Get thumbnail option
+        CheckBox ftThumb = (CheckBox)findViewById(R.id.ft_thumb);
+        final boolean thumbnail = ftThumb.isChecked();
+
         // Initiate session in background
         Thread thread = new Thread() {
         	public void run() {
             	try {
-                    // Initiate transfer
-            		transferSession = messagingApi.transferFile(remote, filename);
+            		// Initiate transfer
+            		transferSession = messagingApi.transferFile(remote, filename, thumbnail);
         	        transferSession.addSessionListener(cshSessionListener);
             	} catch(Exception e) {
 					handler.post(new Runnable(){
@@ -239,6 +253,10 @@ public class InitiateFileTransfer extends Activity {
 			}
 		});            
 
+        // Disable UI
+        spinner.setEnabled(false);
+        ftThumb.setEnabled(false);
+
         // Hide buttons
         Button inviteBtn = (Button)findViewById(R.id.invite_btn);
     	inviteBtn.setVisibility(View.INVISIBLE);
@@ -254,7 +272,7 @@ public class InitiateFileTransfer extends Activity {
         	startDialog();
         }
     };
-
+    
     /**
      * Display a alert dialog to select the kind of file to transfer
      */
@@ -299,48 +317,11 @@ public class InitiateFileTransfer extends Activity {
     	switch(requestCode) {
 	    	case SELECT_CONTACTS: {
 	    		if ((data != null) && (data.getData() != null)) {
-	
-	    			// Get selected photo URI
+	    			// Get selected visit card URI
 	    			Uri uri = data.getData();
-	
-	    			// Get image filename
-	    			Cursor cursor = getContentResolver().query(uri, null, null, null, null); 
-	    			while(cursor.moveToNext()) {
-	    				// Get Name
-	    				String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-	
-	    				String lookupKey = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-	
-	    				Uri vCardUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
-	
-	    				AssetFileDescriptor fd;
-	
-	    				try {
-	    					fd = getContentResolver().openAssetFileDescriptor(vCardUri, "r");
-	    					FileInputStream fis = fd.createInputStream();
-	    					byte[] buf = new byte[(int) fd.getDeclaredLength()];
-	    					fis.read(buf);
-	    					String Vcard = new String(buf);
-	
-	    					filename = Environment.getExternalStorageDirectory().toString() + File.separator + name + ".vcf";
-	
-	    					File vCardFile = new File(filename);
-	
-	    					if (vCardFile.exists()) 
-	    						vCardFile.delete();
-	
-	    					FileOutputStream mFileOutputStream = new FileOutputStream(vCardFile, true);
-	    					mFileOutputStream.write(Vcard.toString().getBytes());
-	    					mFileOutputStream.close();                    		                    
-	
-	    					filesize = vCardFile.length();
-	
-	    				} catch (Exception e) {
-	    					e.printStackTrace();
-	    				}
-	
-	    			}
-	    			cursor.close();     
+	    			
+	    			// Get vCard filename
+	    			filename = contactsApi.getVisitCard(uri);
 	
 	    			// Display the selected filename attribute
 	    			TextView uriEdit = (TextView)findViewById(R.id.uri);
@@ -363,8 +344,8 @@ public class InitiateFileTransfer extends Activity {
 	    			Cursor cursor = getContentResolver().query(uri, new String[] {MediaStore.Images.ImageColumns.DATA}, null, null, null); 
 	    			cursor.moveToFirst();
 	    			filename = cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
-	    			cursor.close();     
-	
+	    			cursor.close();     	    		
+	    			
 	    			// Display the selected filename attribute
 	    			TextView uriEdit = (TextView)findViewById(R.id.uri);
 	    			try {
@@ -565,4 +546,4 @@ public class InitiateFileTransfer extends Activity {
 		}
 		return true;
 	}
-}    
+}

@@ -39,6 +39,7 @@ import javax2.sip.header.ToHeader;
 import javax2.sip.header.ViaHeader;
 import javax2.sip.message.Message;
 
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -232,6 +233,34 @@ public abstract class SipMessage {
 		byte[] content = stackMessage.getRawContent();
 		if (content != null) {
 			return new String(content);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Return the SDP content part
+	 * 
+	 * @return String or null
+	 */
+	public String getSdpContent() {
+		String content = getContent();
+		if (content == null) {
+			return null;
+		}
+		
+		String contentType = getContentType();
+		if (contentType == null) {
+			return null;
+		}
+
+		if (contentType.startsWith("multipart")) {
+			String boundary = getBoundaryContentType();
+			Multipart multi = new Multipart(content, boundary);
+			return multi.getPart("application/sdp"); 
+		} else
+		if (contentType.equals("application/sdp")) {
+			return content;
 		} else {
 			return null;
 		}

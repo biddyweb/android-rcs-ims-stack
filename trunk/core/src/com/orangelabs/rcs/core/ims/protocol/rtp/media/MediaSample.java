@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.media;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
+
 /**
  * Media sample
  * 
@@ -39,10 +41,34 @@ public class MediaSample {
 	 * RTP marker bit
 	 */
 	private boolean marker = false;	
-	
+
+    /**
+     * Sequence number
+     */
+    private long sequenceNumber;
+    // TODO: remove after implement receiver buffer
+
+    /**
+     * Video Orientation
+     */
+    private VideoOrientation videoOrientation;
+
+    /**
+     * Constructor
+     * 
+     * @param data Data
+     * @param time Time stamp
+     * @Param sequenceNumber Packet sequence number
+     */
+    public MediaSample(byte[] data, long time, long sequenceNumber) {
+        this.data = data;
+        this.time = time;
+        this.sequenceNumber = sequenceNumber;
+    }
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param data Data
 	 * @param time Time stamp
 	 */
@@ -103,4 +129,32 @@ public class MediaSample {
 	public boolean isMarker() {
 		return marker;
 	}
+
+    /**
+     * Gets the video orientation
+     *
+     * @return VideoOrientation
+     */
+    public VideoOrientation getVideoOrientation() {
+        return videoOrientation;
+    }
+
+    /**
+     * Sets the video orientation
+     *
+     * @param videoOrientation VideoOrientation
+     */
+    public void setVideoOrientation(VideoOrientation orientation) {
+        this.videoOrientation = orientation;
+    }
+
+    /**
+     * Get the sequence number
+     *
+     * @return sequence number
+     */
+    public long getSequenceNumber() {
+        return this.sequenceNumber;
+    }
+
 }

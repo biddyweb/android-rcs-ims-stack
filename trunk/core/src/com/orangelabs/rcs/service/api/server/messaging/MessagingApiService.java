@@ -40,6 +40,7 @@ import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
@@ -171,7 +172,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		
 		// Update rich messaging history
     	RichMessaging.getInstance().addIncomingFileTransfer(number, chatSessionId, ftSessionId, session.getContent());
-    	
+
 		// Add session in the list
 		FileTransferSession sessionApi = new FileTransferSession(session);
 		MessagingApiService.addFileTransferSession(sessionApi);
@@ -187,8 +188,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
     	intent.putExtra("filetype", session.getContent().getEncoding());
+    	intent.putExtra("thumbnail", session.getThumbnail());
     	intent.putExtra("autoAccept", RcsSettings.getInstance().isFileTransferAutoAccepted());
-    	AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    	AndroidFactory.getApplicationContext().sendBroadcast(intent);    	
     }
 	
 	/**
@@ -196,10 +198,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
      *
      * @param contact Contact
      * @param file File to be transfered
-     * @param File transfer session
+     * @param thumbnail Thumbnail option
+     * @return File transfer session
      * @throws ServerApiException
      */
-    public IFileTransferSession transferFile(String contact, String file) throws ServerApiException {
+    public IFileTransferSession transferFile(String contact, String file, boolean thumbnail) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Transfer file " + file + " to " + contact);
 		}
@@ -214,7 +217,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content);
+			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail);
 
 			// Set the file transfer session ID from the chat session if a chat already exist
 			String ftSessionId = session.getSessionID();
@@ -242,10 +245,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
      *
      * @param contacts List of contacts
      * @param file File to be transfered
+     * @param thumbnail Thumbnail option
      * @return File transfer session
      * @throws ClientApiException
      */
-    public IFileTransferSession transferFileToGroup(List<String> contacts, String file) throws ServerApiException {
+    public IFileTransferSession transferFileToGroup(List<String> contacts, String file, boolean thumbnail) throws ServerApiException {
         if (logger.isActivated()) {
             logger.info("Transfer file " + file + " to " + contacts.size() + " contacts");
         }
