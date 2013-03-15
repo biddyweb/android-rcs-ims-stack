@@ -30,6 +30,9 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -93,6 +96,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     private boolean autoAccept = false;
     
     /**
+     * File thumbnail
+     */
+    private byte[] thumbnail;
+    
+    /**
      * File transfer session
      */
     private IFileTransferSession transferSession = null;
@@ -110,8 +118,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		remoteContact = getIntent().getStringExtra("contact");
 		fileSize = getIntent().getLongExtra("filesize", -1);
 		fileType = getIntent().getStringExtra("filetype");
+		thumbnail = getIntent().getByteArrayExtra("thumbnail");
 		autoAccept = getIntent().getBooleanExtra("autoAccept", false);
-
+		
 		// Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
         
@@ -217,14 +226,22 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				builder.setTitle(R.string.title_recv_file_transfer);
 				builder.setMessage(getString(R.string.label_from) +	remoteContact +	"\n" + size);
 				builder.setCancelable(false);
-				builder.setIcon(R.drawable.ri_notif_file_transfer_icon);
+				if (thumbnail != null) {
+					Bitmap bitmap = BitmapFactory.decodeByteArray(thumbnail, 0, thumbnail.length);
+					builder.setIcon(new BitmapDrawable(bitmap));
+	    		} else
+	    		if (fileType.equals("text/vcard")) {
+					builder.setIcon(R.drawable.ri_contact_card_icon);
+	    		} else {
+					builder.setIcon(R.drawable.ri_file_transfer_icon);
+	    		}
 				builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
 				builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 				builder.show();
 			}
 		} catch(Exception e) {
 			handler.post(new Runnable(){
-				public void run(){
+				public void run(){					
 					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
 				}
 			});
@@ -267,8 +284,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * Accept button listener
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
-        public void onClick(DialogInterface dialog, int which) {
-	    	// Accept invitation
+        public void onClick(DialogInterface dialog, int which) {     
+        	  	
+        	// Accept invitation
         	acceptInvitation();
         }
     };
@@ -278,6 +296,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */    
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
+        	
         	// Reject invitation
         	rejectInvitation();
         	
@@ -352,7 +371,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 					// Make sure progress bar is at the end
 			        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progress_bar);
 			        progressBar.setProgress(progressBar.getMax());
-			        
+
 			        if (fileType.equals("text/vcard")) {
 			        	// Show the transfered vCard
 			        	File file = new File(filename);
@@ -498,5 +517,5 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				break;
 		}
 		return true;
-	}            
+	}     
 }

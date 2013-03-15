@@ -42,11 +42,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class OriginatingVideoStreamingSession extends VideoStreamingSession {
     /**
-     * Media player
-     */
-    private IMediaPlayer player = null;
-
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -67,7 +62,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
         createOriginatingDialogPath();
 
         // Set the media player
-        this.player = player;
+        setMediaPlayer(player);
     }
 
     /**
@@ -80,7 +75,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
             }
 
             // Check player 
-            if ((player == null) || (player.getMediaCodec() == null)) {
+            if ((getMediaPlayer() == null) || (getMediaPlayer().getMediaCodec() == null)) {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE,
                         "Video codec not selected"));
                 return;
@@ -89,7 +84,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            String videoSdp = VideoCodecManager.createCodecSdpPart(player.getSupportedMediaCodecs(), player.getLocalRtpPort());
+            String videoSdp = VideoSdpBuilder.buildSdpWithOrientationExtension(getMediaPlayer().getSupportedMediaCodecs(), getMediaPlayer().getLocalRtpPort());
 	    	String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -146,7 +141,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
 
         // Codec negotiation
         VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                player.getSupportedMediaCodecs(), proposedCodecs);
+                getMediaPlayer().getSupportedMediaCodecs(), proposedCodecs);
         if (selectedVideoCodec == null) {
             if (logger.isActivated()) {
                 logger.debug("Proposed codecs are not supported");
@@ -162,13 +157,19 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
         getContent().setEncoding("video/" + selectedVideoCodec.getCodecName());
 
         // Set the selected media codec
-        player.setMediaCodec(selectedVideoCodec.getMediaCodec());
+        getMediaPlayer().setMediaCodec(selectedVideoCodec.getMediaCodec());
+
+        // Set the OrientationHeaderID
+        SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
+        if (extensionHeader != null) {
+            getMediaPlayer().setOrientationHeaderId(extensionHeader.getExtensionId());
+        }
 
         // Set media player event listener
-        player.addListener(new MediaPlayerEventListener(this));
+        getMediaPlayer().addListener(new MediaPlayerEventListener(this));
 
         // Open the media player
-        player.open(remoteHost, remotePort);
+        getMediaPlayer().open(remoteHost, remotePort);
     }
 
     /**
@@ -178,7 +179,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
      */
     public void startMediaSession() throws Exception {
         // Start the media player
-        player.start();
+        getMediaPlayer().start();
     }
 
 
@@ -188,9 +189,9 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
     public void closeMediaSession() {
         try {
             // Close the media player
-            if (player != null) {
-                player.stop();
-                player.close();
+            if (getMediaPlayer() != null) {
+                getMediaPlayer().stop();
+                getMediaPlayer().close();
             }
         } catch(Exception e) {
             if (logger.isActivated()) {

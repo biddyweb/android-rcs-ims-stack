@@ -49,6 +49,9 @@ public class MimeManager {
     	
     	// Visit Card type
     	mimeTable.put("vcf", "text/vcard");
+    	
+    	// Geoloc type
+    	mimeTable.put("xml", "application/vnd.gsma.rcspushlocation+xml");
     }    
     
     /**
@@ -205,5 +208,33 @@ public class MimeManager {
     	} else {
     		return false;
     	}
+    }
+
+    /**
+     * Is a VCard type
+     * 
+     * @param mime MIME type
+     * @return Boolean
+     */
+    public static boolean isVCardType(String mime) {
+    	if (mime.toLowerCase().equalsIgnoreCase("text/vcard")) {
+    		return true;
+    	} else {
+    		return false;
+    	}
     }    
+    
+    /**
+     * Is a geoloc type
+     * 
+     * @param mime MIME type
+     * @return Boolean
+     */
+    public static boolean isGeolocType(String mime) {
+    	if (mime.toLowerCase().equalsIgnoreCase("application/vnd.gsma.rcspushlocation+xml")) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
 }

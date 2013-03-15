@@ -18,6 +18,9 @@
 
 package com.orangelabs.rcs.service.api.client.messaging;
 
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -54,6 +57,11 @@ public class GeolocPush implements Parcelable {
     private long expiration;
     
     /**
+     * Accuracy (in meters)
+     */
+    private float accuracy = 0;
+
+    /**
      * Constructor
      *
      * @param label Label
@@ -73,6 +81,22 @@ public class GeolocPush implements Parcelable {
     /**
      * Constructor
      *
+     * @param label Label
+     * @param latitude Latitude
+     * @param longitude Longitude
+     * @param altitude Altitude
+     * @param expiration Expiration date
+     * @param accuracy Accuracy 
+     */
+    public GeolocPush(String label, double latitude, double longitude, double altitude, long expiration, float accuracy) {
+    	this(label, latitude, longitude, altitude, expiration);
+    	
+        this.accuracy = accuracy;
+    }
+    
+    /**
+     * Constructor
+     *
      * @param source Parcelable source
      */
     public GeolocPush(Parcel source) {
@@ -81,6 +105,7 @@ public class GeolocPush implements Parcelable {
     	this.longitude = source.readDouble();     	    	                                              
     	this.altitude = source.readDouble(); 
     	this.expiration = source.readLong(); 
+    	this.accuracy = source.readFloat(); 
     }
 
     /**
@@ -105,6 +130,7 @@ public class GeolocPush implements Parcelable {
         dest.writeDouble(longitude);
     	dest.writeDouble(altitude);
     	dest.writeLong(expiration);
+    	dest.writeFloat(accuracy);
     }
 
     /**
@@ -126,7 +152,7 @@ public class GeolocPush implements Parcelable {
      * @return Label
      */
     public String getLabel() {
-        return label;
+		return label;
     }
 
     /**
@@ -211,6 +237,24 @@ public class GeolocPush implements Parcelable {
     }
  
     /**
+     * Returns the accuracy
+     *
+     * @return Accuracy in meters
+     */
+    public float getAccuracy() {
+        return accuracy;
+    }
+ 
+    /**
+     * Set the accuracy
+     *
+     * @param accuracy Accuracy
+     */
+    public void setAcuracy(float accuracy) {
+        this.accuracy = accuracy;
+    }
+    
+    /**
      * Returns a string representation of the object
      *
      * @return String
@@ -220,6 +264,52 @@ public class GeolocPush implements Parcelable {
                 ", Latitude=" + latitude +
                 ", Longitude=" + longitude +
                 ", Altitude=" + altitude +
-        		", Expiration=" + expiration;
+        		", Expiration=" + expiration +
+        		", Accuracy=" + accuracy;
     }
+
+	/** 
+     * Format geoloc object to string
+     * 
+     * @param geoloc Geoloc object
+     * @return String
+     */
+    public static String formatGeolocToStr(GeolocPush geoloc) {
+    	String label = geoloc.getLabel();
+    	if (label == null) {
+    		label = "";
+    	}
+    	return label + "," +
+    		geoloc.getLatitude() + "," +
+    		geoloc.getLongitude() + "," +
+    		geoloc.getAltitude() + "," +
+    		geoloc.getExpiration() + "," +
+    		geoloc.getAccuracy();
+    }
+
+    /** 
+     * Format string to geoloc object
+     * 
+     * @param str String
+     * @return Geoloc object
+     */
+    public static GeolocPush formatStrToGeoloc(String str) {
+    	try {
+	    	StringTokenizer items = new StringTokenizer(str, ",");
+	    	String label = null;
+	    	if (items.countTokens() > 5) {
+	    		label = items.nextToken();
+	    	}
+			double latitude = Double.valueOf(items.nextToken());					
+			double longitude = Double.valueOf(items.nextToken());
+			double altitude = Double.valueOf(items.nextToken());
+			long expiration = Long.valueOf(items.nextToken());
+			float accuracy =  Float.valueOf(items.nextToken());
+			return new GeolocPush(label, latitude, longitude, altitude, expiration, accuracy);
+    	} catch(NoSuchElementException e) {
+    		return null;
+    	} catch(NumberFormatException e) {
+    		return null;
+    	}
+    }	
 }

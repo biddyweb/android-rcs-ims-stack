@@ -101,9 +101,22 @@ public class MessagingApi extends ClientApi {
      * @throws ClientApiException
      */
     public IFileTransferSession transferFile(String contact, String file) throws ClientApiException {	
+        return transferFile(contact, file, false);	
+    }
+    
+    /**
+     * Transfer a file
+     *
+     * @param contact Contact
+     * @param file File to be transfered
+     * @param thumbnail Thumbnail option
+	 * @return File transfer session
+     * @throws ClientApiException
+     */
+    public IFileTransferSession transferFile(String contact, String file, boolean thumbnail) throws ClientApiException {	
     	if (coreApi != null) {
 			try {
-				IFileTransferSession session = coreApi.transferFile(contact, file);
+				IFileTransferSession session = coreApi.transferFile(contact, file, thumbnail);
 		    	return session;
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
@@ -122,9 +135,22 @@ public class MessagingApi extends ClientApi {
      * @throws ClientApiException
      */
     public IFileTransferSession transferFileToGroup(List<String> contacts, String file) throws ClientApiException { 
+        return transferFileToGroup(contacts, file); 
+    }
+    
+    /**
+     * Transfer a file to a group of contacts
+     *
+     * @param contacts List of contacts
+     * @param file File to be transfered
+     * @param thumbnail Thumbnail option
+     * @return File transfer session
+     * @throws ClientApiException
+     */
+    public IFileTransferSession transferFileToGroup(List<String> contacts, String file, boolean thumbnail) throws ClientApiException { 
         if (coreApi != null) {
             try {
-                IFileTransferSession session = coreApi.transferFileToGroup(contacts, file);
+                IFileTransferSession session = coreApi.transferFileToGroup(contacts, file, thumbnail);
                 return session;
             } catch(Exception e) {
                 throw new ClientApiException(e.getMessage());

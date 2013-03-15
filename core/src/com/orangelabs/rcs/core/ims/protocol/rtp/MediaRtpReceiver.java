@@ -25,6 +25,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaRendererStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -63,15 +64,22 @@ public class MediaRtpReceiver {
     /**
      * Prepare the RTP session
      *
-     * @param renderer Media renderer
-     * @param format Media format
-     * @throws RtpException
+     * @param remoteAddress Remote address 
+     * @param remotePort Remote port
+     * @param orientationHeaderId RTP orientation extension header id 
+     * @param renderer Renderer
+     * @param format Video format
+     * @param rtpStreamListener RTP Stream listener
+     * @throws RtpException When an error occurs
      */
-    public void prepareSession(String remoteAddress, int remotePort, MediaOutput renderer, Format format)
+    public void prepareSession(String remoteAddress, int remotePort, int orientationHeaderId, 
+            MediaOutput renderer, Format format, RtpStreamListener rtpStreamListener)
             throws RtpException {
     	try {
 			// Create the input stream
             inputStream = new RtpInputStream(remoteAddress, remotePort, localPort, format);
+            inputStream.setExtensionHeaderId(orientationHeaderId);
+            inputStream.addRtpStreamListener(rtpStreamListener);
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());

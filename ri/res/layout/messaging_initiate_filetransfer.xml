@@ -15,6 +15,9 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"/>
 	
+		<CheckBox android:id="@+id/ft_thumb"			 
+         android:text="@string/label_ft_thumb" />
+        
 	    <TableRow android:paddingTop="5dip">
 	        <TextView android:text="@string/label_file"
 			 android:layout_marginLeft="5dip"
@@ -47,7 +50,7 @@
 			 android:layout_marginLeft="5dip"
 			 android:layout_marginRight="5dip"/>
 	    </TableRow>
-
+	    
 	    <TableRow android:padding="5dip"></TableRow>
 	
 		<Button android:text="@string/label_select_file"

@@ -73,6 +73,14 @@ public abstract class NetworkFactory {
 	 */
 	public abstract DatagramConnection createDatagramConnection();
 
+    /**
+     * Create a datagram connection with a specific SO timeout
+     *
+     * @param timeout SO timeout
+     * @return Datagram connection
+     */
+    public abstract DatagramConnection createDatagramConnection(int timeout);
+
 	/**
 	 * Create a socket client connection
 	 * 

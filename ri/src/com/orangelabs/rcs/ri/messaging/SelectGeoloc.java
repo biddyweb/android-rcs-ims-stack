@@ -1,7 +1,23 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright (C) 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.orangelabs.rcs.ri.messaging;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -17,12 +33,13 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
-import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.orangelabs.rcs.ri.R;
 
 /**
- * Select a geoloc from a Google map
+ * Select a geoloc from a map
+ * 
+ * @author vfml3370
  */
 public class SelectGeoloc extends MapActivity implements OnTouchListener {
 
@@ -35,14 +52,9 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 	 * GestureDetector
 	 */
 	private GestureDetector gestureDectector;
-
+	
 	/**
-	 * Map Overlay
-	 */
-	private List<Overlay> mapOverlays;
-
-	/**
-	 * GeoPoint
+	 * Geo point
 	 */
 	private GeoPoint geoPoint;
 
@@ -60,15 +72,15 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 		mapView = (MapView) findViewById(R.id.mapview);
 		mapView.setBuiltInZoomControls(true);
 		mapView.setOnTouchListener(this);
+		mapView.getController().setZoom(4);
+		
+		// Set gesture detector
 		gestureDectector = new GestureDetector(this, new LearnGestureListener());
 
 		// Clear the list of overlay
-		mapOverlays = mapView.getOverlays();
-		mapOverlays.clear();
-		
-		// Invalidate the map in order to show changes
+		mapView.getOverlays().clear();
 		mapView.invalidate();
-
+		
 		// Set button callback
 		Button selectBtn = (Button)findViewById(R.id.select_btn);
 		selectBtn.setOnClickListener(btnSelectListener);	
@@ -100,11 +112,10 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 	}
 
 	/**
-	 * Intercepts some events
-	 * @author vfml3370
-	 *
+	 * Gesture event listener
 	 */
 	private class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{ 
+		private Drawable drawable = getResources().getDrawable(R.drawable.ri_map_icon);
 
 		@Override 
 		public boolean onDoubleTap(MotionEvent ev) { 	     
@@ -117,29 +128,27 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 			// Get the latitude and the longitude
 			geoPoint = mapView.getProjection().fromPixels((int) e.getX(),(int) e.getY());
 			
-			// Remove all overlay from the list, only one marker on the map.
-			mapOverlays.removeAll(mapOverlays);		
+			// Remove all overlay from the list, only one marker on the map
+			mapView.getOverlays().removeAll(mapView.getOverlays());		
 			
-			// The Pin that will be displayed on the map
-			Drawable drawable = getResources().getDrawable(R.drawable.ri_map_icon);
-			
-			// Create and add an OverlayItem to the MyItemizedOverlay
-			OverlayItem overlayitem1 = new OverlayItem(geoPoint, "", "");
+			// Create an overlay
+			OverlayItem overlay = new OverlayItem(geoPoint, "", "");
 			MyItemizedOverlay itemizedoverlay = new MyItemizedOverlay(drawable);
-			itemizedoverlay.addOverlay(overlayitem1);
+			itemizedoverlay.addOverlay(overlay);
 			itemizedoverlay.setGestureDetector(gestureDectector);
 			
 			// Add the overlays to the map
-			mapOverlays.add(itemizedoverlay);
+			mapView.getOverlays().add(itemizedoverlay);			
 		} 
 	}
-
+	
 	/**
-	 * Overlay item
+	 * My overlay item
 	 */
 	private class MyItemizedOverlay extends ItemizedOverlay<OverlayItem>{
 
-		private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
+		private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
+		
 		private GestureDetector gestureDetector;
 
 		public MyItemizedOverlay(Drawable defaultMarker) {
@@ -148,16 +157,16 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 
 		@Override
 		protected OverlayItem createItem(int i) {
-			return mOverlays.get(i);
+			return overlays.get(i);
 		}
 
 		@Override
 		public int size() {
-			return mOverlays.size();
+			return overlays.size();
 		}
 
 		public void addOverlay(OverlayItem overlay) {
-			mOverlays.add(overlay);
+			overlays.add(overlay);
 			populate();
 		}
 		
@@ -171,5 +180,5 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 			}
 			return false;
 		}
-	}
+	}	
 }

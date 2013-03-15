@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSessionL
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.service.api.client.SessionState;
+import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
@@ -138,6 +139,18 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
 
+    /**
+     * Get the media renderer
+     *
+     * @return Media renderer
+     */
+    public IMediaRenderer getMediaRenderer() {
+        if (logger.isActivated()) {
+            logger.info("Get media renderer");
+        }
+        return session.getMediaRenderer();
+    }
+
 	/**
 	 * Set the media renderer
 	 * 
@@ -150,7 +163,31 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 		
 		session.setMediaRenderer(renderer);
 	}
-	
+
+    /**
+     * Get the media player
+     *
+     * @return Media player
+     */
+    public IMediaPlayer getMediaPlayer() {
+        if (logger.isActivated()) {
+            logger.info("Get media player");
+        }
+        return session.getMediaPlayer();
+    }
+
+    /**
+     * Set the media player
+     *
+     * @param IMediaPlayer
+     */
+    public void setMediaPlayer(IMediaPlayer player) {
+        if (logger.isActivated()) {
+            logger.info("Set a media player");
+        }
+        session.setMediaPlayer(player);
+    }
+
 	/**
 	 * Add session listener
 	 * 
@@ -297,5 +334,28 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	        // Remove session from the list
 	        RichCallApiService.removeVideoSharingSession(session.getSessionID());
 	    }
+    }
+
+    /**
+     * The size of media has changed
+     *
+     * @param width
+     * @param height
+     */
+    public void handleMediaResized(int width, int height) {
+        synchronized(lock) {
+            // Notify event listeners
+            final int N = listeners.beginBroadcast();
+            for (int i=0; i < N; i++) {
+                try {
+                    listeners.getBroadcastItem(i).handleMediaResized(width, height);
+                } catch(Exception e) {
+                    if (logger.isActivated()) {
+                        logger.error("Can't notify listener", e);
+                    }
+                }
+            }
+            listeners.finishBroadcast();
+        }
     }
 }

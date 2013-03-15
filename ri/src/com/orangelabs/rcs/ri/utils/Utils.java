@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.ri.utils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
@@ -32,12 +31,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.MatrixCursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.ri.R;
@@ -322,31 +317,15 @@ public class Utils {
         	return;
         }
         
-    	try {
-	        File file = new File(url);
-	        FileInputStream stream =  new FileInputStream(file);
-	        Bitmap bitmap = BitmapFactory.decodeStream(stream);
-	        LayoutInflater factory = LayoutInflater.from(activity);
-	        final View view = factory.inflate(R.layout.utils_show_picture, null);
-	        ImageView imgView = (ImageView)view.findViewById(R.id.picture);
-	        imgView.setImageBitmap(bitmap);        	
-	        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-	        builder.setTitle(R.string.title_picture);
-	        builder.setCancelable(false);
-	        builder.setView(view);
-	    	builder.setPositiveButton(activity.getString(R.string.label_ok), new DialogInterface.OnClickListener() {
-	    		public void onClick(DialogInterface dialog, int which) {
-	    			activity.finish();
-	    		}
-	    	});
-	    	AlertDialog alert = builder.create();
-	    	alert.show();
-		} catch(Exception e) {
-			e.printStackTrace();
-			// TODO: display error
-		}
+        Toast.makeText(activity, activity.getString(R.string.label_receive_image, url), Toast.LENGTH_LONG).show();
+
+        Intent intent = new Intent();  
+        intent.setAction(android.content.Intent.ACTION_VIEW);  
+        File file = new File(url);  
+        intent.setDataAndType(Uri.fromFile(file), "image/*");  
+        activity.startActivity(intent);        
     }
-    
+  
     /**
 	 * Show an info with a specific title
 	 * 

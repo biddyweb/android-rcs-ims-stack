@@ -18,6 +18,10 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -26,18 +30,25 @@ import javax2.sip.header.ExtensionHeader;
 
 import org.xml.sax.InputSource;
 
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
+import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.Base64;
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -532,7 +543,7 @@ public class ChatUtils {
 				"<gp:location-info>" + CRLF +
 				"<gs:Circle srsName=\"urn:ogc:def:crs:EPSG::4326\">" + CRLF +
 				"<gml:pos>"+ geoloc.getLatitude()+" "+geoloc.getLongitude()+" "+geoloc.getAltitude() +"</gml:pos>" + CRLF +
-				"<gs:radius uom=\"urn:ogc:def:uom:EPSG::9001\">10</gs:radius>" + CRLF +
+				"<gs:radius uom=\"urn:ogc:def:uom:EPSG::9001\">" + geoloc.getAccuracy() + "</gs:radius>" + CRLF +
 				"</gs:Circle>" + CRLF +
 				"</gp:location-info>" + CRLF + 
 				"<gp:usage-rules>" + CRLF +
@@ -543,6 +554,32 @@ public class ChatUtils {
 				"</rcspushlocation>" + CRLF;
 		document += "</rcsenveloppe>" + CRLF;
 		return document;
+	}
+	
+	/**
+	 * Parse a geoloc document
+	 *  
+	 * @param xml XML document
+	 * @return Geoloc info
+	 */
+	public static GeolocPush parseGeolocDocument(String xml) {
+		try {
+		    InputSource geolocInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
+		    GeolocInfoParser geolocParser = new GeolocInfoParser(geolocInput);
+		    GeolocInfoDocument geolocDocument = geolocParser.getGeoLocInfo();		    
+		    if (geolocDocument != null) {			    
+			    GeolocPush geoloc = new GeolocPush(geolocDocument.getLabel(),
+			    		geolocDocument.getLatitude(),
+			    		geolocDocument.getLongitude(),
+			    		geolocDocument.getAltitude(),
+			    		geolocDocument.getExpiration(),
+			    		geolocDocument.getRadius());
+			    return geoloc;
+		    }
+		} catch (Exception e) {
+			return null;
+		}
+	    return null;	    
 	}
 	
 	/**
@@ -697,5 +734,80 @@ public class ChatUtils {
 	    	// Nothing to do
         }
         return participants;
+    }
+
+	/**
+	 * Create a thumbnail from a filename
+	 * 
+	 * @param filename Filename
+	 * @return Thumbnail
+	 */
+	public static byte[] createFileThumbnail(String filename) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			File file = new File(filename);
+			InputStream in = new FileInputStream(file);
+			Bitmap bitmap = BitmapFactory.decodeStream(in);
+			int width = bitmap.getWidth();
+			int height = bitmap.getHeight();
+			long size = file.length();
+
+			// Resize the bitmap
+			float scale = 0.05f;
+			Matrix matrix = new Matrix();
+			matrix.postScale(scale, scale);
+
+			// Recreate the new bitmap
+			Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width,
+					height, matrix, true);
+
+			// Compress the file to be under the limit (10KBytes)
+			int quality = 90;
+			int maxSize = 1024 * 10;
+			while(size > maxSize) {
+				out = new ByteArrayOutputStream();
+				resizedBitmap.compress(CompressFormat.JPEG, quality, out);
+				out.flush();
+				out.close();
+				size = out.size();
+				quality -= 10;
+			}
+		} catch (Exception e) {
+			return null;
+		}
+		return out.toByteArray();
+	}
+
+    /**
+     * Extract thumbnail from incoming INVITE request
+     * 
+     * @param request Request
+     * @return Thumbnail
+     */
+    public static byte[] extractFileThumbnail(SipRequest request) {
+		try {
+			// Extract message from content/CPIM
+		    String content = request.getContent();
+		    String boundary = request.getBoundaryContentType();
+			Multipart multi = new Multipart(content, boundary);
+			if (multi.isMultipart()) {
+		    	// Get image/jpeg content
+		    	String jpeg = multi.getPart("image/jpeg");
+		    	if (jpeg != null) {
+		    		// Decode the content
+		    		return Base64.decodeBase64(jpeg.getBytes());
+		    	}
+		    	
+		    	// Get image/png content
+		    	String png = multi.getPart("image/png");
+		    	if (png != null) {
+		    		// Decode the content
+		    		return Base64.decodeBase64(png.getBytes());
+		    	}
+		    }
+		} catch(Exception e) {
+			return null;
+		}		
+		return null;
     }
 }

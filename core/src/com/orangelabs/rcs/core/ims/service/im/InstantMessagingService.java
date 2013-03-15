@@ -48,6 +48,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
@@ -90,6 +91,11 @@ public class InstantMessagingService extends ImsService {
 	 * Max file transfer sessions
 	 */
 	private int maxFtSessions;
+	
+	/**
+	 * Max file transfer size
+	 */
+	private int maxFtSize;
 
 	/**
 	 * IMDN manager
@@ -117,6 +123,7 @@ public class InstantMessagingService extends ImsService {
 
 		this.maxChatSessions = RcsSettings.getInstance().getMaxChatSessions();
         this.maxFtSessions = RcsSettings.getInstance().getMaxFileTransferSessions();
+        this.maxFtSize = FileSharingSession.getMaxFileSharingSize();
 	}
 
 	/**
@@ -252,10 +259,11 @@ public class InstantMessagingService extends ImsService {
      * 
      * @param contact Remote contact
      * @param content Content to be sent
+     * @param thumbnail Thumbnail option
      * @return CSh session
      * @throws CoreException
      */
-	public FileSharingSession initiateFileTransferSession(String contact, MmContent content) throws CoreException {
+	public FileSharingSession initiateFileTransferSession(String contact, MmContent content, boolean thumbnail) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a file transfer session with contact " + contact + ", file " + content.toString());
 		}
@@ -269,19 +277,25 @@ public class InstantMessagingService extends ImsService {
 		}
 
         // Test max size
-        int maxSize = FileSharingSession.getMaxFileSharingSize();
-        if (maxSize > 0 && content.getSize() > maxSize) {
+        if (maxFtSize > 0 && content.getSize() > maxFtSize) {
             if (logger.isActivated()) {
                 logger.debug("File exceeds max size: cancel the initiation");
             }
             throw new CoreException("File exceeds max size");
         }
 
+        // Create the thumbnail
+        byte[] thumbnailImage = null;
+        if (thumbnail && content.getEncoding().startsWith("image/")) {
+        	thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
+        }
+        
 		// Create a new session
 		OriginatingFileSharingSession session = new OriginatingFileSharingSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToSipUri(contact));
+				PhoneUtils.formatNumberToSipUri(contact),
+				thumbnailImage);
 
 		// Start the session
 		session.startSession();
@@ -300,7 +314,7 @@ public class InstantMessagingService extends ImsService {
 
 		// Test if the contact is blocked
 		String remote = SipUtils.getAssertedIdentity(invite);
-	    if (ContactsManager.getInstance().isImBlockedForContact(remote)) {
+	    if (ContactsManager.getInstance().isFtBlockedForContact(remote)) {
 			if (logger.isActivated()) {
 				logger.debug("Contact " + remote + " is blocked: automatically reject the file transfer invitation");
 			}
@@ -323,6 +337,21 @@ public class InstantMessagingService extends ImsService {
 
     	// Create a new session
 		FileSharingSession session = new TerminatingFileSharingSession(this, invite);
+
+        // Auto reject if file too big
+        int maxSize = FileSharingSession.getMaxFileSharingSize();
+        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("File is too big, reject file transfer invitation");
+            }
+
+            // Send a 603 Decline response
+            session.sendErrorResponse(invite, session.getDialogPath().getLocalTag(), 603);
+
+            // Close session
+            session.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
+            return;
+        }
 
 		// Start the session
 		session.startSession();

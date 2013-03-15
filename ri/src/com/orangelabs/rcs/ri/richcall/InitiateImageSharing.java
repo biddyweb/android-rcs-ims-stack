@@ -21,8 +21,8 @@ package com.orangelabs.rcs.ri.richcall;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -37,6 +37,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -45,6 +46,7 @@ import android.widget.Toast;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
@@ -117,6 +119,12 @@ public class InitiateImageSharing extends Activity {
         	selectBtn.setEnabled(false);
         }
         
+        // Disable thumbnail option if not supported
+        CheckBox ftThumb = (CheckBox)findViewById(R.id.ft_thumb);
+        if (!RcsSettings.getInstance().isFileTransferThumbnailSupported()) {
+        	ftThumb.setEnabled(false);
+        }       
+        
         // Instanciate rich call API
 		callApi = new RichCallApi(getApplicationContext());
 		callApi.connectApi();
@@ -165,11 +173,15 @@ public class InitiateImageSharing extends Activity {
             MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
             final String remote = cursor.getString(1);
 
+            // Get thumbnail option
+            CheckBox ftThumb = (CheckBox)findViewById(R.id.ft_thumb);
+            final boolean thumbnail = ftThumb.isChecked();
+
             Thread thread = new Thread() {
             	public void run() {
                 	try {
                         // Initiate sharing
-	            		sharingSession = callApi.initiateImageSharing(remote, filename);
+	            		sharingSession = callApi.initiateImageSharing(remote, filename, thumbnail);
 	        	        sharingSession.addSessionListener(sharingSessionListener);
 	            	} catch(Exception e) {
 	    				handler.post(new Runnable() { 
@@ -191,6 +203,10 @@ public class InitiateImageSharing extends Activity {
 				}
 			});
             
+            // Disable UI
+            spinner.setEnabled(false);
+            ftThumb.setEnabled(false);
+
             // Hide buttons
             Button inviteBtn = (Button)findViewById(R.id.invite_btn);
         	inviteBtn.setVisibility(View.INVISIBLE);
@@ -237,7 +253,7 @@ public class InitiateImageSharing extends Activity {
                     cursor.moveToFirst();
                     filename = cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
                     cursor.close();     
-            		
+                    
                     // Display the selected filename attribute
                     TextView uriEdit = (TextView)findViewById(R.id.uri);
                     try {

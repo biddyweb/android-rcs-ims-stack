@@ -18,6 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.service.richcall;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -31,6 +34,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.TerminatingImageTransferSession;
@@ -44,9 +48,6 @@ import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
-
-import java.util.Enumeration;
-import java.util.Vector;
 
 /**
  * Rich call service has in charge to monitor the GSM call in order to stop the
@@ -129,10 +130,11 @@ public class RichcallService extends ImsService {
      *
      * @param contact Remote contact
      * @param content Content to be shared
+     * @param thumbnail Thumbnail option
      * @return CSh session
      * @throws CoreException
      */
-	public ImageTransferSession initiateImageSharingSession(String contact, MmContent content) throws CoreException {
+	public ImageTransferSession initiateImageSharingSession(String contact, MmContent content, boolean thumbnail) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate image sharing session with contact " + contact + ", file " + content.toString());
 		}
@@ -188,11 +190,18 @@ public class RichcallService extends ImsService {
             throw new CoreException("Max content sharing sessions achieved");
         }
 
+        // Create the thumbnail
+        byte[] thumbnailImage = null;
+        if (thumbnail && content.getEncoding().startsWith("image/")) {
+        	thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
+        }             
+        
 		// Create a new session
 		OriginatingImageTransferSession session = new OriginatingImageTransferSession(
 				this,
 				content,
-				PhoneUtils.formatNumberToSipUri(contact));
+				PhoneUtils.formatNumberToSipUri(contact),
+				thumbnailImage);
 
 		// Start the session
 		session.startSession();
@@ -450,6 +459,21 @@ public class RichcallService extends ImsService {
 
 		// Create a new session
     	ImageTransferSession session = new TerminatingImageTransferSession(this, invite);
+
+        // Auto reject if file too big
+        int maxSize = ImageTransferSession.getMaxImageSharingSize();
+        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("Auto reject image sharing invitation");
+            }
+
+            // Decline the invitation
+            session.sendErrorResponse(invite, session.getDialogPath().getLocalTag(), 603);
+
+            // File too big
+            session.handleError(new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG));
+            return;
+        }
 
 		// Start the session
 		session.startSession();

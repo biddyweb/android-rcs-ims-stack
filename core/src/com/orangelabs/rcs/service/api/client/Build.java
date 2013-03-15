@@ -9,7 +9,7 @@ public class Build {
 	/**
 	 * API release
 	 */
-	public static final String API_RELEASE = "2.9";
+	public static final String API_RELEASE = "3.0";
 
 	/**
 	 * API release implementor

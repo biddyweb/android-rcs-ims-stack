@@ -3,16 +3,17 @@ package com.orangelabs.rcs.service.api.client.messaging;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
  * Messaging API
  */
 interface IMessagingApi {
 	// Transfer a file
-	IFileTransferSession transferFile(in String contact, in String file);
+	IFileTransferSession transferFile(in String contact, in String file, in boolean thumbnail);
 
-    // Transfer a file to a group of contacts
-    IFileTransferSession transferFileToGroup(in List<String> contacts, in String file);
+	// Transfer a file to a group of contacts
+	IFileTransferSession transferFileToGroup(in List<String> contacts, in String file, in boolean thumbnail);
 
 	// Get current file transfer session from its session ID
 	IFileTransferSession getFileTransferSession(in String id);
@@ -58,5 +59,4 @@ interface IMessagingApi {
 
 	// Remove message delivery listener
 	void removeMessageDeliveryListener(in IMessageDeliveryListener listener);	
-
 }

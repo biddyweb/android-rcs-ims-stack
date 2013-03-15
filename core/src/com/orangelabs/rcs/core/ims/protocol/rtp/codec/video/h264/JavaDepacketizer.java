@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.VideoCodec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
 
 /**
@@ -43,9 +44,24 @@ public class JavaDepacketizer extends VideoCodec {
     private static final int MAX_H264_FRAME_SIZE = 8192;
 
     /**
+     * Default frame packet size
+     */
+    public static int H264_FRAME_PACKET_SIZE = 1500;
+
+    /**
      * Video decoder max payloads chunks mask
      */
     private static final byte VIDEO_DECODER_MAX_PAYLOADS_CHUNKS_MASK = 0x1F;
+
+    /**
+     * Packet NalUnitHeader
+     */
+    private NalUnitHeader mNalUnitHeader;
+
+    /**
+     * Reading position for aggregation packet
+     */
+    private int aggregationPositon = 1;
 
     /**
      * Constructor
@@ -61,15 +77,133 @@ public class JavaDepacketizer extends VideoCodec {
      * @return Processing result
      */
     public int process(Buffer input, Buffer output) {
-
         if (input == null || output == null) {
             return BUFFER_PROCESSED_FAILED;
         }
 
+        // Extracts the NAL Unit Header from the Input Buffer
+        extractNalUnitHeader(input);
+
+        if (mNalUnitHeader.isFragmentationUnit()) {
+            return handleFragmentationUnitPacket(input, output);
+        } else if (mNalUnitHeader.isAggregationPacket()) {
+            return handleAggregationPacket(input, output);
+        } else {
+            return handleSingleNalUnitPacket(input, output);
+        }
+
+    }
+
+    /**
+     * Extract the NAL unit header
+     *
+     * @param input
+     */
+    private void extractNalUnitHeader(Buffer input) {
+        if (mNalUnitHeader == null) {
+            mNalUnitHeader = NalUnitHeader.extract((byte[])input.getData());
+        } else {
+            NalUnitHeader.extract((byte[])input.getData(), mNalUnitHeader);
+        }
+    }
+
+    /**
+     * Extract the NAL unit header at position
+     *
+     * @param input
+     * @param position
+     */
+    private void extractNalUnitHeader(int position, Buffer input) {
+        if (mNalUnitHeader == null) {
+            mNalUnitHeader = NalUnitHeader.extract(position, (byte[])input.getData());
+        } else {
+            NalUnitHeader.extract(position, (byte[])input.getData(), mNalUnitHeader);
+        }
+    }
+
+    /**
+     * Handle single NAL Unit packet
+     *
+     * @return Processing result
+     */
+    private int handleSingleNalUnitPacket(Buffer input, Buffer output) {
+        // Create output buffer
+        byte[] bufferData = (byte[]) input.getData();
+        int bufferDataLength = bufferData.length;
+        byte[] data = new byte[bufferDataLength];
+        System.arraycopy(bufferData, 0, data, 0, bufferDataLength);
+
+        // Set buffer
+        output.setData(data);
+        output.setLength(data.length);
+        output.setOffset(0);
+        output.setTimeStamp(input.getTimeStamp());
+        output.setSequenceNumber(input.getSequenceNumber());
+        output.setVideoOrientation(input.getVideoOrientation());
+        output.setFormat(input.getFormat());
+        output.setFlags(input.getFlags());
+
+        return BUFFER_PROCESSED_OK;
+    }
+
+    /**
+     * Handle Aggregation NAL Unit packet
+     *
+     * @return Processing result
+     */
+    private int handleAggregationPacket(Buffer input, Buffer output) {
+        // Get data
+        byte[] bufferData = (byte[]) input.getData();
+        if (aggregationPositon + 1 >= bufferData.length) {
+            // No more data in aggregation packet
+            aggregationPositon = 1;
+            output.setDiscard(true);
+            return BUFFER_PROCESSED_OK;
+        }
+
+        // Get NALU size
+        int nalu_size = ((bufferData[aggregationPositon] << 8) | bufferData[aggregationPositon+1]);
+        aggregationPositon+=2;
+        if (aggregationPositon + nalu_size > bufferData.length) {
+            // Not a correct packet
+            aggregationPositon = 1;
+            return BUFFER_PROCESSED_FAILED;
+        }
+
+        // Get NALU HDR
+        extractNalUnitHeader(aggregationPositon, input);
+        if (mNalUnitHeader.isSingleNalUnitPacket()) {
+            // Create output buffer
+            byte[] data = new byte[nalu_size];
+            System.arraycopy(bufferData, aggregationPositon, data, 0, nalu_size);
+            aggregationPositon+=nalu_size;
+
+            // Set buffer
+            output.setData(data);
+            output.setLength(data.length);
+            output.setOffset(0);
+            output.setTimeStamp(input.getTimeStamp());
+            output.setSequenceNumber(input.getSequenceNumber());
+            output.setVideoOrientation(input.getVideoOrientation());
+            output.setFormat(input.getFormat());
+            output.setFlags(input.getFlags());
+
+            return INPUT_BUFFER_NOT_CONSUMED;
+        } else {
+            // Not a correct packet
+            aggregationPositon = 1;
+            return BUFFER_PROCESSED_FAILED;
+        }
+    }
+
+    /**
+     * Handle Fragmentation NAL Unit packet
+     *
+     * @return Processing result
+     */
+    private int handleFragmentationUnitPacket(Buffer input, Buffer output) {
         if (!input.isDiscard()) {
-
             assemblersCollection.put(input);
-
             if (assemblersCollection.getLastActiveAssembler().complete()) {
                 assemblersCollection.getLastActiveAssembler().copyToBuffer(output);
                 assemblersCollection.removeOldestThan(input.getTimeStamp());
@@ -88,7 +222,7 @@ public class JavaDepacketizer extends VideoCodec {
      * Used to assemble fragments with the same timestamp into a single frame.
      */
     public static class FrameAssembler {
-        private boolean rtpMarker = false; // have we received the RTP marker  that signifies the end of a frame?
+        private boolean rtpMarker = false; // have we received the RTP marker that signifies the end of a frame?
         private byte[][] reassembledData = null; // Frame sequence chunks
         private int[] reassembledDataSize = null; // Sequence chunk size
         private int reassembledDataFullSize = 0; // Frame sequence chunks full size
@@ -100,6 +234,8 @@ public class JavaDepacketizer extends VideoCodec {
         private long timeStamp = -1;
         private Format format = null;
         private byte[] finalData = new byte[MAX_H264_FRAME_SIZE];
+        private long seqNumber = -1;
+        private VideoOrientation videoOrientation;
 
         /**
          * Add the buffer (which contains a fragment) to the assembler.
@@ -129,12 +265,13 @@ public class JavaDepacketizer extends VideoCodec {
                 // First packet
                 timeStamp = buffer.getTimeStamp();
                 format = buffer.getFormat();
+                seqNumber = buffer.getSequenceNumber();
 
                 // Get NAL header
                 reassembledDataNALHeader = h264RtpHeaders.getNALHeader();
 
                 // Copy packet data to reassembledData
-                reassembledData = new byte[JavaPacketizer.H264_MAX_RTP_PKTS][JavaPacketizer.H264_MAX_PACKET_FRAME_SIZE];
+                reassembledData = new byte[JavaPacketizer.H264_MAX_RTP_PKTS][H264_FRAME_PACKET_SIZE];
                 reassembledDataSize = new int[JavaPacketizer.H264_MAX_RTP_PKTS];
                 reassembledDataHasStart = false;
                 reassembledDataHasEnd = false;
@@ -163,17 +300,6 @@ public class JavaDepacketizer extends VideoCodec {
                 // Fill Pos Seq End
                 reassembledDataPosSeqEnd = ((h264RtpHeaders.getFUH_E()) ? posSeq
                         : reassembledDataPosSeqEnd);
-            } else {
-
-                // Fill Has Start Chunk
-                reassembledDataHasStart = true;
-                // Fill Has End Chunk
-                reassembledDataHasEnd = true;
-
-                // Fill Pos Seq Start
-                reassembledDataPosSeqStart = posSeq;
-                // Fill Pos Seq End
-                reassembledDataPosSeqEnd = posSeq;
             }
 
             // Sequence chuck size
@@ -185,6 +311,7 @@ public class JavaDepacketizer extends VideoCodec {
             // Copy data
             System.arraycopy(currentRtpPacketData, payloadStartPosition, reassembledData[posSeq],
                     0, payloadLength);
+            videoOrientation = buffer.getVideoOrientation();
         }
 
         /**
@@ -263,6 +390,8 @@ public class JavaDepacketizer extends VideoCodec {
                 bDest.setTimeStamp(timeStamp);
                 bDest.setFormat(format);
                 bDest.setFlags(Buffer.FLAG_RTP_MARKER | Buffer.FLAG_RTP_TIME);
+                bDest.setVideoOrientation(videoOrientation);
+                bDest.setSequenceNumber(seqNumber);
             }
 
             // Set reassembledData to null

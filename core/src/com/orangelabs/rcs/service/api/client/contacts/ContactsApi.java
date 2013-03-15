@@ -19,7 +19,9 @@
 package com.orangelabs.rcs.service.api.client.contacts;
 
 import java.util.List;
+
 import android.content.Context;
+import android.net.Uri;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -139,15 +141,6 @@ public class ContactsApi {
     public boolean isRcsValidNumber(String phoneNumber){
         return ContactsManager.getInstance().isRcsValidNumber(phoneNumber);
     }
-
-    /**
-     * Get the IM-blocked status of a contact
-     * 
-     * @param contact
-     */
-    public boolean isContactImBlocked(String contact){
-    	return ContactsManager.getInstance().isImBlockedForContact(contact);
-    }
     
 	/**
 	 * Is the number in the RCS blocked list
@@ -209,6 +202,15 @@ public class ContactsApi {
     	ContactsManager.getInstance().setImBlockedForContact(contact, status);
     }
     
+    /**
+     * Get the IM-blocked status of a contact
+     * 
+     * @param contact
+     */
+    public boolean isContactImBlocked(String contact){
+    	return ContactsManager.getInstance().isImBlockedForContact(contact);
+    }    
+    
 	/**
 	 * Get list of blocked contacts for IM sessions
 	 *  
@@ -217,6 +219,35 @@ public class ContactsApi {
 	 */
 	public List<String> getBlockedContactsForIm(){
 		return ContactsManager.getInstance().getImBlockedContacts();
+	}
+	
+    /**
+     * Set the FT-blocked status of a contact
+     * 
+     * @param contact
+     * @param status of the FT-blocked
+     */
+    public void setFtBlockedForContact(String contact, boolean status){
+    	ContactsManager.getInstance().setFtBlockedForContact(contact, status);
+    }
+    
+    /**
+     * Get the FT-blocked status of a contact
+     * 
+     * @param contact
+     */
+    public boolean isContactFtBlocked(String contact){
+    	return ContactsManager.getInstance().isFtBlockedForContact(contact);
+    }
+    
+	/**
+	 * Get list of blocked contacts for FT sessions
+	 *  
+	 * @return List of contacts
+	 * @throws ClientApiException
+	 */
+	public List<String> getBlockedContactsForFt(){
+		return ContactsManager.getInstance().getFtBlockedContacts();
 	}
 	
 	/**
@@ -247,34 +278,14 @@ public class ContactsApi {
 	public void removeCancelledPresenceInvitation(String contact){
 		ContactsManager.getInstance().removeCancelledPresenceInvitation(contact);
 	}
-
+    
     /**
-     * Block a specific capability for a contact
+     * Get the vCard file associated to a contact
      *
-     * @param contact Contact
-     * @param capability Capability to be blocked
+     * @param uri Contact URI in database
+     * @return vCard filename
      */
-    public void blockCapability(String contact, String capability) {
-        // TODO: NOT YET IMPLEMETED
-    }
-
-    /**
-     * Block all the capabilities for a contact
-     *
-     * @param contact Contact
-     */
-    public void blockAllCapabilities(String contact) {
-        // TODO: NOT YET IMPLEMETED
-    }
-
-    /**
-     * Get list of blocked capabilities for a contact
-     *
-     * @param contact Contact
-     * @return List of capabilities
-     */
-    public List<String> getBlockedCapabilities(String contact) {
-        // TODO: NOT YET IMPLEMETED
-        return null;
+    public String getVisitCard(Uri uri) {
+    	return ContactsManager.getInstance().getVisitCard(uri);
     }
 }

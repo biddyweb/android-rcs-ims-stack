@@ -28,6 +28,9 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -78,7 +81,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      * Remote Contact
      */
     private String remoteContact;
-        
+    
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -155,7 +158,13 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     			builder.setTitle(R.string.title_recv_image_sharing);
     			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" + sizeDesc);
     			builder.setCancelable(false);
-    			builder.setIcon(R.drawable.ri_notif_csh_icon);
+    			byte[] thumbnail = sharingSession.getFileThumbnail();
+				if (thumbnail != null) {
+					Bitmap bitmap = BitmapFactory.decodeByteArray(thumbnail, 0, thumbnail.length);
+					builder.setIcon(new BitmapDrawable(bitmap));
+				} else {
+					builder.setIcon(R.drawable.ri_notif_csh_icon);
+				}
     			builder.setPositiveButton(getString(R.string.label_accept), acceptBtnListener);
     			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
     			builder.show();    			

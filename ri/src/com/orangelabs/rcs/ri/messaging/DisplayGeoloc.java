@@ -1,20 +1,31 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright (C) 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.orangelabs.rcs.ri.messaging;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import com.google.android.maps.GeoPoint;
-import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapView;
-import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
  * Display a geoloc on a Google map
@@ -25,11 +36,6 @@ public class DisplayGeoloc extends MapActivity {
 	 * Map view
 	 */
 	private MapView mapView;
-
-	/**
-	 * Map overlay
-	 */
-	private List<Overlay> mapOverlays;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -44,68 +50,36 @@ public class DisplayGeoloc extends MapActivity {
 		// Set map
 		mapView = (MapView)findViewById(R.id.mapview);
 		mapView.setBuiltInZoomControls(true);
-		mapOverlays = mapView.getOverlays();	
 		mapView.getController().setZoom(4);
 		
-		// Get geoloc value
-		String label = getIntent().getStringExtra("label");
-		double latitude = getIntent().getDoubleExtra("latitude", 0.0);
-		double longitude = getIntent().getDoubleExtra("longitude", 0.0);
-		GeoPoint geoPoint = new GeoPoint((int)(latitude * 1E6),	(int)(longitude * 1E6));
+		// Clear the list of overlay
+		mapView.getOverlays().clear();
+		mapView.invalidate();		
 		
-		// Create an overlay item
+		// Get geoloc value
+		String contact = getIntent().getStringExtra("contact");
+		GeolocPush geoloc = getIntent().getParcelableExtra("geoloc");
+		if ((contact == null) || (geoloc == null)) {
+			Utils.showMessageAndExit(this, getString(R.string.label_geoloc_not_found));
+			return;
+		}
+		
+		// Create an overlay
 		Drawable drawable = getResources().getDrawable(R.drawable.ri_map_icon);
-		MyItemizedOverlay itemizedoverlay = new MyItemizedOverlay(drawable, this);
-		OverlayItem overlayitem = new OverlayItem(geoPoint, getString(R.string.label_marker), label);
-		itemizedoverlay.addOverlay(overlayitem);
+		GeolocOverlay overlay = new GeolocOverlay(this, drawable);
 
-		// Add the overlays to the map
-		mapOverlays.add(itemizedoverlay);
-		mapView.getController().setCenter(geoPoint);
+		// Add an overlay item
+		overlay.addOverlayItem(contact, geoloc.getLabel(), geoloc.getLatitude(), geoloc.getLongitude(), geoloc.getAccuracy());
+
+		// Add overlay to the map
+		mapView.getOverlays().add(overlay);
+		
+		// Center the map
+		mapView.getController().setCenter(new GeoPoint((int)(geoloc.getLatitude() * 1E6), (int)(geoloc.getLongitude() * 1E6)));
 	}
 	
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
-	}
-
-	/**
-	 * Overlay
-	 */
-	private class MyItemizedOverlay extends ItemizedOverlay<OverlayItem>{
-		private ArrayList<OverlayItem> overlays = new ArrayList<OverlayItem>();
-
-		private Context context;
-
-		public MyItemizedOverlay(Drawable defaultMarker, Context context) {
-			super(boundCenterBottom(defaultMarker));
-			
-			this.context = context;
-		}
-
-		@Override
-		protected OverlayItem createItem(int i) {
-			return overlays.get(i);
-		}
-
-		@Override
-		public int size() {
-			return overlays.size();
-		}
-
-		public void addOverlay(OverlayItem overlay) {
-			overlays.add(overlay);
-			populate();
-		}
-		
-		@Override
-		protected boolean onTap(int index) {
-		  OverlayItem item = overlays.get(index);
-		  AlertDialog.Builder dialog = new AlertDialog.Builder(context);
-		  dialog.setTitle(item.getTitle());
-		  dialog.setMessage(item.getSnippet());
-		  dialog.show();
-		  return true;
-		}
 	}
 }

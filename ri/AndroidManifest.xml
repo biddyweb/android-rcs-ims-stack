@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.1"
+ android:versionName="2.5.2"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -88,6 +88,8 @@
 
 		<activity android:name=".capabilities.RefreshCapabilities"/>
 		
+		<activity android:name=".capabilities.BlockCapablities"/>
+		
 		<activity android:icon="@drawable/ri_quick_rcs_extension_icon" android:label="@string/label_quick_extensions"
 			 android:name=".capabilities.ExtensionsCapabilities">
 			<intent-filter>
@@ -162,8 +164,13 @@
                 <action android:name="android.net.rcs.INITIATE_FT"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/x-vcard"/>
+            </intent-filter>
 		</activity>
-
+        
 		<receiver android:name=".messaging.FileTransferInvitationReceiver">
             <intent-filter>
 		    	<action android:name="com.orangelabs.rcs.messaging.FILE_TRANSFER_INVITATION"/>
@@ -232,11 +239,11 @@
         <activity android:name=".RichCallRI"/>
 
         <activity android:name=".richcall.InitiateImageSharing"/>
-
+        
         <activity android:name=".richcall.InitiatePrerecordedVideoSharing"/>
 
 		<activity android:name=".richcall.InitiateOutgoingVisioSharing"/>
-
+		
 		<receiver android:name=".richcall.ImageSharingInvitationReceiver">
             <intent-filter>
 		    	<action android:name="com.orangelabs.rcs.richcall.IMAGE_SHARING_INVITATION"/>

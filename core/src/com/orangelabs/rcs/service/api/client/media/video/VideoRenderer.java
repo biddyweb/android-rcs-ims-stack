@@ -29,18 +29,20 @@ import android.os.SystemClock;
 import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
-import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.Orientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
 import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
-import com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView;
 import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -50,7 +52,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author jexa7410
  */
-public class VideoRenderer extends IMediaRenderer.Stub {
+public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListener {
 
     /**
      * List of supported video codecs
@@ -105,7 +107,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     /**
      * Video surface
      */
-    private VideoSurfaceView surface = null;
+    private VideoSurface surface = null;
 
     /**
      * Media event listeners
@@ -116,6 +118,11 @@ public class VideoRenderer extends IMediaRenderer.Stub {
      * Temporary connection to reserve the port
      */
     private DatagramConnection temporaryConnection = null;
+
+    /**
+     * Orientation header id.
+     */
+    private int orientationHeaderId = -1;
 
     /**
      * The logger
@@ -163,7 +170,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
      *
      * @param surface Video surface
      */
-    public void setVideoSurface(VideoSurfaceView surface) {
+    public void setVideoSurface(VideoSurface surface) {
         this.surface = surface;
     }
 
@@ -269,7 +276,7 @@ public class VideoRenderer extends IMediaRenderer.Stub {
             rtpDummySender = new DummyPacketGenerator();
             rtpOutput = new MediaRtpOutput();
             rtpOutput.open();
-            rtpReceiver.prepareSession(remoteHost, remotePort, rtpOutput, videoFormat);
+            rtpReceiver.prepareSession(remoteHost, remotePort, orientationHeaderId, rtpOutput, videoFormat, this);
             rtpDummySender.prepareSession(remoteHost, remotePort, rtpReceiver.getInputStream());
             rtpDummySender.startSession();
         } catch (Exception e) {
@@ -413,6 +420,22 @@ public class VideoRenderer extends IMediaRenderer.Stub {
     }
 
     /**
+     * Notify RTP aborted
+     */
+    public void rtpStreamAborted() {
+        notifyPlayerEventError("RTP session aborted");
+    }
+
+    /**
+     * Set extension header orientation id
+     *
+     * @param headerId extension header orientation id
+     */
+    public void setOrientationHeaderId(int headerId) {
+        this.orientationHeaderId = headerId;
+    }
+
+    /**
      * Notify player event started
      */
     private void notifyPlayerEventStarted() {
@@ -423,6 +446,25 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         while (ite.hasNext()) {
             try {
                 ((IMediaEventListener)ite.next()).mediaStarted();
+            } catch (RemoteException e) {
+                if (logger.isActivated()) {
+                    logger.error("Can't notify listener", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify player event resized
+     */
+    private void notifyPlayerEventResized(int width, int height) {
+        if (logger.isActivated()) {
+            logger.debug("The media size has changed");
+        }
+        Iterator<IMediaEventListener> ite = listeners.iterator();
+        while (ite.hasNext()) {
+            try {
+                ((IMediaEventListener)ite.next()).mediaResized(width, height);
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -518,10 +560,22 @@ public class VideoRenderer extends IMediaRenderer.Stub {
         private Bitmap rgbFrame = null;
 
         /**
+         * Video orientation
+         */
+        private VideoOrientation videoOrientation = new VideoOrientation(CameraOptions.BACK, Orientation.NONE);
+
+        /**
+         * Frame dimensions
+         * Just 2 - width and height
+         */
+        private int decodedFrameDimensions[] = new int[2];
+
+        /**
          * Constructor
          */
         public MediaRtpOutput() {
-            // Nothing to do
+            // Init rgbFrame with a default size
+            rgbFrame = Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565);
         }
 
         /**
@@ -544,40 +598,30 @@ public class VideoRenderer extends IMediaRenderer.Stub {
          */
         public void writeSample(MediaSample sample) {
             rtpDummySender.incomingStarted();
-            int[] decodedFrame = NativeH264Decoder.DecodeAndConvert(sample.getData());
-            if (NativeH264Decoder.getLastDecodeStatus() == 1) {
+
+            // Init orientation
+            if (sample.getVideoOrientation() != null) {
+                this.videoOrientation = sample.getVideoOrientation();
+            }
+
+            int[] decodedFrame = NativeH264Decoder.DecodeAndConvert(sample.getData(), videoOrientation.getOrientation().getValue(), decodedFrameDimensions);
+
+            if (NativeH264Decoder.getLastDecodeStatus() == 0) {
                 if ((surface != null) && (decodedFrame.length > 0)) {
-                    // Init rgbFrame with the size of first decoded frame
-                    if (rgbFrame == null) {
-                        init(decodedFrame.length);
+                    // Init rgbFrame with the decoder dimensions
+                    if ((rgbFrame.getWidth() != decodedFrameDimensions[0]) || (rgbFrame.getHeight() != decodedFrameDimensions[1])) {
+                        rgbFrame = Bitmap.createBitmap(decodedFrameDimensions[0], decodedFrameDimensions[1], Bitmap.Config.RGB_565);
+                        notifyPlayerEventResized(decodedFrameDimensions[0], decodedFrameDimensions[1]);
                     }
-	            	rgbFrame.setPixels(decodedFrame, 0, selectedVideoCodec.getWidth(), 0, 0,
-	                        selectedVideoCodec.getWidth(), selectedVideoCodec.getHeight());
+
+                    // Set data in image
+                    rgbFrame.setPixels(decodedFrame, 0, decodedFrameDimensions[0], 0, 0,
+                            decodedFrameDimensions[0], decodedFrameDimensions[1]);
                     surface.setImage(rgbFrame);
             	}
             }
         }
 
-        /**
-         * Init RGB frame
-         *
-         * @param size of the decoded frame
-         */
-        private void init(int size) {
-            int width = H264Config.QCIF_WIDTH;
-            int height = H264Config.QCIF_HEIGHT;
-            if (size == H264Config.QCIF_WIDTH * H264Config.QCIF_HEIGHT) {
-                width = H264Config.QCIF_WIDTH;
-                height = H264Config.QCIF_HEIGHT;
-            } else if (size == H264Config.QVGA_WIDTH * H264Config.QVGA_HEIGHT) {
-                width = H264Config.QVGA_WIDTH;
-                height = H264Config.QVGA_HEIGHT;
-            } else if (size == H264Config.CIF_WIDTH * H264Config.CIF_HEIGHT) {
-                width = H264Config.CIF_WIDTH;
-                height = H264Config.CIF_HEIGHT;
-            }
-            rgbFrame = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        }
     }
 }
 

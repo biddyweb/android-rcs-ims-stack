@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.utils;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1_2;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1_3;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1b;
@@ -27,10 +28,9 @@ import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 
 /**
- * Codecs Utils
+ * Codecs utility functions
  *
  * @author hlxn7157
- *
  */
 public class CodecsUtils {
 
@@ -64,7 +64,7 @@ public class CodecsUtils {
             supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                     ++payload_count,
                     H264Config.CLOCK_RATE,
-                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_3.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=1",
+                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_3.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=" + JavaPacketizer.H264_ENABLED_PACKETIZATION_MODE,
                     15,
                     384000,
                     H264Config.CIF_WIDTH, 
@@ -72,16 +72,16 @@ public class CodecsUtils {
             supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                     ++payload_count,
                     H264Config.CLOCK_RATE,
-                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_2.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=1",
-                    10,
+                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_2.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=" + JavaPacketizer.H264_ENABLED_PACKETIZATION_MODE,
+                    15,
                     176000,
                     H264Config.CIF_WIDTH, 
                     H264Config.CIF_HEIGHT).getMediaCodec();
             supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                     ++payload_count,
                     H264Config.CLOCK_RATE,
-                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_2.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=1",
-                    10,
+                    H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1_2.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=" + JavaPacketizer.H264_ENABLED_PACKETIZATION_MODE,
+                    15,
                     176000,
                     H264Config.QVGA_WIDTH, 
                     H264Config.QVGA_HEIGHT).getMediaCodec();
@@ -89,8 +89,8 @@ public class CodecsUtils {
         supportedMediaCodecs[++i] = new VideoCodec(H264Config.CODEC_NAME,
                 ++payload_count,
                 H264Config.CLOCK_RATE,
-                H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1b.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=1",
-                12,
+                H264Config.CODEC_PARAM_PROFILEID + "=" + H264Profile1b.BASELINE_PROFILE_ID + ";" + H264Config.CODEC_PARAM_PACKETIZATIONMODE + "=" + JavaPacketizer.H264_ENABLED_PACKETIZATION_MODE,
+                15,
                 96000,
                 H264Config.QCIF_WIDTH, 
                 H264Config.QCIF_HEIGHT).getMediaCodec();

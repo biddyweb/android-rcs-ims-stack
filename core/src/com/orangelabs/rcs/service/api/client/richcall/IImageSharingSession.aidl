@@ -18,11 +18,11 @@ interface IImageSharingSession {
 	// Get filename
 	String getFilename();
 	
-	// Get filesize
+	// Get file size
 	long getFilesize();
 
     // Get file thumbnail
-    String getFileThumbnail();
+    byte[] getFileThumbnail();
 
 	// Accept the session invitation
 	void acceptSession();

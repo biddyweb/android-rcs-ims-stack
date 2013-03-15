@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.1
+Release 2.5.2
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,11 +8,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- Geolocation Push.
-- Show us in map.
-- vCard sharing.
-- New Blackbird provisioning parameters.
-- Disable File transfer and Image sharing capabilities if memory low.
+- Video orientation management.
+- File transfer thumbnail.
+- Block/unblock capabilities (chat, FT).
+- Video depacketization STAP-A.
 
 
 Bugs fixed:
@@ -21,12 +20,18 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+v2.5.2
+- Mantis #0016862	Stack: No displayed IMDN report for geoloc message
+- Mantis #0016866	Stack: Service timer must be 120s (not 60s)
+- Mantis #0016859	Stack: Parameter TimerIdle should be only used for 1-1 chat
+- Deutsche Telekom	Stack: Management of packetization-mode 0
+
 v2.5.1
 - Mantis #0016859	Stack: Parameter TimerIdle should be only used for 1-1 chat
 - Mantis #0016852	Stack: Max length of a group chat message not taken into account
 - Mantis #0016788	Stack: Autoprovisioning of IMS domain not well extracted
-- Mantis #0016833   	Stack: re-REGISTER should use the default expire value (600000s) instead the received one in 200 OK
-- Mantis #0010397   	Stack: Check size of FT and IS with max in RCS settings
+- Mantis #0016833	Stack: re-REGISTER should use the default expire value (600000s) instead the received one in 200 OK
+- Mantis #0010397	Stack: Check size of FT and IS with max in RCS settings
 
 v2.5.0
 - Mantis #0016782	Stack: Difference in progress for file transfer between originating and terminating

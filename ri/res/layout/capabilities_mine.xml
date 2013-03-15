@@ -114,6 +114,18 @@
              android:clickable="false"
              android:text="@string/label_capabilities_geolocation_push" />
         </TableRow>
+        
+        <TableRow>
+            <TextView android:text=""
+             android:layout_marginLeft="5dip"
+             android:gravity="right"/>
+            <CheckBox android:id="@+id/file_transfer_thumbnail"
+             android:layout_marginLeft="5dip"
+             android:layout_marginRight="5dip"
+             android:textStyle="bold"
+             android:clickable="false"
+             android:text="@string/label_capabilities_file_transfer_thumbnail" />
+        </TableRow>
 
 		<TableRow>
 	        <TextView android:text="@string/label_capabilities_extensions"

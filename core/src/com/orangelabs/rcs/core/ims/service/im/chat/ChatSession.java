@@ -23,8 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
-import org.xml.sax.InputSource;
-
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
@@ -41,7 +39,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
-import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
@@ -592,23 +589,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Is composing event is reset
 	    isComposingMgr.receiveIsComposingEvent(contact, false);
 	    
-		try {	
-		    InputSource geolocInput = new InputSource(new ByteArrayInputStream(geolocDoc.getBytes()));
-		    GeolocInfoParser geolocParser = new GeolocInfoParser(geolocInput);
-		    GeolocInfoDocument geolocDocument = geolocParser.getGeoLocInfo();		    
-		    if (geolocDocument != null) {			    
-			    GeolocPush geoloc = new GeolocPush(geolocDocument.getLabel(),
-			    		geolocDocument.getLatitude(),
-			    		geolocDocument.getLongitude(),
-			    		geolocDocument.getAltitude(),
-			    		geolocDocument.getExpiration());
-			    GeolocMessage geolocMsg = new GeolocMessage(msgId, contact, geoloc, imdnDisplayedRequested, date);
-			    
-			    // Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		((ChatSessionListener)getListeners().get(i)).handleReceiveGeoloc(geolocMsg);
+		try {				
+			GeolocPush geoloc = ChatUtils.parseGeolocDocument(geolocDoc);		
+			if (geoloc != null ) {				
+				// Notify listeners
+				GeolocMessage geolocMsg = new GeolocMessage(msgId, contact, geoloc, imdnDisplayedRequested, date);
+				for(int i=0; i < getListeners().size(); i++) {
+					((ChatSessionListener)getListeners().get(i)).handleReceiveGeoloc(geolocMsg);
 				}
-		    }
+			}		    
 		} catch (Exception e) {
             if (logger.isActivated()) {
                 logger.error("Problem while receiving geolocation", e);

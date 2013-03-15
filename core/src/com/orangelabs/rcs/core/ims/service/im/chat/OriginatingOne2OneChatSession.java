@@ -109,12 +109,25 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		    	// Build CPIM part
 				String from = ChatUtils.ANOMYNOUS_URI;
 				String to = ChatUtils.ANOMYNOUS_URI;
-	    		String cpim = ChatUtils.buildCpimMessageWithImdn(
+				
+				boolean useImdn = getImdnManager().isImdnActivated();
+				String cpim;
+				if (useImdn) {
+					// Send message in CPIM + IMDN
+					cpim = ChatUtils.buildCpimMessageWithImdn(
 	    					from,
 	    					to,
 		        			getFirstMessage().getMessageId(),
 		        			StringUtils.encodeUTF8(getFirstMessage().getTextMessage()),
 		        			InstantMessage.MIME_TYPE);
+				} else {
+					// Send message in CPIM
+					cpim = ChatUtils.buildCpimMessage(
+	    					from,
+	    					to,
+		        			StringUtils.encodeUTF8(getFirstMessage().getTextMessage()),
+		        			InstantMessage.MIME_TYPE);
+				}
 		        
 		    	// Build multipart
 		        String multipart = 

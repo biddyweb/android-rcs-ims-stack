@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.protocol.rtp.util;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 
 /**
  * Buffer
@@ -107,6 +108,11 @@ public class Buffer {
      * The size of used items from array of buffer fragments
      */
     protected int fragmentsSize = 0;
+
+    /**
+     * Video orientation
+     */
+    private VideoOrientation videoOrientation;
 
 	/**
 	 * Get the data format
@@ -360,4 +366,23 @@ public class Buffer {
     public boolean isFragmented() {
         return (fragments != null && fragments.length > 0 && fragmentsSize > 0);
     }
+
+    /**
+     * Gets the VideoOrientation
+     *
+     * @return Video orientation
+     */
+    public VideoOrientation getVideoOrientation() {
+        return videoOrientation;
+    }
+
+    /**
+     * Sets the video orientation
+     *
+     * @param videoOrientation VideoOrientation
+     */
+    public void setVideoOrientation(VideoOrientation videoOrientation) {
+        this.videoOrientation = videoOrientation;
+    }
+
 }

@@ -1,3 +1,20 @@
+/*******************************************************************************
+ * Software Name : RCS IMS Stack
+ *
+ * Copyright (C) 2010 France Telecom S.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package com.orangelabs.rcs.ri.messaging;
 
 import android.app.Activity;
@@ -41,6 +58,11 @@ public class EditGeoloc extends Activity {
 	private EditText altitudeEdit;
 
 	/**
+	 * Accuracy editor
+	 */
+	private EditText accuracyEdit;
+
+	/**
 	 * Activity result constant
 	 */
 	public final static int SELECT_GEOLOCATION = 0;
@@ -62,6 +84,7 @@ public class EditGeoloc extends Activity {
 		latitudeEdit = (EditText)findViewById(R.id.latitude);
 		longitudeEdit = (EditText)findViewById(R.id.longitude);
 		altitudeEdit = (EditText)findViewById(R.id.altitude);
+		accuracyEdit = (EditText)findViewById(R.id.accuracy);
 		
         // Set button callback
         Button sendBtn = (Button)findViewById(R.id.send_btn);
@@ -87,6 +110,7 @@ public class EditGeoloc extends Activity {
 			latitudeEdit.setText(String.valueOf(lastKnownLoc.getLatitude()));
 			longitudeEdit.setText(String.valueOf(lastKnownLoc.getLongitude()));
 			altitudeEdit.setText(String.valueOf(lastKnownLoc.getAltitude()));
+			accuracyEdit.setText(String.valueOf(lastKnownLoc.getAccuracy()));
 		}
 		super.onResume();
 	}
@@ -111,11 +135,17 @@ public class EditGeoloc extends Activity {
     			altitudeEdit.setText("0.0");
     		}
     		
+        	String acc = accuracyEdit.getText().toString().trim();
+    		if (acc.length() == 0) { 	
+    			accuracyEdit.setText("0");
+    		}
+
     		Intent in = new Intent();
     		in.putExtra("label", locationEdit.getText().toString());
     		in.putExtra("latitude", Double.parseDouble(lat));
     		in.putExtra("longitude", Double.parseDouble(lon));
     		in.putExtra("altitude", Double.parseDouble(alt));
+    		in.putExtra("accuracy", Float.parseFloat(acc));
     		setResult(-1, in);
     		finish();
         }

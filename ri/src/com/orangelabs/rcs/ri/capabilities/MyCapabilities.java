@@ -78,7 +78,9 @@ public class MyCapabilities extends Activity {
         socialPresence.setChecked(capabilities.isSocialPresenceSupported());
         CheckBox geolocationPush = (CheckBox)findViewById(R.id.geolocaction_push);
         geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
-
+        CheckBox ftThumbnail = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
+        ftThumbnail.setChecked(capabilities.isFileTransferThumbnailSupported());
+        
         // Set extensions
         TextView extensions = (TextView)findViewById(R.id.extensions);
         String result = "";

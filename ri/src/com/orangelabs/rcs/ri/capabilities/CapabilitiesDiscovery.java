@@ -219,6 +219,7 @@ public class CapabilitiesDiscovery extends Activity {
     	CheckBox presenceDiscovery = (CheckBox)findViewById(R.id.presence_discovery);
     	CheckBox socialPresence = (CheckBox)findViewById(R.id.social_presence);
         CheckBox geolocationPush = (CheckBox)findViewById(R.id.geolocation_push);
+        CheckBox ftThumbnail = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
         TextView extensions = (TextView)findViewById(R.id.extensions);
 
     	if (capabilities != null) {
@@ -234,6 +235,7 @@ public class CapabilitiesDiscovery extends Activity {
     		presenceDiscovery.setVisibility(View.VISIBLE);
     		socialPresence.setVisibility(View.VISIBLE);
             geolocationPush.setVisibility(View.VISIBLE);
+            ftThumbnail.setVisibility(View.VISIBLE);
     		imageCSh.setChecked(capabilities.isImageSharingSupported());
     		videoCSh.setChecked(capabilities.isVideoSharingSupported());
     		ft.setChecked(capabilities.isFileTransferSupported());
@@ -242,6 +244,7 @@ public class CapabilitiesDiscovery extends Activity {
     		presenceDiscovery.setChecked(capabilities.isPresenceDiscoverySupported());
     		socialPresence.setChecked(capabilities.isSocialPresenceSupported());
             geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
+            ftThumbnail.setChecked(capabilities.isFileTransferThumbnailSupported());
 
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
@@ -262,6 +265,7 @@ public class CapabilitiesDiscovery extends Activity {
     		presenceDiscovery.setVisibility(View.GONE);
     		socialPresence.setVisibility(View.GONE);
     		geolocationPush.setVisibility(View.GONE);
+    		ftThumbnail.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
     }

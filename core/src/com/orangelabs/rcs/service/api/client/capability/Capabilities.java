@@ -73,6 +73,11 @@ public class Capabilities implements Parcelable {
      * Geolocation push support
      */
     private boolean geolocationPush = false;
+    
+    /**
+     * File Transfer Thumbnail support
+     */
+    private boolean fileTransferThumbnail = false;
 
 	/**
 	 * List of supported extensions
@@ -105,6 +110,7 @@ public class Capabilities implements Parcelable {
 		this.socialPresence = source.readInt() != 0;
         this.fileTransferHttp = source.readInt() != 0;
         this.geolocationPush = source.readInt() != 0;
+        this.fileTransferThumbnail = source.readInt() != 0;
 		this.timestamp = source.readLong();
 		source.readStringList(this.extensions);
     }
@@ -135,6 +141,7 @@ public class Capabilities implements Parcelable {
     	dest.writeInt(socialPresence ? 1 : 0);
         dest.writeInt(fileTransferHttp ? 1 : 0);
         dest.writeInt(geolocationPush ? 1 : 0);
+        dest.writeInt(fileTransferThumbnail ? 1 : 0);
     	dest.writeLong(timestamp);
 		if (extensions!=null && extensions.size()>0){
 			dest.writeStringList(extensions);
@@ -318,6 +325,24 @@ public class Capabilities implements Parcelable {
     }
 
 	/**
+	 * Is file transfer thumbnail supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isFileTransferThumbnailSupported() {
+		return fileTransferThumbnail;
+	}
+	
+	/**
+	 * Set the file transfer thumbnail support
+	 * 
+	 * @param supported Supported 
+	 */
+	public void setFileTransferThumbnailSupport(boolean supported) {
+		this.fileTransferThumbnail = supported;
+	}
+    
+	/**
 	 * Add supported extension
 	 * 
 	 * @param tag Feature tag
@@ -368,6 +393,7 @@ public class Capabilities implements Parcelable {
 			", Social_presence=" + socialPresence +
             ", FToHttp=" + fileTransferHttp +
             ", GeolocationPush=" + geolocationPush +
+            ", FT_Thumbnail=" + fileTransferThumbnail +
 			", Timestamp=" + timestamp;
 	}
 }

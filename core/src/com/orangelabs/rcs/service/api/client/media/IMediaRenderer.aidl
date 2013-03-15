@@ -36,4 +36,7 @@ interface IMediaRenderer {
 
 	// Set media codec
 	void setMediaCodec(in MediaCodec mediaCodec);
+
+    // Set extension header orientation id
+    void setOrientationHeaderId(int headerId);
 }

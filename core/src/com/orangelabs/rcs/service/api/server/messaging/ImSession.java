@@ -284,7 +284,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @return Boolean
 	 */
 	public boolean isGeolocSupported() {
-		return RcsSettings.getInstance().isGeoLocationPushSupported(); // TODO && session.isGeolocSupportedByServer();
+		return RcsSettings.getInstance().isGeoLocationPushSupported() && session.isGeolocSupportedByServer();
 	}
 	
     /**

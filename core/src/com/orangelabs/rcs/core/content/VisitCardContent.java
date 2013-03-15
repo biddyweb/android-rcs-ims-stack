@@ -25,7 +25,11 @@ package com.orangelabs.rcs.core.content;
  * @author vfml3370
  */
 public class VisitCardContent extends MmContent {
-
+	/**
+	 * Encoding type
+	 */
+	private static final String ENCODING = "text/vcard";
+	
 	/**
 	 * Constructor
 	 * 
@@ -33,7 +37,7 @@ public class VisitCardContent extends MmContent {
 	 * @param size Content size
 	 */
 	public VisitCardContent(String url, long size) {
-		super(url, "text/vcard", size);
+		super(url, ENCODING, size);
 	}
 
 	/**
@@ -42,6 +46,6 @@ public class VisitCardContent extends MmContent {
 	 * @param url URL
 	 */
 	public VisitCardContent(String url) {
-		super(url, "text/vcard");
+		super(url, ENCODING);
 	}
 }

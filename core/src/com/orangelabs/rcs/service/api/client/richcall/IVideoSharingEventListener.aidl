@@ -8,6 +8,9 @@ interface IVideoSharingEventListener {
 	// Session is started
 	void handleSessionStarted();
 
+    // The incoming media size has changed
+    void handleMediaResized(in int width, in int height);
+
 	// Session has been aborted
 	void handleSessionAborted(in int reason);
     

@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
@@ -36,9 +36,10 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
-import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.utils.Base64;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -48,11 +49,16 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class OriginatingImageTransferSession extends ImageTransferSession implements MsrpEventListener {
 	/**
+	 * Boundary tag
+	 */
+	private final static String BOUNDARY_TAG = "boundary1";
+	
+	/**
 	 * MSRP manager
 	 */
 	private MsrpManager msrpMgr = null;
 
-    /**
+	/**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -63,9 +69,10 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	 * @param parent IMS service
 	 * @param content Content to be shared
 	 * @param contact Remote contact
+	 * @param thumbnail Thumbnail option
 	 */
-	public OriginatingImageTransferSession(ImsService parent, MmContent content, String contact) {
-		super(parent, content, contact);
+	public OriginatingImageTransferSession(ImsService parent, MmContent content, String contact, byte[] thumbnail) {
+		super(parent, content, contact, thumbnail);
 
 		// Create dialog path
 		createOriginatingDialogPath();
@@ -126,15 +133,44 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	    		sdp += "a=file-location:" + location + SipUtils.CRLF;
 	    	}
 	   
-			// Set the local SDP part in the dialog path
-	    	getDialogPath().setLocalContent(sdp);
+	    	if (getThumbnail() != null) {
+	    		sdp += "a=file-icon:cid:image@joyn.com" + SipUtils.CRLF;
+	    		
+	    		// Create the thumbnail
+	    		byte[] bytes = ChatUtils.createFileThumbnail(getContent().getUrl());
+	    		
+	    		// Encode the thumbnail file
+	    	    String imageEncoded = Base64.encodeBase64ToString(bytes);
+
+	    		// Build multipart
+	    		String multipart = 
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
+	    				"Content-Type: application/sdp" + SipUtils.CRLF +
+	    				"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
+	    				SipUtils.CRLF +
+	    				sdp + SipUtils.CRLF + 
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
+	    				"Content-Type: " + getContent().getEncoding() + SipUtils.CRLF +
+	    				"Content-Transfer-Encoding: base64" + SipUtils.CRLF +
+	    				"Content-ID: <image@joyn.com>" + SipUtils.CRLF +
+	    				"Content-Length: "+ imageEncoded.length() + SipUtils.CRLF +
+	    				"Content-Disposition: icon" + SipUtils.CRLF +
+	    				SipUtils.CRLF +
+	    				imageEncoded + SipUtils.CRLF +
+	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + Multipart.BOUNDARY_DELIMITER;
+
+	    		// Set the local SDP part in the dialog path
+	    		getDialogPath().setLocalContent(multipart);	    		
+	    	} else {
+	    		// Set the local SDP part in the dialog path
+	    		getDialogPath().setLocalContent(sdp);
+	    	}
 
 	        // Create an INVITE request
 	        if (logger.isActivated()) {
 	        	logger.info("Send INVITE");
 	        }
-	        SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
-	        		RichcallService.FEATURE_TAGS_IMAGE_SHARE, sdp);
+	        SipRequest invite = createInvite();	     
 
 	        // Set the Authorization header
 	        getAuthenticationAgent().setAuthorizationHeader(invite);

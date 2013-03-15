@@ -112,7 +112,11 @@ public class GeolocInfoParser extends DefaultHandler {
 	}
 
 	public void endElement(String namespaceURL, String localName, String qname) {
-		
+		if (localName.equals("radius")) {
+			if (geoloc != null) {
+				geoloc.setRadius(Float.parseFloat(accumulator.toString().trim()));
+			}
+		} else
 		if (localName.equals("retention-expiry")) {			                  
 			if (geoloc != null) {
 				geoloc.setExpiration(DateUtils.decodeDate(accumulator.toString().trim()));

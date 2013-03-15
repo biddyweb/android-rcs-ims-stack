@@ -74,6 +74,16 @@ public class AndroidNetworkFactory extends NetworkFactory {
 	}
 
     /**
+     * Create a datagram connection with a specific SO timeout
+     *
+     * @param timeout SO timeout
+     * @return Datagram connection
+     */
+    public DatagramConnection createDatagramConnection(int timeout) {
+        return new AndroidDatagramConnection(timeout);
+    }
+
+    /**
      * Create a socket client connection
      * 
      * @return Socket connection

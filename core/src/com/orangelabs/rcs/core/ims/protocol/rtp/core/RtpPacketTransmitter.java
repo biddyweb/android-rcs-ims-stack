@@ -183,6 +183,13 @@ public class RtpPacketTransmitter {
         rtppacket.ssrc = rtcpSession.SSRC;
 		rtppacket.payloadoffset = buffer.getOffset();
 		rtppacket.payloadlength = buffer.getLength();
+        if (buffer.getVideoOrientation() != null) {
+            rtppacket.extension = true;
+            rtppacket.extensionHeader = new RtpExtensionHeader();
+            rtppacket.extensionHeader.addElement(
+                    buffer.getVideoOrientation().getHeaderId(), 
+                    new byte[]{buffer.getVideoOrientation().getVideoOrientation()});
+        }
 		return rtppacket;
 	}
 

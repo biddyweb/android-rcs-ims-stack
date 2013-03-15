@@ -150,6 +150,11 @@ public class RegistrationManager extends PeriodicRefresher {
 			tags.add(FeatureTags.FEATURE_3GPP_IMAGE_SHARE);
 		}
 		
+		// Push geoloc support
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+			tags.add(FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH);
+		}
+
 		return tags;		
 	}		
 	

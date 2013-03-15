@@ -277,6 +277,13 @@ public class Core {
 	public InstantMessagingService getImService() {
 		return getImsModule().getInstantMessagingService();
 	}
+	
+	/**
+	 * Returns the IP call service
+	 * 
+	 * @return IP call service
+	 */
+	// TODO : add here a VOIP service getter
 
 	/**
 	 * Returns the SIP service

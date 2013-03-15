@@ -66,6 +66,11 @@ public abstract class ImsService {
      * SIP service
      */
 	public static final int SIP_SERVICE = 5;
+	
+    /**
+     * IP call service
+     */
+	// TODO : add here a VOIP service array id
 
 	/**
 	 * Activation flag

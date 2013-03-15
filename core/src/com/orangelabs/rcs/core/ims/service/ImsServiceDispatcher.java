@@ -133,11 +133,14 @@ public class ImsServiceDispatcher extends Thread {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
 		
-		// Check the To header
-		if (!request.getToUri().contains(ImsModule.IMS_USER_PROFILE.getUsername())) {
+		// TODO : add below the dispatch of sip request and call the VOIP service features
+		
+		// Check the IP address of the request-URI
+		String localIpAddress = imsModule.getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
+		if (!request.getRequestURI().contains(localIpAddress)) {
 			// Send a 404 error
 			if (logger.isActivated()) {
-				logger.debug("To URI doesn't match my public username: should never arrive");
+				logger.debug("Request-URI IP doesn't match with registered contact: reject the request");
 			}
 			sendFinalResponse(request, 404);
 			return;
@@ -188,7 +191,16 @@ public class ImsServiceDispatcher extends Thread {
 			send100Trying(request);
 
     		// Extract the SDP part
-	    	String sdp = request.getContent().toLowerCase();
+			String sdp = request.getSdpContent();
+			if (sdp == null) {
+				// No SDP found: reject the invitation with a 606 Not Acceptable
+				if (logger.isActivated()) {
+					logger.debug("No SDP found: automatically reject");
+				}
+				sendFinalResponse(request, 606);
+				return;
+			}
+			sdp = sdp.toLowerCase();
 
 	    	// New incoming session invitation
 	    	if (isTagPresent(sdp, "msrp") &&

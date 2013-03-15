@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -46,6 +47,7 @@ public class InitiateOutgoingVisioSharing extends Activity {
         super.onCreate(savedInstanceState);
 
         RcsSettings.createInstance(getApplicationContext());
+        AndroidFactory.setApplicationContext(getApplicationContext());
 
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);

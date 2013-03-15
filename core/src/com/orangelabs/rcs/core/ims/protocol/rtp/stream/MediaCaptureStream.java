@@ -117,9 +117,9 @@ public class MediaCaptureStream implements ProcessorInputStream {
     	if (sample == null) {
     		return null;
     	}
-    	
+
     	// Create a buffer
-	    buffer.setData(sample.getData());   	
+	    buffer.setData(sample.getData());
 	    buffer.setLength(sample.getLength());
     	buffer.setFormat(format);
     	buffer.setSequenceNumber(seqNo++);
@@ -127,6 +127,7 @@ public class MediaCaptureStream implements ProcessorInputStream {
     		buffer.setFlags(Buffer.FLAG_RTP_MARKER);
     	}
     	buffer.setTimeStamp(sample.getTimeStamp());
-    	return buffer;  
-    }    
+        buffer.setVideoOrientation(sample.getVideoOrientation());
+    	return buffer;
+    }
 }

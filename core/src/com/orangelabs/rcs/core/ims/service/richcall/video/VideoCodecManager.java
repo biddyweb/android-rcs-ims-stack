@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.richcall.video;
 
 import java.util.Vector;
 
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
@@ -33,64 +32,6 @@ import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
  * @author hlxn7157
  */
 public class VideoCodecManager {
-
-    /**
-     * Create the SDP part for a given codec
-     *
-     * @param codec Media codec
-     * @param localRtpPort Local RTP port
-     * @return SDP part
-     */
-    public static String createCodecSdpPart(MediaCodec codec, int localRtpPort) {
-    	VideoCodec videoCodec = new VideoCodec(codec);
-        String result = "";
-        result += "m=video " + localRtpPort + " RTP/AVP" + " " + videoCodec.getPayload() + SipUtils.CRLF;
-        result += "a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF;
-        if (videoCodec.getWidth() != 0 && videoCodec.getHeight() != 0) {
-            result += "a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF;
-        }
-        if (videoCodec.getFramerate() != 0) {
-            result += "a=framerate:" + videoCodec.getFramerate() + SipUtils.CRLF;
-        }
-        result += "a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF;
-        return result;
-    }
-
-    /**
-     * Create the SDP part for a list of codecs
-     *
-     * @param supportedCodecs List of supported media codecs
-     * @return SDP part
-     */
-    public static String createCodecSdpPart(MediaCodec[] supportedCodecs, int localRtpPort) {
-        StringBuffer result = new StringBuffer();
-
-        // Create video codec list
-        Vector<VideoCodec> codecs = new Vector<VideoCodec>();
-        for (int i = 0; i < supportedCodecs.length; i++) {
-            codecs.add(new VideoCodec(supportedCodecs[i]));
-        }
-
-        result.append("m=video " + localRtpPort + " RTP/AVP");
-        for (int i = 0; i < codecs.size(); i++) {
-        	VideoCodec videoCodec = codecs.elementAt(i);
-            result.append(" " + videoCodec.getPayload());
-        }
-        result.append(SipUtils.CRLF);
-        for (int i = 0; i < codecs.size(); i++) {
-            VideoCodec videoCodec = codecs.elementAt(i);
-            result.append("a=rtpmap:" + videoCodec.getPayload() + " " + videoCodec.getCodecName() + "/" + videoCodec.getClockRate() + SipUtils.CRLF);
-            if (videoCodec.getWidth() != 0 && videoCodec.getHeight() != 0) {
-                result.append("a=framesize:" + videoCodec.getPayload() + " " + videoCodec.getWidth() + "-" + videoCodec.getHeight() + SipUtils.CRLF);
-            }
-            if (videoCodec.getFramerate() != 0) {
-                result.append("a=framerate:" + videoCodec.getFramerate() + SipUtils.CRLF);
-            }
-            result.append("a=fmtp:" + videoCodec.getPayload() + " " + videoCodec.getCodecParams() + SipUtils.CRLF);
-        }
-
-        return result.toString();
-    }
 
     /**
      * Video codec negotiation

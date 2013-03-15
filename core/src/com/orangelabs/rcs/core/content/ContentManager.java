@@ -18,17 +18,18 @@
 
 package com.orangelabs.rcs.core.content;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Vector;
+
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.MimeManager;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Vector;
 
 /**
  * Multimedia content manager
@@ -127,6 +128,10 @@ public class ContentManager{
 	    		// Visit Card content
 	    		return new VisitCardContent(url, size);
 	        }
+	    	if (mime.equals("application/vnd.gsma.rcspushlocation+xml")) {
+	    		// Geoloc content
+	    		return new GeolocContent(url, size);
+	        }
 		}
 		
 		// File content
@@ -176,25 +181,25 @@ public class ContentManager{
 	}
 
 	/**
-     * Create a content object from SDP data
+     * Create a content object from SDP description of a SIP invite request
      * 
-     * @param sdp SDP part
+     * @param invite SIP invite request
      * @return Content instance
      */
-	public static MmContent createMmContentFromSdp(String sdp) {
-		// Set the content
+	public static MmContent createMmContentFromSdp(SipRequest invite) {
 		try {
-	    	SdpParser parser = new SdpParser(sdp.getBytes());
+			String remoteSdp = invite.getSdpContent();
+	    	SdpParser parser = new SdpParser(remoteSdp.getBytes());
 			Vector<MediaDescription> media = parser.getMediaDescriptions();
 			MediaDescription desc = media.elementAt(0);
 			MediaAttribute attr1 = desc.getMediaAttribute("file-selector");
-	        String fileSelectorValue = attr1.getValue();
+			String fileSelectorValue = attr1.getValue();
 			String mime = SipUtils.extractParameter(fileSelectorValue, "type:", "application/octet-stream");
 			long size = Long.parseLong(SipUtils.extractParameter(fileSelectorValue, "size:", "-1"));
 			String filename = SipUtils.extractParameter(fileSelectorValue, "name:", "");
-			String url = ContentManager.generateUrlForReceivedContent(filename, mime);
-			MmContent content = ContentManager.createMmContentFromMime(url, mime, size);
-			return content;
+			String url = ContentManager.generateUrlForReceivedContent(filename, mime);				
+			MmContent mContent = ContentManager.createMmContentFromMime(url, mime, size);
+			return mContent;
 		} catch(Exception e) {
 			return null;
 		}

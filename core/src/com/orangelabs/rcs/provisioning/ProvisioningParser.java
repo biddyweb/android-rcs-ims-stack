@@ -775,6 +775,7 @@ public class ProvisioningParser {
         String maxSize1toM = null;
         String timerIdle = null;
         String maxSizeFileTransfer = null;
+        String ftThumb = null;
         String presSrvCap = null;
         String deferredMsgFuncUri = null;
         String maxAdhocGroupSize = null;
@@ -936,6 +937,19 @@ public class ProvisioningParser {
                     }
                 }
 
+                if (ftThumb == null) {
+                    if ((ftThumb = getValueByParamName("ftThumb", childnode)) != null) {
+                        if (ftThumb.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL, RcsSettingsData.FALSE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL, RcsSettingsData.TRUE);
+                        }
+                        continue;
+                    }
+                }
+                
                 if (presSrvCap == null) {
                     if ((presSrvCap = getValueByParamName("pres-srv-cap", childnode)) != null) {
                         // Not used for RCS

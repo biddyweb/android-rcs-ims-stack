@@ -19,7 +19,10 @@
 package com.orangelabs.rcs.provider.eab;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,12 +36,14 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.AggregationExceptions;
@@ -181,6 +186,11 @@ public final class ContactsManager {
     private static final String MIMETYPE_CAPABILITY_GEOLOCATION_PUSH = "vnd.android.cursor.item/com.orangelabs.rcs.capability.geolocation-push";
     
     /** 
+     * MIME type for file transfer thumbnail
+     */
+    private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer-thumbnail";
+    
+    /** 
      * MIME type for RCS extensions 
      */
     private static final String MIMETYPE_CAPABILITY_EXTENSIONS = "vnd.android.cursor.item/com.orangelabs.rcs.capability.extensions";
@@ -215,6 +225,11 @@ public final class ContactsManager {
      */
     private static final String MIMETYPE_IM_BLOCKED = "vnd.android.cursor.item/com.orangelabs.rcs.im-blocked";
 
+    /** 
+     * MIME type for block FT status 
+     */
+    private static final String MIMETYPE_FT_BLOCKED = "vnd.android.cursor.item/com.orangelabs.rcs.ft-blocked";
+    
     /**
      * ONLINE available status
      */
@@ -658,6 +673,11 @@ public final class ContactsManager {
     			}
     			// Geolocation push
     			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_GEOLOCATION_PUSH, newInfo.getCapabilities().isGeolocationPushSupported() && isRegistered, oldInfo.getCapabilities().isGeolocationPushSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// File transfer thumbnail
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL, newInfo.getCapabilities().isFileTransferThumbnailSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferThumbnailSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -2592,6 +2612,10 @@ public final class ContactsManager {
         if (capabilities.isGeolocationPushSupported()) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_GEOLOCATION_PUSH));
         }
+        // File transfer thumbnail
+        if (capabilities.isFileTransferThumbnailSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL));
+        }
         // Insert extensions
 		boolean hasCommonExtensions = false;
 		StringBuffer extension = new StringBuffer();
@@ -3475,6 +3499,119 @@ public final class ContactsManager {
 	}
     
     /**
+     * Mark the contact as "blocked for FT"
+     * 
+     * @param contact
+     * @param flag indicating if we enable or disable the FT sessions with the contact
+     */
+    public void setFtBlockedForContact(String contact, boolean flag){
+		// May be called from outside the core, so be sure the number format is international before doing the queries
+    	contact = PhoneUtils.extractNumberFromUri(contact);
+
+		// Update the database		
+		// Get all the Ids from raw contacts that have this phone number
+		List<Long> rawContactIds = getRawContactIdsFromPhoneNumber(contact);
+
+		ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+		// For each, prepare the modifications
+		for (int i=0;i<rawContactIds.size();i++){
+			long rawContactId = rawContactIds.get(i);
+			
+			// Get the associated RCS raw contact id
+			long rcsRawContactId = getAssociatedRcsRawContact(rawContactId, contact);
+			
+			if (rcsRawContactId==INVALID_ID){
+				// If no RCS raw contact id is associated to the raw contact, create a new one
+				ContactInfo newInfo = new ContactInfo();
+				newInfo.setContact(contact);
+				rcsRawContactId = createRcsContact(newInfo, rawContactId);
+			}
+			// Get the row id of this capability for this raw contact
+			long dataId = getDataIdForRawContact(rawContactId, MIMETYPE_FT_BLOCKED);
+	        
+	        if (dataId == INVALID_ID) {
+	        	// The capability is not present for now
+	        	if (flag){
+	        		// We have to add it
+	        		ops.add(insertMimeTypeForContact(rawContactId, contact, MIMETYPE_FT_BLOCKED));
+	        	}
+	        }else{
+	        	// The capability is present
+	        	if (!flag){
+	        		// We have to remove it
+	        		ops.add(deleteMimeTypeForContact(rawContactId, contact, MIMETYPE_FT_BLOCKED));
+	        	}
+	        }
+		}
+		
+		if (!ops.isEmpty()){
+			// Do the actual database modifications
+			try {
+				ctx.getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+			} catch (RemoteException e) {
+				if (logger.isActivated()){
+					logger.error("Something went wrong when updating the database with the contact info",e);
+				}
+			} catch (OperationApplicationException e) {
+				if (logger.isActivated()){
+					logger.error("Something went wrong when updating the database with the contact info",e);
+				}
+			}
+		}
+    }
+    
+    /**
+     * Get whether the "FT" feature is enabled or not for the contact
+     * 
+     * @param contact
+     * @return flag indicating if FT sessions with the contact are enabled or not
+     */
+    public boolean isFtBlockedForContact(String contact){
+		// May be called from outside the core, so be sure the number format is international before doing the queries
+    	contact = PhoneUtils.extractNumberFromUri(contact);
+    	
+		String[] projection = {Data.DATA1, Data.MIMETYPE};
+
+        String selection = Data.MIMETYPE + "=?" + " AND " + Data.DATA1+ "=?";
+        String[] selectionArgs = { MIMETYPE_FT_BLOCKED , contact};
+        Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
+        		projection, 
+        		selection, 
+        		selectionArgs, 
+        		null);
+		if (c.getCount()>0){
+			c.close();
+			return true;
+		}
+		c.close();
+    	return false;
+    }
+    
+	/**
+	 * Get the contacts that are "FT blocked"
+	 * 
+	 * @return list containing all contacts that are "FT blocked" 
+	 */
+	public List<String> getFtBlockedContacts(){
+		List<String> imBlockedNumbers = new ArrayList<String>();
+        String[] projection = {Data.DATA1, Data.MIMETYPE};
+
+        String selection = Data.MIMETYPE + "=?";
+        String[] selectionArgs = { MIMETYPE_FT_BLOCKED };
+        Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
+        		projection, 
+        		selection, 
+        		selectionArgs, 
+        		null);
+		
+		while (c.moveToNext()) {
+			imBlockedNumbers.add(c.getString(0));
+		}
+		c.close();
+		return imBlockedNumbers;
+	}
+	
+    /**
      * Utility to create a ContactInfo object from a cursor containing data
      * 
      * @param cursor
@@ -3541,8 +3678,11 @@ public final class ContactsManager {
     			// Set capability social presence
 				capabilities.setSocialPresenceSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_GEOLOCATION_PUSH)){
-    			// Set capability social presence
-				capabilities.setGeolocationPushSupport(true);
+    			// Set capability geoloc push
+    			capabilities.setGeolocationPushSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL)){
+    			// Set capability file transfer thumbnail
+				capabilities.setFileTransferThumbnailSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_EXTENSIONS)){
     			// Set RCS extensions capability
     			int columnIndex = cursor.getColumnIndex(Data.DATA2);
@@ -3673,6 +3813,8 @@ public final class ContactsManager {
                 MIMETYPE_CAPABILITY_FILE_TRANSFER,
                 MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY,
                 MIMETYPE_CAPABILITY_SOCIAL_PRESENCE,
+                MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
+                MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
                 MIMETYPE_CAPABILITY_EXTENSIONS
         };
 
@@ -3880,6 +4022,8 @@ public final class ContactsManager {
     		    MIMETYPE_CAPABILITY_FILE_TRANSFER,
     		    MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY,
     		    MIMETYPE_CAPABILITY_SOCIAL_PRESENCE,
+    		    MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
+    		    MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
     		    MIMETYPE_CAPABILITY_EXTENSIONS,
     		    MIMETYPE_SEE_MY_PROFILE,
     		    MIMETYPE_RCS_CONTACT,
@@ -3898,5 +4042,47 @@ public final class ContactsManager {
 
         // Delete presence data
         ctx.getContentResolver().delete(RichAddressBookData.CONTENT_URI, null, null);
+    }
+    
+    /**
+     * Get the vCard file associated to a contact
+     *
+     * @param uri Contact URI in database
+     * @return vCard filename
+     */
+    public String getVisitCard(Uri uri) {
+    	String fileName = null;
+    	
+		Cursor cursor = ctx.getContentResolver().query(uri, null, null, null, null);   			
+    	while(cursor.moveToNext()) {
+    		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+    		String lookupKey = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
+    		Uri vCardUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
+    		AssetFileDescriptor fd;
+    		try {
+    			fd = ctx.getContentResolver().openAssetFileDescriptor(vCardUri, "r");
+    			FileInputStream fis = fd.createInputStream();
+    			byte[] buf = new byte[(int) fd.getDeclaredLength()];
+    			fis.read(buf);
+    			String Vcard = new String(buf);
+
+    			fileName = Environment.getExternalStorageDirectory().toString() + File.separator + name + ".vcf";
+    			
+    			File vCardFile = new File(fileName);
+
+    			if (vCardFile.exists()) 
+    				vCardFile.delete();
+
+    			FileOutputStream mFileOutputStream = new FileOutputStream(vCardFile, true);
+    			mFileOutputStream.write(Vcard.toString().getBytes());
+    			mFileOutputStream.close();
+    		} catch (Exception e) {
+				if (logger.isActivated()){
+					logger.error("Something went wrong when during creation of vcard",e);
+				}				
+    		}
+    	}
+    	cursor.close();
+    	return fileName;
     }
 }
