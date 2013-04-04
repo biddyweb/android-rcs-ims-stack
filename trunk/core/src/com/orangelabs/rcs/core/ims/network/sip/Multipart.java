@@ -19,6 +19,8 @@ package com.orangelabs.rcs.core.ims.network.sip;
 
 import java.util.Hashtable;
 
+import javax2.sip.header.ContentTypeHeader;
+
 /**
  * Multipart content for SIP message
  * 
@@ -29,12 +31,7 @@ public class Multipart {
 	 * Boundary delimiter
 	 */
 	public final static String BOUNDARY_DELIMITER = "--";
-	
-	/**
-	 * Content type header
-	 */
-	private final static String CONTENT_TYPE_HEADER = "Content-Type";
-	
+
 	/**
 	 * Parts
 	 */
@@ -62,13 +59,13 @@ public class Multipart {
 	                        String part = fragment.substring(begin).trim();
 	                        
 	                        // Extract MIME type from content type
-		                    int beginType = type.indexOf(CONTENT_TYPE_HEADER);
+		                    int beginType = type.indexOf(ContentTypeHeader.NAME);
 		                    int endType = type.indexOf(SipUtils.CRLF, beginType);
 		                    String mime;
 		                    if (endType == -1) {
-			                    mime = type.substring(beginType+CONTENT_TYPE_HEADER.length()+1).trim();
+			                    mime = type.substring(beginType+ContentTypeHeader.NAME.length()+1).trim();
 		                    } else {
-		                    	mime = type.substring(beginType+CONTENT_TYPE_HEADER.length()+1, endType).trim();
+		                    	mime = type.substring(beginType+ContentTypeHeader.NAME.length()+1, endType).trim();
 		                    }
 		                    
 		                    // Add part in lowercase

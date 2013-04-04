@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 74;
+        private static final int DATABASE_VERSION = 75;
 
         private Context ctx;
 
@@ -151,6 +151,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_VIDEO_SHARING,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_IM_SESSION,				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER,			RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.TRUE);

@@ -298,7 +298,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
     public void handleSharingError(ContentSharingError error) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Sharing error");
+				logger.info("Sharing error " + error.getErrorCode());
 			}
 	
 			// Update rich call history

@@ -44,6 +44,12 @@ public class FeatureTags {
 	public final static String FEATURE_3GPP_IMAGE_SHARE_RCS2 = "+g.3gpp.app_ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.gsma-is\"";
 	
 	/**
+	 * 3GPP location share feature tag
+	 */
+	public final static String FEATURE_3GPP_LOCATION_SHARE = "+g.3gpp.iari-ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.rcs.geopush\"";
+
+	
+	/**
 	 * RCS-e feature tag prefix
 	 */
 	public final static String FEATURE_RCSE = "+g.3gpp.iari-ref";
@@ -62,6 +68,11 @@ public class FeatureTags {
 	 * RCS-e file transfer feature tag
 	 */
 	public final static String FEATURE_RCSE_FT = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse.ft";
+
+	/**
+	 * RCS-e file transfer over HTTP feature tag
+	 */
+	public final static String FEATURE_RCSE_FT_HTTP = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcs.fthttp";
 
 	/**
 	 * RCS-e presence discovery feature tag

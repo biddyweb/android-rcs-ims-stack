@@ -723,16 +723,27 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Create SDP setup offer (see RFC6135, RFC4145)
 	 * 
-	 * @return Setup offer ("active" or "actpass")
+	 * @return Setup offer
 	 */
 	public String createSetupOffer() {
-    	// Active mode by default if there is a NAT. Active/passive mode is
-		// exchanged in order to be compatible with UE not supporting COMEDIA
     	if (isBehindNat()) {
+    		// Active mode by default if there is a NAT
     		return "active";
     	} else {
+        	// Active/passive mode is exchanged in order to be compatible
+    		// with UE not supporting COMEDIA
         	return "actpass";
     	}
+	}
+	
+	/**
+	 * Create SDP setup offer for mobile to mobile (see RFC6135, RFC4145)
+	 * 
+	 * @return Setup offer
+	 */
+	public String createMobileToMobileSetupOffer() {
+		// Always active mode proposed here
+		return "active";
 	}
 	
 	/**

@@ -35,6 +35,9 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.capability.CapabilityUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.geoloc.OriginatingGeolocTransferSession;
+import com.orangelabs.rcs.core.ims.service.richcall.geoloc.TerminatingGeolocTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.TerminatingImageTransferSession;
@@ -46,6 +49,7 @@ import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -66,6 +70,11 @@ public class RichcallService extends ImsService {
      * Image share features tags
      */
     public final static String[] FEATURE_TAGS_IMAGE_SHARE = { FeatureTags.FEATURE_3GPP_VIDEO_SHARE, FeatureTags.FEATURE_3GPP_IMAGE_SHARE };
+
+    /**
+     * Geoloc share features tags
+     */
+    public final static String[] FEATURE_TAGS_GEOLOC_SHARE = { FeatureTags.FEATURE_3GPP_VIDEO_SHARE, FeatureTags.FEATURE_3GPP_LOCATION_SHARE };
 
     /**
      * The logger
@@ -125,6 +134,24 @@ public class RichcallService extends ImsService {
         return result;
     }
 
+    /**
+     * Returns CSh sessions with a contact
+     *
+     * @param Contact
+     * @return List of sessions
+     */
+    public Vector<ContentSharingSession> getCShSessions(String contact) {
+        Vector<ContentSharingSession> result = new Vector<ContentSharingSession>();
+        Enumeration<ImsServiceSession> list = getSessions();
+        while (list.hasMoreElements()) {
+            ImsServiceSession session = list.nextElement();
+			if (PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
+				result.add((ContentSharingSession) session);
+			}
+        }
+        return result;
+    }    
+    
     /**
      * Initiate an image sharing session
      *
@@ -208,6 +235,86 @@ public class RichcallService extends ImsService {
 		return session;
 	}
 
+    /**
+     * Receive an image sharing invitation
+     *
+     * @param invite Initial invite
+     */
+	public void receiveImageSharingInvitation(SipRequest invite) {
+		if (logger.isActivated()) {
+    		logger.info("Receive an image sharing session invitation");
+    	}
+
+		// Test if call is established
+		if (!getImsModule().getCallManager().isCallConnected()) {
+			if (logger.isActivated()) {
+				logger.debug("Rich call not established: reject the invitation");
+			}
+			sendErrorResponse(invite, 606);
+			return;
+		}
+
+        // Reject if there are already 2 bidirectional sessions with a given contact
+		boolean rejectInvitation = false;
+        String contact = SipUtils.getAssertedIdentity(invite);
+        Vector<ContentSharingSession> currentSessions = getCShSessions();
+        if (currentSessions.size() >= 2) {
+        	// Already a bidirectional session
+            if (logger.isActivated()) {
+                logger.debug("Max sessions reached");
+            }
+        	rejectInvitation = true;
+        } else
+        if (currentSessions.size() == 1) {
+        	ContentSharingSession currentSession = currentSessions.elementAt(0);
+        	if (currentSession instanceof TerminatingImageTransferSession) {
+        		// Terminating session already used
+				if (logger.isActivated()) {
+				    logger.debug("Max terminating sessions reached");
+				}
+            	rejectInvitation = true;
+        	} else
+        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
+        		// Not the same contact
+				if (logger.isActivated()) {
+				    logger.debug("Only bidirectional session with same contact authorized");
+				}
+            	rejectInvitation = true;
+        	}
+        }
+        if (rejectInvitation) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of sharing sessions is achieved: reject the invitation");
+            }
+            sendErrorResponse(invite, 486);
+            return;
+        }
+
+		// Create a new session
+    	ImageTransferSession session = new TerminatingImageTransferSession(this, invite);
+
+        // Auto reject if file too big
+        int maxSize = ImageTransferSession.getMaxImageSharingSize();
+        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("Auto reject image sharing invitation");
+            }
+
+            // Decline the invitation
+            session.sendErrorResponse(invite, session.getDialogPath().getLocalTag(), 603);
+
+            // File too big
+            session.handleError(new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG));
+            return;
+        }
+
+		// Start the session
+		session.startSession();
+
+		// Notify listener
+		getImsModule().getCore().getListener().handleContentSharingTransferInvitation(session);
+	}
+	
     /**
      * Initiate a pre-recorded video sharing session
      *
@@ -403,13 +510,47 @@ public class RichcallService extends ImsService {
 	}
 
     /**
-     * Receive an image sharing invitation
+     * Initiate a geoloc sharing session
+     *
+     * @param contact Remote contact
+     * @param content Content to be shared
+     * @param geoloc Geoloc info
+     * @return CSh session
+     * @throws CoreException
+     */
+	public GeolocTransferSession initiateGeolocSharingSession(String contact, MmContent content, GeolocPush geoloc) throws CoreException {
+		if (logger.isActivated()) {
+			logger.info("Initiate geoloc sharing session with contact " + contact);
+		}
+
+		// Test if call is established
+		if (!getImsModule().getCallManager().isCallConnected()) {
+			if (logger.isActivated()) {
+				logger.debug("Rich call not established: cancel the initiation");
+			}
+            throw new CoreException("Call not established");
+        }
+
+		// Create a new session
+		OriginatingGeolocTransferSession session = new OriginatingGeolocTransferSession(
+				this,
+				content,
+				PhoneUtils.formatNumberToSipUri(contact),
+				geoloc);
+
+		// Start the session
+		session.startSession();
+		return session;
+	}
+
+    /**
+     * Receive a geoloc sharing invitation
      *
      * @param invite Initial invite
      */
-	public void receiveImageSharingInvitation(SipRequest invite) {
+	public void receiveGeolocSharingInvitation(SipRequest invite) {
 		if (logger.isActivated()) {
-    		logger.info("Receive an image sharing session invitation");
+    		logger.info("Receive a geoloc sharing session invitation");
     	}
 
 		// Test if call is established
@@ -421,59 +562,8 @@ public class RichcallService extends ImsService {
 			return;
 		}
 
-        // Reject if there are already 2 bidirectional sessions with a given contact
-		boolean rejectInvitation = false;
-        String contact = SipUtils.getAssertedIdentity(invite);
-        Vector<ContentSharingSession> currentSessions = getCShSessions();
-        if (currentSessions.size() >= 2) {
-        	// Already a bidirectional session
-            if (logger.isActivated()) {
-                logger.debug("Max sessions reached");
-            }
-        	rejectInvitation = true;
-        } else
-        if (currentSessions.size() == 1) {
-        	ContentSharingSession currentSession = currentSessions.elementAt(0);
-        	if (currentSession instanceof TerminatingImageTransferSession) {
-        		// Terminating session already used
-				if (logger.isActivated()) {
-				    logger.debug("Max terminating sessions reached");
-				}
-            	rejectInvitation = true;
-        	} else
-        	if (!PhoneUtils.compareNumbers(contact, currentSession.getRemoteContact())) {
-        		// Not the same contact
-				if (logger.isActivated()) {
-				    logger.debug("Only bidirectional session with same contact authorized");
-				}
-            	rejectInvitation = true;
-        	}
-        }
-        if (rejectInvitation) {
-            if (logger.isActivated()) {
-                logger.debug("The max number of sharing sessions is achieved: reject the invitation");
-            }
-            sendErrorResponse(invite, 486);
-            return;
-        }
-
 		// Create a new session
-    	ImageTransferSession session = new TerminatingImageTransferSession(this, invite);
-
-        // Auto reject if file too big
-        int maxSize = ImageTransferSession.getMaxImageSharingSize();
-        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
-            if (logger.isActivated()) {
-                logger.debug("Auto reject image sharing invitation");
-            }
-
-            // Decline the invitation
-            session.sendErrorResponse(invite, session.getDialogPath().getLocalTag(), 603);
-
-            // File too big
-            session.handleError(new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG));
-            return;
-        }
+    	GeolocTransferSession session = new TerminatingGeolocTransferSession(this, invite);
 
 		// Start the session
 		session.startSession();
@@ -481,8 +571,8 @@ public class RichcallService extends ImsService {
 		// Notify listener
 		getImsModule().getCore().getListener().handleContentSharingTransferInvitation(session);
 	}
-
-    /**
+	
+	/**
      * Receive a capability request (options procedure)
      *
      * @param options Received options message
@@ -499,7 +589,7 @@ public class RichcallService extends ImsService {
 	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			boolean richcall = getImsModule().getCallManager().isRichcallSupportedWith(contact);
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
-	        		getImsModule().getSipManager().getSipStack().getLocalContact(),
+	        		getImsModule().getSipManager().getSipStack().getContact(),
 	        		CapabilityUtils.getSupportedFeatureTags(richcall),
 	        		CapabilityUtils.buildSdp(ipAddress, richcall));
 

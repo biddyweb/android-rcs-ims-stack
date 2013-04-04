@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.2
+Release 2.5.3
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,17 +8,20 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- Video orientation management.
-- File transfer thumbnail.
-- Block/unblock capabilities (chat, FT).
-- Video depacketization STAP-A.
-
+- Multidevice management.
+- Share location during a call.
 
 Bugs fixed:
 -----------
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.3
+- Mantis #0016925	Stack: Parameter client_version not well formated in HTTP provisioning request
+- ID_2_4 Clarification on HTTP configurations parameters and white listing
+- Mantis #0016915	Stack: Video sharing must not be available in EDGE
+- Mantis #0016917	Stack: Camera size CIF not supported on LG Optimus. Codec list must be dependant of supported camera sizes in originating side.
 
 v2.5.2
 - Mantis #0016862	Stack: No displayed IMDN report for geoloc message

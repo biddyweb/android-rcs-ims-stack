@@ -91,11 +91,10 @@ public class SelectGeoloc extends MapActivity implements OnTouchListener {
 	 */
 	private OnClickListener btnSelectListener = new OnClickListener() {
 		public void onClick(View v) {
-			Intent in = new Intent();    		
-			in.putExtra("latitude", (geoPoint.getLatitudeE6() / 1E6));
-			in.putExtra("longitude", (geoPoint.getLongitudeE6() / 1E6));
-			in.putExtra("altitude", 0.0);
-			setResult(-1, in);
+			Intent intent = new Intent();    		
+			intent.putExtra("latitude", (geoPoint.getLatitudeE6() / 1E6));
+			intent.putExtra("longitude", (geoPoint.getLongitudeE6() / 1E6));
+			setResult(RESULT_OK, intent);
 			finish();
 		}
 	};

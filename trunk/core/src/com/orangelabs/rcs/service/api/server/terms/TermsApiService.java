@@ -77,6 +77,9 @@ public class TermsApiService extends ITermsApi.Stub {
 			// Accept terms
 			return Core.getInstance().getTermsConditionsService().acceptTerms(id, pin);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -104,6 +107,9 @@ public class TermsApiService extends ITermsApi.Stub {
 			// Decline terms
 			return Core.getInstance().getTermsConditionsService().rejectTerms(id, pin);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}

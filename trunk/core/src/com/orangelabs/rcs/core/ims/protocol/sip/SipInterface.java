@@ -504,7 +504,8 @@ public class SipInterface implements SipListener {
     }
 
     /**
-     * Get contact
+     * Get contact based on local contact info and multidevice
+     * infos (GRUU, sip.instance)
      *
      * @return Header
      * @throws Exception

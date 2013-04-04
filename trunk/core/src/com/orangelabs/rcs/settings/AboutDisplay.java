@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.settings;
 
 import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.utils.AppUtils;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -43,7 +44,7 @@ public class AboutDisplay extends Activity {
         // Set the release number
         TextView releaseView = (TextView)findViewById(R.id.settings_label_release);
         String relLabel = getString(R.string.rcs_settings_label_release);
-        String relNumber = getString(R.string.rcs_core_release_number);
+        String relNumber = AppUtils.getApplicationVersion(this);
         releaseView.setText(relLabel + " " + relNumber);
     }
 }

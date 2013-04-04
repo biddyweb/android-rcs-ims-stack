@@ -214,6 +214,7 @@ public class CapabilitiesDiscovery extends Activity {
     	CheckBox imageCSh = (CheckBox)findViewById(R.id.image_sharing);
     	CheckBox videoCSh = (CheckBox)findViewById(R.id.video_sharing);
     	CheckBox ft = (CheckBox)findViewById(R.id.file_transfer);
+    	CheckBox ftHttp = (CheckBox)findViewById(R.id.file_transfer_http);
     	CheckBox im = (CheckBox)findViewById(R.id.im);
     	CheckBox csVideo = (CheckBox)findViewById(R.id.cs_video);
     	CheckBox presenceDiscovery = (CheckBox)findViewById(R.id.presence_discovery);
@@ -230,6 +231,7 @@ public class CapabilitiesDiscovery extends Activity {
     		imageCSh.setVisibility(View.VISIBLE);
     		videoCSh.setVisibility(View.VISIBLE);
     		ft.setVisibility(View.VISIBLE);
+    		ftHttp.setVisibility(View.VISIBLE);
     		im.setVisibility(View.VISIBLE);
     		csVideo.setVisibility(View.VISIBLE);
     		presenceDiscovery.setVisibility(View.VISIBLE);
@@ -239,6 +241,7 @@ public class CapabilitiesDiscovery extends Activity {
     		imageCSh.setChecked(capabilities.isImageSharingSupported());
     		videoCSh.setChecked(capabilities.isVideoSharingSupported());
     		ft.setChecked(capabilities.isFileTransferSupported());
+    		ftHttp.setChecked(capabilities.isFileTransferHttpSupported());
     		im.setChecked(capabilities.isImSessionSupported());
     		csVideo.setChecked(capabilities.isCsVideoSupported());
     		presenceDiscovery.setChecked(capabilities.isPresenceDiscoverySupported());
@@ -260,6 +263,7 @@ public class CapabilitiesDiscovery extends Activity {
     		imageCSh.setVisibility(View.GONE);
     		videoCSh.setVisibility(View.GONE);
     		ft.setVisibility(View.GONE);
+    		ftHttp.setVisibility(View.GONE);
     		im.setVisibility(View.GONE);
     		csVideo.setVisibility(View.GONE);
     		presenceDiscovery.setVisibility(View.GONE);

@@ -37,8 +37,6 @@ import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 
 /**
  * Block/unblock contact for chat features
- * 
- * @author jexa7410
  */
 public class BlockCapablities extends ListActivity implements OnItemClickListener {
     /**
@@ -121,19 +119,10 @@ public class BlockCapablities extends ListActivity implements OnItemClickListene
 		
 		List<String> contacts = contactsApi.getRcsContacts();
 		for (String  contact : contacts) {
-			
 			boolean[] blockedItem = {
-					/*(IM  bit0)*/ false,
-					/*(FT  bit1)*/ false
+					contactsApi.isContactImBlocked(contact),
+					contactsApi.isContactFtBlocked(contact)
 			};
-			
-			if (contactsApi.isContactImBlocked(contact)) {
-				blockedItem[0] = true;
-			}
-			if (contactsApi.isContactFtBlocked(contact)) {
-				blockedItem[1] = true;
-			}
-			
 			contactCapables.add(new ContactElement(contact, blockedItem));
 		}
 		
@@ -147,7 +136,7 @@ public class BlockCapablities extends ListActivity implements OnItemClickListene
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.menu_block_capabilities);
         builder.setCancelable(false);
-        builder.setMultiChoiceItems(R.array.list_capabilities, contact.blockedCapabilities, new DialogInterface.OnMultiChoiceClickListener() {
+        builder.setMultiChoiceItems(R.array.blocked_capabilities, contact.blockedCapabilities, new DialogInterface.OnMultiChoiceClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which, boolean isChecked) {			

@@ -28,11 +28,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
-import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
-import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
-import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
-import com.orangelabs.rcs.utils.logger.Logger;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Rejoin a group chat session
@@ -99,8 +96,8 @@ public class RejoinGroupChatSession extends GroupChatSession {
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
-	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
+	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 
 			// Set the local SDP part in the dialog path

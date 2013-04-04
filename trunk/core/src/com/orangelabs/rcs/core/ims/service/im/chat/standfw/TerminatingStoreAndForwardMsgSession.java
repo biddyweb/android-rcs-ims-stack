@@ -39,9 +39,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
-import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
-import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -185,8 +183,8 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
-	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE + SipUtils.CRLF +
+	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;

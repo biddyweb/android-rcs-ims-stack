@@ -18,18 +18,17 @@
 
 package com.orangelabs.rcs.core.content;
 
-
 /**
  * Geoloc content
- * 
+ *
  * @author vfml3370
  */
 public class GeolocContent extends MmContent {
 	/**
 	 * Encoding type
 	 */
-	private static final String ENCODING = "application/vnd.gsma.rcspushlocation+xml";
-	
+	public static final String ENCODING = "application/vnd.gsma.rcspushlocation+xml";
+
 	/**
 	 * Constructor
 	 * 
@@ -38,6 +37,19 @@ public class GeolocContent extends MmContent {
 	 */
 	public GeolocContent(String url, long size) {
 		super(url, ENCODING, size);
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param url URL
+	 * @param size Content size
+	 * @param geolocDoc Geoloc
+	 */
+	public GeolocContent(String url, long size, byte[] geolocDoc) {
+		super(url, ENCODING, size);
+		
+		setData(geolocDoc);
 	}
 
 	/**

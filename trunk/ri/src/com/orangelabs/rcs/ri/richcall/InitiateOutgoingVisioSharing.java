@@ -18,28 +18,30 @@
 
 package com.orangelabs.rcs.ri.richcall;
 
-import com.orangelabs.rcs.platform.AndroidFactory;
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.utils.Utils;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Spinner;
+
+import com.orangelabs.rcs.platform.AndroidFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.utils.Utils;
 
 /**
  * Initiate Visio Sharing.
  *
  * @author hlxn7157
  */
-
 public class InitiateOutgoingVisioSharing extends Activity {
 
     @Override
@@ -78,6 +80,23 @@ public class InitiateOutgoingVisioSharing extends Activity {
     	super.onDestroy();
     }
 
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater=new MenuInflater(getApplicationContext());
+		inflater.inflate(R.menu.menu_video_settings, menu);
+		return true;
+	}
+    
+    @Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.menu_settings:
+            	startActivity(new Intent(this, VideoSettings.class));
+				break;
+		}
+		return true;
+	}
+    
     /**
      * Dial button listener
      */

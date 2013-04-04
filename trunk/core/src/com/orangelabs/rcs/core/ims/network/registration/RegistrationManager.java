@@ -18,7 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.network.registration;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -31,7 +30,6 @@ import javax2.sip.header.ViaHeader;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
-import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
@@ -119,44 +117,13 @@ public class RegistrationManager extends PeriodicRefresher {
     public RegistrationManager(ImsNetworkInterface networkInterface, RegistrationProcedure registrationProcedure) {
     	this.networkInterface = networkInterface;
         this.registrationProcedure = registrationProcedure;
-        this.featureTags = getAllSupportedFeatureTags();
+        this.featureTags = RegistrationUtils.getSupportedFeatureTags();
 		this.expirePeriod = RcsSettings.getInstance().getRegisterExpirePeriod();
 
         if (RcsSettings.getInstance().isGruuSupported()) {
             this.instanceId = DeviceUtils.getInstanceId(AndroidFactory.getApplicationContext());
         }
     }
-    
-	/**
-	 * Get all supported feature tags
-	 *
-	 * @return List of tags
-	 */
-	private List<String> getAllSupportedFeatureTags() {
-		List<String> tags = new ArrayList<String>();
-
-		// IM support
-		if (RcsSettings.getInstance().isImSessionSupported()) {
-			tags.add(FeatureTags.FEATURE_OMA_IM);
-		}
-
-		// Video share support
-		if (RcsSettings.getInstance().isVideoSharingSupported()) {
-			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
-		}
-		
-		// Image share support
-		if (RcsSettings.getInstance().isImageSharingSupported()) {
-			tags.add(FeatureTags.FEATURE_3GPP_IMAGE_SHARE);
-		}
-		
-		// Push geoloc support
-		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-			tags.add(FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH);
-		}
-
-		return tags;		
-	}		
 	
     /**
      * Init the registration procedure
@@ -422,11 +389,11 @@ public class RegistrationManager extends PeriodicRefresher {
 		while(contacts.hasNext()) {
 			ContactHeader contact = (ContactHeader)contacts.next();
 			String contactInstanceId = contact.getParameter(SipUtils.SIP_INSTANCE_PARAM);
-			if ((contactInstanceId != null) && (instanceId != null) && (contactInstanceId.contains(instanceId))) {
-				String pubGruu = contact.getParameter("pub-gruu");
+			if ((contactInstanceId != null) && (instanceId != null) && (instanceId.contains(contactInstanceId))) {
+				String pubGruu = contact.getParameter(SipUtils.PUBLIC_GRUU_PARAM);
 				networkInterface.getSipManager().getSipStack().setPublicGruu(pubGruu);			
-				String tempGruu = contact.getParameter("temp-gruu");
-				networkInterface.getSipManager().getSipStack().setTemporaryGruu(tempGruu);			
+				String tempGruu = contact.getParameter(SipUtils.TEMP_GRUU_PARAM);
+				networkInterface.getSipManager().getSipStack().setTemporaryGruu(tempGruu);
 			}
 		}
 		

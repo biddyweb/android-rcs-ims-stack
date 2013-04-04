@@ -39,6 +39,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.core.ims.network.ImsConnectionManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.service.api.client.ClientApiUtils;
@@ -276,12 +277,18 @@ public class SettingsDisplay extends PreferenceActivity implements Preference.On
         		}
 				RcsSettings.getInstance().setRoamingAuthorizationState(true);
 				
-				// Start the service if necessary 
 				if (rcsCheckbox.isChecked() && !ClientApiUtils.isServiceStarted(getApplicationContext())) {
+					// Start the service 
 	        		if (logger.isActivated()) {
 	        			logger.debug("Start the service");
 	        		}
 	        		startRcsService();
+				} else {
+					// Service already started, force a connection retry 
+	        		if (logger.isActivated()) {
+	        			logger.debug("Retry connection");
+	        		}
+					sendBroadcast(new Intent(ImsConnectionManager.ROAMING_OPTION_INTENT));
 				}
 			} else {
                 // Unauthorize roaming. If the service is started and we are in

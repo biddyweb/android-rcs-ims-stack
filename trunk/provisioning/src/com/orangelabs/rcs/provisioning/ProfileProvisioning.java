@@ -156,6 +156,9 @@ public class ProfileProvisioning extends Activity {
         box = (CheckBox)findViewById(R.id.file_transfer);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER)));
 
+        box = (CheckBox)findViewById(R.id.file_transfer_http);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP)));
+
         box = (CheckBox)findViewById(R.id.im);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IM_SESSION)));
 
@@ -261,6 +264,9 @@ public class ProfileProvisioning extends Activity {
 
 		        box = (CheckBox)findViewById(R.id.file_transfer);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER, Boolean.toString(box.isChecked()));
+
+		        box = (CheckBox)findViewById(R.id.file_transfer_http);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(box.isChecked()));
 
 		        box = (CheckBox)findViewById(R.id.im);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IM_SESSION, Boolean.toString(box.isChecked()));
@@ -460,7 +466,7 @@ public class ProfileProvisioning extends Activity {
 			            			imsPortForWifi = 5060;
 			            			confUri  = "sip:Conference-Factory@" + homeDomain;
                                     break;
-	            			}
+	                        }
 
 	            			// Update UI
 	        				EditText txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsUsername);

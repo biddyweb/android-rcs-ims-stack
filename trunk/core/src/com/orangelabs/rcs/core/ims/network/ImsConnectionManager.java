@@ -50,6 +50,11 @@ import java.util.Random;
  */
 public class ImsConnectionManager implements Runnable {
 	/**
+	 * Roaming option intent
+	 */
+	public static final String ROAMING_OPTION_INTENT = "com.orangelabs.rcs.ROAMING_OPTION";
+	
+	/**
      * IMS module
      */
     private ImsModule imsModule;
@@ -139,7 +144,10 @@ public class ImsConnectionManager implements Runnable {
 		AndroidFactory.getApplicationContext().registerReceiver(networkStateListener, intentFilter);
 
         // Battery management
-        AndroidFactory.getApplicationContext().registerReceiver(batteryLevelObserver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); 
+        AndroidFactory.getApplicationContext().registerReceiver(batteryLevelListener, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); 
+
+        // Roaming option management
+        AndroidFactory.getApplicationContext().registerReceiver(roamingOptionListener, new IntentFilter(ROAMING_OPTION_INTENT)); 
 	}
 	
 	/**
@@ -224,7 +232,14 @@ public class ImsConnectionManager implements Runnable {
 
         // Unregister battery listener
         try {
-            AndroidFactory.getApplicationContext().unregisterReceiver(batteryLevelObserver);
+            AndroidFactory.getApplicationContext().unregisterReceiver(batteryLevelListener);
+        } catch (IllegalArgumentException e) {
+            // Nothing to do
+        }
+
+        // Unregister roaming option listener
+        try {
+            AndroidFactory.getApplicationContext().unregisterReceiver(roamingOptionListener);
         } catch (IllegalArgumentException e) {
             // Nothing to do
         }
@@ -609,7 +624,7 @@ public class ImsConnectionManager implements Runnable {
     /**
      * Battery level listener
      */
-    private BroadcastReceiver batteryLevelObserver = new BroadcastReceiver() {
+    private BroadcastReceiver batteryLevelListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             int batteryLimit = RcsSettings.getInstance().getMinBatteryLevel();
@@ -619,7 +634,7 @@ public class ImsConnectionManager implements Runnable {
                 if (logger.isActivated()) {
                     logger.info("Battery level: " + batteryLevel + "% plugged: " + batteryPlugged);
                 }
-                if (/* batteryLevel <= batteryLimit && */ batteryPlugged == 0) {
+                if ((batteryLevel <= batteryLimit) && (batteryPlugged == 0)) {
                     if (!disconnectedByBattery) {
                         disconnectedByBattery = true;
 
@@ -637,6 +652,17 @@ public class ImsConnectionManager implements Runnable {
             } else {
                 disconnectedByBattery = false;
             }
+        }
+    };
+
+    /**
+     * Roaming option listener
+     */
+    private BroadcastReceiver roamingOptionListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Reconnect with a connection event
+            connectionEvent(new Intent(ConnectivityManager.CONNECTIVITY_ACTION));
         }
     };
 }

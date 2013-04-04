@@ -281,7 +281,7 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
     public void handleSessionError(SipSessionError error) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session error");
+				logger.info("Session error " + error.getErrorCode());
 			}
 	
 	  		// Notify event listeners

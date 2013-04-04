@@ -138,7 +138,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         reservePort(localRtpPort);
 
         // Init codecs
-        supportedMediaCodecs = CodecsUtils.getSupportedCodecList(); 
+        supportedMediaCodecs = CodecsUtils.getRendererCodecList();
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {

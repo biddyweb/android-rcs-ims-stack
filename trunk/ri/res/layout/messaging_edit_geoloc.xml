@@ -9,10 +9,10 @@
 	    android:stretchColumns="1"
 	    android:paddingTop="10dip">
 						    
-		<Button android:id="@+id/send_btn"
+		<Button android:id="@+id/validate_btn"
 			android:layout_marginLeft="5dip"
 		 	android:layout_marginRight="5dip"
-	        android:text="@string/label_send" />
+	        android:text="@string/label_ok" />
 	    
     	<Button android:id="@+id/select_geoloc_btn"
 			android:layout_marginLeft="5dip"

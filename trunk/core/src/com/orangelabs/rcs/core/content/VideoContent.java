@@ -25,7 +25,11 @@ package com.orangelabs.rcs.core.content;
  * @author jexa7410
  */
 public class VideoContent extends MmContent {
-
+	/**
+	 * Encoding type
+	 */
+	public static final String ENCODING = "video/*";
+	
     /**
      * Height
      */

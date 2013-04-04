@@ -55,4 +55,16 @@ public class RichCallApiIntents {
      * </ul>
      */
 	public final static String VIDEO_SHARING_INVITATION = "com.orangelabs.rcs.richcall.VIDEO_SHARING_INVITATION";
+	
+	/**
+     * Intent broadcasted when a new geoloc sharing invitation has been received
+     * 
+     * <p>The intent will have the following extra values:
+     * <ul>
+     *   <li><em>contact</em> - Contact phone number.</li>
+     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     * </ul>
+     * </ul>
+     */
+	public final static String GEOLOC_SHARING_INVITATION = "com.orangelabs.rcs.richcall.GEOLOC_SHARING_INVITATION";	
 }

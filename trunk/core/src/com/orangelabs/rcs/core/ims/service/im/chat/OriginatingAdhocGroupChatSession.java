@@ -28,7 +28,6 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -102,7 +101,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
-	    		"a=accept-types:" + CpimMessage.MIME_TYPE + SipUtils.CRLF +
+	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
 	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	    		"a=sendrecv" + SipUtils.CRLF;
 

@@ -29,7 +29,6 @@ import com.orangelabs.rcs.platform.file.FileFactory;
  * Multimedia content
  *
  * @author jexa7410
- * @author Deutsche Telekom AG
  */
 public abstract class MmContent {
 	/**
@@ -51,11 +50,6 @@ public abstract class MmContent {
 	 * Data
 	 */
 	private byte[] data = null;
-
-	/**
-	 * Content name
-	 */
-	private String name = null;
 
     /**
      * Stream to write received data direct to file.
@@ -161,17 +155,12 @@ public abstract class MmContent {
      * @return Name
      */
 	public String getName() {
-		if (name == null) {
-			// Extract filename from URL
-			int index = url.lastIndexOf('/');
-			if (index != -1) {
-				return url.substring(index+1);
-			} else {
-				return url;
-			}
+		// Extract filename from URL
+		int index = url.lastIndexOf('/');
+		if (index != -1) {
+			return url.substring(index+1);
 		} else {
-			// Return the name associated to the content
-			return name;
+			return url;
 		}
     }
 
@@ -203,9 +192,9 @@ public abstract class MmContent {
 	}
 
     /**
-     * Write data chunk to file.
+     * Write data chunk to file
      *
-     * @param data Data to append to file.
+     * @param data Data to append to file
      * @throws IOException
      */
     public void writeData2File(byte[] data) throws IOException, IllegalArgumentException {

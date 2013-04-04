@@ -870,7 +870,7 @@ public class SipMessageFactory {
 					SipUtils.buildMaxForwardsHeader());       
 	        
 			// Set Contact header
-	        options.addHeader(dialog.getSipStack().getLocalContact());
+	        options.addHeader(dialog.getSipStack().getContact());
 	        
 	        // Set Accept header
 	    	Header acceptHeader = SipUtils.HEADER_FACTORY.createHeader(AcceptHeader.NAME, "application/sdp");
@@ -1003,6 +1003,9 @@ public class SipMessageFactory {
 			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
 			refer.addHeader(s);
 
+			// Set Contact header
+	        refer.addHeader(dialog.getSipStack().getContact());
+			
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
         
@@ -1068,6 +1071,9 @@ public class SipMessageFactory {
 			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
 			refer.addHeader(s);
 
+			// Set Contact header
+	        refer.addHeader(dialog.getSipStack().getContact());
+			
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
 	        
@@ -1221,6 +1227,9 @@ public class SipMessageFactory {
 			// Add Session-Timer header
 			Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
 			update.addHeader(sessionExpiresHeader);
+			
+			// Set Contact header
+			update.addHeader(dialog.getSipStack().getContact());
 			
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)update.getHeader(ViaHeader.NAME);

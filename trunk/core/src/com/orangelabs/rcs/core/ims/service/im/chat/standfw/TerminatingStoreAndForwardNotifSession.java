@@ -137,8 +137,8 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
 	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
-	    		"a=accept-types:" + CpimMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE + SipUtils.CRLF +
+	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
+	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
 	    		"a=recvonly" + SipUtils.CRLF;

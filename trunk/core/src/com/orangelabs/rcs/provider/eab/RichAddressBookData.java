@@ -169,6 +169,16 @@ public class RichAddressBookData {
 	/**
 	 * Column name
 	 */
+	static final String KEY_CAPABILITY_FILE_TRANSFER_HTTP = "capability_file_transfer_http";
+	
+	/**
+	 * Column name
+	 */
+	static final String KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL = "capability_file_transfer_thumbnail";
+	
+	/**
+	 * Column name
+	 */
 	static final String KEY_CAPABILITY_EXTENSIONS = "capability_extensions";
 	
 	/**

@@ -22,7 +22,7 @@ import com.orangelabs.rcs.core.ims.service.ImsSessionListener;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 
 /**
- * Content sharing transfer session listener
+ * Image sharing transfer session listener
  * 
  * @author jexa7410
  */

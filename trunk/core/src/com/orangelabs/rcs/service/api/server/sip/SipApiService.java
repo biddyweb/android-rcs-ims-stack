@@ -137,6 +137,9 @@ public class SipApiService extends ISipApi.Stub {
 			SipApiService.addSipSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -193,6 +196,9 @@ public class SipApiService extends ISipApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}		
 	}
@@ -230,6 +236,9 @@ public class SipApiService extends ISipApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -259,6 +268,9 @@ public class SipApiService extends ISipApi.Stub {
 			return Core.getInstance().getSipService().sendInstantMessage(contact,
 					featureTag, content, contentType);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}

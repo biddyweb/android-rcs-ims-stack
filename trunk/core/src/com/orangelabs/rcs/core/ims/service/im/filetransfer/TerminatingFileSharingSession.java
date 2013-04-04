@@ -370,7 +370,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     	fileTransfered();
 	
     	try {
-            // Save data into a filename
+        	// Close content with received data
             getContent().writeData2File(data);
             getContent().closeFile();
 
@@ -378,15 +378,22 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
 	        }
-	   	} catch(Exception e) {
-	   		// 	Notify listeners
-	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_SAVING_FAILED,e.getMessage()));
-	        }
-	   		if (logger.isActivated()) {
-	   			logger.error("Can't save received file", e);
-	   		}
+	   	} catch(IOException e) {
+	   		// Delete the temp file
             deleteFile();
+
+	   		// Notify listeners
+	    	for(int j=0; j < getListeners().size(); j++) {
+	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_SAVING_FAILED));
+	    	}
+	   	} catch(Exception e) {
+	   		// Delete the temp file
+            deleteFile();
+
+            // Notify listeners
+	    	for(int j=0; j < getListeners().size(); j++) {
+	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED));
+	    	}
 	   	}
 	}
     
@@ -409,24 +416,24 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
      */
     public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
         try {
+        	// Update content with received data
             getContent().writeData2File(data);
+            
             // Notify listeners
             if (!isInterrupted()) {
                 for(int j = 0; j < getListeners().size(); j++) {
                     ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
                 }
             }
-        } catch (Exception e) {
+        } catch(Exception e) {
+	   		// Delete the temp file
+            deleteFile();
+
             // Notify listeners
             for (int j = 0; j < getListeners().size(); j++) {
                 ((FileSharingSessionListener) getListeners().get(j)).handleTransferError(new FileSharingError(
                         FileSharingError.MEDIA_SAVING_FAILED, e.getMessage()));
             }
-            if (logger.isActivated()) {
-                logger.error("Can not save data chunk to file", e);
-            }
-            deleteFile();
-            //TODO  [SD card Exception Handling] -  terminate session (e.g. sd card dismounted)
         }
         return true;
 	}	
@@ -438,7 +445,9 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
     	if (logger.isActivated()) {
     		logger.info("Data transfer aborted");
     	}
+    	
         if (!isFileTransfered()) {
+	   		// Delete the temp file
             deleteFile();
         }
 	}	
@@ -511,6 +520,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
             }
         }
         if (!isFileTransfered()) {
+	   		// Delete the temp file
             deleteFile();
         }
     }
@@ -520,7 +530,7 @@ public class TerminatingFileSharingSession extends FileSharingSession implements
      */
     private void deleteFile() {
         if (logger.isActivated()) {
-            logger.debug("Delete (incomplete) received file");
+            logger.debug("Delete incomplete received file");
         }
         try {
             getContent().deleteFile();

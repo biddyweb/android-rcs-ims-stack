@@ -256,6 +256,13 @@
 		android:enabled="true"
         android:text="File transfer" />
 
+        <CheckBox android:id="@+id/file_transfer_http"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+        android:textStyle="bold"
+		android:enabled="true"
+        android:text="File transfer HTTP" />
+        
         <CheckBox android:id="@+id/im"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"

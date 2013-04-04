@@ -124,11 +124,11 @@ public class ContentManager{
 	    		// Video content
 	    		return new VideoContent(url, mime, size);
 	        }
-	    	if (mime.equals("text/vcard")) {
+	    	if (mime.equals(VisitCardContent.ENCODING)) {
 	    		// Visit Card content
 	    		return new VisitCardContent(url, size);
 	        }
-	    	if (mime.equals("application/vnd.gsma.rcspushlocation+xml")) {
+	    	if (mime.equals(GeolocContent.ENCODING)) {
 	    		// Geoloc content
 	    		return new GeolocContent(url, size);
 	        }

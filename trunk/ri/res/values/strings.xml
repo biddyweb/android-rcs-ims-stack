@@ -59,6 +59,17 @@
 <string name="label_capabilities">Capabilities:</string>
 <string name="label_refresh_all_capabilities">This command permits to force an update of capabilities for each contact in the address book. This may take a long time if there is a lof of contacts.</string>
 <string name="label_refresh_in_progress">Refresh in progress...</string>
+<string name="label_capabilities_cs_video">CS Video</string>
+<string name="label_capabilities_video">Video sharing</string>
+<string name="label_capabilities_image">Image sharing</string>
+<string name="label_capabilities_ft">File transfer</string>
+<string name="label_capabilities_ft_http">File transfer HTTP</string>
+<string name="label_capabilities_im">IM session</string>
+<string name="label_capabilities_presence_discovery">Presence discovery</string>
+<string name="label_capabilities_social_presence">Social presence</string>
+<string name="label_capabilities_geolocation_push">Geolocation push</string>
+<string name="label_capabilities_file_transfer_thumbnail">File transfer thumbnail</string>
+<string name="label_capabilities_extensions">Extensions:</string>
 
 <!--  Presence menu -->
 <string name="menu_presence">Presence</string>
@@ -77,16 +88,6 @@
 <string name="label_last_modified">Last modified:</string>
 <string name="label_last_capabilities_modified">Last modified:</string>
 <string name="label_presence_status">Presence status:</string>
-<string name="label_capabilities_cs_video">CS Video</string>
-<string name="label_capabilities_video">Video sharing</string>
-<string name="label_capabilities_image">Image sharing</string>
-<string name="label_capabilities_ft">File transfer</string>
-<string name="label_capabilities_im">IM session</string>
-<string name="label_capabilities_presence_discovery">Presence discovery</string>
-<string name="label_capabilities_social_presence">Social presence</string>
-<string name="label_capabilities_geolocation_push">Geolocation push</string>
-<string name="label_capabilities_file_transfer_thumbnail">File transfer thumbnail</string>
-<string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_publish">Publish</string>
 <string name="label_select_photo">Select photo</string>
 <string name="label_delete_photo">Delete photo</string>
@@ -199,9 +200,11 @@
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
 <string name="menu_initiate_prerecorded_video_sharing">Initiate pre-recorded video sharing</string>
 <string name="menu_initiate_video_sharing">Initiate video sharing</string>
+<string name="menu_initiate_geoloc_sharing">Initiate geoloc sharing</string>
 <string name="menu_video_settings">Video settings</string>
 <string name="label_image_sharing_canceled">Image sharing session has been canceled</string>
 <string name="label_video_sharing_canceled">Video sharing session has been canceled</string>
+<string name="label_geoloc_sharing_canceled">Geoloc sharing session has been canceled</string>
 <string name="label_progress_status">Status:</string>
 <string name="label_progress_bar">Progress:</string>
 <string name="label_sharing_aborted">Sharing aborted</string>
@@ -210,13 +213,16 @@
 <string name="label_dial">Dial</string>
 <string name="label_select_picture">Select picture</string>
 <string name="label_selected_img">Selected picture:</string>
+<string name="label_select_location">Select location</string>
+<string name="label_selected_location">Selected location:</string>
 <string name="label_select_video">Select video</string>
 <string name="label_selected_video">File:</string>
 <string name="label_initiate_sharing">Invite</string>
 <string name="label_display">Display:</string>
 <string name="label_select_file">Select file</string>
-<string name="title_recv_image_sharing">New image Sharing invitation</string>
-<string name="title_recv_video_sharing">New video Sharing invitation</string>
+<string name="title_recv_image_sharing">New image sharing invitation</string>
+<string name="title_recv_video_sharing">New video sharing invitation</string>
+<string name="title_recv_geoloc_sharing">New geoloc sharing invitation</string>
 <string name="label_out_of_memory">No enough memory to display the image</string>
 <string name="label_csh_failed">Sharing has failed or is aborted (error code %d)</string>
 <string name="label_end_of_media">End of media</string>

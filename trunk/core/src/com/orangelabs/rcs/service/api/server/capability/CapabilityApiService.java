@@ -74,6 +74,9 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 			// Request contact capabilities
 			return Core.getInstance().getCapabilityService().requestContactCapabilities(contact);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -99,6 +102,9 @@ public class CapabilityApiService extends ICapabilityApi.Stub {
 			List<String> contactList = ContactsManager.getInstance().getAllContacts();
 			Core.getInstance().getCapabilityService().requestContactCapabilities(contactList);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}

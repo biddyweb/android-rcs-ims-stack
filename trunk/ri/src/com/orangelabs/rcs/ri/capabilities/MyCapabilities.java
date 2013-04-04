@@ -68,6 +68,8 @@ public class MyCapabilities extends Activity {
         videoCSh.setChecked(capabilities.isVideoSharingSupported());
         CheckBox ft = (CheckBox)findViewById(R.id.file_transfer);
         ft.setChecked(capabilities.isFileTransferSupported());
+        CheckBox ftHttp = (CheckBox)findViewById(R.id.file_transfer_http);
+        ftHttp.setChecked(capabilities.isFileTransferHttpSupported());
         CheckBox im = (CheckBox)findViewById(R.id.im);
         im.setChecked(capabilities.isImSessionSupported());
         CheckBox csVideo = (CheckBox)findViewById(R.id.cs_video);

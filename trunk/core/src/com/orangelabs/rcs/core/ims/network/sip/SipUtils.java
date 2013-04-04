@@ -72,6 +72,11 @@ public class SipUtils {
 	public static MessageFactory MSG_FACTORY = null;	
 		
 	/**
+	 * Content-Transfer-Encoding header
+	 */
+	public static final String HEADER_CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
+	
+	/**
 	 * Accept-Contact header
 	 */
 	public static final String HEADER_ACCEPT_CONTACT = "Accept-Contact";
@@ -143,6 +148,16 @@ public class SipUtils {
 	 */
 	public static final String SIP_INSTANCE_PARAM = "+sip.instance";
 	
+	/**
+	 * Public GRUU parameter
+	 */
+	public static final String PUBLIC_GRUU_PARAM = "pub-gruu";
+	
+	/**
+	 * Temp GRUU parameter
+	 */
+	public static final String TEMP_GRUU_PARAM = "temp-gruu";
+
 	/**
 	 * Extract the URI part of a SIP address
 	 * 
@@ -519,6 +534,34 @@ public class SipUtils {
 	        }
 	    }
 	    return instanceId;
+    }
+    
+    /**
+     * Get public GRUU
+     * 
+	 * @param request SIP message
+     * @return GRUU or null
+     */
+    public static String getPublicGruu(SipMessage message) {
+	    String publicGruu = null;
+	    ExtensionHeader acceptHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+	    if (acceptHeader == null) {
+	        // Check contracted form
+	        acceptHeader = (ExtensionHeader)message.getHeader(SipUtils.HEADER_ACCEPT_CONTACT_C);
+	    }
+	    if (acceptHeader != null) {
+	        String[] pnames = acceptHeader.getValue().split(";");
+	        if (pnames.length > 1) {
+	            // Start at index 1 to bypass the address
+	            for (int i = 1; i < pnames.length; i++) {
+	                if (pnames[i].startsWith(SipUtils.PUBLIC_GRUU_PARAM)){
+	                	publicGruu = pnames[i].substring(SipUtils.PUBLIC_GRUU_PARAM.length()+1, pnames[i].length());
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	    return publicGruu;
     }
     
     /**
