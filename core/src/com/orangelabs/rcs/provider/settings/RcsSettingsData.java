@@ -583,6 +583,11 @@ public class RcsSettingsData {
 	public static final String CAPABILITY_FILE_TRANSFER = "CapabilityFileTransfer";
 
 	/**
+	 * File transfer via HTTP capability
+	 */
+	public static final String CAPABILITY_FILE_TRANSFER_HTTP = "CapabilityFileTransferHttp";
+
+	/**
 	 * Presence discovery capability
 	 */
 	public static final String CAPABILITY_PRESENCE_DISCOVERY = "CapabilityPresenceDiscovery";

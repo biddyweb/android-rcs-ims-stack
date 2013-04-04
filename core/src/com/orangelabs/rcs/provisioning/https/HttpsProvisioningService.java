@@ -69,6 +69,7 @@ import com.orangelabs.rcs.provisioning.ProvisioningInfo;
 import com.orangelabs.rcs.provisioning.ProvisioningParser;
 import com.orangelabs.rcs.provisioning.TermsAndConditionsRequest;
 import com.orangelabs.rcs.service.LauncherUtils;
+import com.orangelabs.rcs.utils.AppUtils;
 import com.orangelabs.rcs.utils.HttpUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -670,15 +671,22 @@ public class HttpsProvisioningService extends Service {
      */
 	private String getClientVersion() {
 		String result = UNKNOWN;
-		String version = getString(R.string.rcs_core_release_number);
-		if (version != null && version.length() > 0) {
-			String[] values = version.split(".");
+
+		// Read version from manifest file
+		String appVersion = AppUtils.getApplicationVersion(getApplicationContext());
+
+		// Extract version in x.y format
+		String version = appVersion;
+		if (appVersion != null && appVersion.length() > 0) {
+			String[] values = appVersion.split("\\.");
 			if (values.length > 2) { 
-				result = values[0] + "." + values[1];
-			} else {
-				result = version;
+				version = values[0] + "." + values[1];
 			}
 		}
+		
+		// Format version like specified in ID_2_4 Impl guideline 
+		result = getString(R.string.rcs_client_version, version);
+		
 		return StringUtils.truncate(result, 15);
 	}
 

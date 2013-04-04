@@ -162,7 +162,7 @@ public class JavaDepacketizer extends VideoCodec {
         }
 
         // Get NALU size
-        int nalu_size = ((bufferData[aggregationPositon] << 8) | bufferData[aggregationPositon+1]);
+        int nalu_size = (((bufferData[aggregationPositon] & 0xff) << 8) | (bufferData[aggregationPositon + 1] & 0xff));
         aggregationPositon+=2;
         if (aggregationPositon + nalu_size > bufferData.length) {
             // Not a correct packet

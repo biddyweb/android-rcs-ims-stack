@@ -186,9 +186,14 @@ public final class ContactsManager {
     private static final String MIMETYPE_CAPABILITY_GEOLOCATION_PUSH = "vnd.android.cursor.item/com.orangelabs.rcs.capability.geolocation-push";
     
     /** 
-     * MIME type for file transfer thumbnail
+     * MIME type for file transfer thumbnail capability
      */
     private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer-thumbnail";
+    
+    /** 
+     * MIME type for file transfer over HTTP capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer-http";
     
     /** 
      * MIME type for RCS extensions 
@@ -503,6 +508,8 @@ public final class ContactsManager {
 		values.put(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(newCapabilities.isSocialPresenceSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING, Boolean.toString(newCapabilities.isVideoSharingSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(newCapabilities.isGeolocationPushSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(newCapabilities.isFileTransferHttpSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(newCapabilities.isFileTransferThumbnailSupported() && isRegistered));
 
 		// Save the capabilities extensions
 		ArrayList<String> newExtensions = newCapabilities.getSupportedExtensions();
@@ -678,6 +685,11 @@ public final class ContactsManager {
     			}
     			// File transfer thumbnail
     			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL, newInfo.getCapabilities().isFileTransferThumbnailSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferThumbnailSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// File transfer http
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP, newInfo.getCapabilities().isFileTransferHttpSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferHttpSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -888,6 +900,8 @@ public final class ContactsManager {
                 capabilities.setSocialPresenceSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE))));
                 capabilities.setGeolocationPushSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH))));
                 capabilities.setVideoSharingSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING))));
+                capabilities.setFileTransferThumbnailSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL))));
+                capabilities.setFileTransferHttpSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP))));
 
                 // Set RCS extensions capability
 				String extensions = cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_EXTENSIONS));
@@ -2365,6 +2379,12 @@ public final class ContactsManager {
 		// Geolocation push
 		capabilities.setGeolocationPushSupport(capabilities.isGeolocationPushSupported() && isRegistered);
 
+		// FT Thumbnail
+		capabilities.setFileTransferThumbnailSupport(capabilities.isFileTransferThumbnailSupported() && isRegistered);
+
+		// FT Http
+		capabilities.setFileTransferHttpSupport(capabilities.isFileTransferHttpSupported() && isRegistered);
+		
 		// Add the capabilities
 		newInfo.setCapabilities(capabilities);
 
@@ -2615,6 +2635,10 @@ public final class ContactsManager {
         // File transfer thumbnail
         if (capabilities.isFileTransferThumbnailSupported()) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL));
+        }
+        // File transfer HTTP
+        if (capabilities.isFileTransferHttpSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP));
         }
         // Insert extensions
 		boolean hasCommonExtensions = false;
@@ -3683,6 +3707,9 @@ public final class ContactsManager {
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL)){
     			// Set capability file transfer thumbnail
 				capabilities.setFileTransferThumbnailSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP)){
+    			// Set capability file transfer HTTP
+   				capabilities.setFileTransferHttpSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_EXTENSIONS)){
     			// Set RCS extensions capability
     			int columnIndex = cursor.getColumnIndex(Data.DATA2);
@@ -3815,6 +3842,7 @@ public final class ContactsManager {
                 MIMETYPE_CAPABILITY_SOCIAL_PRESENCE,
                 MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
                 MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
+                MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP,
                 MIMETYPE_CAPABILITY_EXTENSIONS
         };
 
@@ -4024,6 +4052,7 @@ public final class ContactsManager {
     		    MIMETYPE_CAPABILITY_SOCIAL_PRESENCE,
     		    MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
     		    MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
+    		    MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP,
     		    MIMETYPE_CAPABILITY_EXTENSIONS,
     		    MIMETYPE_SEE_MY_PROFILE,
     		    MIMETYPE_RCS_CONTACT,

@@ -576,7 +576,7 @@ public class ChatUtils {
 			    		geolocDocument.getRadius());
 			    return geoloc;
 		    }
-		} catch (Exception e) {
+		} catch(Exception e) {
 			return null;
 		}
 	    return null;	    

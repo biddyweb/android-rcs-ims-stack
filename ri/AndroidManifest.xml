@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.2"
+ android:versionName="2.5.3"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -240,6 +240,8 @@
 
         <activity android:name=".richcall.InitiateImageSharing"/>
         
+        <activity android:name=".richcall.InitiateGeolocSharing"/>
+        
         <activity android:name=".richcall.InitiatePrerecordedVideoSharing"/>
 
 		<activity android:name=".richcall.InitiateOutgoingVisioSharing"/>
@@ -258,6 +260,14 @@
             </intent-filter>
         </receiver>
 
+		<activity android:name=".richcall.ReceiveGeolocSharing"/>
+
+		<receiver android:name=".richcall.GeolocSharingInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.richcall.GEOLOC_SHARING_INVITATION"/>
+            </intent-filter>
+        </receiver>
+		
 		<activity android:name=".richcall.VisioSharing" android:launchMode="singleTask"/>
 
         <activity android:name=".richcall.VideoSettings"/>

@@ -38,6 +38,7 @@
 <string name="label_capabilities_im">IM session</string>
 <string name="label_capabilities_presence_discovery">Presence discovery</string>
 <string name="label_capabilities_social_presence">Social presence</string>
+<string name="label_capabilities_geoloc">Geolocation push</string>
 <string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_capabilities_sf">Store and Forward:</string>
 <string name="label_capabilities_changed_event">UI connector: capabilities has changed for %s</string>

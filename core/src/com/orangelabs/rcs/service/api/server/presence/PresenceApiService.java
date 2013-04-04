@@ -125,6 +125,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -156,6 +159,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -187,6 +193,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -209,6 +218,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			// Set this contact presence status to "pending"
 			ContactsManager.getInstance().setContactSharingStatus(contact, PresenceInfo.RCS_PENDING, "");
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -244,6 +256,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -275,6 +290,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -306,6 +324,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -330,6 +351,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 		try {
 			return Core.getInstance().getPresenceService().getXdmManager().getGrantedContacts();
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -354,6 +378,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 		try {
 			return Core.getInstance().getPresenceService().getXdmManager().getRevokedContacts();
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -378,6 +405,9 @@ public class PresenceApiService extends IPresenceApi.Stub {
 		try {
 			return Core.getInstance().getPresenceService().getXdmManager().getBlockedContacts();
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}

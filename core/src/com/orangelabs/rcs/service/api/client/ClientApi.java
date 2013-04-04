@@ -53,7 +53,12 @@ public abstract class ClientApi {
 	 * IMS core API
 	 */
 	protected IImsApi imsCoreApi;
-	
+
+    /**
+     * Last IMS status
+     */
+    private boolean lastImsStatus = false;
+
 	/**
 	 * Constructor
 	 */
@@ -105,8 +110,10 @@ public abstract class ClientApi {
 
             try {
 				if (imsCoreApi.isImsConnected()) {
+                    lastImsStatus = true;
 					notifyEventImsConnected();
 				} else {
+                    lastImsStatus = false;
 					notifyEventImsDisconnected(ImsDisconnectionReason.UNKNOWN);
 				}
 			} catch(Exception e) {
@@ -192,18 +199,24 @@ public abstract class ClientApi {
 			listener.handleApiDisconnected();
 		}
 	}
-	
+
 	/**
 	 * Broadcast receiver to be aware of IMS connection changes
 	 */
 	protected BroadcastReceiver imsConnectionReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, final Intent intent) {
-			if (intent.getBooleanExtra("status", false)){
-				// Connected to IMS
-				notifyEventImsConnected();
+			if (intent.getBooleanExtra("status", false)) {
+                if (!lastImsStatus) {
+                    lastImsStatus = true;
+                    // Connected to IMS
+                    notifyEventImsConnected();
+                }
 			} else {
-				// Disconnected from IMS
-				notifyEventImsDisconnected(intent.getIntExtra("reason", ImsDisconnectionReason.UNKNOWN));
+                if (lastImsStatus) {
+                    lastImsStatus = false;
+                    // Disconnected from IMS
+                    notifyEventImsDisconnected(intent.getIntExtra("reason", ImsDisconnectionReason.UNKNOWN));
+                }
 			}
 		}
 	};	

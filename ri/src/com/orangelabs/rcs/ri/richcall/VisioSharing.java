@@ -333,8 +333,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             // Close sessions
             new Thread() {
                 public void run() {
-                    stopIncomingSession();
-                    stopOutgoingSession();
+                    stopIncomingSession(true);
+                    stopOutgoingSession(true);
                 }
             }.start();
         } else {
@@ -343,6 +343,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
 
         // Disconnect rich call API
         callApi.removeApiEventListener(this);
+        callApi.removeImsEventListener(this);
         callApi.disconnectApi();
     }
 
@@ -353,8 +354,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
                 // Quit session
                 new Thread() {
                     public void run() {
-                        stopIncomingSession();
-                        stopOutgoingSession();
+                        stopIncomingSession(true);
+                        stopOutgoingSession(true);
                         exitIfNoSession(null);
                     }
                 }.start();
@@ -375,8 +376,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_close_session:
-                stopOutgoingSession();
-                stopIncomingSession();
+                stopOutgoingSession(true);
+                stopIncomingSession(true);
                 exitIfNoSession(null);
                 break;
         }
@@ -437,7 +438,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
                 // Stop the outgoing session
                 new Thread() {
                     public void run() {
-                        stopOutgoingSession();
+                        stopOutgoingSession(true);
                         exitIfNoSession(null);
 
                         recreateVideoPlayer();
@@ -455,10 +456,10 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
      */
     private View.OnClickListener btnIncomingListener = new View.OnClickListener() {
         public void onClick(View v) {
-            if (pendingOutgoingSession) {
+            if (pendingIncomingSession) {
                 new Thread() {
                     public void run() {
-                        stopIncomingSession();
+                        stopIncomingSession(true);
                         exitIfNoSession(null);
                     }
                 }.start();
@@ -565,59 +566,64 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             p.setPreviewFormat(PixelFormat.YCbCr_420_SP); //ImageFormat.NV21);
 
             // Orientation
-            Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-            switch (display.getRotation()) {
-                case Surface.ROTATION_0:
-                    if (logger.isActivated()) {
-                        logger.debug("ROTATION_0");
-                    }
-                    if (openedCameraId == CameraOptions.FRONT) {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
-                    } else {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                        camera.setDisplayOrientation(90);
-                    } else {
-                        p.setRotation(90);
-                    }
-                    break;
-                case Surface.ROTATION_90:
-                    if (logger.isActivated()) {
-                        logger.debug("ROTATION_90");
-                    }
-                    outgoingPlayer.setOrientation(Orientation.NONE);
-                    break;
-                case Surface.ROTATION_180:
-                    if (logger.isActivated()) {
-                        logger.debug("ROTATION_180");
-                    }
-                    if (openedCameraId == CameraOptions.FRONT) {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
-                    } else {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                        camera.setDisplayOrientation(270);
-                    } else {
-                        p.setRotation(270);
-                    }
-                    break;
-                case Surface.ROTATION_270:
-                    if (logger.isActivated()) {
-                        logger.debug("ROTATION_270");
-                    }
-                    if (openedCameraId == CameraOptions.FRONT) {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_180);
-                    } else {
-                        outgoingPlayer.setOrientation(Orientation.ROTATE_180);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                        camera.setDisplayOrientation(180);
-                    } else {
-                        p.setRotation(180);
-                    }
-                    break;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+                switch (display.getRotation()) {
+                    case Surface.ROTATION_0:
+                        if (logger.isActivated()) {
+                            logger.debug("ROTATION_0");
+                        }
+                        if (openedCameraId == CameraOptions.FRONT) {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
+                        } else {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                            camera.setDisplayOrientation(90);
+                        } else {
+                            p.setRotation(90);
+                        }
+                        break;
+                    case Surface.ROTATION_90:
+                        if (logger.isActivated()) {
+                            logger.debug("ROTATION_90");
+                        }
+                        outgoingPlayer.setOrientation(Orientation.NONE);
+                        break;
+                    case Surface.ROTATION_180:
+                        if (logger.isActivated()) {
+                            logger.debug("ROTATION_180");
+                        }
+                        if (openedCameraId == CameraOptions.FRONT) {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_90_CW);
+                        } else {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_90_CCW);
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                            camera.setDisplayOrientation(270);
+                        } else {
+                            p.setRotation(270);
+                        }
+                        break;
+                    case Surface.ROTATION_270:
+                        if (logger.isActivated()) {
+                            logger.debug("ROTATION_270");
+                        }
+                        if (openedCameraId == CameraOptions.FRONT) {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_180);
+                        } else {
+                            outgoingPlayer.setOrientation(Orientation.ROTATE_180);
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
+                            camera.setDisplayOrientation(180);
+                        } else {
+                            p.setRotation(180);
+                        }
+                        break;
+                }
+            } else {
+                // getRotation not managed under Froyo
+                outgoingPlayer.setOrientation(Orientation.NONE);
             }
 
             // Camera size
@@ -875,12 +881,16 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
 
     /**
      * Stop the incoming session
+     *
+     * @param boolean cancel or not the session
      */
-    private void stopIncomingSession() {
+    private void stopIncomingSession(boolean cancel) {
         if (pendingIncomingSession && incomingCshSession != null) {
             try {
                 incomingCshSession.removeSessionListener(incomingSessionEventListener);
-                incomingCshSession.cancelSession();
+                if (cancel) {
+                    incomingCshSession.cancelSession();
+                }
             } catch (Exception e) {
                 Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
             }
@@ -974,7 +984,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         public void handleSessionAborted(int reason) {
             handler.post(new Runnable() {
                 public void run() {
-                    stopIncomingSession();
+                    stopIncomingSession(false);
                     exitIfNoSession(getString(R.string.label_incoming_sharing_aborted));
                 }
             });
@@ -986,7 +996,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         public void handleSessionTerminatedByRemote() {
             handler.post(new Runnable() {
                 public void run() {
-                    stopIncomingSession();
+                    stopIncomingSession(false);
                     exitIfNoSession(getString(R.string.label_incoming_sharing_terminated_by_remote));
                 }
             });
@@ -998,7 +1008,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         public void handleSharingError(final int error) {
             handler.post(new Runnable() {
                 public void run() {
-                    stopIncomingSession();
+                    stopIncomingSession(false);
                     exitIfNoSession(getString(R.string.label_csh_failed, error));
                 }
             });
@@ -1124,15 +1134,19 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
 
     /**
      * Stop the outgoing session
+     *
+     * @param boolean cancel the session or not
      */
-    private void stopOutgoingSession() {
+    private void stopOutgoingSession(final boolean cancel) {
         if (outgoingCshSession != null && pendingOutgoingSession) {
             hideProgressDialog();
             new Thread() {
                 public void run() {
                     try {
                         outgoingCshSession.removeSessionListener(outgoingSessionEventListener);
-                        outgoingCshSession.cancelSession();
+                        if (cancel) {
+                            outgoingCshSession.cancelSession();
+                        }
                     } catch (RemoteException e) {
                         Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
                     }
@@ -1210,7 +1224,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             handler.post(new Runnable() {
                 public void run() {
                     hideProgressDialog();
-                    stopOutgoingSession();
+                    stopOutgoingSession(false);
                     exitIfNoSession(getString(R.string.label_outgoing_sharing_aborted));
 
                     recreateVideoPlayer();
@@ -1223,7 +1237,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             handler.post(new Runnable() {
                 public void run() {
                     hideProgressDialog();
-                    stopOutgoingSession();
+                    stopOutgoingSession(false);
                     exitIfNoSession(getString(R.string.label_outgoing_sharing_terminated_by_remote));
 
                     recreateVideoPlayer();
@@ -1236,7 +1250,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             handler.post(new Runnable() {
                 public void run() {
                     hideProgressDialog();
-                    stopOutgoingSession();
+                    stopOutgoingSession(false);
                     if (error == ContentSharingError.SESSION_INITIATION_DECLINED) {
                         exitIfNoSession(getString(R.string.label_invitation_declined));
                     } else {

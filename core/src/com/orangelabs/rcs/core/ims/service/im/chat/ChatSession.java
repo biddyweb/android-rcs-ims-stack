@@ -19,10 +19,12 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
@@ -60,6 +62,11 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ChatSession extends ImsServiceSession implements MsrpEventListener {
+	/**
+	 * File transfer over HTTP MIME type
+	 */
+	private static final String FT_HTTP_MIME_TYPE = "application/vnd.gsma.rcs-ft-http+xml";
+	
 	/**
 	 * Subject
 	 */
@@ -103,17 +110,27 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     /**
      * Feature tags
      */
-    private String[] featureTags = InstantMessagingService.CHAT_FEATURE_TAGS;
+    private ArrayList<String> featureTags = new ArrayList<String>();
     
+    /**
+     * Accept types
+     */
+    private String acceptTypes;
+
     /**
      * Wrapped types
      */
-    private String wrappedTypes = InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE;
+    private String wrappedTypes;
 
     /**
-     * Geolocation push supported by remote server
+     * Geolocation push supported by remote
      */
-    private boolean geolocSupportedByServer = false;
+    private boolean geolocSupportedByRemote = false;
+    
+    /**
+     * File transfer over HTTP supported by remote
+     */
+    private boolean ftHttpSupportedByRemote = false;
     
     /**
      * The logger
@@ -129,13 +146,31 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	public ChatSession(ImsService parent, String contact) {
 		super(parent, contact);
 
-		// Update feature tags if geolocation supported
-        if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
-        	featureTags = InstantMessagingService.CHAT_FEATURE_TAGS_GEOLOCATION;
+		// Set feature tags
+		featureTags.add(FeatureTags.FEATURE_OMA_IM);
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	featureTags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	featureTags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_FT_HTTP + "\"");
         }
 		
-		// Create the MSRP manager
+		// Set accept-types
+		acceptTypes = CpimMessage.MIME_TYPE;
+		if (!isGroupChat()) {
+			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
+		}
+				
+		// Set accept-wrapped-types
+		wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	wrappedTypes += " " + FT_HTTP_MIME_TYPE;
+        }
+		
+        // Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
@@ -164,7 +199,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @return Feature tags
 	 */
 	public String[] getFeatureTags() {
-		return featureTags;
+		return featureTags.toArray(new String[0]);
+	}
+
+	/**
+	 * Get accept types
+	 * 
+	 * @return Accept types
+	 */
+	public String getAcceptTypes() {
+		return acceptTypes;
 	}
 
 	/**
@@ -296,23 +340,41 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Is geolocation supported by server
+	 * Is geolocation supported by remote
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isGeolocSupportedByServer() {
-		return geolocSupportedByServer;
+	public boolean isGeolocSupportedByRemote() {
+		return geolocSupportedByRemote;
 	}	
 	
 	/**
-	 * Set geolocation supported by server
+	 * Set geolocation supported by remote
 	 * 
 	 * @param suppported Supported
 	 */
-	public void setGeolocSupportedByServer(boolean supported) {
-		this.geolocSupportedByServer = supported;
+	public void setGeolocSupportedByRemote(boolean supported) {
+		this.geolocSupportedByRemote = supported;
 	}
 	
+	/**
+	 * Is file transfer over HTTP supported by remote
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isFileTransferHttpSupportedByRemote() {
+		return ftHttpSupportedByRemote;
+	}	
+	
+	/**
+	 * Set file transfer over HTTP supported by remote
+	 * 
+	 * @param suppported Supported
+	 */
+	public void setFileTransferHttpSupportedByRemote(boolean supported) {
+		this.ftHttpSupportedByRemote = supported;
+	}
+
 	/**
 	 * Close the MSRP session
 	 */
@@ -806,7 +868,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     public void handle200OK(SipResponse resp) {
         super.handle200OK(resp);
                 
-        // Check if geolocation push supported by server
-        setGeolocSupportedByServer(SipUtils.isFeatureTagPresent(resp, GeolocInfoDocument.MIME_TYPE));
+        // Check if geolocation push supported by remote
+        setGeolocSupportedByRemote(SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH));
+
+        // Check if file transfer over HTTP supported by remote
+        setFileTransferHttpSupportedByRemote(SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_FT_HTTP));
     }	
 }

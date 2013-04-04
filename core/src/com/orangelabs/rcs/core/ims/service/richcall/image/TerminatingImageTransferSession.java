@@ -332,7 +332,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     	imageTransfered();
 	
 	   	try {
-            // Save data to file
+        	// Close content with received data
             getContent().writeData2File(data);
             getContent().closeFile();
 
@@ -340,24 +340,22 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleContentTransfered(getContent().getUrl());
 	    	}
-
-            deleteFile();
 	   	} catch(IOException e) {
-	   		if (logger.isActivated()) {
-	   			logger.error("Can't save received image", e);
-	   		}
+	   		// Delete the temp file
+            deleteFile();
 
 	   		// Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_SAVING_FAILED));
 	    	}
 	   	} catch(Exception e) {
-	   		// Notify listeners
+	   		// Delete the temp file
+            deleteFile();
+
+            // Notify listeners
 	    	for(int j=0; j < getListeners().size(); j++) {
 	    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED));
 	    	}
-            deleteFile();
-            //TODO [SD card Exception Handling] -  terminate session (e.g. sd card dismounted)
 	   	}
 	}
     
@@ -380,17 +378,17 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
      */
     public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
         try {
+        	// Update content with received data
             getContent().writeData2File(data);
 
             // Notify listeners
             for (int j = 0; j < getListeners().size(); j++) {
                 ((ImageTransferSessionListener)getListeners().get(j)).handleSharingProgress(currentSize, totalSize);
             }
-        } catch (IOException e) {
-            if (logger.isActivated()) {
-                logger.error("Can't save received image", e);
-            }
+        } catch(Exception e) {
+	   		// Delete the temp file
             deleteFile();
+            
             // Notify listeners
             for (int j = 0; j < getListeners().size(); j++) {
                 ((ImageTransferSessionListener) getListeners().get(j)).handleSharingError(new ContentSharingError(
@@ -407,7 +405,11 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
     	if (logger.isActivated()) {
     		logger.info("Data transfer aborted");
     	}
-        deleteFile();
+    	
+        if (!isImageTransfered()) {
+	   		// Delete the temp file
+	        deleteFile();
+        }
 	}
 
     /**
@@ -424,13 +426,19 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 		if (logger.isActivated()) {
             logger.info("Data transfer error " + error);
     	}
-
-        // Close the media session
-        closeMediaSession();
-        
-		// Terminate session
-		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-
+		
+		try {
+	        // Close the media session
+	        closeMediaSession();
+	        
+			// Terminate session
+			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+	   	} catch(Exception e) {
+	   		if (logger.isActivated()) {
+	   			logger.error("Can't close correctly the image sharing session", e);
+	   		}
+	   	}
+		
     	// Remove the current session
     	getImsService().removeSession(this);
 
@@ -470,6 +478,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
             logger.debug("MSRP session has been closed");
         }
         if (!isImageTransfered()) {
+	   		// Delete the temp file
             deleteFile();
         }
     }
@@ -479,7 +488,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
      */
     private void deleteFile() {
         if (logger.isActivated()) {
-            logger.debug("Delete (incomplete) received image");
+            logger.debug("Delete incomplete received image");
         }
         try {
             getContent().deleteFile();

@@ -28,7 +28,7 @@ public class VisitCardContent extends MmContent {
 	/**
 	 * Encoding type
 	 */
-	private static final String ENCODING = "text/vcard";
+	public static final String ENCODING = "text/vcard";
 	
 	/**
 	 * Constructor

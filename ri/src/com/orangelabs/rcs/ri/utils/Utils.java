@@ -71,6 +71,11 @@ public class Utils {
 	public static int NOTIF_ID_VIDEO_SHARE = 1003; 
 
 	/**
+	 * Notification ID for location share
+	 */
+	public static int NOTIF_ID_LOCATION_SHARE = 1004; 
+	
+	/**
 	 * RCS-e extension feature tag prefix
 	 */
 	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";
@@ -359,6 +364,7 @@ public class Utils {
 		dlg.setMessage(msg);
 		dlg.setIndeterminate(true);
 		dlg.setCancelable(true);
+		dlg.setCanceledOnTouchOutside(false);
 		dlg.show();
 		return dlg;
 	}    

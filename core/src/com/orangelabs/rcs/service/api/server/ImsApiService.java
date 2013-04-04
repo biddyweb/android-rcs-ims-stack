@@ -59,6 +59,9 @@ public class ImsApiService extends IImsApi.Stub {
 			// Test IMS connection
 			return ServerApiUtils.isImsConnected();
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}

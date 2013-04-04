@@ -284,7 +284,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @return Boolean
 	 */
 	public boolean isGeolocSupported() {
-		return RcsSettings.getInstance().isGeoLocationPushSupported() && session.isGeolocSupportedByServer();
+		return RcsSettings.getInstance().isGeoLocationPushSupported(); // TODO && session.isGeolocSupportedByRemote();
 	}
 	
     /**
@@ -304,6 +304,24 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
     }
 
 	/**
+	 * Is file transfer over HTTP supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isFileTransferHttpSupported() {
+		return RcsSettings.getInstance().isFileTransferHttpSupported(); // TODO && session.isFileTransferHttpSupportedByRemote();
+	}
+
+    /**
+     * Send file over HTTP
+     * 
+     * @param filename Filename
+     */
+    public void sendFile(String filename) {
+		// TODO
+    }
+
+    /**
 	 * Set is composing status
 	 * 
 	 * @param status Status
@@ -493,7 +511,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
     public void handleImError(ChatError error) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("IM error received");
+				logger.info("IM error " + error.getErrorCode());
 			}
 			
 			// Update rich messaging history

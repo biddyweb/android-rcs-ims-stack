@@ -327,6 +327,21 @@ public class RichMessaging {
 	}
 	
 	/**
+	 * Add incoming geoloc message out of a session
+	 * 
+	 * @param geoloc Geoloc message
+	 */
+	public void addIncomingGeoloc(GeolocMessage geoloc) {
+		// Add message entry
+		int type = EventsLogApi.TYPE_INCOMING_GEOLOC;
+		int status = EventsLogApi.STATUS_RECEIVED;
+		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
+		addEntry(type, null, null, geoloc.getMessageId(),
+				geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
+				geolocData.length(), geoloc.getDate(), status);
+	}
+
+	/**
 	 * Add outgoing geoloc message
 	 * 
 	 * @param geoloc Geoloc message
@@ -347,6 +362,21 @@ public class RichMessaging {
 				geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);			
 	}
 	
+	/**
+	 * Add outgoing geoloc message
+	 * 
+	 * @param geoloc Geoloc message
+	 */
+	public void addOutgoingGeoloc(GeolocMessage geoloc) {
+		// Add session entry
+		int type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
+		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
+		addEntry(type, null, null,
+				geoloc.getMessageId(), geoloc.getRemote(), geolocData,
+				GeolocMessage.MIME_TYPE, geoloc.getRemote(),
+				geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);			
+	}
+
 	/**
 	 * Set the delivery status of a chat message
 	 * 

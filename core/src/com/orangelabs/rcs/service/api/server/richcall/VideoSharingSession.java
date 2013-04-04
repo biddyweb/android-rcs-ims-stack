@@ -312,7 +312,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
     public void handleSharingError(ContentSharingError error) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Session error");
+				logger.info("Sharing error " + error.getErrorCode());
 			}
 	
 			// Update rich call history

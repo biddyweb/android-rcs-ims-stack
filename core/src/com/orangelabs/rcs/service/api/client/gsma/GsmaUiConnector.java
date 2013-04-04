@@ -88,6 +88,12 @@ public class GsmaUiConnector {
 	public static final String EXTRA_CAPABILITY_VIDEO_SHARE = "videoshare";
 
 	/**
+	 * The lookup key for a boolean that indicates whether the device supports the geoloc
+	 * push service or not. Retrieve it with getBooleanExtra(String, boolean). 
+	 */
+	public static final String EXTRA_CAPABILITY_GEOLOCATION_PUSH = "geolocpush";
+
+	/**
 	 * The lookup key for a boolean that indicates whether the device supports the
 	 * Store&Forward service or not. Retrieve it with getBooleanExtra(String, boolean). 
 	 */

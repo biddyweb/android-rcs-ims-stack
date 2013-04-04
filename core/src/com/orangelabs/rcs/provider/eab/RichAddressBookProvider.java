@@ -129,6 +129,8 @@ public class RichAddressBookProvider extends ContentProvider {
 					+ RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_EXTENSIONS + " TEXT, "
 					+ RichAddressBookData.KEY_IM_BLOCKED + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_IM_BLOCKED_TIMESTAMP + " long, "

@@ -195,7 +195,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         reservePort(localRtpPort);
 
         // Init codecs
-        supportedMediaCodecs = CodecsUtils.getSupportedCodecList(); 
+        supportedMediaCodecs = CodecsUtils.getPlayerCodecList();
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
@@ -321,10 +321,8 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
             // Codec settings optimization
             nativeH264EncoderParams.setEncMode(NativeH264EncoderParams.ENCODING_MODE_STREAMING);
-//            nativeH264EncoderParams.setPacketSize(JavaPacketizer.H264_MAX_PACKET_FRAME_SIZE);
-            nativeH264EncoderParams.setSceneDetection(true);
-            nativeH264EncoderParams.setIFrameInterval(10);
-            nativeH264EncoderParams.setFrameOrientation(0);
+            nativeH264EncoderParams.setSceneDetection(false);
+            nativeH264EncoderParams.setIFrameInterval(15);
 
             if (logger.isActivated()) {
                 logger.info("Init H264Encoder " + selectedVideoCodec.getCodecParams() + " " +

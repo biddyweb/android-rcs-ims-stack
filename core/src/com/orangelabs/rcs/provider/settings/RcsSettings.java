@@ -977,6 +977,7 @@ public class RcsSettings {
 		// Add default capabilities
 		capabilities.setCsVideoSupport(isCsVideoSupported());
 		capabilities.setFileTransferSupport(isFileTransferSupported());
+		capabilities.setFileTransferHttpSupport(isFileTransferHttpSupported());
 		capabilities.setImageSharingSupport(isImageSharingSupported());
 		capabilities.setImSessionSupport(isImSessionSupported());
 		capabilities.setPresenceDiscoverySupport(isPresenceDiscoverySupported());
@@ -1752,6 +1753,19 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER));
+		}
+		return result;
+	}
+
+	/**
+     * Is file transfer via HTTP supported
+     *
+     * @return Boolean
+     */
+	public boolean isFileTransferHttpSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP));
 		}
 		return result;
 	}

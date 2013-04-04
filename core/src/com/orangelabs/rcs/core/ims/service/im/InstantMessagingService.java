@@ -39,6 +39,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
+import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession;
@@ -72,11 +73,6 @@ public class InstantMessagingService extends ImsService {
      */
     public final static String[] CHAT_FEATURE_TAGS = { FeatureTags.FEATURE_OMA_IM };
 
-    /**
-     * Chat features tags with geolocation support
-     */
-    public final static String[] CHAT_FEATURE_TAGS_GEOLOCATION = { FeatureTags.FEATURE_OMA_IM, FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\""};
-    
     /**
      * File transfer features tags
      */
@@ -209,7 +205,7 @@ public class InstantMessagingService extends ImsService {
 		Enumeration<ImsServiceSession> list = getSessions();
 		while(list.hasMoreElements()) {
 			ImsServiceSession session = list.nextElement();
-			if ((session instanceof ChatSession) && PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
+			if ((session instanceof OneOneChatSession) && PhoneUtils.compareNumbers(session.getRemoteContact(), contact)) {
 				result.add((ChatSession)session);
 			}
 		}

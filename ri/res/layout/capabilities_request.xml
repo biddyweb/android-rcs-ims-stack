@@ -84,6 +84,18 @@
 	        <TextView android:text=""
  			 android:layout_marginLeft="5dip"
 	         android:gravity="right"/>
+	        <CheckBox android:id="@+id/file_transfer_http"
+			 android:layout_marginLeft="5dip"
+			 android:layout_marginRight="5dip"
+	         android:textStyle="bold"
+			 android:clickable="false"
+             android:text="@string/label_capabilities_ft_http" />
+	    </TableRow>
+	    
+	    <TableRow>
+	        <TextView android:text=""
+ 			 android:layout_marginLeft="5dip"
+	         android:gravity="right"/>
 	        <CheckBox android:id="@+id/im"
 			 android:layout_marginLeft="5dip"
 			 android:layout_marginRight="5dip"

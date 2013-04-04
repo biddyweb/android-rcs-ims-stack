@@ -338,7 +338,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     public void handleTransferError(FileSharingError error) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Sharing error");
+				logger.info("Sharing error " + error.getErrorCode());
 			}
 	
 			// Update rich messaging history

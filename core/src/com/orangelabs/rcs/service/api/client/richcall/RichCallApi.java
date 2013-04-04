@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.service.api.client.richcall;
 
+import java.util.List;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +30,7 @@ import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
  * Rich call API
@@ -167,6 +170,25 @@ public class RichCallApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+	
+	/**
+	 * Get list of current video sharing sessions with a contact
+	 * 
+	 * @param contact Contact
+	 * @return List of sessions
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getVideoSharingSessionsWith(String contact) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.getVideoSharingSessionsWith(contact);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}	
 
 	/**
 	 * Initiate an image sharing session
@@ -227,6 +249,25 @@ public class RichCallApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+
+	/**
+	 * Get list of current image sharing sessions with a contact
+	 * 
+	 * @param contact Contact
+	 * @return List of sessions
+	 * @throws ClientApiException
+	 */
+	public List<IBinder> getImageSharingSessionsWith(String contact) throws ClientApiException {
+   	if (coreApi != null) {
+			try {
+		    	return coreApi.getImageSharingSessionsWith(contact);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
 	
 	/**
 	 * Set multiparty call
@@ -263,4 +304,43 @@ public class RichCallApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+		
+	/**
+	 * Initiate a geoloc sharing session
+	 * 
+	 * @param contact Contact
+	 * @param geoloc Geoloc info
+	 * @return Geoloc sharing session
+	 * @throws ClientApiException
+	 */
+	public IGeolocSharingSession initiateGeolocSharing(String contact, GeolocPush geoloc) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.initiateGeolocSharing(contact, geoloc);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}	
+	
+	/**
+	 * Get a geoloc sharing session from its session ID
+	 * 
+	 * @param id Session ID
+	 * @return Session
+	 * @throws ClientApiException
+	 */
+	public IGeolocSharingSession getGeolocSharingSession(String id) throws ClientApiException {
+    	if (coreApi != null) {
+			try {
+		    	return coreApi.getGeolocSharingSession(id);
+			} catch(Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}	
 }

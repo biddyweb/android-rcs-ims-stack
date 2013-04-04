@@ -40,7 +40,6 @@ import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
@@ -236,36 +235,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			addFileTransferSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
-    }
-
-    /**
-     * Transfer a file to a group of contacts
-     *
-     * @param contacts List of contacts
-     * @param file File to be transfered
-     * @param thumbnail Thumbnail option
-     * @return File transfer session
-     * @throws ClientApiException
-     */
-    public IFileTransferSession transferFileToGroup(List<String> contacts, String file, boolean thumbnail) throws ServerApiException {
-        if (logger.isActivated()) {
-            logger.info("Transfer file " + file + " to " + contacts.size() + " contacts");
-        }
-
-        // Check permission
-        ServerApiUtils.testPermission();
-
-        // Test IMS connection
-        ServerApiUtils.testIms();
-
-        try {
-            // TODO: NOT YET IMPLEMENTED
-            return null;
-        } catch (Exception e) {
-            throw new ServerApiException(e.getMessage());
-        }
     }
 
 	/**
@@ -320,6 +294,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}		
 	}	
@@ -349,6 +326,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -438,6 +418,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			MessagingApiService.addChatSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -504,6 +487,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			MessagingApiService.addChatSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -535,6 +521,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			MessagingApiService.addChatSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}	
@@ -566,6 +555,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			MessagingApiService.addChatSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}	
@@ -622,6 +614,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			}
 			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -644,17 +639,16 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testCore();
 		
 		try {
-			try {
-				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
-				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
-					IChatSession sessionApi = (IChatSession)e.nextElement() ;
-					result.add(sessionApi.asBinder());
-				}
-				return result;
-			} catch(Exception e) {
-				throw new ServerApiException(e.getMessage());
+			ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+			for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+				IChatSession sessionApi = (IChatSession)e.nextElement() ;
+				result.add(sessionApi.asBinder());
 			}
+			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -677,19 +671,18 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testCore();
 		
 		try {
-			try {
-				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
-				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
-					IChatSession sessionApi = (IChatSession)e.nextElement() ;
-					if (sessionApi.isGroupChat()) {
-						result.add(sessionApi.asBinder());
-					}
+			ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+			for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+				IChatSession sessionApi = (IChatSession)e.nextElement() ;
+				if (sessionApi.isGroupChat()) {
+					result.add(sessionApi.asBinder());
 				}
-				return result;
-			} catch(Exception e) {
-				throw new ServerApiException(e.getMessage());
 			}
+			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -712,20 +705,19 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ServerApiUtils.testCore();
 		
 		try {
-			try {
-				ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
-				for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
-					IChatSession sessionApi = (IChatSession)e.nextElement() ;
-					String id = sessionApi.getChatID(); 
-					if (sessionApi.isGroupChat() && id.equals(chatId)) {
-						result.add(sessionApi.asBinder());
-					}
+			ArrayList<IBinder> result = new ArrayList<IBinder>(chatSessions.size());
+			for (Enumeration<IChatSession> e = chatSessions.elements() ; e.hasMoreElements() ;) {
+				IChatSession sessionApi = (IChatSession)e.nextElement() ;
+				String id = sessionApi.getChatID(); 
+				if (sessionApi.isGroupChat() && id.equals(chatId)) {
+					result.add(sessionApi.asBinder());
 				}
-				return result;
-			} catch(Exception e) {
-				throw new ServerApiException(e.getMessage());
 			}
+			return result;
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}
@@ -754,6 +746,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			Core.getInstance().getImService().getImdnManager().sendMessageDeliveryStatus(PhoneUtils.formatNumberToSipUri(contact),
 					msgId, status);
 		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
 			throw new ServerApiException(e.getMessage());
 		}
 	}	

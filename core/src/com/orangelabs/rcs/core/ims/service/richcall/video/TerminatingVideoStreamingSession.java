@@ -108,7 +108,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 }
 
                 // Ringing period timeout
-                send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+                send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 
                 // Remove the current session
                 getImsService().removeSession(this);

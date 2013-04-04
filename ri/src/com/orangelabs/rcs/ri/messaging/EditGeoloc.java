@@ -32,6 +32,7 @@ import android.widget.EditText;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
  * Geoloc info editor 
@@ -87,8 +88,8 @@ public class EditGeoloc extends Activity {
 		accuracyEdit = (EditText)findViewById(R.id.accuracy);
 		
         // Set button callback
-        Button sendBtn = (Button)findViewById(R.id.send_btn);
-        sendBtn.setOnClickListener(btnSendListener);	
+        Button validateBtn = (Button)findViewById(R.id.validate_btn);
+        validateBtn.setOnClickListener(btnValidateListener);	
         
         // Set button callback
         Button selectBtn = (Button)findViewById(R.id.select_geoloc_btn);
@@ -116,9 +117,9 @@ public class EditGeoloc extends Activity {
 	}
 	
     /**
-     * Invite button listener
+     * Validate button listener
      */
-    private OnClickListener btnSendListener = new OnClickListener() {
+    private OnClickListener btnValidateListener = new OnClickListener() {
         public void onClick(View v) {
         	String lat = latitudeEdit.getText().toString().trim();
     		if (lat.length() == 0) { 	
@@ -140,12 +141,12 @@ public class EditGeoloc extends Activity {
     			accuracyEdit.setText("0");
     		}
 
+			long expiration = System.currentTimeMillis() + RcsSettings.getInstance().getGeolocExpirationTime();
+    		GeolocPush geoloc = new GeolocPush(locationEdit.getText().toString(),
+    				Double.parseDouble(lat), Double.parseDouble(lon), Double.parseDouble(alt),
+    				expiration, Float.parseFloat(acc));
     		Intent in = new Intent();
-    		in.putExtra("label", locationEdit.getText().toString());
-    		in.putExtra("latitude", Double.parseDouble(lat));
-    		in.putExtra("longitude", Double.parseDouble(lon));
-    		in.putExtra("altitude", Double.parseDouble(alt));
-    		in.putExtra("accuracy", Float.parseFloat(acc));
+    		in.putExtra("geoloc", geoloc);
     		setResult(-1, in);
     		finish();
         }
@@ -176,16 +177,14 @@ public class EditGeoloc extends Activity {
 
     	switch(requestCode) {
 	    	case SELECT_GEOLOCATION: {
-	    		
+				// Get selected geoloc
 	    		double latitude = data.getDoubleExtra("latitude", 0.0);
 	    		double longitude = data.getDoubleExtra("longitude", 0.0);
-	    		double altitude = data.getDoubleExtra("altitude", 0.0);
 
+				// Display geoloc
 	    		latitudeEdit.setText(String.valueOf(latitude));
 	    		longitudeEdit.setText(String.valueOf(longitude));
-	    		altitudeEdit.setText(String.valueOf(altitude));
 	    	}
-	    	
 	    	break;
     	}
     }

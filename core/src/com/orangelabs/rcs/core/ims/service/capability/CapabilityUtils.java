@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.orangelabs.rcs.core.content.GeolocContent;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
@@ -40,6 +41,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
+import com.orangelabs.rcs.utils.NetworkUtils;
 import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 
@@ -60,7 +62,8 @@ public class CapabilityUtils {
 		List<String> tags = new ArrayList<String>();
 
 		// Video share support
-		if (RcsSettings.getInstance().isVideoSharingSupported() && richcall) {
+        if (RcsSettings.getInstance().isVideoSharingSupported() && richcall
+                && NetworkUtils.getNetworkAccessType() >= NetworkUtils.NETWORK_ACCESS_3G) {
 			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
 		}
 
@@ -74,6 +77,11 @@ public class CapabilityUtils {
 		// FT support
 		if (RcsSettings.getInstance().isFileTransferSupported() && isFileStorageAvailable()) {
 			supported += FeatureTags.FEATURE_RCSE_FT + ",";
+		}
+		
+		// FT over HTTP support
+		if (RcsSettings.getInstance().isFileTransferHttpSupported() && isFileStorageAvailable()) {
+			supported += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
 		}
 
 		// Image share support
@@ -91,7 +99,7 @@ public class CapabilityUtils {
 			supported += FeatureTags.FEATURE_RCSE_SOCIAL_PRESENCE + ",";
 		}
 
-		// GeoLocation Push support
+		// Geolocation push support
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
 		}
@@ -146,6 +154,10 @@ public class CapabilityUtils {
         	if (tag.contains(FeatureTags.FEATURE_RCSE_FT)) {
         		// Support FT service
         		capabilities.setFileTransferSupport(true);
+        	} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_FT_HTTP)) {
+        		// Support FT over HTTP service
+        		capabilities.setFileTransferHttpSupport(true);
         	} else
         	if (tag.contains(FeatureTags.FEATURE_OMA_IM)) {
         		// Support both IM & FT services
@@ -272,8 +284,9 @@ public class CapabilityUtils {
     public static String buildSdp(String ipAddress, boolean richcall) {
     	String sdp = null;
 		if (richcall) {
-	        boolean video = RcsSettings.getInstance().isVideoSharingSupported();
+	        boolean video = RcsSettings.getInstance().isVideoSharingSupported() && NetworkUtils.getNetworkAccessType() >= NetworkUtils.NETWORK_ACCESS_3G;
 	        boolean image = RcsSettings.getInstance().isImageSharingSupported();
+	        boolean geoloc = RcsSettings.getInstance().isGeoLocationPushSupported();
 	        if (video | image) {
 				// Build the local SDP
 		    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
@@ -298,18 +311,26 @@ public class CapabilityUtils {
 			    	sdp += videoSharingConfig.toString();
 		        }
 	        
-				// Add image config
-		        if (image && isFileStorageAvailable()) {
+				// Add image and geoloc config
+		        if (image || geoloc) {
+					StringBuffer supportedTransferFormats = new StringBuffer();
+
 					// Get supported image formats
-					Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
-					StringBuffer supportedImageFormats = new StringBuffer();
-					for(int i=0; i < mimeTypes.size(); i++) {
-						supportedImageFormats.append(mimeTypes.elementAt(i) + " ");
-				    }    	    	
+		        	if (isFileStorageAvailable()) {
+			        	Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
+						for(int i=0; i < mimeTypes.size(); i++) {
+							supportedTransferFormats.append(mimeTypes.elementAt(i) + " ");
+					    }
+		        	}
+		        	
+		        	// Get supported geoloc
+		        	if (geoloc) {
+		        		supportedTransferFormats.append(GeolocContent.ENCODING);		        		
+		        	}
 				
 					// Update SDP
 					String imageSharingConfig = "m=message 0 TCP/MSRP *"  + SipUtils.CRLF +
-						"a=accept-types:" + supportedImageFormats.toString().trim() + SipUtils.CRLF +
+						"a=accept-types:" + supportedTransferFormats.toString().trim() + SipUtils.CRLF +
 						"a=file-selector" + SipUtils.CRLF;
 			    	int maxSize = ImageTransferSession.getMaxImageSharingSize();
 			    	if (maxSize > 0) {

@@ -21,6 +21,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Vector;
 
+import javax2.sip.header.ContentDispositionHeader;
+import javax2.sip.header.ContentLengthHeader;
+import javax2.sip.header.ContentTypeHeader;
+
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -141,16 +145,16 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 	    		// Build multipart
 	    		String multipart = 
 	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
-	    				"Content-Type: application/sdp" + SipUtils.CRLF +
-	    				"Content-Length: " + sdp.getBytes().length + SipUtils.CRLF +
+	    				ContentTypeHeader.NAME + ": application/sdp" + SipUtils.CRLF +
+	    				ContentLengthHeader.NAME + ": " + sdp.getBytes().length + SipUtils.CRLF +
 	    				SipUtils.CRLF +
 	    				sdp + SipUtils.CRLF + 
 	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + SipUtils.CRLF +
-	    				"Content-Type: " + encoding + SipUtils.CRLF +
-	    				"Content-Transfer-Encoding: base64" + SipUtils.CRLF +
-	    				"Content-ID: <image@joyn.com>" + SipUtils.CRLF +
-	    				"Content-Length: "+ imageEncoded.length() + SipUtils.CRLF +
-	    				"Content-Disposition: icon" + SipUtils.CRLF +
+	    				ContentTypeHeader.NAME + ": " + encoding + SipUtils.CRLF +
+	    				SipUtils.HEADER_CONTENT_TRANSFER_ENCODING + ": base64" + SipUtils.CRLF +
+	    				SipUtils.HEADER_CONTENT_ID + ": <image@joyn.com>" + SipUtils.CRLF +
+	    				ContentLengthHeader.NAME + ": "+ imageEncoded.length() + SipUtils.CRLF +
+	    				ContentDispositionHeader.NAME + ": icon" + SipUtils.CRLF +
 	    				SipUtils.CRLF +
 	    				imageEncoded + SipUtils.CRLF +
 	    				Multipart.BOUNDARY_DELIMITER + BOUNDARY_TAG + Multipart.BOUNDARY_DELIMITER;

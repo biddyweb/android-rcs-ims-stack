@@ -28,7 +28,7 @@ public class FileContent extends MmContent {
 	/**
 	 * Encoding type
 	 */
-	private static final String ENCODING = "application/octet-stream";
+	public static final String ENCODING = "application/octet-stream";
 	
 	/**
 	 * Constructor

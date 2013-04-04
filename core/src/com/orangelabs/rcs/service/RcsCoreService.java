@@ -48,6 +48,7 @@ import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Person;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Tuple;
+import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
@@ -84,6 +85,7 @@ import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
 import com.orangelabs.rcs.service.api.server.sip.SipApiService;
 import com.orangelabs.rcs.service.api.server.terms.TermsApiService;
+import com.orangelabs.rcs.utils.AppUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -160,7 +162,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		AndroidFactory.setApplicationContext(getApplicationContext());
 
 		// Set the terminal version
-		TerminalInfo.setProductVersion(getString(R.string.rcs_core_release_number));
+		TerminalInfo.setProductVersion(AppUtils.getApplicationVersion(this));
 
     	// Start the core
     	startCore();
@@ -237,7 +239,7 @@ public class RcsCoreService extends Service implements CoreListener {
 
     		// Terminal version
             if (logger.isActivated()) {
-                logger.info("My RCS software release is " + TerminalInfo.getProductVersion());
+                logger.info("RCS stack release is " + TerminalInfo.getProductVersion());
             }
     		
     		// Instantiate the contacts manager
@@ -878,11 +880,12 @@ public class RcsCoreService extends Service implements CoreListener {
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_FT, capabilities.isFileTransferSupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_IMAGE_SHARE, capabilities.isImageSharingSupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_VIDEO_SHARE, capabilities.isVideoSharingSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_GEOLOCATION_PUSH, capabilities.isGeolocationPushSupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_SOCIAL_PRESENCE, capabilities.isSocialPresenceSupported());
 		intentGsma.putStringArrayListExtra(GsmaUiConnector.EXTRA_CAPABILITY_EXTENSIONS, capabilities.getSupportedExtensions());
-		getApplicationContext().sendBroadcast(intentGsma);       	
+		getApplicationContext().sendBroadcast(intentGsma);
     }
     
     /**
@@ -985,6 +988,20 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		// Broadcast the invitation
 		richcallApi.receiveImageSharingInvitation(session);
+    }
+    
+    /**
+     * New content sharing transfer invitation
+     * 
+     * @param session Content sharing transfer invitation
+     */
+    public void handleContentSharingTransferInvitation(GeolocTransferSession session) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event content sharing transfer invitation");
+		}
+
+		// Broadcast the invitation
+		richcallApi.receiveGeolocSharingInvitation(session);
     }
     
     /**

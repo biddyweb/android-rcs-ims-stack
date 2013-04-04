@@ -19,10 +19,11 @@ package com.orangelabs.rcs.utils;
 
 import java.util.UUID;
 
-import com.orangelabs.rcs.provider.settings.RcsSettings;
-
 import android.content.Context;
+import android.os.Build;
 import android.telephony.TelephonyManager;
+
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 
 /***
  * Device utility functions
@@ -48,12 +49,29 @@ public class DeviceUtils {
 
         if (uuid == null) {
             String imei = getImei(context);
+            if (imei == null) {
+                // For compatibility with device without telephony
+                imei = getSerial();
+            }
             if (imei != null) {
                 uuid = UUID.nameUUIDFromBytes(imei.getBytes());
             }
 		}
-		
+
 		return uuid;
+	}
+
+	/**
+	 * Returns the serial number of the device. Only works from OS version Gingerbread.
+	 * 
+	 * @return Serial number
+	 */
+	private static String getSerial() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+			return android.os.Build.SERIAL;
+		} else {
+			return null;
+		}
 	}
 
     /**

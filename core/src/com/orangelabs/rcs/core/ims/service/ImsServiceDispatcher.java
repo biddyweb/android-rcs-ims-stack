@@ -159,6 +159,19 @@ public class ImsServiceDispatcher extends Thread {
             return;
         }
 
+        // Check public GRUU : RCS client supporting the multidevice procedure shall respond to the
+        // invite with a 486 BUSY HERE if the identifier value of the "pub-gruu" tag included
+        // in the Accept-Contact header of that incoming SIP request does not match theirs
+        String publicGruu = SipUtils.getPublicGruu(request);
+        if ((publicGruu != null) && !publicGruu.contains(imsModule.getSipManager().getSipStack().getPublicGruu())) {
+            // Send 486 Busy Here
+			if (logger.isActivated()) {
+				logger.debug("SIP public-gruu doesn't match: reject the request");
+			}
+            sendFinalResponse(request, 486);
+            return;
+        }
+        
         // Update remote SIP instance ID in the dialog path of the session
         ImsServiceSession session = searchSession(request.getCallId());
         if (session != null) {
@@ -202,7 +215,7 @@ public class ImsServiceDispatcher extends Thread {
 			}
 			sdp = sdp.toLowerCase();
 
-	    	// New incoming session invitation
+			// New incoming session invitation
 	    	if (isTagPresent(sdp, "msrp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "file-selector")) {
@@ -294,6 +307,23 @@ public class ImsServiceDispatcher extends Thread {
 					}
 					sendFinalResponse(request, 603);
 	    		}
+	    	} else
+		    if (isTagPresent(sdp, "msrp") &&
+		    		SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
+		    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH )) {
+	    		// Geoloc sharing
+	    		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Geoloc content sharing transfer invitation");
+		    		}
+	    			imsModule.getRichcallService().receiveGeolocSharingInvitation(request);
+	    		} else {
+					// Service not supported: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("Geoloc share service not supported: automatically reject");
+					}
+					sendFinalResponse(request, 603);
+	    		}	    		
     		} else {
     			Intent intent = intentMgr.isSipRequestResolved(request);
 	    		if (intent != null) {

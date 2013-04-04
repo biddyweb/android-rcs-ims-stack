@@ -48,6 +48,7 @@ public class GetContactCapabilitiesReceiver extends BroadcastReceiver {
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_FT, capabilities.isFileTransferSupported());
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_IMAGE_SHARE, capabilities.isImageSharingSupported());
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_VIDEO_SHARE, capabilities.isVideoSharingSupported());
+    		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_GEOLOCATION_PUSH, capabilities.isGeolocationPushSupported());
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
     		extras.putBoolean(GsmaUiConnector.EXTRA_CAPABILITY_SOCIAL_PRESENCE, capabilities.isSocialPresenceSupported());

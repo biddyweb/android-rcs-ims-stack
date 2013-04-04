@@ -1291,7 +1291,8 @@ public class ProvisioningParser {
      * @param node Node
      */
     private void parseSecondaryDevicePar(Node node) {
-        String voiceCall = null;
+    	// TODO: to be managed thks to a flag main/secondary device
+        /*String voiceCall = null;
         String chat = null;
         String sendSms = null;
         String fileTranfer = null;
@@ -1384,7 +1385,7 @@ public class ProvisioningParser {
                     }
                 }
             } while ((childnode = childnode.getNextSibling()) != null);
-        }
+        }*/
     }
 
     /**
@@ -1886,7 +1887,12 @@ public class ProvisioningParser {
                     // For debug only: logger.debug("Read parameter " + paramName + ": " + value);
                     logger.debug("Read parameter " + paramName);
                 }
-                return value;
+                if (value.equalsIgnoreCase("x")){
+                	// If the value is containing "x" or "X", we simply ignore the parameter
+                	return null;
+                }else{
+                	return value;
+                }
             } else {
                 return null;
             }

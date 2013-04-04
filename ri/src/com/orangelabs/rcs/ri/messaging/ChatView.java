@@ -428,15 +428,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 
     	switch(requestCode) {
 	    	case SELECT_GEOLOCATION: {
-	    		String locationLabel = data.getStringExtra("label");
-	    		double latitude = data.getDoubleExtra("latitude", 0.0);
-	    		double longitude = data.getDoubleExtra("longitude", 0.0);
-	    		double altitude = data.getDoubleExtra("altitude", 0.0);
-	    		float accuracy = data.getFloatExtra("accuracy", 0);
-	    		long expiration = System.currentTimeMillis() + RcsSettings.getInstance().getGeolocExpirationTime();
-    			try {
-    	        	// Add geoloc to the message history
-    				GeolocPush geoloc = new GeolocPush(locationLabel, latitude, longitude, altitude, expiration, accuracy);
+	    		try {
+    				// Get selected geoloc
+    				GeolocPush geoloc = data.getParcelableExtra("geoloc");
+
+    				// Add geoloc to the message history
     	            addGeolocHistory(MessageItem.OUT, getString(R.string.label_me), geoloc);
     	            composeText.setText(null);
     				chatSession.sendGeoloc(geoloc);
@@ -1383,12 +1379,6 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				holder.text.setText(line);
         	}
 
-        	/*if (item.getDirection() == MessageItem.OUT) {
-        		holder.icon.setImageResource();
-        	} else {
-        		holder.icon.setImageResource();
-        	}*/
-        	
 	        return row;
 	    }
 	    

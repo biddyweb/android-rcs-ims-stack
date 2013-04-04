@@ -57,6 +57,7 @@ public class GetMyCapabilities extends Activity {
             boolean capabilitySp = result.getBoolean(GsmaUiConnector.EXTRA_CAPABILITY_SOCIAL_PRESENCE, false);
             boolean capabilityCsv = result.getBoolean(GsmaUiConnector.EXTRA_CAPABILITY_CS_VIDEO, false);
             boolean capabilitySf = result.getBoolean(GsmaUiConnector.EXTRA_CAPABILITY_SF, false);
+            boolean capabilityGeoloc = result.getBoolean(GsmaUiConnector.EXTRA_CAPABILITY_GEOLOCATION_PUSH, false);
             String[] capabilityExts = result.getStringArray(GsmaUiConnector.EXTRA_CAPABILITY_EXTENSIONS);
 
         	// Show result
@@ -83,6 +84,9 @@ public class GetMyCapabilities extends Activity {
 
             CheckBox sf = (CheckBox)findViewById(R.id.sf);
             sf.setChecked(capabilitySf);
+            
+            CheckBox geoloc = (CheckBox)findViewById(R.id.geoloc_push);
+            geoloc.setChecked(capabilityGeoloc);
 
             if (capabilityExts != null) {
             	TextView ext = (TextView)findViewById(R.id.extensions);
