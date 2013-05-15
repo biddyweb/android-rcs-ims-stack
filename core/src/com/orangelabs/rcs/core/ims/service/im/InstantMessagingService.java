@@ -53,9 +53,11 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpFileSharingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.IdGenerator;
@@ -286,12 +288,31 @@ public class InstantMessagingService extends ImsService {
         	thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
         }
         
-		// Create a new session
-		OriginatingFileSharingSession session = new OriginatingFileSharingSession(
-				this,
-				content,
-				PhoneUtils.formatNumberToSipUri(contact),
-				thumbnailImage);
+		// Check FT over HTTP capability
+		boolean isContactFToHttp = false;
+		Capabilities capability = ContactsManager.getInstance().getContactCapabilities(contact);
+		if (capability != null) {
+			isContactFToHttp = capability.isFileTransferHttpSupported();
+		}
+		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
+		
+		// Initiate session
+		FileSharingSession session;
+		if (isContactFToHttp && myCapability.isFileTransferHttpSupported()) {
+			// Create a new session
+			session = new OriginatingHttpFileSharingSession(
+					this,
+					content,
+					PhoneUtils.formatNumberToSipUri(contact),
+					thumbnailImage);
+		} else {
+			// Create a new session
+			session = new OriginatingFileSharingSession(
+					this,
+					content,
+					PhoneUtils.formatNumberToSipUri(contact),
+					thumbnailImage);
+		}
 
 		// Start the session
 		session.startSession();
@@ -625,7 +646,7 @@ public class InstantMessagingService extends ImsService {
 		// Get the connected participants from database
 		List<String> participants = RichMessaging.getInstance().getGroupChatConnectedParticipants(chatId);
 		
-		// Add also participants who have been connected after the initial invitation
+		// Add also participants who have been initially invited
 		List<String> invitedParticipants = groupChat.getParticipants();
 		for(int i=0; i < invitedParticipants.size(); i++) {
 			String user = invitedParticipants.get(i);

@@ -443,17 +443,20 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    	break;
     	}
     }
-    
+
     /**
      * Mark a message as "displayed"
      * 
      * @param msg Message
      */
     private void markMessageAsDisplayed(InstantMessage msg){
-    	try {
-    		chatSession.setMessageDeliveryStatus(msg.getMessageId(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
-    	} catch(RemoteException e) {
-    	}
+        if (RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
+            try {
+                chatSession.setMessageDeliveryStatus(msg.getMessageId(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+            } catch(RemoteException e) {
+                // Nothing to do
+            }
+        }
     }
 
     /**

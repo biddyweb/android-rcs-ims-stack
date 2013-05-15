@@ -355,6 +355,11 @@ JNIEXPORT jintArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_
                 (env)->SetIntArrayRegion(decoded, 0, outVid.pitch*outVid.height, (const jint*)resultBuffer);
                 if (freeResultBuffer) {
                     free(resultBuffer);
+                    resultBuffer = NULL;
+                }
+                if (rotatedFrame != NULL) {
+                    free(rotatedFrame);
+                    rotatedFrame = NULL;
                 }
             } else {
                 __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "Decoder error %ld", status);
@@ -365,10 +370,10 @@ JNIEXPORT jintArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_
             }
             break;
     }
+    free(aInputBuf);
     pthread_mutex_unlock(&iMutex);
     return decoded;
 }
-
 
 /*
  * Method:    getLastDecodeStatus

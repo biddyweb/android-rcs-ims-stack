@@ -181,6 +181,10 @@ public class ImdnManager extends Thread {
 	 */
 	private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus, String remoteInstanceId) {
 		try {
+            if (!RcsSettings.getInstance().isImDisplayedNotificationActivated() && ImdnDocument.DELIVERY_STATUS_DISPLAYED.equals(deliveryStatus.getStatus())) {
+                return;
+            }
+
 			if (logger.isActivated()) {
        			logger.debug("Send delivery status " + deliveryStatus.getStatus() + " for message " + deliveryStatus.getMsgId());
        		}

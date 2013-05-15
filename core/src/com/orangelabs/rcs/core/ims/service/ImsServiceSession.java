@@ -100,6 +100,11 @@ public abstract class ImsServiceSession extends Thread {
 	 */
 	private SessionTimerManager sessionTimer = new SessionTimerManager(this);
 
+	/**
+	 * Update session manager
+	 */
+	private UpdateSessionManager updateMgr = new UpdateSessionManager(this);
+	
     /**
      * Ringing period (in seconds)
      */
@@ -587,7 +592,13 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param reInvite re-INVITE request
 	 */
 	public void receiveReInvite(SipRequest reInvite) {
-        sessionTimer.receiveReInvite(reInvite);
+		if (reInvite.getContent() == null) {
+			// Keep alive
+			sessionTimer.receiveReInvite(reInvite);
+		} else {
+			// Update session
+			updateMgr.receiveReInvite(reInvite);
+		}
 	}
 
 	/**

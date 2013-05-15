@@ -995,7 +995,7 @@ AVCLevel PVAVCEncoder::mapLevel(TAVCEILevel in)
             out = AVC_LEVEL1;
             break;
         case EAVCEI_LEVEL_1B:
-            out = AVC_LEVEL1_B;
+            out = AVC_LEVEL1_1; //AVC_LEVEL1_B; the "11" value is expected in SPS packet to be decoded as Level 1.b
             break;
         case EAVCEI_LEVEL_11:
             out = AVC_LEVEL1_1;

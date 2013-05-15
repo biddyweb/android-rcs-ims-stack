@@ -210,7 +210,10 @@ public class RegistrationManager extends PeriodicRefresher {
     	        dialogPath.incrementCseq();
             }
 
-            // Create REGISTER request
+        	// Reset the number of 401 failures
+    		nb401Failures = 0;
+
+    		// Create REGISTER request
             SipRequest register = SipMessageFactory.createRegister(dialogPath,
             		featureTags,
             		RcsSettings.getInstance().getRegisterExpirePeriod(),
@@ -325,9 +328,6 @@ public class RegistrationManager extends PeriodicRefresher {
         if (ctx.isSipResponse()) {
         	// A response has been received
             if (ctx.getStatusCode() == 200) {
-            	// Reset the number of 401 failures
-        		nb401Failures = 0;        		
-
         		// 200 OK
         		if (register.getExpires() != 0) {
         			handle200OK(ctx);
@@ -346,9 +346,6 @@ public class RegistrationManager extends PeriodicRefresher {
             	} else { 
                 	// We reached 3 successive 401 failures, stop registration retries
             		handleError(new ImsError(ImsError.REGISTRATION_FAILED, "too many 401"));
-            		
-                	// Reset the number of 401 failures
-            		nb401Failures = 0;
             	}
             } else
             if (ctx.getStatusCode() == 423) {

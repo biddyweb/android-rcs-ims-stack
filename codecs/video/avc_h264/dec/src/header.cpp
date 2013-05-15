@@ -528,21 +528,21 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
     ue_v(stream, &(sliceHdr->first_mb_in_slice));
     ue_v(stream, (uint*)&slice_type);
 
-    if (sliceHdr->first_mb_in_slice != 0)
-    {
-        if ((int)sliceHdr->slice_type >= 5 && slice_type != (int)sliceHdr->slice_type - 5)
-        {
+    if (sliceHdr->first_mb_in_slice != 0) {
+        // In ITU-T H.264 TELECOMMUNICATION STANDARDIZATION SECTOR OF ITU (01/2012)
+        // When slice_type has a value in the range 5..9, it is a requirement of bitstream conformance that all other slices of the
+        // current coded picture shall have a value of slice_type equal to the current value of slice_type or equal to the current value
+        // of slice_type minus 5.
+        if ((int)sliceHdr->slice_type >= 5 && (slice_type != (int)sliceHdr->slice_type) && (slice_type != (int)sliceHdr->slice_type - 5)) {
             return AVCDEC_FAIL; /* slice type doesn't follow the first slice in the picture */
         }
     }
     sliceHdr->slice_type = (AVCSliceType) slice_type;
-    if (slice_type > 4)
-    {
+    if (slice_type > 4) {
         slice_type -= 5;
     }
 
-    if (slice_type == 1 || slice_type > 2)
-    {
+    if (slice_type == 1 || slice_type > 2) {
         return AVCDEC_FAIL;
     }
 
@@ -552,27 +552,28 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
     /* end FirstPartSliceHeader() */
     /* begin RestOfSliceHeader() */
     /* after getting pic_parameter_set_id, we have to load corresponding SPS and PPS */
-    if (sliceHdr->pic_parameter_set_id > 255)
-    {
+    if (sliceHdr->pic_parameter_set_id > 255) {
         return AVCDEC_FAIL;
     }
 
-    if (decvid->picParams[sliceHdr->pic_parameter_set_id] == NULL)
+    if (decvid->picParams[sliceHdr->pic_parameter_set_id] == NULL) {
         return AVCDEC_FAIL; /* PPS doesn't exist */
+    }
 
     currPPS = video->currPicParams = decvid->picParams[sliceHdr->pic_parameter_set_id];
 
-    if (decvid->seqParams[currPPS->seq_parameter_set_id] == NULL)
+    if (decvid->seqParams[currPPS->seq_parameter_set_id] == NULL) {
         return AVCDEC_FAIL; /* SPS doesn't exist */
+    }
 
     currSPS = video->currSeqParams = decvid->seqParams[currPPS->seq_parameter_set_id];
 
-    if (currPPS->seq_parameter_set_id != video->seq_parameter_set_id)
-    {
+    if (currPPS->seq_parameter_set_id != video->seq_parameter_set_id) {
         video->seq_parameter_set_id = currPPS->seq_parameter_set_id;
         status = (AVCDec_Status)AVCConfigureSequence(decvid->avcHandle, video, false);
-        if (status != AVCDEC_SUCCESS)
+        if (status != AVCDEC_SUCCESS) {
             return status;
+        }
         video->level_idc = currSPS->level_idc;
     }
 
@@ -593,16 +594,13 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
 
     BitstreamReadBits(stream, currSPS->log2_max_frame_num_minus4 + 4, &(sliceHdr->frame_num));
 
-    if (video->currFS == NULL && sliceHdr->frame_num != 0)
-    {
+    if (video->currFS == NULL && sliceHdr->frame_num != 0) {
         video->prevFrameNum = video->PrevRefFrameNum = sliceHdr->frame_num - 1;
     }
 
-    if (!currSPS->frame_mbs_only_flag)
-    {
+    if (!currSPS->frame_mbs_only_flag) {
         BitstreamRead1Bit(stream, &(sliceHdr->field_pic_flag));
-        if (sliceHdr->field_pic_flag)
-        {
+        if (sliceHdr->field_pic_flag) {
             return AVCDEC_FAIL;
         }
     }
@@ -621,10 +619,8 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
     video->CurrPicNum = sliceHdr->frame_num;
 
 
-    if (video->nal_unit_type == AVC_NALTYPE_IDR)
-    {
-        if (sliceHdr->frame_num != 0)
-        {
+    if (video->nal_unit_type == AVC_NALTYPE_IDR) {
+        if (sliceHdr->frame_num != 0) {
             return AVCDEC_FAIL;
         }
         ue_v(stream, &idr_pic_id);
@@ -633,53 +629,45 @@ AVCDec_Status DecodeSliceHeader(AVCDecObject *decvid, AVCCommonObj *video, AVCDe
     sliceHdr->delta_pic_order_cnt_bottom = 0; /* default value */
     sliceHdr->delta_pic_order_cnt[0] = 0; /* default value */
     sliceHdr->delta_pic_order_cnt[1] = 0; /* default value */
-    if (currSPS->pic_order_cnt_type == 0)
-    {
+    if (currSPS->pic_order_cnt_type == 0) {
         BitstreamReadBits(stream, currSPS->log2_max_pic_order_cnt_lsb_minus4 + 4,
                           &(sliceHdr->pic_order_cnt_lsb));
         video->MaxPicOrderCntLsb =  1 << (currSPS->log2_max_pic_order_cnt_lsb_minus4 + 4);
-        if (sliceHdr->pic_order_cnt_lsb > video->MaxPicOrderCntLsb - 1)
+        if (sliceHdr->pic_order_cnt_lsb > video->MaxPicOrderCntLsb - 1) {
             return AVCDEC_FAIL; /* out of range */
+        }
 
-        if (currPPS->pic_order_present_flag)
-        {
+        if (currPPS->pic_order_present_flag) {
             se_v32bit(stream, &(sliceHdr->delta_pic_order_cnt_bottom));
         }
     }
-    if (currSPS->pic_order_cnt_type == 1 && !currSPS->delta_pic_order_always_zero_flag)
-    {
+    if (currSPS->pic_order_cnt_type == 1 && !currSPS->delta_pic_order_always_zero_flag) {
         se_v32bit(stream, &(sliceHdr->delta_pic_order_cnt[0]));
-        if (currPPS->pic_order_present_flag)
-        {
+        if (currPPS->pic_order_present_flag) {
             se_v32bit(stream, &(sliceHdr->delta_pic_order_cnt[1]));
         }
     }
 
     sliceHdr->redundant_pic_cnt = 0; /* default value */
-    if (currPPS->redundant_pic_cnt_present_flag)
-    {
+    if (currPPS->redundant_pic_cnt_present_flag) {
         // MC_CHECK
         ue_v(stream, &(sliceHdr->redundant_pic_cnt));
-        if (sliceHdr->redundant_pic_cnt > 127) /* out of range */
+        if (sliceHdr->redundant_pic_cnt > 127) { /* out of range */
             return AVCDEC_FAIL;
-
-        if (sliceHdr->redundant_pic_cnt > 0) /* redundant picture */
+        }
+        if (sliceHdr->redundant_pic_cnt > 0) { /* redundant picture */
             return AVCDEC_FAIL; /* not supported */
+        }
     }
     sliceHdr->num_ref_idx_l0_active_minus1 = currPPS->num_ref_idx_l0_active_minus1;
     sliceHdr->num_ref_idx_l1_active_minus1 = currPPS->num_ref_idx_l1_active_minus1;
 
-    if (slice_type == AVC_P_SLICE)
-    {
+    if (slice_type == AVC_P_SLICE) {
         BitstreamRead1Bit(stream, &(sliceHdr->num_ref_idx_active_override_flag));
-        if (sliceHdr->num_ref_idx_active_override_flag)
-        {
+        if (sliceHdr->num_ref_idx_active_override_flag) {
             ue_v(stream, &(sliceHdr->num_ref_idx_l0_active_minus1));
-        }
-        else  /* the following condition is not allowed if the flag is zero */
-        {
-            if ((slice_type == AVC_P_SLICE) && currPPS->num_ref_idx_l0_active_minus1 > 15)
-            {
+        } else { /* the following condition is not allowed if the flag is zero */
+            if ((slice_type == AVC_P_SLICE) && currPPS->num_ref_idx_l0_active_minus1 > 15) {
                 return AVCDEC_FAIL; /* not allowed */
             }
         }

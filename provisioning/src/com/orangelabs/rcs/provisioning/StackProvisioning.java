@@ -69,6 +69,13 @@ public class StackProvisioning extends Activity {
     	"All networks", "Mobile only", "Wi-Fi only"
     };
 
+    /**
+	 * FT protocol
+	 */
+    private static final String[] FT_PROTOCOL = {
+        RcsSettingsData.FT_PROTOCOL_HTTP, RcsSettingsData.FT_PROTOCOL_MSRP
+    };
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -143,7 +150,6 @@ public class StackProvisioning extends Activity {
         }
 
         String[] certificates = loadCertificatesList();
-
         spinner = (Spinner) findViewById(R.id.TlsCertificateRoot);
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, certificates);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -177,6 +183,18 @@ public class StackProvisioning extends Activity {
         if (!found) {
             spinner.setSelection(0);
             RcsSettings.getInstance().writeParameter(RcsSettingsData.TLS_CERTIFICATE_INTERMEDIATE, "");
+        }
+
+        spinner = (Spinner)findViewById(R.id.FtProtocol);
+        adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, FT_PROTOCOL);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        String ftProtocol = RcsSettings.getInstance().getFtProtocol();
+        if (ftProtocol.equalsIgnoreCase(FT_PROTOCOL[0])) {
+            spinner.setSelection(0);
+        } else {
+            spinner.setSelection(1);
         }
 
         txt = (EditText)this.findViewById(R.id.ImsServicePollingPeriod);
@@ -335,7 +353,10 @@ public class StackProvisioning extends Activity {
 						break;
                 }
 
-		        EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
+				spinner = (Spinner)findViewById(R.id.FtProtocol);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_PROTOCOL, (String)spinner.getSelectedItem());
+
+				EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.PROVISIONING_ADDRESS, txt.getText().toString());
 
 				txt = (EditText)this.findViewById(R.id.SipListeningPort);

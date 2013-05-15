@@ -8,7 +8,7 @@ Demos:
 
 	/tts		Text-To-Speech for chat invitations
 
-	/twitter	RCS to Twitter client gateway
+	/widget		RCS service widget (start/stop)
 
 
 Contact:

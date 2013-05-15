@@ -132,6 +132,15 @@ public class ProfileProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.XdmServerPassword);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_PASSWORD));
         
+        txt = (EditText)this.findViewById(R.id.FtHttpServerAddr);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_SERVER));
+
+		txt = (EditText)this.findViewById(R.id.FtHttpServerLogin);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_LOGIN));
+
+		txt = (EditText)this.findViewById(R.id.FtHttpServerPassword);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_PASSWORD));
+        
 		txt = (EditText)this.findViewById(R.id.ImConferenceUri);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_CONF_URI));
 
@@ -240,6 +249,16 @@ public class ProfileProvisioning extends Activity {
 		        txt = (EditText)this.findViewById(R.id.XdmServerPassword);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.XDM_PASSWORD, txt.getText().toString());
 
+                txt = (EditText)this.findViewById(R.id.FtHttpServerAddr);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_HTTP_SERVER, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.FtHttpServerLogin);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_HTTP_LOGIN, txt.getText().toString());
+
+		        txt = (EditText)this.findViewById(R.id.FtHttpServerPassword);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_HTTP_PASSWORD, txt.getText().toString());
+
+		        
 		        txt = (EditText)this.findViewById(R.id.ImConferenceUri);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_CONF_URI, txt.getText().toString());
 
@@ -304,7 +323,7 @@ public class ProfileProvisioning extends Activity {
 	            final String[] platforms = {
                         "NSN Brune", "NSN Lannion", "Margaux", "VCOM1", "VCOM2",
                         "RCS", "Kamailio1", "MargauxIPv6", "Huawei",
-                        "ALU Poland"
+                        "ALU Poland", "Capgemini"
 	            };
 	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
 	            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -335,6 +354,9 @@ public class ProfileProvisioning extends Activity {
 	            			String xdms = "";
 	            			String xdmsPwd = "";
 	            			String xdmsLogin = "";
+							String ftHttpServerAddr = "";
+							String ftHttpServerLogin = "";
+							String ftHttpServerPwd = "";
 	            			String confUri = "";
 	            			String enduserConfirmUri = "";
 	                        switch(index) {
@@ -466,6 +488,18 @@ public class ProfileProvisioning extends Activity {
 			            			imsPortForWifi = 5060;
 			            			confUri  = "sip:Conference-Factory@" + homeDomain;
                                     break;
+                                case 10: // Capgemini
+                                    homeDomain = "sims2.net";
+                                    sipUri = number + "@" + homeDomain;
+		            				privateSipUri = sipUri;
+                                    imsPwd = "1234";
+			            			imsRealm = "sims2.net";
+                                    imsAddrForMobile = "10.67.102.151";
+                                    imsPortForMobile = 5060;
+                                    imsAddrForWifi = "10.67.102.151";
+                                    imsPortForWifi = 5060;
+                                    confUri  = "sip:Conference-Factory@" + homeDomain;
+                                    break;
 	                        }
 
 	            			// Update UI
@@ -495,6 +529,12 @@ public class ProfileProvisioning extends Activity {
 	        		        txt.setText(xdmsLogin);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerPassword);
 	        		        txt.setText(xdmsPwd);
+	        				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerAddr);
+	        				txt.setText(ftHttpServerAddr);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerLogin);
+	        		        txt.setText(ftHttpServerLogin);
+	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerPassword);
+	        		        txt.setText(ftHttpServerPwd);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImConferenceUri);
 	        		        txt.setText(confUri);
 	        		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.EndUserConfReqUri);

@@ -16,10 +16,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.service.presence.xdm;
+package com.orangelabs.rcs.core.ims.protocol.http;
 
 import com.orangelabs.rcs.core.CoreException;
-import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.security.HttpDigestMd5Authentication;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -29,6 +28,15 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author JM. Auffret
  */
 public class HttpAuthenticationAgent {
+	/**
+	 * Login
+	 */
+	private String serverLogin;
+	
+	/**
+	 * Password
+	 */
+	private String serverPwd;
 
 	/**
      * The logger
@@ -42,8 +50,13 @@ public class HttpAuthenticationAgent {
 
 	/**
 	 * Constructor
+	 * 
+	 * @param login Server login
+	 * @param pwd Server pwd
 	 */
-	public HttpAuthenticationAgent() {
+	public HttpAuthenticationAgent(String login, String pwd) {
+		this.serverLogin = login;
+		this.serverPwd = pwd;
 	}
 
 	/**
@@ -61,16 +74,14 @@ public class HttpAuthenticationAgent {
 			digest.updateNonceParameters();
 			
 			// Calculate response
-			String user = ImsModule.IMS_USER_PROFILE.getXdmServerLogin();
-			String password = ImsModule.IMS_USER_PROFILE.getXdmServerPassword();
-	   		String response = digest.calculateResponse(user, password,
+	   		String response = digest.calculateResponse(serverLogin, serverPwd,
 	   				method,
 	   				requestUri,
 					digest.buildNonceCounter(),
 					body);				
 
 	   		// Build the Authorization header
-			String auth = "Authorization: Digest username=\"" + ImsModule.IMS_USER_PROFILE.getXdmServerLogin() + "\"" +
+			String auth = "Authorization: Digest username=\"" + serverLogin + "\"" +
 					",realm=\"" + digest.getRealm() + "\"" +
 					",nonce=\"" + digest.getNonce() + "\"" +
 					",uri=\"" + requestUri + "\"";

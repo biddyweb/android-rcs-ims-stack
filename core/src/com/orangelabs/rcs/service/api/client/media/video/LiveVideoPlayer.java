@@ -152,6 +152,16 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     private float scaleFactor = 1;
 
     /**
+     * Source Width - used for resizing
+     */
+    private int srcWidth = 0;
+
+    /**
+     * Source Height - used for resizing
+     */
+    private int srcHeight = 0;
+
+    /**
      * Mirroring (horizontal and vertival) for encoding
      */
     private boolean mirroring = false;
@@ -600,6 +610,20 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      */
     public void setScalingFactor(float scaleFactor) {
         this.scaleFactor = scaleFactor;
+        this.srcWidth = 0;
+        this.srcHeight = 0;
+    }
+
+    /**
+     * Set the source dimension for resizing
+     *
+     * @param srcWidth
+     * @param srcHeight
+     */
+    public void activateResizing(int srcWidth, int srcHeight) {
+        this.srcWidth = srcWidth;
+        this.srcHeight = srcHeight;
+        this.scaleFactor = 1;
     }
 
     /**
@@ -756,7 +780,12 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         } 
 
         // Encode frame
-        byte[] encoded = NativeH264Encoder.EncodeFrame(data, timeStamp, mirroring, scaleFactor);
+        byte[] encoded;
+        if (frameBuffer.dataSrcWidth != 0 && frameBuffer.dataSrcHeight != 0) {
+            encoded = NativeH264Encoder.ResizeAndEncodeFrame(data, timeStamp, mirroring, frameBuffer.dataSrcWidth, frameBuffer.dataSrcHeight);
+        } else {
+            encoded = NativeH264Encoder.EncodeFrame(data, timeStamp, mirroring, frameBuffer.dataScaleFactor);
+        }
         int encodeResult = NativeH264Encoder.getLastEncodeStatus();
         if ((encodeResult == 0) && (encoded.length > 0)) {
             VideoOrientation videoOrientation = null;
@@ -825,6 +854,21 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         private byte[] data = null;
 
         /**
+         * Scaling factor for encoding
+         */
+        public float dataScaleFactor = 1;
+
+        /**
+         * Source Width - used for resizing
+         */
+        public int dataSrcWidth = 0;
+
+        /**
+         * Source Height - used for resizing
+         */
+        public int dataSrcHeight = 0;
+
+        /**
          * Get the data
          *
          * @return data
@@ -840,6 +884,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          */
         public synchronized void setData(byte[] data) {
             this.data = data;
+
+            // Update resizing / scaling values
+            this.dataScaleFactor = scaleFactor;
+            this.dataSrcWidth = srcWidth;
+            this.dataSrcHeight = srcHeight;
         }
     }
 

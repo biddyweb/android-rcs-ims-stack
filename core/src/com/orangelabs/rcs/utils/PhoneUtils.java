@@ -88,7 +88,8 @@ public class PhoneUtils {
 			// International format
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(4);
 		} else
-		if ((COUNTRY_AREA_CODE.length() > 0) && phoneNumber.startsWith(COUNTRY_AREA_CODE)) {
+		if ((COUNTRY_AREA_CODE != null) && (COUNTRY_AREA_CODE.length() > 0) &&
+				phoneNumber.startsWith(COUNTRY_AREA_CODE)) {
 			// National number with area code
 			phoneNumber = COUNTRY_CODE + phoneNumber.substring(COUNTRY_AREA_CODE.length());
 		} else

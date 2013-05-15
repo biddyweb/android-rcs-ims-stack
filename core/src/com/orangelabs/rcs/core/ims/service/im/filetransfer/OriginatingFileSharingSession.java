@@ -41,6 +41,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.Base64;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -49,7 +50,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class OriginatingFileSharingSession extends FileSharingSession implements MsrpEventListener {
+public class OriginatingFileSharingSession extends ImsFileSharingSession implements MsrpEventListener {
 	/**
 	 * Boundary tag
 	 */
@@ -101,7 +102,10 @@ public class OriginatingFileSharingSession extends FileSharingSession implements
 			// Create the MSRP manager
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
-	    	
+            if (getImsService().getImsModule().isConnectedToWifiAccess()) {
+                msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
+            }
+
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();

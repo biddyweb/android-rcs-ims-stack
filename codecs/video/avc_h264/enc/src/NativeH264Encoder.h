@@ -23,6 +23,12 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
 /*
  * Method:    EncodeFrame
  */
+JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_ResizeAndEncodeFrame
+  (JNIEnv *, jclass, jbyteArray, jlong, jboolean, jint, jint);
+
+/*
+ * Method:    EncodeFrame
+ */
 JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_EncodeFrame
   (JNIEnv *, jclass, jbyteArray, jlong, jboolean, jfloat);
 

@@ -179,7 +179,7 @@ public class RichMessaging {
 			event = EventsLogApi.EVENT_DECLINED;
 		} else
 		if (state.equals(User.STATE_FAILED)) {
-			// Contact has declined the invitation or any SIP error related to the contact invitation 
+			// Any SIP error related to the contact invitation 
 			event = EventsLogApi.EVENT_FAILED;
 		}
 		

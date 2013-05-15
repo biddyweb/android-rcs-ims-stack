@@ -46,6 +46,8 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoParser;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.Base64;
@@ -186,6 +188,20 @@ public class ChatUtils {
      */
     public static boolean isGeolocType(String mime) {
     	if ((mime != null) && mime.toLowerCase().startsWith(GeolocInfoDocument.MIME_TYPE)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    /**
+     * Is a file transfer HTTP event type
+     * 
+     * @param mime MIME type
+     * @return Boolean
+     */
+    public static boolean isFileTransferHttpType(String mime) {
+    	if ((mime != null) && mime.toLowerCase().startsWith(FileTransferHttpInfoDocument.MIME_TYPE)) {
     		return true;
     	} else {
     		return false;
@@ -580,6 +596,22 @@ public class ChatUtils {
 			return null;
 		}
 	    return null;	    
+	}
+	
+	/**
+	 * Parse a file transfer over HTTP document
+	 *  
+	 * @param xml XML document
+	 * @return File transfer document
+	 */
+	public static FileTransferHttpInfoDocument parseFileTransferHttpDocument(String xml) {
+		try {
+		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
+		    FileTransferHttpInfoParser ftHttpParser = new FileTransferHttpInfoParser(ftHttpInput);
+		    return ftHttpParser.getFtInfo();
+		} catch(Exception e) {
+			return null;
+		}
 	}
 	
 	/**

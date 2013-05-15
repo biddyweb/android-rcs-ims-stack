@@ -167,30 +167,6 @@ public class RcsSettings {
     }
 
 	/**
-     * Is RCS service authorized in roaming
-     *
-     * @return Boolean
-     */
-	public boolean isRoamingAuthorized() {
-		boolean result = false;
-		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.ROAMING_AUTHORIZED));
-		}
-		return result;
-    }
-
-	/**
-     * Set the roaming authorization state
-     *
-     * @param state State
-     */
-	public void setRoamingAuthorizationState(boolean state) {
-		if (instance != null) {
-			writeParameter(RcsSettingsData.ROAMING_AUTHORIZED, Boolean.toString(state));
-		}
-	}
-
-	/**
      * Get the ringtone for presence invitation
      *
      * @return Ringtone URI or null if there is no ringtone
@@ -405,6 +381,30 @@ public class RcsSettings {
 			writeParameter(RcsSettingsData.CHAT_INVITATION_VIBRATE, Boolean.toString(vibrate));
 		}
 	}
+
+	/**
+	 * Is send displayed notification activated
+	 *
+	 * @return Boolean
+	 */
+    public boolean isImDisplayedNotificationActivated() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.CHAT_DISPLAYED_NOTIFICATION));
+        }
+        return result;
+    }
+
+    /**
+     * Set send displayed notification
+     *
+     * @param state
+     */
+    public void setImDisplayedNotificationActivated(boolean state) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.CHAT_DISPLAYED_NOTIFICATION, Boolean.toString(state));
+        }
+    }
 
     /**
      * Get the pre-defined freetext 1
@@ -869,6 +869,102 @@ public class RcsSettings {
 			writeParameter(RcsSettingsData.XDM_PASSWORD, value);
 		}
 	}
+
+	/**
+     * Get file transfer HTTP server address
+     *
+     * @return Address
+     */
+	public String getFtHttpServer() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.FT_HTTP_SERVER);
+		}
+		return result;
+    }
+
+	/**
+     * Set file transfer HTTP server address
+     *
+     * @param addr Address 
+     */
+	public void setFtHttpServer(String addr) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.FT_HTTP_SERVER, addr);
+		}
+	}
+
+    /**
+     * Get file transfer HTTP server login
+     *
+     * @return String value
+     */
+	public String getFtHttpLogin() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.FT_HTTP_LOGIN);
+		}
+		return result;
+    }
+
+	/**
+     * Set file transfer HTTP server login
+     *
+     * @param value Value
+     */
+	public void setFtHttpLogin(String value) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.FT_HTTP_LOGIN, value);
+		}
+	}
+
+    /**
+     * Get file transfer HTTP server password
+     *
+     * @return String value
+     */
+	public String getFtHttpPassword() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.FT_HTTP_PASSWORD);
+		}
+		return result;
+    }
+
+	/**
+     * Set file transfer HTTP server password
+     *
+     * @param value Value
+     */
+	public void setFtHttpPassword(String value) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.FT_HTTP_PASSWORD, value);
+		}
+	}
+
+    /**
+     * Get file transfer protocol
+     *
+     * @return String value
+     */
+    public String getFtProtocol() {
+        String result = null;
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.FT_PROTOCOL);
+        }
+        return result;
+    }
+
+    /**
+     * Set file transfer protocol
+     *
+     * @param value Value
+     */
+    public void setFtProtocol(String value) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.FT_PROTOCOL, value);
+        }
+    }
 
     /**
      * Get IM conference URI
@@ -1765,7 +1861,9 @@ public class RcsSettings {
 	public boolean isFileTransferHttpSupported() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP));
+            if ((getFtHttpServer().length() > 0) && (getFtHttpLogin().length() > 0) && (getFtHttpPassword().length() > 0)) {
+                result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP));
+            }
 		}
 		return result;
 	}
@@ -1817,7 +1915,9 @@ public class RcsSettings {
 	public boolean isPresenceDiscoverySupported() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY));
+            if (getXdmServer().length() > 0) {
+            	result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY));
+            }
 		}
 		return result;
 	}
@@ -1830,7 +1930,9 @@ public class RcsSettings {
 	public boolean isSocialPresenceSupported() {
 		boolean result = false;
 		if (instance != null) {
-			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE));
+            if (getXdmServer().length() > 0) {
+            	result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE));
+            }
 		}
 		return result;
 	}
