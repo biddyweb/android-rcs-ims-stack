@@ -181,6 +181,13 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
      * @return Capabilities
      */
 	public synchronized Capabilities requestContactCapabilities(String contact) {
+    	if (logger.isActivated()) {
+    		logger.debug("Request capabilities to " + contact);
+    	}
+
+    	// Extract contact phone number
+		contact = PhoneUtils.extractNumberFromUri(contact);
+
         // Check if if it is a valid RCS number
         if (!ContactsManager.getInstance().isRcsValidNumber(contact)) {
             if (logger.isActivated()) {
@@ -188,13 +195,6 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
             }
             return null;
         }
-
-    	if (logger.isActivated()) {
-    		logger.debug("Request capabilities to " + contact);
-    	}
-
-    	// Extract contact phone number
-		contact = PhoneUtils.extractNumberFromUri(contact);
 
 		// Read capabilities from the database
 		Capabilities capabilities = ContactsManager.getInstance().getContactCapabilities(contact);

@@ -37,6 +37,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
+import android.hardware.Camera.Parameters;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -117,6 +118,12 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
 
     /** RemoteContact */
     private String remoteContact;
+
+    /** Pending incoming notification */
+    private boolean pendingIncomingNotification = false;
+
+    /** Pending incoming notification */
+    private AlertDialog incomingAlert = null;
 
     /** Pending incoming session ? */
     private boolean pendingIncomingSession = false;
@@ -216,6 +223,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             numberOfCameras = savedInstanceState.getInt("numberOfCameras");
             openedCameraId = CameraOptions.convert(savedInstanceState.getInt("openedCameraId"));
             remoteContact = savedInstanceState.getString("remoteContact");
+            pendingIncomingNotification = savedInstanceState.getBoolean("pendingIncomingNotification");
             pendingIncomingSession = savedInstanceState.getBoolean("pendingIncomingSession");
             incomingHeight = savedInstanceState.getInt("incomingHeight");
             incomingWidth = savedInstanceState.getInt("incomingWidth");
@@ -226,7 +234,12 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             outgoingSessionId = savedInstanceState.getString("outgoingSessionId");
         }
 
-        // Update
+        // Pending Incoming notification
+        if (pendingIncomingNotification) {
+            handler.post(receiveIncomingSessionRunnable);
+        }
+
+        // Update view
         TextView fromTxt = (TextView)findViewById(R.id.visio_with_txt);
         fromTxt.setText(getString(R.string.label_video_sharing_with, remoteContact));
         if (pendingIncomingSession) {
@@ -242,9 +255,25 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             switchCamBtn.setEnabled(false);
         }
         if (numberOfCameras > 1) {
-            switchCamBtn.setOnClickListener(btnSwitchCamListener);
+            boolean backAvailable = checkCameraSize(CameraOptions.BACK);
+            boolean frontAvailable = checkCameraSize(CameraOptions.FRONT);
+            if (frontAvailable && backAvailable) {
+                switchCamBtn.setOnClickListener(btnSwitchCamListener);
+            } else if (frontAvailable) {
+                openedCameraId = CameraOptions.FRONT;
+                switchCamBtn.setVisibility(View.INVISIBLE);
+            } else if (backAvailable) {
+                openedCameraId = CameraOptions.BACK;
+                switchCamBtn.setVisibility(View.INVISIBLE);
+            } else {
+                // TODO: Error - no camera available for encoding
+            }
         } else {
-            switchCamBtn.setVisibility(View.INVISIBLE);
+            if (checkCameraSize(CameraOptions.FRONT)) {
+                switchCamBtn.setVisibility(View.INVISIBLE);
+            } else {
+                // TODO: Error - no camera available for encoding
+            }
         }
 
         // Set incoming video preview
@@ -297,6 +326,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         outState.putInt("numberOfCameras", numberOfCameras);
         outState.putInt("openedCameraId", openedCameraId.getValue());
         outState.putString("remoteContact", remoteContact);
+        outState.putBoolean("pendingIncomingNotification", pendingIncomingNotification);
         outState.putBoolean("pendingIncomingSession", pendingIncomingSession);
         outState.putInt("incomingHeight", incomingHeight);
         outState.putInt("incomingWidth", incomingWidth);
@@ -328,6 +358,10 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        if (pendingIncomingNotification && incomingAlert != null) {
+            incomingAlert.cancel();
+        }
 
         if (isFinishing()) {
             // Close sessions
@@ -393,6 +427,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
+            pendingIncomingNotification = false;
             removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
             acceptIncomingSession();
         }
@@ -403,6 +438,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
      */
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
+            pendingIncomingNotification = false;
             removeVideoSharingNotification(getApplicationContext(), incomingSessionId);
             declineIncomingSession();
         }
@@ -553,7 +589,40 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             camera = Camera.open();
             openedCameraId = CameraOptions.BACK;
         }
-        outgoingPlayer.setCameraId(openedCameraId.getValue());
+        if (outgoingPlayer != null) {
+            outgoingPlayer.setCameraId(openedCameraId.getValue());
+        }
+    }
+
+    /**
+     * Check if good camera sizes are available for encoder.
+     * Must be used only before open camera.
+     * 
+     * @param cameraId
+     * @return false if the camera don't have the good preview size for the encoder
+     */
+    private boolean checkCameraSize(CameraOptions cameraId) {
+        boolean sizeAvailable = false;
+
+        // Open the camera
+        OpenCamera(cameraId);
+
+        // Check common sizes
+        Parameters param = camera.getParameters();
+        List<Camera.Size> sizes = param.getSupportedPreviewSizes();
+        for (Camera.Size size:sizes) {
+            if (    (size.width == H264Config.QVGA_WIDTH && size.height == H264Config.QVGA_HEIGHT) ||
+                    (size.width == H264Config.CIF_WIDTH && size.height == H264Config.CIF_HEIGHT) ||
+                    (size.width == H264Config.VGA_WIDTH && size.height == H264Config.VGA_HEIGHT)) {
+                sizeAvailable = true;
+                break;
+            }
+        }
+
+        // Release camera
+        releaseCamera();
+
+        return sizeAvailable;
     }
 
     /**
@@ -629,40 +698,42 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             // Camera size
             List<Camera.Size> sizes = p.getSupportedPreviewSizes();
             if (sizeContains(sizes, outgoingWidth, outgoingHeight)) {
+                // Use the existing size without resizing
                 p.setPreviewSize(outgoingWidth, outgoingHeight);
-                outgoingPlayer.setScalingFactor((float) 1);
+                outgoingPlayer.activateResizing(outgoingWidth, outgoingHeight); // same size = no resizing
                 if (logger.isActivated()) {
-                    logger.info("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight + " with a 1 scale factor");
+                    logger.info("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight);
                 }
             } else {
-                // Try to select double size and initialize scaling 0.5
-                if (sizeContains(sizes, 2*outgoingWidth, 2*outgoingHeight)) {
-                    p.setPreviewSize(2*outgoingWidth, 2*outgoingHeight);
-                    outgoingPlayer.setScalingFactor((float) 0.5);
-                    if (logger.isActivated()) {
-                        logger.info("Camera preview initialized with size " + 2*outgoingWidth + "x" + 2*outgoingHeight + " with a 0.5 scale factor");
-                    }
-                } else {
-                    // Try to set front camera if back camera doesn't support size
-                    String cam_id = p.get("camera-id");
-                    if (cam_id != null) {
-                        p.set("camera-id", 2);
-                        p.setRotation(270);
-                        p.setPreviewSize(outgoingWidth, outgoingHeight);
-                        outgoingPlayer.setScalingFactor((float) 1);
-                        if (logger.isActivated()) {
-                            logger.info("Camera preview initialized on front camera with size " + outgoingWidth + "x" + outgoingHeight + " with a 1 scale factor");
-                        }
-                    } else {
-                        // Error
-                        if (logger.isActivated()) {
-                            logger.warn("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
-                        }
-                        camera = null;
-                        return;
+                // Check if can use a other known size (QVGA, CIF or VGA)
+                int w = 0;
+                int h = 0;
+                for (Camera.Size size:sizes) {
+                    w = size.width;
+                    h = size.height;
+                    if (    (w == H264Config.QVGA_WIDTH && h == H264Config.QVGA_HEIGHT) ||
+                            (w == H264Config.CIF_WIDTH && h == H264Config.CIF_HEIGHT) ||
+                            (w == H264Config.VGA_WIDTH && h == H264Config.VGA_HEIGHT)) {
+                        break;
                     }
                 }
+
+                if (w != 0) {
+                    p.setPreviewSize(w, h);
+                    outgoingPlayer.activateResizing(w, h);
+                    if (logger.isActivated()) {
+                        logger.info("Camera preview initialized with size " + w + "x" + h + " with a resizing to " + outgoingWidth + "x" + outgoingHeight);
+                    }
+                } else {
+                    // The camera don't have known size, we can't use it
+                    if (logger.isActivated()) {
+                        logger.warn("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
+                    }
+                    camera = null;
+                    return;
+                }
             }
+
             camera.setParameters(p);
             try {
                 camera.setPreviewDisplay(outgoingVideoView.getHolder());
@@ -837,9 +908,14 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         }
     };
 
+
+    /**
+     * Show Incoming alert dialog 
+     */
     private void showReceiveNotification() {
         // User alert
-        new AlertDialog.Builder(this)
+        pendingIncomingNotification = true;
+        incomingAlert = new AlertDialog.Builder(this)
                 .setTitle(R.string.title_recv_video_sharing)
                 .setMessage(getString(R.string.label_from) + " " + remoteContact)
                 .setCancelable(false)

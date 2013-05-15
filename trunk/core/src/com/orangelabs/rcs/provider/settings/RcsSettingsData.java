@@ -106,6 +106,16 @@ public class RcsSettingsData {
 	 */
     public static final int HTTPS_AUTO_CONFIG = 1;
 
+    /**
+     * File transfer over MSRP
+     */
+    public static final String FT_PROTOCOL_MSRP = "MSRP";
+
+    /**
+     * File transfer over HTTP
+     */
+    public static final String FT_PROTOCOL_HTTP = "HTTP";
+
     // ---------------------------------------------------------------------------
 	// UI settings
 	// ---------------------------------------------------------------------------
@@ -114,11 +124,6 @@ public class RcsSettingsData {
      * Activate or not the RCS service
      */
 	public static final String SERVICE_ACTIVATED = "ServiceActivated";
-
-	/**
-     * Roaming authorization parameter which indicates if the RCS service may be used or not in roaming
-     */
-	public static final String ROAMING_AUTHORIZED = "RoamingAuthorized";
 
 	/**
      * Ringtone which is played when a social presence sharing invitation is received
@@ -164,6 +169,11 @@ public class RcsSettingsData {
      * Vibrate or not when a chat invitation is received
      */
 	public static final String CHAT_INVITATION_VIBRATE = "ChatInvitationVibrate";
+
+    /**
+     * Send or not the displayed notification
+     */
+    public static final String CHAT_DISPLAYED_NOTIFICATION = "ChatDisplayedNotification";
 
 	/**
      * Predefined freetext
@@ -377,6 +387,26 @@ public class RcsSettingsData {
 	 * XDM server password (for HTTP Digest only)
 	 */
 	public static final String XDM_PASSWORD = "XdmServerPassword";
+
+	/**
+	 * File transfer HTTP server address & port
+	 */
+	public static final String FT_HTTP_SERVER = "FtHttpServerAddr";
+
+	/**
+	 * File transfer HTTP server login
+	 */
+	public static final String FT_HTTP_LOGIN= "FtHttpServerLogin";
+
+	/**
+	 * File transfer HTTP server password
+	 */
+	public static final String FT_HTTP_PASSWORD = "FtHttpServerPassword";
+
+    /**
+     * File transfer default protocol
+     */
+    public static final String FT_PROTOCOL = "FtProtocol";
 
 	/**
 	 * IM conference URI for group chat session

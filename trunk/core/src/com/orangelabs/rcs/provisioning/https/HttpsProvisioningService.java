@@ -350,7 +350,18 @@ public class HttpsProvisioningService extends Service {
                     if (logger.isActivated()) {
                         logger.debug("Can't parse provisioning document");
                     }
-                    retry();
+                    if (first){
+                    	if (logger.isActivated()){
+                    		logger.debug("As this is first launch and we do not have a valid configuration yet, retry later");
+                    	}
+                    	retry();
+                    }else{
+                    	if (logger.isActivated()){
+                    		logger.debug("This is not first launch, use old configuration to register");
+                    	}
+                        // Start the RCS service
+                    	LauncherUtils.launchRcsCoreService(getApplicationContext());
+                    }
                 }
             } else if (result.code == 503) {
                 // Retry after

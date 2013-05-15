@@ -70,6 +70,9 @@ enum INIT_RETVAL {
     GETFIELD_FAIL       = -8
 };
 
+/** Resizing method */
+void resizeFrame(uint8* srcBuffer, uint8* dstBuffer, int srcWidth, int srcHeight, int dstWidth, int dstHeight);
+
 /** Scaling method */
 void scaleFrame(uint8* sourceBuffer, uint8* destBuffer, int destWidth, int destHeight, float scalingFactor);
 
@@ -284,6 +287,81 @@ JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec
 /*
  * Method:    EncodeFrame
  */
+JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_ResizeAndEncodeFrame
+  (JNIEnv *env, jclass iclass, jbyteArray frame, jlong timestamp, jboolean mirroring, jint srcWidth, jint srcHeight)
+{
+    pthread_mutex_lock(&iMutex);
+
+    // Check frame size
+    jbyteArray result;
+    jint frameLength = env->GetArrayLength(frame);
+    if (frameLength > 1.5 * srcWidth * srcHeight) {
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Encode fail - frame size not good");
+        result = (env)->NewByteArray(0);
+        pthread_mutex_unlock(&iMutex);
+        return result;
+    }
+    if (frameLength > iSrcBufferLen) {
+        iSrcBuffer = (uint8*)realloc(iSrcBuffer, frameLength);
+        iSrcBufferLen = frameLength;
+    }
+    env->GetByteArrayRegion (frame, (jint)0, (jint)frameLength, (jbyte*)iSrcBuffer);
+
+    // Resize the frame
+    if ((srcWidth != iInputFormat->iFrameWidth) || (srcHeight != iInputFormat->iFrameHeight)) {
+        float scaleWidth = (float)iInputFormat->iFrameWidth / srcWidth;
+        float scaleHeight = (float)iInputFormat->iFrameHeight / srcHeight;
+        frameLength = frameLength * scaleWidth * scaleHeight;
+        if (frameLength > iDestBufferLen) {
+            iDestBuffer = (uint8*)realloc(iDestBuffer, frameLength);
+            iDestBufferLen = frameLength;
+        }
+        resizeFrame(iSrcBuffer, iDestBuffer, srcWidth, srcHeight, iInputFormat->iFrameWidth, iInputFormat->iFrameHeight);
+        if (frameLength > iSrcBufferLen) {
+            iSrcBuffer = (uint8*)realloc(iSrcBuffer, frameLength);
+            iSrcBufferLen = frameLength;
+        }
+        memcpy(iSrcBuffer, iDestBuffer, frameLength);
+    }
+
+    // Mirror the frame
+    if (mirroring == JNI_TRUE) {
+        if (frameLength > iDestBufferLen) {
+            iDestBuffer = (uint8*)realloc(iDestBuffer, frameLength);
+            iDestBufferLen = frameLength;
+        }
+
+        mirrorFrame(iSrcBuffer, iDestBuffer, iInputFormat->iFrameWidth, iInputFormat->iFrameHeight);
+        memcpy(iSrcBuffer, iDestBuffer, frameLength);
+    }
+
+    iInData->iSource = iSrcBuffer;
+    iInData->iTimeStamp = timestamp;
+    iStatus = encoder->Encode(iInData);
+    if(iStatus != EAVCEI_SUCCESS){
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Encode fail with code: %d", iStatus);
+        result=(env)->NewByteArray(0);
+        pthread_mutex_unlock(&iMutex);
+        return result;
+    }
+
+    int remainingByte = 0;
+    iOutData->iBitstreamSize = iFrameSize;
+    iStatus = encoder->GetOutput(iOutData,&remainingByte);
+    if(iStatus != EAVCEI_SUCCESS){
+        __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Get output fail with code: %d", iStatus);
+        result=(env)->NewByteArray(0);
+        pthread_mutex_unlock(&iMutex);
+        return result;
+    }
+
+    // Copy aOutBuffer into result
+    result=(env)->NewByteArray(iOutData->iBitstreamSize);
+    (env)->SetByteArrayRegion(result, 0, iOutData->iBitstreamSize, (jbyte*)iOutData->iBitstream);
+    pthread_mutex_unlock(&iMutex);
+    return result;
+}
+
 JNIEXPORT jbyteArray JNICALL Java_com_orangelabs_rcs_core_ims_protocol_rtp_codec_video_h264_encoder_NativeH264Encoder_EncodeFrame
   (JNIEnv *env, jclass iclass, jbyteArray frame, jlong timestamp, jboolean mirroring, jfloat scalingFactor)
 {
@@ -399,6 +477,52 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 bail:
     return result;
+}
+
+/*
+ * Resize method
+ */
+void resizeFrame(uint8* srcBuffer, uint8* dstBuffer, int srcWidth, int srcHeight, int dstWidth, int dstHeight) {
+    float scaleW = (float)dstWidth / srcWidth;
+    float scaleH = (float)dstHeight / srcHeight;
+    int srcBegin = srcWidth * srcHeight;
+    int dstBegin = dstWidth * dstHeight;
+    int i, j, i1, j1;
+    int srcOffset, dstOffset;
+
+    // Y value
+    for (i = 0; i < dstHeight; i++) {
+        for (j = 0; j < dstWidth; j++) {
+            i1 = i / scaleH;
+            j1 = j / scaleW;
+            dstOffset = i * dstWidth + j;
+            srcOffset = i1 * srcWidth + j1;
+            if (srcOffset < iSrcBufferLen) {
+                dstBuffer[dstOffset] = srcBuffer[srcOffset];
+            } else {
+                dstBuffer[dstOffset] = 0;
+            }
+        }
+    }
+
+    // UV value
+    for (i = 0; i < dstHeight / 2; i++) {
+        for (j = 0; j < dstWidth / 2; j++) {
+            i1 = i / scaleH;
+            j1 = j / scaleW;
+            dstOffset = dstBegin + i * dstWidth + 2 * j;
+            srcOffset = srcBegin + i1 * srcWidth + 2 * j1;
+
+            if (srcOffset + 1 < iSrcBufferLen) {
+                // U & V value
+                dstBuffer[dstOffset] = srcBuffer[srcOffset];
+                dstBuffer[dstOffset + 1] = srcBuffer[srcOffset + 1];
+            } else {
+                dstBuffer[dstOffset] = 0;
+                dstBuffer[dstOffset + 1] = 0;
+            }
+        }
+    }
 }
 
 /*

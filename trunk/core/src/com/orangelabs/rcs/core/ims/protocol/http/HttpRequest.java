@@ -16,8 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.service.presence.xdm;
-
+package com.orangelabs.rcs.core.ims.protocol.http;
 
 /**
  * HTTP request
@@ -46,9 +45,9 @@ public abstract class HttpRequest {
 	private String cookie = null;
 
 	/**
-	 * HTTP authentication agent MD5
+	 * HTTP authentication agent
 	 */
-	private HttpAuthenticationAgent authenticationAgent = new HttpAuthenticationAgent();
+	private HttpAuthenticationAgent authenticationAgent = null;
 
     /**
 	 * Constructor
@@ -72,6 +71,15 @@ public abstract class HttpRequest {
 		return authenticationAgent;
 	}
 	
+	/**
+	 * Set the authentication agent
+	 * 
+	 * @param agent Authentication agent
+	 */
+	public void setAuthenticationAgent(HttpAuthenticationAgent agent) {
+		this.authenticationAgent = agent;
+	}
+
 	/**
 	 * Returns the HTTP method
 	 * 

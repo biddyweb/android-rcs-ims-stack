@@ -181,7 +181,7 @@ public class SessionTimerManager extends PeriodicRefresher {
             session.getDialogPath().incrementCseq();
 
             // Create RE-INVITE request
-            SipRequest reInvite = SipMessageFactory.createReInvite(session.getDialogPath(), session.getDialogPath().getInvite());
+            SipRequest reInvite = SipMessageFactory.createReInvite(session.getDialogPath());
 
             // Set the Authorization header
             session.getAuthenticationAgent().setAuthorizationHeader(reInvite);
@@ -256,7 +256,7 @@ public class SessionTimerManager extends PeriodicRefresher {
                 session.getDialogPath().incrementCseq();
 
                 // Create new RE-INVITE request
-                SipRequest newReInvite = SipMessageFactory.createReInvite(session.getDialogPath(), session.getDialogPath().getInvite());
+                SipRequest newReInvite = SipMessageFactory.createReInvite(session.getDialogPath());
 
                 // Update the authentication agent
                 session.getAuthenticationAgent().readProxyAuthenticateHeader(ctx.getSipResponse());

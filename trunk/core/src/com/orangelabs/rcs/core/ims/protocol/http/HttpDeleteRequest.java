@@ -16,7 +16,8 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.service.presence.xdm;
+package com.orangelabs.rcs.core.ims.protocol.http;
+
 
 /**
  * HTTP DELETE request

@@ -73,7 +73,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 75;
+        private static final int DATABASE_VERSION = 78;
 
         private Context ctx;
 
@@ -93,7 +93,6 @@ public class RcsSettingsProvider extends ContentProvider {
             // Insert default values for parameters
 
             addParameter(db, RcsSettingsData.SERVICE_ACTIVATED, 				RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.ROAMING_AUTHORIZED, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_RINGTONE, 		"");
             addParameter(db, RcsSettingsData.PRESENCE_INVITATION_VIBRATE, 		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CSH_INVITATION_RINGTONE, 			"");
@@ -103,6 +102,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.FILETRANSFER_INVITATION_VIBRATE, 	RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CHAT_INVITATION_RINGTONE, 			"");
             addParameter(db, RcsSettingsData.CHAT_INVITATION_VIBRATE, 			RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.CHAT_DISPLAYED_NOTIFICATION,       RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.FREETEXT1, 						ctx.getString(R.string.rcs_settings_label_default_freetext_1));
             addParameter(db, RcsSettingsData.FREETEXT2, 						ctx.getString(R.string.rcs_settings_label_default_freetext_2));
             addParameter(db, RcsSettingsData.FREETEXT3,							ctx.getString(R.string.rcs_settings_label_default_freetext_3));
@@ -142,6 +142,10 @@ public class RcsSettingsProvider extends ContentProvider {
 		    addParameter(db, RcsSettingsData.XDM_SERVER, 						"");
 		    addParameter(db, RcsSettingsData.XDM_LOGIN,							"");
 		    addParameter(db, RcsSettingsData.XDM_PASSWORD, 						"");
+		    addParameter(db, RcsSettingsData.FT_HTTP_SERVER, 					"");
+		    addParameter(db, RcsSettingsData.FT_HTTP_LOGIN,						"");
+		    addParameter(db, RcsSettingsData.FT_HTTP_PASSWORD, 					"");
+            addParameter(db, RcsSettingsData.FT_PROTOCOL,                   	RcsSettingsData.FT_PROTOCOL_MSRP);
             addParameter(db, RcsSettingsData.IM_CONF_URI, 						RcsSettingsData.DEFAULT_GROUP_CHAT_URI);
             addParameter(db, RcsSettingsData.ENDUSER_CONFIRMATION_URI,			"");
             addParameter(db, RcsSettingsData.COUNTRY_CODE,						"+33");
@@ -151,7 +155,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_VIDEO_SHARING,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_IM_SESSION,				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER,			RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP,		RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP,		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.TRUE);

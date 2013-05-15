@@ -194,7 +194,8 @@ public class InitiateFileTransfer extends Activity {
      */
     private OnClickListener btnInviteListener = new OnClickListener() {
         public void onClick(View v) {
-            if (filesize >= (RcsSettings.getInstance().getWarningMaxFileTransferSize())) {
+        	int warnSize = RcsSettings.getInstance().getWarningMaxFileTransferSize();
+            if ((warnSize > 0) && (filesize >= warnSize)) {
 				// Display a warning message
             	AlertDialog.Builder builder = new AlertDialog.Builder(InitiateFileTransfer.this);
             	builder.setMessage(getString(R.string.label_sharing_warn_size, filesize));

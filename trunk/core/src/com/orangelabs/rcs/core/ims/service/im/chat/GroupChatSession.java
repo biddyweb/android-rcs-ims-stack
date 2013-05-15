@@ -276,7 +276,7 @@ public abstract class GroupChatSession extends ChatSession {
         		logger.debug("Send REFER");
         	}
     		String contactUri = PhoneUtils.formatNumberToSipUri(participant);
-	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject());
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject(), getContributionID());
     		SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
 	
 	        // Analyze received message
@@ -296,7 +296,7 @@ public abstract class GroupChatSession extends ChatSession {
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject());
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), contactUri, getSubject(), getContributionID());
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
@@ -386,8 +386,8 @@ public abstract class GroupChatSession extends ChatSession {
     		if (logger.isActivated()) {
         		logger.debug("Send REFER");
         	}
-	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject());
-	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
+	        SipRequest refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject(), getContributionID());
+	        SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
 	
 	        // Analyze received message
             if (ctx.getStatusCode() == 407) {
@@ -406,13 +406,13 @@ public abstract class GroupChatSession extends ChatSession {
                 if (logger.isActivated()) {
                 	logger.info("Send second REFER");
                 }
-    	        refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject());
+    	        refer = SipMessageFactory.createRefer(getDialogPath(), participants, getSubject(), getContributionID());
                 
     	        // Set the Authorization header
     	        authenticationAgent.setProxyAuthorizationHeader(refer);
                 
                 // Send REFER request
-    	        ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(refer);
+    	        ctx = getImsService().getImsModule().getSipManager().sendSubsequentRequest(getDialogPath(), refer);
 
                 // Analyze received message
                 if ((ctx.getStatusCode() >= 200) && (ctx.getStatusCode() < 300)) {

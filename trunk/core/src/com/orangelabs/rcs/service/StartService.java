@@ -97,7 +97,7 @@ public class StartService extends Service {
         // Instantiate RcsSettings
         RcsSettings.createInstance(getApplicationContext());
 
-        // Use a network listener to start RCS Core when the data will be ON 
+        // Use a network listener to start RCS core when the data will be ON 
         if (RcsSettings.getInstance().getAutoConfigMode() == RcsSettingsData.NO_AUTO_CONFIG) {
             // Get connectivity manager
             if (connMgr == null) {
@@ -209,8 +209,10 @@ public class StartService extends Service {
 
     /**
      * Set the country code
+     * 
+     * @return Boolean
      */
-    private void setCountryCode() {
+    private boolean setCountryCode() {
         // Get country code 
         TelephonyManager mgr = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         String countryCodeIso = mgr.getSimCountryIso();
@@ -218,7 +220,7 @@ public class StartService extends Service {
         	if (logger.isActivated()) {
         		logger.error("Can't read country code from SIM");
         	}
-            return;
+            return false;
         }
 
         // Parse country table to resolve the area code and country code
@@ -231,6 +233,7 @@ public class StartService extends Service {
                     if (parser.getName().equals("Data")) {
                         if (parser.getAttributeValue(null, "code").equalsIgnoreCase(countryCodeIso)) {
                         	String countryCode = parser.getAttributeValue(null, "cc");
+                        	String areaCode = parser.getAttributeValue(null, "tc");
                             if (countryCode != null) {
                                 if (!countryCode.startsWith("+")) {
                                     countryCode = "+" + countryCode;
@@ -239,29 +242,34 @@ public class StartService extends Service {
                                     logger.info("Set country code to " + countryCode);
                                 }
                                 RcsSettings.getInstance().setCountryCode(countryCode);
-                            }
 
-                        	String areaCode = parser.getAttributeValue(null, "tc");
-                            if (areaCode != null) {
                                 if (logger.isActivated()) {
                                     logger.info("Set area code to " + areaCode);
                                 }
                                 RcsSettings.getInstance().setCountryAreaCode(areaCode);
+                                
+                                return true;
                             }
-                            return;
                         }
                     }
                 }
                 eventType = parser.next();
             }
+
+            if (logger.isActivated()) {
+        		logger.error("Country code not found");
+        	}
+        	return false;
         } catch (XmlPullParserException e) {
         	if (logger.isActivated()) {
         		logger.error("Can't parse country code from XML file", e);
         	}
+        	return false;
         } catch (IOException e) {
         	if (logger.isActivated()) {
         		logger.error("Can't read country code from XML file", e);
         	}
+        	return false;
         }
     }
 
@@ -295,7 +303,11 @@ public class StartService extends Service {
         // On the first launch and if SIM card has changed
         if (isFirstLaunch()) {
             // Set the country code
-            setCountryCode();
+            boolean result = setCountryCode();
+            if (!result) {
+            	// Can't set the country code
+            	return false;
+            }
 
             // Set new user flag
             setNewUserAccount(true);
@@ -310,7 +322,11 @@ public class StartService extends Service {
         	}
         	
             // Set the country code
-            setCountryCode();
+            boolean result = setCountryCode();
+            if (!result) {
+            	// Can't set the country code
+            	return false;
+            }
 
             // Reset RCS account 
             LauncherUtils.resetRcsConfig(getApplicationContext());

@@ -43,6 +43,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.Base64;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -103,6 +104,9 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 			// Create the MSRP manager
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+            if (getImsService().getImsModule().isConnectedToWifiAccess()) {
+                msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
+            }
 
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
@@ -113,7 +117,7 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " TCP/MSRP *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	    		"a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +

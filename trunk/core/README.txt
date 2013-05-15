@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.3
+Release 2.5.4
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,14 +8,24 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- Multidevice management.
-- Share location during a call.
+- Remove roaming switch.
+- New settings for displayed report during a chat.
+- Video sharing: new method to resize frame before encoding.
+- File transfer over HTTP (!not yet tested).
+
 
 Bugs fixed:
 -----------
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.4
+- Mantis #0016927	Stack: CSeq value not well incremented on REFER after a 407
+- Mantis #0016935	Stack: Request capabilities fail in session
+- Open source #107	Stack: Memory leak on video decoder
+- Mantis #0017155	Stack: Bug Autoprovisioning (GSMA ID_RCSE_1_2_5)
+- Deutsche Telekom	Stack: Video JavaDepacktizer and codec issue
 
 v2.5.3
 - Mantis #0016925	Stack: Parameter client_version not well formated in HTTP provisioning request

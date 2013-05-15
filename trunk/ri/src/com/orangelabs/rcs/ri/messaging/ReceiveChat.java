@@ -260,7 +260,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 			try {
 				// Update delivery status of the first message
 				InstantMessage firstMessage = chatSession.getFirstMessage();
-				if (firstMessage != null) {
+				if ((firstMessage != null) && (RcsSettings.getInstance().isImDisplayedNotificationActivated())) {
 					chatSession.setMessageDeliveryStatus(chatSession.getFirstMessage().getMessageId(),
 						ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 				}

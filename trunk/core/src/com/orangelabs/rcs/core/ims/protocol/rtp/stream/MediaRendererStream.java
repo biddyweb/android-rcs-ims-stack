@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
@@ -38,12 +35,6 @@ public class MediaRendererStream implements ProcessorOutputStream {
 	private MediaOutput renderer;
 
     /**
-     * Orderer queue of Buffer with sequence number
-     */
-    private PriorityQueue<Buffer> sequencedBuffers;
-    // TODO: Temporary solution, remove after implement receive buffer
-
-    /**
 	 * The logger
 	 */
 	private final Logger logger = Logger.getLogger(this.getClass().getName());
@@ -55,19 +46,6 @@ public class MediaRendererStream implements ProcessorOutputStream {
 	 */
 	public MediaRendererStream(MediaOutput renderer) {
 		this.renderer = renderer;
-		sequencedBuffers = new PriorityQueue<Buffer>(10, new Comparator<Buffer>() {
-
-            @Override
-            public int compare(Buffer object1, Buffer object2) {
-                if (object1.getSequenceNumber() == object2.getSequenceNumber()) {
-                    return 0;
-                } else if (object1.getSequenceNumber() < object2.getSequenceNumber()) {
-                    return -1;
-                }
-
-                return 1;
-            }
-        });
 	}
 
 	/**
@@ -106,17 +84,8 @@ public class MediaRendererStream implements ProcessorOutputStream {
      * @throws Exception
      */
     public void write(Buffer buffer) throws Exception {
-        // Add the buffer in queue
-        sequencedBuffers.add(buffer);
-
-        if (sequencedBuffers.size() > 5) {
-            // Get the first buffer in queue and build a MediaSample
-            Buffer buf = sequencedBuffers.poll();
-            MediaSample sample = new MediaSample((byte[])buf.getData(), buf.getTimeStamp(), buf.getSequenceNumber());
-            sample.setVideoOrientation(buf.getVideoOrientation());
-
-            // Write sample in renderer
-            renderer.writeSample(sample);
-        }
+        MediaSample sample = new MediaSample((byte[])buffer.getData(), buffer.getTimeStamp(), buffer.getSequenceNumber());
+        sample.setVideoOrientation(buffer.getVideoOrientation());
+        renderer.writeSample(sample);
     }
 }

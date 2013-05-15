@@ -465,38 +465,32 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecodeSlice(AVCHandle *avcHandle, uint8 *buff
         return AVCDEC_PICTURE_OUTPUT_READY;      // to flushout frame buffers
     }
 
-    if (video->newSlice)
-    {
-        /* 2. Check NAL type  */
-        if (buffer == NULL)
-        {
-            return AVCDEC_FAIL;
-        }
-        video->prev_nal_unit_type = video->nal_unit_type;
-        video->forbidden_bit = buffer[0] >> 7;
-        video->nal_ref_idc = (buffer[0] & 0x60) >> 5;
-        video->nal_unit_type = (AVCNalUnitType)(buffer[0] & 0x1F);
+    /* 2. Check NAL type  */
+    if (buffer == NULL) {
+        return AVCDEC_FAIL;
+    }
+    video->prev_nal_unit_type = video->nal_unit_type;
+    video->forbidden_bit = buffer[0] >> 7;
+    video->nal_ref_idc = (buffer[0] & 0x60) >> 5;
+    video->nal_unit_type = (AVCNalUnitType)(buffer[0] & 0x1F);
 
+    if (!video->newSlice && video->nal_unit_type == AVC_NALTYPE_IDR) {
+        video->newSlice = TRUE;
+    }
 
-        if (video->nal_unit_type == AVC_NALTYPE_AUD)
-        {
+    if (video->newSlice) {
+        if (video->nal_unit_type == AVC_NALTYPE_AUD) {
             return AVCDEC_SUCCESS;
         }
 
-        if (video->nal_unit_type != AVC_NALTYPE_SLICE &&
-                video->nal_unit_type != AVC_NALTYPE_IDR)
-        {
+        if (video->nal_unit_type != AVC_NALTYPE_SLICE
+                && video->nal_unit_type != AVC_NALTYPE_IDR) {
             return AVCDEC_FAIL; /* not supported */
         }
 
-
-
-        if (video->nal_unit_type >= 2 && video->nal_unit_type <= 4)
-        {
+        if (video->nal_unit_type >= 2 && video->nal_unit_type <= 4) {
             return AVCDEC_FAIL; /* not supported */
-        }
-        else
-        {
+        } else {
             video->slice_data_partitioning = FALSE;
         }
 
@@ -504,22 +498,21 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecodeSlice(AVCHandle *avcHandle, uint8 *buff
         /*  Initialize bitstream structure*/
         BitstreamInit(bitstream, buffer + 1, buf_size - 1);
 
-
         /* 2.1 Decode Slice Header (separate function)*/
         status = DecodeSliceHeader(decvid, video, bitstream);
-        if (status != AVCDEC_SUCCESS)
-        {
+        if (status != AVCDEC_SUCCESS) {
             video->newSlice = TRUE;
             return status;
         }
 
-        if (video->sliceHdr->frame_num != video->prevFrameNum || (video->sliceHdr->first_mb_in_slice < (uint)video->mbNum && video->currSeqParams->constrained_set1_flag == 1))
-        {
+        if (video->sliceHdr->frame_num != video->prevFrameNum
+                || (video->sliceHdr->first_mb_in_slice < (uint) video->mbNum
+                        && video->currSeqParams->constrained_set1_flag == 1)) {
             video->newPic = TRUE;
-            if (video->numMBs > 0)
-            {
+            if (video->numMBs > 0) {
                 // Conceal missing MBs of previously decoded frame
-                ConcealSlice(decvid, video->PicSizeInMbs - video->numMBs, video->PicSizeInMbs);  // Conceal
+                ConcealSlice(decvid, video->PicSizeInMbs - video->numMBs,
+                        video->PicSizeInMbs); // Conceal
                 video->numMBs = 0;
 
                 //              DeblockPicture(video);   // No need to deblock
@@ -542,8 +535,8 @@ OSCL_EXPORT_REF AVCDec_Status PVAVCDecodeSlice(AVCHandle *avcHandle, uint8 *buff
             video->PrevRefFrameNum = 0;
         }
 
-        if (!video->currSeqParams->gaps_in_frame_num_value_allowed_flag)
-        {   /* no gaps allowed, frame_num has to increase by one only */
+        if (!video->currSeqParams->gaps_in_frame_num_value_allowed_flag) {
+            /* no gaps allowed, frame_num has to increase by one only */
             /*          if(sliceHdr->frame_num != (video->PrevRefFrameNum + 1)%video->MaxFrameNum) */
             if (video->sliceHdr->frame_num != video->PrevRefFrameNum && video->sliceHdr->frame_num != (video->PrevRefFrameNum + 1) % video->MaxFrameNum)
             {

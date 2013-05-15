@@ -73,12 +73,14 @@ public class LauncherUtils {
     		Logger.traceLevel = Logger.FATAL_LEVEL;
 		}    		
 
-		if (logger.isActivated()) {
-            logger.debug("Launch RCS service");
-        }
-        Intent intent = new Intent(ClientApiUtils.STARTUP_SERVICE_NAME);
-        intent.putExtra("boot", boot);
-        context.startService(intent);
+		if (RcsSettings.getInstance().isServiceActivated()) {
+			if (logger.isActivated()) {
+	            logger.debug("Launch RCS service (boot=" + boot + ")");
+	        }
+	        Intent intent = new Intent(ClientApiUtils.STARTUP_SERVICE_NAME);
+	        intent.putExtra("boot", boot);
+	        context.startService(intent);
+		}
     }    
     
     /**

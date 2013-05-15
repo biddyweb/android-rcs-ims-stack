@@ -970,10 +970,11 @@ public class SipMessageFactory {
 	 * @param dialog SIP dialog path
 	 * @param toContact Refer to contact
 	 * @param subject Subject
+	 * @param contributionId Contribution ID
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRefer(SipDialogPath dialog, String toContact, String subject) throws SipException {
+    public static SipRequest createRefer(SipDialogPath dialog, String toContact, String subject, String contributionId) throws SipException {
 		try {			
 			// Create the request
 		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
@@ -1000,12 +1001,13 @@ public class SipMessageFactory {
 	        }
 
 	        // Set Subject header
-			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
-			refer.addHeader(s);
+			Header sub = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
+			refer.addHeader(sub);
 
-			// Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContact());
-			
+			// Set Contribution-ID header
+			Header cid = SipUtils.HEADER_FACTORY.createHeader(ChatUtils.HEADER_CONTRIBUTION_ID, contributionId);
+	        refer.addHeader(cid);
+
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
         
@@ -1028,10 +1030,11 @@ public class SipMessageFactory {
 	 * @param dialog SIP dialog path
 	 * @param participants List of participants
 	 * @param subject Subject
+	 * @param contributionId Contribution ID
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRefer(SipDialogPath dialog, List<String> participants, String subject) throws SipException {
+    public static SipRequest createRefer(SipDialogPath dialog, List<String> participants, String subject, String contributionId) throws SipException {
     	try {
 			// Create the request
 		    Request refer = dialog.getStackDialog().createRequest(Request.REFER);
@@ -1071,9 +1074,10 @@ public class SipMessageFactory {
 			Header s = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
 			refer.addHeader(s);
 
-			// Set Contact header
-	        refer.addHeader(dialog.getSipStack().getContact());
-			
+			// Set Contribution-ID header
+			Header cid = SipUtils.HEADER_FACTORY.createHeader(ChatUtils.HEADER_CONTRIBUTION_ID, contributionId);
+	        refer.addHeader(cid);
+						
 			// Set User-Agent header
 	        refer.addHeader(SipUtils.buildUserAgentHeader());
 	        
@@ -1117,31 +1121,32 @@ public class SipMessageFactory {
      * @return SIP request
      * @throws SipException
      */
-    public static SipRequest createReInvite(SipDialogPath dialog, SipRequest invite) throws SipException {
+    public static SipRequest createReInvite(SipDialogPath dialog) throws SipException {
         try {
             // Build the request
             Request reInvite = dialog.getStackDialog().createRequest(Request.INVITE);
-
+            SipRequest firstInvite = dialog.getInvite();
+            
             // Set feature tags
             reInvite.removeHeader(ContactHeader.NAME);
-            reInvite.addHeader(invite.getHeader(ContactHeader.NAME));
+            reInvite.addHeader(firstInvite.getHeader(ContactHeader.NAME));
             reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
-            reInvite.addHeader(invite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
+            reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
 
             // Add remote SIP instance ID
-            SipUtils.setRemoteInstanceID(invite.getStackMessage(), dialog.getRemoteSipInstance());
+            SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
 
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);
 
             // Set the Route header
-            reInvite.addHeader(invite.getHeader(RouteHeader.NAME));
+            reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
 
             // Set the P-Preferred-Identity header
-            reInvite.addHeader(invite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY));
+            reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY));
 
             // Set User-Agent header
-            reInvite.addHeader(invite.getHeader(UserAgentHeader.NAME));
+            reInvite.addHeader(firstInvite.getHeader(UserAgentHeader.NAME));
 
             // Add session timer management
             if (dialog.getSessionExpireTime() >= SessionTimerManager.MIN_EXPIRE_PERIOD) {
@@ -1227,10 +1232,7 @@ public class SipMessageFactory {
 			// Add Session-Timer header
 			Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES, ""+dialog.getSessionExpireTime());
 			update.addHeader(sessionExpiresHeader);
-			
-			// Set Contact header
-			update.addHeader(dialog.getSipStack().getContact());
-			
+						
 	        // Set "rport" (RFC3581)
 	        ViaHeader viaHeader = (ViaHeader)update.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();

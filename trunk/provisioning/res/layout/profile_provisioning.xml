@@ -140,7 +140,7 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="5" android:inputType="number" android:lines="1"/>
 
-	 	<TextView android:text="XDM server root URI:"
+	 	<TextView android:text="XDM server address:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"/>
@@ -173,6 +173,39 @@
 	 	android:layout_marginRight="5dip"
 	 	android:maxLength="100" android:lines="1"/>
 
+		<TextView android:text="FT HTTP server address:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/FtHttpServerAddr"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="100" android:lines="1"/>
+
+       	<TextView android:text="FT HTTP server login:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/FtHttpServerLogin"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="100" android:lines="1"/>
+
+       	<TextView android:text="FT HTTP server password:"
+	    android:paddingTop="5dip"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"/>
+		<EditText android:id="@+id/FtHttpServerPassword"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	 	android:layout_marginLeft="5dip"
+	 	android:layout_marginRight="5dip"
+	 	android:maxLength="100" android:lines="1"/>
+		
        	<TextView android:text="IM conference URI:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"

@@ -50,11 +50,6 @@ import java.util.Random;
  */
 public class ImsConnectionManager implements Runnable {
 	/**
-	 * Roaming option intent
-	 */
-	public static final String ROAMING_OPTION_INTENT = "com.orangelabs.rcs.ROAMING_OPTION";
-	
-	/**
      * IMS module
      */
     private ImsModule imsModule;
@@ -145,9 +140,6 @@ public class ImsConnectionManager implements Runnable {
 
         // Battery management
         AndroidFactory.getApplicationContext().registerReceiver(batteryLevelListener, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)); 
-
-        // Roaming option management
-        AndroidFactory.getApplicationContext().registerReceiver(roamingOptionListener, new IntentFilter(ROAMING_OPTION_INTENT)); 
 	}
 	
 	/**
@@ -233,13 +225,6 @@ public class ImsConnectionManager implements Runnable {
         // Unregister battery listener
         try {
             AndroidFactory.getApplicationContext().unregisterReceiver(batteryLevelListener);
-        } catch (IllegalArgumentException e) {
-            // Nothing to do
-        }
-
-        // Unregister roaming option listener
-        try {
-            AndroidFactory.getApplicationContext().unregisterReceiver(roamingOptionListener);
         } catch (IllegalArgumentException e) {
             // Nothing to do
         }
@@ -380,16 +365,6 @@ public class ImsConnectionManager implements Runnable {
 				return;
 			}
 
-			// Test roaming flag if mobile network
-			if ((networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) && networkInfo.isRoaming()) {
-				if (!RcsSettings.getInstance().isRoamingAuthorized()) {
-					if (logger.isActivated()) {
-						logger.warn("RCS not authorized in roaming");
-					}
-					return;
-				}
-			}
-			
 			// Test the operator id
 			TelephonyManager tm = (TelephonyManager)AndroidFactory.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
 			String currentOpe = tm.getSimOperatorName();
@@ -652,17 +627,6 @@ public class ImsConnectionManager implements Runnable {
             } else {
                 disconnectedByBattery = false;
             }
-        }
-    };
-
-    /**
-     * Roaming option listener
-     */
-    private BroadcastReceiver roamingOptionListener = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Reconnect with a connection event
-            connectionEvent(new Intent(ConnectivityManager.CONNECTIVITY_ACTION));
         }
     };
 }

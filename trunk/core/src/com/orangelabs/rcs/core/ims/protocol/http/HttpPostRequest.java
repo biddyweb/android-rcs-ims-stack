@@ -16,21 +16,25 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.orangelabs.rcs.core.ims.service.presence.xdm;
+package com.orangelabs.rcs.core.ims.protocol.http;
+
+
 
 /**
- * HTTP GET request
+ * HTTP POST request
  * 
- * @author jexa7410
+ * @author vfml3370
  */
-public class HttpGetRequest extends HttpRequest {
+public class HttpPostRequest extends HttpRequest {
 	/**
 	 * Constructor
 	 * 
 	 * @param url URL
+	 * @param content Content
+	 * @param contentType Content type
 	 */
-	public HttpGetRequest(String url) {
-		super(url, null, null);
+	public HttpPostRequest(String url, String content, String contentType) {
+		super(url, content, contentType);
 	}
 	
 	/**
@@ -39,6 +43,6 @@ public class HttpGetRequest extends HttpRequest {
 	 * @return Method
 	 */
 	public String getMethod() {
-		return "GET";
+		return "POST";
 	}
 }

@@ -47,6 +47,11 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
+import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
@@ -62,11 +67,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public abstract class ChatSession extends ImsServiceSession implements MsrpEventListener {
-	/**
-	 * File transfer over HTTP MIME type
-	 */
-	private static final String FT_HTTP_MIME_TYPE = "application/vnd.gsma.rcs-ft-http+xml";
-	
 	/**
 	 * Subject
 	 */
@@ -167,7 +167,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
         }
         if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	wrappedTypes += " " + FT_HTTP_MIME_TYPE;
+        	wrappedTypes += " " + FileTransferHttpInfoDocument.MIME_TYPE;
         }
 		
         // Create the MSRP manager
@@ -524,6 +524,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	if (ChatUtils.isGeolocType(contentType)) {
 						// Geoloc message
 						receiveGeoloc(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
+			    	} else 
+			    	if (ChatUtils.isFileTransferHttpType(contentType)) {
+						// File transfer over HTTP message
+			    		receiveFileTransferHttp(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, date);
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -644,7 +648,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param contact Contact
 	 * @param geolocDoc Geoloc document
 	 * @param msgId Message Id
-	 * @param flag indicating that an IMDN "displayed" is requested for this message
+	 * @param flag Flag indicating that an IMDN "displayed" is requested for this message
 	 * @param date Date of the message
 	 */
 	private void receiveGeoloc(String contact, String geolocDoc, String msgId, boolean imdnDisplayedRequested, Date date) {
@@ -665,6 +669,59 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
                 logger.error("Problem while receiving geolocation", e);
             }
 		}
+	}
+	
+	/**
+	 * Receive file transfer HTTP event
+	 * 
+	 * @param contact Contact
+	 * @param fileInfo File info in XML
+	 * @param msgId Message Id
+	 * @param date Date of the message
+	 */
+	private void receiveFileTransferHttp(String contact, String fileInfo, String msgId, Date date) {
+		// Parse HTTP document
+		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo);
+		if (fileTransferInfo != null ) {
+			
+			// Test if the contact is blocked
+		    if (ContactsManager.getInstance().isFtBlockedForContact(contact)) {
+				if (logger.isActivated()) {
+					logger.debug("Contact " + contact + " is blocked: automatically reject the file transfer invitation");
+				}
+				
+				// Send a decline response
+				// TODO
+				return;
+		    }
+
+			// Test number of sessions
+		    // TODO
+
+			// Create a new session
+			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo);
+			
+	        // Auto reject if file too big
+	        int maxSize = FileSharingSession.getMaxFileSharingSize();
+	        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
+	            if (logger.isActivated()) {
+	                logger.debug("File is too big, reject file transfer");
+	            }
+
+	            // Send a decline response
+	            // TODO
+
+	            // Close session
+	            session.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
+	            return;
+	        }			
+
+	        // Start the session
+			session.startSession();
+			
+			// Notify listener
+			getImsService().getImsModule().getCoreListener().handleFileTransferInvitation(session);					
+	    }
 	}
 	
 	/**
@@ -828,6 +885,12 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
         session.setFailureReportOption(false);
         session.setSuccessReportOption(false);
+
+        // Open the MSRP session
+        getMsrpMgr().openMsrpSession();
+
+        // Send an empty packet
+        sendEmptyDataChunk();
     }
 
     /**
@@ -836,11 +899,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      * @throws Exception 
      */
     public void startMediaSession() throws Exception {
-        // Open the MSRP session
-        getMsrpMgr().openMsrpSession();
-
-        // Send an empty packet
-        sendEmptyDataChunk();
+        // Nothing to do
     }
 
 	/**

@@ -26,7 +26,9 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
 public interface MsrpConstants {
 	public static final String MSRP_PROTOCOL = "msrp";
 	public static final String MSRP_SECURED_PROTOCOL = "msrps";
-	
+    public static final String SOCKET_MSRP_PROTOCOL = "TCP/MSRP";
+    public static final String SOCKET_MSRP_SECURED_PROTOCOL = "TCP/TLS/MSRP";
+
 	public static final String MSRP_HEADER = "MSRP";
 	public static final String NEW_LINE = "\r\n";
 	public static final String END_MSRP_MSG = "-------";
