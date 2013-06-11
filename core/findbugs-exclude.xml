@@ -34,15 +34,6 @@
         switch has been checked and is intentional.
     -->
     <Match>
-        <Class name="com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.encoder.NativeH263Encoder" />
-        <Or>
-            <Method name="InitEncoder" />
-            <Method name="EncodeFrame" />
-            <Method name="DeinitEncoder" />
-        </Or>
-        <Bug pattern="NM_METHOD_NAMING_CONVENTION" />
-    </Match>
-    <Match>
         <Class name="com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder" />
         <Or>
             <Method name="InitEncoder" />

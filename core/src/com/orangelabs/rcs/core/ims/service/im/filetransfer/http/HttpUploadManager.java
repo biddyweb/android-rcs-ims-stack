@@ -74,6 +74,9 @@ public class HttpUploadManager extends HttpTransferManager {
         	// Send a first POST request
 	        return sendFirstPost();
     	} catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Upload file has failed", e);
+        	}
     		return null;
     	}
     }
@@ -170,7 +173,7 @@ public class HttpUploadManager extends HttpTransferManager {
      */
     private HttpResponse sendRequest(HttpRequest request, boolean authenticate) throws IOException, CoreException {
         // Extract host & port
-        String[] parts = request.getUrl().substring(7).split(":|/");
+        String[] parts = request.getUrl().split(":");
         String host = parts[0];
         int port = Integer.parseInt(parts[1]);
         String serviceRoot = "";

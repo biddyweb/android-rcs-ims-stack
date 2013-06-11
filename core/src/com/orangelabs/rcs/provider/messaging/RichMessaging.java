@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.provider.messaging;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -113,7 +114,7 @@ public class RichMessaging {
 	 * @param session Chat session
 	 * @return String (contacts are comma separated)
 	 */
-	private String getParticipants(ChatSession session) {
+	private static String getParticipants(ChatSession session) {
 		StringBuffer participants = new StringBuffer();
 		if (session.isGroupChat()) {
 			for(String contact : session.getParticipants().getList()){
@@ -127,6 +128,22 @@ public class RichMessaging {
 		return participants.toString();
 	}
 
+	/**
+	 * Get list of participants from a string
+	 * 
+	 * @param String  participants (contacts are comma separated)
+	 * @return String[] contacts or null if 
+	 */
+	private static String[] getParticipants(String participants) {
+		String[] res = new String[]{};
+		if (participants!=null && participants.trim().length()>0) {
+			//In groupChat, "participants" is a concatenation of all contacts' numbers, separated by ';' and terminated by a ';'
+			//We call split with the param limit set to 0 for empty strings to be automatically trimmed out 
+			res = participants.split(";", 0);
+		}
+		return res;
+	}
+	
 	/**
 	 * Get type corresponding to a chat system event
 	 * 
@@ -199,7 +216,7 @@ public class RichMessaging {
 		// Add session entry
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INVITED);
@@ -233,7 +250,7 @@ public class RichMessaging {
 		// Add session entry
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
@@ -430,7 +447,7 @@ public class RichMessaging {
 	public void addChatSessionTermination(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
 	}
@@ -443,7 +460,7 @@ public class RichMessaging {
 	public void addChatSessionTerminationByUser(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
 	}
@@ -456,7 +473,7 @@ public class RichMessaging {
 	public void addChatSessionTerminationByRemote(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_REMOTE);
 	}
@@ -469,7 +486,7 @@ public class RichMessaging {
 	public void addChatSessionError(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 	}
@@ -481,7 +498,7 @@ public class RichMessaging {
 	 */
 	public void markChatSessionStarted(ChatSession session) {
 		int type = getChatSystemEventType(session);
-		String participants = getParticipants(session);
+		String participants = RichMessaging.getParticipants(session);
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_CHAT_REJOIN_ID, session.getImSessionIdentity());
 		values.put(RichMessagingData.KEY_CONTACT, participants);
@@ -1245,13 +1262,7 @@ public class RichMessaging {
     	
     	if (cursor.moveToFirst()) {
     		String participants = cursor.getString(2); 
-        	List<String> list = new ArrayList<String>();
-        	if (participants != null) {
-        		String[] contacts = participants.split(";");
-        		for(int i=0; i < contacts.length; i++) {
-        			list.add(contacts[i]);
-        		}
-        	}    		
+        	List<String> list = Arrays.asList(RichMessaging.getParticipants(participants));
         	result = new GroupChatInfo(
     				cursor.getString(0),
     				cursor.getString(1),
@@ -1294,20 +1305,38 @@ public class RichMessaging {
 	 */
 	public List<String> getGroupChatConnectedParticipants(String chatId) {
     	List<String> result = new ArrayList<String>();
-    	Cursor cursor = cr.query(databaseUri, 
+    	
+    	List<String> alreadyTreated = new ArrayList<String>();
+    	Cursor cursor = cr.query(databaseUri,
+    			//We take the statuses for each contact, in descending order
     			new String[] {
-    				RichMessagingData.KEY_CONTACT
+    				RichMessagingData.KEY_CONTACT, RichMessagingData.KEY_STATUS
     			},
-    			"(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId + "') AND (" + 
-    				RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND (" +
-    				RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT + ")", 
-    			null, 
+    			RichMessagingData.KEY_CHAT_ID + "= ?" 
+    			 +" AND "+ RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE 
+    			 +" AND ("+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_BUSY
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_DISCONNECT_CHAT
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INVITED
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_JOINED_CHAT
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_PENDING
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_LEFT_CHAT
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_FAILED
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_DECLINED
+    			 +")",    			 
+    			new String[]{chatId}, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
     	while(cursor.moveToNext()) {
-    		String participant = cursor.getString(0);
-    		if (!result.contains(participant)) {
-    			result.add(participant);
-    		}
+    		String contact = cursor.getString(0);
+    		int status = cursor.getInt(1);
+			for(String participant: RichMessaging.getParticipants(contact)) {
+				// If we already have a status for this contact, do not take it (we only want the last one)
+	    		if (!alreadyTreated.contains(participant) && status!=EventsLogApi.EVENT_LEFT_CHAT
+	    				&& status!=EventsLogApi.EVENT_FAILED && status!=EventsLogApi.EVENT_DECLINED) {	
+	    			result.add(participant);
+	    		}
+	    		alreadyTreated.add(participant);
+			}
     	}
     	cursor.close();
     	return result;

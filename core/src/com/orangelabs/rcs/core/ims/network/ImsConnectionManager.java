@@ -294,16 +294,18 @@ public class ImsConnectionManager implements Runnable {
 			return;
 		}
 
-        // Check if SIM account has changed
-        String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
-        String currentUserAccount = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
-        if (lastUserAccount != null) {
-            if ((currentUserAccount == null) || !currentUserAccount.equalsIgnoreCase(lastUserAccount)) {
-                imsModule.getCoreListener().handleSimHasChanged();
-                return;
-            }
-        }
-
+        // Check if SIM account has changed (i.e. hot SIM swap)
+		if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+	        String lastUserAccount = LauncherUtils.getLastUserAccount(AndroidFactory.getApplicationContext());
+	        String currentUserAccount = LauncherUtils.getCurrentUserAccount(AndroidFactory.getApplicationContext());
+	        if (lastUserAccount != null) {
+	            if ((currentUserAccount == null) || !currentUserAccount.equalsIgnoreCase(lastUserAccount)) {
+	                imsModule.getCoreListener().handleSimHasChanged();
+	                return;
+	            }
+	        }
+		}
+		
 		// Get the current local IP address
 		String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(networkInfo.getType());
 		if (logger.isActivated()) {

@@ -304,20 +304,22 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
     }
 
 	/**
-	 * Is file transfer over HTTP supported
+	 * Is file transfer supported
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isFileTransferHttpSupported() {
-		return RcsSettings.getInstance().isFileTransferHttpSupported(); // TODO && session.isFileTransferHttpSupportedByRemote();
+	public boolean isFileTransferSupported() {
+		return (RcsSettings.getInstance().isFileTransferHttpSupported() || RcsSettings.getInstance().isFileTransferHttpSupported() &&
+				session.isFileTransferSupportedByRemote());
 	}
 
     /**
      * Send file over HTTP
      * 
      * @param filename Filename
+     * @param thumbnail Thumbnail option
      */
-    public void sendFile(String filename) {
+    public void sendFile(String filename, boolean thumbnail) {
 		// TODO
     }
 

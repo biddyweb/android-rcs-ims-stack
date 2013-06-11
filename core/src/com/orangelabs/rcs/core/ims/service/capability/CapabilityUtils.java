@@ -109,6 +109,16 @@ public class CapabilityUtils {
 			supported += FeatureTags.FEATURE_RCSE_FT_THUMBNAIL + ",";
 		}
 		
+		// FT S&F support
+		if (RcsSettings.getInstance().isFileTransferStoreForwardSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_FT_SF + ",";
+		}
+
+		// Group chat S&F support
+		if (RcsSettings.getInstance().isGroupChatStoreForwardSupported()) {
+			supported += FeatureTags.FEATURE_RCSE_GC_SF + ",";
+		}
+
 		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
 		if ((exts != null) && (exts.length() > 0)) {
@@ -180,6 +190,14 @@ public class CapabilityUtils {
     			// Support file transfer thumbnail service
     			capabilities.setFileTransferThumbnailSupport(true);
     		} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_FT_SF)) {
+        		// Support FT S&F service
+        		capabilities.setFileTransferStoreForwardSupport(true);
+        	} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_GC_SF)) {
+        		// Support FT S&F service
+        		capabilities.setGroupChatStoreForwardSupport(true);
+        	} else
     		if (tag.startsWith(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_EXTENSION)) {
     			// Support a RCS extension
     			String[] value = tag.split("=");

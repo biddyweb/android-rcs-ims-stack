@@ -65,11 +65,11 @@ interface IChatSession {
 	// Send a geoloc message
 	String sendGeoloc(in GeolocPush geoloc);
 
-	// Is file transfer over HTTP supported
-	boolean isFileTransferHttpSupported();
+	// Is file transfer supported
+	boolean isFileTransferSupported();
 
-	// Send file over HTTP
-	void sendFile(in String filename);
+	// Send file to participants
+	void sendFile(in String filename, in boolean thumbnail);
 
 	// Set is composing status
 	void setIsComposingStatus(in boolean status);

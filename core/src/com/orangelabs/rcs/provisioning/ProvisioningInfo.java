@@ -63,7 +63,7 @@ public class ProvisioningInfo {
     }
 
     /**
-     * Set valaidity
+     * Set validity
      *
      * @param validity
      */

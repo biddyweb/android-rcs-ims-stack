@@ -253,15 +253,16 @@ public class ChatUtils {
 		for(int i=0; i < newParticipants.size(); i++) {
 			String contact = newParticipants.get(i);
 			if (contact.equals(existingParticipant)) {
-				uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
+				uriList.append(" <entry cp:copyControl=\"to\" uri=\"" + PhoneUtils.formatNumberToSipUri(existingParticipant) +
 					StringUtils.encodeXML(replaceHeader) + "\"/>" + CRLF);
 			} else {
-				uriList.append(" <entry uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF);
+				uriList.append(" <entry cp:copyControl=\"to\" uri=\"" + PhoneUtils.formatNumberToSipUri(contact) + "\"/>" + CRLF);
 			}
 		}
 		
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
-			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
+			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\" " + 
+			"xmlns:cp=\"urn:ietf:params:xml:ns:copycontrol\">" +
 			"<list>" + CRLF +
 			uriList.toString() +
 			"</list></resource-lists>";

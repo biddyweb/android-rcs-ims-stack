@@ -133,8 +133,6 @@ public class ImsServiceDispatcher extends Thread {
 			logger.debug("Receive " + request.getMethod() + " request");
 		}
 		
-		// TODO : add below the dispatch of sip request and call the VOIP service features
-		
 		// Check the IP address of the request-URI
 		String localIpAddress = imsModule.getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 		if (!request.getRequestURI().contains(localIpAddress)) {

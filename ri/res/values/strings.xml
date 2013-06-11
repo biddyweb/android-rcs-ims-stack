@@ -69,7 +69,10 @@
 <string name="label_capabilities_social_presence">Social presence</string>
 <string name="label_capabilities_geolocation_push">Geolocation push</string>
 <string name="label_capabilities_file_transfer_thumbnail">File transfer thumbnail</string>
+<string name="label_capabilities_file_transfer_sf">File transfer Store &amp; Forward</string>
+<string name="label_capabilities_group_chat_sf">Group chat Store &amp; Forward</string>
 <string name="label_capabilities_extensions">Extensions:</string>
+<string name="label_request_in_background">Request has been sent in background for %s</string>
 
 <!--  Presence menu -->
 <string name="menu_presence">Presence</string>
@@ -113,7 +116,6 @@
 <string name="label_read_eab_ko">Can\'t read the EAB</string>
 <string name="label_request_ok">Request initiated with success</string>
 <string name="label_request_ko">Request has failed</string>
-<string name="label_request_in_background">Request has been sent in background for %s</string>
 <string name="label_browser_bookmarks">Browser bookmarks</string>
 <string name="label_predefined_freetext">Pre-defined freetext</string>
 <string name="title_presence_invitation">New invitation to share profile</string>
@@ -198,7 +200,6 @@
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
-<string name="menu_initiate_prerecorded_video_sharing">Initiate pre-recorded video sharing</string>
 <string name="menu_initiate_video_sharing">Initiate video sharing</string>
 <string name="menu_initiate_geoloc_sharing">Initiate geoloc sharing</string>
 <string name="menu_video_settings">Video settings</string>

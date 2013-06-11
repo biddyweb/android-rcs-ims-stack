@@ -18,7 +18,7 @@
 package com.orangelabs.rcs.service.api.client.terms;
 
 /**
- * Terms API intents
+ * Terms & conditions API intents
  * 
  * @author jexa7410
  */

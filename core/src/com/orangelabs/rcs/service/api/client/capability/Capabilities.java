@@ -79,7 +79,17 @@ public class Capabilities implements Parcelable {
      */
     private boolean fileTransferThumbnail = false;
 
-	/**
+    /**
+     * File Transfer S&F
+     */
+    private boolean fileTransferStoreForward = false;
+
+    /**
+     * Group chat S&F
+     */
+    private boolean groupChatStoreForward = false;
+
+    /**
 	 * List of supported extensions
 	 */
 	private ArrayList<String> extensions = new ArrayList<String>();
@@ -111,6 +121,8 @@ public class Capabilities implements Parcelable {
         this.fileTransferHttp = source.readInt() != 0;
         this.geolocationPush = source.readInt() != 0;
         this.fileTransferThumbnail = source.readInt() != 0;
+        this.fileTransferStoreForward = source.readInt() != 0;
+        this.groupChatStoreForward = source.readInt() != 0;
 		this.timestamp = source.readLong();
 		source.readStringList(this.extensions);
     }
@@ -142,6 +154,8 @@ public class Capabilities implements Parcelable {
         dest.writeInt(fileTransferHttp ? 1 : 0);
         dest.writeInt(geolocationPush ? 1 : 0);
         dest.writeInt(fileTransferThumbnail ? 1 : 0);
+        dest.writeInt(fileTransferStoreForward ? 1 : 0);
+        dest.writeInt(groupChatStoreForward ? 1 : 0);
     	dest.writeLong(timestamp);
 		if (extensions!=null && extensions.size()>0){
 			dest.writeStringList(extensions);
@@ -342,6 +356,42 @@ public class Capabilities implements Parcelable {
 		this.fileTransferThumbnail = supported;
 	}
     
+	/**
+	 * Is file transfer S&F supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isFileTransferStoreForwardSupported() {
+		return fileTransferStoreForward;
+	}
+	
+	/**
+	 * Set the file transfer S&F support
+	 * 
+	 * @param supported Supported 
+	 */
+	public void setFileTransferStoreForwardSupport(boolean supported) {
+		this.fileTransferStoreForward = supported;
+	}
+
+	/**
+	 * Is group chat S&F supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isGroupChatStoreForwardSupported() {
+		return groupChatStoreForward;
+	}
+	
+	/**
+	 * Set the group chat S&F support
+	 * 
+	 * @param supported Supported 
+	 */
+	public void setGroupChatStoreForwardSupport(boolean supported) {
+		this.groupChatStoreForward = supported;
+	}
+
 	/**
 	 * Add supported extension
 	 * 

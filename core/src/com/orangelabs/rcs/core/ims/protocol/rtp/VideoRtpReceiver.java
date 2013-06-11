@@ -21,42 +21,23 @@ package com.orangelabs.rcs.core.ims.protocol.rtp;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
-import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaRendererStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
-import com.orangelabs.rcs.utils.logger.Logger;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.VideoRendererStream;
 
 /**
- * Media RTP receiver
+ * Video RTP receiver
+ *
+ * @author hlxn7157
  */
-public class MediaRtpReceiver {
-    /**
-     * Media processor
-     */
-    protected Processor processor = null;
-
-	/**
-	 * Local port number (RTP listening port)
-	 */
-    protected int localPort;
-
-    /**
-     * RTP Input Stream
-     */
-	protected RtpInputStream inputStream = null;
-
-	/**
-	 * The logger
-	 */
-	protected Logger logger =	Logger.getLogger(this.getClass().getName());
-
+public class VideoRtpReceiver  extends MediaRtpReceiver {
     /**
      * Constructor
      *
      * @param localPort Local port number
      */
-	public MediaRtpReceiver(int localPort) {
-		this.localPort = localPort;
+	public VideoRtpReceiver(int localPort) {
+		super(localPort);
 	}
 
     /**
@@ -64,17 +45,19 @@ public class MediaRtpReceiver {
      *
      * @param remoteAddress Remote address 
      * @param remotePort Remote port
+     * @param orientationHeaderId RTP orientation extension header id 
      * @param renderer Renderer
-     * @param format format
+     * @param format Video format
      * @param rtpStreamListener RTP Stream listener
      * @throws RtpException When an error occurs
      */
-    public void prepareSession(String remoteAddress, int remotePort, 
+    public void prepareSession(String remoteAddress, int remotePort, int orientationHeaderId, 
             MediaOutput renderer, Format format, RtpStreamListener rtpStreamListener)
             throws RtpException {
     	try {
 			// Create the input stream
             inputStream = new RtpInputStream(remoteAddress, remotePort, localPort, format);
+            inputStream.setExtensionHeaderId(orientationHeaderId);
             inputStream.addRtpStreamListener(rtpStreamListener);
     		inputStream.open();
 			if (logger.isActivated()) {
@@ -82,7 +65,7 @@ public class MediaRtpReceiver {
 			}
 
             // Create the output stream
-        	MediaRendererStream outputStream = new MediaRendererStream(renderer);
+        	VideoRendererStream outputStream = new VideoRendererStream(renderer);
     		outputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Output stream: " + outputStream.getClass().getName());
@@ -103,42 +86,5 @@ public class MediaRtpReceiver {
         	}
         	throw new RtpException("Can't prepare resources");
         }
-    }
-
-    /**
-	 * Start the RTP session
-	 */
-	public void startSession() {
-		if (logger.isActivated()) {
-			logger.info("Start the session");
-		}
-
-		// Start the media processor
-		if (processor != null) {
-			processor.startProcessing();
-		}
-	}
-
-	/**
-	 * Stop the RTP session
-	 */
-	public void stopSession() {
-		if (logger.isActivated()) {
-			logger.info("Stop the session");
-		}
-
-		// Stop the media processor
-		if (processor != null) {
-			processor.stopProcessing();
-		}
-	}
-
-    /**
-     * Returns the RTP input stream
-     *
-     * @return RTP input stream
-     */
-    public RtpInputStream getInputStream() {
-        return inputStream;
     }
 }

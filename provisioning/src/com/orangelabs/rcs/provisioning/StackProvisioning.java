@@ -191,7 +191,7 @@ public class StackProvisioning extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         String ftProtocol = RcsSettings.getInstance().getFtProtocol();
-        if (ftProtocol.equalsIgnoreCase(FT_PROTOCOL[0])) {
+        if ((ftProtocol != null) && ftProtocol.equalsIgnoreCase(FT_PROTOCOL[0])) {
             spinner.setSelection(0);
         } else {
             spinner.setSelection(1);

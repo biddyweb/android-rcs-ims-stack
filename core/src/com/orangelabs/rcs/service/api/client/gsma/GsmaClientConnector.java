@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 /**
  * GSMA client connector based on GSMA Implementation guidelines 3.0
@@ -86,22 +87,24 @@ public class GsmaClientConnector {
      * @return Boolean
      */
     public static boolean isRcsClientActivated(Context ctx, String packageName) {
-		try {
-			Context appContext = ctx.createPackageContext(packageName, Context.MODE_WORLD_WRITEABLE);
-			if (appContext == null) {
-				return false;
-			}
-			
-			SharedPreferences prefs = appContext.getSharedPreferences(GsmaClientConnector.GSMA_PREFS_NAME, Context.MODE_WORLD_READABLE);
-			if (prefs != null) {
-				return prefs.getBoolean(GsmaClientConnector.GSMA_CLIENT_ENABLED, false);
-			} else {
-				return false;
-			}			
-		} catch(Exception e) {
-			return false;
-		}
-    }    
+        boolean ret = false;
+        try {
+            Context appContext = ctx.createPackageContext(packageName, 0);//Context.CONTEXT_IGNORE_SECURITY);
+            if (appContext != null) {
+                SharedPreferences prefs = null;
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.GINGERBREAD_MR1) {
+                    prefs = appContext.getSharedPreferences(GsmaClientConnector.GSMA_PREFS_NAME, Context.MODE_WORLD_READABLE);
+                } else {
+                    prefs = appContext.getSharedPreferences(GsmaClientConnector.GSMA_PREFS_NAME, Context.MODE_WORLD_READABLE + Context.MODE_MULTI_PROCESS);
+                }
+                if (prefs != null) {
+                    ret = prefs.getBoolean(GsmaClientConnector.GSMA_CLIENT_ENABLED, false);
+                }
+            }
+        } catch(Exception e) {
+        }
+        return ret;
+    }
 
     /**
      * Get the RCS settings intent

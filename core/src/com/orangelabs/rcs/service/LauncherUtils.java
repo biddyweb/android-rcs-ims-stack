@@ -26,10 +26,11 @@ import android.telephony.TelephonyManager;
 
 import com.orangelabs.rcs.addressbook.AccountChangedReceiver;
 import com.orangelabs.rcs.addressbook.AuthenticationService;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.service.api.client.ClientApiUtils;
+import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -55,29 +56,18 @@ public class LauncherUtils {
      * @param boot Boot flag
      */
     public static void launchRcsService(Context context, boolean boot) {
-		// Instantiate the settings manager
+        // Instantiate the settings manager
         RcsSettings.createInstance(context);
 
         // Set the logger properties
 		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
-		String traceLevel = RcsSettings.getInstance().getTraceLevel();
-		if (traceLevel.equalsIgnoreCase("DEBUG")) {
-    		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
-		} else if (traceLevel.equalsIgnoreCase("INFO")) {
-    		Logger.traceLevel = Logger.INFO_LEVEL;
-		} else if (traceLevel.equalsIgnoreCase("WARN")) {
-    		Logger.traceLevel = Logger.WARN_LEVEL;
-		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
-    		Logger.traceLevel = Logger.ERROR_LEVEL;
-		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
-    		Logger.traceLevel = Logger.FATAL_LEVEL;
-		}    		
+		Logger.traceLevel = RcsSettings.getInstance().getTraceLevel();
 
 		if (RcsSettings.getInstance().isServiceActivated()) {
 			if (logger.isActivated()) {
 	            logger.debug("Launch RCS service (boot=" + boot + ")");
 	        }
-	        Intent intent = new Intent(ClientApiUtils.STARTUP_SERVICE_NAME);
+	        Intent intent = new Intent(context, StartService.class);
 	        intent.putExtra("boot", boot);
 	        context.startService(intent);
 		}
@@ -94,7 +84,7 @@ public class LauncherUtils {
         }
         if (RcsSettings.getInstance().isServiceActivated()) {
         	if (RcsSettings.getInstance().isUserProfileConfigured()) {
-	        	context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+                context.startService(new Intent(context, RcsCoreService.class));
 	        } else {
 		        if (logger.isActivated()) {
 		            logger.debug("RCS service not configured");
@@ -118,7 +108,7 @@ public class LauncherUtils {
         }
     	if (RcsSettings.getInstance().isUserProfileConfigured()) {
             RcsSettings.getInstance().setServiceActivationState(true);
-            context.startService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+            context.startService(new Intent(context, RcsCoreService.class));
         } else {
             if (logger.isActivated()) {
                 logger.debug("RCS service not configured");
@@ -135,9 +125,9 @@ public class LauncherUtils {
         if (logger.isActivated()) {
             logger.debug("Stop RCS service");
         }
-        context.stopService(new Intent(ClientApiUtils.STARTUP_SERVICE_NAME));
-        context.stopService(new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME));
-        context.stopService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+        context.stopService(new Intent(context, StartService.class));
+        context.stopService(new Intent(context, HttpsProvisioningService.class));
+        context.stopService(new Intent(context, RcsCoreService.class));
     }
 
     /**
@@ -151,7 +141,7 @@ public class LauncherUtils {
         }
 
         // Stop the Core service
-        context.stopService(new Intent(ClientApiUtils.RCS_SERVICE_NAME));
+        context.stopService(new Intent(context, RcsCoreService.class));
 
         // Reset user profile
         RcsSettings.createInstance(context);
@@ -163,6 +153,8 @@ public class LauncherUtils {
 
         // Remove the RCS account 
         AuthenticationService.removeRcsAccount(context, null);
+        // Ensure that factory is set up properly to avoid NullPointerException in AccountChangedReceiver.setAccountResetByEndUser
+        AndroidFactory.setApplicationContext(context);
         AccountChangedReceiver.setAccountResetByEndUser(false);
 
         // Clean terms status

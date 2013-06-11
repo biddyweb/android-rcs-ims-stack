@@ -515,7 +515,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		try {
 			// Initiate the session
 			ChatSession session = Core.getInstance().getImService().rejoinGroupChatSession(chatId);
-
+			
+			// Update rich messaging history
+			RichMessaging.getInstance().addOutgoingChatSession(session);
+			
 			// Add session in the list
 			ImSession sessionApi = new ImSession(session);
 			MessagingApiService.addChatSession(sessionApi);
@@ -549,7 +552,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		try {
 			// Initiate the session
 			ChatSession session = Core.getInstance().getImService().restartGroupChatSession(chatId);
-
+			
+			// Update rich messaging history
+			RichMessaging.getInstance().addOutgoingChatSession(session);
+			
 			// Add session in the list
 			ImSession sessionApi = new ImSession(session);
 			MessagingApiService.addChatSession(sessionApi);

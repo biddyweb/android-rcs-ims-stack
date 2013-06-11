@@ -47,7 +47,6 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
-import com.orangelabs.rcs.service.api.client.ClientApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -414,7 +413,7 @@ public class StartService extends Service {
             if (RcsSettings.getInstance().getProvisioningVersion().equals("-1")) {
                 if (hasChangedAccount()) {
                     // Start provisioning as a first launch
-                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    Intent provisioningIntent = new Intent(getApplicationContext(), HttpsProvisioningService.class);
                     provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, true);
                     startService(provisioningIntent);
                 } else {
@@ -425,13 +424,13 @@ public class StartService extends Service {
             } else {
                 if (isFirstLaunch() || hasChangedAccount()) {
                     // First launch: start the auto config service with special tag
-                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    Intent provisioningIntent = new Intent(getApplicationContext(), HttpsProvisioningService.class);
                     provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, true);
                     startService(provisioningIntent);
                 } else
                 if (boot) {
                     // Boot: start the auto config service
-                    Intent provisioningIntent = new Intent(ClientApiUtils.PROVISIONING_SERVICE_NAME);
+                    Intent provisioningIntent = new Intent(getApplicationContext(), HttpsProvisioningService.class);
                     provisioningIntent.putExtra(HttpsProvisioningService.FIRST_KEY, false);
                     startService(provisioningIntent);
                 } else {

@@ -33,6 +33,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * RCS settings
@@ -1081,6 +1082,8 @@ public class RcsSettings {
 		capabilities.setVideoSharingSupport(isVideoSharingSupported());
 		capabilities.setGeolocationPushSupport(isGeoLocationPushSupported());
 		capabilities.setFileTransferThumbnailSupport(isFileTransferThumbnailSupported());
+		capabilities.setFileTransferStoreForwardSupport(isFileTransferStoreForwardSupported());
+		capabilities.setGroupChatStoreForwardSupport(isGroupChatStoreForwardSupported());
 		capabilities.setTimestamp(System.currentTimeMillis());
 
 		// Add extensions
@@ -1733,10 +1736,12 @@ public class RcsSettings {
      *
      * @return trace level
      */
-	public String getTraceLevel() {
-		String result = null;
+	public int getTraceLevel() {
+		int result = Logger.ERROR_LEVEL;
 		if (instance != null) {
-			result = readParameter(RcsSettingsData.TRACE_LEVEL);
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.TRACE_LEVEL));
+			} catch(Exception e) {}
 		}
 		return result;
 	}
@@ -1964,6 +1969,32 @@ public class RcsSettings {
 		return result;
 	}
 	
+    /**
+     * Is file transfer Store & Forward supported
+     *
+     * @return Boolean
+     */
+	public boolean isFileTransferStoreForwardSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF));
+		}
+		return result;
+	}
+
+    /**
+     * Is group chat Store & Forward supported
+     *
+     * @return Boolean
+     */
+	public boolean isGroupChatStoreForwardSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF));
+		}
+		return result;
+	}
+
 	/**
      * Get supported RCS extensions
      *

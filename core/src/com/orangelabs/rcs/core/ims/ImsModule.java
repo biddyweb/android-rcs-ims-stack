@@ -134,9 +134,6 @@ public class ImsModule implements SipEventListener {
         // Create capability discovery service
         services[ImsService.CAPABILITY_SERVICE] = new CapabilityService(this);
         
-        // Create IP call service
-        // TODO : add here the VOIP service instanciation
-        
         // Create IM service (mandatory)
         services[ImsService.IM_SERVICE] = new InstantMessagingService(this);
         
@@ -413,19 +410,27 @@ public class ImsModule implements SipEventListener {
 	 * Abort all sessions
 	 */
 	public void abortAllSessions() {
-		if (logger.isActivated()) {
-			logger.debug("Abort all pending sessions");
-		}
-		ImsService[] services = getImsServices();
-		for(int i=0; i < services.length; i++) {
-			ImsService service = services[i];
-			for (Enumeration<ImsServiceSession> e = service.getSessions(); e.hasMoreElements() ;) {
-				ImsServiceSession session = (ImsServiceSession)e.nextElement();
-				if (logger.isActivated()) {
-					logger.debug("Abort session " + session.getSessionID());
-				}
-				session.abortSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-			}
-		}
-	}		
+        try {
+            if (logger.isActivated()) {
+                logger.debug("Abort all pending sessions");
+            }
+            ImsService[] services = getImsServices();
+            for (int i = 0; i < services.length; i++) {
+                ImsService service = services[i];
+                for (Enumeration<ImsServiceSession> e = service.getSessions(); e.hasMoreElements();) {
+                    ImsServiceSession session = (ImsServiceSession) e.nextElement();
+                    if (logger.isActivated()) {
+                        logger.debug("Abort session " + session.getSessionID());
+                    }
+                    session.abortSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+                }
+            }
+        } catch (Exception e) {
+            // Aborting sessions may fail (e.g. due to ConcurrentModificationException)
+            // we don't want the whole shutdown to be interrupted just because of this
+            if (logger.isActivated()) {
+                logger.error("Aborting all sessions failed", e);
+            }
+        }
+	}
 }

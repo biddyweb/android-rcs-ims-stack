@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.4
+Release 2.5.5
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,10 +8,11 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- Remove roaming switch.
-- New settings for displayed report during a chat.
-- Video sharing: new method to resize frame before encoding.
-- File transfer over HTTP (!not yet tested).
+
+- Add Neusoft contributions.
+- FT Store & Forward.
+- Remove H263 codec and prerecorded feature.
+- Invites missing participants on incoming group chat request.
 
 
 Bugs fixed:
@@ -19,6 +20,12 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+
+v2.5.5
+- Mantis #0017281	Stack: "To" URI should be "anonymous" in group chat messages
+- Mantis #0017280	Stack: On chat restart don't reinvite participants that were departed
+- Trello #45		Stack: Fix DE-REGISTER issue if core is stopped - https://trello.com/c/dPVYlvPz
 
 v2.5.4
 - Mantis #0016927	Stack: CSeq value not well incremented on REFER after a 407
@@ -439,8 +446,8 @@ Known bugs:
 
 Notes:
 -------
-- This release works only with 2.x Android OS.
-- TLS may be only used from ANdroid 2.3 release.
+- This release runs from Android 2.x release.
+- TLS runs from Android 2.3 release.
 
 
 Contact:

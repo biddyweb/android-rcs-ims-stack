@@ -98,7 +98,7 @@ public class ImdnManager extends Thread {
 		while((delivery = (DeliveryStatus)buffer.getObject()) != null) {
 			try {
 				// Send SIP MESSAGE
-				sendSipMessageDeliveryStatus(delivery);
+				sendSipMessageDeliveryStatus(delivery, null); // TODO: add sip.instance
 
 				// Update rich messaging history
 				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus());
@@ -125,25 +125,6 @@ public class ImdnManager extends Thread {
 		DeliveryStatus delivery = new DeliveryStatus(contact, msgId, status);
 		buffer.addObject(delivery);
 	}
-	
-	/**
-	 * Send a message delivery status immediately
-	 * 
-	 * @param contact Contact
-	 * @param msgId Message ID
-	 * @param status Delivery status
-	 */
-	public void sendMessageDeliveryStatusImmediately(String contact, String msgId, String status) {
-		// Execute request in background
-		final DeliveryStatus delivery = new DeliveryStatus(contact, msgId, status);
-		Thread thread = new Thread(){
-			public void run() {
-				// Send SIP MESSAGE
-				sendSipMessageDeliveryStatus(delivery);
-			}
-		};
-		thread.start();
-	}
 
     /**
      * Send a message delivery status immediately
@@ -162,15 +143,6 @@ public class ImdnManager extends Thread {
             }
         };
         thread.start();
-    }
-
-    /**
-     * Send message delivery status via SIP MESSAGE
-     * 
-     * @param deliveryStatus Delivery status
-     */
-    private void sendSipMessageDeliveryStatus(DeliveryStatus deliveryStatus) {
-        sendSipMessageDeliveryStatus(deliveryStatus, null);
     }
 
 	/**

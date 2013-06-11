@@ -196,6 +196,16 @@ public final class ContactsManager {
     private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer-http";
     
     /** 
+     * MIME type for file transfer S&F capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_FILE_TRANSFER_SF = "vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer-sf";
+
+    /** 
+     * MIME type for group chat S&F capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_GROUP_CHAT_SF = "vnd.android.cursor.item/com.orangelabs.rcs.capability.group-chat-sf";
+
+    /** 
      * MIME type for RCS extensions 
      */
     private static final String MIMETYPE_CAPABILITY_EXTENSIONS = "vnd.android.cursor.item/com.orangelabs.rcs.capability.extensions";
@@ -501,15 +511,19 @@ public final class ContactsManager {
 		boolean isRegistered = (newInfo.getRegistrationState() == ContactInfo.REGISTRATION_STATUS_ONLINE);
 		Capabilities newCapabilities = newInfo.getCapabilities();
 		values.put(RichAddressBookData.KEY_CAPABILITY_CS_VIDEO, Boolean.toString(newCapabilities.isCsVideoSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER, Boolean.toString(newCapabilities.isFileTransferSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER, Boolean.toString((newCapabilities.isFileTransferSupported() && isRegistered)||
+				(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact())));
 		values.put(RichAddressBookData.KEY_CAPABILITY_IMAGE_SHARING, Boolean.toString(newCapabilities.isImageSharingSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_IM_SESSION, Boolean.toString((newCapabilities.isImSessionSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact())));
+		values.put(RichAddressBookData.KEY_CAPABILITY_IM_SESSION, Boolean.toString((newCapabilities.isImSessionSupported() && isRegistered)||
+				(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact())));
 		values.put(RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY, Boolean.toString(newCapabilities.isPresenceDiscoverySupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(newCapabilities.isSocialPresenceSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING, Boolean.toString(newCapabilities.isVideoSharingSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(newCapabilities.isGeolocationPushSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(newCapabilities.isFileTransferHttpSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(newCapabilities.isFileTransferThumbnailSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString(newCapabilities.isFileTransferStoreForwardSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_GROUP_CHAT_SF, Boolean.toString(newCapabilities.isGroupChatStoreForwardSupported() && isRegistered));
 
 		// Save the capabilities extensions
 		ArrayList<String> newExtensions = newCapabilities.getSupportedExtensions();
@@ -648,7 +662,8 @@ public final class ContactsManager {
     				ops.add(op);
     			}
     			// File transfer
-    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, newInfo.getCapabilities().isFileTransferSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferSupported());
+    			// For FT, also check if the FT S&F is activated, for RCS contacts
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, (newInfo.getCapabilities().isFileTransferSupported() && isRegistered)||(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()), oldInfo.getCapabilities().isFileTransferSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -688,8 +703,18 @@ public final class ContactsManager {
     			if (op!=null){
     				ops.add(op);
     			}
-    			// File transfer http
+    			// File transfer HTTP
     			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP, newInfo.getCapabilities().isFileTransferHttpSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferHttpSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// File transfer S&F
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_SF, newInfo.getCapabilities().isFileTransferStoreForwardSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferStoreForwardSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// Group chat S&F
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_GROUP_CHAT_SF, newInfo.getCapabilities().isGroupChatStoreForwardSupported() && isRegistered, oldInfo.getCapabilities().isGroupChatStoreForwardSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -902,13 +927,17 @@ public final class ContactsManager {
                 capabilities.setVideoSharingSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING))));
                 capabilities.setFileTransferThumbnailSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL))));
                 capabilities.setFileTransferHttpSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP))));
+                capabilities.setFileTransferStoreForwardSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF))));
+                capabilities.setGroupChatStoreForwardSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_GROUP_CHAT_SF))));
 
                 // Set RCS extensions capability
 				String extensions = cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_EXTENSIONS));
-				String[] extensionList = extensions.split(";");
-				for (int i=0;i<extensionList.length;i++){
-					if (extensionList[i].trim().length()>0){
-						capabilities.addSupportedExtension(extensionList[i]);
+				if (extensions != null) {
+					String[] extensionList = extensions.split(";");
+					for (int i=0;i<extensionList.length;i++){
+						if (extensionList[i].trim().length()>0){
+							capabilities.addSupportedExtension(extensionList[i]);
+						}
 					}
 				}
 				capabilities.setTimestamp(cur.getLong(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_TIMESTAMP)));
@@ -2360,31 +2389,43 @@ public final class ContactsManager {
 
 		// Modify the capabilities regarding the registration state		
 		boolean isRegistered = (registrationState==ContactInfo.REGISTRATION_STATUS_ONLINE);
+		
 		// Cs Video
 		capabilities.setCsVideoSupport(capabilities.isCsVideoSupported() && isRegistered);
 
-		// File transfer
-		capabilities.setFileTransferSupport(capabilities.isFileTransferSupported() && isRegistered);
+		// File transfer. This capability is enabled:
+		// - if the capability is present and the contact is registered
+		// - if the FT S&F is enabled and the contact is RCS capable		
+		capabilities.setFileTransferSupport((capabilities.isFileTransferSupported() && isRegistered) ||
+				(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()));
+		
 		// Image sharing
 		capabilities.setImageSharingSupport(capabilities.isImageSharingSupported() && isRegistered);
-		// IM session
-		// This capability is enabled:
+		
+		// IM session. This capability is enabled:
 		// - if the capability is present and the contact is registered
-		// - if the IM store&forward is enabled and the contact is RCS capable
-		capabilities.setImSessionSupport((capabilities.isImSessionSupported() && isRegistered) 
-				|| (RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()));
+		// - if the IM S&F is enabled and the contact is RCS capable
+		capabilities.setImSessionSupport((capabilities.isImSessionSupported() && isRegistered) ||
+				(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()));
+		
 		// Video sharing
 		capabilities.setVideoSharingSupport(capabilities.isVideoSharingSupported() && isRegistered);
 		
 		// Geolocation push
 		capabilities.setGeolocationPushSupport(capabilities.isGeolocationPushSupported() && isRegistered);
 
-		// FT Thumbnail
+		// FT thumbnail
 		capabilities.setFileTransferThumbnailSupport(capabilities.isFileTransferThumbnailSupported() && isRegistered);
 
-		// FT Http
+		// FT HTTP
 		capabilities.setFileTransferHttpSupport(capabilities.isFileTransferHttpSupported() && isRegistered);
 		
+		// FT S&F
+		capabilities.setFileTransferStoreForwardSupport(capabilities.isFileTransferStoreForwardSupported() && isRegistered);
+
+		// Group chat S&F
+		capabilities.setGroupChatStoreForwardSupport(capabilities.isGroupChatStoreForwardSupported() && isRegistered);
+
 		// Add the capabilities
 		newInfo.setCapabilities(capabilities);
 
@@ -2639,6 +2680,14 @@ public final class ContactsManager {
         // File transfer HTTP
         if (capabilities.isFileTransferHttpSupported()) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP));
+        }
+        // File transfer S&F
+        if (capabilities.isFileTransferStoreForwardSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_FILE_TRANSFER_SF));
+        }
+        // Group chat S&F
+        if (capabilities.isGroupChatStoreForwardSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_GROUP_CHAT_SF));
         }
         // Insert extensions
 		boolean hasCommonExtensions = false;
@@ -3710,6 +3759,12 @@ public final class ContactsManager {
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP)){
     			// Set capability file transfer HTTP
    				capabilities.setFileTransferHttpSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_FILE_TRANSFER_SF)){
+    			// Set capability file transfer S&F
+   				capabilities.setFileTransferStoreForwardSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_GROUP_CHAT_SF)){
+    			// Set capability group chat S&F
+   				capabilities.setGroupChatStoreForwardSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_EXTENSIONS)){
     			// Set RCS extensions capability
     			int columnIndex = cursor.getColumnIndex(Data.DATA2);
@@ -3843,6 +3898,8 @@ public final class ContactsManager {
                 MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
                 MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
                 MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP,
+                MIMETYPE_CAPABILITY_FILE_TRANSFER_SF,
+                MIMETYPE_CAPABILITY_GROUP_CHAT_SF,
                 MIMETYPE_CAPABILITY_EXTENSIONS
         };
 
@@ -4007,23 +4064,34 @@ public final class ContactsManager {
         String[] projection = {
                 RichAddressBookData.KEY_CONTACT_NUMBER
         };
-        Cursor cursor = ctx.getContentResolver().query(RichAddressBookData.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null);
+        Cursor cursor = null;
+        try {
+	        cursor = ctx.getContentResolver().query(RichAddressBookData.CONTENT_URI,
+	                projection,
+	                null,
+	                null,
+	                null);
 
-        // Delete EAB Entry where number is not in the address book anymore
-        while (cursor.moveToNext()) {
-            String phoneNumber = cursor.getString(0);
-            if (getRawContactIdsFromPhoneNumber(phoneNumber).isEmpty()) {
-                String where = RichAddressBookData.KEY_CONTACT_NUMBER + "=?";
-                String[] selectionArg = {phoneNumber};
-                ctx.getContentResolver().delete(RichAddressBookData.CONTENT_URI,
-                        where,
-                        selectionArg);
-            }
-        }
+	        // Delete EAB Entry where number is not in the address book anymore
+	        while (cursor.moveToNext()) {
+	            String phoneNumber = cursor.getString(0);
+	            if (getRawContactIdsFromPhoneNumber(phoneNumber).isEmpty()) {
+	                String where = RichAddressBookData.KEY_CONTACT_NUMBER + "=?";
+	                String[] selectionArg = {phoneNumber};
+	                ctx.getContentResolver().delete(RichAddressBookData.CONTENT_URI,
+	                        where,
+	                        selectionArg);
+	            }
+	        }
+	    } catch (Exception e) {
+	        if (logger.isActivated()) {
+	            logger.error("Clean entries has failed", e);
+	        }
+	    } finally {
+	        if (cursor != null) {
+	            cursor.close();
+	        }
+	    }
     }
 
     /**
@@ -4053,6 +4121,8 @@ public final class ContactsManager {
     		    MIMETYPE_CAPABILITY_GEOLOCATION_PUSH,
     		    MIMETYPE_CAPABILITY_FILE_TRANSFER_THUMBNAIL,
     		    MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP,
+    		    MIMETYPE_CAPABILITY_FILE_TRANSFER_SF,
+    		    MIMETYPE_CAPABILITY_GROUP_CHAT_SF,
     		    MIMETYPE_CAPABILITY_EXTENSIONS,
     		    MIMETYPE_SEE_MY_PROFILE,
     		    MIMETYPE_RCS_CONTACT,

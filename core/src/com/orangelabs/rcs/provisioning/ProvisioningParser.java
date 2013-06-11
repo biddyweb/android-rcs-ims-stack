@@ -193,7 +193,7 @@ public class ProvisioningParser {
                 }
                 if (validity == null) {
                     if ((validity = getValueByParamName("validity", versionchild, TYPE_INT)) != null) {
-                        provisioningInfo.setValidity(Integer.parseInt(validity));
+                        provisioningInfo.setValidity(Long.parseLong(validity));
                         continue;
                     }
                 }
@@ -658,6 +658,7 @@ public class ProvisioningParser {
         String ftHttpCsUser = null;
         String ftHttpCsPwd = null;
         String ftDefaultMech = null;
+        String ftSF = null;
         String chatAuth = null;
         String smsFallBackAuth = null;
         String autoAcceptChat = null;
@@ -669,6 +670,8 @@ public class ProvisioningParser {
         String ftThumb = null;
         String maxAdhocGroupSize = null;
         String confFctyUri = null;
+        String groupChatSF = null;
+        String maxConcurrentSession = null;
         if (node == null) {
             return;
         }
@@ -691,6 +694,30 @@ public class ProvisioningParser {
                     }
                 }
 
+                if (maxConcurrentSession == null) {
+                    if ((maxConcurrentSession = getValueByParamName("MaxConcurrentSession", childnode, TYPE_INT)) != null) {
+                        RcsSettings.getInstance().writeParameter(
+                                RcsSettingsData.MAX_CHAT_SESSIONS,
+                                maxConcurrentSession);
+                        continue;
+                    }
+                }
+
+                if (groupChatSF == null) {
+                    if ((groupChatSF = getValueByParamName("GroupChatFullStandFwd", childnode, TYPE_INT)) != null) {
+                        if (groupChatSF.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_GROUP_CHAT_SF,
+                                    RcsSettingsData.FALSE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_GROUP_CHAT_SF,
+                                    RcsSettingsData.TRUE);
+                        }
+                        continue;
+                    }
+                }
+                
                 if (imWarnSF == null) {
                     if ((imWarnSF = getValueByParamName("imWarnSF", childnode, TYPE_INT)) != null) {
                         if (imWarnSF.equals("0")) {
@@ -715,6 +742,21 @@ public class ProvisioningParser {
                         } else {
                             RcsSettings.getInstance().writeParameter(
                                     RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER,
+                                    RcsSettingsData.TRUE);
+                        }
+                        continue;
+                    }
+                }
+
+                if (ftSF == null) {
+                    if ((ftSF = getValueByParamName("ftStAndFwEnabled", childnode, TYPE_INT)) != null) {
+                        if (ftSF.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF,
+                                    RcsSettingsData.FALSE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF,
                                     RcsSettingsData.TRUE);
                         }
                         continue;

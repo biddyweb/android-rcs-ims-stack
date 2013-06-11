@@ -18,9 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp.stream;
 
-import java.net.SocketTimeoutException;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.concurrent.TimeoutException;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
@@ -152,6 +152,7 @@ public class RtpInputStream implements ProcessorInputStream {
     public void open() throws Exception {
     	// Create the RTP receiver
         rtpReceiver = new RtpPacketReceiver(localPort, rtcpSession, RTP_SOCKET_TIMEOUT);
+        rtpReceiver.start();
 
     	// Create the RTCP receiver
         rtcpReceiver = new RtcpPacketReceiver(localPort + 1, rtcpSession);
@@ -253,7 +254,7 @@ public class RtpInputStream implements ProcessorInputStream {
         	// Set inputFormat back to null
         	inputFormat = null;
         	return buffer;
-        } catch (SocketTimeoutException ex) {
+        } catch (TimeoutException ex) {
             if (!isClosed) {
                 if (logger.isActivated()) {
                     logger.error("RTP Packet receiver socket error", ex);

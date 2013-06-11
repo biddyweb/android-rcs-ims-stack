@@ -371,7 +371,6 @@ public class HttpsProvisioningService extends Service {
 
                 // Start retry alarm
                 if (result.retryAfter > 0) {
-                	retryCount = 0;
                     startRetryAlarm(result.retryAfter * 1000);
                 }
 
@@ -579,6 +578,8 @@ public class HttpsProvisioningService extends Service {
 
 			// Format second HTTPS request
 			String args = "?vers=" + RcsSettings.getInstance().getProvisioningVersion()
+                    + "&rcs_version=" + getRcsVersion()
+                    + "&rcs_profile=" + getRcsProfile()
                     + "&client_vendor=" + getClientVendor()
                     + "&client_version=" + getClientVersion()
                     + "&terminal_vendor=" + HttpUtils.encodeURL(getTerminalVendor())
@@ -769,4 +770,22 @@ public class HttpsProvisioningService extends Service {
     private String getUserLanguage() {
         return Locale.getDefault().getLanguage() + "-" + Locale.getDefault().getCountry();
     }
+    
+	/**
+     * Returns the RCS version
+     * 
+     * @return String(4)
+     */
+	private String getRcsVersion() {
+		return "5.1B";
+	}
+
+	/**
+     * Returns the RCS profile
+     * 
+     * @return String(15)
+     */
+	private String getRcsProfile() {
+		return "joyn_blackbird";
+	}    
 }

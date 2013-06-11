@@ -57,6 +57,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpF
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -282,23 +283,33 @@ public class InstantMessagingService extends ImsService {
             throw new CoreException("File exceeds max size");
         }
 
-        // Create the thumbnail
-        byte[] thumbnailImage = null;
-        if (thumbnail && content.getEncoding().startsWith("image/")) {
-        	thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
-        }
-        
-		// Check FT over HTTP capability
-		boolean isContactFToHttp = false;
+		// Check contact capabilities
+		boolean isFToHttpSupportedByRemote = false;
+		boolean isThumbnailSupportedByRemote = false;
 		Capabilities capability = ContactsManager.getInstance().getContactCapabilities(contact);
 		if (capability != null) {
-			isContactFToHttp = capability.isFileTransferHttpSupported();
+			isFToHttpSupportedByRemote = capability.isFileTransferHttpSupported();
+			isThumbnailSupportedByRemote = capability.isFileTransferThumbnailSupported();
 		}
-		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
 		
+        byte[] thumbnailImage = null;
+		if (thumbnail && isThumbnailSupportedByRemote && content.getEncoding().startsWith("image/")) {
+			// Create the thumbnail
+			thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
+		}
+
+		// Select default protocol
+		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
+		boolean isHttpProtocol = false;
+		if (isFToHttpSupportedByRemote && myCapability.isFileTransferHttpSupported()) {
+			if (RcsSettings.getInstance().getFtProtocol().equals(RcsSettingsData.FT_PROTOCOL_HTTP)) {
+				isHttpProtocol = true;
+			}
+		}
+
 		// Initiate session
 		FileSharingSession session;
-		if (isContactFToHttp && myCapability.isFileTransferHttpSupported()) {
+		if (isHttpProtocol) {
 			// Create a new session
 			session = new OriginatingHttpFileSharingSession(
 					this,
@@ -313,7 +324,7 @@ public class InstantMessagingService extends ImsService {
 					PhoneUtils.formatNumberToSipUri(contact),
 					thumbnailImage);
 		}
-
+		
 		// Start the session
 		session.startSession();
 		return session;
@@ -646,14 +657,6 @@ public class InstantMessagingService extends ImsService {
 		// Get the connected participants from database
 		List<String> participants = RichMessaging.getInstance().getGroupChatConnectedParticipants(chatId);
 		
-		// Add also participants who have been initially invited
-		List<String> invitedParticipants = groupChat.getParticipants();
-		for(int i=0; i < invitedParticipants.size(); i++) {
-			String user = invitedParticipants.get(i);
-			if (!participants.contains(user)) {
-				participants.add(user);
-			}
-		}
 		if (participants.size() == 0) {
 			if (logger.isActivated()) {
 				logger.warn("Group chat " + chatId + " can't be restarted: participants not found");
