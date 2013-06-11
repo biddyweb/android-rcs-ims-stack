@@ -53,7 +53,7 @@ public class ContributionIdGenerator {
         // Keep only 128 bits
         byte[] secretKey = new byte[16];
         for (int i = 0; i < 16; i++) {
-            if (key.length >= 16) {
+            if (key != null && key.length >= 16) {
                 secretKey[i] = key[i];
             } else {
                 secretKey[i] = '0';

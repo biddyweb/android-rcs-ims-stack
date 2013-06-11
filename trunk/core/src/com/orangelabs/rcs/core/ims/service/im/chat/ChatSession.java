@@ -40,11 +40,9 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
-import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
-import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
@@ -110,7 +108,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     /**
      * Feature tags
      */
-    private ArrayList<String> featureTags = new ArrayList<String>();
+    private List<String> featureTags = new ArrayList<String>();
     
     /**
      * Accept types
@@ -128,9 +126,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     private boolean geolocSupportedByRemote = false;
     
     /**
-     * File transfer over HTTP supported by remote
+     * File transfer supported by remote
      */
-    private boolean ftHttpSupportedByRemote = false;
+    private boolean ftSupportedByRemote = false;
     
     /**
      * The logger
@@ -142,34 +140,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param parent IMS service
 	 * @param contact Remote contact
+	 * @param participants List of participants
 	 */
-	public ChatSession(ImsService parent, String contact) {
+	public ChatSession(ImsService parent, String contact, ListOfParticipant participants) {
 		super(parent, contact);
 
-		// Set feature tags
-		featureTags.add(FeatureTags.FEATURE_OMA_IM);
-		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	featureTags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
-        }
-        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	featureTags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_FT_HTTP + "\"");
-        }
-		
-		// Set accept-types
-		acceptTypes = CpimMessage.MIME_TYPE;
-		if (!isGroupChat()) {
-			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
-		}
+		// Set the session participants
+		this.participants = participants;
 				
-		// Set accept-wrapped-types
-		wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
-		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
-        }
-        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	wrappedTypes += " " + FileTransferHttpInfoDocument.MIME_TYPE;
-        }
-		
         // Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
@@ -179,20 +157,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		}
 	}
 
-    /**
-	 * Constructor
-	 * 
-	 * @param parent IMS service
-	 * @param contact Remote contact
-	 * @param participants List of participants
-	 */
-	public ChatSession(ImsService parent, String contact, ListOfParticipant participants) {
-		this(parent, contact);
-
-		// Set the session participants
-		setParticipants(participants);
-	}
-	
 	/**
 	 * Get feature tags
 	 * 
@@ -200,6 +164,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 */
 	public String[] getFeatureTags() {
 		return featureTags.toArray(new String[0]);
+	}
+
+	/**
+	 * Set feature tags
+	 * 
+	 * @param tags Feature tags
+	 */
+	public void setFeatureTags(List<String> tags) {
+		this.featureTags = tags;
 	}
 
 	/**
@@ -212,12 +185,30 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 
 	/**
+	 * Set accept types
+	 * 
+	 * @param types Accept types
+	 */
+	public void setAcceptTypes(String types) {
+		this.acceptTypes = types; 
+	}
+
+	/**
 	 * Get wrapped types
 	 * 
 	 * @return Wrapped types
 	 */
 	public String getWrappedTypes() {
 		return wrappedTypes;
+	}
+
+	/**
+	 * Set wrapped types
+	 * 
+	 * @param types Wrapped types
+	 */
+	public void setWrappedTypes(String types) {
+		this.wrappedTypes = types;
 	}
 
 	/**
@@ -301,15 +292,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		return participants;
 	}
         
-    /**
-	 * Set the list of participants
-	 * 
-	 * @param participants List of participants
-	 */
-    public void setParticipants(ListOfParticipant participants) {
-		this.participants = participants;
-	}
-    
 	/**
 	 * Returns the list of participants currently connected to the session
 	 * 
@@ -358,21 +340,21 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Is file transfer over HTTP supported by remote
+	 * Is file transfer supported by remote
 	 * 
 	 * @return Boolean
 	 */
-	public boolean isFileTransferHttpSupportedByRemote() {
-		return ftHttpSupportedByRemote;
+	public boolean isFileTransferSupportedByRemote() {
+		return ftSupportedByRemote;
 	}	
 	
 	/**
-	 * Set file transfer over HTTP supported by remote
+	 * Set file transfer supported by remote
 	 * 
 	 * @param suppported Supported
 	 */
-	public void setFileTransferHttpSupportedByRemote(boolean supported) {
-		this.ftHttpSupportedByRemote = supported;
+	public void setFileTransferSupportedByRemote(boolean supported) {
+		this.ftSupportedByRemote = supported;
 	}
 
 	/**
@@ -930,7 +912,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         // Check if geolocation push supported by remote
         setGeolocSupportedByRemote(SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH));
 
-        // Check if file transfer over HTTP supported by remote
-        setFileTransferHttpSupportedByRemote(SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_FT_HTTP));
+        // Check if file transfer supported by remote
+        setFileTransferSupportedByRemote(SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_FT) ||
+        		SipUtils.isFeatureTagPresent(resp, FeatureTags.FEATURE_RCSE_FT_HTTP));
     }	
 }

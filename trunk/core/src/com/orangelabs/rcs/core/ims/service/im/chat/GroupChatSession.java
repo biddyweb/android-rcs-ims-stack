@@ -18,11 +18,13 @@
 
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax2.sip.header.ExtensionHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
@@ -36,7 +38,9 @@ import com.orangelabs.rcs.core.ims.service.im.chat.event.ConferenceEventSubscrib
 import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -69,18 +73,39 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public GroupChatSession(ImsService parent, String conferenceId, ListOfParticipant participants) {
 		super(parent, conferenceId, participants);
+		
+		// Set feature tags
+		List<String> tags = new ArrayList<String>(); 
+		tags.add(FeatureTags.FEATURE_OMA_IM);
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
+        }
+        if (RcsSettings.getInstance().isFileTransferSupported()) {
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_FT + "\"");
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_FT_HTTP + "\"");
+        }
+        setFeatureTags(tags);
+		
+		// Set accept-types
+		String acceptTypes = CpimMessage.MIME_TYPE;
+		if (!isGroupChat()) {
+			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
+		}
+        setAcceptTypes(acceptTypes);
+				
+		// Set accept-wrapped-types
+		String wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	wrappedTypes += " " + FileTransferHttpInfoDocument.MIME_TYPE;
+        }		
+        setWrappedTypes(wrappedTypes);
 	}
 
-	/**
-	 * Constructor for terminating side
-	 * 
-	 * @param parent IMS service
-	 * @param contact Remote contact
-	 */
-	public GroupChatSession(ImsService parent, String contact) {
-		super(parent, contact);
-	}
-	
 	/**
 	 * Is group chat
 	 * 
@@ -187,7 +212,7 @@ public abstract class GroupChatSession extends ChatSession {
 	public void sendTextMessage(String msgId, String txt) {
 		// Send message in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getRemoteContact();
+		String to = ChatUtils.ANOMYNOUS_URI;
 		String content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		
 		// Send data
@@ -218,7 +243,7 @@ public abstract class GroupChatSession extends ChatSession {
 	public void sendGeolocMessage(String msgId, GeolocPush geoloc) {
 		// Send message in CPIM
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getRemoteContact();
+		String to = ChatUtils.ANOMYNOUS_URI;
 		String geoDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
 		String content = ChatUtils.buildCpimMessage(from, to, geoDoc, GeolocInfoDocument.MIME_TYPE);
 		
@@ -248,7 +273,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 */
 	public void sendIsComposingStatus(boolean status) {
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-		String to = getRemoteContact();
+		String to = ChatUtils.ANOMYNOUS_URI;
 		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
 		String msgId = ChatUtils.generateMessageId();
 		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);	

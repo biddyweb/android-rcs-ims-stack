@@ -82,6 +82,10 @@ public class MyCapabilities extends Activity {
         geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
         CheckBox ftThumbnail = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
         ftThumbnail.setChecked(capabilities.isFileTransferThumbnailSupported());
+        CheckBox ftSF = (CheckBox)findViewById(R.id.file_transfer_sf);
+        ftSF.setChecked(capabilities.isFileTransferStoreForwardSupported());
+        CheckBox gcSF = (CheckBox)findViewById(R.id.group_chat_sf);
+        gcSF.setChecked(capabilities.isGroupChatStoreForwardSupported());
         
         // Set extensions
         TextView extensions = (TextView)findViewById(R.id.extensions);

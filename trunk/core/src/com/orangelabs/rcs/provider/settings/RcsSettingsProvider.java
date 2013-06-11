@@ -34,6 +34,7 @@ import android.net.Uri;
 import android.os.Environment;
 
 import com.orangelabs.rcs.R;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * RCS settings provider
@@ -73,7 +74,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 78;
+        private static final int DATABASE_VERSION = 80;
 
         private Context ctx;
 
@@ -121,7 +122,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.WARN_FILE_TRANSFER_SIZE, 			"2048");
             addParameter(db, RcsSettingsData.MAX_IMAGE_SHARE_SIZE, 				"3072");
             addParameter(db, RcsSettingsData.MAX_VIDEO_SHARE_DURATION, 			"54000");
-            addParameter(db, RcsSettingsData.MAX_CHAT_SESSIONS, 				"10");
+            addParameter(db, RcsSettingsData.MAX_CHAT_SESSIONS, 				"20");
             addParameter(db, RcsSettingsData.MAX_FILE_TRANSFER_SESSIONS, 		"1");
             addParameter(db, RcsSettingsData.SMS_FALLBACK_SERVICE, 				RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.WARN_SF_SERVICE,	 				RcsSettingsData.FALSE);
@@ -160,6 +161,8 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_SOCIAL_PRESENCE,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL,RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CAPABILITY_GROUP_CHAT_SF,			RcsSettingsData.FALSE);
+            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF,		RcsSettingsData.FALSE);            
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
@@ -185,7 +188,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.SESSION_REFRESH_EXPIRE_PERIOD, 	"0");
             addParameter(db, RcsSettingsData.PERMANENT_STATE_MODE,	 			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.TRACE_ACTIVATED,			 		RcsSettingsData.TRUE);
-            addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"DEBUG");
+            addParameter(db, RcsSettingsData.TRACE_LEVEL,	 					"" + Logger.DEBUG_LEVEL);
             addParameter(db, RcsSettingsData.SIP_TRACE_ACTIVATED, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.SIP_TRACE_FILE,                    Environment.getExternalStorageDirectory() + "/sip.txt");
             addParameter(db, RcsSettingsData.MEDIA_TRACE_ACTIVATED,				RcsSettingsData.FALSE);

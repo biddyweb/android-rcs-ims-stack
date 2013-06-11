@@ -221,6 +221,8 @@ public class CapabilitiesDiscovery extends Activity {
     	CheckBox socialPresence = (CheckBox)findViewById(R.id.social_presence);
         CheckBox geolocationPush = (CheckBox)findViewById(R.id.geolocation_push);
         CheckBox ftThumbnail = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
+        CheckBox ftSF = (CheckBox)findViewById(R.id.file_transfer_sf);
+        CheckBox gcSF = (CheckBox)findViewById(R.id.group_chat_sf);
         TextView extensions = (TextView)findViewById(R.id.extensions);
 
     	if (capabilities != null) {
@@ -238,6 +240,8 @@ public class CapabilitiesDiscovery extends Activity {
     		socialPresence.setVisibility(View.VISIBLE);
             geolocationPush.setVisibility(View.VISIBLE);
             ftThumbnail.setVisibility(View.VISIBLE);
+    		ftSF.setVisibility(View.VISIBLE);
+    		gcSF.setVisibility(View.VISIBLE);
     		imageCSh.setChecked(capabilities.isImageSharingSupported());
     		videoCSh.setChecked(capabilities.isVideoSharingSupported());
     		ft.setChecked(capabilities.isFileTransferSupported());
@@ -248,6 +252,8 @@ public class CapabilitiesDiscovery extends Activity {
     		socialPresence.setChecked(capabilities.isSocialPresenceSupported());
             geolocationPush.setChecked(capabilities.isGeolocationPushSupported());
             ftThumbnail.setChecked(capabilities.isFileTransferThumbnailSupported());
+            ftSF.setChecked(capabilities.isFileTransferStoreForwardSupported());
+            gcSF.setChecked(capabilities.isGroupChatStoreForwardSupported());
 
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
@@ -270,6 +276,8 @@ public class CapabilitiesDiscovery extends Activity {
     		socialPresence.setVisibility(View.GONE);
     		geolocationPush.setVisibility(View.GONE);
     		ftThumbnail.setVisibility(View.GONE);
+    		ftSF.setVisibility(View.GONE);
+    		gcSF.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
     }

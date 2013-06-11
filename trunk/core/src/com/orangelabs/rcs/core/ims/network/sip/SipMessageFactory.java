@@ -300,9 +300,6 @@ public class SipMessageFactory {
 	        // Set Contact header
 			message.addHeader(dialog.getSipStack().getContact());	        
 			
-            // Add remote SIP instance ID
-            SipUtils.setRemoteInstanceID(message, dialog.getRemoteSipInstance());
-
 	        // Set User-Agent header
 	        message.addHeader(SipUtils.buildUserAgentHeader());
 	
@@ -324,7 +321,10 @@ public class SipMessageFactory {
 	        ViaHeader viaHeader = (ViaHeader)message.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
 
-	        return new SipRequest(message);
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(message, dialog.getRemoteSipInstance());
+
+            return new SipRequest(message);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -983,9 +983,6 @@ public class SipMessageFactory {
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
 
-            // Add remote SIP instance ID
-            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
-
 	        // Set Refer-To header
 	        Header referTo = SipUtils.HEADER_FACTORY.createHeader(ReferToHeader.NAME, toContact);
 	        refer.addHeader(referTo);
@@ -1015,7 +1012,10 @@ public class SipMessageFactory {
 	        ViaHeader viaHeader = (ViaHeader)refer.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
 
-	        return new SipRequest(refer);
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
+
+            return new SipRequest(refer);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -1045,9 +1045,6 @@ public class SipMessageFactory {
             // Set feature tags
 	        String[] tags = {FeatureTags.FEATURE_OMA_IM};
             SipUtils.setFeatureTags(refer, tags);
-
-            // Add remote SIP instance ID
-            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
 
 	        // Set Require header
             Header require = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "multiple-refer");
@@ -1105,7 +1102,10 @@ public class SipMessageFactory {
 	        ViaHeader viaHeader = (ViaHeader)refer.getHeader(ViaHeader.NAME);
 	        viaHeader.setRPort();
 
-	        return new SipRequest(refer);
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(refer, dialog.getRemoteSipInstance());
+
+            return new SipRequest(refer);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -1132,9 +1132,6 @@ public class SipMessageFactory {
             reInvite.addHeader(firstInvite.getHeader(ContactHeader.NAME));
             reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
             reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
-
-            // Add remote SIP instance ID
-            SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
 
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);
@@ -1163,6 +1160,9 @@ public class SipMessageFactory {
             // Set "rport" (RFC3581)
             ViaHeader viaHeader = (ViaHeader)reInvite.getHeader(ViaHeader.NAME);
             viaHeader.setRPort();
+
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
 
             return new SipRequest(reInvite);
         } catch(Exception e) {

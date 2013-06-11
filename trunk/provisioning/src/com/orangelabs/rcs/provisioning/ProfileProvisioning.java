@@ -186,6 +186,11 @@ public class ProfileProvisioning extends Activity {
         box = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL)));	
 
+        box = (CheckBox)findViewById(R.id.file_transfer_sf);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF)));	
+
+        box = (CheckBox)findViewById(R.id.group_chat_sf);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF)));	
 	}
 
     @Override
@@ -305,7 +310,13 @@ public class ProfileProvisioning extends Activity {
 		        box = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
 		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(box.isChecked()));
 		        
-                Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
+		        box = (CheckBox)findViewById(R.id.file_transfer_sf);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF, Boolean.toString(box.isChecked()));
+
+		        box = (CheckBox)findViewById(R.id.group_chat_sf);
+		        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF, Boolean.toString(box.isChecked()));
+
+		        Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 		        break;
 		}
 		return true;

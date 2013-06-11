@@ -17,9 +17,6 @@ interface IRichCallApi {
 	// Initiate a live video sharing session
 	IVideoSharingSession initiateLiveVideoSharing(in String contact, in IMediaPlayer player);
 
-	// Initiate a pre-recorded video sharing session
-	IVideoSharingSession initiateVideoSharing(in String contact, in String file, in IMediaPlayer player);
-
 	// Get current video sharing session from its session ID
 	IVideoSharingSession getVideoSharingSession(in String id);
 

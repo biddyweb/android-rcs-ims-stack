@@ -18,6 +18,7 @@
 package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import javax2.sip.header.RequireHeader;
+import javax2.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -28,6 +29,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -170,7 +172,13 @@ public class ExtendOneOneChatSession extends GroupChatSession {
         		InstantMessagingService.CHAT_FEATURE_TAGS,
         		content, BOUNDARY_TAG);
 
-        // Add a require header
+        // Test if there is a subject
+    	if (getSubject() != null) {
+	        // Add a subject header
+    		invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getSubject()));
+    	}
+
+    	// Add a require header
         invite.addHeader(RequireHeader.NAME, "recipient-list-invite");
         
         // Add a contribution ID header

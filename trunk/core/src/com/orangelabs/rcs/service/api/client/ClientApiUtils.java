@@ -5,7 +5,6 @@ import java.util.List;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 
 /**
  * Client API utils
@@ -13,21 +12,6 @@ import android.content.Intent;
  * @author jexa7410
  */
 public class ClientApiUtils {
-	/**
-	 * RCS service name
-	 */
-	public static final String RCS_SERVICE_NAME = "com.orangelabs.rcs.SERVICE";
-
-    /**
-     * Startup service name
-     */
-    public static final String STARTUP_SERVICE_NAME = "com.orangelabs.rcs.STARTUP";	
-	
-    /**
-     * Provisioning service name
-     */
-    public static final String PROVISIONING_SERVICE_NAME = "com.orangelabs.rcs.PROVISIONING";
-
     /**
 	 * Is service started
 	 *
@@ -50,24 +34,4 @@ public class ClientApiUtils {
 	     }
 	     return false;
 	}	
-	
-	/**
-	 * Start RCS service
-	 *
-	 * @param ctx Context
-	 */
-	public static void startRcsService(Context ctx) {
-        ctx.startService(new Intent(STARTUP_SERVICE_NAME));
-	}
-
-	/**
-	 * Stop RCS service
-	 *
-	 * @param ctx Context
-	 */
-	public static void stopRcsService(Context ctx) {
-        ctx.stopService(new Intent(STARTUP_SERVICE_NAME));
-        ctx.stopService(new Intent(PROVISIONING_SERVICE_NAME));
-        ctx.stopService(new Intent(RCS_SERVICE_NAME));
-	}
 }

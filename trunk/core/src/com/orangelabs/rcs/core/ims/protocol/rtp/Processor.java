@@ -56,11 +56,6 @@ public class Processor extends Thread {
 	private boolean interrupted = false;
 
     /**
-     * bigger Sequence Number
-     */
-    private long bigSeqNum = 0;
-
-    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -94,7 +89,6 @@ public class Processor extends Thread {
 			logger.debug("Start media processor");
 		}
 		interrupted = false;
-        bigSeqNum = 0;
         start();
 	}
 
@@ -133,23 +127,15 @@ public class Processor extends Thread {
 					break;
 				}
 
-                // Drop the old packet
-                long seqNum = inBuffer.getSequenceNumber();
-                if (seqNum + 3 > bigSeqNum) {
-                    if (seqNum > bigSeqNum) {
-                        bigSeqNum = seqNum;
+                // Codec chain processing
+                int result = codecChain.process(inBuffer);
+                if ((result != Codec.BUFFER_PROCESSED_OK)
+                        && (result != Codec.OUTPUT_BUFFER_NOT_FILLED)) {
+                    interrupted = true;
+                    if (logger.isActivated()) {
+                        logger.error("Codec chain processing error: " + result);
                     }
-
-                    // Codec chain processing
-                    int result = codecChain.process(inBuffer);
-                    if ((result != Codec.BUFFER_PROCESSED_OK)
-                            && (result != Codec.OUTPUT_BUFFER_NOT_FILLED)) {
-                        interrupted = true;
-                        if (logger.isActivated()) {
-                            logger.error("Codec chain processing error: " + result);
-                        }
-                        break;
-                    }
+                    break;
                 }
 			}
 		} catch (Exception e) {

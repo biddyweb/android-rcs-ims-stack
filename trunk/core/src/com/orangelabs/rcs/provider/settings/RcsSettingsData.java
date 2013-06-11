@@ -280,7 +280,7 @@ public class RcsSettingsData {
 	public static final String AUTO_ACCEPT_CHAT = "AutoAcceptChat";	
 
     /**
-     * Auto accept chat invitation
+     * Auto accept group chat invitation
      */
     public static final String AUTO_ACCEPT_GROUP_CHAT = "AutoAcceptGroupChat"; 
 
@@ -637,7 +637,17 @@ public class RcsSettingsData {
 	 */
 	public static final String CAPABILITY_FILE_TRANSFER_THUMBNAIL = "CapabilityFileTransferThumbnail";
 	
-    /**
+	/**
+	 * File transfer Store & Forward
+	 */
+	public static final String CAPABILITY_FILE_TRANSFER_SF = "CapabilityFileTransferSF";
+
+	/**
+	 * Group chat Store & Forward
+	 */
+	public static final String CAPABILITY_GROUP_CHAT_SF = "CapabilityGroupChatSF";
+
+	/**
      * RCS extensions capability
      */
 	public static final String CAPABILITY_RCS_EXTENSIONS = "CapabilityRcsExtensions";
@@ -723,8 +733,7 @@ public class RcsSettingsData {
     public static final String PROVISIONING_VERSION = "ProvisioningVersion";
 
     /**
-     * Provisioning address.
-     * The provisioning address can be set in settings for test purpose.
+     * Provisioning address (for test purpose)
      */
     public static final String PROVISIONING_ADDRESS = "ProvisioningAddress";
 

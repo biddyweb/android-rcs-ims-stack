@@ -27,7 +27,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpSender;
+import com.orangelabs.rcs.core.ims.protocol.rtp.VideoRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
@@ -38,7 +38,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
-import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.media.VideoSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
@@ -79,7 +79,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * RTP sender session
      */
-    private MediaRtpSender rtpSender = null;
+    private VideoRtpSender rtpSender = null;
 
     /**
      * RTP media input
@@ -352,7 +352,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         // Init the RTP layer
         try {
             releasePort();
-            rtpSender = new MediaRtpSender(videoFormat, localRtpPort);
+            rtpSender = new VideoRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
             rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
@@ -916,10 +916,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          */
         public void addFrame(byte[] data, long timestamp, VideoOrientation videoOrientation) {
             if (fifo != null) {
-                MediaSample sample = new MediaSample(data, timestamp);
-                if (videoOrientation != null) {
-                    sample.setVideoOrientation(videoOrientation);
-                }
+                VideoSample sample = new VideoSample(data, timestamp, videoOrientation);
                 fifo.addObject(sample);
             }
         }
@@ -958,10 +955,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
          * @return Media sample
          * @throws MediaException
          */
-        public MediaSample readSample() throws MediaException {
+        public VideoSample readSample() throws MediaException {
             try {
                 if (fifo != null) {
-                    return (MediaSample)fifo.getObject();
+                    return (VideoSample)fifo.getObject();
                 } else {
                     throw new MediaException("Media input not opened");
                 }

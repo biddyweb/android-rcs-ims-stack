@@ -28,7 +28,7 @@ import android.os.SystemClock;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.DummyPacketGenerator;
 import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
-import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRtpReceiver;
+import com.orangelabs.rcs.core.ims.protocol.rtp.VideoRtpReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.decoder.NativeH264Decoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.Orientation;
@@ -36,6 +36,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.media.VideoSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
@@ -77,7 +78,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
     /**
      * RTP receiver session
      */
-    private MediaRtpReceiver rtpReceiver = null;
+    private VideoRtpReceiver rtpReceiver = null;
 
     /**
      * RTP dummy packet generator
@@ -272,7 +273,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         try {
             // Init the RTP layer
             releasePort();
-            rtpReceiver = new MediaRtpReceiver(localRtpPort);
+            rtpReceiver = new VideoRtpReceiver(localRtpPort);
             rtpDummySender = new DummyPacketGenerator();
             rtpOutput = new MediaRtpOutput();
             rtpOutput.open();
@@ -600,8 +601,9 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
             rtpDummySender.incomingStarted();
 
             // Init orientation
-            if (sample.getVideoOrientation() != null) {
-                this.videoOrientation = sample.getVideoOrientation();
+            VideoOrientation orientation = ((VideoSample)sample).getVideoOrientation();
+            if (orientation != null) {
+                this.videoOrientation = orientation;
             }
 
             int[] decodedFrame = NativeH264Decoder.DecodeAndConvert(sample.getData(), videoOrientation.getOrientation().getValue(), decodedFrameDimensions);

@@ -139,7 +139,31 @@
              android:text="@string/label_capabilities_file_transfer_thumbnail" />
         </TableRow>
 
-		<TableRow>
+        <TableRow>
+            <TextView android:text=""
+             android:layout_marginLeft="5dip"
+             android:gravity="right"/>
+            <CheckBox android:id="@+id/file_transfer_sf"
+             android:layout_marginLeft="5dip"
+             android:layout_marginRight="5dip"
+             android:textStyle="bold"
+             android:clickable="false"
+             android:text="@string/label_capabilities_file_transfer_sf" />
+        </TableRow>
+        
+        <TableRow>
+            <TextView android:text=""
+             android:layout_marginLeft="5dip"
+             android:gravity="right"/>
+            <CheckBox android:id="@+id/group_chat_sf"
+             android:layout_marginLeft="5dip"
+             android:layout_marginRight="5dip"
+             android:textStyle="bold"
+             android:clickable="false"
+             android:text="@string/label_capabilities_group_chat_sf" />
+        </TableRow>
+        
+   		<TableRow>
 	        <TextView android:text="@string/label_capabilities_extensions"
  			 android:layout_marginLeft="5dip"
 	         android:gravity="right"/>

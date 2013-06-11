@@ -25,7 +25,6 @@ import java.util.Vector;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H263VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
 
@@ -110,13 +109,6 @@ public class MediaRegistry {
 	            new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer()
 	        };
 	        return chain;
-    	} else
-    	if (encoding.equalsIgnoreCase(H263VideoFormat.ENCODING)) {
-    		// Java H263 packetizer
-    		Codec[] chain = {
-    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaPacketizer()
-    		};
-    		return chain;
 		} else { 
 			// Codec implemented in the native part
 			return new Codec[0];
@@ -136,13 +128,6 @@ public class MediaRegistry {
 	            new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaDepacketizer()
 	        };
 	        return chain;
-		} else
-    	if (encoding.equalsIgnoreCase(H263VideoFormat.ENCODING)) {
-    		// Java H263 depacketizer
-    		Codec[] chain = {
-    			new com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h263.JavaDepacketizer()
-    		};
-    		return chain;        
 		} else {
 			// Codec implemented in the native part
 			return new Codec[0];

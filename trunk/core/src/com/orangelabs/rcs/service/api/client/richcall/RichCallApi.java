@@ -132,27 +132,6 @@ public class RichCallApi extends ClientApi {
 	}
 
 	/**
-	 * Initiate a pre-recorded video sharing session
-	 * 
- 	 * @param contact Contact
- 	 * @param file Video file
-	 * @param player Media player
-	 * @return Video sharing session
-	 * @throws ClientApiException
- 	 */
-	public IVideoSharingSession initiateVideoSharing(String contact, String file, IMediaPlayer player) throws ClientApiException {
-    	if (coreApi != null) {
-			try {
-		    	return coreApi.initiateVideoSharing(contact, file, player);
-			} catch(Exception e) {
-				throw new ClientApiException(e.getMessage());
-			}
-		} else {
-			throw new CoreServiceNotAvailableException();
-		}
-	}
-
-	/**
 	 * Get a video sharing session from its session ID
 	 *
 	 * @param id Session ID

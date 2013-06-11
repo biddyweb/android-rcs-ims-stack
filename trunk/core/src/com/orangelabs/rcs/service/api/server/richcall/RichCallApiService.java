@@ -275,49 +275,6 @@ public class RichCallApiService extends IRichCallApi.Stub {
 		}
 	}
 
-    /**
-     * Initiate a pre-recorded video sharing session
-     * 
-     * @param contact Contact
-     * @param file Video file
-     * @param player Media player
-     * @throws ServerApiException
-     */
-	public IVideoSharingSession initiateVideoSharing(String contact, String file, IMediaPlayer player) throws ServerApiException {
-		if (logger.isActivated()) {
-			logger.info("Initiate a pre-recorded video session with " + contact);
-		}
-
-		// Check permission
-		ServerApiUtils.testPermission();
-
-		// Test IMS connection
-		ServerApiUtils.testIms();
-
-		try {
-			// Create a video content
-			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
-			VideoContent content = (VideoContent)ContentManager.createMmContentFromUrl(file, desc.getSize());
-			VideoStreamingSession session = Core.getInstance().getRichcallService().initiatePreRecordedVideoSharingSession(contact, content, player);
-
-			// Update rich call history
-			RichCall.getInstance().addCall(contact, session.getSessionID(),
-                    RichCallData.EVENT_OUTGOING,
-	    			session.getContent(),
-	    			RichCallData.STATUS_STARTED);
-
-			// Add session in the list
-			VideoSharingSession sessionApi = new VideoSharingSession(session);
-			addVideoSharingSession(sessionApi);
-			return sessionApi;
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Unexpected error", e);
-			}
-			throw new ServerApiException(e.getMessage());
-		}
-	}
-
 	/**
 	 * Get current video sharing session from its session ID
 	 *

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.4"
+ android:versionName="2.5.5"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"
@@ -53,16 +53,15 @@
 
 		<!-- RCS service -->	
 
-		<service android:name="com.orangelabs.rcs.service.RcsCoreService">  
+		<service android:name="com.orangelabs.rcs.service.RcsCoreService">
 	        <intent-filter>
-	            <action android:name="com.orangelabs.rcs.SERVICE"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.IImsApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.terms.ITermsApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.capability.ICapabilityApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.presence.IPresenceApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.messaging.IMessagingApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.richcall.IRichCallApi"/>
-	            <action android:name="com.orangelabs.rcs.service.api.client.sip.ISipApi"/>	            
+	            <action android:name="com.orangelabs.rcs.service.api.client.sip.ISipApi"/>
 	        </intent-filter>
 	    </service>
 	
@@ -196,17 +195,11 @@
 		</receiver>
 		
 		<!-- HTTPS provisioning service -->
-		<service android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningService">  
-	        <intent-filter>
-	            <action android:name="com.orangelabs.rcs.PROVISIONING"/>
-	        </intent-filter>
+		<service android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningService">
 	    </service>
 
         <!-- Startup service -->
-        <service android:name="com.orangelabs.rcs.service.StartService">  
-            <intent-filter>
-                <action android:name="com.orangelabs.rcs.STARTUP"/>
-            </intent-filter>
+        <service android:name="com.orangelabs.rcs.service.StartService">
         </service>
 
         <!-- Provisioning - Terms and conditions activity -->

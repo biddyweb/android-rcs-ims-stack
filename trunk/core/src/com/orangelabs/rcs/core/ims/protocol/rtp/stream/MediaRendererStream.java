@@ -48,6 +48,15 @@ public class MediaRendererStream implements ProcessorOutputStream {
 		this.renderer = renderer;
 	}
 
+    /**
+     * Get Media renderer
+     *
+     * @return renderer Media renderer
+     */
+    public MediaOutput getRenderer() {
+        return renderer;
+    }
+
 	/**
 	 * Open the output stream
 	 * 
@@ -85,7 +94,6 @@ public class MediaRendererStream implements ProcessorOutputStream {
      */
     public void write(Buffer buffer) throws Exception {
         MediaSample sample = new MediaSample((byte[])buffer.getData(), buffer.getTimeStamp(), buffer.getSequenceNumber());
-        sample.setVideoOrientation(buffer.getVideoOrientation());
         renderer.writeSample(sample);
     }
 }

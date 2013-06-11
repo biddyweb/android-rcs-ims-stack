@@ -21,53 +21,23 @@ package com.orangelabs.rcs.core.ims.protocol.rtp;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
-import com.orangelabs.rcs.core.ims.protocol.rtp.stream.MediaCaptureStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpOutputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
-import com.orangelabs.rcs.utils.logger.Logger;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.VideoCaptureStream;
 
 /**
- * Media RTP sender
+ * Video RTP sender
+ *
+ * @author hlxn7157
  */
-public class MediaRtpSender {
-	/**
-	 * Format
-	 */
-	protected Format format;
-
-    /**
-     * Media processor
-     */
-	protected Processor processor = null;
-
-    /**
-     * MediaCaptureStream
-     */
-	protected MediaCaptureStream inputStream = null;
-
-    /**
-     * RTP output stream
-     */
-	protected RtpOutputStream outputStream = null;
-
-    /**
-     * Local RTP port
-     */
-	protected int localRtpPort;
-
-    /**
-     * The logger
-     */
-	protected Logger logger = Logger.getLogger(this.getClass().getName());
-
+public class VideoRtpSender extends MediaRtpSender {
     /**
      * Constructor
      *
      * @param format Media format
      */
-    public MediaRtpSender(Format format, int localRtpPort) {
-    	this.format = format;
-        this.localRtpPort = localRtpPort;
+    public VideoRtpSender(Format format, int localRtpPort) {
+        super(format, localRtpPort);
     }
 
     /**
@@ -82,7 +52,7 @@ public class MediaRtpSender {
             throws RtpException {
     	try {
     		// Create the input stream
-            inputStream = new MediaCaptureStream(format, player);
+            inputStream = new VideoCaptureStream(format, player);
     		inputStream.open();
 			if (logger.isActivated()) {
 				logger.debug("Input stream: " + inputStream.getClass().getName());
@@ -111,36 +81,5 @@ public class MediaRtpSender {
         	}
         	throw new RtpException("Can't prepare resources");
         }
-    }
-
-    /**
-     * Start the RTP session
-     */
-    public void startSession() {
-    	if (logger.isActivated()) {
-    		logger.debug("Start the session");
-    	}
-
-    	// Start the media processor
-		if (processor != null) {
-			processor.startProcessing();
-		}
-    }
-
-    /**
-     * Stop the RTP session
-     */
-    public void stopSession() {
-    	if (logger.isActivated()) {
-    		logger.debug("Stop the session");
-    	}
-
-    	// Stop the media processor
-		if (processor != null) {
-			processor.stopProcessing();
-		}
-
-        if (outputStream != null)
-            outputStream.close();
     }
 }

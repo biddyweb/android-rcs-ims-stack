@@ -141,11 +141,6 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
 	private SipApiService sipApi = new SipApiService(); 
 	
-	/**
-	 * IP call API
-	 */
-	// TODO : add here the VOIPApiService instanciation
-
     /**
      * Account changed broadcast receiver
      */
@@ -160,6 +155,13 @@ public class RcsCoreService extends Service implements CoreListener {
     public void onCreate() {
 		// Set application context
 		AndroidFactory.setApplicationContext(getApplicationContext());
+
+        // Instantiate the settings manager
+        RcsSettings.createInstance(getApplicationContext());
+
+        // Set the logger properties
+		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
+		Logger.traceLevel = RcsSettings.getInstance().getTraceLevel();
 
 		// Set the terminal version
 		TerminalInfo.setProductVersion(AppUtils.getApplicationVersion(this));
@@ -218,24 +220,6 @@ public class RcsCoreService extends Service implements CoreListener {
 			Intent intent = new Intent(ClientApiIntents.SERVICE_STATUS);
 			intent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STARTING);
 			getApplicationContext().sendBroadcast(intent);
-            
-			// Instantiate the settings manager
-            RcsSettings.createInstance(getApplicationContext());
-            
-            // Set the logger properties
-    		Logger.activationFlag = RcsSettings.getInstance().isTraceActivated();
-    		String traceLevel = RcsSettings.getInstance().getTraceLevel();
-    		if (traceLevel.equalsIgnoreCase("DEBUG")) {
-        		Logger.traceLevel = Logger.DEBUG_LEVEL;    			
-    		} else if (traceLevel.equalsIgnoreCase("INFO")) {
-        		Logger.traceLevel = Logger.INFO_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("WARN")) {
-        		Logger.traceLevel = Logger.WARN_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("ERROR")) {
-        		Logger.traceLevel = Logger.ERROR_LEVEL;
-    		} else if (traceLevel.equalsIgnoreCase("FATAL")) {
-        		Logger.traceLevel = Logger.FATAL_LEVEL;
-    		}
 
     		// Terminal version
             if (logger.isActivated()) {

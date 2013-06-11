@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * End user profile parameters provisioning
@@ -77,20 +78,20 @@ public class LoggerProvisioning extends Activity {
                 android.R.layout.simple_spinner_item, TRACE_LEVEL);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-        String level = RcsSettings.getInstance().getTraceLevel();
-        if (level.equals(TRACE_LEVEL[0])) {
+        int level = RcsSettings.getInstance().getTraceLevel();
+        if (level == Logger.DEBUG_LEVEL) {
             spinner.setSelection(0);
         } else
-        if (level.equals(TRACE_LEVEL[1])) {
+        if (level == Logger.INFO_LEVEL) {
             spinner.setSelection(1);
         } else
-        if (level.equals(TRACE_LEVEL[2])) {
+        if (level == Logger.WARN_LEVEL) {
             spinner.setSelection(2);
         } else
-        if (level.equals(TRACE_LEVEL[3])) {
+        if (level == Logger.ERROR_LEVEL) {
             spinner.setSelection(3);
         } else
-        if (level.equals(TRACE_LEVEL[4])) {
+        if (level == Logger.FATAL_LEVEL) {
             spinner.setSelection(4);
         }
 	}
@@ -118,7 +119,23 @@ public class LoggerProvisioning extends Activity {
 
 				Spinner spinner = (Spinner)findViewById(R.id.TraceLevel);
 				String value = (String)spinner.getSelectedItem();
-				RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_LEVEL, value);
+		        int level = Logger.ERROR_LEVEL;
+		        if (value.equals(TRACE_LEVEL[0])) {
+		            level = Logger.DEBUG_LEVEL;
+		        } else
+		        if (value.equals(TRACE_LEVEL[1])) {
+		            level = Logger.INFO_LEVEL;
+		        } else
+		        if (value.equals(TRACE_LEVEL[2])) {
+		            level = Logger.WARN_LEVEL;
+		        } else
+		        if (value.equals(TRACE_LEVEL[3])) {
+		            level = Logger.ERROR_LEVEL;
+		        } else
+		        if (value.equals(TRACE_LEVEL[4])) {
+		            level = Logger.FATAL_LEVEL;
+		        }
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_LEVEL, ""+level);
 
 				EditText txt = (EditText)this.findViewById(R.id.SipTraceFile);
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_TRACE_FILE, txt.getText().toString());

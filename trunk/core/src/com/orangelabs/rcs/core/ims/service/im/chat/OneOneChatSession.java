@@ -24,6 +24,7 @@ import java.util.List;
 import javax2.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -35,6 +36,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -58,12 +60,29 @@ public abstract class OneOneChatSession extends ChatSession {
 	 * @param contact Remote contact
 	 */
 	public OneOneChatSession(ImsService parent, String contact) {
-		super(parent, contact);
+		super(parent, contact, OneOneChatSession.generateOneOneParticipants(contact));
 		
-		// Set list of participants
-		ListOfParticipant participants = new ListOfParticipant();
-		participants.addParticipant(contact);
-		setParticipants(participants);		
+		// Set feature tags
+		List<String> tags = new ArrayList<String>(); 
+		tags.add(FeatureTags.FEATURE_OMA_IM);
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
+        }
+        setFeatureTags(tags);
+		
+		// Set accept-types
+		String acceptTypes = CpimMessage.MIME_TYPE;
+		if (!isGroupChat()) {
+			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
+		}
+        setAcceptTypes(acceptTypes);
+				
+		// Set accept-wrapped-types
+		String wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
+        }
+        setWrappedTypes(wrappedTypes);
 	}
 	
 	/**
@@ -76,6 +95,18 @@ public abstract class OneOneChatSession extends ChatSession {
 	}
 	
 	/**
+	 * Generate the list of participants for a 1-1 chat
+	 * 
+	 * @param contact Contact
+	 * @return List of participants
+	 */
+    private static ListOfParticipant generateOneOneParticipants(String contact) {
+    	ListOfParticipant list = new ListOfParticipant();
+    	list.addParticipant(contact);
+		return list;
+	}
+
+    /**
 	 * Returns the list of participants currently connected to the session
 	 * 
 	 * @return List of participants

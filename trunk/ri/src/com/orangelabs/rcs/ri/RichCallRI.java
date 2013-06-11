@@ -29,7 +29,6 @@ import android.widget.ListView;
 import com.orangelabs.rcs.ri.richcall.InitiateGeolocSharing;
 import com.orangelabs.rcs.ri.richcall.InitiateImageSharing;
 import com.orangelabs.rcs.ri.richcall.InitiateOutgoingVisioSharing;
-import com.orangelabs.rcs.ri.richcall.InitiatePrerecordedVideoSharing;
 
 /**
  * Rich call RI
@@ -48,7 +47,6 @@ public class RichCallRI extends ListActivity {
         String[] items = {
     		getString(R.string.menu_initiate_image_sharing),
     		getString(R.string.menu_initiate_video_sharing),
-    		getString(R.string.menu_initiate_prerecorded_video_sharing),
     		getString(R.string.menu_initiate_geoloc_sharing)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
@@ -60,16 +58,12 @@ public class RichCallRI extends ListActivity {
 	        case 0:
             	startActivity(new Intent(this, InitiateImageSharing.class));
                 break;
-                
+
 	        case 1:
 	        	startActivity(new Intent(this, InitiateOutgoingVisioSharing.class));
-                break;            
-                                
+                break;
+
 	        case 2:
-	        	startActivity(new Intent(this, InitiatePrerecordedVideoSharing.class));
-	            break;
-	            
-	        case 3:
             	startActivity(new Intent(this, InitiateGeolocSharing.class));
                 break;
         }
