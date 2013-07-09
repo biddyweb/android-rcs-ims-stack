@@ -22,14 +22,14 @@
 	<ContactsDataKind android:icon="@drawable/rcs_core_chat_icon"
         android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.im-session"
         android:summaryColumn="data2" android:detailColumn="data3"
-        android:detailSocialSummary="false" />
+        android:detailSocialSummary="true" />
 	<ContactsDataKind android:icon="@drawable/rcs_core_ft_icon"
         android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer"
         android:summaryColumn="data2" android:detailColumn="data3"
-        android:detailSocialSummary="false" />
+        android:detailSocialSummary="true" />
 	<ContactsDataKind android:icon="@drawable/rcs_core_extension_icon"
         android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.support.extension"
         android:summaryColumn="data2" android:detailColumn="data3"
-        android:detailSocialSummary="false" />        
+        android:detailSocialSummary="true" />        
 </ContactsSource>
 

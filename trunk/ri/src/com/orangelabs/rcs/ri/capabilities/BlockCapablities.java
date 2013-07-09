@@ -146,7 +146,7 @@ public class BlockCapablities extends ListActivity implements OnItemClickListene
 						break;
 					case 1:  
 						contact.blockedCapabilities[1]=isChecked;
-						break;
+						break;				
 				}
 			}
 		});

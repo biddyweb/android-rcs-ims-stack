@@ -71,6 +71,11 @@ public class Utils {
 	public static int NOTIF_ID_VIDEO_SHARE = 1003; 
 
 	/**
+	 * Notification ID for IPcall
+	 */
+	public static int NOTIF_ID_IPCALL = 1004; 
+	
+	/**
 	 * Notification ID for location share
 	 */
 	public static int NOTIF_ID_LOCATION_SHARE = 1004; 

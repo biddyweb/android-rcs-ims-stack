@@ -81,6 +81,10 @@ public class MediaRtpSender {
     public void prepareSession(MediaInput player, String remoteAddress, int remotePort, RtpStreamListener rtpStreamListener)
             throws RtpException {
     	try {
+			if (logger.isActivated()) {
+				logger.debug("Prepare session");
+			}
+			
     		// Create the input stream
             inputStream = new MediaCaptureStream(format, player);
     		inputStream.open();
@@ -100,6 +104,9 @@ public class MediaRtpSender {
         	Codec[] codecChain = MediaRegistry.generateEncodingCodecChain(format.getCodec());
 
             // Create the media processor
+			if (logger.isActivated()) {
+				logger.debug("New processor");
+			}
     		processor = new Processor(inputStream, outputStream, codecChain);
 
         	if (logger.isActivated()) {

@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.concurrent.TimeoutException;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.RtpUtils;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpPacketTransmitter;
 import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtcpSession;
@@ -31,7 +32,6 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.core.RtpPacketReceiver;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.util.Buffer;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -99,7 +99,7 @@ public class RtpInputStream implements ProcessorInputStream {
     /**
      * The negotiated orientation extension header id
      */
-    private int extensionHeaderId = VideoSdpBuilder.DEFAULT_EXTENSION_ID;
+    private int extensionHeaderId = RtpUtils.RTP_DEFAULT_EXTENSION_ID;
 
     /**
      * Indicates if the stream was closed

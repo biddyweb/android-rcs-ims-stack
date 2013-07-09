@@ -53,7 +53,9 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -301,6 +303,7 @@ public class InstantMessagingService extends ImsService {
 		// Select default protocol
 		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
 		boolean isHttpProtocol = false;
+		
 		if (isFToHttpSupportedByRemote && myCapability.isFileTransferHttpSupported()) {
 			if (RcsSettings.getInstance().getFtProtocol().equals(RcsSettingsData.FT_PROTOCOL_HTTP)) {
 				isHttpProtocol = true;
@@ -793,4 +796,61 @@ public class InstantMessagingService extends ImsService {
 		// Create a new session
     	getStoreAndForwardManager().receiveStoredNotifications(invite);
     }
+
+    /**
+     * Receive HTTP file transfer
+     *
+     * @param invite Received invite
+     * @param ftinfo File transfer info document
+     */
+	public void receiveHttpFileTranfer(SipRequest invite, FileTransferHttpInfoDocument ftinfo) {
+		if (logger.isActivated()){
+			logger.info("Receive a http file transfer invitation");
+		}
+
+		// Test if the contact is blocked
+		String remote = ChatUtils.getReferredIdentity(invite);
+	    if (ContactsManager.getInstance().isFtBlockedForContact(remote)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + remote + " is blocked, automatically reject the HTTP File transfer");
+			}
+
+            // TODO : reject (SIP MESSAGE ?)
+			return;
+	    }
+
+		// Test number of sessions
+		if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
+			if (logger.isActivated()) {
+				logger.debug("The max number of FT sessions is achieved, reject the HTTP File transfer");
+			}
+
+            // TODO : reject (SIP MESSAGE ?)
+			return;
+		}
+
+        // Auto reject if file too big
+        int maxSize = FileSharingSession.getMaxFileSharingSize();
+        if (maxSize > 0 && ftinfo.getFileSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("File is too big, reject the HTTP File transfer");
+            }
+
+            // TODO : reject (SIP MESSAGE ?)
+            return;
+        }
+
+		// Create a new session
+        TerminatingHttpFileSharingSession session = new TerminatingHttpFileSharingSession(this,
+                invite, ftinfo);
+
+       // Start the session
+        session.startSession();
+
+        // Notify listener
+        getImsModule().getCore().getListener().handleFileTransferInvitation(session);
+
+        // Chat session can be directly closed
+        sendErrorResponse(invite, 486);
+	}
 }

@@ -69,39 +69,69 @@ public class HttpAuthenticationAgent {
 	 * @throws CoreException
 	 */
 	public String generateAuthorizationHeader(String method, String requestUri, String body) throws CoreException {
+   		// Build the Authorization header
+		String auth = "Authorization: "+generateAuthorizationHeaderValue(method, requestUri, body);
+		return auth;
+    }
+	
+	/**
+	 * Generate the authorization header value
+	 * 
+	 * @param method Method used
+	 * @param requestUri Request Uri
+	 * @param body Entity body
+	 * @return authorizationHeader Authorization header value
+	 * @throws CoreException
+	 */
+	public String generateAuthorizationHeaderValue(String method, String requestUri, String body) throws CoreException {
 		try {
-	   		// Update nonce parameters
-			digest.updateNonceParameters();
+			digest.updateNonceParameters();	
 			
-			// Calculate response
-	   		String response = digest.calculateResponse(serverLogin, serverPwd,
-	   				method,
-	   				requestUri,
-					digest.buildNonceCounter(),
-					body);				
-
+			
 	   		// Build the Authorization header
-			String auth = "Authorization: Digest username=\"" + serverLogin + "\"" +
+	   		String authValue = "Digest username=\"" + serverLogin + "\"" +
 					",realm=\"" + digest.getRealm() + "\"" +
 					",nonce=\"" + digest.getNonce() + "\"" +
-					",uri=\"" + requestUri + "\"";
+					",uri=\"" + requestUri + "\""+
+					",nc=" + digest.buildNonceCounter() +
+					",cnonce=\"" + digest.getCnonce() + "\"";
+	   		
 			String opaque = digest.getOpaque();
 			if (opaque != null) {
-				auth += ",opaque=\"" + opaque + "\"";
+				authValue += ",opaque=\"" + opaque + "\"";
 			}
+			
+			String response = "";
+			
 			String qop = digest.getQop();
 			if ((qop != null) && qop.startsWith("auth")) {	
-				auth += ",qop=\"" + qop + "\"" +
-						",nc=" + digest.buildNonceCounter() +						
-						",cnonce=\"" + digest.getCnonce() + "\""+
-						",response=\"" + response + "\"";
+				authValue += ",qop=\"" + qop + "\"";
+
+				// Calculate response
+		   		response = digest.calculateResponse(serverLogin, serverPwd,
+		   				method,
+		   				requestUri,
+						digest.buildNonceCounter(),
+						body);	
+			}		
+			else 
+			{
+				// Calculate response
+		   		response = digest.calculateResponse(serverLogin, serverPwd,
+		   				method,
+		   				requestUri,
+						digest.buildNonceCounter(),
+						"");	
 			}
-			return auth;
+			authValue += ",response=\"" + response + "\"";
+			
+			return authValue;
+			
 		} catch(Exception e) {
 			if (logger.isActivated()) {
-				logger.error("Can't create the authorization header", e);
+				logger.error("Can't create the authorization value", e);
 			}
-			throw new CoreException("Can't create the authorization header");
+			throw new CoreException("Can't create the authorization value");
 		}
     }
 
@@ -110,51 +140,51 @@ public class HttpAuthenticationAgent {
 	 * 
 	 * @param header WWW-Authenticate header
 	 */
-	public void readWwwAuthenticateHeader(String header) {		
-		if (header != null) {
-	   		// Get domain name
-			String value = null;
-			int end = -1;
-			int begin = header.toLowerCase().indexOf("realm=\"");
-			if (begin != -1) {
-				begin += 7;
-				end = header.indexOf("\"", begin);
-				value = header.substring(begin, end);
-			}			
-			digest.setRealm(value);
+	public void readWwwAuthenticateHeader(String header) {
+        if (header != null) {
+            // Get domain name
+            String value = getValue(header, "realm");
+            digest.setRealm(value);
 
-	   		// Get opaque parameter
-			value = null;
-			end = -1;
-			begin = header.toLowerCase().indexOf("opaque=\"");
-			if (begin != -1) {
-				begin += 8;
-				end = header.indexOf("\"", begin);
-				value = header.substring(begin, end);
-			}			
-			digest.setOpaque(value);
+            // Get opaque parameter
+            value = getValue(header, "opaque");
+            digest.setOpaque(value);
 
-			// Get qop
-			value = null;
-			end = -1;
-			begin = header.toLowerCase().indexOf("qop=\"");
-			if (begin != -1) {
-				begin += 5;
-				end = header.indexOf("\"", begin);
-				value = header.substring(begin, end);
-			}			
-			digest.setQop(value);
+            // Get qop
+            value = getValue(header, "qop");
+            digest.setQop(value);
 
-			// Get nonce to be used
-			value = null;
-			end = -1;
-			begin = header.toLowerCase().indexOf("nonce=\"");
-			if (begin != -1) {
-				begin += 7;
-				end = header.indexOf("\"", begin);
-				value = header.substring(begin, end);
-			}			
-			digest.setNextnonce(value);
-		}
+            // Get nonce to be used
+            value = getValue(header, "nonce");
+            digest.setNextnonce(value);
+        }
 	}
+
+    /**
+     * Get the value of key in header
+     *
+     * @param header
+     * @param key
+     * @return value
+     */
+    private String getValue(String header, String key) {
+        String value = null;
+        int end = -1;
+        int begin = header.toLowerCase().indexOf(key + "=\"");
+        if (begin != -1) {
+            begin += key.length() + 2;
+            end = header.indexOf("\"", begin);
+            if (end == -1) end = header.length();
+            value = header.substring(begin, end);
+        } else {
+            begin = header.toLowerCase().indexOf(key + "=");
+            if (begin != -1) {
+                begin += key.length() + 1;
+                end = header.indexOf(",", begin);
+                if (end == -1) end = header.length();
+                value = header.substring(begin, end);
+            }
+        }
+        return value;
+    }
 }

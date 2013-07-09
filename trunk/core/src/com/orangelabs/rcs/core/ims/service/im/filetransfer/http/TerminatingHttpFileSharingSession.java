@@ -19,9 +19,10 @@
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -46,17 +47,22 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 
     /**
      * Constructor
-     *
+     * 
      * @param parent IMS service
-     * @param session Chat session
+     * @param invite initial INVITE
      * @param fileTransferInfo File transfer info
      */
-    public TerminatingHttpFileSharingSession(ImsService parent, ChatSession session, FileTransferHttpInfoDocument fileTransferInfo) {
-        super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(), fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()),
-        		session.getRemoteContact(), null);
-        
-		// Instanciate the download manager
-		downloadManager = new HttpDownloadManager(getContent(), this);
+    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite,
+            FileTransferHttpInfoDocument fileTransferInfo) {
+        super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(),
+                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), SipUtils
+                .getAssertedIdentity(invite), null);
+
+        // Create dialog path
+        createTerminatingDialogPath(invite);
+
+		// Instantiate the download manager
+		downloadManager = new HttpDownloadManager(getContent(), this, fileTransferInfo.getFilename());
 		// TODO: download thumbnail here?
     }
 
@@ -137,10 +143,13 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 					logger.debug("Download file with success");
 				}
 
-		    	// Notify listeners
-		    	for(int j=0; j < getListeners().size(); j++) {
-		    		((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
-		        }
+                // Set file path
+                getContent().setUrl(downloadManager.getFilePath());
+
+                // File transfered
+                handleFileTransfered();
+
+                // TODO Send SIP MESSAGE transfered
 
 			} else {
 				if (logger.isActivated()){
@@ -148,7 +157,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 				}
 				
                 // Upload error
-    			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));				
+    			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 			}
         
         } catch(Exception e) {
@@ -157,20 +166,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
         	}
         	
         	// Unexpected error
-			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));        	
+			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
-
-    /**
-     * HTTP transfer progress
-     *
-     * @param currentSize Current transfered size in bytes
-     * @param totalSize Total size in bytes
-     */
-    public void httpTransferProgress(long currentSize, long totalSize) {
-        // Notify listeners
-        for(int j = 0; j < getListeners().size(); j++) {
-            ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
-        }
-    }
 }

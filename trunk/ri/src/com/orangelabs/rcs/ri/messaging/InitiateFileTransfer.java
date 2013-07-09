@@ -427,6 +427,11 @@ public class InitiateFileTransfer extends Activity {
     			public void run() {
 					// Display transfer progress
     				updateProgressBar(currentSize, totalSize);
+
+                    if (currentSize >= totalSize) {
+                        TextView statusView = (TextView)findViewById(R.id.progress_status);
+                        statusView.setText("uploaded");
+                    }
     			}
     		});
 		}

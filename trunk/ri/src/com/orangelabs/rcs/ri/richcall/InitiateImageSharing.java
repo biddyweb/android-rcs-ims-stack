@@ -48,6 +48,7 @@ import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
+import com.orangelabs.rcs.ri.ipcall.IPCallSessionActivity;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
@@ -112,6 +113,8 @@ public class InitiateImageSharing extends Activity {
         selectBtn.setOnClickListener(btnSelectListener);
         Button dialBtn = (Button)findViewById(R.id.dial_btn);
         dialBtn.setOnClickListener(btnDialListener);
+        Button ipDialBtn = (Button)findViewById(R.id.dial_ip_btn);
+        ipDialBtn.setOnClickListener(btnIpDialListener);
 
         // Disable button if no contact available
         if (spinner.getAdapter().getCount() == 0) {
@@ -163,6 +166,27 @@ public class InitiateImageSharing extends Activity {
         }
     };
 
+    /**
+     * IP dial button listener
+     */
+    private OnClickListener btnIpDialListener = new OnClickListener() {
+        public void onClick(View v) {
+        	// Get the remote contact
+            Spinner spinner = (Spinner)findViewById(R.id.contact);
+            MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
+            String remote = cursor.getString(1);
+
+            // Initiate an IP call before to be able to share content
+            Intent intent = new Intent(getApplicationContext(), IPCallSessionActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("contact", remote);
+            intent.putExtra("media", "audio");
+            intent.setAction("outgoing");
+            startActivity(intent);
+        }
+    };
+
+    
     /**
      * Invite button listener
      */

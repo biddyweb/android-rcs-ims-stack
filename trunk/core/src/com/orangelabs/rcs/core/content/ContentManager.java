@@ -147,6 +147,16 @@ public class ContentManager{
 	public static LiveVideoContent createLiveVideoContent(String codec) {
 		return new LiveVideoContent("video/"+codec);
 	}
+	
+    /**
+     * Create a live audio content object
+     * 
+     * @param codec Codec
+     * @return Content instance
+     */
+	public static LiveAudioContent createLiveAudioContent(String codec) {
+		return new LiveAudioContent("audio/"+codec);
+	}
 
     /**
      * Create a generic live video content object
@@ -155,6 +165,15 @@ public class ContentManager{
      */
     public static LiveVideoContent createGenericLiveVideoContent() {
         return new LiveVideoContent("video/*");
+    }
+    
+    /**
+     * Create a generic live audio content object
+     * 
+     * @return Content instance
+     */
+    public static LiveAudioContent createGenericLiveAudioContent() {
+        return new LiveAudioContent("audio/*");
     }
 
 	/**
@@ -167,7 +186,24 @@ public class ContentManager{
 		 // Parse the remote SDP part
         SdpParser parser = new SdpParser(sdp);
     	Vector<MediaDescription> media = parser.getMediaDescriptions();
-		MediaDescription desc = media.elementAt(0);
+    	if (media.size()==0) { // there is no media in SDP
+    		return null;
+    	}
+    	MediaDescription desc = media.elementAt(0);
+    	if (media.size()==1) { // if only one media in SDP, test if 'video', if not then return null 		
+    		if (!desc.name.equals("video")) {
+    			return null;
+    		}	
+    	}	
+    	if (media.size()==2) { // if two media in SDP, test if first 'video', if not then choose second and test if video, if not return null
+    		if (!desc.name.equals("video")) {
+    			desc = media.elementAt(1);
+    			if (!desc.name.equals("video")) {
+    				return null;
+    			}
+    		}	
+    	}		
+	
         String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
 
         // Extract the video encoding
@@ -178,6 +214,48 @@ public class ContentManager{
 			codec = encoding.substring(0, index);
         }
 		return createLiveVideoContent(codec);
+	}
+	
+	/**
+     * Create a live audio content object
+     * 
+     * @param sdp SDP part
+     * @return Content instance
+     */
+	public static LiveAudioContent createLiveAudioContentFromSdp(byte[] sdp) {
+		 // Parse the remote SDP part
+        SdpParser parser = new SdpParser(sdp);
+    	Vector<MediaDescription> media = parser.getMediaDescriptions(); // TODO replace with getMediaDescriptions(audio)
+    	if (media.size()==0) {
+    		return null;
+    	}
+		MediaDescription desc = media.elementAt(0);
+    	if (media.size()==1) { // if only one media in SDP, test if 'audio', if not then return null 		
+    		if (!desc.name.equals("audio")) {
+    			return null;
+    		}	
+    	}	
+    	if (media.size()==2) { // if two media in SDP, test if first 'audio', if not then choose second and test if 'audio', if not return null
+    		if (!desc.name.equals("audio")) {
+    			desc = media.elementAt(1);
+    			if (!desc.name.equals("audio")) {
+    				return null;
+    			}
+    		}	
+    	}	
+		if (!desc.name.equals("audio")) {
+			return null;
+		}	
+        String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
+
+        // Extract the audio encoding
+        String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
+        String codec = encoding.toLowerCase().trim();        
+        int index = encoding.indexOf("/");
+		if (index != -1) {
+			codec = encoding.substring(0, index);
+        }
+		return createLiveAudioContent(codec);
 	}
 
 	/**

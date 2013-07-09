@@ -40,6 +40,16 @@ public class Capabilities implements Parcelable {
 	private boolean videoSharing = false;
 	
 	/**
+	 * IP voice call support
+	 */
+	private boolean ipVoiceCall = false;
+	
+	/**
+	 * IP video call support
+	 */
+	private boolean ipVideoCall = false;
+	
+	/**
 	 * IM session support
 	 */
 	private boolean imSession = false;
@@ -113,6 +123,8 @@ public class Capabilities implements Parcelable {
 	public Capabilities(Parcel source) {
 		this.imageSharing = source.readInt() != 0;
 		this.videoSharing = source.readInt() != 0;
+		this.ipVoiceCall = source.readInt() != 0;	
+		this.ipVideoCall = source.readInt() != 0;
 		this.imSession = source.readInt() != 0;
 		this.fileTransfer = source.readInt() != 0;
 		this.csVideo = source.readInt() != 0;
@@ -146,6 +158,8 @@ public class Capabilities implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
     	dest.writeInt(imageSharing ? 1 : 0);
     	dest.writeInt(videoSharing ? 1 : 0);
+    	dest.writeInt(ipVoiceCall ? 1 : 0);    
+    	dest.writeInt(ipVideoCall ? 1 : 0);  
     	dest.writeInt(imSession ? 1 : 0);
     	dest.writeInt(fileTransfer ? 1 : 0);
     	dest.writeInt(csVideo ? 1 : 0);
@@ -212,6 +226,42 @@ public class Capabilities implements Parcelable {
 		this.videoSharing = supported;
 	}
 
+	/**
+	 * Is IP voice call supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isIPVoiceCallSupported() {
+		return ipVoiceCall;
+	}
+
+	/**
+	 * Is IP video call supported
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isIPVideoCallSupported() {
+		return ipVideoCall;
+	}
+
+	/**
+	 * Set the IP voice call support
+	 * 
+	 * @param supported Supported 
+	 */
+	public void setIPVoiceCallSupport(boolean supported) {
+		this.ipVoiceCall = supported;
+	}
+	
+	/**
+	 * Set the IP video call support
+	 * 
+	 * @param supported Supported 
+	 */
+	public void setIPVideoCallSupport(boolean supported) {
+		this.ipVideoCall = supported;
+	}
+	
 	/**
 	 * Is IM session supported
 	 * 
@@ -436,14 +486,16 @@ public class Capabilities implements Parcelable {
 	public String toString() {
 		return "Image_share=" + imageSharing +
 			", Video_share=" + videoSharing +
-			", FT=" + fileTransfer +
-			", IM=" + imSession +
+			", IP_voice_call=" + ipVoiceCall +
+			", IP_video_call=" + ipVideoCall +			
+			", File_transfer=" + fileTransfer +
+			", Chat=" + imSession +
 			", CS_video=" + csVideo +
 			", Presence_discovery=" + presenceDiscovery +
 			", Social_presence=" + socialPresence +
-            ", FToHttp=" + fileTransferHttp +
-            ", GeolocationPush=" + geolocationPush +
-            ", FT_Thumbnail=" + fileTransferThumbnail +
+            ", FT_http=" + fileTransferHttp +
+            ", Geolocation_push=" + geolocationPush +
+            ", FT_thumbnail=" + fileTransferThumbnail +
 			", Timestamp=" + timestamp;
 	}
 }

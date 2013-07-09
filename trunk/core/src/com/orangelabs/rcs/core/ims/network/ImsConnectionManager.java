@@ -474,7 +474,7 @@ public class ImsConnectionManager implements Runnable {
 			imsPollingThread.start();
 		} catch(Exception e) {
 			if (logger.isActivated()) {
-				logger.error("Intrenal exception while starting IMS polling thread", e);
+				logger.error("Internal exception while starting IMS polling thread", e);
 			}
 		}
 	}
@@ -500,7 +500,7 @@ public class ImsConnectionManager implements Runnable {
 			imsPollingThread = null;
 		} catch(Exception e) {
 			if (logger.isActivated()) {
-				logger.error("Intrenal exception while stopping IMS polling thread", e);
+				logger.error("Internal exception while stopping IMS polling thread", e);
 			}
 		}
 		
@@ -537,15 +537,21 @@ public class ImsConnectionManager implements Runnable {
 
     				// Try to register to IMS
     	    		if (currentNetworkInterface.register()) {
-    	            	if (logger.isActivated()) {
-    	            		logger.debug("Registered to the IMS with success: start IMS services");
-    	            	}
-    	            	
-    	            	// Start IMS services
-        	        	imsModule.startImsServices();
-        	        	
-        	        	// Reset number of failures
-        	        	nbFailures = 0;
+                        // InterruptedException thrown by stopImsConnection() may be caught by one
+                        // of the methods used in currentNetworkInterface.register() above
+                        if (imsPollingThreadID != Thread.currentThread().getId()) {
+                            logger.debug("IMS connection polling thread race condition");
+                            break;
+                        } else {
+                            if (logger.isActivated()) {
+                                logger.debug("Registered to the IMS with success: start IMS services");
+                            }
+                            // Start IMS services
+                            imsModule.startImsServices();
+    
+                            // Reset number of failures
+                            nbFailures = 0;
+                        }
     	    		} else {
     	            	if (logger.isActivated()) {
     	            		logger.debug("Can't register to the IMS");
@@ -560,7 +566,7 @@ public class ImsConnectionManager implements Runnable {
     	        	}
     	        	imsModule.checkImsServices();
     			}
-			} catch(Exception e) {
+            } catch (Exception e) {
 				if (logger.isActivated()) {
 		    		logger.error("Internal exception", e);
 		    	}

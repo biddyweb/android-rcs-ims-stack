@@ -44,6 +44,11 @@ public class ImsSessionBasedServiceError extends ImsServiceError {
 	 * Error code base for SIP generic service
 	 */
 	protected static final int SIP_ERROR_CODES = SESSION_ERROR_CODES + 40;
+	
+	/**
+	 * Error code base for IP call service
+	 */
+	protected static final int IPCALL_ERROR_CODES = SESSION_ERROR_CODES + 50;
 
 	/**
 	 * Session initiation has failed (e.g. 408 timeout)

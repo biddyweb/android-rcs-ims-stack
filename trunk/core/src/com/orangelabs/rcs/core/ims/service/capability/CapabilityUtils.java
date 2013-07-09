@@ -56,9 +56,10 @@ public class CapabilityUtils {
 	 * Get supported feature tags for capability exchange
 	 *
 	 * @param richcall Rich call supported
+	 * @param ipcall IP call supported
 	 * @return List of tags
 	 */
-	public static List<String> getSupportedFeatureTags(boolean richcall) {
+	public static List<String> getSupportedFeatureTags(boolean richcall, boolean ipcall) {
 		List<String> tags = new ArrayList<String>();
 
 		// Video share support
@@ -85,7 +86,7 @@ public class CapabilityUtils {
 		}
 
 		// Image share support
-		if (RcsSettings.getInstance().isImageSharingSupported() && richcall && isFileStorageAvailable()) {
+		if (RcsSettings.getInstance().isImageSharingSupported() && (richcall || ipcall) && isFileStorageAvailable()) {
 			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
 		}
 
@@ -147,6 +148,9 @@ public class CapabilityUtils {
     	// Analyze feature tags
     	Capabilities capabilities = new Capabilities(); 
     	ArrayList<String> tags = msg.getFeatureTags();
+		boolean iPCall_RCSE = false;
+		boolean iPCall_3GPP = false;
+		
     	for(int i=0; i < tags.size(); i++) {
     		String tag = tags.get(i);
     		if (tag.contains(FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
@@ -190,6 +194,25 @@ public class CapabilityUtils {
     			// Support file transfer thumbnail service
     			capabilities.setFileTransferThumbnailSupport(true);
     		} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)) {
+        		// Support IP Call
+        		if (iPCall_3GPP) {
+        			capabilities.setIPVoiceCallSupport(true);
+        		} else {
+        			iPCall_RCSE = true;
+        		}
+        	} else
+        	if (tag.contains(FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)) {
+        		// Support IP Call
+        		if (iPCall_RCSE) {
+        			capabilities.setIPVoiceCallSupport(true);
+        		} else {
+        			iPCall_3GPP = true;
+        		}
+        	} else
+        	if (tag.contains(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
+            	capabilities.setIPVideoCallSupport(true);
+            } else
         	if (tag.contains(FeatureTags.FEATURE_RCSE_FT_SF)) {
         		// Support FT S&F service
         		capabilities.setFileTransferStoreForwardSupport(true);

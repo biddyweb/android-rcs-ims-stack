@@ -103,7 +103,8 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Update session manager
 	 */
-	private UpdateSessionManager updateMgr = new UpdateSessionManager(this);
+	//private UpdateSessionManager updateMgr = new UpdateSessionManager(this);
+	protected UpdateSessionManager updateMgr;
 	
     /**
      * Ringing period (in seconds)
@@ -130,6 +131,7 @@ public abstract class ImsServiceSession extends Thread {
         this.imsService = imsService;
 		this.contact = contact;
 		this.authenticationAgent = new SessionAuthenticationAgent(imsService.getImsModule());
+		this.updateMgr = new UpdateSessionManager(this);
 	}
 
 	/**
@@ -242,6 +244,15 @@ public abstract class ImsServiceSession extends Thread {
 	 */
 	public SessionTimerManager getSessionTimerManager() {
 		return sessionTimer;
+	}
+	
+	/**
+	 * Get the update session manager
+	 * 
+	 * @return UpdateSessionManager
+	 */
+	public UpdateSessionManager getUpdateSessionManager() {
+		return updateMgr;
 	}
 
     /**
@@ -426,7 +437,7 @@ public abstract class ImsServiceSession extends Thread {
 	 */
 	public void abortSession(int reason) {
     	if (logger.isActivated()) {
-    		logger.info("Abort the session");
+    		logger.info("Abort the session " + reason);
     	}
     	
     	// Interrupt the session
@@ -592,13 +603,14 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param reInvite re-INVITE request
 	 */
 	public void receiveReInvite(SipRequest reInvite) {
-		if (reInvite.getContent() == null) {
-			// Keep alive
-			sessionTimer.receiveReInvite(reInvite);
-		} else {
-			// Update session
-			updateMgr.receiveReInvite(reInvite);
-		}
+//		if (reInvite.getContent() == null) {
+//			// Keep alive
+//			sessionTimer.receiveReInvite(reInvite);
+//		} else {
+//			// Update session
+//			updateMgr.receiveReInvite(reInvite);
+//		}
+		sessionTimer.receiveReInvite(reInvite);
 	}
 
 	/**
@@ -840,8 +852,12 @@ public abstract class ImsServiceSession extends Thread {
                 // 422 Session Interval Too Small
                 handle422SessionTooSmall(ctx.getSipResponse());
             } else
-            if ((ctx.getStatusCode() == 486) || (ctx.getStatusCode() == 480)) {
-                // 486 busy or 480 Temporarily Unavailable 
+                if (ctx.getStatusCode() == 480) {
+                    // 480 Temporarily Unavailable 
+                    handle480Unavailable(ctx.getSipResponse());
+                } else
+                if (ctx.getStatusCode() == 486) {
+                    // 486 busy  
                 handle486Busy(ctx.getSipResponse());
             } else
             if (ctx.getStatusCode() == 487) {
@@ -1056,6 +1072,15 @@ public abstract class ImsServiceSession extends Thread {
                     e.getMessage()));
         }
     }
+    
+    /**
+     * Handle 480 Temporarily Unavailable
+     *
+     * @param resp 480 response
+     */
+    public void handle480Unavailable(SipResponse resp) {
+        handleDefaultError(resp);
+    }
 
     /**
      * Handle 486 Busy
@@ -1092,4 +1117,38 @@ public abstract class ImsServiceSession extends Thread {
      * @param error ImsServiceError
      */
     public abstract void handleError(ImsServiceError error);
+    
+    /**
+     * Handle ReInvite Response
+     *
+     * @param response Sip response to reInvite
+     * @param int code response code
+     * @param reInvite reInvite SIP request
+     */
+    public void handleReInviteResponse(int  code, SipResponse response, int requestType) {   	
+    }
+    
+    /**
+     * Handle ACK sent in Response to 200Ok ReInvite 
+     *
+     * @param int code response code
+     * @param reInvite reInvite SIP request
+     */
+    public void handle200OkReInviteResponse(int  code, int requestType) {   	
+    }
+    
+    /**
+     * Handle 407 Proxy Authent error ReInvite Response
+     *
+     * @param response reInvite SIP response
+     * @param int requestType  service context of reInvite 
+     */
+    public void handleReInvite407ProxyAuthent(SipResponse response, int serviceContext){	
+    }
+ 
+    
+    public String buildReInviteSdpResponse(SipRequest ReInvite, int serviceContext){
+    	return null;
+    }
+    
 }

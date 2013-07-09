@@ -998,8 +998,10 @@ public class SipMessageFactory {
 	        }
 
 	        // Set Subject header
-			Header sub = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
-			refer.addHeader(sub);
+            if (subject != null) {
+                Header sub = SipUtils.HEADER_FACTORY.createHeader(Subject.NAME, subject);
+                refer.addHeader(sub);
+            }
 
 			// Set Contribution-ID header
 			Header cid = SipUtils.HEADER_FACTORY.createHeader(ChatUtils.HEADER_CONTRIBUTION_ID, contributionId);
@@ -1172,6 +1174,109 @@ public class SipMessageFactory {
             throw new SipException("Can't create SIP RE-INVITE message");
         }
     }
+    
+    /**
+     * Create a SIP RE-INVITE request with content using initial Invite request 
+     *
+     * @param dialog Dialog path SIP request
+     * @param featureTags featureTags to set in request
+     * @param content sdp content
+     * @return SIP request
+     * @throws SipException
+     */
+    public static SipRequest createReInvite(SipDialogPath dialog, String[] featureTags, String content) throws SipException { 	
+    	if (logger.isActivated()) {
+            logger.info("createReInvite()");  
+           
+        }
+    	try {
+
+            // Build the request
+    		Request reInvite = dialog.getStackDialog().createRequest(Request.INVITE);          
+           
+    		// get first Invite
+            SipRequest firstInvite = dialog.getInvite();
+            
+           	// Set the CSeq header
+	        CSeqHeader cseqHeader = SipUtils.HEADER_FACTORY.createCSeqHeader(dialog.getCseq(), Request.INVITE); 
+            reInvite.removeHeader(CSeqHeader.NAME);
+            reInvite.addHeader(cseqHeader);
+            
+            // Set Contact header
+            reInvite.removeHeader(ContactHeader.NAME);
+            reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
+	        reInvite.addHeader(dialog.getSipStack().getContact());
+	        
+	        // Set feature tags
+	        SipUtils.setFeatureTags(reInvite, featureTags);
+            
+            // Add remote SIP instance ID
+            SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
+                       
+            // Set Allow header
+            SipUtils.buildAllowHeader(reInvite);    
+            
+            // Set the Route header
+            if (firstInvite.getHeader(RouteHeader.NAME) != null){
+            	reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
+            }
+            else {
+            	Vector<String> route = dialog.getRoute();
+    	        for(int i=0; i < route.size(); i++) {
+    	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
+    	        	reInvite.addHeader(routeHeader);
+    	        }
+            }        
+	        
+                        
+            // Set the P-Preferred-Identity header
+            if (firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY) != null){
+            	reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY));
+            }
+            else if (ImsModule.IMS_USER_PROFILE.getPreferredUri() != null) {
+	        	Header prefHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY, ImsModule.IMS_USER_PROFILE.getPreferredUri());
+	        	reInvite.addHeader(prefHeader);
+	        } 
+	        
+                        
+            // Set User-Agent header
+            reInvite.addHeader(firstInvite.getHeader(UserAgentHeader.NAME));
+	        //reInvite.addHeader(SipUtils.buildUserAgentHeader());
+            
+            // Add session timer management
+            if (dialog.getSessionExpireTime() >= SessionTimerManager.MIN_EXPIRE_PERIOD) {
+                // Set the Supported header
+                Header supportedHeader = SipUtils.HEADER_FACTORY.createHeader(SupportedHeader.NAME, "timer");
+                reInvite.addHeader(supportedHeader);
+                
+                // Set Session-Timer headers
+                Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES,
+                        ""+dialog.getSessionExpireTime());
+                reInvite.addHeader(sessionExpiresHeader);
+            }
+            
+            // Set "rport" (RFC3581)
+            ViaHeader viaHeader = (ViaHeader)reInvite.getHeader(ViaHeader.NAME);
+            viaHeader.setRPort();
+                                 
+            // Create the content type and set content
+            ContentTypeHeader contentType = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "sdp");
+            reInvite.setContent(content, contentType);
+
+     		// Set the content length
+            ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.getBytes().length);
+            reInvite.setContentLength(contentLengthHeader);          
+            return new SipRequest(reInvite);
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't create SIP message", e);
+            }
+            throw new SipException("Can't create SIP RE-INVITE message");
+        }
+
+    	
+    }
+
 
     /**
      * Create a SIP response for RE-INVITE request
@@ -1212,6 +1317,69 @@ public class SipMessageFactory {
             throw new SipException("Can't create SIP response");
         }
     }
+    
+    /**
+     * Create a SIP response for RE-INVITE request
+     *
+     * @param dialog Dialog path SIP request
+     * @param request SIP request
+     * @param featureTags featureTags to set in request
+     * @param content SDP content
+     * @return SIP response
+     * @throws SipException
+     */
+    public static SipResponse create200OkReInviteResponse(SipDialogPath dialog, SipRequest request, String[] featureTags, String content) throws SipException{
+    	try {
+			// Create the response
+			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)request.getStackMessage());
+	
+			// Set the local tag
+			ToHeader to = (ToHeader)response.getHeader(ToHeader.NAME);
+			to.setTag(dialog.getLocalTag());	
+	
+	        // Set Contact header
+	        response.addHeader(dialog.getSipStack().getContact());
+	
+	        // Set feature tags
+	        SipUtils.setFeatureTags(response, featureTags);
+
+            // Set Allow header
+	        SipUtils.buildAllowHeader(response);
+
+	        // Set the Server header
+			response.addHeader(SipUtils.buildServerHeader());
+	
+			// Add session timer management
+			if (dialog.getSessionExpireTime() >= SessionTimerManager.MIN_EXPIRE_PERIOD) {
+				// Set the Require header
+		    	Header requireHeader = SipUtils.HEADER_FACTORY.createHeader(RequireHeader.NAME, "timer");
+				response.addHeader(requireHeader);	
+
+				// Set Session-Timer header
+				Header sessionExpiresHeader = SipUtils.HEADER_FACTORY.createHeader(SipUtils.HEADER_SESSION_EXPIRES,
+						dialog.getSessionExpireTime() + ";refresher=" + dialog.getInvite().getSessionTimerRefresher());
+				response.addHeader(sessionExpiresHeader);
+			}
+			
+	        // Set the message content
+			ContentTypeHeader contentTypeHeader = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "sdp");
+			response.setContent(content, contentTypeHeader);
+
+	        // Set the message content length
+			ContentLengthHeader contentLengthHeader = SipUtils.HEADER_FACTORY.createContentLengthHeader(content.getBytes().length);
+			response.setContentLength(contentLengthHeader);
+			
+			SipResponse resp = new SipResponse(response);
+			resp.setStackTransaction(request.getStackTransaction());
+			return resp;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create SIP message", e);
+			}
+			throw new SipException("Can't create SIP response");
+		}
+    }
+
 
     /**
      * Create a SIP UPDATE request

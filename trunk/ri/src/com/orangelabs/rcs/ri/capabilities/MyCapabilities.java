@@ -86,6 +86,10 @@ public class MyCapabilities extends Activity {
         ftSF.setChecked(capabilities.isFileTransferStoreForwardSupported());
         CheckBox gcSF = (CheckBox)findViewById(R.id.group_chat_sf);
         gcSF.setChecked(capabilities.isGroupChatStoreForwardSupported());
+        CheckBox ipVoiceCall = (CheckBox)findViewById(R.id.ip_voice_call);
+        ipVoiceCall.setChecked(capabilities.isIPVoiceCallSupported());
+        CheckBox ipVideoCall = (CheckBox)findViewById(R.id.ip_video_call);
+        ipVideoCall.setChecked(capabilities.isIPVideoCallSupported());
         
         // Set extensions
         TextView extensions = (TextView)findViewById(R.id.extensions);

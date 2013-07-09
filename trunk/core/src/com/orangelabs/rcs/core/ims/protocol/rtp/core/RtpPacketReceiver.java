@@ -171,6 +171,8 @@ public class RtpPacketReceiver extends Thread {
                             }
                             fifo.addObject(data);
                             lastSeqnum = seqnum;
+                        } else {
+                            stats.numBadRtpPkts++;
                         }
                     }
                 }

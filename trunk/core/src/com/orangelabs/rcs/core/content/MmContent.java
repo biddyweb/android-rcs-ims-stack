@@ -91,6 +91,15 @@ public abstract class MmContent {
 	}
 
     /**
+     * Set the URL
+     * 
+     * @param url URL
+     */
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
      * Returns the content size in bytes
      * 
      * @return Size in bytes

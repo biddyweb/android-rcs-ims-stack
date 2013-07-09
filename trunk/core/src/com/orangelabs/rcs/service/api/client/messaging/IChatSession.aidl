@@ -3,6 +3,7 @@ package com.orangelabs.rcs.service.api.client.messaging;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
+import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 
 /**
  * Chat session interface
@@ -68,8 +69,8 @@ interface IChatSession {
 	// Is file transfer supported
 	boolean isFileTransferSupported();
 
-	// Send file to participants
-	void sendFile(in String filename, in boolean thumbnail);
+	// Send file to group
+	IFileTransferSession sendFile(in String file, in boolean thumbnail);
 
 	// Set is composing status
 	void setIsComposingStatus(in boolean status);

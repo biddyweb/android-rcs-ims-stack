@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 
 import javax2.sip.ListeningPoint;
 
+import org.apache.http.conn.util.InetAddressUtils;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.NAPTRRecord;
@@ -373,9 +374,7 @@ public abstract class ImsNetworkInterface {
 			// Use default port by default
 			int resolvedPort = imsProxyPort;
 
-			// TODO: use DNS only if a domain name is used
-			boolean useDns = true;
-			if (useDns) {
+            if (!InetAddressUtils.isIPv4Address(imsProxyAddr) && !InetAddressUtils.isIPv6Address(imsProxyAddr)) {
 				// Set DNS resolver
 				ResolverConfig.refresh();
 				ExtendedResolver resolver = new ExtendedResolver(); 

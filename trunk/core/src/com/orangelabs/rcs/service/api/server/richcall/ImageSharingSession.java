@@ -375,6 +375,9 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	            }
 	        }
 	        listeners.finishBroadcast();
+			
+			// Remove session from the list
+	        RichCallApiService.removeImageSharingSession(session.getSessionID());
 	    }
     }
 }

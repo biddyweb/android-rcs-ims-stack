@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.provider;
 
+import com.orangelabs.rcs.provider.ipcall.IPCallData;
+import com.orangelabs.rcs.provider.ipcall.IPCallProvider;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.messaging.RichMessagingProvider;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
@@ -70,12 +72,25 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ RichCallData.KEY_STATUS + " integer,"
 				+ RichCallData.KEY_SESSION_ID+ " TEXT);"
 				);
+		
+		db.execSQL("create table " + IPCallProvider.TABLE + " ("
+				+ IPCallData.KEY_ID + " integer primary key, "
+				+ IPCallData.KEY_CONTACT + " TEXT, "
+				+ IPCallData.KEY_EVENT_TYPE + " integer, "
+				+ IPCallData.KEY_AUDIO_MIME_TYPE + " TEXT, "
+				+ IPCallData.KEY_VIDEO_MIME_TYPE + " TEXT, "
+				+ IPCallData.KEY_TIMESTAMP + " long,"
+				+ IPCallData.KEY_NUMBER_MESSAGES + " integer,"
+				+ IPCallData.KEY_STATUS + " integer,"
+				+ IPCallData.KEY_SESSION_ID+ " TEXT);"
+				);
 	}
 	
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
 		db.execSQL("DROP TABLE IF EXISTS " + RichMessagingProvider.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS " + RichCallProvider.TABLE);
+		db.execSQL("DROP TABLE IF EXISTS " + IPCallProvider.TABLE);
 		onCreate(db);
 	}
 	

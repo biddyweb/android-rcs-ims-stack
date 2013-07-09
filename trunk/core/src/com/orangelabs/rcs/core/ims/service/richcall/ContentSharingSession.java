@@ -95,6 +95,6 @@ public abstract class ContentSharingSession extends ImsServiceSession {
 	 * @return String
 	 */
 	public String getFileTransferId() {
-		return "Ft" + IdGenerator.getIdentifier();
+		return "Ft" + IdGenerator.getIdentifier().replace('_', '-');
 	}
 }

@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSess
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.PidfDocument;
 import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
@@ -98,6 +99,13 @@ public interface CoreListener {
      * @param contact Contact
      */
     public void handlePresenceSharingInvitation(String contact);
+    
+    /**
+     * A new IP call invitation has been received
+     * 
+     * @param session IP call session
+     */
+    public void handleIPCallInvitation(IPCallStreamingSession session);
     
     /**
      * A new content sharing transfer invitation has been received

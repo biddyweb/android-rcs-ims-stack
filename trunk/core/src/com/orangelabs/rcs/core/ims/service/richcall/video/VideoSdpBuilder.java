@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.service.richcall.video;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.rtp.RtpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
@@ -32,12 +33,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author Deutsche Telekom
  */
 public class VideoSdpBuilder {
-
-    /**
-     * RTP Extension ID used by the client. The extension ID is a value between
-     * 1 and 15 arbitrarily chosen by the sender, as defined in RFC5285
-     */
-    public static final int DEFAULT_EXTENSION_ID = 9;
 
     /**
      * Extension attribute name, RFC5285
@@ -71,13 +66,19 @@ public class VideoSdpBuilder {
             result.append(" ").append(codec.getPayload());
         }
         result.append(SipUtils.CRLF);
+        int framerate = 0;
+        for (VideoCodec codec : codecs) {
+            if (codec.getFramerate() > framerate) {
+                framerate = codec.getFramerate();
+            }
+        }
+        if (framerate > 0) {
+            result.append("a=framerate:" + framerate + SipUtils.CRLF);
+        }
         for (VideoCodec codec : codecs) {
             result.append("a=rtpmap:" + codec.getPayload() + " " + codec.getCodecName() + "/" + codec.getClockRate() + SipUtils.CRLF);
             if (codec.getWidth() != 0 && codec.getHeight() != 0) {
                 result.append("a=framesize:" + codec.getPayload() + " " + codec.getWidth() + "-" + codec.getHeight() + SipUtils.CRLF);
-            }
-            if (codec.getFramerate() != 0) {
-                result.append("a=framerate:" + codec.getPayload() + " " + codec.getFramerate() + SipUtils.CRLF);
             }
             result.append("a=fmtp:" + codec.getPayload() + " " + codec.getCodecParams() + SipUtils.CRLF);
         }
@@ -95,7 +96,7 @@ public class VideoSdpBuilder {
      */
     public static String buildSdpWithOrientationExtension(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuilder sdp = new StringBuilder(buildSdpWithoutOrientation(supportedCodecs, localRtpPort))
-                .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(DEFAULT_EXTENSION_ID)
+                .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(RtpUtils.RTP_DEFAULT_EXTENSION_ID)
                 .append(" urn:gsma:video-orientation").append(SipUtils.CRLF);
         return sdp.toString();
     }

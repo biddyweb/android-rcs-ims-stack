@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.5"
+ android:versionName="2.5.6"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -20,7 +20,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 	<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-
+	<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	
     <uses-permission android:name="com.orangelabs.rcs.permission.RCS"/>
 
 
@@ -269,7 +271,21 @@
 		<activity android:name=".richcall.VisioSharing" android:launchMode="singleTask"/>
 
         <activity android:name=".richcall.VideoSettings"/>
-
+		 
+		<!-- IP Call RI -->
+        
+        <activity android:name=".IPCallRI"/>
+        
+        <activity android:name=".ipcall.InitiateIPCallActivity"/>
+        
+        <activity android:name=".ipcall.IPCallSessionActivity"/>
+        
+		<receiver android:name=".ipcall.IPCallInvitationReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.ipcall.IPCALL_INVITATION"/>
+            </intent-filter>
+        </receiver>        
+		
 		<!-- Event log RI -->
 		<activity android:name=".eventlog.EventLog">
 			<intent-filter>

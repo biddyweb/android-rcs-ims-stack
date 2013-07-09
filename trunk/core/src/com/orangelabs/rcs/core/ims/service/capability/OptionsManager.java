@@ -104,7 +104,8 @@ public class OptionsManager implements DiscoveryManager {
     	// Start request in background
 		try {
 			boolean richcall = imsModule.getCallManager().isRichcallSupportedWith(contact);
-	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(richcall));
+			boolean ipcall = imsModule.getIPCallService().isCallConnectedWith(contact);
+	    	OptionsRequestTask task = new OptionsRequestTask(imsModule, contact, CapabilityUtils.getSupportedFeatureTags(richcall, ipcall));
 	    	threadPool.submit(task);
 	    	return true;
 		} catch(Exception e) {
@@ -154,7 +155,7 @@ public class OptionsManager implements DiscoveryManager {
 	    	String ipAddress = imsModule.getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		imsModule.getSipManager().getSipStack().getContact(),
-	        		CapabilityUtils.getSupportedFeatureTags(false),
+	        		CapabilityUtils.getSupportedFeatureTags(false, false),
 	        		CapabilityUtils.buildSdp(ipAddress, false));
 
 	        // Send 200 OK response

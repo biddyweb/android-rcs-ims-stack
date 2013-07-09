@@ -370,10 +370,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 */
     public void handleTransferProgress(long currentSize, long totalSize) {
     	synchronized(lock) {
-			if (logger.isActivated()) {
-				logger.debug("Sharing progress");
-			}
-			
 			// Update rich messaging history
 	  		RichMessaging.getInstance().updateFileTransferProgress(session.getSessionID(), currentSize, totalSize);
 			
@@ -417,7 +413,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	            	}
 	            }
 	        }
-	        listeners.finishBroadcast();		
+	        listeners.finishBroadcast();
+			
+			// Remove session from the list
+	        MessagingApiService.removeFileTransferSession(session.getSessionID());			
 	    }	
     }
 }

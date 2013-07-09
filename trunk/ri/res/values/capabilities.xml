@@ -2,7 +2,7 @@
 <resources>
     <string-array name="blocked_capabilities">
 		<item>Instant messaging</item>
-        <item>File transfer</item>
+        <item>File transfer</item>  
     </string-array>
 </resources>
     
