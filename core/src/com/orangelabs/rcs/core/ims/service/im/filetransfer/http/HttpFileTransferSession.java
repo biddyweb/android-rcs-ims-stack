@@ -111,4 +111,34 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     public void closeMediaSession() {
     	// Not used here
     }
+
+    /**
+     * Handle file transfered
+     */
+    public void handleFileTransfered() {
+        // File has been transfered
+        fileTransfered();
+
+        // Remove the current session
+        getImsService().removeSession(this);
+
+        // Notify listeners
+        for (int j = 0; j < getListeners().size(); j++) {
+            ((FileSharingSessionListener) getListeners().get(j))
+                    .handleFileTransfered(getContent().getUrl());
+        }
+    }
+
+    /**
+     * HTTP transfer progress
+     *
+     * @param currentSize Current transfered size in bytes
+     * @param totalSize Total size in bytes
+     */
+    public void httpTransferProgress(long currentSize, long totalSize) {
+        // Notify listeners
+        for(int j=0; j < getListeners().size(); j++) {
+            ((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
+        }
+    }
 }

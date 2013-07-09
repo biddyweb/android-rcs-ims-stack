@@ -1083,6 +1083,8 @@ public class RcsSettings {
 		capabilities.setGeolocationPushSupport(isGeoLocationPushSupported());
 		capabilities.setFileTransferThumbnailSupport(isFileTransferThumbnailSupported());
 		capabilities.setFileTransferStoreForwardSupport(isFileTransferStoreForwardSupported());
+		capabilities.setIPVoiceCallSupport(isIPVoiceCallSupported());
+		capabilities.setIPVideoCallSupport(isIPVideoCallSupported());
 		capabilities.setGroupChatStoreForwardSupport(isGroupChatStoreForwardSupported());
 		capabilities.setTimestamp(System.currentTimeMillis());
 
@@ -1277,7 +1279,22 @@ public class RcsSettings {
 		}
 		return result;
 	}
-
+	
+    /**
+     * Get max number of simultaneous IP call sessions
+     *
+     * @return Number of sessions
+     */
+	public int getMaxIPCallSessions() {
+		int result = 1;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_IP_CALL_SESSIONS));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+	
 	/**
      * Is SMS fallback service activated
      *
@@ -1388,6 +1405,22 @@ public class RcsSettings {
 		}
 		return result;
 	}
+	
+	/**
+	 * Get max number of entries per contact in the ipcall log
+	 * 
+	 * @return Number
+	 */
+	public int getMaxIPCallLogEntriesPerContact() {
+		int result = 200;
+		if (instance != null) {
+			try {
+				result = Integer.parseInt(readParameter(RcsSettingsData.MAX_IPCALL_LOG_ENTRIES));
+			} catch(Exception e) {}
+		}
+		return result;
+	}
+	
 	
     /**
      * Get polling period used before each IMS service check (e.g. test subscription state for presence service)
@@ -1982,6 +2015,33 @@ public class RcsSettings {
 		return result;
 	}
 
+	 /**
+     * Is IPCall (Audio) supported
+     *
+     * @return Boolean
+     */
+	public boolean isIPVoiceCallSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_IP_VOICE_CALL));
+		}
+		return result;
+	}
+	
+	/**
+     * Is IPCall (Video) supported
+     *
+     * @return Boolean
+     */
+	public boolean isIPVideoCallSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_IP_VIDEO_CALL));
+		}
+		return result;
+	}
+	
+	
     /**
      * Is group chat Store & Forward supported
      *

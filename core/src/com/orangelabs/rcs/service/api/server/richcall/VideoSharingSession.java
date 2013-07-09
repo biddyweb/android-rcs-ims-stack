@@ -148,6 +148,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
         if (logger.isActivated()) {
             logger.info("Get media renderer");
         }
+        
         return session.getMediaRenderer();
     }
 
@@ -160,7 +161,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 		if (logger.isActivated()) {
 			logger.info("Set a media renderer");
 		}
-		
+
 		session.setMediaRenderer(renderer);
 	}
 
@@ -173,6 +174,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
         if (logger.isActivated()) {
             logger.info("Get media player");
         }
+        
         return session.getMediaPlayer();
     }
 
@@ -185,6 +187,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
         if (logger.isActivated()) {
             logger.info("Set a media player");
         }
+        
         session.setMediaPlayer(player);
     }
 
@@ -339,12 +342,16 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
     /**
      * The size of media has changed
      *
-     * @param width
-     * @param height
+     * @param width Video width
+     * @param height Video height
      */
     public void handleMediaResized(int width, int height) {
         synchronized(lock) {
-            // Notify event listeners
+			if (logger.isActivated()) {
+				logger.info("Video resized");
+			}
+
+			// Notify event listeners
             final int N = listeners.beginBroadcast();
             for (int i=0; i < N; i++) {
                 try {

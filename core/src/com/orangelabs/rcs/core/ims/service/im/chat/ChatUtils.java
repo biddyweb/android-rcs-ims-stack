@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -35,6 +36,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -48,6 +50,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoParser;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.Base64;
@@ -77,6 +80,51 @@ public class ChatUtils {
 	 */
 	private static final String CRLF = "\r\n";
 
+	/**
+	 * Get supported feature tags for a group chat
+	 *
+	 * @return List of tags
+	 */
+	public static List<String> getSupportedFeatureTagsForGroupChat() {
+		List<String> tags = new ArrayList<String>(); 
+		tags.add(FeatureTags.FEATURE_OMA_IM);
+		
+		String additionalRcseTags = "";
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP;
+        }
+        if (additionalRcseTags.length() > 0) {
+        	if (additionalRcseTags.endsWith(",")) {
+        		additionalRcseTags = additionalRcseTags.substring(0, additionalRcseTags.length()-1);
+        	}
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + additionalRcseTags + "\"");
+        }
+        
+        return tags;
+	}	
+	
+	/**
+	 * Get supported feature tags for a chat
+	 *
+	 * @return List of tags
+	 */
+	public static List<String> getSupportedFeatureTagsForChat() {
+		List<String> tags = new ArrayList<String>(); 
+		tags.add(FeatureTags.FEATURE_OMA_IM);
+		
+		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
+	    	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
+	    }
+		
+	    return tags;
+	}	
+	
 	/**
 	 * Get contribution ID
 	 * 
@@ -575,7 +623,7 @@ public class ChatUtils {
 	
 	/**
 	 * Parse a geoloc document
-	 *  
+	 *
 	 * @param xml XML document
 	 * @return Geoloc info
 	 */
@@ -583,8 +631,8 @@ public class ChatUtils {
 		try {
 		    InputSource geolocInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
 		    GeolocInfoParser geolocParser = new GeolocInfoParser(geolocInput);
-		    GeolocInfoDocument geolocDocument = geolocParser.getGeoLocInfo();		    
-		    if (geolocDocument != null) {			    
+		    GeolocInfoDocument geolocDocument = geolocParser.getGeoLocInfo();
+		    if (geolocDocument != null) {
 			    GeolocPush geoloc = new GeolocPush(geolocDocument.getLabel(),
 			    		geolocDocument.getLatitude(),
 			    		geolocDocument.getLongitude(),
@@ -596,12 +644,12 @@ public class ChatUtils {
 		} catch(Exception e) {
 			return null;
 		}
-	    return null;	    
+	    return null;
 	}
 	
 	/**
 	 * Parse a file transfer over HTTP document
-	 *  
+	 *
 	 * @param xml XML document
 	 * @return File transfer document
 	 */
@@ -843,4 +891,19 @@ public class ChatUtils {
 		}		
 		return null;
     }
+
+    /**
+     * Get the HTTP File tranfer Info Document
+     *
+     * @param request Request
+     * @return FT HTTP info
+     */
+	public static FileTransferHttpInfoDocument getHttpFTInfo(SipRequest request) {
+        InstantMessage message = getFirstMessage(request);
+        if (message != null) {
+            return parseFileTransferHttpDocument(message.getTextMessage());
+        } else {
+            return null;
+        }
+	}
 }

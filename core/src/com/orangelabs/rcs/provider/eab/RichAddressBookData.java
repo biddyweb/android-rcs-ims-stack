@@ -144,6 +144,16 @@ public class RichAddressBookData {
 	/**
 	 * Column name
 	 */
+	static final String KEY_CAPABILITY_IP_VOICE_CALL = "capability_ip_voice_call";
+	
+	/**
+	 * Column name
+	 */
+	static final String KEY_CAPABILITY_IP_VIDEO_CALL = "capability_ip_video_call";
+	
+	/**
+	 * Column name
+	 */
 	static final String KEY_CAPABILITY_IM_SESSION = "capability_im_session";
 	
 	/**

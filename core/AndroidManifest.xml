@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.5"
+ android:versionName="2.5.6"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"
@@ -27,6 +27,7 @@
 	<uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+	<uses-permission android:name="android.permission.RECORD_AUDIO"/>
 	 
 	<uses-permission android:name="com.orangelabs.rcs.permission.RCS"/>	
 	 
@@ -61,6 +62,7 @@
 	            <action android:name="com.orangelabs.rcs.service.api.client.presence.IPresenceApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.messaging.IMessagingApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.richcall.IRichCallApi"/>
+	            <action android:name="com.orangelabs.rcs.service.api.client.ipcall.IIPCallApi"/>
 	            <action android:name="com.orangelabs.rcs.service.api.client.sip.ISipApi"/>
 	        </intent-filter>
 	    </service>
@@ -144,7 +146,12 @@
 			android:writePermission="com.orangelabs.rcs.permission.RCS"
 			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.messaging.RichMessagingProvider"/>
-			
+
+		<provider android:authorities="com.orangelabs.rcs.ipcall"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
+			android:name="com.orangelabs.rcs.provider.ipcall.IPCallProvider"/>	
+
 		<provider android:authorities="com.orangelabs.rcs.csh"
 			android:writePermission="com.orangelabs.rcs.permission.RCS"
 			android:readPermission="com.orangelabs.rcs.permission.RCS"
@@ -230,6 +237,21 @@
  			</intent-filter>  
 		</receiver> 
 
-    </application> 
+        <!-- Local provisioning (only for debug) -->
+   		
+   		<activity android:name=".provisioning.local.Provisioning"
+   		    android:icon="@drawable/rcs_icon" android:label="@string/provisioning_app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".provisioning.local.ProfileProvisioning"/>
+        <activity android:name=".provisioning.local.StackProvisioning"/>
+        <activity android:name=".provisioning.local.ServiceProvisioning"/>
+		<activity android:name=".provisioning.local.LoggerProvisioning"/>
+		
+	</application> 
 
 </manifest>

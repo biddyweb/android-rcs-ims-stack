@@ -24,7 +24,6 @@ import java.util.List;
 import javax2.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
-import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -63,12 +62,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		super(parent, contact, OneOneChatSession.generateOneOneParticipants(contact));
 		
 		// Set feature tags
-		List<String> tags = new ArrayList<String>(); 
-		tags.add(FeatureTags.FEATURE_OMA_IM);
-		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
-        }
-        setFeatureTags(tags);
+        setFeatureTags(ChatUtils.getSupportedFeatureTagsForChat());
 		
 		// Set accept-types
 		String acceptTypes = CpimMessage.MIME_TYPE;

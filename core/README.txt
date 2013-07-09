@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.5
+Release 2.5.6
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,10 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Add Neusoft contributions.
-- FT Store & Forward.
-- Remove H263 codec and prerecorded feature.
-- Invites missing participants on incoming group chat request.
+- FToHTTP tested (basic call flow)
+- IP Call (except media part).
+- Merge local provisioning tool in the stack part.
+
 
 
 Bugs fixed:
@@ -20,6 +20,12 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+
+v2.5.6
+- Mantis #0017517	Stack: Bad message ID for Image Sharing, character "_" is forbidden
+- Mantis #0017502	Stack: Feature tags not aggregated in Contact header of chat requests
+- Mantis #0017379	Stack: SDP Parsing error with a native GS4
 
 
 v2.5.5

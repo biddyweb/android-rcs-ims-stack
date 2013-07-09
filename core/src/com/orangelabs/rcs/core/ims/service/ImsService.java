@@ -53,21 +53,26 @@ public abstract class ImsService {
      * Instant Messaging service
      */
 	public static final int IM_SERVICE = 2;
+	
+	/**
+     * IP call service
+     */
+	public static final int IPCALL_SERVICE = 3;
 
     /**
      * Richcall service
      */
-	public static final int RICHCALL_SERVICE = 3;
+	public static final int RICHCALL_SERVICE = 4;
 
     /**
      * Presence service
      */
-	public static final int PRESENCE_SERVICE = 4;
+	public static final int PRESENCE_SERVICE = 5;
 
     /**
      * SIP service
      */
-	public static final int SIP_SERVICE = 5;
+	public static final int SIP_SERVICE = 6;
 	
 	/**
 	 * Activation flag

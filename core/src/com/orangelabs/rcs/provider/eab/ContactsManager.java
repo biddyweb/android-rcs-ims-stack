@@ -159,7 +159,17 @@ public final class ContactsManager {
      * MIME type for 3GPP_CS_VOICE (video sharing) capability 
      */
     private static final String MIMETYPE_CAPABILITY_VIDEO_SHARING = "vnd.android.cursor.item/com.orangelabs.rcs.capability.video-sharing";
+    
+    /** 
+     * MIME type for RCS IP Voice Call capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_IP_VOICE_CALL = "vnd.android.cursor.item/com.orangelabs.rcs.capability.ip-voice-call";
 
+    /** 
+     * MIME type for RCS IP Video Call capability 
+     */
+    private static final String MIMETYPE_CAPABILITY_IP_VIDEO_CALL = "vnd.android.cursor.item/com.orangelabs.rcs.capability.ip-video-call";
+    
     /** 
      * MIME type for RCS_IM (IM session) capability 
      */
@@ -520,6 +530,8 @@ public final class ContactsManager {
 		values.put(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE, Boolean.toString(newCapabilities.isSocialPresenceSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING, Boolean.toString(newCapabilities.isVideoSharingSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(newCapabilities.isGeolocationPushSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_IP_VOICE_CALL, Boolean.toString(newCapabilities.isIPVoiceCallSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_IP_VIDEO_CALL, Boolean.toString(newCapabilities.isIPVideoCallSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(newCapabilities.isFileTransferHttpSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(newCapabilities.isFileTransferThumbnailSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString(newCapabilities.isFileTransferStoreForwardSupported() && isRegistered));
@@ -680,6 +692,16 @@ public final class ContactsManager {
     			}
     			// Video sharing
     			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_VIDEO_SHARING, newInfo.getCapabilities().isVideoSharingSupported() && isRegistered, oldInfo.getCapabilities().isVideoSharingSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// IP Voice call
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VOICE_CALL, (newInfo.getCapabilities().isIPVoiceCallSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()), oldInfo.getCapabilities().isIPVoiceCallSupported());
+    			if (op!=null){
+    				ops.add(op);
+    			}
+    			// IP video call
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VIDEO_CALL, (newInfo.getCapabilities().isIPVideoCallSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()), oldInfo.getCapabilities().isIPVideoCallSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -925,6 +947,8 @@ public final class ContactsManager {
                 capabilities.setSocialPresenceSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_SOCIAL_PRESENCE))));
                 capabilities.setGeolocationPushSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH))));
                 capabilities.setVideoSharingSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING))));
+                capabilities.setIPVoiceCallSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_IP_VOICE_CALL))));
+                capabilities.setIPVideoCallSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_IP_VIDEO_CALL))));
                 capabilities.setFileTransferThumbnailSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL))));
                 capabilities.setFileTransferHttpSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP))));
                 capabilities.setFileTransferStoreForwardSupport(Boolean.parseBoolean(cur.getString(cur.getColumnIndex(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF))));
@@ -2257,7 +2281,13 @@ public final class ContactsManager {
 		if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_CS_VIDEO)) {
 			return ctx.getString(R.string.rcs_core_contact_cs_video);
 		} else
-		if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_COMMON_EXTENSION)) {
+			if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_IP_VOICE_CALL)) {
+				return ctx.getString(R.string.rcs_core_contact_ip_voice_call);
+			} else
+			if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_IP_VIDEO_CALL)) {
+				return ctx.getString(R.string.rcs_core_contact_ip_video_call);
+			} else		
+			if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_COMMON_EXTENSION)) {
 			return ctx.getString(R.string.rcs_core_contact_extensions);
 		} else 
 			return null;
@@ -2318,6 +2348,66 @@ public final class ContactsManager {
 		c.close();
 		
 		return richcallCapableNumbers;
+	}
+	
+	/**
+	 * Get a list of numbers that can use ip voice call features 
+	 * 
+	 * @return list containing all contacts that can use ip voice call features 
+	 */
+	public List<String> getIPVoiceCallCapableContacts() {
+		List<String> ipVoiceCallCapableNumbers = new ArrayList<String>();
+        String[] projection = {Data.DATA1, Data.MIMETYPE};
+
+        String selection = "( " + Data.MIMETYPE + "=? OR " + Data.MIMETYPE + "=? )";
+        
+        // Get all ipcall capable contacts
+        String[] selectionArgs = { MIMETYPE_CAPABILITY_IP_VOICE_CALL };
+        Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
+        		projection, 
+        		selection, 
+        		selectionArgs, 
+        		null);
+		
+		while (c.moveToNext()) {
+			String ipVoiceCallCapableNumber = c.getString(0);
+			if (!ipVoiceCallCapableNumbers.contains(ipVoiceCallCapableNumber)){
+				ipVoiceCallCapableNumbers.add(ipVoiceCallCapableNumber);
+			}
+		}
+		c.close();
+		
+		return ipVoiceCallCapableNumbers;
+	}
+	
+	/**
+	 * Get a list of numbers that can use ip video call features 
+	 * 
+	 * @return list containing all contacts that can use ip video call features 
+	 */
+	public List<String> getIPVideoCallCapableContacts() {
+		List<String> ipVideoCallCapableNumbers = new ArrayList<String>();
+        String[] projection = {Data.DATA1, Data.MIMETYPE};
+
+        String selection = "( " + Data.MIMETYPE + "=? OR " + Data.MIMETYPE + "=? )";
+        
+        // Get all ipcall capable contacts
+        String[] selectionArgs = { MIMETYPE_CAPABILITY_IP_VIDEO_CALL };
+        Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
+        		projection, 
+        		selection, 
+        		selectionArgs, 
+        		null);
+		
+		while (c.moveToNext()) {
+			String ipVideoCallCapableNumber = c.getString(0);
+			if (!ipVideoCallCapableNumbers.contains(ipVideoCallCapableNumber)){
+				ipVideoCallCapableNumbers.add(ipVideoCallCapableNumber);
+			}
+		}
+		c.close();
+		
+		return ipVideoCallCapableNumbers;
 	}
 	
 	/**
@@ -2425,7 +2515,13 @@ public final class ContactsManager {
 
 		// Group chat S&F
 		capabilities.setGroupChatStoreForwardSupport(capabilities.isGroupChatStoreForwardSupported() && isRegistered);
-
+		
+		// IP Voice call
+		capabilities.setIPVoiceCallSupport(capabilities.isIPVoiceCallSupported() && isRegistered);
+		
+		// IP Video call
+		capabilities.setIPVideoCallSupport(capabilities.isIPVideoCallSupported() && isRegistered);
+		
 		// Add the capabilities
 		newInfo.setCapabilities(capabilities);
 
@@ -2660,6 +2756,14 @@ public final class ContactsManager {
         // Video sharing
         if (capabilities.isVideoSharingSupported()) {
             ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_VIDEO_SHARING));
+        }
+        // IP Voice call
+        if (capabilities.isIPVoiceCallSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_IP_VOICE_CALL));
+        }
+        // IP Video call
+        if (capabilities.isIPVideoCallSupported()) {
+            ops.add(createMimeTypeForContact(rawContactRefIms, info.getContact(), MIMETYPE_CAPABILITY_IP_VIDEO_CALL));
         }
         // Presence discovery
         if (capabilities.isPresenceDiscoverySupported()) {
@@ -3520,6 +3624,8 @@ public final class ContactsManager {
 		}
     }
     
+    // TODO : create here a "setIPCallBlockedForContact"
+    
     /**
      * Get whether the "IM" feature is enabled or not for the contact
      * 
@@ -3546,6 +3652,8 @@ public final class ContactsManager {
 		c.close();
     	return false;
     }
+    
+    // TODO : create here a "isIPCallBlockedForContact"
     
 	/**
 	 * Get the contacts that are "IM blocked"
@@ -3738,6 +3846,12 @@ public final class ContactsManager {
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_VIDEO_SHARING)){
     			// Set capability video sharing
    				capabilities.setVideoSharingSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_IP_VOICE_CALL)){
+    			// Set capability ip voice call
+   				capabilities.setIPVoiceCallSupport(true);
+    		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_IP_VIDEO_CALL)){
+    			// Set capability ip video call
+   				capabilities.setIPVideoCallSupport(true);
     		}else if (mimeType.equalsIgnoreCase(MIMETYPE_CAPABILITY_IM_SESSION)){
     			// Set capability IM session
    				capabilities.setImSessionSupport(true);
@@ -3856,8 +3970,15 @@ public final class ContactsManager {
 
         // Filter the mime types 
         String selection = "(" + Data.RAW_CONTACT_ID + " =?) AND (" 
+                + Data.MIMETYPE + "=? OR "
                 + Data.MIMETYPE + "=? OR " 
                 + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR "
+                + Data.MIMETYPE + "=? OR " 
                 + Data.MIMETYPE + "=? OR "
                 + Data.MIMETYPE + "=? OR "
                 + Data.MIMETYPE + "=? OR "
@@ -3891,6 +4012,8 @@ public final class ContactsManager {
                 MIMETYPE_CAPABILITY_CS_VIDEO,
                 MIMETYPE_CAPABILITY_IMAGE_SHARING,
                 MIMETYPE_CAPABILITY_VIDEO_SHARING,
+                MIMETYPE_CAPABILITY_IP_VOICE_CALL,
+                MIMETYPE_CAPABILITY_IP_VIDEO_CALL,
                 MIMETYPE_CAPABILITY_IM_SESSION,
                 MIMETYPE_CAPABILITY_FILE_TRANSFER,
                 MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY,
@@ -3960,6 +4083,22 @@ public final class ContactsManager {
     			.withValues(values)
     			.build());
 
+    	// Update ip voice call menu 
+    	values.clear();
+    	values.put(Data.DATA2, getMimeTypeDescription(MIMETYPE_CAPABILITY_IP_VOICE_CALL));
+    	ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+    			.withSelection(Data.MIMETYPE + "=?", new String[]{MIMETYPE_CAPABILITY_IP_VOICE_CALL})
+    			.withValues(values)
+    			.build());
+
+    	// Update ip video call menu 
+    	values.clear();
+    	values.put(Data.DATA2, getMimeTypeDescription(MIMETYPE_CAPABILITY_IP_VIDEO_CALL));
+    	ops.add(ContentProviderOperation.newUpdate(Data.CONTENT_URI)
+    			.withSelection(Data.MIMETYPE + "=?", new String[]{MIMETYPE_CAPABILITY_IP_VIDEO_CALL})
+    			.withValues(values)
+    			.build());
+    	
     	// Update CS video menu 
     	values.clear();
     	values.put(Data.DATA2, getMimeTypeDescription(MIMETYPE_CAPABILITY_CS_VIDEO));
@@ -4114,6 +4253,8 @@ public final class ContactsManager {
     		    MIMETYPE_CAPABILITY_CS_VIDEO,
     		    MIMETYPE_CAPABILITY_IMAGE_SHARING,
     		    MIMETYPE_CAPABILITY_VIDEO_SHARING,
+    		    MIMETYPE_CAPABILITY_IP_VOICE_CALL,   
+    		    MIMETYPE_CAPABILITY_IP_VIDEO_CALL, 
     		    MIMETYPE_CAPABILITY_IM_SESSION,
     		    MIMETYPE_CAPABILITY_FILE_TRANSFER,
     		    MIMETYPE_CAPABILITY_PRESENCE_DISCOVERY,

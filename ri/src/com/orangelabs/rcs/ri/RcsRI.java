@@ -67,6 +67,7 @@ public class RcsRI extends ListActivity {
     		getString(R.string.menu_presence),
     		getString(R.string.menu_messaging),
     		getString(R.string.menu_richcall),
+    		getString(R.string.menu_ipcall),
     		getString(R.string.menu_eventlog),
     		getString(R.string.menu_settings),
     		getString(R.string.menu_about)
@@ -108,16 +109,20 @@ public class RcsRI extends ListActivity {
         	case 4:
         		startActivity(new Intent(this, RichCallRI.class));
         		break;
-        		
+        	
         	case 5:
-        		startActivity(new Intent(this, EventLog.class));
+        		startActivity(new Intent(this, IPCallRI.class));
         		break;
         		
         	case 6:
-        		startActivity(new Intent(ClientApiIntents.RCS_SETTINGS));
+        		startActivity(new Intent(this, EventLog.class));
         		break;
         		
         	case 7:
+        		startActivity(new Intent(ClientApiIntents.RCS_SETTINGS));
+        		break;
+        		
+        	case 8:
         		startActivity(new Intent(this, AboutRI.class));
         		break;
     	}

@@ -43,6 +43,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSess
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.presence.PresenceUtils;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.OverridingWillingness;
 import com.orangelabs.rcs.core.ims.service.presence.pidf.Person;
@@ -55,6 +56,7 @@ import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.ipcall.IPCall;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.sharing.RichCall;
@@ -67,6 +69,7 @@ import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.service.api.client.capability.ICapabilityApi;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.gsma.GsmaUiConnector;
+import com.orangelabs.rcs.service.api.client.ipcall.IIPCallApi;
 import com.orangelabs.rcs.service.api.client.messaging.IMessagingApi;
 import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
 import com.orangelabs.rcs.service.api.client.presence.Geoloc;
@@ -80,6 +83,7 @@ import com.orangelabs.rcs.service.api.client.terms.ITermsApi;
 import com.orangelabs.rcs.service.api.server.ImsApiService;
 import com.orangelabs.rcs.service.api.server.capability.CapabilityApiService;
 import com.orangelabs.rcs.service.api.server.gsma.GsmaUtils;
+import com.orangelabs.rcs.service.api.server.ipcall.IPCallApiService;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.service.api.server.presence.PresenceApiService;
 import com.orangelabs.rcs.service.api.server.richcall.RichCallApiService;
@@ -137,6 +141,11 @@ public class RcsCoreService extends Service implements CoreListener {
 	private RichCallApiService richcallApi = new RichCallApiService(); 
 	
 	/**
+	 * IP call API
+	 */
+	private IPCallApiService ipcallApi = new IPCallApiService();
+	
+	/**
 	 * SIP API
 	 */
 	private SipApiService sipApi = new SipApiService(); 
@@ -187,6 +196,7 @@ public class RcsCoreService extends Service implements CoreListener {
 		presenceApi.close();
 		capabilityApi.close();
 		richcallApi.close();
+		ipcallApi.close();
 		messagingApi.close();
 		sipApi.close();
 
@@ -234,6 +244,9 @@ public class RcsCoreService extends Service implements CoreListener {
             
             // Instantiate the rich call history 
             RichCall.createInstance(getApplicationContext());
+            
+            // Instantiate the IP call history
+            IPCall.createInstance(getApplicationContext());
 
             // Create the core
 			Core.createCore(this);
@@ -373,6 +386,11 @@ public class RcsCoreService extends Service implements CoreListener {
     			logger.debug("Rich call API binding");
     		}
             return richcallApi;
+		} else if (IIPCallApi.class.getName().equals(intent.getAction())) {
+			if (logger.isActivated()) {
+				logger.debug("IP call API binding");
+			}
+			return ipcallApi;
         } else
         if (ISipApi.class.getName().equals(intent.getAction())) {
     		if (logger.isActivated()) {
@@ -868,6 +886,8 @@ public class RcsCoreService extends Service implements CoreListener {
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_CS_VIDEO, capabilities.isCsVideoSupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_PRESENCE_DISCOVERY, capabilities.isPresenceDiscoverySupported());
 		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_SOCIAL_PRESENCE, capabilities.isSocialPresenceSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_IPVOICECALL, capabilities.isIPVoiceCallSupported());
+		intentGsma.putExtra(GsmaUiConnector.EXTRA_CAPABILITY_IPVIDEOCALL, capabilities.isIPVideoCallSupported());
 		intentGsma.putStringArrayListExtra(GsmaUiConnector.EXTRA_CAPABILITY_EXTENSIONS, capabilities.getSupportedExtensions());
 		getApplicationContext().sendBroadcast(intentGsma);
     }
@@ -1001,6 +1021,20 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Broadcast the invitation
 		richcallApi.receiveVideoSharingInvitation(session);
     }
+    
+    /**
+     * New IP call invitation
+     * 
+     * @param session IP call session
+     */
+    @Override
+	public void handleIPCallInvitation(IPCallStreamingSession session) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event IP call invitation");
+		}
+		// Broadcast the invitation
+		ipcallApi.receiveIPCallInvitation(session);
+	}
 
 	/**
 	 * A new file transfer invitation has been received

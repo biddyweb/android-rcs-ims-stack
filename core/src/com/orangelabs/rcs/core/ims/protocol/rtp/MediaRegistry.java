@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.Format;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AmrWbAudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoFormat;
@@ -41,6 +42,7 @@ public class MediaRegistry {
 	private static Hashtable<String, Format> SUPPORTED_CODECS = new Hashtable<String, Format>();
 	static {
 		SUPPORTED_CODECS.put(H264VideoFormat.ENCODING.toLowerCase(), new H264VideoFormat());
+		SUPPORTED_CODECS.put(AmrWbAudioFormat.ENCODING.toLowerCase(), new AmrWbAudioFormat());
 	}
 
 	/**

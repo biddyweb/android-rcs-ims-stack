@@ -223,6 +223,8 @@ public class CapabilitiesDiscovery extends Activity {
         CheckBox ftThumbnail = (CheckBox)findViewById(R.id.file_transfer_thumbnail);
         CheckBox ftSF = (CheckBox)findViewById(R.id.file_transfer_sf);
         CheckBox gcSF = (CheckBox)findViewById(R.id.group_chat_sf);
+        CheckBox ipVoiceCall = (CheckBox)findViewById(R.id.ip_voice_call);
+        CheckBox ipVideoCall = (CheckBox)findViewById(R.id.ip_video_call);
         TextView extensions = (TextView)findViewById(R.id.extensions);
 
     	if (capabilities != null) {
@@ -254,7 +256,9 @@ public class CapabilitiesDiscovery extends Activity {
             ftThumbnail.setChecked(capabilities.isFileTransferThumbnailSupported());
             ftSF.setChecked(capabilities.isFileTransferStoreForwardSupported());
             gcSF.setChecked(capabilities.isGroupChatStoreForwardSupported());
-
+            ipVoiceCall.setChecked(capabilities.isIPVoiceCallSupported());
+            ipVideoCall.setChecked(capabilities.isIPVideoCallSupported());
+            
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
             String result = "";
@@ -278,6 +282,8 @@ public class CapabilitiesDiscovery extends Activity {
     		ftThumbnail.setVisibility(View.GONE);
     		ftSF.setVisibility(View.GONE);
     		gcSF.setVisibility(View.GONE);
+    		ipVoiceCall.setVisibility(View.GONE);
+    		ipVideoCall.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
     }

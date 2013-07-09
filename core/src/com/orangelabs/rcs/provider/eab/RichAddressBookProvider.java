@@ -124,6 +124,8 @@ public class RichAddressBookProvider extends ContentProvider {
 					+ RichAddressBookData.KEY_CAPABILITY_CS_VIDEO + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_IMAGE_SHARING + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_VIDEO_SHARING + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_IP_VOICE_CALL + " TEXT, "
+					+ RichAddressBookData.KEY_CAPABILITY_IP_VIDEO_CALL + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_IM_SESSION + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER + " TEXT, "
 					+ RichAddressBookData.KEY_CAPABILITY_PRESENCE_DISCOVERY + " TEXT, "

@@ -98,7 +98,7 @@ public class EventLog extends Activity {
 	 * The filter values as CharSequence[].
 	 * Ordered according to itemsIndexInCheckedArray.
 	 */
-	private CharSequence[] items={"SMS/MMS", "File Transfer", "Chat", "RichCall"};
+	private CharSequence[] items={"SMS/MMS", "File Transfer", "Chat", "RichCall", "IPCall"};
 	
 	/**
 	 * CheckedItems contains states of the Filter menu. (checked, unchecked)
@@ -111,15 +111,17 @@ public class EventLog extends Activity {
 			/*(sms/mms	bit0)*/true,
 			/*(FT		bit1)*/true,
 			/*(chat		bit2)*/true,
-			/*(RC		bit3)*/true};
+			/*(RC		bit3)*/true,
+			/*(IPCall	bit4)*/true};
 	/**
 	 * Enables the UI elements to be indexed in the binary representation of the selectedMode. 
 	 * *****************************
 	 * Bit representation of the selectedMode :
 	 * sms/mms  = bit0
-	 * FT 		= bit2
-	 * chat 	= bit3
-	 * RC 		= bit4
+	 * FT 		= bit1
+	 * chat 	= bit2
+	 * RC 		= bit3
+	 * IP call	= bit4
 	 * *****************************
 	 * If UI element should be reordered, then reorder also the itemsIndexInCheckedArray, following the bits representation above.
 	 * 
@@ -129,7 +131,7 @@ public class EventLog extends Activity {
 	 * 		  Reordering is done with: checkItems[itemsIndexInCheckedArray[which]] = isChecked
 	 * 		  Then : selectedMode = for(i=0..3) checkItems[i]*2^i 
 	 */
-	private final int[] itemsIndexInCheckedArray = {0,1,2,3};
+	private final int[] itemsIndexInCheckedArray = {0,1,2,3,4};
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -413,6 +415,8 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_FILE_TRANSFER:
 	    		case EventsLogApi.TYPE_INCOMING_RICH_CALL:
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO:
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO_VIDEO:
 	    		case EventsLogApi.TYPE_INCOMING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
 	    				eventDirectionIconView.setImageDrawable(mDrawableIncomingFailed);
@@ -423,6 +427,8 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
 	    		case EventsLogApi.TYPE_OUTGOING_RICH_CALL:
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO:	
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO_VIDEO:
 	    		case EventsLogApi.TYPE_OUTGOING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
 	    				eventDirectionIconView.setImageDrawable(mDrawableOutgoingFailed);
@@ -467,6 +473,24 @@ public class EventLog extends Activity {
 	    			break;
 	    		case EventsLogApi.TYPE_INCOMING_RICH_CALL:
 	    		case EventsLogApi.TYPE_OUTGOING_RICH_CALL:
+	    			eventIconView.setImageDrawable(mDrawableRichCall);
+	    			break;
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO:	
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO:	
+	    			line1View.setText(R.string.title_audio_call);
+	    			eventIconView.setImageDrawable(mDrawableRichCall);
+	    			break;
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO_VIDEO:
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO_VIDEO:
+	    			line1View.setText(R.string.title_audiovideo_call);
+	    			eventIconView.setImageDrawable(mDrawableRichCall);
+	    			break;
+	    		case EventsLogApi.TYPE_IPCALL_ADDED_VIDEO:
+	    			line1View.setText(R.string.title_video_added);
+	    			eventIconView.setImageDrawable(mDrawableRichCall);
+	    			break;
+	    		case EventsLogApi.TYPE_IPCALL_REMOVED_VIDEO:
+	    			line1View.setText(R.string.title_video_removed);
 	    			eventIconView.setImageDrawable(mDrawableRichCall);
 	    			break;
     		}

@@ -57,6 +57,11 @@
 		 android:layout_marginLeft="5dip"
  		 android:layout_marginRight="5dip"
 		 android:id="@+id/dial_btn"/>
+		 
+		<Button android:text="@string/label_dial_ip"
+		 android:layout_marginLeft="5dip"
+ 		 android:layout_marginRight="5dip"
+		 android:id="@+id/dial_ip_btn"/>
 
 		<Button android:text="@string/label_select_picture"
 		 android:layout_marginLeft="5dip"

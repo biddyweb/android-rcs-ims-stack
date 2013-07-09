@@ -71,6 +71,8 @@
 <string name="label_capabilities_file_transfer_thumbnail">File transfer thumbnail</string>
 <string name="label_capabilities_file_transfer_sf">File transfer Store &amp; Forward</string>
 <string name="label_capabilities_group_chat_sf">Group chat Store &amp; Forward</string>
+<string name="label_capabilities_ip_voice_call">IP Voice call</string>
+<string name="label_capabilities_ip_video_call">IP Video call</string>
 <string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_request_in_background">Request has been sent in background for %s</string>
 
@@ -134,7 +136,7 @@
 <!--  Messaging menu -->
 <string name="menu_messaging">Messaging</string>
 <string name="menu_sms_mms">Send SMS/MMS</string>
-<string name="menu_transfer_file">Transfer a file</string>
+<string name="menu_transfer_file">File transfer</string>
 <string name="menu_one_to_one_chat">One-to-one chat</string>
 <string name="menu_adhoc_group_chat">Ad-hoc group chat</string>
 <string name="menu_chat_list">Chat history</string>
@@ -155,6 +157,7 @@
 <string name="menu_insert_smiley">Smiley</string>
 <string name="menu_participants">Participants</string>
 <string name="menu_add_participant">Add participant</string>
+<string name="menu_group_transfer_file">Send file to group</string>
 <string name="menu_wizz">Wizz</string>
 <string name="label_send_im_failed">Send IM has failed</string>
 <string name="label_chat_failed">Chat session has failed</string>
@@ -197,6 +200,36 @@
 <string name="label_geoloc_prefix">Geoloc</string>
 <string name="label_ft_thumb">File thumbnail</string>
 
+<!--  IP call menu -->
+<string name="menu_ipcall">IP call</string>
+<string name="menu_initiate_ipcall">Initiate IP call</string>
+<string name="menu_ipcall_settings">IP call settings</string>
+<string name="label_audio_video_invite_btn">initiate audio+video ipcall</string>
+<string name="label_audio_invite_btn">initiate audio ipcall</string>
+<string name="label_set_onhold_btn">Set On Hold</string>
+<string name="label_resume_btn">Resume</string>
+<string name="label_hangup_btn">Hang Up</string>
+<string name="label_add_video_btn">Add Video</string> 
+<string name="label_remove_video_btn">Remove Video</string> 
+<string name="title_audio_call">Audio call</string> 
+<string name="title_audiovideo_call">Audio + Video call</string> 
+<string name="title_video_added">IPCall - Video added</string> 
+<string name="title_video_removed">IPCall - Video removed</string> 
+<string name="title_recv_ipcall_audio">New audio call invitation</string>
+<string name="title_recv_ipcall_audiovideo">New audio + video call invitation</string>
+<string name="label_audio_with">Audio call  with %s</string>
+<string name="label_audiovideo_with">Audio + Video call  with %s</string>
+<string name="label_incoming_ipcall_failed">Incoming IP call failed</string>
+<string name="label_incoming_ipcall_aborted">Incoming IP call aborted</string>
+<string name="label_incoming_ipcall_terminated_by_remote">Incoming IP call terminated by remote</string>
+<string name="label_outgoing_ipcall_failed">Outgoing IP call failed</string>
+<string name="label_outgoing_ipcall_aborted">Outgoing IP call aborted</string>
+<string name="label_outgoing_ipcall_terminated_by_remote">Outgoing IP call terminated by remote</string>
+<string name="label_ipcall_failed">IP call has failed or is aborted</string>
+<string name="label_ipcall_canceled">IP call session has been canceled</string>
+<string name="label_ipcall_invitation_declined">IP call invitation has been declined</string>
+<string name="label_ipcall_called_is_busy">called is busy</string>
+
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>
 <string name="menu_initiate_image_sharing">Initiate image sharing</string>
@@ -212,6 +245,7 @@
 <string name="label_invitation_declined">Sharing invitation has been declined</string>
 <string name="label_sharing_terminated_by_remote">Sharing terminated by remote</string>
 <string name="label_dial">Dial</string>
+<string name="label_dial_ip">IP dial</string>
 <string name="label_select_picture">Select picture</string>
 <string name="label_selected_img">Selected picture:</string>
 <string name="label_select_location">Select location</string>

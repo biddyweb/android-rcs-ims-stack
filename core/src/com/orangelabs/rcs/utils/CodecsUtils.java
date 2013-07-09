@@ -20,13 +20,16 @@ package com.orangelabs.rcs.utils;
 
 import java.util.Vector;
 
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.audio.amr.AMRWBConfig;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1_2;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1_3;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.profiles.H264Profile1b;
+import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AmrWbAudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.H264VideoFormat;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
+import com.orangelabs.rcs.service.api.client.media.audio.AudioCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 
 /**
@@ -111,5 +114,27 @@ public class CodecsUtils {
                 H264Config.QCIF_HEIGHT).getMediaCodec());
 
         return (MediaCodec[]) list.toArray(new MediaCodec[list.size()]);
+    }
+
+    /**
+     * Get list of supported audio codecs
+     *
+     * @return Codecs list
+     */
+    public static MediaCodec[] getSupportedAudioCodecList() {
+        int i = -1;
+
+        // Set number of codecs
+        int size = 1; // default
+
+        MediaCodec[] supportedMediaCodecs = new MediaCodec[size];
+
+        // Add codecs settings (ordered list)        
+        supportedMediaCodecs[++i] = new AudioCodec(AMRWBConfig.CODEC_NAME,
+        		AmrWbAudioFormat.PAYLOAD,
+                "",
+                AMRWBConfig.SAMPLE_RATE).getMediaCodec();
+
+        return supportedMediaCodecs;
     }
 }

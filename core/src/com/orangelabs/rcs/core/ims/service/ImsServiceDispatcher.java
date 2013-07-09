@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
@@ -185,7 +186,12 @@ public class ImsServiceDispatcher extends Thread {
 	    	if (imsModule.getCallManager().isCallConnected()) { 
 		    	// Rich call service
 	    		imsModule.getRichcallService().receiveCapabilityRequest(request);
-	    	} else {
+	    	} else
+	    	if (imsModule.getIPCallService().isCallConnected()) { 
+		    	// IP call service
+	    		imsModule.getIPCallService().receiveCapabilityRequest(request);
+	    	}	
+	    	else {
 	    		// Capability discovery service
 	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
 	    	}		    	
@@ -243,34 +249,43 @@ public class ImsServiceDispatcher extends Thread {
 					return;
 	    		}
 	    		
-		    	if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
+                FileTransferHttpInfoDocument ftHttpInfo = ChatUtils.getHttpFTInfo(request);
+                if (ftHttpInfo != null) {
+                    // HTTP file transfer invitation
+                    if (logger.isActivated()) {
+                        logger.debug("Http file transfer invitation");
+                    }
+                    imsModule.getInstantMessagingService().receiveHttpFileTranfer(request, ftHttpInfo);
+                } else {
+	    			if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
 		    			(!request.getContentType().contains("multipart"))) { // TODO: to be removed when corrected by ALU
-	    			// Store & Forward push notifs session
-		    		if (logger.isActivated()) {
-		    			logger.debug("Store & Forward push notifications");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveStoredAndForwardPushNotifications(request);
-		    	} else
-		    	if (ChatUtils.isGroupChatInvitation(request)) {
-			        // Ad-hoc group chat session
-		    		if (logger.isActivated()) {
-		    			logger.debug("Ad-hoc group chat session invitation");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
-		    	} else
-		    	if (SipUtils.getReferredByHeader(request) != null) {
-	    			// Store & Forward push messages session
-		    		if (logger.isActivated()) {
-		    			logger.debug("Store & Forward push messages session");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveStoredAndForwardPushMessages(request);
-		    	} else {
-			        // 1-1 chat session
-		    		if (logger.isActivated()) {
-		    			logger.debug("1-1 chat session invitation");
-		    		}
-	    			imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
-	    		}
+	    				// Store & Forward push notifs session
+			    		if (logger.isActivated()) {
+			    			logger.debug("Store & Forward push notifications");
+			    		}
+			    		imsModule.getInstantMessagingService().receiveStoredAndForwardPushNotifications(request);
+			    	} else
+			    	if (ChatUtils.isGroupChatInvitation(request)) {
+				        // Ad-hoc group chat session
+			    		if (logger.isActivated()) {
+			    			logger.debug("Ad-hoc group chat session invitation");
+			    		}
+		    			imsModule.getInstantMessagingService().receiveAdhocGroupChatSession(request);
+			    	} else
+			    	if (SipUtils.getReferredByHeader(request) != null) {
+		    			// Store & Forward push messages session
+			    		if (logger.isActivated()) {
+			    			logger.debug("Store & Forward push messages session");
+			    		}
+		    		 	imsModule.getInstantMessagingService().receiveStoredAndForwardPushMessages(request);
+			    	} else {
+	                    // 1-1 chat session
+	                    if (logger.isActivated()) {
+	                        logger.debug("1-1 chat session invitation");
+	                    }
+	                    imsModule.getInstantMessagingService().receiveOne2OneChatSession(request);
+			    	}
+		    	}
 	    	} else
 	    	if (isTagPresent(sdp, "rtp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE)) {
@@ -321,7 +336,38 @@ public class ImsServiceDispatcher extends Thread {
 						logger.debug("Geoloc share service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
-	    		}	    		
+	    		}		
+		    } else 
+			if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL))	{
+	    		// IP Voice Call setting
+	    		if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("IP Voice call invitation");
+		    		}
+	    			imsModule.getIPCallService().receiveIPCallInvitation(request, true, false);
+	    		} else {
+					// Service not supported: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("IP Voice Call service not supported: automatically reject");
+					}
+					sendFinalResponse(request, 603);
+	    		}	    	
+	    	} else 
+		    	if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))	{
+		    		// IP Video Call setting
+		    		if (RcsSettings.getInstance().isIPVideoCallSupported()) {
+			    		if (logger.isActivated()) {
+			    			logger.debug("IP Voice+ Video call invitation");
+			    		}
+		    			imsModule.getIPCallService().receiveIPCallInvitation(request, true, true);
+		    		} else {
+						// Service not supported: reject the invitation with a 603 Decline
+						if (logger.isActivated()) {
+							logger.debug("IP Voice Call or IP Video Call service not supported: automatically reject");
+						}
+						sendFinalResponse(request, 603);
+		    		}	    		    		
     		} else {
     			Intent intent = intentMgr.isSipRequestResolved(request);
 	    		if (intent != null) {

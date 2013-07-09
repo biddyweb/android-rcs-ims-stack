@@ -118,6 +118,18 @@ public class GsmaUiConnector {
 	public static final String EXTRA_CAPABILITY_CS_VIDEO = "csvideo";
 
 	/**
+	 * The lookup key for a boolean that indicates whether the device supports the
+	 * IP voice call service or not. Retrieve it with getBooleanExtra(String, boolean). 
+	 */
+	public static final String EXTRA_CAPABILITY_IPVOICECALL = "ipvoicecall";
+
+	/**
+	 * The lookup key for a boolean that indicates whether the device supports the
+	 * IP video call service or not. Retrieve it with getBooleanExtra(String, boolean). 
+	 */
+	public static final String EXTRA_CAPABILITY_IPVIDEOCALL = "ipvideocall";
+
+	/**
 	 * The lookup key for a string array that indicates whether the device supports
 	 * extensions or not. Retrieve it with getStringArrayExtra(String). 
 	 */

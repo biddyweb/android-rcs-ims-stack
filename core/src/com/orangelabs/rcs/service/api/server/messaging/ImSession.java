@@ -19,21 +19,30 @@
 package com.orangelabs.rcs.service.api.server.messaging;
 
 import java.util.List;
+import java.util.Vector;
 
 import android.os.RemoteCallbackList;
 
+import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.platform.file.FileDescription;
+import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -314,13 +323,46 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 
     /**
-     * Send file over HTTP
+     * Send file to group
      * 
-     * @param filename Filename
+     * @param file File to transfer
      * @param thumbnail Thumbnail option
+     * @return File transfer session
      */
-    public void sendFile(String filename, boolean thumbnail) {
-		// TODO
+    public IFileTransferSession sendFile(String file, boolean thumbnail) {
+		if (logger.isActivated()) {
+			logger.info("Transfer file " + file + " to group");
+		}
+
+/*		try {
+			// Initiate the session
+			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
+			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
+			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail);
+
+			// Set the file transfer session ID from the chat session if a chat already exist
+			String ftSessionId = session.getSessionID();
+			String chatSessionId = ftSessionId;
+			Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(contact);
+			if (chatSessions.size() > 0) {
+				ChatSession chatSession = chatSessions.lastElement();
+				chatSessionId = chatSession.getSessionID();
+			}
+			
+			// Update rich messaging history
+			RichMessaging.getInstance().addOutgoingFileTransfer(contact, chatSessionId, ftSessionId, file, session.getContent());
+
+			// Add session in the list
+			FileTransferSession sessionApi = new FileTransferSession(session);
+			addFileTransferSession(sessionApi);
+			return sessionApi;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
+			throw new ServerApiException(e.getMessage());
+		}*/
+		return null;
     }
 
     /**

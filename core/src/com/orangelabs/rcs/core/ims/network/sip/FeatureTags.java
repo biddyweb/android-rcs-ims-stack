@@ -47,7 +47,6 @@ public class FeatureTags {
 	 * 3GPP location share feature tag
 	 */
 	public final static String FEATURE_3GPP_LOCATION_SHARE = "+g.3gpp.iari-ref=\"urn%3Aurn-7%3A3gpp-application.ims.iari.rcs.geopush\"";
-
 	
 	/**
 	 * RCS-e feature tag prefix
@@ -103,6 +102,21 @@ public class FeatureTags {
 	 * RCS-e group chat S&F feature tag
 	 */
 	public final static String FEATURE_RCSE_GC_SF = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcs.fullsfgroupchat";
+	
+	/**
+	 * 3GPP IP call feature tag
+	 */
+	public final static String FEATURE_3GPP_IP_VOICE_CALL = "+g.3gpp.icsi-ref=\"urn%3Aurn-7%3A3gpp-service.ims.icsi.mmtel\"";
+	
+	/**
+	 * RCS-e IP call feature tag
+	 */
+	public final static String FEATURE_RCSE_IP_VOICE_CALL = "+g.gsma.rcs.ipcall";
+	
+	/**
+	 * RCS IP video call feature tag
+	 */
+	public final static String FEATURE_RCSE_IP_VIDEO_CALL = "+video";
 
 	/**
 	 * RCS-e extension feature tag prefix

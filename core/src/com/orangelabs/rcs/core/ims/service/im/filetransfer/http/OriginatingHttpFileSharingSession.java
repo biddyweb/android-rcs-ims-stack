@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -56,8 +57,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	 */
 	public OriginatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail) {
 		super(parent, content, contact, thumbnail);
-		
-		// Instanciate the upload manager
+
+		// Instantiate the upload manager
 		uploadManager = new HttpUploadManager(getContent(), getThumbnail(), this);
 	}
 
@@ -72,13 +73,13 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile();
+            // TODO: check also if xml is well formatted
             if (result != null) {
             	String fileInfo = new String(result);
-                
                 if (logger.isActivated()) {
                     logger.debug("Upload done with success: " + fileInfo);
                 }
-                
+
 				// Send the file transfer info via a chat message
 				Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(getRemoteContact());
 				if (chatSessions.size() > 0) {
@@ -99,6 +100,9 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 					// Send content
 					chatSession.sendDataChunks(msgId, content, mime);
+
+                    // File transfered
+                    handleFileTransfered();
 				} else {
 					// A chat session should be initiated
 	                if (logger.isActivated()) {
@@ -106,21 +110,19 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	                }
 
 	                // Initiate a new chat session to send file transfer info in the first message
-	            	Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo);
-				}
-				
-		        // Notify listeners
-		        for(int j=0; j < getListeners().size(); j++) {
-		            ((FileSharingSessionListener)getListeners().get(j)).handleFileTransfered(getContent().getUrl());
-		        }
+                    ChatSession session = Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo);
+                    RichMessaging.getInstance().addOutgoingChatSession(session);
 
-		        // TODO: monitor the result on the chat message?
-				
+                    // TODO : Check session response ?
+
+                    // File transfered
+                    handleFileTransfered();
+				}
 			} else {
                 if (logger.isActivated()) {
                     logger.debug("Upload has failed");
                 }
-                
+
                 // Upload error
     			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
 			}
@@ -133,17 +135,4 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
-
-    /**
-     * HTTP transfer progress
-     *
-     * @param currentSize Current transfered size in bytes
-     * @param totalSize Total size in bytes
-     */
-	public void httpTransferProgress(long currentSize, long totalSize) {
-        // Notify listeners
-        for(int j=0; j < getListeners().size(); j++) {
-            ((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
-        }
-    }
 }

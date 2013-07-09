@@ -33,6 +33,7 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
@@ -45,7 +46,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
@@ -393,7 +393,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	        }
 		}
 	}
-
+	
+	/**
+     * Handle 480 Temporarily Unavailable
+     *
+     * @param resp 480 response
+     */
+    public void handle480Unavailable(SipResponse resp) {
+        handleError(new ChatError(ChatError.SESSION_INITIATION_DECLINED, resp.getReasonPhrase()));
+    }
+    
     /**
      * Handle 486 Busy
      *
@@ -509,7 +518,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	} else 
 			    	if (ChatUtils.isFileTransferHttpType(contentType)) {
 						// File transfer over HTTP message
-			    		receiveFileTransferHttp(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, date);
+			    		receiveFileTransferHttp(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite());
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -661,48 +670,44 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param msgId Message Id
 	 * @param date Date of the message
 	 */
-	private void receiveFileTransferHttp(String contact, String fileInfo, String msgId, Date date) {
+	private void receiveFileTransferHttp(String fileInfo, SipRequest invite) {
 		// Parse HTTP document
 		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo);
 		if (fileTransferInfo != null ) {
-			
-			// Test if the contact is blocked
-		    if (ContactsManager.getInstance().isFtBlockedForContact(contact)) {
-				if (logger.isActivated()) {
-					logger.debug("Contact " + contact + " is blocked: automatically reject the file transfer invitation");
-				}
-				
-				// Send a decline response
-				// TODO
-				return;
-		    }
 
-			// Test number of sessions
-		    // TODO
+            // Test if the contact is blocked
+            String remote = ChatUtils.getReferredIdentity(invite);
+            if (ContactsManager.getInstance().isFtBlockedForContact(remote)) {
+                if (logger.isActivated()) {
+                    logger.debug("Contact " + remote
+                            + " is blocked, automatically reject the HTTP File transfer");
+                }
+
+                // TODO : reject (SIP MESSAGE ?)
+                return;
+            }
+
+            // TODO Test number of sessions
+
+            // Auto reject if file too big
+            int maxSize = FileSharingSession.getMaxFileSharingSize();
+            if (maxSize > 0 && fileTransferInfo.getFileSize() > maxSize) {
+                if (logger.isActivated()) {
+                    logger.debug("File is too big, reject the HTTP File transfer");
+                }
+
+                // TODO : reject (SIP MESSAGE ?)
+                return;
+            }
 
 			// Create a new session
-			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo);
-			
-	        // Auto reject if file too big
-	        int maxSize = FileSharingSession.getMaxFileSharingSize();
-	        if (maxSize > 0 && session.getContent().getSize() > maxSize) {
-	            if (logger.isActivated()) {
-	                logger.debug("File is too big, reject file transfer");
-	            }
-
-	            // Send a decline response
-	            // TODO
-
-	            // Close session
-	            session.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
-	            return;
-	        }			
+			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo);
 
 	        // Start the session
 			session.startSession();
-			
+
 			// Notify listener
-			getImsService().getImsModule().getCoreListener().handleFileTransferInvitation(session);					
+			getImsService().getImsModule().getCoreListener().handleFileTransferInvitation(session);
 	    }
 	}
 	

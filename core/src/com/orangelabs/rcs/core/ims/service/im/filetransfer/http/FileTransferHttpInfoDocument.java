@@ -52,7 +52,12 @@ public class FileTransferHttpInfoDocument {
 	/**
 	 * File thumbnail
 	 */
-	private FileTransferHttpThumbnail thumbnail = null; 
+	private FileTransferHttpThumbnail thumbnail = null;
+
+	/**
+	 * Filename
+	 */
+	private String filename; 
 
 	/**
 	 * Constructor
@@ -148,5 +153,23 @@ public class FileTransferHttpInfoDocument {
 	 */
 	public void setFileSize(int size) {
 		this.size = size;
+	}
+
+	/**
+	 * Set the filename
+	 * 
+	 * @param filename Filename
+	 */
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+	
+	/**
+	 * Return the filename
+	 * 
+	 * @return Filename
+	 */
+	public String getFilename() {
+		return filename;
 	}
 }

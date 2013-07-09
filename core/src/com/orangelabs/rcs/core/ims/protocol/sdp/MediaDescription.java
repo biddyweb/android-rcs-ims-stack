@@ -66,6 +66,16 @@ public class MediaDescription {
 	 */
 	public String bandwidthInfo;
 
+    /**
+     * Sender bandwidth info (RFC 3556)
+     */
+    public String senderBandwidthInfo;
+
+    /**
+     * Receiver bandwidth info (RFC 3556)
+     */
+    public String receiverBandwidthInfo;
+
 	/**
 	 * Encryption key
 	 */

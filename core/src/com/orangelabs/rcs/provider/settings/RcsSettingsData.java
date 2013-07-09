@@ -265,6 +265,11 @@ public class RcsSettingsData {
 	public static final String MAX_FILE_TRANSFER_SESSIONS = "MaxFileTransferSessions";
 
 	/**
+	 * Max number of simultaneous IP call sessions
+	 */
+	public static final String MAX_IP_CALL_SESSIONS = "MaxIpCallSessions";
+
+	/**
 	 * Activate or not SMS fallback service
 	 */
 	public static final String SMS_FALLBACK_SERVICE = "SmsFallbackService";
@@ -303,6 +308,11 @@ public class RcsSettingsData {
 	 * Max entries for richcall log
 	 */
 	public static final String MAX_RICHCALL_LOG_ENTRIES = "MaxRichcallLogEntries";	
+	
+	/**
+	 * Max entries for ipcall log
+	 */
+	public static final String MAX_IPCALL_LOG_ENTRIES = "MaxIpcallLogEntries";	
 	
 	/**
 	 * Max length of a geolocation label
@@ -602,6 +612,16 @@ public class RcsSettingsData {
 	 */
 	public static final String CAPABILITY_VIDEO_SHARING = "CapabilityVideoShare";
 
+	/**
+	 * IP call Audio capability
+	 */
+	public static final String CAPABILITY_IP_VOICE_CALL = "CapabilityIPVoiceCall";
+	
+	/**
+	 * IP call Video capability
+	 */
+	public static final String CAPABILITY_IP_VIDEO_CALL = "CapabilityIPVideoCall";
+	
 	/**
 	 * Instant Messaging session capability
 	 */
