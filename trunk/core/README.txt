@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.6
+Release 2.5.7
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
