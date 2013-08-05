@@ -137,6 +137,7 @@
 <string name="menu_messaging">Messaging</string>
 <string name="menu_sms_mms">Send SMS/MMS</string>
 <string name="menu_transfer_file">File transfer</string>
+<string name="menu_transfer_file_group">Group file transfer</string>
 <string name="menu_one_to_one_chat">One-to-one chat</string>
 <string name="menu_adhoc_group_chat">Ad-hoc group chat</string>
 <string name="menu_chat_list">Chat history</string>
@@ -157,6 +158,7 @@
 <string name="menu_insert_smiley">Smiley</string>
 <string name="menu_participants">Participants</string>
 <string name="menu_add_participant">Add participant</string>
+<string name="menu_send_file">Send a file</string>
 <string name="menu_group_transfer_file">Send file to group</string>
 <string name="menu_wizz">Wizz</string>
 <string name="label_send_im_failed">Send IM has failed</string>
@@ -203,9 +205,10 @@
 <!--  IP call menu -->
 <string name="menu_ipcall">IP call</string>
 <string name="menu_initiate_ipcall">Initiate IP call</string>
+<string name="menu_ipcall_sessionslist">Pending Sessions</string>
 <string name="menu_ipcall_settings">IP call settings</string>
-<string name="label_audio_video_invite_btn">initiate audio+video ipcall</string>
-<string name="label_audio_invite_btn">initiate audio ipcall</string>
+<string name="label_audio_video_invite_btn">init audio+video call</string>
+<string name="label_audio_invite_btn">init audio call</string>
 <string name="label_set_onhold_btn">Set On Hold</string>
 <string name="label_resume_btn">Resume</string>
 <string name="label_hangup_btn">Hang Up</string>

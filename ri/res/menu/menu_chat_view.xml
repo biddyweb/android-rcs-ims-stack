@@ -21,6 +21,10 @@
 		android:title="@string/menu_send_geoloc"
 		android:icon="@drawable/ri_menu_send_geoloc"/>
 	
+	<item android:id="@+id/menu_send_file"
+		android:title="@string/menu_send_file"
+		android:icon="@drawable/ri_quick_ft_icon"/>
+	
 	<item android:id="@+id/menu_showus_map"
 		android:title="@string/menu_showus_map"
 		android:icon="@drawable/ri_menu_showus_map"/>

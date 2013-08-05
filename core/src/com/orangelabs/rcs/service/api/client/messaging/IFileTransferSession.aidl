@@ -12,6 +12,15 @@ interface IFileTransferSession {
 	// Get remote contact
 	String getRemoteContact();
 
+	// Get list of contacts (only for group transfer)
+	List<String> getContacts();
+
+	// Is group transfer
+	boolean isGroupTransfer();
+
+	// Is HTTP transfer
+	boolean isHttpTransfer();
+
 	// Get session state
 	int getSessionState();
 
@@ -24,15 +33,6 @@ interface IFileTransferSession {
 	// Get file thumbnail
 	byte[] getFileThumbnail();
 
-	// Is group transfer
-	boolean isGroupTransfer();
-
-	// Is HTTP transfer
-	boolean isHttpTransfer();
-
-	// Get list of contacts (only for group transfer)
-	List<String> getContacts();
-
 	// Accept the session invitation
 	void acceptSession();
 
@@ -41,6 +41,9 @@ interface IFileTransferSession {
 
 	// Cancel the session
 	void cancelSession();
+
+	// Pause the session (only for HTTP transfer)
+	void pauseSession();
 
 	// Resume the session (only for HTTP transfer)
 	void resumeSession();

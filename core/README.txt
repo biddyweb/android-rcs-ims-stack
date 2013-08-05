@@ -9,9 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- FToHTTP tested (basic call flow)
-- IP Call (except media part).
-- Merge local provisioning tool in the stack part.
+- FToHTTP updates.
+- FToHTTP thumbnail.
+- Group FToHTTP.
+- Deutsche Telekom contribs.
 
 
 
@@ -21,12 +22,16 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+v2.5.7
+- Deutsche Telekom	Stack: m line in SDP offer contains wrong port number in case of actpass setup - https://trello.com/c/IPp5hBQ8
+- Issue 120		Stack: In terminating image sharing, missing space before protocol in media description
+- Issue 119		Stack: In a FToHTTP a 486 response is sent for the initiated chat
+
 
 v2.5.6
 - Mantis #0017517	Stack: Bad message ID for Image Sharing, character "_" is forbidden
 - Mantis #0017502	Stack: Feature tags not aggregated in Contact header of chat requests
 - Mantis #0017379	Stack: SDP Parsing error with a native GS4
-
 
 v2.5.5
 - Mantis #0017281	Stack: "To" URI should be "anonymous" in group chat messages

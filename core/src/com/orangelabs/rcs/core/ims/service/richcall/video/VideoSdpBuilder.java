@@ -97,7 +97,7 @@ public class VideoSdpBuilder {
     public static String buildSdpWithOrientationExtension(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuilder sdp = new StringBuilder(buildSdpWithoutOrientation(supportedCodecs, localRtpPort))
                 .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(RtpUtils.RTP_DEFAULT_EXTENSION_ID)
-                .append(" urn:gsma:video-orientation").append(SipUtils.CRLF);
+                .append(" " + SdpOrientationExtension.VIDEO_ORIENTATION_URI).append(SipUtils.CRLF);
         return sdp.toString();
     }
 
@@ -146,7 +146,7 @@ public class VideoSdpBuilder {
             int extensionId) {
         StringBuilder sdp = new StringBuilder(buildSdpWithoutOrientation(codec, localRtpPort))
                 .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(extensionId)
-                .append(" urn:gsma:video-orientation").append(SipUtils.CRLF);
+                .append(" " + SdpOrientationExtension.VIDEO_ORIENTATION_URI).append(SipUtils.CRLF);
         return sdp.toString();
     }
 

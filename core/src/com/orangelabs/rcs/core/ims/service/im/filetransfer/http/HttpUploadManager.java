@@ -34,6 +34,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * HTTP upload manager
  * 
  * @author jexa7410
+ * @author hhff3235
  */
 public class HttpUploadManager extends HttpTransferManager {
     /**
@@ -69,7 +70,7 @@ public class HttpUploadManager extends HttpTransferManager {
     /**
      * Thumbnail flag
      */
-    private boolean thumbnailFlag = false;
+    private boolean thumbnailFlag = true;
 
     /**
      * TID of the upload
@@ -94,7 +95,7 @@ public class HttpUploadManager extends HttpTransferManager {
     /**
      * Retry counter
      */
-    private int retry_count = 0;
+    private int retryCount = 0;
 
     /**
      * The logger
@@ -103,13 +104,14 @@ public class HttpUploadManager extends HttpTransferManager {
 
     /**
      * Constructor
-     * 
+     *
      * @param content File content to upload
      * @param thumbnail Thumbnail of the file
      * @param listener HTTP transfer event listener
      */
     public HttpUploadManager(MmContent content, byte[] thumbnail, HttpTransferEventListener listener) {
         super(listener);
+        
         this.content = content;
         this.thumbnail = thumbnail;
     }
@@ -164,8 +166,8 @@ public class HttpUploadManager extends HttpTransferManager {
                     // No break to do the retry
                 default :
                     // Retry procedure
-                    if (retry_count < RETRY_MAX) {
-                        retry_count++;
+                    if (retryCount < RETRY_MAX) {
+                        retryCount++;
                         return uploadFile();
                     } else {
                         return null;
@@ -194,7 +196,7 @@ public class HttpUploadManager extends HttpTransferManager {
             UnsupportedEncodingException {
         // Check server address
         url = new URL(getHttpServerAddr());
-        String protocol = url.getProtocol();
+        String protocol = url.getProtocol();    // TODO : exit if not HTTPS
         String host = url.getHost();
         String serviceRoot = url.getPath();
 
@@ -227,32 +229,28 @@ public class HttpUploadManager extends HttpTransferManager {
      * Create and Send the second POST
      *
      * @param resp response of the first request
-     * @return content of the response
+     * @return Content of the response
      * @throws CoreException
      * @throws IOException 
      * @throws Exception
      */
-    private byte[] sendMultipartPost(HttpResponse resp) throws CoreException, IOException {
+    private byte[] sendMultipartPost(HttpResponse resp) throws CoreException, IOException, Exception {
         DataOutputStream outputStream = null;
         String filepath = content.getUrl();
-
-        // Check server address
-        String protocol = url.getProtocol();
-        int port = url.getPort();
-        if (port == -1) {
-            if (protocol.equals("https")) {
-                port = 443;
-            } else {
-                port = 80;
-            }
-        }
 
         // Get the connection
         HttpsURLConnection connection = null;
         HttpsURLConnection.setDefaultHostnameVerifier(new NullHostNameVerifier());
         connection = (HttpsURLConnection) url.openConnection();
-        connection.setSSLSocketFactory(FileTransSSLFactory.getFileTransferSSLContext()
-                .getSocketFactory());
+
+        try {
+            connection.setSSLSocketFactory(FileTransSSLFactory.getFileTransferSSLContext().getSocketFactory());
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Failed to initiate SSL for connection:", e);
+            }
+        }
+
         connection.setDoInput(true);
         connection.setDoOutput(true);
         connection.setUseCaches(false);
@@ -271,11 +269,7 @@ public class HttpUploadManager extends HttpTransferManager {
         if (tidFlag) {
             body += generateTidMultipart();
         }
-
-        // Add Thumbnail
-        if (thumbnailFlag) {
-            body += generateThumbnailMultipart(filepath);
-        }
+        
 
         // Update authentication agent from response
         if (authenticationFlag) {
@@ -303,107 +297,131 @@ public class HttpUploadManager extends HttpTransferManager {
                 Object element = itr.next();
                 trace += "\n" + element + ": " + connection.getRequestProperty((String) element);
             }
-            int maxBodyLen = Math.min(400, body.length());
-            trace += "\n" + body.substring(0, maxBodyLen);
+            trace += "\n" + body;
             System.out.println(trace);
         }
 
-        // Write the DataOutputStream
+        // Create the DataOutputStream and start writing its body
         outputStream = new DataOutputStream(connection.getOutputStream());
         outputStream.writeBytes(body);
 
+        // Add thumbnail
+        if (thumbnailFlag && thumbnail != null) {
+            writeThumbnailMultipart(outputStream,filepath);
+        }
+
         // Add File
         writreFileMultipart(outputStream, filepath);
-        outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens);
+        if(!isCancelled())
+        {
+        	outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the last boundary to get bad request
+            
+	        // Check response status code
+	        int responseCode = connection.getResponseCode();
+	        if (logger.isActivated()) {
+	            logger.debug("Second POST response " + responseCode);
+	        }
+	        byte[] result = null;
+	        boolean success = false;
+	        boolean retry = false;
+	        if (HTTP_TRACE_ENABLED) {
+	            String trace = "<<< Receive HTTP response:";
+	            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
+	            System.out.println(trace);
+	        }
+	        switch (responseCode) 
+	        {
+	            case 200 :
+	                // 200 OK
+	                success = true;
+	                InputStream inputStream = connection.getInputStream();
+	                result = convertStreamToString(inputStream);
+	                inputStream.close();
+	                if (HTTP_TRACE_ENABLED) {
+	                    System.out.println("\n" + new String(result));
+	                }
+	                break;
+	            case 503 :
+	                // INTERNAL ERROR
+	                String header = connection.getHeaderField("Retry-After");
+	                int retryAfter = 0;
+	                if (header != null) {
+	                    try {
+	                        retryAfter = Integer.parseInt(header);
+	                    } catch (NumberFormatException e) {
+	                        // Nothing to do
+	                    }
+	                }
+	                if (retryAfter > 0) {
+	                    try {
+	                        Thread.sleep(retryAfter * 1000);
+	                    } catch (InterruptedException e) {
+	                        // Nothing to do
+	                    }
+	                }
+	                // No break to do the retry
+	            default :
+	                // Retry procedure
+	                if (retryCount < RETRY_MAX) {
+	                    retryCount++;
+	                    retry = true;
+	                }
+	        }
 
-        // Check response status code
-        int responseCode = connection.getResponseCode();
-        if (logger.isActivated()) {
-            logger.debug("Second POST response " + responseCode);
-        }
-        byte[] result = null;
-        boolean success = false;
-        boolean retry = false;
-        if (HTTP_TRACE_ENABLED) {
-            String trace = "<<< Receive HTTP response:";
-            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
-            System.out.println(trace);
-        }
-        switch (responseCode) {
-            case 200 :
-                // 200 OK
-                success = true;
-                InputStream inputStream = connection.getInputStream();
-                result = convertStreamToString(inputStream);
-                inputStream.close();
-                if (HTTP_TRACE_ENABLED) {
-                    System.out.println("\n" + new String(result));
-                }
-                break;
-            case 503 :
-                // INTERNAL ERROR
-                String header = connection.getHeaderField("Retry-After");
-                int retryAfter = 0;
-                if (header != null) {
-                    try {
-                        retryAfter = Integer.parseInt(header);
-                    } catch (NumberFormatException e) {
-                        // Nothing to do
-                    }
-                }
-                if (retryAfter > 0) {
-                    try {
-                        Thread.sleep(retryAfter * 1000);
-                    } catch (InterruptedException e) {
-                        // Nothing to do
-                    }
-                }
-                // No break to do the retry
-            default :
-                // Retry procedure
-                if (retry_count < RETRY_MAX) {
-                    retry_count++;
-                    retry = true;
-                }
-        }
-
-        // Close streams
-        outputStream.flush();
-        outputStream.close();
-        connection.disconnect();
-
-        if (success) {
-            return result;
-        } else if (retry) {
-            return sendMultipartPost(resp);
+	        // Close streams
+	        outputStream.flush();
+	        outputStream.close();
+	        connection.disconnect();
+	        
+	        
+	        if (success) {
+	            return result;
+	        } else
+	        if (retry) {
+	            return sendMultipartPost(resp);
+	        } else {
+	            throw new IOException("Received " + responseCode + " from server");
+	        } 
         } else {
-            throw new IOException("Received " + responseCode + " from server");
-        } 
+        	// Close streams
+            outputStream.flush();
+            outputStream.close();
+            connection.disconnect();
+            
+            if (logger.isActivated()) {
+	            logger.debug("File transfer cancelled by user");
+	        }
+            
+            return null;
+        }
     }
 
     /**
-     * Generate the thumbnail multipart
+     * Write the thumbnail multipart
      *
-     * @param filepath
-     * @return Thumbnail header
+     * @param outputStream DataOutputStream to write to
+     * @param filepath File path
      */
-    private String generateThumbnailMultipart(String filepath) {
-        String[] splittedPath = content.getUrl().split("/");
-        String filename = splittedPath[splittedPath.length - 1];
+    private void writeThumbnailMultipart(DataOutputStream outputStream, String filepath) throws IOException {
+    	if(thumbnail.length > 0) {
+	        String[] splittedPath = content.getUrl().split("/");
+	        String filename = splittedPath[splittedPath.length - 1];
 
-        String thumbnailPartHeader = twoHyphens + BOUNDARY_TAG + lineEnd;
-        thumbnailPartHeader += "Content-Disposition: form-data; name=\"Thumbnail\"; filename=\"thumb_"
-                + filename + "\"" + lineEnd;
-        thumbnailPartHeader += "Content-Type: " + content.getEncoding() + lineEnd; //
-        thumbnailPartHeader += "Content-Length: " + thumbnail.length;
-
-        return thumbnailPartHeader + lineEnd + lineEnd + thumbnail + lineEnd;
+	        outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + lineEnd);
+	        outputStream.writeBytes("Content-Disposition: form-data; name=\"Thumbnail\"; filename=\"thumb_"
+	                + filename + "\"" + lineEnd);
+	        outputStream.writeBytes("Content-Type: " + content.getEncoding() + lineEnd);
+	        outputStream.writeBytes("Content-Length: " + thumbnail.length);
+	        outputStream.writeBytes(lineEnd + lineEnd);
+	        outputStream.write(thumbnail);
+	        outputStream.writeBytes(lineEnd);
+    	}
     }
 
     /**
      * Generate the TID multipart
      *
-     * @return tid header
+     * @return tid TID header
      */
     private String generateTidMultipart() {
         String tidPartHeader = twoHyphens + BOUNDARY_TAG + lineEnd;
@@ -415,10 +433,10 @@ public class HttpUploadManager extends HttpTransferManager {
     }
 
     /**
-     * Write the File multipart
+     * Write the file multipart
      *
-     * @param outputStream
-     * @param filepath
+     * @param outputStream DataOutputStream to write to
+     * @param filepath File path
      * @throws IOException
      */
     private void writreFileMultipart(DataOutputStream outputStream, String filepath) throws IOException {
@@ -442,7 +460,7 @@ public class HttpUploadManager extends HttpTransferManager {
         byte[] buffer = new byte[bufferSize];
         int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
         int progress = 0;
-        while (bytesRead > 0) {
+        while (bytesRead > 0 && !isCancelled()) {
             progress += bytesRead;
             outputStream.write(buffer, 0, bytesRead);
             bytesAvailable = fileInputStream.available(); 
@@ -458,8 +476,8 @@ public class HttpUploadManager extends HttpTransferManager {
     /**
      * Stream conversion
      *
-     * @param is input stream
-     * @return byte array
+     * @param is Input stream
+     * @return Byte array
      */
     private byte[] convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -484,20 +502,17 @@ public class HttpUploadManager extends HttpTransferManager {
 
     /**
      * Blank host verifier
-     *
-     * @author hhff3235
      */
     public class NullHostNameVerifier implements HostnameVerifier {
         /**
          * Verifies that the specified hostname is allowed within the specified SSL session.
          *
-         * @param hostname hostname to check
-         * @param session the current SSL session
-         * @return always true
+         * @param hostname Hostname to check
+         * @param session Current SSL session
+         * @return Always returns true
          */
         public boolean verify(String hostname, SSLSession session) {
             return true;
         }
     }
-    
 }

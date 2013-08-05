@@ -1,10 +1,10 @@
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.Date;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,7 +26,7 @@ public class HttpDownloadManager extends HttpTransferManager {
     private final static int RETRY_MAX = 3;
 
     /**
-     * File content to Download
+     * File content to download
      */
     private MmContent content;
 
@@ -38,7 +38,7 @@ public class HttpDownloadManager extends HttpTransferManager {
     /**
      * Retry counter
      */
-    private int retry_count = 0;
+    private int retryCount = 0;
 
     /**
      * The logger
@@ -50,27 +50,28 @@ public class HttpDownloadManager extends HttpTransferManager {
      *
      * @param content File content to download
      * @param listener HTTP transfer event listener
-     * @param string 
+     * @param filename Filename to download 
      */
-    public HttpDownloadManager(MmContent content, HttpTransferEventListener listener, String name) {
+    public HttpDownloadManager(MmContent content, HttpTransferEventListener listener, String filename) {
         super(listener);
+        
         this.content = content;
-        this.contentName = name;
+        this.contentName = filename;
     }
 
     /**
-     * Returns file path
+     * Returns complete filename
      *
-     * @return file path
+     * @return Filename
      */
-    public String getFilePath() {
-        return RcsSettings.getInstance().getFileRootDirectory() +contentName;
+    public String getFilename() {
+        return RcsSettings.getInstance().getFileRootDirectory() + contentName;
     }
 
     /**
      * Download file
      * 
-     * @return Boolean result. Data are saved during the transfer in the content object.  
+     * @return Returns true if successful. Data are saved during the transfer in the content object.  
      */
     public boolean downloadFile() {
         try {
@@ -87,13 +88,21 @@ public class HttpDownloadManager extends HttpTransferManager {
             }
 
             // Execute request with retry procedure
-            if (!executeRequest(request)) {
-                if (retry_count < RETRY_MAX) {
-                    retry_count++;
+            if (!getFile(request)) {
+                if (retryCount < RETRY_MAX && !isCancelled()) {
+                    retryCount++;
                     return downloadFile();
                 } else {
                     if (logger.isActivated()) {
-                        logger.debug("Failed to download file");
+                    	if(isCancelled()) {
+                    		if (logger.isActivated()) {
+                    			logger.debug("Download file cancelled");
+                    		}
+                    	} else {
+                    		if (logger.isActivated()) {
+                    			logger.debug("Failed to download file");
+                    		}
+                    	}
                     }
                     return false;
                 }
@@ -101,31 +110,23 @@ public class HttpDownloadManager extends HttpTransferManager {
 
             return true;
         } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Donwload file exception", e);
+        	}
             return false;
         }
     }
 
     /**
-     * Execute the GET request
+     * Get the file and save it
      *
-     * @param request
-     * @return true if 200 Ok
+     * @param request HTTP request
+     * @return Returns true if successful
      */
-    private boolean executeRequest(HttpGet request) {
-        int calclength = 0;
-        boolean result = false;
-
+    private boolean getFile(HttpGet request) {
         try {
             // Init file
-            if (contentName == null) {
-                contentName = "file_"+new Date();
-                if (content.getEncoding().startsWith("image/jpeg")) {
-                    contentName += ".jpg";
-                }
-            }
             File file = new File(RcsSettings.getInstance().getFileRootDirectory(), contentName);
-            BufferedOutputStream bOutputStream = new BufferedOutputStream(new FileOutputStream(file));
-            byte[] buffer = new byte[CHUNK_MAX_SIZE];
 
             // Execute HTTP request
             HttpResponse response = getHttpClient().execute(request);
@@ -135,24 +136,131 @@ public class HttpDownloadManager extends HttpTransferManager {
                 trace += "\n" + statusCode + " " + response.getStatusLine().getReasonPhrase();
                 System.out.println(trace);
             }
+            
+            // Analyze HTTP response
             if (statusCode == 200) {
-                result = true;
+                BufferedOutputStream bOutputStream = new BufferedOutputStream(new FileOutputStream(file));
+                byte[] buffer = new byte[CHUNK_MAX_SIZE];
                 HttpEntity entity = response.getEntity();
                 InputStream input = entity.getContent();
+                int calclength = 0;
                 int num;
-                while ((num = input.read(buffer)) != -1) {
+                while ((num = input.read(buffer)) != -1 && !isCancelled()) {
                     calclength += num;
                     getListener().httpTransferProgress(calclength, content.getSize());
                     bOutputStream.write(buffer, 0, num);
                 }
+
+    	        bOutputStream.flush();
+                bOutputStream.close();
+
+                if (isCancelled()) {
+    	        	file.delete();
+    	        	return false;
+            	} else {
+            		return true;
+            	}
+            } else {
+            	return false;
+            }
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Donwload file exception", e);
+        	}
+        	return false;
+        }
+    }
+
+	/**
+	 * Download the thumbnail
+	 * 
+	 * @param thumbnailInfo Thumbnail info
+	 * @return Thumbnail picture data or null in case of error
+	 */
+	public byte[] downloadThumbnail(FileTransferHttpThumbnail thumbnailInfo) {
+		try {
+            if (logger.isActivated()) {
+                logger.debug("Download Thumbnail" + content.getUrl());
             }
 
-            // Close stream
-            bOutputStream.flush();
-            bOutputStream.close();
-        } catch (Exception e) {
-            // Nothing to do
+            // Send GET request
+            HttpGet request = new HttpGet(thumbnailInfo.getThumbnailUrl());
+            if (HTTP_TRACE_ENABLED) {
+                String trace = ">>> Send HTTP request:";
+                trace += "\n" + request.getMethod() + " " + request.getRequestLine().getUri();
+                System.out.println(trace);
+            }
+            
+            // Execute request with retry procedure
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            if ((baos = getThumbnail(request)) == null) {
+                if (retryCount < RETRY_MAX) {
+                    retryCount++;
+                    return downloadThumbnail(thumbnailInfo);
+                } else {
+                    if (logger.isActivated()) {
+                        logger.debug("Failed to download Thumbnail");
+                    }
+                    return null;
+                }
+            }
+
+            return baos.toByteArray();
+        } catch(Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Download thumbnail exception", e);
+        	}
+            return null;
         }
-        return result;
+	}
+	
+	/**
+     * Get the thumbnail and save it
+     *
+     * @param request HTTP request
+	 * @return Thumbnail picture data or null in case of error
+     */
+    private ByteArrayOutputStream getThumbnail(HttpGet request) {
+		try {
+		    // Execute HTTP request
+		    HttpResponse response = getHttpClient().execute(request);
+		    int statusCode = response.getStatusLine().getStatusCode();
+		    if (HTTP_TRACE_ENABLED) {
+		        String trace = "<<< Resceive HTTP response:";
+		        trace += "\n" + statusCode + " " + response.getStatusLine().getReasonPhrase();
+		        System.out.println(trace);
+		    }
+		    
+            // Analyze HTTP response
+		    if (statusCode == 200) {
+				int calclength = 0;
+			    byte[] buffer = new byte[CHUNK_MAX_SIZE];
+				ByteArrayOutputStream bOutputStream = new ByteArrayOutputStream();
+		        HttpEntity entity = response.getEntity();
+		        InputStream input = entity.getContent();
+		        int num;
+		        while ((num = input.read(buffer)) != -1 && !isCancelled()) {
+		            calclength += num;
+		            getListener().httpTransferProgress(calclength, content.getSize());
+		            bOutputStream.write(buffer, 0, num);
+		        }
+		        
+		        bOutputStream.flush();
+		        bOutputStream.close();
+
+		        if(isCancelled()) {
+		        	return null;
+	        	} else {
+		        	return bOutputStream;
+		        }
+		    } else  {
+		    	return null;
+		    }
+		} catch (Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Download thumbnail exception", e);
+        	}
+		    return null;
+		}
     }
 }

@@ -97,7 +97,10 @@ public class ChatUtils {
         	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT + ",";
         }
         if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP;
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferStoreForwardSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_SF;
         }
         if (additionalRcseTags.length() > 0) {
         	if (additionalRcseTags.endsWith(",")) {
@@ -118,9 +121,25 @@ public class ChatUtils {
 		List<String> tags = new ArrayList<String>(); 
 		tags.add(FeatureTags.FEATURE_OMA_IM);
 		
+		String additionalRcseTags = "";
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-	    	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + "\"");
-	    }
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
+        }
+        if (RcsSettings.getInstance().isFileTransferStoreForwardSupported()) {
+        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_SF;
+        }
+        if (additionalRcseTags.length() > 0) {
+        	if (additionalRcseTags.endsWith(",")) {
+        		additionalRcseTags = additionalRcseTags.substring(0, additionalRcseTags.length()-1);
+        	}
+        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + additionalRcseTags + "\"");
+        }
 		
 	    return tags;
 	}	
@@ -893,7 +912,7 @@ public class ChatUtils {
     }
 
     /**
-     * Get the HTTP File tranfer Info Document
+     * Get the HTTP file transfer info document
      *
      * @param request Request
      * @return FT HTTP info

@@ -36,10 +36,15 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public abstract class HttpFileTransferSession extends FileSharingSession {
 
     /**
+     * Chat session ID
+     */
+    private String chatSessionId = null;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-
+    
     /**
 	 * Constructor
 	 *
@@ -47,9 +52,22 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 	 * @param content Content to be shared
 	 * @param contact Remote contact
 	 * @param thumbnail Thumbnail
+	 * @param chatSessionId Chat session ID
 	 */
-	public HttpFileTransferSession(ImsService parent, MmContent content, String contact, byte[] thumbnail) {
+	public HttpFileTransferSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionID) {
 		super(parent, content, contact, thumbnail);
+		
+		this.chatSessionId = chatSessionID;
+	}
+	
+
+	/**
+	 * Returns the chat session ID associated to the transfer
+	 * 
+	 * @return the chatSessionID
+	 */
+	public String getChatSessionID() {
+		return chatSessionId;
 	}
 
     /**

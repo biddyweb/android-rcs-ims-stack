@@ -891,6 +891,16 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				Utils.showMessage(ChatView.this, getString(R.string.label_api_failed));
 			}
 			break;
+			
+		case R.id.menu_send_file:
+			try {
+				Intent intent = new Intent(this, SendFileInSession.class);
+				intent.putExtra("sessionid", chatSession.getSessionID());
+				startActivity(intent);
+			} catch(Exception e) {
+				Utils.showMessage(ChatView.this, getString(R.string.label_api_failed));
+			}
+			break;
 
 		case R.id.menu_add_participant:
 			if (chatSession != null) {

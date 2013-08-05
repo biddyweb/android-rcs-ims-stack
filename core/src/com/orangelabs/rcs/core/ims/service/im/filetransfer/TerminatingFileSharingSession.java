@@ -165,7 +165,7 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
             String fileTransferId = attr2.getName() + ":" + attr2.getValue();
 			MediaAttribute attr3 = mediaDesc.getMediaAttribute("path");
             String remotePath = attr3.getValue();
-    		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
             // Extract the "setup" parameter

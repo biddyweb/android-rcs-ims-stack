@@ -113,9 +113,7 @@ public class HttpAuthenticationAgent {
 		   				requestUri,
 						digest.buildNonceCounter(),
 						body);	
-			}		
-			else 
-			{
+			} else {
 				// Calculate response
 		   		response = digest.calculateResponse(serverLogin, serverPwd,
 		   				method,

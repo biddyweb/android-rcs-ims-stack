@@ -15,7 +15,7 @@ public class IPCallInvitationReceiver extends BroadcastReceiver {
 		AndroidFactory.setApplicationContext(context); //TODO: use context at player level
 
 		// Display invitation notification
-		IPCallSessionActivity.addIPCallInvitationNotification(context, intent);
+		InitiateIPCallActivity.addIPCallInvitationNotification(context, intent);
 		
 	}
 

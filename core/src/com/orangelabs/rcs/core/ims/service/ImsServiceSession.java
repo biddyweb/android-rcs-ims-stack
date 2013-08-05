@@ -443,7 +443,7 @@ public abstract class ImsServiceSession extends Thread {
     	// Interrupt the session
     	interruptSession();
 
-        // Terminate session
+    	// Terminate session
 		terminateSession(reason);
 
     	// Close media session
@@ -468,7 +468,7 @@ public abstract class ImsServiceSession extends Thread {
 			logger.debug("Terminate the session (reason " + reason + ")");
 		}
 		
-		if (dialogPath.isSessionTerminated()) {
+		if ((dialogPath == null) || dialogPath.isSessionTerminated()) {
 			// Already terminated
 			return;
 		}
@@ -1119,7 +1119,7 @@ public abstract class ImsServiceSession extends Thread {
     public abstract void handleError(ImsServiceError error);
     
     /**
-     * Handle ReInvite Response
+     * Handle ReInvite Sip Response
      *
      * @param response Sip response to reInvite
      * @param int code response code
@@ -1129,12 +1129,21 @@ public abstract class ImsServiceSession extends Thread {
     }
     
     /**
+     * Handle User Answer in Response to Session Update notification 
+     *
+     * @param int code response code
+     * @param reInvite reInvite SIP request
+     */
+    public void handleReInviteUserAnswer(int  code, int requestType) {   	
+    }
+    
+    /**
      * Handle ACK sent in Response to 200Ok ReInvite 
      *
      * @param int code response code
      * @param reInvite reInvite SIP request
      */
-    public void handle200OkReInviteResponse(int  code, int requestType) {   	
+    public void handleReInviteAckResponse(int  code, int requestType) {   	
     }
     
     /**

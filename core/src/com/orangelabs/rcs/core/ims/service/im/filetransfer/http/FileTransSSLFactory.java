@@ -19,13 +19,13 @@ public class FileTransSSLFactory {
 
     static private SSLContext sslcontext = null;
     
+    
     static
     {
     	try {
     		sslcontext = SSLContext.getInstance("TLS");
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Warn that the context init has failed
-			e.printStackTrace();
+			sslcontext = null;
 		}
     }
     
@@ -40,8 +40,9 @@ public class FileTransSSLFactory {
     	try {
 			sslcontext.init(null, new TrustManager[]{ new AllTrustManager()}, new SecureRandom());
 		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return null;
+		} catch (NullPointerException e) {
+			return null;
 		}
 	
 		return sslcontext;
@@ -52,20 +53,15 @@ public class FileTransSSLFactory {
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
                 throws CertificateException {
-            // TODO Auto-generated method stub
-
         }
 
         @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType)
                 throws CertificateException {
-            // TODO Auto-generated method stub
-
         }
 
         @Override
         public X509Certificate[] getAcceptedIssuers() {
-            // TODO Auto-generated method stub
             return new X509Certificate[0];
         }
 

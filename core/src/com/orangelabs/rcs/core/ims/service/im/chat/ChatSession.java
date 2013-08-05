@@ -46,6 +46,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardNotifSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
@@ -518,7 +519,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	} else 
 			    	if (ChatUtils.isFileTransferHttpType(contentType)) {
 						// File transfer over HTTP message
-			    		receiveFileTransferHttp(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite());
+			    		receiveHttpFileTransfer(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite(), msgId);
 			    	}
 				}
 	    	} catch(Exception e) {
@@ -663,14 +664,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-	 * Receive file transfer HTTP event
+	 * Receive HTTP file transfer event
 	 * 
-	 * @param contact Contact
 	 * @param fileInfo File info in XML
+	 * @param invite Incoming request
 	 * @param msgId Message Id
-	 * @param date Date of the message
 	 */
-	private void receiveFileTransferHttp(String fileInfo, SipRequest invite) {
+	private void receiveHttpFileTransfer(String fileInfo, SipRequest invite, String msgID) {
 		// Parse HTTP document
 		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo);
 		if (fileTransferInfo != null ) {
@@ -687,8 +687,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
                 return;
             }
 
-            // TODO Test number of sessions
-
             // Auto reject if file too big
             int maxSize = FileSharingSession.getMaxFileSharingSize();
             if (maxSize > 0 && fileTransferInfo.getFileSize() > maxSize) {
@@ -699,9 +697,20 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
                 // TODO : reject (SIP MESSAGE ?)
                 return;
             }
+            
+            // Auto reject if number max of FT reached
+            maxSize = RcsSettings.getInstance().getMaxFileTransferSessions();
+            if (maxSize > 0 && getImsService().getImsModule().getInstantMessagingService().getFileTransferSessions().size() > maxSize) {
+                if (logger.isActivated()) {
+                    logger.debug("Max number of File Tranfer reached, rejecting the HTTP File transfer");
+                }
+
+                // TODO : reject (SIP MESSAGE ?)
+                return;
+            }
 
 			// Create a new session
-			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo);
+			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo, msgID, getSessionID());
 
 	        // Start the session
 			session.startSession();
@@ -746,7 +755,8 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @return Boolean
 	 */
 	public boolean isStoreAndForward() {
-		if (this instanceof TerminatingStoreAndForwardMsgSession) {
+		if (this instanceof TerminatingStoreAndForwardMsgSession ||
+				this instanceof TerminatingStoreAndForwardNotifSession) {
 			return true;
 		} else {
 			return false;
@@ -865,7 +875,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         MediaDescription mediaDesc = media.elementAt(0);
         MediaAttribute attr = mediaDesc.getMediaAttribute("path");
         String remoteMsrpPath = attr.getValue();
-        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
         int remotePort = mediaDesc.port;
 
         // Create the MSRP session

@@ -173,7 +173,7 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
         MediaDescription mediaDesc = media.elementAt(0);
         MediaAttribute attr = mediaDesc.getMediaAttribute("path");
         String remoteMsrpPath = attr.getValue();
-        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
         int remotePort = mediaDesc.port;
 
         // Create the MSRP session

@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
@@ -89,6 +90,33 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		return session.getRemoteContact();
 	}
 	
+    /**
+     * Get list of contacts (only for group transfer)
+     *
+     * @return List of contacts
+     */
+    public List<String> getContacts() {
+        return session.getParticipants().getList();
+    }
+
+    /**
+     * Is group transfer
+     *
+     * @return Boolean
+     */
+    public boolean isGroupTransfer() {
+        return (session.getParticipants().getList().size() > 0);
+    }
+
+    /**
+     * Is HTTP transfer
+     *
+     * @return Boolean
+     */
+    public boolean isHttpTransfer() {
+        return (session instanceof HttpFileTransferSession);
+    }
+
 	/**
 	 * Get session state
 	 * 
@@ -124,36 +152,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
      */
     public byte[] getFileThumbnail() {
         return session.getThumbnail();
-    }
-
-    /**
-     * Is group transfer
-     *
-     * @return Boolean
-     */
-    public boolean isGroupTransfer() {
-        // TODO: NOT YET IMPLEMENTED
-        return false;
-    }
-
-    /**
-     * Is HTTP transfer
-     *
-     * @return Boolean
-     */
-    public boolean isHttpTransfer() {
-        // TODO: NOT YET IMPLEMENTED
-        return false;
-    }
-
-    /**
-     * Get list of contacts (only for group transfer)
-     *
-     * @return List of contacts
-     */
-    public List<String> getContacts() {
-        // TODO: NOT YET IMPLEMENTED
-        return null;
     }
 
 	/**
@@ -202,13 +200,20 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	}
 
     /**
+     * Pause the session (only for HTTP transfer)
+     */
+    public void pauseSession() {
+        // TODO: NOT YET IMPLEMENTED
+    }
+
+    /**
      * Resume the session (only for HTTP transfer)
      */
     public void resumeSession() {
         // TODO: NOT YET IMPLEMENTED
     }
 
-	/**
+    /**
 	 * Add session listener
 	 * 
 	 * @param listener Listener

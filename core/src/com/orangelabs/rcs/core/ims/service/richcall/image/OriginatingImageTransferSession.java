@@ -45,6 +45,7 @@ import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.Base64;
+import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -97,10 +98,15 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
-	    	
-	    	// Set local port
-	    	int localMsrpPort = 9; // See RFC4145, Page 4	    	
-	    	
+
+            // Set local port
+            int localMsrpPort;
+            if ("active".equals(localSetup)) {
+                localMsrpPort = 9; // See RFC4145, Page 4
+            } else {
+                localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
+            }
+
 			// Create the MSRP manager
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
@@ -215,7 +221,7 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
         MediaDescription mediaDesc = media.elementAt(0);
         MediaAttribute attr = mediaDesc.getMediaAttribute("path");
         String remoteMsrpPath = attr.getValue();
-        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
         int remotePort = mediaDesc.port;
 
         // Create the MSRP session
