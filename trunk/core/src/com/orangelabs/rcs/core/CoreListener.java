@@ -129,11 +129,25 @@ public interface CoreListener {
     public void handleContentSharingStreamingInvitation(VideoStreamingSession session);
     
 	/**
-	 * A new file transfer invitation has been received
+	 * A new file transfer invitation has been received when already in a chat session
 	 * 
 	 * @param session File transfer session
 	 */
-	public void handleFileTransferInvitation(FileSharingSession session);
+	public void handleFileTransferInvitation(FileSharingSession fileSharingSession);
+
+	/**
+	 * A new file transfer invitation has been received and creating a chat session
+	 * 
+	 * @param session File transfer session
+	 */
+	public void handle1to1FileTransferInvitation(FileSharingSession fileSharingSession, TerminatingOne2OneChatSession one2oneChatSession);
+
+	/**
+	 * A new file transfer invitation has been received and creating a chat session
+	 * 
+	 * @param session File transfer session
+	 */
+	public void handleGroupFileTransferInvitation(FileSharingSession fileSharingSession, TerminatingAdhocGroupChatSession groupChatSession);
 
     /**
      * New one-to-one chat session invitation

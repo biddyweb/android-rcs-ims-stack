@@ -69,7 +69,7 @@ interface IChatSession {
 	// Is file transfer supported
 	boolean isFileTransferSupported();
 
-	// Send file to group
+	// Send a file to participants of the group chat
 	IFileTransferSession sendFile(in String file, in boolean thumbnail);
 
 	// Set is composing status

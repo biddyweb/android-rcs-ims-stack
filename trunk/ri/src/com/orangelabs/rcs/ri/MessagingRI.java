@@ -35,6 +35,7 @@ import com.orangelabs.rcs.ri.messaging.ChatList;
 import com.orangelabs.rcs.ri.messaging.InitiateChat;
 import com.orangelabs.rcs.ri.messaging.InitiateFileTransfer;
 import com.orangelabs.rcs.ri.messaging.InitiateGroupChat;
+import com.orangelabs.rcs.ri.messaging.InitiateGroupFileTransfer;
 import com.orangelabs.rcs.ri.messaging.ShowUsInMap;
 import com.orangelabs.rcs.ri.messaging.SpamBox;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -58,6 +59,7 @@ public class MessagingRI extends ListActivity {
         String[] items = {
     		getString(R.string.menu_sms_mms),
     		getString(R.string.menu_transfer_file),
+    		getString(R.string.menu_transfer_file_group),
     		getString(R.string.menu_one_to_one_chat),
     		getString(R.string.menu_adhoc_group_chat),
     		getString(R.string.menu_chat_list),
@@ -86,26 +88,30 @@ public class MessagingRI extends ListActivity {
 	            break;
 	            
 	        case 2:
-            	startActivity(new Intent(this, InitiateChat.class));
+            	startActivity(new Intent(this, InitiateGroupFileTransfer.class));
 	            break;
 	            
 	        case 3:
+            	startActivity(new Intent(this, InitiateChat.class));
+	            break;
+	            
+	        case 4:
             	startActivity(new Intent(this, InitiateGroupChat.class));
 	            break;
 	            
-	        case 4: 
+	        case 5: 
 	        	startActivity(new Intent(this, ChatList.class));
 	            break;
 	            
-	        case 5:
+	        case 6:
 	        	startActivity(new Intent(this, BlockContact.class));
 	        	break;
 
-	        case 6:
+	        case 7:
 	        	startActivity(new Intent(this, SpamBox.class));
 	        	break;
 
-	        case 7:
+	        case 8:
 	    		ContactsApi contactApi = new  ContactsApi(this);
 	    		List<String> contacts = contactApi.getRcsContacts();
 	        	Intent intent = new Intent(this, ShowUsInMap.class);

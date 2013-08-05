@@ -82,7 +82,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	    		logger.info("Initiate a new ad-hoc group chat session as terminating");
 	    	}
 
-            if (RcsSettings.getInstance().isGroupChatAutoAccepted()) {
+            if (RcsSettings.getInstance().isGroupChatAutoAccepted() || ChatUtils.getHttpFTInfo(getDialogPath().getInvite()) != null) {
                 if (logger.isActivated()) {
                     logger.debug("Auto accept group chat invitation");
                 }
@@ -141,7 +141,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 			MediaDescription mediaDesc = media.elementAt(0);
 			MediaAttribute attr1 = mediaDesc.getMediaAttribute("path");
             String remotePath = attr1.getValue();
-    		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
             // Extract the "setup" parameter

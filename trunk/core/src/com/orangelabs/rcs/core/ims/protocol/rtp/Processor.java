@@ -18,10 +18,6 @@
 
 package com.orangelabs.rcs.core.ims.protocol.rtp;
 
-
-
-
-
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.Codec;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.ProcessorInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.ProcessorOutputStream;
@@ -126,7 +122,7 @@ public class Processor extends Thread {
 					}
 					break;
 				}
-
+				
                 // Codec chain processing
                 int result = codecChain.process(inBuffer);
                 if ((result != Codec.BUFFER_PROCESSED_OK)

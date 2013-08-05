@@ -104,7 +104,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * 
 	 * @param session Chat session
 	 */
-	protected static void addChatSession(ImSession session) {
+	public static void addChatSession(ImSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Add a chat session in the list (size=" + chatSessions.size() + ")");
 		}
@@ -128,7 +128,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * 
 	 * @param session File transfer session
 	 */
-	protected static void addFileTransferSession(FileTransferSession session) {
+	public static void addFileTransferSession(FileTransferSession session) {
 		if (logger.isActivated()) {
 			logger.debug("Add a file transfer session in the list (size=" + ftSessions.size() + ")");
 		}
@@ -191,7 +191,24 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("autoAccept", RcsSettings.getInstance().isFileTransferAutoAccepted());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);    	
     }
-	
+
+	/**
+	 * Receive a new HTTP file transfer invitation outside of an existing chat session
+	 *
+	 * @param session File transfer session
+	 */
+	public void receiveFileTransferInvitation(FileSharingSession session, ChatSession chatSession) {
+		// Display invitation
+		receiveFileTransferInvitation(session);
+		
+		// Update rich messaging history
+		RichMessaging.getInstance().addIncomingChatSessionByFtHttp(chatSession);
+		
+		// Add session in the list
+		ImSession sessionApi = new ImSession(chatSession);
+		MessagingApiService.addChatSession(sessionApi);
+	}
+
 	/**
      * Transfer a file
      *
@@ -216,21 +233,12 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail);
-
-			// Set the file transfer session ID from the chat session if a chat already exist
-			String ftSessionId = session.getSessionID();
-			String chatSessionId = ftSessionId;
-			Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(contact);
-			if (chatSessions.size() > 0) {
-				ChatSession chatSession = chatSessions.lastElement();
-				chatSessionId = chatSession.getSessionID();
-			}
+			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail, null);
 			
 			// Update rich messaging history
-			RichMessaging.getInstance().addOutgoingFileTransfer(contact, chatSessionId, ftSessionId, file, session.getContent());
+			String ftSessionId = session.getSessionID();
+			RichMessaging.getInstance().addOutgoingFileTransfer(contact, ftSessionId, ftSessionId, file, session.getContent());
 
-			// Add session in the list
 			FileTransferSession sessionApi = new FileTransferSession(session);
 			addFileTransferSession(sessionApi);
 			return sessionApi;
@@ -263,6 +271,48 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		// Return a session instance
 		return ftSessions.get(id);
 	}
+	
+	/**
+     * Transfer a file to a group of contacts outside of an existing group chat
+     *
+     * @param contacts List of contact
+     * @param file File to be transfered
+     * @param thumbnail Thumbnail option
+     * @return File transfer session
+     * @throws ServerApiException
+     */
+    public IFileTransferSession transferFileGroup(List<String> contacts, String file, boolean thumbnail) throws ServerApiException {
+    	if (logger.isActivated()) {
+			logger.info("Transfer file " + file + " to " + contacts);
+		}
+
+    	// Check permission
+		ServerApiUtils.testPermission();
+
+		// Test IMS connection
+		ServerApiUtils.testIms();
+
+		try {
+			// Initiate the session
+			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
+			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
+			FileSharingSession session = Core.getInstance().getImService().initiateGroupFileTransferSession(contacts, content, thumbnail,null);
+
+			// Update rich messaging history
+			String ftSessionId = session.getSessionID();
+			RichMessaging.getInstance().addOutgoingGroupFileTransfer(contacts, ftSessionId, ftSessionId, file, session.getContent());
+
+			// Add session in the list
+			FileTransferSession sessionApi = new FileTransferSession(session);
+			addFileTransferSession(sessionApi);
+			return sessionApi;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unexpected error", e);
+			}
+			throw new ServerApiException(e.getMessage());
+		}
+    }
 	
 	/**
 	 * Get list of current file transfer sessions with a contact

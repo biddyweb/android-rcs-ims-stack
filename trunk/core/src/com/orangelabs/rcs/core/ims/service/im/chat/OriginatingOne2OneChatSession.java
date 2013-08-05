@@ -77,15 +77,20 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new 1-1 chat session as originating");
 	    	}
-	    	
+
     		// Set setup mode
 	    	String localSetup = createSetupOffer();
             if (logger.isActivated()){
 				logger.debug("Local setup attribute is " + localSetup);
 			}
-	    	
-    		// Set local port
-	    	int localMsrpPort = 9; // See RFC4145, Page 4
+
+            // Set local port
+            int localMsrpPort;
+            if ("active".equals(localSetup)) {
+                localMsrpPort = 9; // See RFC4145, Page 4
+            } else {
+                localMsrpPort = getMsrpMgr().getLocalMsrpPort();
+            }
 
 	    	// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());

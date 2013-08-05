@@ -18,13 +18,16 @@
 
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
+import javax2.sip.header.ContactHeader;
+
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -41,6 +44,11 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
     private HttpDownloadManager downloadManager;
 
     /**
+     * ID of the incoming transfer message 
+     */
+    private String msgID;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -51,20 +59,38 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
      * @param parent IMS service
      * @param invite initial INVITE
      * @param fileTransferInfo File transfer info
+     * @param msgID Message ID
+	 * @param chatSessionId Chat session ID
      */
-    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite,
-            FileTransferHttpInfoDocument fileTransferInfo) {
+    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgID, String chatSessionID) {
         super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(),
-                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), SipUtils
-                .getAssertedIdentity(invite), null);
+                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), invite.getFromUri(), null, chatSessionID);
+
+        this.msgID = msgID;
 
         // Create dialog path
         createTerminatingDialogPath(invite);
 
 		// Instantiate the download manager
 		downloadManager = new HttpDownloadManager(getContent(), this, fileTransferInfo.getFilename());
-		// TODO: download thumbnail here?
+		
+		// Download thumbnail
+		if (fileTransferInfo.getFileThumbnail() != null) {
+			setThumbnail(downloadManager.downloadThumbnail(fileTransferInfo.getFileThumbnail()));
+		}
     }
+    
+    /**
+     * Posts an interrupt request to this Thread
+     */
+    @Override
+    public void interrupt(){
+    	super.interrupt();
+    	
+    	// Interrupt the download
+    	downloadManager.interrupt();
+    }
+    
 
     /**
      * Background processing
@@ -110,7 +136,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                                 ImsServiceSession.TERMINATION_BY_USER);
                     }
                     return;
-                } else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+                } else
+                if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
                     if (logger.isActivated()) {
                         logger.debug("Transfer has been rejected on timeout");
                     }
@@ -124,7 +151,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                                 ImsServiceSession.TERMINATION_BY_TIMEOUT);
                     }
                     return;
-                } else if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                } else
+                if (answer == ImsServiceSession.INVITATION_CANCELED) {
                     if (logger.isActivated()) {
                         logger.debug("Transfer has been canceled");
                     }
@@ -143,28 +171,41 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 					logger.debug("Download file with success");
 				}
 
-                // Set file path
-                getContent().setUrl(downloadManager.getFilePath());
+                // Set filename
+                getContent().setUrl(downloadManager.getFilename());
 
                 // File transfered
                 handleFileTransfered();
 
-                // TODO Send SIP MESSAGE transfered
-
+                // Send SIP MESSAGE transfered
+				if (msgID != null) {
+                    String remoteInstanceId = null;
+                    ContactHeader inviteContactHeader = (ContactHeader)getDialogPath().getInvite().getHeader(ContactHeader.NAME);
+                    if (inviteContactHeader != null) {
+                        remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+                    }
+					// Send message delivery status via a SIP MESSAGE
+                    ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
+                                    SipUtils.getAssertedIdentity(getDialogPath().getInvite()),
+                                    msgID, ImdnDocument.DISPLAY, remoteInstanceId);
+				}
 			} else {
+				if (downloadManager.isCancelled()) {
+					return;
+				}
+
 				if (logger.isActivated()){
 					logger.info("Download file has failed");
 				}
-				
+
                 // Upload error
     			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 			}
-        
         } catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("Transfer has failed", e);
         	}
-        	
+
         	// Unexpected error
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}

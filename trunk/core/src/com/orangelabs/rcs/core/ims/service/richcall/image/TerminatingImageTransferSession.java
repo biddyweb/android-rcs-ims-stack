@@ -154,7 +154,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
             String fileTransferId = attr2.getName() + ":" + attr2.getValue();
 			MediaAttribute attr3 = mediaDesc.getMediaAttribute("path");
             String remotePath = attr3.getValue();
-    		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
             // Extract the "setup" parameter
@@ -195,7 +195,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	            "s=-" + SipUtils.CRLF +
 				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
+	            "m=message " + localMsrpPort + " " + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
 	            "a=" + fileSelector + SipUtils.CRLF +
 	    		"a=" + fileTransferId + SipUtils.CRLF +
 	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +

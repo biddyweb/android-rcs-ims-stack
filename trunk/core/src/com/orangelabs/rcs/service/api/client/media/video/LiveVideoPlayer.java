@@ -70,6 +70,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      * Video format
      */
     private VideoFormat videoFormat;
+    
+    /**
+     * AudioRenderer for RTP stream sharing
+     */
+    private VideoRenderer videoRenderer = null;     
 
     /**
      * Local RTP port
@@ -162,7 +167,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     private int srcHeight = 0;
 
     /**
-     * Mirroring (horizontal and vertival) for encoding
+     * Mirroring (horizontal and vertical) for encoding
      */
     private boolean mirroring = false;
 
@@ -204,6 +209,26 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
 
+        // Init codecs
+        supportedMediaCodecs = CodecsUtils.getPlayerCodecList();
+
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+            setMediaCodec(supportedMediaCodecs[0]);
+        }
+    }
+    
+    /**
+     * Constructor for sharing RTP stream with video renderer
+     */
+    public LiveVideoPlayer(VideoRenderer vr) {
+    	// Set the local RTP port
+        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        reservePort(localRtpPort);
+
+     // Get and set locally the audio renderer reference
+        videoRenderer = vr;
+        
         // Init codecs
         supportedMediaCodecs = CodecsUtils.getPlayerCodecList();
 
@@ -355,7 +380,17 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             rtpSender = new VideoRtpSender(videoFormat, localRtpPort);
             rtpInput = new MediaRtpInput();
             rtpInput.open();
-            rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
+            if ( videoRenderer != null ) {
+            	// The video renderer is supposed to be opened and so we used its RTP stream
+            	if (logger.isActivated()) {
+            		logger.info("audioplayer share the audio renderer rtp stream on same port");
+            	}
+            	rtpSender.prepareSession(rtpInput, remoteHost, remotePort, videoRenderer.getRtpInputStream(), this);
+            } else { 
+            	// The video renderer doesn't exist and so we create a new RTP stream
+            	rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
+            }
+            
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;

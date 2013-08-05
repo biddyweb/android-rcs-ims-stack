@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.6"
+ android:versionName="2.5.7"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -181,6 +181,24 @@
 
         <activity android:name=".messaging.ReceiveFileTransfer"/>
 
+        <activity android:icon="@drawable/ri_quick_ft_icon" android:label="@string/label_quick_ft"
+        	 android:name=".messaging.InitiateGroupFileTransfer">
+			<intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="vnd.android.cursor.item/com.orangelabs.rcs.capability.file-transfer"/>
+            </intent-filter>
+			<intent-filter>
+                <action android:name="android.net.rcs.INITIATE_FT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/x-vcard"/>
+            </intent-filter>
+		</activity>
+        
         <activity android:icon="@drawable/ri_quick_chat_icon" android:label="@string/label_quick_chat"
         	android:name=".messaging.InitiateChat">
 			<intent-filter>
@@ -235,6 +253,8 @@
         
         <activity android:name=".messaging.DisplayGeoloc"/>
         
+        <activity android:name=".messaging.SendFileInSession"/>
+        
         <activity android:name=".messaging.ShowUsInMap"/>
         
         <!-- Rich call RI -->
@@ -277,6 +297,8 @@
         <activity android:name=".IPCallRI"/>
         
         <activity android:name=".ipcall.InitiateIPCallActivity"/>
+        
+        <activity android:name=".ipcall.IPCallSessionsListActivity"/>
         
         <activity android:name=".ipcall.IPCallSessionActivity"/>
         

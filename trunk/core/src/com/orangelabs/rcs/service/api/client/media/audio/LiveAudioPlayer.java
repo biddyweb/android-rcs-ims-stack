@@ -18,18 +18,24 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IAudioEventListener;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
+import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
+/**
+ * Audio RTP player based on AMR WB format
+ *
+ * @author opob7414
+ */
 public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListener {
 	
     /**
@@ -48,24 +54,19 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     private AudioFormat audioFormat;
     
 	/**
-     * Local MediaRecorder object to capture mic and encode it
+     * Local MediaRecorder object to capture mic and encode the stream
      */
-    private MediaRecorder mediaRecorder;    
+    private MediaRecorder mediaRecorder;
+    
+	/**
+     * AudioRenderer for RTP stream sharing
+     */
+    private AudioRenderer audioRenderer = null;        
     
 	/**
      * Local RTP port
      */
     private int localRtpPort;
-    
-	/**
-     * Remote RTP host
-     */
-    private String remoteRtpHost;
-    
-	/**
-     * Remote RTP port
-     */
-    private int remoteRtpPort;
     
     /**
      * RTP sender session
@@ -88,9 +89,9 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     private boolean started = false;
     
     /**
-     * Media event listeners
+     * Audio event listeners
      */
-    private Vector<IMediaEventListener> listeners = new Vector<IMediaEventListener>();
+    private Vector<IAudioEventListener> listeners = new Vector<IAudioEventListener>();
     
     /**
      * Temporary connection to reserve the port
@@ -100,7 +101,7 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     /**
      * Timestamp increment
      */
-    private int timestampInc = 100; //TODO calculate it
+    private int timestampInc = 100; // calculate it ?
     
     /***
      * Current time stamp
@@ -133,7 +134,7 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	/**
-     * Constructor
+     * Constructor for standalone mode
      */
 	public LiveAudioPlayer() { 	
 		
@@ -149,13 +150,41 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
             setAudioCodec(supportedAudioCodecs[0]);
         }
         
-        logger.info("LiveAudioPlayer constructor : reserve local RTP port("+localRtpPort+"), init codec and set audiocodec("+supportedAudioCodecs[0].getCodecName()+")");
+        if (logger.isActivated()) {
+        	logger.info("LiveAudioPlayer constructor : reserve local RTP port("+localRtpPort+"), init codec and set audiocodec("+supportedAudioCodecs[0].getCodecName()+")");
+        }
 
     }
 	
+	/**
+     * Constructor for RTP stream sharing with audio renderer
+     */
+	public LiveAudioPlayer(AudioRenderer ar) { 	
+		
+    	// Set the local RTP port
+        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        reservePort(localRtpPort);
+        
+        // Get and set locally the audio renderer reference
+        audioRenderer = ar;
+        
+        // Init codecs
+        supportedAudioCodecs = CodecsUtils.getSupportedAudioCodecList();   
+
+        // Set the default media codec
+        if (supportedAudioCodecs.length > 0) {
+            setAudioCodec(supportedAudioCodecs[0]);
+        }
+        
+        if (logger.isActivated()) {
+        	logger.info("LiveAudioPlayer constructor with renderer : reserve local RTP port("+localRtpPort+"), init codec and set audiocodec("+supportedAudioCodecs[0].getCodecName()+")");        	
+        }
+
+    }	
+	
 	@Override
 	public void rtpStreamAborted() {
-		
+		notifyPlayerEventError("RTP session aborted");
 	}
 
 	 /**
@@ -207,15 +236,18 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
 
 	@Override
 	public void open(String remoteHost, int remotePort) throws RemoteException {
-		
-		if (remoteHost!=null) remoteRtpHost = remoteHost;
-		remoteRtpPort = remotePort;
 
         if (opened) {
             // Already opened
-        	//logger.info("audioplayer open : already opened");
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer open : already opened");
+        	}
             return;
         }		
+        
+		if (logger.isActivated()) {
+			logger.info("open the audioplayer");
+		}
         
         // Init the socket listener thread
         new LiveAudioPlayerSocketListener().start();
@@ -226,7 +258,16 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
             rtpSender = new MediaRtpSender(audioFormat, localRtpPort);
             rtpInput = new AudioRtpInput();
             rtpInput.open();
-            rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
+            if ( audioRenderer != null ) {
+            	// The audio renderer is supposed to be opened and so we used its RTP stream
+            	if (logger.isActivated()) {
+            		logger.info("audioplayer share the audio renderer rtp stream on same port");
+            	}
+            	rtpSender.prepareSession(rtpInput, remoteHost, remotePort, audioRenderer.getRtpInputStream(), this);
+            } else { 
+            	// The audio renderer doesn't exist and so we create a new RTP stream
+            	rtpSender.prepareSession(rtpInput, remoteHost, remotePort, this);
+            }
         } catch (Exception e) {
             notifyPlayerEventError(e.getMessage());
             return;
@@ -241,9 +282,16 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
 	public void close() throws RemoteException {		
         if (!opened) {
             // Already closed
-        	//logger.info("audioplayer close : already closed");
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer close : already closed");
+        	}
             return;
         }
+        
+		if (logger.isActivated()) {
+			logger.info("close the audioplayer");
+		}
+        
         // Close the RTP layer
         rtpInput.close();
         rtpSender.stopSession();
@@ -258,106 +306,151 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
 	public void start() throws RemoteException {    		
         if (!opened) {
             // Player not opened
-        	//logger.info("audioplayer start : not opened");        	
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer start : not opened");
+        	}
             return;
         }
 
         if (started) {
             // Already started
-        	//logger.info("audioplayer start : already started");
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer start : already started");
+        	}
             return;
         }
-		// Start audio recorder
-		// Feed the Socket ("audioBuffer") here with audio stream from recorder (in place of onPreview callback)
-		// Read the Socket ("audioBuffer") here with audio stream from recorder (in place of onPreview callback)
-
-		// Create media recorder
-		mediaRecorder = new MediaRecorder();
-		//logger.info("create MediaRecorder");
-		
-		// Set media recorder listener 
-		mediaRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
-
-			@Override
-			public void onError(MediaRecorder mr, int what, int extra) {
-				logger.error("mediaRecorder error : what=" + what);
-			}
-		});
-		
-		// Set media recorder audio source, output format and audio encoder
-    	mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);    	
-    	mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-    	mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
-    	//logger.info("set mediaRecorder source=MIC outputformat=3GPP audioencoder=AMR_WB");
-		
-		// Set output in a socket
-		localSocketSender = new LocalSocket(); 
-		//logger.info("new localSenderSocket");
-
-		try {
-			 localSocketSender.connect(new LocalSocketAddress(LOCAL_SOCKET));
-			 logger.warn("localSenderSocket connect locally to the thread");
-		} catch (IOException e1) {
-			e1.printStackTrace();
+        
+		if (logger.isActivated()) {
+			logger.info("start the LiveAudioPlayer");
 		}
-
-		mediaRecorder.setOutputFile(localSocketSender.getFileDescriptor());
-		//logger.info("mediaRecorder local socket sender endpoint = " + LOCAL_SOCKET);
-    	
-    	// Prepare the media recorder
-    	try {
-			mediaRecorder.prepare();
-			//logger.info("prepare mediaRecorder");
-		} catch (IllegalStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        
+        // Set and start the media recorder
+        startMediaRecorder();
     	
     	// Start the RTP sender
     	rtpSender.startSession();
     	
     	// Start the media recorder
 		mediaRecorder.start();
-		//logger.info("start MediaRecorder");
-		//logger.info("---");
+		if (logger.isActivated()) {
+			logger.info("start MediaRecorder");
+		}
 		
         // Player is started
         started = true;
         notifyPlayerEventStarted();
+	}
+	
+    /**
+     * Create, prepare and start the media recorder
+     */
+	public void startMediaRecorder() {
+		// Create media recorder
+		mediaRecorder = new MediaRecorder();
+		if (logger.isActivated()) {
+			logger.info("create MediaRecorder");
+		}
+		
+		// Set media recorder listener 
+		mediaRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
+
+			@Override
+			public void onError(MediaRecorder mr, int what, int extra) {
+				if (logger.isActivated()) {
+					logger.error("mediaRecorder error : reason=" + what);
+				}
+			}
+		});
+		
+		// Set media recorder audio source, output format and audio encoder
+    	mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);    	
+    	mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.AMR_WB);
+    	mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB);
+    	if (logger.isActivated()) {
+    		logger.info("set mediaRecorder source=MIC outputformat=AMR_WB audioencoder=AMR_WB");
+    	}
+		
+		// Set output in a local socket
+		localSocketSender = new LocalSocket(); 
+		if (logger.isActivated()) {
+			logger.info("new localSenderSocket");
+		}
+
+		try {
+			 localSocketSender.connect(new LocalSocketAddress(LOCAL_SOCKET));
+			 if (logger.isActivated()) {
+				 logger.info("localSenderSocket connect locally to the thread");
+			 }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		mediaRecorder.setOutputFile(localSocketSender.getFileDescriptor());
+		if (logger.isActivated()) {
+			logger.info("mediaRecorder local socket sender endpoint = " + LOCAL_SOCKET);
+		}
+    	
+    	// Prepare the media recorder
+    	try {
+			mediaRecorder.prepare();
+			if (logger.isActivated()) {
+				logger.info("prepare mediaRecorder");
+			}
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void stop() throws RemoteException {		
         if (!opened) {
             // Player not opened
-        	//logger.info("audioplayer stop : not opened");
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer stop : not opened");
+        	}
             return;
         }
 
         if (!started) {
             // Already stopped
-        	//logger.info("audioplayer stop : already started");
+        	if (logger.isActivated()) {
+        		logger.info("audioplayer stop : not started");
+        	}
             return;
         }
         
+		if (logger.isActivated()) {
+			logger.info("stop the audioplayer");
+		}
+        
+		// Stop the audio recorder
+        stopMediaRecorder();
+   	 	
+        notifyPlayerEventStopped();		
+	}
+	
+	public void stopMediaRecorder() {
 		// Stop audio recorder
    	 	mediaRecorder.stop();
-   	 	//logger.info("stop MediaRecorder");
+   	 	if (logger.isActivated()) {
+   	 		logger.info("stop MediaRecorder");
+   	 	}
 		try {
 			localSocketSender.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-   	 	//logger.info("close localSocketSender");
+		if (logger.isActivated()) {
+			logger.info("close localSocketSender");
+		}
    	 	mediaRecorder.reset();
    	 	// Release the recorder
    	 	mediaRecorder.release();
-   	 	//logger.info("release MediaRecorder");
-   	 	
-        notifyPlayerEventStopped();		
+   	 	if (logger.isActivated()) {
+   	 		logger.info("release MediaRecorder");
+   	 	}	
 	}
 
 	@Override
@@ -368,11 +461,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
 	@Override
 	public void addListener(IAudioEventListener listener)
 			throws RemoteException {		
+		listeners.addElement(listener);
 	}
 
 	@Override
 	public void removeAllListeners() throws RemoteException {
-		
+		listeners.removeAllElements();
 	}
 
     /**
@@ -411,12 +505,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventStarted() {
         if (logger.isActivated()) {
-            logger.debug("Player is started");
+            logger.info("Player is started");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IAudioEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStarted();
+                ((IAudioEventListener)ite.next()).audioStarted();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -430,12 +524,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventStopped() {
         if (logger.isActivated()) {
-            logger.debug("Player is stopped");
+            logger.info("Player is stopped");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IAudioEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStopped();
+                ((IAudioEventListener)ite.next()).audioStopped();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -449,12 +543,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventOpened() {
         if (logger.isActivated()) {
-            logger.debug("Player is opened");
+            logger.info("Player is opened");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IAudioEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaOpened();
+                ((IAudioEventListener)ite.next()).audioOpened();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -468,12 +562,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventClosed() {
         if (logger.isActivated()) {
-            logger.debug("Player is closed");
+            logger.info("Player is closed");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IAudioEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaClosed();
+                ((IAudioEventListener)ite.next()).audioClosed();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -487,13 +581,13 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventError(String error) {
         if (logger.isActivated()) {
-            logger.debug("Player error: " + error);
+            logger.info("Player error: " + error);
         }
 
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IAudioEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaError(error);
+                ((IAudioEventListener)ite.next()).audioError(error);
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -503,14 +597,13 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     }
 	
     /**
-     * Media RTP input
+     * Audio RTP input
      */
     private static class AudioRtpInput implements MediaInput {
         /**
          * Received frames
          */
         private FifoBuffer fifo = null;
-
         /**
          * Constructor
          */
@@ -568,13 +661,12 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
     }
     
     /**
-     * Thread that listen from local socket connection and read bytes from it
+     * Thread that listen from local socket connection and read bytes from it to add in RTP stream
      *
      */
     class LiveAudioPlayerSocketListener extends Thread {
         
         public LiveAudioPlayerSocketListener() {
-        	//logger.info("create SocketListener"); 
         }
         
         @Override
@@ -582,35 +674,44 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
 
             try {
                 localServerSocket = new LocalServerSocket(LOCAL_SOCKET);
-                //logger.info("create localServerSocket");
-                //logger.info("---");
+                
                 while (true) {
+                	
                     localSocketReceiver = localServerSocket.accept();
-                    //logger.info("accept localSocketReceiver");               
+ 
                     if (localSocketReceiver != null) { 
                         
                         // Reading bytes from the socket
-                    	//logger.info("reading inputstream");
+                    	
             	 		InputStream in = localSocketReceiver.getInputStream();
-
-//            	    	String externalStorageRootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-//            	    	String uniqueOutFile = externalStorageRootPath + "/TEST" + System.currentTimeMillis() + ".3gp";
-//            	    	FileOutputStream fop = new FileOutputStream(uniqueOutFile);
-//            	    	logger.info("writing to file : "+uniqueOutFile);
-
             	        int len = 0; 
-            	        byte[] buffer = new byte[1024];
+            	        byte[] b = new byte[1024];
+            	        byte[] buffer;
             	        
-            	        while ((len = in.read(buffer)) >= 0) {
-            	        	//logger.info("writing in rtpinput : "+len+" bytes to "+remoteRtpHost+":"+remoteRtpPort);
-            	        	//logger.info("buffer content : "+buffer);            	        	
-            	        	//logger.info("in file");
-            	        	//fop.write(buffer, 0, len);
-            	            rtpInput.addSample(buffer, timeStamp);            	             
+            	        if (logger.isActivated()) {
+            	        	logger.info("start reading inputstream in localsocket server");
+            	        }
+            	        
+            	        while ((len = in.read(b)) >= 0) {
+            	        	buffer = new byte[len];
+            	        	for (int j = 0; j < len; j++) {
+            	            	buffer[j] = b[j];
+            	            }
+            	            rtpInput.addSample(buffer, timeStamp);          
+                	        if (logger.isActivated()) {
+                	        	logger.info("addSample to rtp input: " + buffer.length);
+                	            StringBuilder sb = new StringBuilder();
+                	            for (int y = 0; y < buffer.length; y++) {
+                	            	sb.append(" "+Byte.valueOf(buffer[y]).toString());        	            	
+                	            }
+                	        	logger.info("addSample to rtp input: " + sb.toString());
+                	        }
             	            timeStamp += timestampInc; // needed ?
             	            
             	        }
-            	        //logger.info("stop reading inputstream");
+            	        if (logger.isActivated()) {
+            	        	logger.info("stop reading inputstream in localsocket server");
+            	        }
                     }
                 }
             } catch (IOException e) {

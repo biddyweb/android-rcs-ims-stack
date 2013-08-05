@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.ri;
 
+import com.orangelabs.rcs.ri.ipcall.IPCallSessionsListActivity;
 import com.orangelabs.rcs.ri.ipcall.InitiateIPCallActivity;
 import com.orangelabs.rcs.ri.utils.Utils;
 
@@ -47,6 +48,7 @@ public class IPCallRI extends ListActivity {
         // Set items
         String[] items = {
     		getString(R.string.menu_initiate_ipcall),
+    		getString(R.string.menu_ipcall_sessionslist),
             getString(R.string.menu_ipcall_settings)
         };
         setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items));
@@ -57,9 +59,13 @@ public class IPCallRI extends ListActivity {
         switch(position) {
 	        case 0:
             	startActivity(new Intent(this, InitiateIPCallActivity.class));
-                break;         
-	            
-            case 1 :
+                break; 
+                
+	        case 1 :
+	        	startActivity(new Intent(this, IPCallSessionsListActivity.class));
+                break;
+              
+            case 2 :
             	Utils.showMessage(this, getString(R.string.label_not_implemented));
                 //startActivity(new Intent(this, IPCallSettingsActivity.class));
                 break;

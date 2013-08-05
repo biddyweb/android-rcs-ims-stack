@@ -55,6 +55,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharin
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpGroupFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
@@ -217,6 +218,40 @@ public class InstantMessagingService extends ImsService {
 
 		return result;
     }
+	
+	/**
+     * Returns IM sessions with a list of contact
+     * 
+     * @param contact Contact
+     * @return List of sessions
+     */
+	public Vector<ChatSession> getImSessionsWith(List<String> contacts) {
+		// Search all IM sessions
+		Vector<ChatSession> result = new Vector<ChatSession>();
+		Enumeration<ImsServiceSession> list = getSessions();
+		loopThroughSession:while(list.hasMoreElements()) {
+			ImsServiceSession session = list.nextElement();
+			if (session instanceof GroupChatSession) {
+				List<String> connectedParticipants = ((GroupChatSession) session).getConnectedParticipants().getList();
+				
+				if(contacts.size() != connectedParticipants.size())
+				{
+					continue;
+				}
+
+				for(String contact : contacts)
+				{
+					if(!connectedParticipants.contains(contact))
+					{
+						continue loopThroughSession;
+					}
+				}
+				result.add((ChatSession)session);
+			}
+		}
+
+		return result;
+    }
 
 	/**
      * Returns file transfer sessions with a given contact
@@ -261,10 +296,11 @@ public class InstantMessagingService extends ImsService {
      * @param contact Remote contact
      * @param content Content to be sent
      * @param thumbnail Thumbnail option
-     * @return CSh session
+     * @param chatSessionId Chat session ID
+     * @return File transfer session
      * @throws CoreException
      */
-	public FileSharingSession initiateFileTransferSession(String contact, MmContent content, boolean thumbnail) throws CoreException {
+	public FileSharingSession initiateFileTransferSession(String contact, MmContent content, boolean thumbnail, String chatSessionId) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a file transfer session with contact " + contact + ", file " + content.toString());
 		}
@@ -287,23 +323,20 @@ public class InstantMessagingService extends ImsService {
 
 		// Check contact capabilities
 		boolean isFToHttpSupportedByRemote = false;
-		boolean isThumbnailSupportedByRemote = false;
 		Capabilities capability = ContactsManager.getInstance().getContactCapabilities(contact);
 		if (capability != null) {
 			isFToHttpSupportedByRemote = capability.isFileTransferHttpSupported();
-			isThumbnailSupportedByRemote = capability.isFileTransferThumbnailSupported();
 		}
 		
         byte[] thumbnailImage = null;
-		if (thumbnail && isThumbnailSupportedByRemote && content.getEncoding().startsWith("image/")) {
+        if (thumbnail && content.getEncoding().startsWith("image/")) {
 			// Create the thumbnail
 			thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
-		}
+		}		
 
 		// Select default protocol
 		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
 		boolean isHttpProtocol = false;
-		
 		if (isFToHttpSupportedByRemote && myCapability.isFileTransferHttpSupported()) {
 			if (RcsSettings.getInstance().getFtProtocol().equals(RcsSettingsData.FT_PROTOCOL_HTTP)) {
 				isHttpProtocol = true;
@@ -318,7 +351,8 @@ public class InstantMessagingService extends ImsService {
 					this,
 					content,
 					PhoneUtils.formatNumberToSipUri(contact),
-					thumbnailImage);
+					thumbnailImage,
+					chatSessionId);
 		} else {
 			// Create a new session
 			session = new OriginatingFileSharingSession(
@@ -332,9 +366,90 @@ public class InstantMessagingService extends ImsService {
 		session.startSession();
 		return session;
 	}
+	
+	/**
+     * Initiate a group file transfer session
+     * 
+     * @param contacts List of remote contacts
+     * @param content Content to be sent
+     * @param thumbnail Thumbnail option
+     * @param chatSessionId Chat session ID
+     * @return File transfer session
+     * @throws CoreException
+     */
+	public FileSharingSession initiateGroupFileTransferSession(List<String> contactList, MmContent content, boolean thumbnail, String chatSessionId) throws CoreException {
+        // Test if group FT is supported
+		// TODO: control to be removed when Group FR over MSRP is implemented
+        if (!RcsSettings.getInstance().getMyCapabilities().isFileTransferHttpSupported()) {
+            if (logger.isActivated()) {
+                logger.debug("Group file transfer not supported");
+            }
+            throw new CoreException("File transfer Http not supported");
+        }
+
+        StringBuilder contactsString = new StringBuilder();
+		for(String contact : contactList){
+			if (contact!=null) {
+				contactsString.append(contact+";");
+			}
+		}
+
+		if (logger.isActivated()) {
+			logger.info("Initiate a group file transfer session with: "+contactsString+" , file " + content.toString());
+		}
+
+		// Test number of sessions
+		if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
+			if (logger.isActivated()) {
+				logger.debug("The max number of file transfer sessions is achieved: cancel the initiation");
+			}
+			throw new CoreException("Max file transfer sessions achieved");
+		}
+
+        // Test max size
+        if (maxFtSize > 0 && content.getSize() > maxFtSize) {
+            if (logger.isActivated()) {
+                logger.debug("File exceeds max size: cancel the initiation");
+            }
+            throw new CoreException("File exceeds max size");
+        }
+
+        byte[] thumbnailImage = null;
+        if (thumbnail && content.getEncoding().startsWith("image/")) {
+			// Create the thumbnail
+			thumbnailImage = ChatUtils.createFileThumbnail(content.getUrl());
+		}
+        
+        // Select default protocol
+ 		Capabilities myCapability = RcsSettings.getInstance().getMyCapabilities();
+ 		boolean isHttpProtocol = false;
+ 		if (myCapability.isFileTransferHttpSupported()) {
+ 			if (RcsSettings.getInstance().getFtProtocol().equals(RcsSettingsData.FT_PROTOCOL_HTTP)) {
+ 				isHttpProtocol = true;
+ 			}
+ 		}
+        
+        if (isHttpProtocol) {
+	        // Create a new session
+			FileSharingSession session = new OriginatingHttpGroupFileSharingSession(
+					this,
+					content,
+					ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
+					new ListOfParticipant(contactList),
+					thumbnailImage,
+					chatSessionId);
+
+			// Start the session
+			session.startSession();
+
+			return session;
+		} else {
+        	throw new CoreException("Group file transfer over MSRP not possible outside of a group chat session");
+        }
+	}
 
 	/**
-     * Reveive a file transfer invitation
+     * Receive a file transfer invitation
      * 
      * @param invite Initial invite
      */
@@ -798,14 +913,14 @@ public class InstantMessagingService extends ImsService {
     }
 
     /**
-     * Receive HTTP file transfer
+     * Receive HTTP file transfer invitation
      *
      * @param invite Received invite
      * @param ftinfo File transfer info document
      */
-	public void receiveHttpFileTranfer(SipRequest invite, FileTransferHttpInfoDocument ftinfo) {
+	public void receiveHttpFileTranferInvitation(SipRequest invite, FileTransferHttpInfoDocument ftinfo) {
 		if (logger.isActivated()){
-			logger.info("Receive a http file transfer invitation");
+			logger.info("Receive a single HTTP file transfer invitation");
 		}
 
 		// Test if the contact is blocked
@@ -840,17 +955,78 @@ public class InstantMessagingService extends ImsService {
             return;
         }
 
-		// Create a new session
-        TerminatingHttpFileSharingSession session = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo);
+		// Create a new HTTP file transfer session
+        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
+                invite, ftinfo, ChatUtils.getMessageId(invite),null);
 
-       // Start the session
-        session.startSession();
+		// Create a chat session
+        TerminatingOne2OneChatSession one2oneChatSession = new TerminatingOne2OneChatSession(this, invite);
 
+       // Start both sessions
+        httpFiletransferSession.startSession();
+        one2oneChatSession.startSession();
+        
         // Notify listener
-        getImsModule().getCore().getListener().handleFileTransferInvitation(session);
+        getImsModule().getCore().getListener().handle1to1FileTransferInvitation(httpFiletransferSession, one2oneChatSession);
 
-        // Chat session can be directly closed
-        sendErrorResponse(invite, 486);
+	}
+	
+	/**
+     * Receive HTTP group file transfer invitation
+     *
+     * @param invite Received invite
+     * @param ftinfo File transfer info document
+     */
+	public void receiveHttpGroupFileTranferInvitation(SipRequest invite, FileTransferHttpInfoDocument ftinfo) {
+		if (logger.isActivated()){
+			logger.info("Receive HTTP group file transfer invitation");
+		}
+
+		// Test if the contact is blocked
+		String remote = ChatUtils.getReferredIdentity(invite);
+	    if (ContactsManager.getInstance().isFtBlockedForContact(remote)) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + remote + " is blocked, automatically reject the HTTP File transfer");
+			}
+
+            // TODO : reject (SIP MESSAGE ?)
+			return;
+	    }
+
+		// Test number of sessions
+		if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
+			if (logger.isActivated()) {
+				logger.debug("The max number of FT sessions is achieved, reject the HTTP File transfer");
+			}
+
+            // TODO : reject (SIP MESSAGE ?)
+			return;
+		}
+
+        // Auto reject if file too big
+        int maxSize = FileSharingSession.getMaxFileSharingSize();
+        if (maxSize > 0 && ftinfo.getFileSize() > maxSize) {
+            if (logger.isActivated()) {
+                logger.debug("File is too big, reject the HTTP File transfer");
+            }
+
+            // TODO : reject (SIP MESSAGE ?)
+            return;
+        }
+
+		// Create a new HTTP file transfer session
+        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
+                invite, ftinfo,ChatUtils.getMessageId(invite),null);
+
+		// Create a chat session
+        TerminatingAdhocGroupChatSession groupChatSession = new TerminatingAdhocGroupChatSession(this, invite);
+
+       // Start both sessions
+        httpFiletransferSession.startSession();
+        groupChatSession.startSession();
+        
+        // Notify listener
+        getImsModule().getCore().getListener().handleGroupFileTransferInvitation(httpFiletransferSession, groupChatSession);
+
 	}
 }

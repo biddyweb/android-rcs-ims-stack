@@ -3,6 +3,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 
 /**
@@ -21,11 +22,16 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	private boolean fileTransfered = false;
 
-	/**
+    /**
+     * List of participants
+     */
+    protected ListOfParticipant participants = new ListOfParticipant();
+
+    /**
 	 * Thumbnail
 	 */
 	private byte[] thumbnail = null;
-
+	
     /**
 	 * Constructor
 	 * 
@@ -48,6 +54,15 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	public MmContent getContent() {
 		return content;
+	}
+	
+	/**
+	 * Returns the list of participants involved in the transfer
+	 * 
+	 * @return List of participants 
+	 */
+	public ListOfParticipant getParticipants() {
+		return participants;
 	}
 	
 	/**
@@ -83,7 +98,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	public boolean isFileTransfered() {
 		return fileTransfered; 
 	}
-		
+	
 	/**
 	 * Returns max file sharing size
 	 * 

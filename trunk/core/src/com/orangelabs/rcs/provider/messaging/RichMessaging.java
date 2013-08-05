@@ -227,7 +227,21 @@ public class RichMessaging {
 			addIncomingChatMessage(firstMsg, session);
 		}
 	}
-	
+
+    /**
+     * Add an incoming chat session (created by FT HTTP)
+     *
+     * @param session Chat session
+     */
+    public void addIncomingChatSessionByFtHttp(ChatSession session) {
+        // Add session entry
+        String sessionId = session.getSessionID();
+        String chatId = session.getContributionID();
+        String participants = RichMessaging.getParticipants(session);
+        int type = getChatSystemEventType(session);
+        addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INVITED);
+    }
+
 	/**
 	 * Add an incoming file transfer
 	 * 
@@ -238,7 +252,7 @@ public class RichMessaging {
 	 */
 	public void addIncomingFileTransfer(String contact, String chatSessionId, String ftSessionId, MmContent content) {
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, chatSessionId, null, ftSessionId, contact, null, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.STATUS_STARTED);	
+		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, ftSessionId, chatSessionId, ftSessionId, contact, null, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -261,7 +275,21 @@ public class RichMessaging {
 			addOutgoingChatMessage(firstMsg, session);
 		}
 	}
-	
+
+    /**
+     * Add outgoing chat session (created by FT HTTP)
+     * 
+     * @param session Chat session 
+     */
+    public void addOutgoingChatSessionByFtHttp(ChatSession session){
+        // Add session entry
+        String sessionId = session.getSessionID();
+        String chatId = session.getContributionID();
+        String participants = RichMessaging.getParticipants(session);
+        int type = getChatSystemEventType(session);
+        addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
+    }
+
 	/**
 	 * Add outgoing file transfer
 	 * 
@@ -274,6 +302,27 @@ public class RichMessaging {
 	public void addOutgoingFileTransfer(String contact, String chatSessionId, String ftSessionId, String fileName, MmContent content){
 		// Add session entry
 		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, chatSessionId, null, ftSessionId, contact, fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
+	}
+	
+	/**
+	 * Add outgoing file transfer to a group
+	 * 
+	 * @param contactList List of contacts
+	 * @param chatSessionId Chat session ID which may be null if file transfer took place outside of a chat session
+	 * @param sessionId Session ID
+	 * @param filename Filename
+	 * @param content File content 
+	 */
+	public void addOutgoingGroupFileTransfer(List<String> contactList, String chatSessionId, String ftSessionId, String fileName, MmContent content){
+		
+		StringBuilder sContacts = new StringBuilder();
+		for(String contact : contactList){
+			if (contact!=null) {
+				sContacts.append(PhoneUtils.extractNumberFromUri(contact)+";");
+			}
+		}
+		// Add session entry
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, chatSessionId, null, ftSessionId, sContacts.toString(), fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -696,7 +745,9 @@ public class RichMessaging {
 		} else {
 			values.put(RichMessagingData.KEY_TIMESTAMP, date.getTime());
 		}
-		return cr.insert(databaseUri, values);
+		
+		Uri uri = cr.insert(databaseUri, values);
+		return uri;
 	}
 	
 	/**

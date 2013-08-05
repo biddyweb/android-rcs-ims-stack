@@ -17,14 +17,12 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
-import java.util.NoSuchElementException;
-import java.util.Vector;
-
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
@@ -37,14 +35,14 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author vfml3370
  */
-public class OriginatingHttpFileSharingSession extends HttpFileTransferSession implements HttpTransferEventListener {
+public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSession implements HttpTransferEventListener {
 
     /**
      * HTTP upload manager
      */
     private HttpUploadManager uploadManager;
 
-	/**
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -54,17 +52,19 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	 *
 	 * @param parent IMS service
 	 * @param content Content to be shared
-	 * @param contact Remote contact
+	 * @param conferenceId Conference ID
+	 * @param participants List of participants
 	 * @param thumbnail Thumbnail
-	 * @param chatSessionId Chat session ID
 	 */
-	public OriginatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionId) {
-		super(parent, content, contact, thumbnail, chatSessionId);
+	public OriginatingHttpGroupFileSharingSession(ImsService parent, MmContent content, String conferenceId, ListOfParticipant participants, byte[] thumbnail, String chatSessionID) {
+		super(parent, content, conferenceId, thumbnail, chatSessionID);
 
+		// Set participants involved in the transfer
+		this.participants = participants;
+		
 		// Instantiate the upload manager
 		uploadManager = new HttpUploadManager(getContent(), getThumbnail(), this);
 	}
-
 
 	/**
 	 * Background processing
@@ -72,7 +72,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void run() {
 		try {
 	    	if (logger.isActivated()) {
-	    		logger.info("Initiate a new HTTP file transfer session as originating");
+	    		logger.info("Initiate a new HTTP group file transfer session as originating");
 	    	}
 
 	    	// Upload the file to the HTTP server 
@@ -82,7 +82,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
             if(uploadManager.isCancelled()) {
             	return;
             }
-
+            
             if (result != null &&  ChatUtils.parseFileTransferHttpDocument(new String(result)) != null) {
             	String fileInfo = new String(result);
                 if (logger.isActivated()) {
@@ -91,14 +91,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 				// Send the file transfer info via a chat message
                 ChatSession chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
-                if (chatSession == null) {
-                	 Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(getRemoteContact());
-                	 try {
-                		 chatSession = chatSessions.lastElement();
-                	 } catch(NoSuchElementException nsee) {
-                         chatSession = null;
-                     }
-                }
+                
                 if (chatSession != null) {
 					// A chat session exists
 	                if (logger.isActivated()) {
@@ -126,14 +119,15 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	                }
 
 	                // Initiate a new chat session to send file transfer info in the first message, session does not need to be retrieved since it is not used
-	                chatSession = Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo);
+	                chatSession = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants.getList(), fileInfo);
 
-	                // Update rich messaging history
+                    // Update rich messaging history
 	    			RichMessaging.getInstance().addOutgoingChatSessionByFtHttp(chatSession);
 	    			
 	    			// Add session in the list
 	    			ImSession sessionApi = new ImSession(chatSession);
 	    			MessagingApiService.addChatSession(sessionApi);
+                    
                     // TODO : Check session response ?
 
                     // File transfered
@@ -157,14 +151,10 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 		}
 	}
 	
-    /**
-     * Posts an interrupt request to this Thread
-     */
-    @Override
-    public void interrupt(){
+	@Override
+	public void interrupt() {
 		super.interrupt();
-
-		// Interrupt the upload
 		uploadManager.interrupt();
 	}
+	
 }

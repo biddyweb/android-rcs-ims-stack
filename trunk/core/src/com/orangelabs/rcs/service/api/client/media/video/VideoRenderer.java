@@ -37,6 +37,7 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.VideoOrientation;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaOutput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.VideoSample;
+import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
@@ -69,6 +70,11 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
      * Video format
      */
     private VideoFormat videoFormat;
+    
+    /**
+     * RtpInputStream shared with the renderer
+     */
+    private RtpInputStream rendererRtpInputStream = null; 
 
     /**
      * Local RTP port
@@ -194,6 +200,15 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
     }
 
     /**
+     * Returns the local RTP stream (set after the open)
+     *
+     * @return RtpInputStream
+     */
+    public RtpInputStream getRtpInputStream() {
+        return rendererRtpInputStream;
+    }
+    
+    /**
      * Reserve a port
      *
      * @param port Port to reserve
@@ -278,6 +293,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
             rtpOutput = new MediaRtpOutput();
             rtpOutput.open();
             rtpReceiver.prepareSession(remoteHost, remotePort, orientationHeaderId, rtpOutput, videoFormat, this);
+            rendererRtpInputStream = rtpReceiver.getInputStream();
             rtpDummySender.prepareSession(remoteHost, remotePort, rtpReceiver.getInputStream());
             rtpDummySender.startSession();
         } catch (Exception e) {

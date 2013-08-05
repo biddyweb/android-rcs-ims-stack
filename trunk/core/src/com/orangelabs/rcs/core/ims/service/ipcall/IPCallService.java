@@ -21,6 +21,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
+import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -126,7 +127,7 @@ public class IPCallService extends ImsService {
      * @return Call session
      * @throws CoreException
      */
-    public IPCallStreamingSession initiateIPCallSession(String contact, IMediaPlayer videoPlayer, IAudioPlayer audioPlayer) throws CoreException {
+    public IPCallStreamingSession initiateIPCallSession(String contact, IMediaPlayer videoPlayer, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an IP call session");
 		}
@@ -146,6 +147,7 @@ public class IPCallService extends ImsService {
             logger.debug("VideoContent = "+ContentManager.createGenericLiveVideoContent());
             logger.debug("AudioPlayer = "+audioPlayer);
             logger.debug("VideoPlayer = "+videoPlayer);
+            logger.debug("AudioPlayer = "+audioRenderer);
         }
         
         LiveVideoContent liveVideoContent = (videoPlayer==null) ? null:ContentManager.createGenericLiveVideoContent();
@@ -154,6 +156,7 @@ public class IPCallService extends ImsService {
 				this,
 				videoPlayer,
 				audioPlayer,
+				audioRenderer,
 				liveVideoContent,
 				liveAudioContent,
 				PhoneUtils.formatNumberToSipUri(contact));

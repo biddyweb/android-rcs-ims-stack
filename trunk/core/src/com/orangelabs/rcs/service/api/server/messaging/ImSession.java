@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.service.api.server.messaging;
 
 import java.util.List;
-import java.util.Vector;
 
 import android.os.RemoteCallbackList;
 
@@ -323,46 +322,46 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	}
 
     /**
-     * Send file to group
+     * Send a file to participants of the group chat
      * 
      * @param file File to transfer
      * @param thumbnail Thumbnail option
      * @return File transfer session
+     * @throws ServerApiException 
      */
-    public IFileTransferSession sendFile(String file, boolean thumbnail) {
+    public IFileTransferSession sendFile(String file, boolean thumbnail) throws ServerApiException {
 		if (logger.isActivated()) {
-			logger.info("Transfer file " + file + " to group");
+			logger.info("Transfer file " + file);
 		}
-
-/*		try {
+		try {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail);
-
-			// Set the file transfer session ID from the chat session if a chat already exist
-			String ftSessionId = session.getSessionID();
-			String chatSessionId = ftSessionId;
-			Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(contact);
-			if (chatSessions.size() > 0) {
-				ChatSession chatSession = chatSessions.lastElement();
-				chatSessionId = chatSession.getSessionID();
+			
+			String chatSessionId = this.getSessionID();
+			FileSharingSession fileSharingsession = null;
+			if (isGroupChat()) {
+                fileSharingsession = Core.getInstance().getImService().initiateGroupFileTransferSession(getParticipants(), content, thumbnail, chatSessionId);
+			} else {
+	            fileSharingsession = Core.getInstance().getImService().initiateFileTransferSession(getRemoteContact(), content, thumbnail, chatSessionId);
 			}
 			
+			// Set the file transfer session ID from the chat session if a chat already exist
+			String ftSessionId = fileSharingsession.getSessionID();
+			
 			// Update rich messaging history
-			RichMessaging.getInstance().addOutgoingFileTransfer(contact, chatSessionId, ftSessionId, file, session.getContent());
+			RichMessaging.getInstance().addOutgoingFileTransfer(getRemoteContact(), chatSessionId, ftSessionId, file, fileSharingsession.getContent());
 
 			// Add session in the list
-			FileTransferSession sessionApi = new FileTransferSession(session);
-			addFileTransferSession(sessionApi);
+			FileTransferSession sessionApi = new FileTransferSession(fileSharingsession);
+			MessagingApiService.addFileTransferSession(sessionApi);
 			return sessionApi;
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Unexpected error", e);
 			}
 			throw new ServerApiException(e.getMessage());
-		}*/
-		return null;
+		}
     }
 
     /**

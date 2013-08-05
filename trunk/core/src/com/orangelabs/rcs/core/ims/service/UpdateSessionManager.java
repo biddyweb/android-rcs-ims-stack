@@ -237,7 +237,7 @@ public class UpdateSessionManager {
     		                    logger.info("ACK request received");
     		                }
     		                //notify local listener 
-    		            	session.handle200OkReInviteResponse( 200, reInviteContext) ;
+    		            	session.handleReInviteAckResponse( 200, reInviteContext) ;
     		            } else {
     		                if (logger.isActivated()) {
     		                    logger.debug("No ACK received for ReINVITE");
@@ -271,7 +271,8 @@ public class UpdateSessionManager {
 		if (logger.isActivated()) {
 			logger.debug("receiveReInviteAndWait()");
 		}
-
+		
+		reInviteStatus = ImsServiceSession.INVITATION_NOT_ANSWERED;
     	final SipRequest reInvite = request;
     	final int reInviteContext = serviceContext;
     	final String[] respFeatureTags = featureTags;
@@ -279,8 +280,12 @@ public class UpdateSessionManager {
     	Thread thread = new Thread() {
 			public void run() {
 				try {
-					reInviteStatus = ImsServiceSession.INVITATION_NOT_ANSWERED;
+					
 					int answer = waitInvitationAnswer();
+					
+					// build sdp response
+					String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
+					
 					
 					if (answer == ImsServiceSession.INVITATION_REJECTED) { 
 						// Invitation declined by user
@@ -298,7 +303,7 @@ public class UpdateSessionManager {
 
 						// send error to remote client						
 						session.sendErrorResponse(reInvite, session.getDialogPath().getLocalTag(), 603);
-						session.handle200OkReInviteResponse(ImsServiceSession.INVITATION_NOT_ANSWERED, reInviteContext);
+						session.handleReInviteUserAnswer(ImsServiceSession.INVITATION_NOT_ANSWERED, reInviteContext);
 						
 					} else
 					if (answer == ImsServiceSession.INVITATION_ACCEPTED){
@@ -306,10 +311,10 @@ public class UpdateSessionManager {
 							logger.debug("Send 200 OK");
 						}
 
-						// build sdp response
-						String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
 						// set sdp response as local content
 						session.getDialogPath().setLocalContent(sdp);
+						
+						session.handleReInviteUserAnswer(ImsServiceSession.INVITATION_ACCEPTED, reInviteContext);
 						
 						//create 200OK response
 						SipResponse resp = SipMessageFactory
@@ -330,7 +335,7 @@ public class UpdateSessionManager {
 							}
 
 							//notify local listener  
-    		            	session.handle200OkReInviteResponse(200, reInviteContext) ;
+    		            	session.handleReInviteAckResponse(200, reInviteContext) ;
 						} else {
 							if (logger.isActivated()) {
 								logger.debug("No ACK received for INVITE");

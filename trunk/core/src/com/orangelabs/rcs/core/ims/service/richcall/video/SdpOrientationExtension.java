@@ -30,9 +30,9 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class SdpOrientationExtension {
 
     /**
-     * GSMA VideoOrientation extension URI
+     * Video Orientation extension URI
      */
-    public static final String GSMA_ORIENTATION_URI = "urn:3gpp:video-orientation";
+    public static final String VIDEO_ORIENTATION_URI = "urn:3gpp:video-orientation";
 
     /**
      * Minimum ID value for RTP Extension header. RFC5285
@@ -87,7 +87,7 @@ public class SdpOrientationExtension {
      */
     public boolean isValid() {
         return (extensionId >= MIN_ID_VALUE && extensionId <= MAX_ID_VALUE)
-                && GSMA_ORIENTATION_URI.equalsIgnoreCase(uri);
+                && VIDEO_ORIENTATION_URI.equalsIgnoreCase(uri);
     }
 
     /**

@@ -25,6 +25,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.DefaultHandler;
 
+import android.util.TimeFormatException;
+
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -133,17 +135,39 @@ public class FileTransferHttpInfoParser extends DefaultHandler {
 				
 				if (ftInfo.getFileThumbnail() != null || thumbnailInfo == null){ 
 					ftInfo.setFileUrl(url);
-					ftInfo.setTransferValidity(DateUtils.decodeDate(validity));	// TODO Parsing Date or timestamp
+					ftInfo.setTransferValidity(parseValidityDate(validity));
+					
 				} else
 				if (thumbnailInfo != null) {
 					thumbnailInfo.setThumbnailUrl(url);		
-					thumbnailInfo.setThumbnailValidity(DateUtils.decodeDate(validity));	// TODO Parsing Date or timestamp
+					thumbnailInfo.setThumbnailValidity(parseValidityDate(validity));
 					ftInfo.setFileThumbnail(thumbnailInfo);
 				}
 			}
 		}
 	}
 	
+	private long parseValidityDate(String validity) {
+		try
+		{
+			return DateUtils.decodeDate(validity);
+		}
+		catch(TimeFormatException tfe) // validity is not in the expected date format
+		{
+			try
+			{
+				return Long.decode(validity); // validity may be already the long value 
+			}
+			catch(NumberFormatException nfe)
+			{
+				if (logger.isActivated()) {
+					logger.error("Could not parse tranfer validity:"+validity);
+				}
+				return java.lang.System.currentTimeMillis()+300000;	// TODO Validité par défaut ?
+			}
+		}
+	}
+
 	/**
 	 * Receive notification of the end of an element.
 	 */

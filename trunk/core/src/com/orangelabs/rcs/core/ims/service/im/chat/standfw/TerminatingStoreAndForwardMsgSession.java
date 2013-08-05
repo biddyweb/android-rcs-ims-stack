@@ -146,7 +146,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 			MediaDescription mediaDesc = media.elementAt(0);
 			MediaAttribute attr1 = mediaDesc.getMediaAttribute("path");
             String remotePath = attr1.getValue();
-    		String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
             // Extract the "setup" parameter

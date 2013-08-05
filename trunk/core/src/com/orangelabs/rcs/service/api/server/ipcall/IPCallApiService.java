@@ -124,8 +124,8 @@ public class IPCallApiService extends IIPCallApi.Stub {
 			IPCallStreamingSession session = Core
 					.getInstance()
 					.getIPCallService()
-					.initiateIPCallSession(contact, videoPlayer, audioPlayer);
-			session.setAudioRenderer(audioRenderer);
+					.initiateIPCallSession(contact, videoPlayer, audioPlayer, audioRenderer);
+			//session.setAudioRenderer(audioRenderer);
 
 			// Update IP call history
 			IPCall.getInstance().addCall(contact,

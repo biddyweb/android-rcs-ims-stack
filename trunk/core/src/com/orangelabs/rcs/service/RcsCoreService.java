@@ -1043,11 +1043,41 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
 	public void handleFileTransferInvitation(FileSharingSession session) {
 		if (logger.isActivated()) {
-			logger.debug("Handle event file transfer invitation");
+			logger.debug("Handle event file transfer invitation within an existing session");
 		}
 		
     	// Broadcast the invitation
     	messagingApi.receiveFileTransferInvitation(session);
+	}
+	
+	/**
+	 * A new one to one file transfer invitation has been received
+	 * 
+	 * @param session File transfer session
+	 * @param one2oneChatSession the created chat session (1to1)
+	 */
+	public void handle1to1FileTransferInvitation(FileSharingSession session, TerminatingOne2OneChatSession one2oneChatSession) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event file transfer invitation outside an existing session");
+		}
+		
+    	// Broadcast the invitation
+    	messagingApi.receiveFileTransferInvitation(session, one2oneChatSession);
+	}
+	
+	/**
+	 * A new file transfer invitation has been received
+	 * 
+	 * @param session File transfer session
+	 * @param groupChatSession the created chat session (group)
+	 */
+	public void handleGroupFileTransferInvitation(FileSharingSession session, TerminatingAdhocGroupChatSession groupChatSession) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event file transfer invitation outside an existing session");
+		}
+		
+    	// Broadcast the invitation
+    	messagingApi.receiveFileTransferInvitation(session,groupChatSession);
 	}
     
 	/**

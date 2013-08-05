@@ -41,6 +41,16 @@ public class IPCallError extends ImsSessionBasedServiceError {
 	 * Unsupported audio type (e.g. codec not supported)
 	 */
 	public final static int UNSUPPORTED_AUDIO_TYPE = IPCALL_ERROR_CODES + 6;
+	
+	/**
+	 * Audio player is not initialized
+	 */
+	public final static int AUDIO_PLAYER_NOT_INITIALIZED = IPCALL_ERROR_CODES + 7;
+	
+	/**
+	 * Video player is not initialized
+	 */
+	public final static int VIDEO_PLAYER_NOT_INITIALIZED = IPCALL_ERROR_CODES + 8;
 
 	/**
      * Constructor

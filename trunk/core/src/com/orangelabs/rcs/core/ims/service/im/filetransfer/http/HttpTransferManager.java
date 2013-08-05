@@ -99,6 +99,11 @@ public abstract class HttpTransferManager {
      * HTTP client
      */
     private DefaultHttpClient httpClient = null;
+    
+    /**
+     * Cancellation flag
+     */
+    private boolean isCancelled = false;
 
     /**
      * Constructor
@@ -175,7 +180,7 @@ public abstract class HttpTransferManager {
     }
 
     /**
-     * Returns server address
+     * Returns HTTP server address
      *
      * @return Address
      */
@@ -184,7 +189,7 @@ public abstract class HttpTransferManager {
     }
 
     /**
-     * Returns server login
+     * Returns HTTP server login
      *
      * @return Login
      */
@@ -193,7 +198,7 @@ public abstract class HttpTransferManager {
     }
 
     /**
-     * Returns server password
+     * Returns HTTP server password
      *
      * @return Password
      */
@@ -223,17 +228,32 @@ public abstract class HttpTransferManager {
             }
             return response;
         } else {
-            throw new IOException("Can't get a response");
+            throw new IOException("HTTP client not found");
         }
     }
-
     
     /**
-     * get HTTP request
+     * Get HTTP client
      * 
      * @return HTTP client
      */
     public DefaultHttpClient getHttpClient(){
     	return httpClient;
     }
+
+    /**
+     * Interrupts file transfer
+     */
+	public void interrupt() {
+		isCancelled = true;
+	}
+	
+	/**
+     * Return whether or not the file transfer has been cancelled
+     * 
+     * @return Boolean
+     */
+	public boolean isCancelled() {
+		return this.isCancelled;
+	}
 }

@@ -75,8 +75,8 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
 
             // Parse the remote SDP part
             SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
             MediaDescription mediaVideo = parser.getMediaDescription("video");
+            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaVideo);
             int remotePort = mediaVideo.port;
 
             // Extract video codecs from SDP
