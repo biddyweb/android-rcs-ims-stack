@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical"
+	android:background="#ff000000">
+	
+	<TextView android:id="@+id/ipcall_with_txt"
+	    android:textStyle="bold"
+	    android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="top|center_horizontal"
+		android:gravity="center_horizontal"/>
+
+	 <LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_marginLeft="5dp"
+	    android:layout_marginRight="5dp"
+	    android:gravity="center"
+	    android:orientation="horizontal">    
+		<Button
+	            android:id="@+id/set_onhold_btn"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/label_set_onhold_btn"
+	            android:layout_marginLeft="5dp"
+	        	android:layout_marginRight="30dp"
+	        	android:gravity="center"
+	            android:textSize="10sp" />
+
+	     <Button
+	            android:id="@+id/hangup_btn"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:text="@string/label_hangup_btn"
+	            android:layout_marginLeft="30dp"
+	        	android:layout_marginRight="5dp"
+	        	android:gravity="center"
+	           	android:textSize="10sp" />	     
+	 </LinearLayout>  
+
+	<TableRow
+	    android:id="@+id/add_video_dialog_layout_root"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_marginTop="30dp"
+	    android:gravity="center" >
+
+	    <Button
+	        android:id="@+id/add_video_btn"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="@string/label_add_video_btn"
+	        android:textSize="10sp" />
+	</TableRow>
+</LinearLayout>

@@ -1,0 +1,679 @@
+package com.orangelabs.rcs.service.api.server.ipcall;
+
+import android.os.RemoteCallbackList;
+
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSessionListener;
+import com.orangelabs.rcs.provider.ipcall.IPCall;
+import com.orangelabs.rcs.provider.ipcall.IPCallData;
+import com.orangelabs.rcs.service.api.client.SessionState;
+import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
+import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
+import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
+import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
+import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
+
+/**
+ * IP call session
+ * 
+ * * @author owom5460
+ */
+public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamingSessionListener{ 
+
+	/**
+	 * Core session
+	 */
+	private IPCallStreamingSession session;
+
+	/**
+	 * List of listeners
+	 */
+	private RemoteCallbackList<IIPCallEventListener> listeners = new RemoteCallbackList<IIPCallEventListener>();
+
+	/**
+	 * Lock used for synchronisation
+	 */
+	private Object lock = new Object();
+
+	/**
+	 * The logger
+	 */
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
+	/**
+	 * Constructor
+	 * 
+	 * @param session
+	 *            Session
+	 */
+	public IPCallSession(IPCallStreamingSession session) {
+		this.session = session;
+		session.addListener(this);
+	}
+
+	/**
+	 * Get session ID
+	 * 
+	 * @return Session ID
+	 */
+	public String getSessionID() {
+		return session.getSessionID();
+	}
+
+	/**
+	 * Get remote contact
+	 * 
+	 * @return Contact
+	 */
+	public String getRemoteContact() {
+		return session.getRemoteContact();
+	}
+
+	/**
+	 * Get session state
+	 * 
+	 * @return State (see class SessionState)
+	 * @see SessionState
+	 */
+	public int getSessionState() {
+		return ServerApiUtils.getSessionState(session);
+	}
+
+	/**
+	 * Accept the session invitation
+	 */
+	public void acceptSession(boolean audio, boolean video) {
+		if (logger.isActivated()) {
+			logger.info("Accept session invitation");
+		}
+
+		if (audio == false) {
+			handleCallError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
+					"Audio call is mandatory"));
+		} else
+		if (video == false) {
+			setVideoPlayer(null);
+			try {
+				setVideoRenderer(null);
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Can't set the video Renderer", e);
+				}
+			}
+		}
+
+		// Accept invitation
+		session.acceptSession();
+	}
+
+	/**
+	 * Reject the session invitation
+	 */
+	public void rejectSession() {
+		if (logger.isActivated()) {
+			logger.info("Reject session invitation");
+		}
+
+		// Update IP call history
+		IPCall.getInstance().setStatus(session.getSessionID(),
+				IPCallData.STATUS_CANCELED); 
+
+		// Reject invitation
+		session.rejectSession(603);
+	}
+
+	/**
+	 * Cancel the session
+	 */
+	public void cancelSession() {
+		if (logger.isActivated()) {
+			logger.info("Cancel session");
+		}
+
+		// Abort the session
+		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
+	}
+
+	/**
+	 * Add video to the session
+	 * 
+	 * @param contact Contact
+	 * @param videoPlayer Video player
+	 * @param videoRenderer Video renderer
+	 */
+	public void addVideo(IMediaPlayer videoPlayer, IMediaRenderer videoRenderer) {
+		if (logger.isActivated()) {
+			logger.info("Add video");
+		}
+
+		// Add video to session
+		session.addVideo(videoPlayer, videoRenderer);		
+	}
+
+	/**
+	 * Remove video from the session
+	 */
+	public void removeVideo() {
+		if (logger.isActivated()) {
+			logger.info("Remove video");
+		}
+
+		// Remove video from session
+		session.removeVideo();		
+	}
+
+	/**
+	 * Accept invitation to add video
+	 */
+	public void acceptAddVideo() {
+		if (logger.isActivated()) {
+			logger.info("Accept invitation to add video");
+			
+		}
+		
+		// Accept to add video
+		session.getUpdateSessionManager().acceptReInvite();
+	}
+
+	/**
+	 * Reject invitation to add video
+	 */
+	public void rejectAddVideo() {
+		if (logger.isActivated()) {
+			logger.info("Reject invitation to add video");
+		}
+		
+		// Reject add video
+		session.getUpdateSessionManager().rejectReInvite(603);
+	}
+
+	/**
+	 * Set call hold
+	 * 
+	 * @param state State
+	 */
+	public void setCallHold(boolean flag) {
+		if (logger.isActivated()) {
+			logger.info("Set call hold to " + flag);
+		}
+
+		// TODO
+	}
+
+	/**
+	 * Set the video renderer
+	 * 
+	 * @param renderer Video Renderer
+	 */
+	public void setVideoRenderer(IMediaRenderer renderer) {
+		if (logger.isActivated()) {
+			logger.info("Set a video renderer");
+		}
+
+		session.setVideoRenderer(renderer);
+	}
+
+	/**
+	 * Get the video renderer
+	 * 
+	 * @return Video renderer
+	 */
+	public IMediaRenderer getVideoRenderer() {
+		if (logger.isActivated()) {
+			logger.info("Get video renderer");
+		}
+		
+		return session.getVideoRenderer();
+	}
+
+	/**
+	 * Set the video player
+	 * 
+	 * @param player Video player
+	 */
+	public void setVideoPlayer(IMediaPlayer player) {
+		if (logger.isActivated()) {
+			logger.info("Set a video player");
+		}
+
+		session.setVideoPlayer(player);
+	}
+
+	/**
+	 * Get the video player
+	 * 
+	 * @return Video player
+	 */
+	public IMediaPlayer getVideoPlayer() {
+		if (logger.isActivated()) {
+			logger.info("Get video player");
+		}
+		
+		return session.getVideoPlayer();
+	}
+
+	/**
+	 * Set the audio renderer
+	 * 
+	 * @param renderer Audio renderer
+	 */
+	public void setAudioRenderer(IAudioRenderer renderer) {
+		if (logger.isActivated()) {
+			logger.info("Set an audio renderer");
+		}
+		
+		session.setAudioRenderer(renderer);
+	}
+
+	/**
+	 * Get the audio renderer
+	 * 
+	 * @return Audio renderer
+	 */
+	public IAudioRenderer getAudioRenderer() {
+		if (logger.isActivated()) {
+			logger.info("Get audio renderer");
+		}
+		
+		return session.getAudioRenderer();
+	}
+
+	/**
+	 * Set the audio player
+	 * 
+	 * @param player Audio pPlayer
+	 */
+	public void setAudioPlayer(IAudioPlayer player) {
+		if (logger.isActivated()) {
+			logger.info("Set an audio player");
+		}
+
+		session.setAudioPlayer(player);
+	}
+
+	/**
+	 * Get the audio player
+	 * 
+	 * @return Audio player
+	 */
+	public IAudioPlayer getAudioPlayer() {
+		if (logger.isActivated()) {
+			logger.info("Get audio player");
+		}
+		
+		return session.getAudioPlayer();
+	}
+
+	/**
+	 * Add session listener
+	 * 
+	 * @param listener Listener
+	 */
+	public void addSessionListener(IIPCallEventListener listener) {
+		if (logger.isActivated()) {
+			logger.info("Add an event listener");
+		}
+
+		synchronized (lock) {
+			listeners.register(listener);
+		}
+	}
+
+	/**
+	 * Remove session listener
+	 * 
+	 * @param listener Listener
+	 */
+	public void removeSessionListener(IIPCallEventListener listener) {
+		if (logger.isActivated()) {
+			logger.info("Remove an event listener");
+		}
+
+		synchronized (lock) {
+			listeners.unregister(listener);
+		}
+	}
+
+	/**
+	 * Session is started
+	 */
+	public void handleSessionStarted() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Session started");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleSessionStarted();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Session has been aborted
+	 * 
+	 * @param reason Termination reason
+	 */
+	public void handleSessionAborted(int reason) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Session aborted (reason " + reason + ")");
+			}
+
+			// Update IP call history
+			IPCall.getInstance().setStatus(session.getSessionID(),
+					IPCallData.STATUS_CANCELED); 
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleSessionAborted(reason);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+
+			// Remove session from the list
+			IPCallApiService.removeIPCallSession(session.getSessionID());
+		}
+	}
+
+	/**
+	 * Session has been terminated by remote
+	 */
+	public void handleSessionTerminatedByRemote() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Session terminated by remote");
+			}
+
+			// Update IP call history
+			IPCall.getInstance().setStatus(session.getSessionID(),
+					IPCallData.STATUS_TERMINATED); 
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i)
+							.handleSessionTerminatedByRemote();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+
+			// Remove session from the list
+			IPCallApiService.removeIPCallSession(session.getSessionID());
+		}
+	}
+
+    /**
+     * The size of media has changed
+     *
+     * @param width Video width
+     * @param height Video height
+     */
+	public void handleMediaResized(int width, int height) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Video resized");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleMediaResized(width,
+							height);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Add video invitation
+	 * 
+	 * @param videoEncoding Video encoding
+     * @param width Video width
+     * @param height Video height
+	 */
+	public void handleAddVideoInvitation(String videoEncoding, int videoWidth, int videoHeight) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Add video invitation");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleAddVideoInvitation(
+							videoEncoding, videoWidth, videoHeight);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+	
+	/**
+	 * Remove video invitation
+	 */
+	public void handleRemoveVideoInvitation() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info(" Remove video invitation");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleRemoveVideoInvitation();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Add video accepted by user
+	 */
+	public void handleAddVideoAccepted() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Add video accepted");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleAddVideoAccepted();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Remove video accepted by user
+	 */
+	public void handleRemoveVideoAccepted() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Remove video accepted");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleRemoveVideoAccepted();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+	
+	/**
+	 * Add video aborted (user declined or invitation not answered)
+	 * 
+	 * @param errorCode Error code
+	 */
+	public void handleAddVideoAborted(int errorCode) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Add Video Aborted - reason = " + errorCode);
+			}
+
+	        // Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleAddVideoAborted(
+							errorCode);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+	
+	/**
+	 * Remove video aborted (no 200 OK response)
+	 * 
+	 * @param errorCode Error code
+	 */
+	public void handleRemoveVideoAborted(int code) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Add Video Aborted - reason = " + code);
+			}
+
+	        // Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleRemoveVideoAborted(
+							code);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}		
+	}
+
+	/**
+	 * IP Call error
+	 * 
+	 * @param error Error
+	 */
+	public void handleCallError(IPCallError error) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Session error");
+			}
+
+			// Update IP call history
+			IPCall.getInstance().setStatus(session.getSessionID(),
+					IPCallData.STATUS_FAILED); 
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallError(
+							error.getErrorCode());
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+
+			// Remove session from the list
+			IPCallApiService.removeIPCallSession(session.getSessionID());
+		}
+	}
+
+	/**
+	 * Called user is Busy
+	 */
+	public void handle486Busy() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("486 Busy");
+			}
+
+			// Update IP call history
+			IPCall.getInstance().setStatus(session.getSessionID(),
+					IPCallData.STATUS_FAILED);
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handle486Busy();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+
+			// Remove session from the list
+			IPCallApiService.removeIPCallSession(session.getSessionID());
+		}
+	}
+}
+
