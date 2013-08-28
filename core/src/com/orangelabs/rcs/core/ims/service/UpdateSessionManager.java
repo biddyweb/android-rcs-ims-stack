@@ -25,7 +25,7 @@ public class UpdateSessionManager {
 	private ImsServiceSession session;	
 	
 	/**
-	 * ReInvite invitation status
+	 * Re-Invite invitation status
 	 */
 	private int reInviteStatus = ImsServiceSession.INVITATION_NOT_ANSWERED;
 
@@ -50,7 +50,7 @@ public class UpdateSessionManager {
 	 * @param session Session to be refreshed
 	 */
 	public UpdateSessionManager(ImsServiceSession mysession) {
-			this.session  =  mysession;	
+		this.session  =  mysession;	
 	}
 
 	
@@ -147,7 +147,7 @@ public class UpdateSessionManager {
 
 							// notify session with 200OK response
 							session.handleReInviteResponse(
-									ctx.getStatusCode(), ctx.getSipResponse(), 
+									200, ctx.getSipResponse(), 
 									reInviteContext);
 							
 							// send SIP ACK
@@ -283,10 +283,7 @@ public class UpdateSessionManager {
 					
 					int answer = waitInvitationAnswer();
 					
-					// build sdp response
-					String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
-					
-					
+	
 					if (answer == ImsServiceSession.INVITATION_REJECTED) { 
 						// Invitation declined by user
 						if (logger.isActivated()) {
@@ -310,7 +307,9 @@ public class UpdateSessionManager {
 						if (logger.isActivated()) {
 							logger.debug("Send 200 OK");
 						}
-
+						// build sdp response
+						String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
+						
 						// set sdp response as local content
 						session.getDialogPath().setLocalContent(sdp);
 						

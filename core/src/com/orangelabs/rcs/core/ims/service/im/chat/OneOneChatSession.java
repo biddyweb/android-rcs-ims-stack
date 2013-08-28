@@ -34,6 +34,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.geoloc.GeolocInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
@@ -65,16 +66,16 @@ public abstract class OneOneChatSession extends ChatSession {
         setFeatureTags(ChatUtils.getSupportedFeatureTagsForChat());
 		
 		// Set accept-types
-		String acceptTypes = CpimMessage.MIME_TYPE;
-		if (!isGroupChat()) {
-			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
-		}
+		String acceptTypes = CpimMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE;
         setAcceptTypes(acceptTypes);
 				
 		// Set accept-wrapped-types
 		String wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
         	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
+        }
+		if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
+        	wrappedTypes += " " + FileTransferHttpInfoDocument.MIME_TYPE;
         }
         setWrappedTypes(wrappedTypes);
 	}

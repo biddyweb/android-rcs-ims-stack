@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.7"
+ android:versionName="2.5.8"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -296,11 +296,11 @@
         
         <activity android:name=".IPCallRI"/>
         
-        <activity android:name=".ipcall.InitiateIPCallActivity"/>
+        <activity android:name=".ipcall.InitiateIPCall"/>
         
-        <activity android:name=".ipcall.IPCallSessionsListActivity"/>
+        <activity android:name=".ipcall.IPCallSessionsList"/>
         
-        <activity android:name=".ipcall.IPCallSessionActivity"/>
+        <activity android:name=".ipcall.IPCallView"/>
         
 		<receiver android:name=".ipcall.IPCallInvitationReceiver">
             <intent-filter>

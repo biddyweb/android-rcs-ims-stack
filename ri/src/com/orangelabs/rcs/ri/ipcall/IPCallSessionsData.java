@@ -2,10 +2,11 @@ package com.orangelabs.rcs.ri.ipcall;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import android.os.IBinder;
 
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
+import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.service.api.client.ipcall.IPCallApi;
@@ -81,6 +82,16 @@ public class IPCallSessionsData {
 	 * IP call API connected status
 	 */
 	public static boolean isCallApiConnected = false;
+	
+	/**
+	 * Client API listener
+	 */
+	public static ClientApiListener callApiListener = null;
+	
+	/**
+	 * Ims Event listener
+	 */
+	public static ImsEventListener imsEventListener = null;
 
 	/**
 	 * Wait API connected to do getIncomingSession

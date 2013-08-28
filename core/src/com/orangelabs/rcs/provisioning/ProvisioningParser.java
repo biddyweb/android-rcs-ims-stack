@@ -448,6 +448,7 @@ public class ProvisioningParser {
     private void parseServices(Node node) {
         String presencePrfl = null;
         String chatAuth = null;        
+        String groupChatAuth = null;        
         String ftAuth = null;
         String geolocPushAuth = null;
         String vsAuth = null;
@@ -472,6 +473,19 @@ public class ProvisioningParser {
                         continue;
                     }
                 }
+
+            	 if (groupChatAuth == null) {
+                     if ((groupChatAuth = getValueByParamName("groupChatAuth", childnode, TYPE_INT)) != null) {
+                         if (chatAuth.equals("1")) {
+                             RcsSettings.getInstance().writeParameter(
+                                     RcsSettingsData.CAPABILITY_IM_GROUP_SESSION, RcsSettingsData.TRUE);
+                         } else {
+                             RcsSettings.getInstance().writeParameter(
+                                     RcsSettingsData.CAPABILITY_IM_GROUP_SESSION, RcsSettingsData.FALSE);
+                         }
+                         continue;
+                     }
+                 }
 
                 if (ftAuth == null) {
                     if ((ftAuth = getValueByParamName("ftAuth", childnode, TYPE_INT)) != null) {
@@ -650,6 +664,7 @@ public class ProvisioningParser {
      */
     private void parseIM(Node node) {
         String imCapAlwaysOn = null;
+        String ftCapAlwaysOn = null;
         String imWarnSF = null;
         String imSessionStart = null;
         String ftWarnSize = null;
@@ -679,7 +694,7 @@ public class ProvisioningParser {
 
         if (childnode != null) {
             do {
-                if (imCapAlwaysOn == null) {
+            	if (imCapAlwaysOn == null) {
                     if ((imCapAlwaysOn = getValueByParamName("imCapAlwaysON", childnode, TYPE_INT)) != null) {
                         if (imCapAlwaysOn.equals("0")) {
                             RcsSettings.getInstance().writeParameter(
@@ -688,6 +703,21 @@ public class ProvisioningParser {
                         } else {
                             RcsSettings.getInstance().writeParameter(
                                     RcsSettingsData.IM_CAPABILITY_ALWAYS_ON,
+                                    RcsSettingsData.TRUE);
+                        }
+                        continue;
+                    }
+                }
+            	
+            	if (ftCapAlwaysOn == null) {
+                    if ((ftCapAlwaysOn = getValueByParamName("ftCapAlwaysON", childnode, TYPE_INT)) != null) {
+                        if (ftCapAlwaysOn.equals("0")) {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.FT_CAPABILITY_ALWAYS_ON,
+                                    RcsSettingsData.FALSE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                                    RcsSettingsData.FT_CAPABILITY_ALWAYS_ON,
                                     RcsSettingsData.TRUE);
                         }
                         continue;

@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.7
+Release 2.5.8
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,11 +9,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- FToHTTP updates.
-- FToHTTP thumbnail.
-- Group FToHTTP.
-- Deutsche Telekom contribs.
-
+- Media API refactoring (i.e. rename IMediaPlayer to IVideoPlayer).
+- IP call refactoring.
+- Add SIP 302 error support during registration.
+- New Blackbird parameters: FT always-on, Group chat auth.
 
 
 Bugs fixed:
@@ -22,11 +21,20 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+v2.5.8
+- Issue 145		Stack: "application/vnd.gsma.rcs-ft-http+xml" missing in accept-wrapped-types header for 1-1 chat
+- Issue 144		Stack: Bad capabilities in INVITE contact header for IP video call
+- Issue 141		Stack: Bad accept-wrapped-types in Group chat SDP part
+- Issue 137		Stack: Missing Contribution-ID in file transfer call flow
+- Issue 136		Stack: When a client accepts a INVITE of forward, it does not indicate if it supports FToHTTP or GeolocPush
+- Issue 135		Stack: When a client receives a link to start a FToHTTP download, it does not send a delivered notification
+- Issue 134		Stack: The notification format sent when a file has been downloaded through FToHTTP is bad-formed
+- Issue 133		Stack: When a client finishes to donwload a file through FToHTTP, it sends a notification with a SIP MESSAGE request
+
 v2.5.7
 - Deutsche Telekom	Stack: m line in SDP offer contains wrong port number in case of actpass setup - https://trello.com/c/IPp5hBQ8
 - Issue 120		Stack: In terminating image sharing, missing space before protocol in media description
 - Issue 119		Stack: In a FToHTTP a 486 response is sent for the initiated chat
-
 
 v2.5.6
 - Mantis #0017517	Stack: Bad message ID for Image Sharing, character "_" is forbidden

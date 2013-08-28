@@ -21,8 +21,8 @@ import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.service.api.client.ipcall.IPCallApiIntents;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -95,13 +95,11 @@ public class IPCallApiService extends IIPCallApi.Stub {
      * @param audioRenderer Media renderer for audio
      * @param videoPlayer Media player for video
      * @param videoRenderer Media renderer for video
-     * 
      * @throws ServerApiException
      */	
 	public IIPCallSession initiateCall(String contact,
 			IAudioPlayer audioPlayer, IAudioRenderer audioRenderer,
-			IMediaPlayer videoPlayer, IMediaRenderer videoRenderer)
-			throws ServerApiException {
+			IVideoPlayer videoPlayer, IVideoRenderer videoRenderer)	throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an IP call session with " + contact);
 		}
@@ -113,24 +111,19 @@ public class IPCallApiService extends IIPCallApi.Stub {
 		ServerApiUtils.testIms();
 
 		// Test if at least the audio media is configured
-		boolean audio = ((audioPlayer != null) && (audioRenderer != null)) ? true : false;
-		if (!audio) {
-			// No audio player or renderer
+		if ((audioPlayer == null) || (audioRenderer == null)) {
 			throw new ServerApiException("Missing audio player or renderer");
 		}
 		
 		try {
 			// Initiate a new session
-			IPCallStreamingSession session = Core
-					.getInstance()
-					.getIPCallService()
-					.initiateIPCallSession(contact, videoPlayer, audioPlayer, audioRenderer);
-			//session.setAudioRenderer(audioRenderer);
+			IPCallStreamingSession session = Core.getInstance().getIPCallService().initiateIPCallSession(contact,
+					audioPlayer, audioRenderer, videoPlayer, videoRenderer);
 
 			// Update IP call history
 			IPCall.getInstance().addCall(contact,
 					session.getSessionID(),
-					IPCallData.AUDIO_VIDEO_OUTGOING,
+					IPCallData.EVENT_OUTGOING,
 					session.getAudioContent(),
 					session.getVideoContent(),
 					IPCallData.STATUS_STARTED);
@@ -155,10 +148,6 @@ public class IPCallApiService extends IIPCallApi.Stub {
 			logger.info("Receive IP call invitation from " + session.getRemoteContact());
 		}
 
-		// Add session in the list
-		IPCallSession sessionApi = new IPCallSession(session);
-		IPCallApiService.addIPCallSession(sessionApi);
-
 		// Extract number from contact
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
@@ -168,7 +157,7 @@ public class IPCallApiService extends IIPCallApi.Stub {
 		if (audiocontent != null) {
 			audioEncoding = audiocontent.getEncoding();
 		}
-		// TODO: if no audio, rejects the call?
+		// TODO: if no audio then rejects the call
 		
 		// Get video encoding
 		VideoContent videocontent  = (VideoContent)session.getVideoContent();
@@ -181,9 +170,13 @@ public class IPCallApiService extends IIPCallApi.Stub {
 			videoHeight = videocontent.getHeight();
 		}				
 
+		// Add session in the list
+		IPCallSession sessionApi = new IPCallSession(session);
+		IPCallApiService.addIPCallSession(sessionApi);
+
 		// Update IP call history
 		IPCall.getInstance().addCall(number, session.getSessionID(),
-				IPCallData.AUDIO_VIDEO_INCOMING, audiocontent,
+				IPCallData.EVENT_INCOMING, audiocontent,
 				videocontent, IPCallData.STATUS_STARTED);
 
 		// Broadcast intent related to the received invitation
@@ -203,7 +196,7 @@ public class IPCallApiService extends IIPCallApi.Stub {
 	}
 	
 	/**
-	 * Get current IP Call session from its session ID
+	 * Get a current IP call session from its session ID
 	 *
 	 * @param id Session ID
 	 * @return Session

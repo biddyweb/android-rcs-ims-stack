@@ -126,8 +126,8 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 return;
             }
 
-            // Check that a media renderer has been set
-            if (getMediaRenderer() == null) {
+            // Check that a video renderer has been set
+            if (getVideoRenderer() == null) {
                 handleError(new ContentSharingError(
                         ContentSharingError.MEDIA_RENDERER_NOT_INITIALIZED));
                 return;
@@ -135,7 +135,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
 
             // Codec negotiation
             VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                    getMediaRenderer().getSupportedMediaCodecs(), proposedCodecs);
+            		getVideoRenderer().getSupportedVideoCodecs(), proposedCodecs);
             if (selectedVideoCodec == null) {
                 if (logger.isActivated()){
                     logger.debug("Proposed codecs are not supported");
@@ -152,22 +152,22 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
             // Set the OrientationHeaderID
             SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
             if (extensionHeader != null) {
-                getMediaRenderer().setOrientationHeaderId(extensionHeader.getExtensionId());
+            	getVideoRenderer().setOrientationHeaderId(extensionHeader.getExtensionId());
             }
 
-            // Set the media codec in media renderer
-            getMediaRenderer().setMediaCodec(selectedVideoCodec.getMediaCodec());
+            // Set video codec to the renderer
+            getVideoRenderer().setVideoCodec(selectedVideoCodec.getMediaCodec());
 
-            // Set media renderer event listener
-            getMediaRenderer().addListener(new MediaPlayerEventListener(this));
+            // Set video renderer event listener
+            getVideoRenderer().addListener(new MediaPlayerEventListener(this));
 
-            // Open the media renderer
-            getMediaRenderer().open(remoteHost, remotePort);
+            // Open the video renderer
+            getVideoRenderer().open(remoteHost, remotePort);
 
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            String videoSdp = VideoSdpBuilder.buildResponseSdp(selectedVideoCodec.getMediaCodec(), getMediaRenderer().getLocalRtpPort(), mediaVideo); 
+            String videoSdp = VideoSdpBuilder.buildSdpAnswer(selectedVideoCodec.getMediaCodec(), getVideoRenderer().getLocalRtpPort(), mediaVideo); 
             String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -203,8 +203,8 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
                 // The session is established
                 getDialogPath().sessionEstablished();
 
-                // Start the media renderer
-                getMediaRenderer().start();
+                // Start the video renderer
+                getVideoRenderer().start();
 
                 // Start session timer
                 if (getSessionTimerManager().isSessionTimerActivated(resp)) {
@@ -264,10 +264,10 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
      */
     public void closeMediaSession() {
         try {
-            // Close the media renderer
-            if (getMediaRenderer() != null) {
-                getMediaRenderer().stop();
-                getMediaRenderer().close();
+            // Close the video renderer
+            if (getVideoRenderer() != null) {
+            	getVideoRenderer().stop();
+            	getVideoRenderer().close();
             }
         } catch(Exception e) {
             if (logger.isActivated()) {
@@ -282,7 +282,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
      * @throws Exception 
      */
     public void prepareMediaSession() throws Exception {
-        // Nothing to do in terminating side
+        // Already done in run() method
     }
 
     /**
@@ -291,7 +291,7 @@ public class TerminatingVideoStreamingSession extends VideoStreamingSession {
      * @throws Exception 
      */
     public void startMediaSession() throws Exception {
-        // Nothing to do in terminating side
+        // Already done in run() method
     }
 }
 

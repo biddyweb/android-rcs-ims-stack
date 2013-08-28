@@ -1,8 +1,8 @@
 package com.orangelabs.rcs.service.api.client.richcall;
 
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 
 
 /**
@@ -27,17 +27,17 @@ interface IVideoSharingSession {
 	// Cancel the session
 	void cancelSession();
 
-	// Set the media renderer
-	void setMediaRenderer(in IMediaRenderer renderer);
+	// Set the video renderer
+	void setVideoRenderer(in IVideoRenderer renderer);
 
-    // Get the media renderer
-    IMediaRenderer getMediaRenderer();
+    // Get the video renderer
+    IVideoRenderer getVideoRenderer();
 
-    // Set the media player
-    void setMediaPlayer(in IMediaPlayer player);
+    // Set the video player
+    void setVideoPlayer(in IVideoPlayer player);
 
-    // Get the media player
-    IMediaPlayer getMediaPlayer();
+    // Get the video player
+    IVideoPlayer getVideoPlayer();
 
 	// Add session listener
 	void addSessionListener(in IVideoSharingEventListener listener);

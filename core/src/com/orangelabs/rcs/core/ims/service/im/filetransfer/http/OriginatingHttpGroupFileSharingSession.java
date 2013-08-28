@@ -83,7 +83,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
             	return;
             }
             
-            if (result != null &&  ChatUtils.parseFileTransferHttpDocument(new String(result)) != null) {
+            if (result != null &&  ChatUtils.parseFileTransferHttpDocument(result) != null) {
             	String fileInfo = new String(result);
                 if (logger.isActivated()) {
                     logger.debug("Upload done with success: " + fileInfo);

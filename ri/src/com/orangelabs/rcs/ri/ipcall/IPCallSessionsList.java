@@ -24,30 +24,29 @@ import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.service.api.client.ipcall.IPCallApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-public class IPCallSessionsListActivity extends Activity implements
-ClientApiListener, ImsEventListener {
-
-	
-	
+/**
+ * List of current IP calls
+ */
+public class IPCallSessionsList extends Activity implements ClientApiListener, ImsEventListener {
 	/**
 	 * UI handler
 	 */
-	Handler handler = new Handler() ;
+	private Handler handler = new Handler();
 	
 	/**
 	 * synchronization object
 	 */
-	Object callApiConnected = new Object(); 
+	private Object callApiConnected = new Object(); 
 	
 	/**
 	 * layout of activity
 	 */
-	ListView sessionsList ;
+	private ListView sessionsList;
 	
 	/**
 	 * Logger
 	 */
-	private static Logger logger = Logger.getLogger(IPCallSessionsListActivity.class.getName());
+	private Logger logger = Logger.getLogger(IPCallSessionsList.class.getName());
 	
 	
 	 /* *****************************************
@@ -62,72 +61,94 @@ ClientApiListener, ImsEventListener {
 		}
 		// Set layout
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		setContentView(R.layout.ipcall_sessionslist);
+		setContentView(R.layout.ipcall_sessions_list);
 
 		// Set title
-		setTitle(R.string.menu_ipcall_sessionslist);
+		setTitle(R.string.menu_ipcall_sessions);
 
 		sessionsList = (ListView) findViewById(R.id.sessions_list);
 
 		RcsSettings.createInstance(getApplicationContext());
 
-		// wait Api connection - get sessions when connected
-		Thread thread = new Thread() {
-			public void run() {
-
-				synchronized (callApiConnected) {
-					while (!IPCallSessionsData.isCallApiConnected) {
-						if (logger.isActivated()) {
-							logger.info("wait Api connected");
-						}
-						try {
-							callApiConnected.wait(1000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						if (logger.isActivated()) {
-							logger.info("sortie wait");
-						}
-					}
-				}
-				if (logger.isActivated()) {
-					logger.info("callApi connected");
-				}
-				try {
-					IPCallSessionsData.sessions = (ArrayList<IBinder>) IPCallSessionsData.callApi
-							.getSessions();
-					if (logger.isActivated()) {
-						logger.info("sessions list initialized");
-					}
-				} catch (ClientApiException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				// set sessions in listView
-				handler.post(new Runnable() {
-					public void run() {
-						sessionsList.setAdapter(new ArrayAdapter<IBinder>(
-								IPCallSessionsListActivity.this,
-								android.R.layout.simple_list_item_1,
-								IPCallSessionsData.sessions));
-						sessionsList
-								.setOnItemClickListener(sessionsListListener);
-					}
-				});
-			}
-		};
-		thread.start();
-
-		// Instantiate IP call API and connect it
-		if (IPCallSessionsData.callApi == null) {
-			IPCallSessionsData.callApi = new IPCallApi(getApplicationContext());
-
+		if (IPCallSessionsData.isCallApiConnected) {
+			// remove "old" listeners and set "new" listeners
+			IPCallSessionsData.callApi.removeAllApiEventListeners();
+			IPCallSessionsData.callApi
+					.removeImsEventListener(IPCallSessionsData.imsEventListener);
+			IPCallSessionsData.callApi.addApiEventListener(this);
+			IPCallSessionsData.callApiListener = this;
+			IPCallSessionsData.callApi.addImsEventListener(this);
+			IPCallSessionsData.imsEventListener = this;
 		}
-		IPCallSessionsData.callApi.addApiEventListener(this);
-		IPCallSessionsData.callApi.addImsEventListener(this);
-		IPCallSessionsData.callApi.connectApi();
+		else { // wait Api connection - get sessions when connected		
+			Thread thread = new Thread() {
+				public void run() {
+
+					synchronized (callApiConnected) {
+						while (!IPCallSessionsData.isCallApiConnected) {
+							if (logger.isActivated()) {
+								logger.info("wait Api connected");
+							}
+							try {
+								callApiConnected.wait(1000);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							if (logger.isActivated()) {
+								logger.info("sortie wait");
+							}
+						}
+					}
+					if (logger.isActivated()) {
+						logger.info("callApi connected");
+					}
+					try {
+						IPCallSessionsData.sessions = (ArrayList<IBinder>) IPCallSessionsData.callApi
+								.getSessions();
+						if (logger.isActivated()) {
+							logger.info("sessions list initialized");
+						}
+					} catch (ClientApiException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+					// set sessions in listView
+					handler.post(new Runnable() {
+						public void run() {
+							sessionsList.setAdapter(new ArrayAdapter<IBinder>(
+									IPCallSessionsList.this,
+									android.R.layout.simple_list_item_1,
+									IPCallSessionsData.sessions));
+							sessionsList
+									.setOnItemClickListener(sessionsListListener);
+						}
+					});
+				}
+			};
+			thread.start();
+	
+			// instantiate callApi if null
+			if (IPCallSessionsData.callApi == null) { 
+				IPCallSessionsData.callApi = new IPCallApi(getApplicationContext());
+			} 
+			else { // callApi already exists remove "old" listeners
+				IPCallSessionsData.callApi.removeAllApiEventListeners();
+				IPCallSessionsData.callApi
+						.removeImsEventListener(IPCallSessionsData.imsEventListener);
+			}
+			
+			//set "new" listeners
+			IPCallSessionsData.callApi.addApiEventListener(this);
+			IPCallSessionsData.callApiListener = this;
+			IPCallSessionsData.callApi.addImsEventListener(this);
+			IPCallSessionsData.imsEventListener = this;
+			
+			//connect api
+			IPCallSessionsData.callApi.connectApi();
+		}
+	
 	}
 
    
@@ -141,7 +162,6 @@ ClientApiListener, ImsEventListener {
     	
     	if (IPCallSessionsData.isCallApiConnected) {
 			try {
-				IPCallSessionsData.sessions.clear();
 
 				IPCallSessionsData.sessions = (ArrayList<IBinder>) IPCallSessionsData.callApi
 						.getSessions();
@@ -155,7 +175,7 @@ ClientApiListener, ImsEventListener {
 			
 			//get listView and display sessions 
    	        ListView sessionsList = (ListView)findViewById(R.id.sessions_list);	
-   	        	sessionsList.setAdapter(new ArrayAdapter<IBinder>(IPCallSessionsListActivity.this, android.R.layout.simple_list_item_1, IPCallSessionsData.sessions));
+   	        	sessionsList.setAdapter(new ArrayAdapter<IBinder>(IPCallSessionsList.this, android.R.layout.simple_list_item_1, IPCallSessionsData.sessions));
    	        	sessionsList.setOnItemClickListener(sessionsListListener);       
 		}	
     }
@@ -163,17 +183,11 @@ ClientApiListener, ImsEventListener {
     
     @Override
     public void onDestroy() {
-    	super.onDestroy();
-    	
+    	super.onDestroy();  	
     	if (logger.isActivated()) {
 			logger.info("onDestroy()");
 		}
-    	
-    	// Disconnect ip call API
-    	IPCallSessionsData.callApi.removeApiEventListener(this);
-    	IPCallSessionsData.callApi.removeImsEventListener(this);
-		IPCallSessionsData.callApi.disconnectApi();
-		IPCallSessionsData.isCallApiConnected = false;
+
     }
 
 
@@ -183,15 +197,14 @@ ClientApiListener, ImsEventListener {
 		if (logger.isActivated()) {
 			logger.debug("API, connected");
 		}
-
-		
+	
 		IPCallSessionsData.isCallApiConnected = true;
-		if (logger.isActivated()) {
-			logger.debug("IPCallSessionData.isCallApiConnected set to "+IPCallSessionsData.isCallApiConnected);
-		}
+		
 		synchronized (callApiConnected){
 			callApiConnected.notifyAll() ;
-		}		
+		}
+		
+		//launch IPCallSession activity if activity is waiting for api connection
 		if (IPCallSessionsData.recoverSessionsWhenApiConnected) {
 			getApplicationContext().startActivity(setIntentRecoverSession());
 			IPCallSessionsData.recoverSessionsWhenApiConnected = false;
@@ -205,10 +218,10 @@ ClientApiListener, ImsEventListener {
 		}
 		IPCallSessionsData.isCallApiConnected = false;
 
-		String msg = IPCallSessionsListActivity.this.getString(R.string.label_api_disabled);
+		String msg = IPCallSessionsList.this.getString(R.string.label_api_disabled);
 		
 		// Api disabled
-				Intent intent = new Intent(IPCallSessionsListActivity.this.getApplicationContext(), IPCallSessionActivity.class);
+				Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 				intent.setAction("ExitActivity");
 				intent.putExtra("messages", msg);
 				getApplicationContext().startActivity(intent);
@@ -221,10 +234,10 @@ ClientApiListener, ImsEventListener {
 		}
 		IPCallSessionsData.isCallApiConnected = false;
 		
-		String msg = IPCallSessionsListActivity.this.getString(R.string.label_api_disconnected);
+		String msg = IPCallSessionsList.this.getString(R.string.label_api_disconnected);
 
 		// Service has been disconnected
-		Intent intent = new Intent(IPCallSessionsListActivity.this.getApplicationContext(), IPCallSessionActivity.class);
+		Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
@@ -244,10 +257,10 @@ ClientApiListener, ImsEventListener {
 			logger.debug("IMS, disconnected");
 		}
 		
-		String msg = IPCallSessionsListActivity.this.getString(R.string.label_ims_disconnected);
+		String msg = IPCallSessionsList.this.getString(R.string.label_ims_disconnected);
 		
 		// IMS has been disconnected
-		Intent intent = new Intent(IPCallSessionsListActivity.this.getApplicationContext(), IPCallSessionActivity.class);
+		Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
@@ -274,7 +287,7 @@ ClientApiListener, ImsEventListener {
 	        	IPCallSessionsData.getSessionData(IPCallSessionsData.sessionId);
 	        	//launch IPCallSessionActivity
 				getApplicationContext().startActivity(setIntentRecoverSession());
-				IPCallSessionsListActivity.this.finish();
+				IPCallSessionsList.this.finish();
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block 
 				e.printStackTrace();
@@ -284,7 +297,7 @@ ClientApiListener, ImsEventListener {
 	
 	private Intent setIntentRecoverSession() {
 		// Initiate Intent to launch outgoing IP call
-		Intent intent = new Intent(getApplicationContext(), IPCallSessionActivity.class);
+		Intent intent = new Intent(getApplicationContext(), IPCallView.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("contact", IPCallSessionsData.remoteContact);
         intent.setAction("recover");

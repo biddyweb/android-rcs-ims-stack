@@ -94,7 +94,7 @@ public class GeolocSharingSession extends IGeolocSharingSession.Stub implements 
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState) 
+	 * @return State 
 	 * @see SessionState
 	 */
 	public int getSessionState() {

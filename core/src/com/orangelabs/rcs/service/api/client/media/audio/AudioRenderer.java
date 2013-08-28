@@ -55,7 +55,7 @@ import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 
 /**
- * Audio RTP renderer based on AMR WB format
+ * Audio RTP renderer. Only the AMR WB format is supported.
  *
  * @author opob7414
  */
@@ -77,7 +77,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
     private AudioFormat audioFormat;
     
 	/**
-     * RtpInputStream shared with the renderer
+     * RTP input stream shared with the renderer
      */
     private RtpInputStream rendererRtpInputStream = null; 
 
@@ -102,7 +102,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
     private AudioRtpOutput rtpOutput = null;
     
 	/**
-     * Local MediaPlayer object to decode the stream and play it
+     * Local media player to decode the stream and play it
      */
     private MediaPlayer mediaPlayer;    
 
@@ -117,17 +117,17 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
     private File outputBufferFile;
     
     /**
-     * Minimum number of buffers before playing in the mediaplayer and size of read piece of audio
+     * Minimum number of buffers before playing in the media player and size of read piece of audio
      */    
     private int nbMinBuffer = 25;
     
     /**
-     * Current number of received buffers before playing in the mediaplayer
+     * Current number of received buffers before playing in the media player
      */    
     private int nbBuffer = 0;
     
     /**
-     * Local buffer media file input stream for the mediaplayer
+     * Local buffer media file input stream for the media player
      */  
     private FileInputStream fin;  
 
@@ -173,6 +173,9 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         // Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
+        if (logger.isActivated()) {
+        	logger.debug("Reserve local RTP port "+localRtpPort);
+        }
 
         // Init codecs
         supportedAudioCodecs = CodecsUtils.getSupportedAudioCodecList();   
@@ -181,9 +184,8 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         if (supportedAudioCodecs.length > 0) {
             setAudioCodec(supportedAudioCodecs[0]);
         }
-        
         if (logger.isActivated()) {
-        	logger.info("AudioRenderer constructor : reserve local RTP port("+localRtpPort+"), init codec and set audiocodec("+supportedAudioCodecs[0].getCodecName()+")");
+        	logger.debug("Init codec "+supportedAudioCodecs[0].getCodecName());
         }
         
         this.rendererContext = context;
@@ -289,29 +291,21 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
      * @param remotePort Remote port
      */
     public void open(String remoteHost, int remotePort) {
-    	
     	if (logger.isActivated()) {
-    		logger.info("AudioRenderer open : check codec and init RTP layer");
+    		logger.info("Open the renderer at "+remoteHost+":"+remotePort);
     	}
     	
         if (opened) {
             // Already opened
-        	if (logger.isActivated()) {
-        		logger.info("AudioRenderer already opened");
-        	}
             return;
         }
 
         // Check audio codec
         if (selectedAudioCodec == null) {
-            notifyPlayerEventError("Audio Codec not selected");
+            notifyPlayerEventError("Audio codec not selected");
             return;
         }
 
-        if (logger.isActivated()) {
-        	logger.info("AudioRenderer open : init RTP layer with host:"+remoteHost+" and port:"+remotePort);
-        }
-        
         try {
             // Init the RTP layer
             releasePort();
@@ -323,59 +317,57 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
             rendererRtpInputStream = rtpReceiver.getInputStream();
             rtpDummySender.prepareSession(remoteHost, remotePort, rtpReceiver.getInputStream());
             rtpDummySender.startSession();
-        } catch (Exception e) {
-        	if (logger.isActivated()) {
-        		logger.warn("AudioRenderer init RTP layer failed");
-        	}
-            notifyPlayerEventError(e.getMessage());
-            return;
-        }
-        
-        // Init the file buffer to write sound data        
-    	File outputBufferDir = rendererContext.getCacheDir();
-    	try {
+            
+            // Init the file buffer to write sound data        
+        	File outputBufferDir = rendererContext.getCacheDir();
 			outputBufferFile = File.createTempFile("RTPBUFFER", ".AMR", outputBufferDir);
 			outputBufferFile.deleteOnExit();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-    	if (logger.isActivated()) {
-    		logger.info("prepare record file : " + outputBufferFile.getAbsolutePath());
-    	}
-    	try {
-			fop = new FileOutputStream(outputBufferFile);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-    	
-    	// Set the audio settings
-    	AudioManager audioManager;  
-    	audioManager = (AudioManager)rendererContext.getSystemService(Context.AUDIO_SERVICE);  
-    	audioManager.setMode(AudioManager.MODE_IN_CALL); 
-    	audioManager.setSpeakerphoneOn(false); 
-    	if (logger.isActivated()) {
-    		logger.info("set audiomanager settings : MODE_IN_CALL and SpeakerphoneOn to false");
-    	}
 
-        // Player is opened
-        opened = true;
-        notifyPlayerEventOpened();
+			if (logger.isActivated()) {
+        		logger.debug("Prepare record file " + outputBufferFile.getAbsolutePath());
+        	}
+			fop = new FileOutputStream(outputBufferFile);
+        	
+        	// Set the audio settings
+        	AudioManager audioManager;  
+        	audioManager = (AudioManager)rendererContext.getSystemService(Context.AUDIO_SERVICE);  
+        	audioManager.setMode(AudioManager.MODE_IN_CALL); 
+        	audioManager.setSpeakerphoneOn(false); 
+        	if (logger.isActivated()) {
+        		logger.debug("Set audio manager settings: MODE_IN_CALL and speaker OFF");
+        	}
+
+            // Player is opened
+            opened = true;
+            notifyPlayerEventOpened();
+		} catch (FileNotFoundException e) {
+        	if (logger.isActivated()) {
+        		logger.error("Renderer init RTP layer failed", e);
+        	}
+            notifyPlayerEventError(e.getMessage());
+		} catch (IOException e) {
+        	if (logger.isActivated()) {
+        		logger.error("Renderer init RTP layer failed", e);
+        	}
+            notifyPlayerEventError(e.getMessage());
+        } catch (Exception e) {
+        	if (logger.isActivated()) {
+        		logger.error("Renderer init RTP layer failed", e);
+        	}
+            notifyPlayerEventError(e.getMessage());
+        }
     }
 
     /**
      * Close the renderer
      */
     public void close() {
-    	
     	if (logger.isActivated()) {
-    		logger.info("AudioRenderer close : close RTP layer (rtpOutput close and rtpReceiver stop) and notify");
+    		logger.info("Close the renderer");
     	}
     	
         if (!opened) {
             // Already closed
-        	if (logger.isActivated()) {
-        		logger.info("AudioRenderer already closed");
-        	}
             return;
         }
         
@@ -384,7 +376,6 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
 	        fop.close();
 	        fin.close();
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
 
         // Close the RTP layer
@@ -401,24 +392,17 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
      * Start the player
      */
     public void start() {
-    	
     	if (logger.isActivated()) {
-    		logger.info("AudioRenderer start : start RTP layer (rtpReceiver start)");
+    		logger.info("Start the player");
     	}
     	
         if (!opened) {
             // Player not opened
-        	if (logger.isActivated()) {
-        		logger.info("AudioRenderer not opened");
-        	}
             return;
         }
 
         if (started) {
             // Already started
-        	if (logger.isActivated()) {
-        		logger.info("AudioRenderer already started");
-        	}
             return;
         }
 
@@ -427,7 +411,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         
         // Create the mediaPlayer (started after nbMinBuffer packets received through writeSample())
 		if (logger.isActivated()) {
-			logger.info("create the mediaplayer");
+			logger.debug("Create the media player");
 		}
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_VOICE_CALL);
@@ -442,10 +426,9 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
      * Set up the media player
      */
     private void setupMediaPlayer() {
-    	
         // Set data source to the mediaPlayer
 		if (logger.isActivated()) {
-			logger.info("set data source to the mediaplayer");
+			logger.debug("Set data source to the mediaplayer");
 		}
         try {
         	fin = new FileInputStream(this.outputBufferFile);
@@ -462,7 +445,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         
         // Prepare the mediaPlayer
 		if (logger.isActivated()) {
-			logger.info("prepare the mediaplayer");
+			logger.debug("Prepare the media player");
 		}
         try {
 			mediaPlayer.prepare();
@@ -476,10 +459,9 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         mediaPlayer.setOnPreparedListener(new OnPreparedListener() {
         	@Override
         	public void onPrepared(MediaPlayer mp) {
-        		
         		// The mediaPlayer is prepared
 				if (logger.isActivated()) {
-					logger.info("the mediaplayer is prepared");
+					logger.debug("The media player is prepared");
 				}
             }
         });
@@ -490,7 +472,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
 				mp.start();
 				// The mediaPlayer is seeked
 				if (logger.isActivated()) {
-					logger.info("the mediaplayer is seeked and restart");
+					logger.info("The media player is seeked and restart");
 				}
 			}
         	
@@ -711,7 +693,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
      */
     private void notifyPlayerEventError(String error) {
         if (logger.isActivated()) {
-            logger.debug("Renderer error: " + error);
+            logger.debug("Player error " + error);
         }
 
         Iterator<IAudioEventListener> ite = listeners.iterator();
@@ -736,7 +718,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
          */
         public AudioRtpOutput() {
         	if (logger.isActivated()) {
-        		logger.info("Create the rtp output stream");
+        		logger.info("Create the RTP output stream");
         	}
         }
 
@@ -746,7 +728,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         public void open() {
             // Nothing to do
         	if (logger.isActivated()) {
-        		logger.info("Open the rtp output stream");
+        		logger.info("Open the RTP output stream");
         	}
         }
 
@@ -755,7 +737,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
          */
         public void close() {
         	if (logger.isActivated()) {
-        		logger.info("close the rtp output stream");
+        		logger.info("Close the RTP output stream");
         	}
         }
 
@@ -767,8 +749,8 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         	try {				
 				fop.write(sample.getData(), 0, sample.getData().length);
 			} catch (IOException e) {
-				e.printStackTrace();
-			}
+                throw new MediaException("Can't write media sample to file");
+            }
         	
         	// Start playing when number of received buffers reach nbMinBuffer
         	nbBuffer++;
@@ -779,10 +761,7 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
 	            for (int y = 0; y < sample.getData().length; y++) {
 	            	sb.append(" "+Byte.valueOf(sample.getData()[y]).toString());            	            	
 	            }
-	            logger.info("RTP buffer content : " + sb.toString());	            
     		}
-			
 		}
     }
-       
 }

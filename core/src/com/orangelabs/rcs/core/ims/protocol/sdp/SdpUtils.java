@@ -47,20 +47,22 @@ public class SdpUtils {
      * 
      * @param sessionDescription Session description part of SDP
      * @param mediaDescription Media description part of SDP
-     * @return Remote host address
+     * @return Remote host address or null if not found
      */
     public static String extractRemoteHost(SessionDescription sessionDescription, MediaDescription mediaDescription) {
         String remoteHost = null;
+        
         // First we need try to use the media description connection info
-        if (mediaDescription != null
-                && mediaDescription.connectionInfo != null) {
+        if ((mediaDescription != null) &&
+				(mediaDescription.connectionInfo != null)) {
             remoteHost = extractRemoteHost(mediaDescription.connectionInfo);
         }
+        
         // If media description has no connection info or remote host information, we need to try
         // to use the session description connection info
-        if (remoteHost == null
-                && sessionDescription != null
-                && sessionDescription.connectionInfo != null) {
+        if ((remoteHost == null) &&
+        		(sessionDescription != null) &&
+        			(sessionDescription.connectionInfo != null)) {
             remoteHost = extractRemoteHost(sessionDescription.connectionInfo);
         }
         return remoteHost;

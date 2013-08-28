@@ -22,32 +22,26 @@ import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * IP call service has in charge to monitor the IP call in order to stop the
- * current audio and video communication when the call terminates , to process 
- * capability request from remote and to request remote capabilities
+ * IP call service offers one-to-on IP voice call and IP video call
  *
  * @author opob7414
  */
 public class IPCallService extends ImsService {
     /**
-     * IP VOICE CALL features tags 
+     * IP voice call features tags 
      */
     public final static String[] FEATURE_TAGS_IP_VOICE_CALL = { FeatureTags.FEATURE_3GPP_IP_VOICE_CALL, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL};
 
     /**
-     * IP AUDIO+VIDEO CALL features tags 
+     * IP video call features tags 
      */
-    public final static String[] FEATURE_TAGS_IP_AUDIOVIDEO_CALL = { FeatureTags.FEATURE_3GPP_IP_VOICE_CALL, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL , FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL};
-    
-    /**
-     * IP VIDEO CALL features tags 
-     */
-    public final static String[] FEATURE_TAGS_IP_VIDEO_CALL = { FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL};
+    public final static String[] FEATURE_TAGS_IP_VIDEO_CALL = { FeatureTags.FEATURE_3GPP_IP_VOICE_CALL, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL , FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL};
     
 	/**
 	 * Max sessions
@@ -74,7 +68,6 @@ public class IPCallService extends ImsService {
 	/**
 	 * Start the IMS service
 	 */
-	@Override
 	public void start() {
 		if (isServiceStarted()) {
 			// Already started
@@ -86,7 +79,6 @@ public class IPCallService extends ImsService {
 	/**
 	 * Stop the IMS service
 	 */
-	@Override
 	public void stop() {
 		if (!isServiceStarted()) {
 			// Already stopped
@@ -98,9 +90,7 @@ public class IPCallService extends ImsService {
 	/**
      * Check the IMS service
      */
-	@Override
 	public void check() {
-	
 	}
 	
     /**
@@ -119,15 +109,17 @@ public class IPCallService extends ImsService {
     }
     
     /**
-     * Initiate an IPCall session
+     * Initiate an IP call session
      *
      * @param contact Remote contact
-     * @param player Media player
-     * @param player Audio player
-     * @return Call session
+     * @param audioPlayer Audio player
+     * @param audioRenderer Audio renderer
+     * @param videoPlayer Video player
+     * @param videoRenderer Video renderer
+     * @return IP call session
      * @throws CoreException
      */
-    public IPCallStreamingSession initiateIPCallSession(String contact, IMediaPlayer videoPlayer, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer) throws CoreException {
+    public IPCallStreamingSession initiateIPCallSession(String contact, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer, IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate an IP call session");
 		}
@@ -142,24 +134,17 @@ public class IPCallService extends ImsService {
 
         
         // Create a new session
-        if (logger.isActivated()) {
-            logger.debug("AudioContent = "+ContentManager.createGenericLiveAudioContent());
-            logger.debug("VideoContent = "+ContentManager.createGenericLiveVideoContent());
-            logger.debug("AudioPlayer = "+audioPlayer);
-            logger.debug("VideoPlayer = "+videoPlayer);
-            logger.debug("AudioPlayer = "+audioRenderer);
-        }
-        
+        LiveAudioContent liveAudioContent = ContentManager.createGenericLiveAudioContent();
         LiveVideoContent liveVideoContent = (videoPlayer==null) ? null:ContentManager.createGenericLiveVideoContent();
-        LiveAudioContent liveAudioContent = (audioPlayer==null) ? null:ContentManager.createGenericLiveAudioContent();
 		OriginatingIPCallStreamingSession session = new OriginatingIPCallStreamingSession(
 				this,
-				videoPlayer,
+				PhoneUtils.formatNumberToSipUri(contact),
+				liveAudioContent,
 				audioPlayer,
 				audioRenderer,
 				liveVideoContent,
-				liveAudioContent,
-				PhoneUtils.formatNumberToSipUri(contact));
+				videoPlayer,
+				videoRenderer);
 		
 		// Start the session
 		session.startSession();
@@ -196,7 +181,6 @@ public class IPCallService extends ImsService {
      * @param options Received options message
      */
     public void receiveCapabilityRequest(SipRequest options) { 
-    	// Not used, see ImsDispatcher (OPTIONS request) and CapabilityUtils for OPTIONS request management
     	String contact = SipUtils.getAssertedIdentity(options);
 
     	if (logger.isActivated()) {

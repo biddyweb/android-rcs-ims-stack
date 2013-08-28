@@ -1,8 +1,8 @@
  package com.orangelabs.rcs.service.api.client.ipcall;
 
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 
@@ -22,7 +22,7 @@ interface IIPCallSession {
 	int getSessionState();
 
 	// Accept the session invitation
-	void acceptSession(in boolean audio, in boolean video);
+	void acceptSession(in boolean video);
 
 	// Reject the session invitation
 	void rejectSession();
@@ -31,7 +31,7 @@ interface IIPCallSession {
 	void cancelSession();
 	
 	// Add video to the session
-	void addVideo(in IMediaPlayer videoPlayer, in IMediaRenderer videoRenderer);
+	void addVideo(in IVideoPlayer videoPlayer, in IVideoRenderer videoRenderer);
 	
 	// Accept invitation to add video
 	void acceptAddVideo();
@@ -46,16 +46,16 @@ interface IIPCallSession {
 	void setCallHold(in boolean flag);
 
 	// Set the video renderer
-	void setVideoRenderer(in IMediaRenderer renderer);
+	void setVideoRenderer(in IVideoRenderer renderer);
 
     // Get the video renderer
-    IMediaRenderer getVideoRenderer();
+    IVideoRenderer getVideoRenderer();
 
     // Set the video player
-    void setVideoPlayer(in IMediaPlayer player);
+    void setVideoPlayer(in IVideoPlayer player);
 
     // Get the video player
-    IMediaPlayer getVideoPlayer();
+    IVideoPlayer getVideoPlayer();
     
     // Set the audio renderer
 	void setAudioRenderer(in IAudioRenderer renderer);

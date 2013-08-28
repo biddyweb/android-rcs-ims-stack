@@ -90,7 +90,7 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState) 
+	 * @return State 
 	 * @see SessionState
 	 */
 	public int getSessionState() {

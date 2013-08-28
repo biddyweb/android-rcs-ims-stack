@@ -18,13 +18,11 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.format.audio.AudioFormat;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaException;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaInput;
 import com.orangelabs.rcs.core.ims.protocol.rtp.media.MediaSample;
-import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.service.api.client.media.IAudioEventListener;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
-import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.FifoBuffer;
@@ -32,7 +30,7 @@ import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Audio RTP player based on AMR WB format
+ * Audio RTP player. Only the AMR WB format is supported.
  *
  * @author opob7414
  */
@@ -698,14 +696,14 @@ public class LiveAudioPlayer extends IAudioPlayer.Stub implements RtpStreamListe
             	            	buffer[j] = b[j];
             	            }
             	            rtpInput.addSample(buffer, timeStamp);          
-                	        if (logger.isActivated()) {
-                	        	logger.info("addSample to rtp input: " + buffer.length);
-                	            StringBuilder sb = new StringBuilder();
-                	            for (int y = 0; y < buffer.length; y++) {
-                	            	sb.append(" "+Byte.valueOf(buffer[y]).toString());        	            	
-                	            }
-                	        	logger.info("addSample to rtp input: " + sb.toString());
-                	        }
+//                	        if (logger.isActivated()) {
+//                	        	logger.info("addSample to rtp input: " + buffer.length);
+//                	            StringBuilder sb = new StringBuilder();
+//                	            for (int y = 0; y < buffer.length; y++) {
+//                	            	sb.append(" "+Byte.valueOf(buffer[y]).toString());        	            	
+//                	            }
+//                	        	logger.info("addSample to rtp input: " + sb.toString());
+//                	        }
             	            timeStamp += timestampInc; // needed ?
             	            
             	        }

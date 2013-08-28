@@ -31,8 +31,8 @@ import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 
 /**
  * IP call API
@@ -99,17 +99,17 @@ public class IPCallApi extends ClientApi {
 	 * Initiate an IP call session with audio and video
 	 * 
 	 * @param contact Contact
-	 * @param audioplayer Audio player
-	 * @param audiorenderer Audio renderer
-	 * @param videoplayer Video player 
-	 * @param videorenderer Video renderer
+	 * @param audioPlayer Audio player
+	 * @param audioRenderer Audio renderer
+	 * @param videoPlayer Video player 
+	 * @param videoRenderer Video renderer
 	 * @return IP call session
 	 * @throws ClientApiException
 	 */
-	public IIPCallSession initiateCall(String contact, IAudioPlayer audioplayer, IAudioRenderer audiorenderer, IMediaPlayer videoplayer, IMediaRenderer videorenderer) throws ClientApiException {
+	public IIPCallSession initiateCall(String contact, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer, IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws ClientApiException {
     	if (coreApi != null) {
 			try {
-		    	return coreApi.initiateCall(contact, audioplayer, audiorenderer, videoplayer, videorenderer);
+		    	return coreApi.initiateCall(contact, audioPlayer, audioRenderer, videoPlayer, videoRenderer);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}
@@ -122,15 +122,15 @@ public class IPCallApi extends ClientApi {
 	 * Initiate an IP call session with audio only
 	 * 
 	 * @param contact Contact
-	 * @param audioplayer Audio player
-	 * @param audiorenderer Audio renderer
+	 * @param audioPlayer Audio player
+	 * @param audioRenderer Audio renderer
 	 * @return IP call session
 	 * @throws ClientApiException
 	 */
-	public IIPCallSession initiateCall(String contact, IAudioPlayer audioplayer, IAudioRenderer audiorenderer) throws ClientApiException {
+	public IIPCallSession initiateCall(String contact, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer) throws ClientApiException {
 		if (coreApi != null) {
 			try {
-				return coreApi.initiateCall(contact, audioplayer, audiorenderer, null, null);
+				return coreApi.initiateCall(contact, audioPlayer, audioRenderer, null, null);
 			} catch(Exception e) {
 				throw new ClientApiException(e.getMessage());
 			}

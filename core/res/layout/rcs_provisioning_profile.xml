@@ -320,6 +320,12 @@
         android:textStyle="bold"
         android:text="IM session" />
         
+        <CheckBox android:id="@+id/im_group"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="IM Group session" />
+        
         <CheckBox android:id="@+id/ipvoicecall"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"

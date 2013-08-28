@@ -78,12 +78,12 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile();
 
-            // Check if upload is cancelled
-            if(uploadManager.isCancelled()) {
+            // Check if upload has been cancelled
+            if (uploadManager.isCancelled()) {
             	return;
             }
 
-            if (result != null &&  ChatUtils.parseFileTransferHttpDocument(new String(result)) != null) {
+            if ((result != null) && (ChatUtils.parseFileTransferHttpDocument(result) != null)) {
             	String fileInfo = new String(result);
                 if (logger.isActivated()) {
                     logger.debug("Upload done with success: " + fileInfo);

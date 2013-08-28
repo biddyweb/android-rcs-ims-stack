@@ -957,7 +957,7 @@ public class InstantMessagingService extends ImsService {
 
 		// Create a new HTTP file transfer session
         TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo, ChatUtils.getMessageId(invite),null);
+                invite, ftinfo, ChatUtils.getMessageId(invite), null);
 
 		// Create a chat session
         TerminatingOne2OneChatSession one2oneChatSession = new TerminatingOne2OneChatSession(this, invite);

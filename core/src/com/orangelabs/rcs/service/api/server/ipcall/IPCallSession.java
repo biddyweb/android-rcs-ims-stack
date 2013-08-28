@@ -13,8 +13,8 @@ import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -48,8 +48,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	/**
 	 * Constructor
 	 * 
-	 * @param session
-	 *            Session
+	 * @param session Session
 	 */
 	public IPCallSession(IPCallStreamingSession session) {
 		this.session = session;
@@ -77,7 +76,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState)
+	 * @return State
 	 * @see SessionState
 	 */
 	public int getSessionState() {
@@ -86,25 +85,17 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 
 	/**
 	 * Accept the session invitation
+	 * 
+	 * @param video Activate video
 	 */
-	public void acceptSession(boolean audio, boolean video) {
+	public void acceptSession(boolean video) {
 		if (logger.isActivated()) {
 			logger.info("Accept session invitation");
 		}
 
-		if (audio == false) {
-			handleCallError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
-					"Audio call is mandatory"));
-		} else
 		if (video == false) {
 			setVideoPlayer(null);
-			try {
-				setVideoRenderer(null);
-			} catch (Exception e) {
-				if (logger.isActivated()) {
-					logger.error("Can't set the video Renderer", e);
-				}
-			}
+			setVideoRenderer(null);
 		}
 
 		// Accept invitation
@@ -142,11 +133,10 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	/**
 	 * Add video to the session
 	 * 
-	 * @param contact Contact
 	 * @param videoPlayer Video player
 	 * @param videoRenderer Video renderer
 	 */
-	public void addVideo(IMediaPlayer videoPlayer, IMediaRenderer videoRenderer) {
+	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) {
 		if (logger.isActivated()) {
 			logger.info("Add video");
 		}
@@ -210,7 +200,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 * 
 	 * @param renderer Video Renderer
 	 */
-	public void setVideoRenderer(IMediaRenderer renderer) {
+	public void setVideoRenderer(IVideoRenderer renderer) {
 		if (logger.isActivated()) {
 			logger.info("Set a video renderer");
 		}
@@ -223,7 +213,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 * 
 	 * @return Video renderer
 	 */
-	public IMediaRenderer getVideoRenderer() {
+	public IVideoRenderer getVideoRenderer() {
 		if (logger.isActivated()) {
 			logger.info("Get video renderer");
 		}
@@ -236,9 +226,9 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 * 
 	 * @param player Video player
 	 */
-	public void setVideoPlayer(IMediaPlayer player) {
+	public void setVideoPlayer(IVideoPlayer player) {
 		if (logger.isActivated()) {
-			logger.info("Set a video player");
+			logger.info("Set video player");
 		}
 
 		session.setVideoPlayer(player);
@@ -249,7 +239,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 * 
 	 * @return Video player
 	 */
-	public IMediaPlayer getVideoPlayer() {
+	public IVideoPlayer getVideoPlayer() {
 		if (logger.isActivated()) {
 			logger.info("Get video player");
 		}
@@ -264,7 +254,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 */
 	public void setAudioRenderer(IAudioRenderer renderer) {
 		if (logger.isActivated()) {
-			logger.info("Set an audio renderer");
+			logger.info("Set audio renderer");
 		}
 		
 		session.setAudioRenderer(renderer);
@@ -290,7 +280,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	 */
 	public void setAudioPlayer(IAudioPlayer player) {
 		if (logger.isActivated()) {
-			logger.info("Set an audio player");
+			logger.info("Set audio player");
 		}
 
 		session.setAudioPlayer(player);
@@ -428,34 +418,6 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 		}
 	}
 
-    /**
-     * The size of media has changed
-     *
-     * @param width Video width
-     * @param height Video height
-     */
-	public void handleMediaResized(int width, int height) {
-		synchronized (lock) {
-			if (logger.isActivated()) {
-				logger.info("Video resized");
-			}
-
-			// Notify event listeners
-			final int N = listeners.beginBroadcast();
-			for (int i = 0; i < N; i++) {
-				try {
-					listeners.getBroadcastItem(i).handleMediaResized(width,
-							height);
-				} catch (Exception e) {
-					if (logger.isActivated()) {
-						logger.error("Can't notify listener", e);
-					}
-				}
-			}
-			listeners.finishBroadcast();
-		}
-	}
-
 	/**
 	 * Add video invitation
 	 * 
@@ -491,7 +453,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	public void handleRemoveVideoInvitation() {
 		synchronized (lock) {
 			if (logger.isActivated()) {
-				logger.info(" Remove video invitation");
+				logger.info("Remove video invitation");
 			}
 
 			// Notify event listeners
@@ -510,7 +472,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	}
 
 	/**
-	 * Add video accepted by user
+	 * Add video has been accepted by user 
 	 */
 	public void handleAddVideoAccepted() {
 		synchronized (lock) {
@@ -534,7 +496,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	}
 
 	/**
-	 * Remove video accepted by user
+	 * Remove video has been accepted by user 
 	 */
 	public void handleRemoveVideoAccepted() {
 		synchronized (lock) {
@@ -558,22 +520,21 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	}
 	
 	/**
-	 * Add video aborted (user declined or invitation not answered)
+	 * Add video has been aborted
 	 * 
-	 * @param errorCode Error code
+	 * @param reason Termination reason
 	 */
-	public void handleAddVideoAborted(int errorCode) {
+	public void handleAddVideoAborted(int reason) {
 		synchronized (lock) {
 			if (logger.isActivated()) {
-				logger.info("Add Video Aborted - reason = " + errorCode);
+				logger.info("Add video aborted (reason " + reason + ")");
 			}
 
 	        // Notify event listeners
 			final int N = listeners.beginBroadcast();
 			for (int i = 0; i < N; i++) {
 				try {
-					listeners.getBroadcastItem(i).handleAddVideoAborted(
-							errorCode);
+					listeners.getBroadcastItem(i).handleAddVideoAborted(reason);
 				} catch (Exception e) {
 					if (logger.isActivated()) {
 						logger.error("Can't notify listener", e);
@@ -585,22 +546,21 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	}
 	
 	/**
-	 * Remove video aborted (no 200 OK response)
+	 * Remove video has been aborted
 	 * 
-	 * @param errorCode Error code
+	 * @param reason Termination reason
 	 */
-	public void handleRemoveVideoAborted(int code) {
+	public void handleRemoveVideoAborted(int reason) {
 		synchronized (lock) {
 			if (logger.isActivated()) {
-				logger.info("Add Video Aborted - reason = " + code);
+				logger.info("Remove video aborted (reason " + reason + ")");
 			}
 
 	        // Notify event listeners
 			final int N = listeners.beginBroadcast();
 			for (int i = 0; i < N; i++) {
 				try {
-					listeners.getBroadcastItem(i).handleRemoveVideoAborted(
-							code);
+					listeners.getBroadcastItem(i).handleRemoveVideoAborted(reason);
 				} catch (Exception e) {
 					if (logger.isActivated()) {
 						logger.error("Can't notify listener", e);
@@ -673,6 +633,34 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 
 			// Remove session from the list
 			IPCallApiService.removeIPCallSession(session.getSessionID());
+		}
+	}
+
+    /**
+     * Video stream has been resized
+     *
+     * @param width Video width
+     * @param height Video height
+     */
+	public void handleVideoResized(int width, int height) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Video resized to " + width + "x" + height);
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleVideoResized(width,
+							height);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
 		}
 	}
 }

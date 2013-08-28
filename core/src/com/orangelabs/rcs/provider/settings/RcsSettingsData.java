@@ -310,7 +310,7 @@ public class RcsSettingsData {
 	public static final String MAX_RICHCALL_LOG_ENTRIES = "MaxRichcallLogEntries";	
 	
 	/**
-	 * Max entries for ipcall log
+	 * Max entries for IP call log
 	 */
 	public static final String MAX_IPCALL_LOG_ENTRIES = "MaxIpcallLogEntries";	
 	
@@ -613,12 +613,12 @@ public class RcsSettingsData {
 	public static final String CAPABILITY_VIDEO_SHARING = "CapabilityVideoShare";
 
 	/**
-	 * IP call Audio capability
+	 * IP voice call capability
 	 */
 	public static final String CAPABILITY_IP_VOICE_CALL = "CapabilityIPVoiceCall";
 	
 	/**
-	 * IP call Video capability
+	 * IP video call capability
 	 */
 	public static final String CAPABILITY_IP_VIDEO_CALL = "CapabilityIPVideoCall";
 	
@@ -626,6 +626,11 @@ public class RcsSettingsData {
 	 * Instant Messaging session capability
 	 */
 	public static final String CAPABILITY_IM_SESSION = "CapabilityImSession";
+	
+	/**
+	 * Group Instant Messaging session capability
+	 */
+	public static final String CAPABILITY_IM_GROUP_SESSION = "CapabilityImGroupSession";
 
 	/**
 	 * File transfer capability
@@ -676,6 +681,11 @@ public class RcsSettingsData {
      * Instant messaging is always on (Store & Forward server)
      */
 	public static final String IM_CAPABILITY_ALWAYS_ON = "ImAlwaysOn";
+	
+	/**
+     * File transfer always on (Store & Forward server)
+     */
+	public static final String FT_CAPABILITY_ALWAYS_ON = "FtAlwaysOn";
 
 	/**
      * Instant messaging use report
@@ -781,4 +791,5 @@ public class RcsSettingsData {
      * Secured RTP over Wi-Fi
      */
     public static final String SECURE_RTP_OVER_WIFI = "SecureRtpOverWifi";
+
 }

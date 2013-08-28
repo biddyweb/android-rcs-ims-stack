@@ -71,6 +71,10 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
+		
+		// Set contribution ID
+		String id = ChatUtils.getContributionId(invite);
+		setContributionID(id);		
 	}
 	
 	/**
@@ -324,33 +328,6 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	   		}
 		}
 	}	
-	
-	/**
-	 * Handle error 
-	 * 
-	 * @param error Error
-	 */
-	public void handleError(FileSharingError error) {
-		if (isInterrupted()) {
-			return;
-		}
-
-		// Error	
-    	if (logger.isActivated()) {
-    		logger.info("Session error: " + error.getErrorCode() + ", reason=" + error.getMessage());
-    	}
-
-    	// Close media session
-    	closeMediaSession();
-
-    	// Remove the current session
-    	getImsService().removeSession(this);
-
-		// Notify listeners
-    	for(int j=0; j < getListeners().size(); j++) {
-    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(error);
-        }
-	}
 
 	/**
 	 * Data has been transfered

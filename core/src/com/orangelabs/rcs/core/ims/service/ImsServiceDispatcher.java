@@ -190,8 +190,7 @@ public class ImsServiceDispatcher extends Thread {
 	    	if (imsModule.getIPCallService().isCallConnected()) { 
 		    	// IP call service
 	    		imsModule.getIPCallService().receiveCapabilityRequest(request);
-	    	}	
-	    	else {
+	    	} else {
 	    		// Capability discovery service
 	    		imsModule.getCapabilityService().receiveCapabilityRequest(request);
 	    	}		    	
@@ -220,6 +219,24 @@ public class ImsServiceDispatcher extends Thread {
 			sdp = sdp.toLowerCase();
 
 			// New incoming session invitation
+	    	if (isTagPresent(sdp, "msrp") &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
+	    				(SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE) ||
+	    						SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE_RCS2))) {
+	    		// Image sharing
+	    		if (RcsSettings.getInstance().isImageSharingSupported()) {
+		    		if (logger.isActivated()) {
+		    			logger.debug("Image content sharing transfer invitation");
+		    		}
+	    			imsModule.getRichcallService().receiveImageSharingInvitation(request);
+	    		} else {
+					// Service not supported: reject the invitation with a 603 Decline
+					if (logger.isActivated()) {
+						logger.debug("Image share service not supported: automatically reject");
+					}
+					sendFinalResponse(request, 603);
+	    		}
+	    	} else
 	    	if (isTagPresent(sdp, "msrp") &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_OMA_IM) &&
 	    				isTagPresent(sdp, "file-selector")) {
@@ -253,10 +270,18 @@ public class ImsServiceDispatcher extends Thread {
                 if (ftHttpInfo != null) {
                     if (ChatUtils.isGroupChatInvitation(request)) {
                         // Group HTTP file transfer invitation
-                        if (logger.isActivated()) {
-                            logger.debug("Group file transfer over HTTP invitation");
-                        }
-                        imsModule.getInstantMessagingService().receiveHttpGroupFileTranferInvitation(request, ftHttpInfo);
+                    	if (RcsSettings.getInstance().isImGroupSessionSupported()) {
+                            if (logger.isActivated()) {
+                                logger.debug("Group file transfer over HTTP invitation");
+                            }
+                            imsModule.getInstantMessagingService().receiveHttpGroupFileTranferInvitation(request, ftHttpInfo);
+                    	} else {
+        					// Service not supported: reject the invitation with a 603 Decline
+        					if (logger.isActivated()) {
+        						logger.debug("Group file transfer service not supported: automatically reject");
+        					}
+        					sendFinalResponse(request, 603);
+        	    		}
                     } else {
                         // HTTP file transfer invitation
                         if (logger.isActivated()) {
@@ -311,24 +336,6 @@ public class ImsServiceDispatcher extends Thread {
 					sendFinalResponse(request, 603);
 	    		}
 	    	} else
-	    	if (isTagPresent(sdp, "msrp") &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
-	    				(SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE) ||
-	    						SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IMAGE_SHARE_RCS2))) {
-	    		// Image sharing
-	    		if (RcsSettings.getInstance().isImageSharingSupported()) {
-		    		if (logger.isActivated()) {
-		    			logger.debug("Image content sharing transfer invitation");
-		    		}
-	    			imsModule.getRichcallService().receiveImageSharingInvitation(request);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					if (logger.isActivated()) {
-						logger.debug("Image share service not supported: automatically reject");
-					}
-					sendFinalResponse(request, 603);
-	    		}
-	    	} else
 		    if (isTagPresent(sdp, "msrp") &&
 		    		SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_VIDEO_SHARE) &&
 		    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH )) {
@@ -348,7 +355,7 @@ public class ImsServiceDispatcher extends Thread {
 		    } else 
 			if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
 	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL))	{
-	    		// IP Voice Call setting
+	    		// IP voice call
 	    		if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
 		    		if (logger.isActivated()) {
 		    			logger.debug("IP Voice call invitation");
@@ -357,22 +364,24 @@ public class ImsServiceDispatcher extends Thread {
 	    		} else {
 					// Service not supported: reject the invitation with a 603 Decline
 					if (logger.isActivated()) {
-						logger.debug("IP Voice Call service not supported: automatically reject");
+						logger.debug("IP Voice call service not supported: automatically reject");
 					}
 					sendFinalResponse(request, 603);
 	    		}	    	
 	    	} else 
-		    	if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))	{
-		    		// IP Video Call setting
+	    	if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL) &&
+	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))	{
+		    		// IP video call
 		    		if (RcsSettings.getInstance().isIPVideoCallSupported()) {
 			    		if (logger.isActivated()) {
-			    			logger.debug("IP Voice+ Video call invitation");
+			    			logger.debug("IP video call invitation");
 			    		}
 		    			imsModule.getIPCallService().receiveIPCallInvitation(request, true, true);
 		    		} else {
 						// Service not supported: reject the invitation with a 603 Decline
 						if (logger.isActivated()) {
-							logger.debug("IP Voice Call or IP Video Call service not supported: automatically reject");
+							logger.debug("IP video call service not supported: automatically reject");
 						}
 						sendFinalResponse(request, 603);
 		    		}	    		    		

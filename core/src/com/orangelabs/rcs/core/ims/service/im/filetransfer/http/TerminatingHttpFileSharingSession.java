@@ -20,12 +20,14 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import javax2.sip.header.ContactHeader;
 
+import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -46,7 +48,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
     /**
      * ID of the incoming transfer message 
      */
-    private String msgID;
+    private String msgId;
 
     /**
      * The logger
@@ -59,14 +61,14 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
      * @param parent IMS service
      * @param invite initial INVITE
      * @param fileTransferInfo File transfer info
-     * @param msgID Message ID
+     * @param msgId Message ID
 	 * @param chatSessionId Chat session ID
      */
-    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgID, String chatSessionID) {
+    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgId, String chatSessionID) {
         super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(),
                 fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), invite.getFromUri(), null, chatSessionID);
 
-        this.msgID = msgID;
+        this.msgId = msgId;
 
         // Create dialog path
         createTerminatingDialogPath(invite);
@@ -100,6 +102,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             if (logger.isActivated()) {
                 logger.info("Initiate a new HTTP file transfer session as terminating");
             }
+            
+            // Send delivery report "delivered"
+            sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DELIVERED);
             
             // Check content
             if (getContent() == null) {
@@ -177,18 +182,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                 // File transfered
                 handleFileTransfered();
 
-                // Send SIP MESSAGE transfered
-				if (msgID != null) {
-                    String remoteInstanceId = null;
-                    ContactHeader inviteContactHeader = (ContactHeader)getDialogPath().getInvite().getHeader(ContactHeader.NAME);
-                    if (inviteContactHeader != null) {
-                        remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
-                    }
-					// Send message delivery status via a SIP MESSAGE
-                    ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
-                                    SipUtils.getAssertedIdentity(getDialogPath().getInvite()),
-                                    msgID, ImdnDocument.DISPLAY, remoteInstanceId);
-				}
+                // Send delivery report "displayed"
+                sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 			} else {
 				if (downloadManager.isCancelled()) {
 					return;
@@ -210,4 +205,35 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
+    
+    /**
+     * Send delivery report
+     * 
+     * @param status Report status
+     */
+    private void sendDeliveryReport(String status) {
+		if (msgId != null) {
+			if (logger.isActivated()){
+				logger.debug("Send delivery report " + status);
+			}
+	        String remoteInstanceId = null;
+	        ContactHeader inviteContactHeader = (ContactHeader)getDialogPath().getInvite().getHeader(ContactHeader.NAME);
+	        if (inviteContactHeader != null) {
+	            remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+	        }
+	        
+			if (getChatSessionID() == null) {
+	            // Send message delivery status via a SIP MESSAGE
+	            ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
+	                            SipUtils.getAssertedIdentity(getDialogPath().getInvite()),
+	                            msgId, status, remoteInstanceId);
+			} else {
+	            // Send message delivery status via a MSRP
+				ChatSession chatSession = (ChatSession)Core.getInstance().getImService().getSession(getChatSessionID());
+				if (chatSession != null) {
+					chatSession.sendMsrpMessageDeliveryStatus(getRemoteContact(), msgId, status);
+				}
+			}
+		}
+    }
 }

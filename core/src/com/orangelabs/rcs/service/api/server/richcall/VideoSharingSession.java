@@ -27,8 +27,8 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSessionL
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.service.api.client.SessionState;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
@@ -93,7 +93,7 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState) 
+	 * @return State 
 	 * @see SessionState
 	 */
 	public int getSessionState() {
@@ -140,55 +140,55 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	}
 
     /**
-     * Get the media renderer
+     * Get the video renderer
      *
-     * @return Media renderer
+     * @return Video renderer
      */
-    public IMediaRenderer getMediaRenderer() {
+    public IVideoRenderer getVideoRenderer() {
         if (logger.isActivated()) {
-            logger.info("Get media renderer");
+            logger.info("Get video renderer");
         }
         
-        return session.getMediaRenderer();
+        return session.getVideoRenderer();
     }
 
 	/**
-	 * Set the media renderer
+	 * Set the video renderer
 	 * 
-	 * @param renderer Media renderer
+	 * @param renderer Video renderer
 	 */
-	public void setMediaRenderer(IMediaRenderer renderer) {
+	public void setVideoRenderer(IVideoRenderer renderer) {
 		if (logger.isActivated()) {
-			logger.info("Set a media renderer");
+			logger.info("Set a video renderer");
 		}
 
-		session.setMediaRenderer(renderer);
+		session.setVideoRenderer(renderer);
 	}
 
     /**
-     * Get the media player
+     * Get the video player
      *
-     * @return Media player
+     * @return Video player
      */
-    public IMediaPlayer getMediaPlayer() {
+    public IVideoPlayer getVideoPlayer() {
         if (logger.isActivated()) {
-            logger.info("Get media player");
+            logger.info("Get video player");
         }
         
-        return session.getMediaPlayer();
+        return session.getVideoPlayer();
     }
 
     /**
-     * Set the media player
+     * Set the video player
      *
-     * @param IMediaPlayer
+     * @param Video player
      */
-    public void setMediaPlayer(IMediaPlayer player) {
+    public void setVideoPlayer(IVideoPlayer player) {
         if (logger.isActivated()) {
-            logger.info("Set a media player");
+            logger.info("Set a video player");
         }
         
-        session.setMediaPlayer(player);
+        session.setVideoPlayer(player);
     }
 
 	/**
@@ -340,22 +340,22 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
     }
 
     /**
-     * The size of media has changed
+     * Video stream has been resized
      *
      * @param width Video width
      * @param height Video height
      */
-    public void handleMediaResized(int width, int height) {
+    public void handleVideoResized(int width, int height) {
         synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("Video resized");
+				logger.info("Video resized to " + width + "x" + height);
 			}
 
 			// Notify event listeners
             final int N = listeners.beginBroadcast();
             for (int i=0; i < N; i++) {
                 try {
-                    listeners.getBroadcastItem(i).handleMediaResized(width, height);
+                    listeners.getBroadcastItem(i).handleVideoResized(width, height);
                 } catch(Exception e) {
                     if (logger.isActivated()) {
                         logger.error("Can't notify listener", e);

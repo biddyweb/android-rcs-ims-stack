@@ -31,7 +31,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -54,15 +54,15 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
      * @param content Content to be shared
      * @param contact Remote contact
      */
-    public OriginatingVideoStreamingSession(ImsService parent, IMediaPlayer player,
+    public OriginatingVideoStreamingSession(ImsService parent, IVideoPlayer player,
             MmContent content, String contact) {
         super(parent, content, contact);
 
         // Create dialog path
         createOriginatingDialogPath();
 
-        // Set the media player
-        setMediaPlayer(player);
+        // Set the video player
+        setVideoPlayer(player);
     }
 
     /**
@@ -75,7 +75,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
             }
 
             // Check player 
-            if ((getMediaPlayer() == null) || (getMediaPlayer().getMediaCodec() == null)) {
+            if ((getVideoPlayer() == null) || (getVideoPlayer().getVideoCodec() == null)) {
                 handleError(new ContentSharingError(ContentSharingError.UNSUPPORTED_MEDIA_TYPE,
                         "Video codec not selected"));
                 return;
@@ -84,7 +84,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            String videoSdp = VideoSdpBuilder.buildSdpWithOrientationExtension(getMediaPlayer().getSupportedMediaCodecs(), getMediaPlayer().getLocalRtpPort());
+            String videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(getVideoPlayer().getSupportedVideoCodecs(), getVideoPlayer().getLocalRtpPort());
 	    	String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -141,7 +141,7 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
 
         // Codec negotiation
         VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
-                getMediaPlayer().getSupportedMediaCodecs(), proposedCodecs);
+                getVideoPlayer().getSupportedVideoCodecs(), proposedCodecs);
         if (selectedVideoCodec == null) {
             if (logger.isActivated()) {
                 logger.debug("Proposed codecs are not supported");
@@ -156,20 +156,20 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
         }
         getContent().setEncoding("video/" + selectedVideoCodec.getCodecName());
 
-        // Set the selected media codec
-        getMediaPlayer().setMediaCodec(selectedVideoCodec.getMediaCodec());
+        // Set the selected video codec
+        getVideoPlayer().setVideoCodec(selectedVideoCodec.getMediaCodec());
 
         // Set the OrientationHeaderID
         SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
         if (extensionHeader != null) {
-            getMediaPlayer().setOrientationHeaderId(extensionHeader.getExtensionId());
+        	getVideoPlayer().setOrientationHeaderId(extensionHeader.getExtensionId());
         }
 
-        // Set media player event listener
-        getMediaPlayer().addListener(new MediaPlayerEventListener(this));
+        // Set video player event listener
+        getVideoPlayer().addListener(new MediaPlayerEventListener(this));
 
-        // Open the media player
-        getMediaPlayer().open(remoteHost, remotePort);
+        // Open the video player
+        getVideoPlayer().open(remoteHost, remotePort);
     }
 
     /**
@@ -178,8 +178,8 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
      * @throws Exception 
      */
     public void startMediaSession() throws Exception {
-        // Start the media player
-        getMediaPlayer().start();
+        // Start the video player
+    	getVideoPlayer().start();
     }
 
 
@@ -188,10 +188,10 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
      */
     public void closeMediaSession() {
         try {
-            // Close the media player
-            if (getMediaPlayer() != null) {
-                getMediaPlayer().stop();
-                getMediaPlayer().close();
+            // Close the video player
+            if (getVideoPlayer() != null) {
+            	getVideoPlayer().stop();
+            	getVideoPlayer().close();
             }
         } catch(Exception e) {
             if (logger.isActivated()) {

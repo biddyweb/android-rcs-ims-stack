@@ -937,7 +937,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
                     // Get the video sharing session
                     incomingCshSession = callApi.getVideoSharingSession(incomingSessionId);
                     incomingCshSession.addSessionListener(incomingSessionEventListener);
-                    incomingRenderer = (VideoRenderer) incomingCshSession.getMediaRenderer();
+                    incomingRenderer = (VideoRenderer) incomingCshSession.getVideoRenderer();
                     incomingRenderer.setVideoSurface(incomingVideoView);
                 } catch (Exception e) {
                     Utils.showMessageAndExit(VisioSharing.this, getString(R.string.label_api_failed));
@@ -989,7 +989,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             public void run() {
                 try {
                     // Accept the invitation
-                    incomingCshSession.setMediaRenderer(incomingRenderer);
+                    incomingCshSession.setVideoRenderer(incomingRenderer);
                     incomingCshSession.acceptSession();
                 } catch (Exception e) {
                     handler.post(new Runnable() {
@@ -1039,12 +1039,12 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
         }
 
         /**
-         * The size of media has changed
+         * Video stream has been resized
          *
-         * @param width
-         * @param height
+         * @param width Video width
+         * @param height Video height
          */
-        public void handleMediaResized(final int width, final int height) {
+        public void handleVideoResized(final int width, final int height) {
             incomingWidth = width;
             incomingHeight = height;
             handler.post(new Runnable() {
@@ -1195,7 +1195,7 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             // continue sharing
             outgoingCshSession = callApi.getVideoSharingSession(outgoingSessionId);
             outgoingCshSession.addSessionListener(outgoingSessionEventListener);
-            outgoingPlayer = (LiveVideoPlayer) outgoingCshSession.getMediaPlayer();
+            outgoingPlayer = (LiveVideoPlayer) outgoingCshSession.getVideoPlayer();
 
             // Start camera
             startCamera();
@@ -1285,8 +1285,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
                         logger.info("Outgoing session started");
                     }
                     // Update Camera
-                    outgoingHeight = outgoingPlayer.getMediaCodecHeight();
-                    outgoingWidth = outgoingPlayer.getMediaCodecWidth();
+                    outgoingHeight = outgoingPlayer.getVideoCodecHeight();
+                    outgoingWidth = outgoingPlayer.getVideoCodecWidth();
                     reStartCamera();
 
                     // Hide progress bar
@@ -1338,8 +1338,8 @@ public class VisioSharing extends Activity implements SurfaceHolder.Callback,
             });
         }
 
-        @Override
-        public void handleMediaResized(int arg0, int arg1) throws RemoteException {
+        // Video stream has been resized
+        public void handleVideoResized(int arg0, int arg1) throws RemoteException {
             // Not used
         }
     };

@@ -297,7 +297,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
                 if (ContactsManager.getInstance().isRcsValidNumber(phoneNumber)
 						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
-						&& ( !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber) || (Build.VERSION.SDK_INT > 10))) { //Build.VERSION_CODES.GINGERBREAD_MR1
+						&& ( !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber) || (Build.VERSION.SDK_INT > 10))) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated
                     // We exclude the number that comes from SIM only contacts, as those cannot be
                     // aggregated to RCS raw contacts only if OS version if gingebread or fewer

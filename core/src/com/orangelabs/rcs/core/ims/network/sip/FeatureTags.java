@@ -116,7 +116,7 @@ public class FeatureTags {
 	/**
 	 * RCS IP video call feature tag
 	 */
-	public final static String FEATURE_RCSE_IP_VIDEO_CALL = "+video";
+	public final static String FEATURE_RCSE_IP_VIDEO_CALL = "video";
 
 	/**
 	 * RCS-e extension feature tag prefix

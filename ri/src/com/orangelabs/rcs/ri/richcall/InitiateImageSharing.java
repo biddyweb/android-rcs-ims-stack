@@ -48,7 +48,7 @@ import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
-import com.orangelabs.rcs.ri.ipcall.IPCallSessionActivity;
+import com.orangelabs.rcs.ri.ipcall.IPCallView;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
@@ -177,7 +177,7 @@ public class InitiateImageSharing extends Activity {
             String remote = cursor.getString(1);
 
             // Initiate an IP call before to be able to share content
-            Intent intent = new Intent(getApplicationContext(), IPCallSessionActivity.class);
+            Intent intent = new Intent(getApplicationContext(), IPCallView.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.putExtra("contact", remote);
             intent.putExtra("media", "audio");
@@ -238,6 +238,8 @@ public class InitiateImageSharing extends Activity {
             selectBtn.setVisibility(View.INVISIBLE);
             Button dialBtn = (Button)findViewById(R.id.dial_btn);
             dialBtn.setVisibility(View.INVISIBLE);
+            Button ipDialBtn = (Button)findViewById(R.id.dial_ip_btn);
+            ipDialBtn.setVisibility(View.INVISIBLE);
         }
     };
        
