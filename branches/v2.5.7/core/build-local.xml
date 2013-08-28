@@ -1,0 +1,49 @@
+<!--**********************-->
+<!-- Android RCS terminal -->
+<!--**********************-->
+<project name="RCS core" basedir=".">
+
+	<property environment="env"/>
+	<property name="android.root" 		value="${env.ANDROID_SDK}"/>
+	<property name="terminal.root" 		value="../core"/>
+	<property name="terminal.api" 		value="${terminal.root}/rcs_api.jar"/>
+	<property name="terminal.build"		value="${terminal.root}/build"/>
+	<property name="src.path" 			value="${terminal.root}/src"/>
+
+	<path id="j2se.lib">
+		<fileset dir="${env.JAVA_HOME}/lib/">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<property name="j2se.classpath" refid="j2se.lib"/>
+
+	<path id="terminal.classpath">
+       	<pathelement path="${j2se.classpath};${android.root}/android.jar;${terminal.build}/classes;${terminal.root}/build/classes"/>
+	</path>
+
+    <!-- Generate RCS API JAR -->
+    <target name="api">
+        <echo>Generate ${terminal.api} file</echo>
+
+	<delete file="${terminal.api}"/>
+    	
+	<jar destfile="${terminal.api}" basedir="${terminal.root}/bin/classes"
+		includesfile="${terminal.root}/jarfiles.txt">
+	</jar>
+
+	<copy file="${terminal.api}" todir="${terminal.root}/../ri/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/deezer/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/eab/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/popup/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/responder/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/tts/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/widget/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/extension/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/gsma/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/sip/libs"/>
+
+    </target>
+
+
+</project>
+
