@@ -534,7 +534,8 @@ public final class ContactsManager {
 		values.put(RichAddressBookData.KEY_CAPABILITY_IP_VIDEO_CALL, Boolean.toString(newCapabilities.isIPVideoCallSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(newCapabilities.isFileTransferHttpSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(newCapabilities.isFileTransferThumbnailSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString(newCapabilities.isFileTransferStoreForwardSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString((newCapabilities.isFileTransferStoreForwardSupported() && isRegistered) ||
+				(RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact())));
 		values.put(RichAddressBookData.KEY_CAPABILITY_GROUP_CHAT_SF, Boolean.toString(newCapabilities.isGroupChatStoreForwardSupported() && isRegistered));
 
 		// Save the capabilities extensions
@@ -2511,7 +2512,8 @@ public final class ContactsManager {
 		capabilities.setFileTransferHttpSupport(capabilities.isFileTransferHttpSupported() && isRegistered);
 		
 		// FT S&F
-		capabilities.setFileTransferStoreForwardSupport(capabilities.isFileTransferStoreForwardSupported() && isRegistered);
+		capabilities.setFileTransferStoreForwardSupport((capabilities.isFileTransferStoreForwardSupported() && isRegistered)||
+				(RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact()));
 
 		// Group chat S&F
 		capabilities.setGroupChatStoreForwardSupport(capabilities.isGroupChatStoreForwardSupported() && isRegistered);

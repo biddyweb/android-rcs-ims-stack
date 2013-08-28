@@ -24,6 +24,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -41,7 +42,7 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
 	 * Default SO_TIMEOUT value (in seconds)
 	 */
 	public final static int DEFAULT_SO_TIMEOUT = 30;
-	
+
     /**
      * The logger
      */
@@ -113,18 +114,24 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
      * @throws SipException 
      */
     public SipRequest createInvite() throws SipException {
+        SipRequest invite;
     	if (getThumbnail() != null) {
-	        return SipMessageFactory.createMultipartInvite(
+	        invite = SipMessageFactory.createMultipartInvite(
 	                getDialogPath(),
 	                InstantMessagingService.FT_FEATURE_TAGS,
 	                getDialogPath().getLocalContent(),
 	                BOUNDARY_TAG);
     	} else {
-	        return SipMessageFactory.createInvite(
+	        invite = SipMessageFactory.createInvite(
 	                getDialogPath(),
 	                InstantMessagingService.FT_FEATURE_TAGS,
 	                getDialogPath().getLocalContent());
     	}
+        
+    	// Add a contribution ID header
+        invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID());
+
+        return invite;
     }
 
     /**

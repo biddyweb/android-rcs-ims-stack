@@ -63,6 +63,9 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 	public TerminatingStoreAndForwardMsgSession(ImsService parent, SipRequest invite) {
 		super(parent, ChatUtils.getReferredIdentity(invite));
 
+		// Set feature tags
+		setFeatureTags(ChatUtils.getSupportedFeatureTagsForChat());
+
 		// Set first message
     	InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);
 		setFirstMesssage(firstMsg);
@@ -231,7 +234,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
         		logger.info("Send 200 OK");
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-            		InstantMessagingService.CHAT_FEATURE_TAGS, sdp);
+            		getFeatureTags(), sdp);
 
             // The signalisation is established
             getDialogPath().sigEstablished();

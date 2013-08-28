@@ -43,7 +43,7 @@ import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.richcall.IGeolocSharingSession;
@@ -241,7 +241,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
      * @param player Media player
      * @throws ServerApiException
      */
-	public IVideoSharingSession initiateLiveVideoSharing(String contact, IMediaPlayer player) throws ServerApiException {
+	public IVideoSharingSession initiateLiveVideoSharing(String contact, IVideoPlayer player) throws ServerApiException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a live video session with " + contact);
 		}

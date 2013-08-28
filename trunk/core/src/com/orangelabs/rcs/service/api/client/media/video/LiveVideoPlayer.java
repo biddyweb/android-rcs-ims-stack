@@ -42,19 +42,18 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.media.VideoSample;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoEventListener;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
-import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.FifoBuffer;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Live RTP video player based on H264 QCIF format
+ * Live RTP video player. Only the H264 QCIF format is supported.
  */
-public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.PreviewCallback, RtpStreamListener {
+public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.PreviewCallback, RtpStreamListener {
 
     /**
      * List of supported video codecs
@@ -109,7 +108,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     /**
      * Media event listeners
      */
-    private Vector<IMediaEventListener> listeners = new Vector<IMediaEventListener>();
+    private Vector<IVideoEventListener> listeners = new Vector<IVideoEventListener>();
 
     /**
      * Temporary connection to reserve the port
@@ -214,19 +213,21 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
-            setMediaCodec(supportedMediaCodecs[0]);
+            setVideoCodec(supportedMediaCodecs[0]);
         }
     }
     
     /**
      * Constructor for sharing RTP stream with video renderer
+     * 
+     * @param vr	video renderer
      */
     public LiveVideoPlayer(VideoRenderer vr) {
     	// Set the local RTP port
         localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
         reservePort(localRtpPort);
 
-     // Get and set locally the audio renderer reference
+        // Get and set locally the audio renderer reference
         videoRenderer = vr;
         
         // Init codecs
@@ -234,7 +235,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
-            setMediaCodec(supportedMediaCodecs[0]);
+        	setVideoCodec(supportedMediaCodecs[0]);
         }
     }
 
@@ -253,10 +254,33 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
-            setMediaCodec(supportedMediaCodecs[0]);
+        	setVideoCodec(supportedMediaCodecs[0]);
         }
     }
 
+    /**
+     * Constructor with a list of video codecs and allowing to share RTP stream with video renderer
+     *
+     * @param codecs Ordered list of codecs (preferred codec in first)
+     * @param vr	video renderer
+     */
+    public LiveVideoPlayer(MediaCodec[] codecs, VideoRenderer vr) {
+        // Set the local RTP port
+        localRtpPort = NetworkRessourceManager.generateLocalRtpPort();
+        reservePort(localRtpPort);
+
+        // Get and set locally the audio renderer reference
+        videoRenderer = vr;
+        
+        // Init codecs
+        supportedMediaCodecs = codecs;
+
+        // Set the default media codec
+        if (supportedMediaCodecs.length > 0) {
+        	setVideoCodec(supportedMediaCodecs[0]);
+        }
+    }
+    
     /**
      * Returns the local RTP port
      *
@@ -336,7 +360,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
 
         // Check video codec
         if (selectedVideoCodec == null) {
-            notifyPlayerEventError("Video Codec not selected");
+            notifyPlayerEventError("Video codec not selected");
             return;
         }
 
@@ -383,7 +407,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             if ( videoRenderer != null ) {
             	// The video renderer is supposed to be opened and so we used its RTP stream
             	if (logger.isActivated()) {
-            		logger.info("audioplayer share the audio renderer rtp stream on same port");
+            		logger.debug("Player shares the renderer RTP stream");
             	}
             	rtpSender.prepareSession(rtpInput, remoteHost, remotePort, videoRenderer.getRtpInputStream(), this);
             } else { 
@@ -418,7 +442,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             NativeH264Encoder.DeinitEncoder();
         } catch (UnsatisfiedLinkError e) {
             if (logger.isActivated()) {
-                logger.error("Can't close correctly the video encoder", e);
+                logger.error("Can't close correctly the encoder", e);
             }
         }
 
@@ -526,7 +550,7 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
      *
      * @param listener Media event listener
      */
-    public void addListener(IMediaEventListener listener) {
+    public void addListener(IVideoEventListener listener) {
         listeners.addElement(listener);
     }
 
@@ -538,20 +562,20 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
-     * Get supported media codecs
+     * Get supported video codecs
      *
      * @return media Codecs list
      */
-    public MediaCodec[] getSupportedMediaCodecs() {
+    public MediaCodec[] getSupportedVideoCodecs() {
         return supportedMediaCodecs;
     }
 
     /**
-     * Get media codec
+     * Get video codec
      *
-     * @return Media codec
+     * @return Video codec
      */
-    public MediaCodec getMediaCodec() {
+    public MediaCodec getVideoCodec() {
         if (selectedVideoCodec == null) {
             return null;
         } else {
@@ -560,11 +584,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
-     * Get media codec width
+     * Get video codec width
      *
      * @return Width
      */
-    public int getMediaCodecWidth() {
+    public int getVideoCodecWidth() {
         if (selectedVideoCodec == null) {
             return H264Config.VIDEO_WIDTH;
         } else {
@@ -573,11 +597,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
-     * Get media codec height
+     * Get video codec height
      *
      * @return Height
      */
-    public int getMediaCodecHeight() {
+    public int getVideoCodecHeight() {
         if (selectedVideoCodec == null) {
             return H264Config.VIDEO_HEIGHT;
         } else {
@@ -586,11 +610,11 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
     }
 
     /**
-     * Set media codec
+     * Set video codec
      *
-     * @param mediaCodec Media codec
+     * @param mediaCodec Video codec
      */
-    public void setMediaCodec(MediaCodec mediaCodec) {
+    public void setVideoCodec(MediaCodec mediaCodec) {
         if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
             VideoCodec codec = new VideoCodec(mediaCodec);
             if (codec.getHeight() == 0 || codec.getWidth() == 0) {
@@ -684,10 +708,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (logger.isActivated()) {
             logger.debug("Player is started");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStarted();
+                ((IVideoEventListener)ite.next()).mediaStarted();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -703,10 +727,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (logger.isActivated()) {
             logger.debug("Player is stopped");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStopped();
+                ((IVideoEventListener)ite.next()).mediaStopped();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -722,10 +746,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (logger.isActivated()) {
             logger.debug("Player is opened");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaOpened();
+                ((IVideoEventListener)ite.next()).mediaOpened();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -741,10 +765,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
         if (logger.isActivated()) {
             logger.debug("Player is closed");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaClosed();
+                ((IVideoEventListener)ite.next()).mediaClosed();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -761,10 +785,10 @@ public class LiveVideoPlayer extends IMediaPlayer.Stub implements Camera.Preview
             logger.debug("Player error: " + error);
         }
 
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaError(error);
+                ((IVideoEventListener)ite.next()).mediaError(error);
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);

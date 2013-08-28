@@ -28,9 +28,9 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoEventListener;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -40,14 +40,14 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public abstract class VideoStreamingSession extends ContentSharingSession {
     /**
-	 * Media renderer
+	 * Video renderer
 	 */
-	private IMediaRenderer renderer = null;
+	private IVideoRenderer renderer = null;
 
     /**
-     * Media renderer
+     * Video renderer
      */
-    private IMediaPlayer player = null;
+    private IVideoPlayer player = null;
 
     /**
      * The logger
@@ -66,38 +66,38 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
 	}
 
 	/**
-	 * Get the media renderer
+	 * Get the video renderer
 	 * 
 	 * @return Renderer
 	 */
-	public IMediaRenderer getMediaRenderer() {
+	public IVideoRenderer getVideoRenderer() {
 		return renderer;
 	}
 	
 	/**
-	 * Set the media renderer
+	 * Set the video renderer
 	 * 
 	 * @param renderer Renderer
 	 */
-	public void setMediaRenderer(IMediaRenderer renderer) {
+	public void setVideoRenderer(IVideoRenderer renderer) {
 		this.renderer = renderer;
 	}
 
     /**
-     * Get the media player
+     * Get the video player
      * 
      * @return Player
      */
-    public IMediaPlayer getMediaPlayer() {
+    public IVideoPlayer getVideoPlayer() {
         return player;
     }
 
     /**
-     * Set the media player
+     * Set the video player
      *
-     * @param IMediaPlayer
+     * @param Player
      */
-    public void setMediaPlayer(IMediaPlayer player) {
+    public void setVideoPlayer(IVideoPlayer player) {
         this.player = player;
     }
 
@@ -155,9 +155,9 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
     }
 
     /**
-     * Media player event listener
+     * Video player event listener
      */
-    protected class MediaPlayerEventListener extends IMediaEventListener.Stub {
+    protected class MediaPlayerEventListener extends IVideoEventListener.Stub {
         /**
          * Streaming session
          */
@@ -182,10 +182,10 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
         }
 
         /**
-         * The size of media has changed
+         * Media stream has been resized
          *
-         * @param width
-         * @param height
+         * @param width Video width
+         * @param height Video height
          */
         public void mediaResized(int width, int height) {
             if (logger.isActivated()) {
@@ -195,7 +195,7 @@ public abstract class VideoStreamingSession extends ContentSharingSession {
             if (!isInterrupted()) {
                 for (int i = 0; i < getListeners().size(); i++) {
                     ((VideoStreamingSessionListener) getListeners().get(i))
-                            .handleMediaResized(width, height);
+                            .handleVideoResized(width, height);
                 }
             }
         }

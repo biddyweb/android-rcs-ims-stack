@@ -1407,7 +1407,7 @@ public class RcsSettings {
 	}
 	
 	/**
-	 * Get max number of entries per contact in the ipcall log
+	 * Get max number of entries per contact in the IP call log
 	 * 
 	 * @return Number
 	 */
@@ -1918,6 +1918,19 @@ public class RcsSettings {
 		}
 		return result;
 	}
+	
+	/**
+     * Is IM group session supported
+     *
+     * @return Boolean
+     */
+	public boolean isImGroupSessionSupported() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_IM_GROUP_SESSION));
+		}
+		return result;
+	}
 
 	/**
      * Is image sharing supported
@@ -2016,7 +2029,7 @@ public class RcsSettings {
 	}
 
 	 /**
-     * Is IPCall (Audio) supported
+     * Is IP voice call supported
      *
      * @return Boolean
      */
@@ -2029,7 +2042,7 @@ public class RcsSettings {
 	}
 	
 	/**
-     * Is IPCall (Video) supported
+     * Is IP video call supported
      *
      * @return Boolean
      */
@@ -2088,6 +2101,19 @@ public class RcsSettings {
 		boolean result = false;
 		if (instance != null) {
 			result = Boolean.parseBoolean(readParameter(RcsSettingsData.IM_CAPABILITY_ALWAYS_ON));
+		}
+		return result;
+	}
+	
+	/**
+     * Is File Transfer always-on thanks to the Store & Forward functionality
+     *
+     * @return Boolean
+     */
+	public boolean isFtAlwaysOn() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.FT_CAPABILITY_ALWAYS_ON));
 		}
 		return result;
 	}

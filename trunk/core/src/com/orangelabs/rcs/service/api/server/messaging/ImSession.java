@@ -35,6 +35,7 @@ import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
@@ -112,7 +113,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState) 
+	 * @return State
+	 * @see SessionState
 	 */
 	public int getSessionState() {
 		return ServerApiUtils.getSessionState(session);

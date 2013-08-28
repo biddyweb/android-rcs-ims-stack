@@ -672,9 +672,9 @@ public class ChatUtils {
 	 * @param xml XML document
 	 * @return File transfer document
 	 */
-	public static FileTransferHttpInfoDocument parseFileTransferHttpDocument(String xml) {
+	public static FileTransferHttpInfoDocument parseFileTransferHttpDocument(byte[] xml) {
 		try {
-		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
+		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml));
 		    FileTransferHttpInfoParser ftHttpParser = new FileTransferHttpInfoParser(ftHttpInput);
 		    return ftHttpParser.getFtInfo();
 		} catch(Exception e) {
@@ -920,7 +920,7 @@ public class ChatUtils {
 	public static FileTransferHttpInfoDocument getHttpFTInfo(SipRequest request) {
         InstantMessage message = getFirstMessage(request);
         if (message != null) {
-            return parseFileTransferHttpDocument(message.getTextMessage());
+            return parseFileTransferHttpDocument(message.getTextMessage().getBytes());
         } else {
             return null;
         }

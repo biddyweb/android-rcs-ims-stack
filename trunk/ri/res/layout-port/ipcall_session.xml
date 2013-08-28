@@ -15,8 +15,8 @@
 	 <LinearLayout
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:layout_marginLeft="5dp"
-	    android:layout_marginRight="5dp"
+	    android:layout_marginLeft="2dp"
+	    android:layout_marginRight="2dp"
 	    android:gravity="center"
 	    android:orientation="horizontal">
 
@@ -54,10 +54,10 @@
 	
 	  <com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView
         android:id="@+id/incoming_ipcall_video_view"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_gravity="left"
+        android:layout_gravity="center"
         android:background="#ff666666"
         android:layout_marginTop="2dp"
         android:layout_marginBottom="2dp"
@@ -66,8 +66,7 @@
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:layout_weight="2"
+        android:layout_height="wrap_content"
         android:background="#ff444444"
         android:layout_gravity="bottom|left"
         android:layout_marginRight="1dip"       
@@ -75,8 +74,8 @@
 
         <com.orangelabs.rcs.service.api.client.media.video.VideoSurfaceView
             android:id="@+id/outgoing_ipcall_video_preview"
-            android:layout_width="120dip"
-            android:layout_height="fill_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
             android:background="#ff666666"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="2dp"

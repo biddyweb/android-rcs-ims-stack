@@ -32,7 +32,6 @@ public interface IPCallStreamingSessionListener extends ImsSessionListener  {
      */
     public void handle486Busy();
 
-	
 	/**
      * Call error
      * 
@@ -40,15 +39,13 @@ public interface IPCallStreamingSessionListener extends ImsSessionListener  {
      */
     public void handleCallError(IPCallError error);
     
-    
     /**
-     * The size of media has changed
+     * Video stream has been resized
      *
-     * @param width
-     * @param height
+     * @param width Video width
+     * @param height Video height
      */
-    public void handleMediaResized(int width, int height);
-    
+    public void handleVideoResized(int width, int height);
     
     /**
      * Add Video Invitation

@@ -1,8 +1,8 @@
  package com.orangelabs.rcs.service.api.client.ipcall;
 
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
 
@@ -13,7 +13,7 @@ import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
  */
 interface IIPCallApi {
 	// Initiate a call session
-	IIPCallSession initiateCall(in String contact, in IAudioPlayer audioPlayer, in IAudioRenderer audioRenderer, in IMediaPlayer videoPlayer, in IMediaRenderer videoRenderer);
+	IIPCallSession initiateCall(in String contact, in IAudioPlayer audioPlayer, in IAudioRenderer audioRenderer, in IVideoPlayer videoPlayer, in IVideoRenderer videoRenderer);
 
 	// Get current call session from its session ID
 	IIPCallSession getSession(in String id);

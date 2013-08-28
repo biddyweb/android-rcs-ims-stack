@@ -91,8 +91,9 @@ public class IPCallProvider extends ContentProvider {
         Cursor c = qb.query(db, projectionIn, where, whereArgs, null, null, sort);
 
 		// Register the contexts ContentResolver to be notified if the cursor result set changes.
-        // TODO with IPCallData
-        //c.setNotificationUri(getContext().getContentResolver(), RichCallData.CONTENT_URI);
+        if (c != null) {
+        	c.setNotificationUri(getContext().getContentResolver(), IPCallData.CONTENT_URI);
+        }
 
         return c;
 	}

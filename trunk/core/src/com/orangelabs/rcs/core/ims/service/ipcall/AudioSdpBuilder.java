@@ -25,19 +25,19 @@ import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.audio.AudioCodec;
 
 /**
- * Builds the Audio SDP
+ * Builds the audio SDP
  * 
  * @author Olivier Briand
  */
 public class AudioSdpBuilder {
 
     /**
-     * Creates the SIP INVITE SDP
+     * Build SDP offer for audio
      * 
      * @param localRtpPort Local RTP port
-     * @return The SDP 
+     * @return SDP offer
      */
-    public static String buildSdp(MediaCodec[] supportedCodecs, int localRtpPort) {
+    public static String buildSdpOffer(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuilder result = new StringBuilder();
         
         // Create video codec list
@@ -63,22 +63,19 @@ public class AudioSdpBuilder {
     }
 
     /**
-     * Builds the SDP for a SIP INVITE response. If the SIP
+     * Build SDP answer for audio
      * 
-     * @param selectedMediaCodec selected audio codec after negociation
+     * @param selectedMediaCodec Selected audio codec after negociation
      * @param localRtpPort Local RTP Port
-     * @return Response SDP
+     * @return SDP answer
      */
-    public static String buildResponseSdp(MediaCodec selectedMediaCodec, int localRtpPort) {
-    	
+    public static String buildSdpAnswer(MediaCodec selectedMediaCodec, int localRtpPort) {
     	StringBuilder result = new StringBuilder();
-
         result.append("m=audio " + localRtpPort + " RTP/AVP");
         AudioCodec codec = new AudioCodec(selectedMediaCodec);
         result.append(" ").append(codec.getPayload());
         result.append(SipUtils.CRLF);
         result.append("a=rtpmap:" + codec.getPayload() + " " + codec.getCodecName() + "/" + codec.getSamplerate() + SipUtils.CRLF);
-
         return result.toString();
     }
 }

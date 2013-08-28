@@ -274,6 +274,17 @@ public class RichMessaging {
 		if (firstMsg != null) {
 			addOutgoingChatMessage(firstMsg, session);
 		}
+
+        // Add rejoin ID
+        if (session.isGroupChat()) {
+            ContentValues values = new ContentValues();
+            values.put(RichMessagingData.KEY_CHAT_REJOIN_ID, session.getImSessionIdentity());
+            cr.update(databaseUri,
+                    values,
+                    "(" + RichMessagingData.KEY_CHAT_SESSION_ID +" = \"" + session.getSessionID() +
+                    "\") AND (" + RichMessagingData.KEY_TYPE + " =" + type + ")",
+                    null);
+        }
 	}
 
     /**
@@ -556,7 +567,6 @@ public class RichMessaging {
 				"(" + RichMessagingData.KEY_CHAT_SESSION_ID +" = \"" + session.getSessionID() +
 				"\") AND (" + RichMessagingData.KEY_TYPE + " =" + type + ")", 
 				null);
-		
 	}	
 	
 	/**

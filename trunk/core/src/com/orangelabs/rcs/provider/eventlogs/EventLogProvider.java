@@ -69,22 +69,22 @@ public class EventLogProvider extends ContentProvider {
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_SPAM_BOX), EventsLogApi.MODE_SPAM_BOX);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_ONE_TO_ONE_CHAT), EventsLogApi.MODE_ONE_TO_ONE_CHAT);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_GROUP_CHAT), EventsLogApi.MODE_GROUP_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_CHAT_FT_SMS), EventsLogApi.MODE_IPCall_RC_CHAT_FT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_CHAT_FT), EventsLogApi.MODE_IPCall_RC_CHAT_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_CHAT_SMS), EventsLogApi.MODE_IPCall_RC_CHAT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_CHAT), EventsLogApi.MODE_IPCall_RC_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_FT_SMS), EventsLogApi.MODE_IPCall_RC_FT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_FT), EventsLogApi.MODE_IPCall_RC_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC_SMS), EventsLogApi.MODE_IPCall_RC_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_RC), EventsLogApi.MODE_IPCall_RC);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_CHAT_FT_SMS), EventsLogApi.MODE_IPCall_CHAT_FT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_CHAT_FT), EventsLogApi.MODE_IPCall_CHAT_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_CHAT_SMS), EventsLogApi.MODE_IPCall_CHAT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_CHAT), EventsLogApi.MODE_IPCall_CHAT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_FT_SMS), EventsLogApi.MODE_IPCall_FT_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_FT), EventsLogApi.MODE_IPCall_FT);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall_SMS), EventsLogApi.MODE_IPCall_SMS);
-		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCall), EventsLogApi.MODE_IPCall);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_CHAT_FT_SMS), EventsLogApi.MODE_IPCALL_RC_CHAT_FT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_CHAT_FT), EventsLogApi.MODE_IPCALL_RC_CHAT_FT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_CHAT_SMS), EventsLogApi.MODE_IPCALL_RC_CHAT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_CHAT), EventsLogApi.MODE_IPCALL_RC_CHAT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_FT_SMS), EventsLogApi.MODE_IPCALL_RC_FT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_FT), EventsLogApi.MODE_IPCALL_RC_FT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC_SMS), EventsLogApi.MODE_IPCALL_RC_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_RC), EventsLogApi.MODE_IPCALL_RC);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_CHAT_FT_SMS), EventsLogApi.MODE_IPCALL_CHAT_FT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_CHAT_FT), EventsLogApi.MODE_IPCALL_CHAT_FT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_CHAT_SMS), EventsLogApi.MODE_IPCALL_CHAT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_CHAT), EventsLogApi.MODE_IPCALL_CHAT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_FT_SMS), EventsLogApi.MODE_IPCALL_FT_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_FT), EventsLogApi.MODE_IPCALL_FT);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL_SMS), EventsLogApi.MODE_IPCALL_SMS);
+		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_IPCALL), EventsLogApi.MODE_IPCALL);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT_SMS), EventsLogApi.MODE_RC_CHAT_FT_SMS);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_FT), EventsLogApi.MODE_RC_CHAT_FT);
 		uriMatcher.addURI("com.orangelabs.rcs.eventlogs", Integer.toString(EventsLogApi.MODE_RC_CHAT_SMS), EventsLogApi.MODE_RC_CHAT_SMS);
@@ -274,7 +274,7 @@ public class EventLogProvider extends ContentProvider {
 					SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_CHAT_FT_SMS:
+		case EventsLogApi.MODE_IPCALL_RC_CHAT_FT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -294,7 +294,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_CHAT_FT:
+		case EventsLogApi.MODE_IPCALL_RC_CHAT_FT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -309,7 +309,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_CHAT_SMS:
+		case EventsLogApi.MODE_IPCALL_RC_CHAT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -329,7 +329,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_CHAT:
+		case EventsLogApi.MODE_IPCALL_RC_CHAT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -344,7 +344,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_FT_SMS:
+		case EventsLogApi.MODE_IPCALL_RC_FT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -364,7 +364,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_FT:
+		case EventsLogApi.MODE_IPCALL_RC_FT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -379,7 +379,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC_SMS:
+		case EventsLogApi.MODE_IPCALL_RC_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -395,7 +395,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_RC:
+		case EventsLogApi.MODE_IPCALL_RC:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for RichCALL */
@@ -406,7 +406,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_CHAT_FT_SMS:
+		case EventsLogApi.MODE_IPCALL_CHAT_FT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -424,7 +424,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_CHAT_FT:
+		case EventsLogApi.MODE_IPCALL_CHAT_FT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -437,7 +437,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_CHAT_SMS:
+		case EventsLogApi.MODE_IPCALL_CHAT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -455,7 +455,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_CHAT:
+		case EventsLogApi.MODE_IPCALL_CHAT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -468,7 +468,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_FT_SMS:
+		case EventsLogApi.MODE_IPCALL_FT_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -486,7 +486,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall_FT:
+		case EventsLogApi.MODE_IPCALL_FT:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query for Rich Messaging */
@@ -499,7 +499,7 @@ public class EventLogProvider extends ContentProvider {
 			sortCursor = db.rawQuery(unionQuery, null);
 			break;
 
-		case EventsLogApi.MODE_IPCall_SMS:
+		case EventsLogApi.MODE_IPCALL_SMS:
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
 			/* Query the sms/mms table */
@@ -513,7 +513,7 @@ public class EventLogProvider extends ContentProvider {
 					EventLogData.KEY_EVENT_DATE, SortCursor.TYPE_NUMERIC, false);
 			break;
 
-		case EventsLogApi.MODE_IPCall:
+		case EventsLogApi.MODE_IPCALL:
 			logger.debug("case IPCall");
 			/* Query for IPCall */
 			ipCallSelectQuery = buildIPCallQuery(selection);
@@ -1137,7 +1137,7 @@ private static Set<String> columnsPresentInIPCallTable = new HashSet<String>(Arr
 				unionIPCallColumns, 
 				columnsPresentInIPCallTable, 
 				unionIPCallColumns.length, 
-				"("+Integer.toString(EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO) + "||" + Integer.toString(EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO_VIDEO) + "||" + Integer.toString(EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO)+ "||" + Integer.toString(EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO_VIDEO)+")", 
+				"("+Integer.toString(EventsLogApi.TYPE_INCOMING_IPCALL) + "||" + Integer.toString(EventsLogApi.TYPE_OUTGOING_IPCALL)+")", 
 				(selection!=null?IPCallData.KEY_CONTACT+selection:null), 
 				null, 
 				null, 
@@ -1169,81 +1169,81 @@ private static Set<String> columnsPresentInIPCallTable = new HashSet<String>(Arr
         //*************** IP Call *********************
         //*********************************************
         //*********************************************	
-        case EventsLogApi.MODE_IPCall_RC_CHAT_FT_SMS:
+        case EventsLogApi.MODE_IPCALL_RC_CHAT_FT_SMS:
         	deletedRows+=deleteIPCalls(selection);
         	deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteRichMessaging(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
-		case EventsLogApi.MODE_IPCall_RC_CHAT_FT:
+		case EventsLogApi.MODE_IPCALL_RC_CHAT_FT:
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteRichMessaging(selection);
 			break;
-    	case EventsLogApi.MODE_IPCall_RC_CHAT_SMS:
+    	case EventsLogApi.MODE_IPCALL_RC_CHAT_SMS:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteChat(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_RC_CHAT:
+    	case EventsLogApi.MODE_IPCALL_RC_CHAT:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteChat(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_RC_FT_SMS:
+    	case EventsLogApi.MODE_IPCALL_RC_FT_SMS:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteFT(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_RC_FT:
+    	case EventsLogApi.MODE_IPCALL_RC_FT:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteFT(selection);
     		break;
-		case EventsLogApi.MODE_IPCall_RC_SMS:
+		case EventsLogApi.MODE_IPCALL_RC_SMS:
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteRichCalls(selection);
         	deletedRows+=deleteSMSMMS(selection);
 			break;
-		case EventsLogApi.MODE_IPCall_RC:
+		case EventsLogApi.MODE_IPCALL_RC:
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteRichCalls(selection);
 			break;
-		case EventsLogApi.MODE_IPCall_CHAT_FT_SMS:
+		case EventsLogApi.MODE_IPCALL_CHAT_FT_SMS:
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteRichMessaging(selection);
         	deletedRows+=deleteSMSMMS(selection);
 			break;
-		case EventsLogApi.MODE_IPCall_CHAT_FT: 
+		case EventsLogApi.MODE_IPCALL_CHAT_FT: 
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteRichMessaging(selection);
 			break;
-    	case EventsLogApi.MODE_IPCall_CHAT_SMS:
+    	case EventsLogApi.MODE_IPCALL_CHAT_SMS:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteChat(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_CHAT:
+    	case EventsLogApi.MODE_IPCALL_CHAT:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteChat(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_FT_SMS:
+    	case EventsLogApi.MODE_IPCALL_FT_SMS:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteFT(selection);
         	deletedRows+=deleteSMSMMS(selection);
     		break;
-    	case EventsLogApi.MODE_IPCall_FT:
+    	case EventsLogApi.MODE_IPCALL_FT:
     		deletedRows+=deleteIPCalls(selection);
     		deletedRows+=deleteFT(selection);
     		break;
-		case EventsLogApi.MODE_IPCall_SMS:
+		case EventsLogApi.MODE_IPCALL_SMS:
 			deletedRows+=deleteIPCalls(selection);
 			deletedRows+=deleteSMSMMS(selection);
         	break;	
-		case EventsLogApi.MODE_IPCall:
+		case EventsLogApi.MODE_IPCALL:
 			deletedRows+=deleteIPCalls(selection);
 			break;	
         //*********************************************

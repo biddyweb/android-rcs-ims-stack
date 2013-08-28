@@ -365,6 +365,7 @@ public class EventLog extends Activity {
     	private Drawable mDrawableMms;
     	private Drawable mDrawableChat;
     	private Drawable mDrawableRichCall;
+    	private Drawable mDrawableIpCall;
     	private Drawable mDrawableFileTransfer;
     	
     	public EventLogAdapter(Context context) {
@@ -379,6 +380,7 @@ public class EventLog extends Activity {
     		mDrawableMms = context.getResources().getDrawable(R.drawable.ri_eventlog_mms);
     		mDrawableChat = context.getResources().getDrawable(R.drawable.ri_eventlog_chat);
     		mDrawableRichCall = context.getResources().getDrawable(R.drawable.ri_eventlog_csh);
+    		mDrawableIpCall = context.getResources().getDrawable(R.drawable.ri_eventlog_csh);
     		mDrawableFileTransfer = context.getResources().getDrawable(R.drawable.ri_eventlog_filetransfer);
     	}
     	
@@ -415,8 +417,7 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_FILE_TRANSFER:
 	    		case EventsLogApi.TYPE_INCOMING_RICH_CALL:
-	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO:
-	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO_VIDEO:
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL:
 	    		case EventsLogApi.TYPE_INCOMING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
 	    				eventDirectionIconView.setImageDrawable(mDrawableIncomingFailed);
@@ -427,8 +428,7 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
 	    		case EventsLogApi.TYPE_OUTGOING_RICH_CALL:
-	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO:	
-	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO_VIDEO:
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL:	
 	    		case EventsLogApi.TYPE_OUTGOING_SMS:
 	    			if(status==EventsLogApi.STATUS_FAILED)
 	    				eventDirectionIconView.setImageDrawable(mDrawableOutgoingFailed);
@@ -475,24 +475,10 @@ public class EventLog extends Activity {
 	    		case EventsLogApi.TYPE_OUTGOING_RICH_CALL:
 	    			eventIconView.setImageDrawable(mDrawableRichCall);
 	    			break;
-	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO:	
-	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO:	
-	    			line1View.setText(R.string.title_audio_call);
-	    			eventIconView.setImageDrawable(mDrawableRichCall);
-	    			break;
-	    		case EventsLogApi.TYPE_INCOMING_IPCALL_AUDIO_VIDEO:
-	    		case EventsLogApi.TYPE_OUTGOING_IPCALL_AUDIO_VIDEO:
-	    			line1View.setText(R.string.title_audiovideo_call);
-	    			eventIconView.setImageDrawable(mDrawableRichCall);
-	    			break;
-	    		case EventsLogApi.TYPE_IPCALL_ADDED_VIDEO:
-	    			line1View.setText(R.string.title_video_added);
-	    			eventIconView.setImageDrawable(mDrawableRichCall);
-	    			break;
-	    		case EventsLogApi.TYPE_IPCALL_REMOVED_VIDEO:
-	    			line1View.setText(R.string.title_video_removed);
-	    			eventIconView.setImageDrawable(mDrawableRichCall);
-	    			break;
+	    		case EventsLogApi.TYPE_INCOMING_IPCALL:	
+	    		case EventsLogApi.TYPE_OUTGOING_IPCALL:	
+	    			line1View.setText(R.string.title_ipcall);
+	    			eventIconView.setImageDrawable(mDrawableIpCall);
     		}
     	}		
     }

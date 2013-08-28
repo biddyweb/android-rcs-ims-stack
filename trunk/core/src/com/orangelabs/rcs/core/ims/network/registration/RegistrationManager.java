@@ -27,12 +27,14 @@ import javax2.sip.header.ExpiresHeader;
 import javax2.sip.header.Header;
 import javax2.sip.header.ViaHeader;
 
+import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
@@ -311,9 +313,10 @@ public class RegistrationManager extends PeriodicRefresher {
 	 * Send REGISTER message
 	 * 
 	 * @param register SIP REGISTER
-	 * @throws Exception
+	 * @throws SipException
+	 * @throws CoreException
 	 */
-	private void sendRegister(SipRequest register) throws Exception {
+	private void sendRegister(SipRequest register) throws SipException, CoreException {
         if (logger.isActivated()) {
         	logger.info("Send REGISTER, expire=" + register.getExpires());
         }
@@ -334,6 +337,10 @@ public class RegistrationManager extends PeriodicRefresher {
         		} else {
         			handle200OkUnregister(ctx);
         		}
+            } else
+            if (ctx.getStatusCode() == 302) {
+        		// 302 Moved Temporarily
+            	handle302MovedTemporarily(ctx);
             } else
             if (ctx.getStatusCode() == 401) {
         		// Increment the number of 401 failures
@@ -366,9 +373,10 @@ public class RegistrationManager extends PeriodicRefresher {
 	 * Handle 200 0K response 
 	 * 
 	 * @param ctx SIP transaction context
-	 * @throws Exception
+	 * @throws SipException
+	 * @throws CoreException
 	 */
-	private void handle200OK(SipTransactionContext ctx) throws Exception {
+	private void handle200OK(SipTransactionContext ctx) throws SipException, CoreException {
         // 200 OK response received
     	if (logger.isActivated()) {
     		logger.info("200 OK response received");
@@ -446,14 +454,50 @@ public class RegistrationManager extends PeriodicRefresher {
             logger.info("200 OK response received");
         }
 	}
+	
+	/**
+	 * Handle 302 response
+	 * 
+	 * @param ctx SIP transaction context
+	 * @throws SipException
+	 * @throws CoreException
+	 */
+	private void handle302MovedTemporarily(SipTransactionContext ctx) throws SipException, CoreException {
+        // 302 Moved Temporarily response received
+        if (logger.isActivated()) {
+            logger.info("302 Moved Temporarily response received");
+        }
+        
+        // Extract new target URI from Contact header of the received response
+		SipResponse resp = ctx.getSipResponse();
+        ContactHeader contactHeader = (ContactHeader)resp.getStackMessage().getHeader(ContactHeader.NAME);
+		String newUri = contactHeader.getAddress().getURI().toString();
+		dialogPath.setTarget(newUri);
+
+		// Increment the Cseq number of the dialog path
+		dialogPath.incrementCseq();
+
+		// Create REGISTER request with security token
+		if (logger.isActivated()) {
+			logger.info("Send REGISTER to new address");
+		}
+		SipRequest register = SipMessageFactory.createRegister(dialogPath,
+				featureTags,
+				ctx.getTransaction().getRequest().getExpires().getExpires(),
+				instanceId);
+
+		// Send REGISTER request
+		sendRegister(register);
+	}
 
 	/**
 	 * Handle 401 response 
 	 * 
 	 * @param ctx SIP transaction context
-	 * @throws Exception
+	 * @throws SipException
+	 * @throws CoreException
 	 */
-	private void handle401Unauthorized(SipTransactionContext ctx) throws Exception {
+	private void handle401Unauthorized(SipTransactionContext ctx) throws SipException, CoreException {
 		// 401 response received
     	if (logger.isActivated()) {
     		logger.info("401 response received, nbFailures=" + nb401Failures);
@@ -482,11 +526,12 @@ public class RegistrationManager extends PeriodicRefresher {
 
 	/**
 	 * Handle 423 response 
-	 * 
+	 *
 	 * @param ctx SIP transaction context
-	 * @throws Exception
+	 * @throws SipException
+	 * @throws CoreException
 	 */
-	private void handle423IntervalTooBrief(SipTransactionContext ctx) throws Exception {
+	private void handle423IntervalTooBrief(SipTransactionContext ctx) throws SipException, CoreException {
 		// 423 response received
     	if (logger.isActivated()) {
     		logger.info("423 response received");

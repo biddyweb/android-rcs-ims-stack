@@ -62,8 +62,6 @@ public class AudioCodecManager {
         return selectedCodec;
     }
 
-    
-
     /**
      * Create an audio codec from its SDP description
      *

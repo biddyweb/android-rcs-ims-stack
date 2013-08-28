@@ -20,8 +20,6 @@ package com.orangelabs.rcs.core.ims.service.ipcall;
 
 import java.util.Vector;
 
-import android.os.RemoteException;
-
 import com.orangelabs.rcs.core.content.LiveAudioContent;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -32,10 +30,14 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
+import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.audio.AudioCodec;
+import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -54,15 +56,18 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
      * Constructor
      *
      * @param parent IMS service
-     * @param videoPlayer Media player
-     * @param audioPlayer Audio player
-     * @param videoContent VideoContent to be shared
-     * @param audioContent AudioContent to be shared
      * @param contact Remote contact
+     * @param audioContent Audio content
+     * @param audioPlayer Audio player
+     * @param audioRenderer Audio renderer
+     * @param videoContent Video content
+     * @param videoPlayer Video player
+     * @param videoRenderer Video renderer
      */
-    public OriginatingIPCallStreamingSession(ImsService parent, IMediaPlayer videoPlayer, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer,
-            LiveVideoContent videoContent, LiveAudioContent audioContent, String contact) {
-    	super(parent, videoContent, audioContent, contact);
+    public OriginatingIPCallStreamingSession(ImsService parent, String contact,
+    		LiveAudioContent audioContent, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer,
+    		LiveVideoContent videoContent, IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) {
+    	super(parent, contact, audioContent, videoContent);
     	
         // Create dialog path
         createOriginatingDialogPath();
@@ -70,6 +75,9 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         // Set the video player
         setVideoPlayer(videoPlayer);
         
+        // Set the video renderer
+        setVideoRenderer(videoRenderer);
+
         // Set the audio player
         setAudioPlayer(audioPlayer);
         
@@ -84,32 +92,36 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
     public void run() {
         try {
             if (logger.isActivated()) {
-                logger.info("Initiate a new ip call session as originating");
+                logger.info("Initiate a new IP call session as originating");
             }
 
-            // Check player 
+            // Check audio parameters 
+            if (getAudioContent() == null) {
+                handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE, "Audio codec not supported"));
+                return;
+            }
             if ((getAudioPlayer() == null) || (getAudioPlayer().getAudioCodec() == null)) {
                 handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE,
-                        "Audio codec not selected"));
+                		"Audio codec not selected"));
                 return;
             }
             if ((getAudioRenderer() == null) || (getAudioRenderer().getAudioCodec() == null)) {
                 handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE,
-                        "Audio codec not selected"));
+                		"Audio codec not selected"));
                 return;
             }
-//            if ((getVideoPlayer() == null) || (getVideoPlayer().getMediaCodec() == null)) {
-//                handleError(new ContentSharingError(IPCallError.UNSUPPORTED_VIDEO_TYPE,
-//                        "Video codec not selected"));
-//                return;
-//            }
 
             // Build SDP part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            //String videoSdp = VideoSdpBuilder.buildSdpWithOrientationExtension(getVideoPlayer().getSupportedMediaCodecs(), getVideoPlayer().getLocalRtpPort());
-	    	//String audioSdp = AudioSdpBuilder.buildSdp(getAudioPlayer().getSupportedAudioCodecs(), getAudioPlayer().getLocalRtpPort());
-	    	String audioSdp = AudioSdpBuilder.buildSdp(getAudioPlayer().getSupportedAudioCodecs(), getAudioRenderer().getLocalRtpPort()); // Set the same port for player and renderer (generated by the renderer)
+            String videoSdp = "";
+            if ((getVideoContent() != null) && (getVideoPlayer() != null)) {
+            	videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(
+            			getVideoPlayer().getSupportedVideoCodecs(),
+            			getVideoPlayer().getLocalRtpPort());
+            }
+	    	String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(),
+	    			getAudioRenderer().getLocalRtpPort());
 	    	String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -117,7 +129,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
             	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
             	"t=0 0" + SipUtils.CRLF +
             	audioSdp +
-            	//videoSdp +
+            	videoSdp +
             	"a=sendrcv" + SipUtils.CRLF;
 
             // Set the local SDP part in the dialog path
@@ -128,12 +140,13 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
                 logger.info("Send INVITE");
             }
             SipRequest invite;  
-            if (getVideoPlayer()== null){
-            	// Audio Call
-            	invite = SipMessageFactory.createInvite(getDialogPath(),IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp); }
-            else {
-            	// Audio + Video call
-            	invite = SipMessageFactory.createInvite(getDialogPath(),IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp); } 
+            if (getVideoContent() == null) {
+            	// Voice call
+            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp);
+            } else {
+            	// Video call
+            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp);
+            } 
 
 	        // Set the Authorization header
 	        getAuthenticationAgent().setAuthorizationHeader(invite);
@@ -155,25 +168,42 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         }
     }
 
-	@Override
+    /**
+     * Prepare media session
+     *
+     * @throws Exception 
+     */
 	public void prepareMediaSession() throws Exception {
-		
         // Parse the remote SDP part
         SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
+        
+        // Extract the remote host (same between audio and video)
         String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
         // TODO String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
+        
+        // Extract media ports
         MediaDescription mediaAudio = parser.getMediaDescription("audio");
-        int remotePort = mediaAudio.port;
+        int audioRemotePort = mediaAudio.port;
+        MediaDescription mediaVideo = parser.getMediaDescription("video");
+        int videoRemotePort = -1;
+        if (mediaVideo != null) {
+            videoRemotePort = mediaVideo.port;
+        }
         
         // Extract audio codecs from SDP
-        Vector<MediaDescription> medias = parser.getMediaDescriptions("audio");
-        Vector<AudioCodec> proposedCodecs = AudioCodecManager.extractAudioCodecsFromSdp(medias);
+        Vector<MediaDescription> audio = parser.getMediaDescriptions("audio");
+        Vector<AudioCodec> proposedAudioCodecs = AudioCodecManager.extractAudioCodecsFromSdp(audio);
 
-        // Codec negotiation
-        AudioCodec selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioPlayer().getSupportedAudioCodecs(), proposedCodecs);
+        // Extract video codecs from SDP
+        Vector<MediaDescription> video = parser.getMediaDescriptions("video");
+        Vector<VideoCodec> proposedVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(video);
+
+        // Audio codec negotiation
+        // TODO: what about the renderer?
+        AudioCodec selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioPlayer().getSupportedAudioCodecs(), proposedAudioCodecs);
         if (selectedAudioCodec == null) {
             if (logger.isActivated()) {
-                logger.debug("Proposed codecs are not supported");
+                logger.debug("Proposed audio codecs are not supported");
             }
             
             // Terminate session
@@ -184,52 +214,64 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
             return;
         }
 
-        // Set the selected audio codec in audio player/renderer
-        getAudioPlayer().setAudioCodec(selectedAudioCodec.getMediaCodec());
-        getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
+        // Video codec negotiation
+        // TODO: what about the renderer?
+        VideoCodec selectedVideoCodec = null;
+        if (getVideoPlayer() != null) {
+	        selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
+	        if (selectedVideoCodec == null) {
+	            if (logger.isActivated()) {
+	                logger.debug("Proposed video codecs are not supported");
+	            }
+	            
+	            // Terminate session
+	            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+	            
+	            // Report error
+	            handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
+	            return;
+	        }
+        }
         
-        // Set audio player/renderer event listener
+        // Set the audio codec in audio player            
+        getAudioPlayer().setAudioCodec(selectedAudioCodec.getMediaCodec());
         getAudioPlayer().addListener(new AudioPlayerEventListener(this));
+
+        // Set the audio codec in audio renderer            
+        getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
         getAudioRenderer().addListener(new AudioPlayerEventListener(this)); 
+
+        // Set the video codec in video player            
+        if ((getVideoPlayer() != null) && (selectedVideoCodec != null)) {
+            getVideoPlayer().setVideoCodec(selectedVideoCodec.getMediaCodec());
+        	getVideoPlayer().addListener(new VideoPlayerEventListener(this));
+        }
+        
+        // Set the video codec in video renderer            
+        if ((getVideoRenderer() != null) && (selectedVideoCodec != null)) {
+            getVideoRenderer().setVideoCodec(selectedVideoCodec.getMediaCodec());
+        	getVideoRenderer().addListener(new VideoPlayerEventListener(this));
+        }
         
         // Open the audio player/renderer
-        getAudioRenderer().open(remoteHost, remotePort);
-        getAudioPlayer().open(remoteHost, remotePort); //always open the player after the renderer when the RTP stream is shared
-		
-		
+        getAudioRenderer().open(remoteHost, audioRemotePort);
+        getAudioPlayer().open(remoteHost, audioRemotePort); //always open the player after the renderer when the RTP stream is shared
+
+        // Open the video player/renderer
+        if (getVideoRenderer() != null) {
+        	getVideoRenderer().open(remoteHost, videoRemotePort);
+        }
+        if (getVideoPlayer() != null) {
+            getVideoPlayer().open(remoteHost, videoRemotePort); //always open the player after the renderer when the RTP stream is shared
+        }
 	}
 
 	@Override
 	public void startMediaSession() throws Exception {
-		getAudioPlayer().start();	
-		getAudioRenderer().start();
+		// TODO: start audio and video player/renderer
+		// getAudioPlayer().start();	
+		// getAudioRenderer().start();
+		// getVideoPlayer().start();	
+		// getVideoRenderer().start();
 	}
-
-	@Override
-	public void closeMediaSession() {
-		try {
-			if (logger.isActivated()) {
-				logger.debug("Stop audio player");
-			}
-			getAudioPlayer().stop();
-			
-			if (logger.isActivated()) {
-				logger.debug("Close audio player");
-			}
-			getAudioPlayer().close();
-			if (logger.isActivated()) {
-				logger.debug("Stop audio renderer");
-			}
-			getAudioRenderer().stop();
-			
-			if (logger.isActivated()) {
-				logger.debug("Close audio renderer");
-			}
-			getAudioRenderer().close();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 }

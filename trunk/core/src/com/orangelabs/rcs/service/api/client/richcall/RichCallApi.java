@@ -29,7 +29,7 @@ import android.os.IBinder;
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
@@ -119,7 +119,7 @@ public class RichCallApi extends ClientApi {
 	 * @return Video sharing session
 	 * @throws ClientApiException
 	 */
-	public IVideoSharingSession initiateLiveVideoSharing(String contact, IMediaPlayer player) throws ClientApiException {
+	public IVideoSharingSession initiateLiveVideoSharing(String contact, IVideoPlayer player) throws ClientApiException {
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateLiveVideoSharing(contact, player);

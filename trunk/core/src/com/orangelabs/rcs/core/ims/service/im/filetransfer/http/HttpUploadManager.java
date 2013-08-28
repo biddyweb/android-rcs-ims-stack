@@ -23,7 +23,6 @@ import javax.net.ssl.SSLSession;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -114,6 +113,7 @@ public class HttpUploadManager extends HttpTransferManager {
         
         this.content = content;
         this.thumbnail = thumbnail;
+        tid = UUID.randomUUID().toString();
     }
 
     /**
@@ -206,20 +206,6 @@ public class HttpUploadManager extends HttpTransferManager {
             String trace = ">>> Send HTTP request:";
             trace += "\n" + post.getMethod() + " " + post.getRequestLine().getUri();
             System.out.println(trace);
-        }
-
-        // Add Content-disposition with tid
-        if (tidFlag) {
-            tid = UUID.randomUUID().toString();
-            StringEntity entity = new StringEntity(tid);
-            entity.setContentType("text/plain");
-            post.addHeader("Content-Disposition", "form-data; name=\"tid\"");
-            post.setEntity(entity);
-            if (HTTP_TRACE_ENABLED) {
-                String trace = "Content-Disposition form-data; name=\"tid\"";
-                trace += "\n" + tid;
-                System.out.println(trace);
-            }
         }
 
         return post;
@@ -329,8 +315,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
 	            System.out.println(trace);
 	        }
-	        switch (responseCode) 
-	        {
+	        switch (responseCode) {
 	            case 200 :
 	                // 200 OK
 	                success = true;
@@ -351,21 +336,22 @@ public class HttpUploadManager extends HttpTransferManager {
 	                    } catch (NumberFormatException e) {
 	                        // Nothing to do
 	                    }
+		                if (retryAfter >= 0) {
+		                    try {
+		                        Thread.sleep(retryAfter * 1000);
+		    	                // Retry procedure
+		    	                if (retryCount < RETRY_MAX) {
+		    	                    retryCount++;
+		    	                    retry = true;
+		    	                }
+		                    } catch (InterruptedException e) {
+		                        // Nothing to do
+		                    }
+		                }
 	                }
-	                if (retryAfter > 0) {
-	                    try {
-	                        Thread.sleep(retryAfter * 1000);
-	                    } catch (InterruptedException e) {
-	                        // Nothing to do
-	                    }
-	                }
-	                // No break to do the retry
+	                break;
 	            default :
-	                // Retry procedure
-	                if (retryCount < RETRY_MAX) {
-	                    retryCount++;
-	                    retry = true;
-	                }
+	            	break; // no success, no retry
 	        }
 
 	        // Close streams

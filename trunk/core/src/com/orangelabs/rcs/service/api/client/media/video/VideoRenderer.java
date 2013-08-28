@@ -41,20 +41,19 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpInputStream;
 import com.orangelabs.rcs.core.ims.protocol.rtp.stream.RtpStreamListener;
 import com.orangelabs.rcs.platform.network.DatagramConnection;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
-import com.orangelabs.rcs.service.api.client.media.IMediaEventListener;
-import com.orangelabs.rcs.service.api.client.media.IMediaRenderer;
+import com.orangelabs.rcs.service.api.client.media.IVideoEventListener;
+import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
-import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.CodecsUtils;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Video RTP renderer based on H264 QCIF format
+ * Video RTP renderer. Only the H264 QCIF format is supported.
  *
  * @author jexa7410
  */
-public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListener {
+public class VideoRenderer extends IVideoRenderer.Stub implements RtpStreamListener {
 
     /**
      * List of supported video codecs
@@ -119,7 +118,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
     /**
      * Media event listeners
      */
-    private Vector<IMediaEventListener> listeners = new Vector<IMediaEventListener>();
+    private Vector<IVideoEventListener> listeners = new Vector<IVideoEventListener>();
 
     /**
      * Temporary connection to reserve the port
@@ -149,7 +148,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
-            setMediaCodec(supportedMediaCodecs[0]);
+        	setVideoCodec(supportedMediaCodecs[0]);
         }
     }
 
@@ -168,7 +167,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
 
         // Set the default media codec
         if (supportedMediaCodecs.length > 0) {
-            setMediaCodec(supportedMediaCodecs[0]);
+        	setVideoCodec(supportedMediaCodecs[0]);
         }
     }
 
@@ -390,7 +389,7 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
      *
      * @param listener Media event listener
      */
-    public void addListener(IMediaEventListener listener) {
+    public void addListener(IVideoEventListener listener) {
         listeners.addElement(listener);
     }
 
@@ -402,20 +401,20 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
     }
 
     /**
-     * Get supported media codecs
+     * Get supported video codecs
      *
      * @return media Codecs list
      */
-    public MediaCodec[] getSupportedMediaCodecs() {
+    public MediaCodec[] getSupportedVideoCodecs() {
         return supportedMediaCodecs;
     }
 
     /**
-     * Get media codec
+     * Get video codec
      *
-     * @return Media codec
+     * @return Video codec
      */
-    public MediaCodec getMediaCodec() {
+    public MediaCodec getVideoCodec() {
         if (selectedVideoCodec == null)
             return null;
         else
@@ -423,11 +422,11 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
     }
 
     /**
-     * Set media codec
+     * Set video codec
      *
      * @param mediaCodec Media codec
      */
-    public void setMediaCodec(MediaCodec mediaCodec) {
+    public void setVideoCodec(MediaCodec mediaCodec) {
         if (VideoCodec.checkVideoCodec(supportedMediaCodecs, new VideoCodec(mediaCodec))) {
             selectedVideoCodec = new VideoCodec(mediaCodec);
             videoFormat = (VideoFormat) MediaRegistry.generateFormat(mediaCodec.getCodecName());
@@ -459,10 +458,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         if (logger.isActivated()) {
             logger.debug("Player is started");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStarted();
+                ((IVideoEventListener)ite.next()).mediaStarted();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -478,10 +477,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         if (logger.isActivated()) {
             logger.debug("The media size has changed");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaResized(width, height);
+                ((IVideoEventListener)ite.next()).mediaResized(width, height);
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -497,10 +496,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         if (logger.isActivated()) {
             logger.debug("Player is stopped");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaStopped();
+                ((IVideoEventListener)ite.next()).mediaStopped();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -516,10 +515,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         if (logger.isActivated()) {
             logger.debug("Player is opened");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaOpened();
+                ((IVideoEventListener)ite.next()).mediaOpened();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -535,10 +534,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
         if (logger.isActivated()) {
             logger.debug("Player is closed");
         }
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaClosed();
+                ((IVideoEventListener)ite.next()).mediaClosed();
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);
@@ -555,10 +554,10 @@ public class VideoRenderer extends IMediaRenderer.Stub implements RtpStreamListe
             logger.debug("Renderer error: " + error);
         }
 
-        Iterator<IMediaEventListener> ite = listeners.iterator();
+        Iterator<IVideoEventListener> ite = listeners.iterator();
         while (ite.hasNext()) {
             try {
-                ((IMediaEventListener)ite.next()).mediaError(error);
+                ((IVideoEventListener)ite.next()).mediaError(error);
             } catch (RemoteException e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);

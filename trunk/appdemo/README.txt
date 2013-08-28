@@ -8,8 +8,6 @@ Demos:
 
 	/tts		Text-To-Speech for chat invitations
 
-	/widget		RCS service widget (start/stop)
-
 
 Contact:
 --------

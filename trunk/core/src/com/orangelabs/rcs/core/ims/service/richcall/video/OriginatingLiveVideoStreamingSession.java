@@ -20,7 +20,7 @@ package com.orangelabs.rcs.core.ims.service.richcall.video;
 
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 
 /**
  * Originating live video content sharing session (streaming)
@@ -36,7 +36,7 @@ public class OriginatingLiveVideoStreamingSession extends OriginatingVideoStream
      * @param content Content to be shared
      * @param contact Remote contact
      */
-    public OriginatingLiveVideoStreamingSession(ImsService parent, IMediaPlayer player,
+    public OriginatingLiveVideoStreamingSession(ImsService parent, IVideoPlayer player,
             LiveVideoContent content, String contact) {
         super(parent, player, content, contact);
     }

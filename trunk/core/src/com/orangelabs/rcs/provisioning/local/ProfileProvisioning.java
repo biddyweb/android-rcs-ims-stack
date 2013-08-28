@@ -170,6 +170,9 @@ public class ProfileProvisioning extends Activity {
 
         box = (CheckBox)findViewById(R.id.im);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IM_SESSION)));
+       
+        box = (CheckBox)findViewById(R.id.im_group);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IM_GROUP_SESSION)));
         
         box = (CheckBox)findViewById(R.id.ipvoicecall);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_IP_VOICE_CALL)));
@@ -299,6 +302,9 @@ public class ProfileProvisioning extends Activity {
         box = (CheckBox)findViewById(R.id.im);
         RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IM_SESSION, Boolean.toString(box.isChecked()));
 
+        box = (CheckBox)findViewById(R.id.im_group);
+        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IM_GROUP_SESSION, Boolean.toString(box.isChecked()));
+        
         box = (CheckBox)findViewById(R.id.ipvoicecall);
         RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_IP_VOICE_CALL, Boolean.toString(box.isChecked()));
         
@@ -350,7 +356,7 @@ public class ProfileProvisioning extends Activity {
 
         final String[] platforms = {
                 "NSN Brune", "NSN Lannion", "Margaux (albatros)", "Margaux (blackbird)", "VCOM1", "VCOM2",
-                "RCS", "Kamailio1", "MargauxIPv6", "Huawei", "Capgemini"
+                "RCS", "Kamailio1", "MargauxIPv6", "Huawei", "Capgemini", "JibeNet"
         };
         Spinner spinner = (Spinner)view.findViewById(R.id.ims);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -528,6 +534,18 @@ public class ProfileProvisioning extends Activity {
                             imsAddrForWifi = "10.67.102.151";
                             imsPortForWifi = 5060;
                             confUri  = "sip:Conference-Factory@" + homeDomain;
+                            break;
+                        case 11: // JibeNet
+                            homeDomain = "jibemobile.com";
+                            sipUri = number + "@" + homeDomain;
+            				privateSipUri = sipUri;
+                            imsPwd = "5555";
+	            			imsRealm = "jibemobile.com";
+                            imsAddrForMobile = "goose.jibemobile.com";
+                            imsPortForMobile = 5671;
+                            imsAddrForWifi = "goose.jibemobile.com";
+                            imsPortForWifi = 5671;
+                            confUri  = "sip:conference@" + homeDomain;
                             break;
                     }
 

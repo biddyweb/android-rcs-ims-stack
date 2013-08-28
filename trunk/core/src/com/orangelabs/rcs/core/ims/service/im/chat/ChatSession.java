@@ -668,11 +668,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * 
 	 * @param fileInfo File info in XML
 	 * @param invite Incoming request
-	 * @param msgId Message Id
+	 * @param msgId Message ID
 	 */
-	private void receiveHttpFileTransfer(String fileInfo, SipRequest invite, String msgID) {
+	private void receiveHttpFileTransfer(String fileInfo, SipRequest invite, String msgId) {
 		// Parse HTTP document
-		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo);
+		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo.getBytes());
 		if (fileTransferInfo != null ) {
 
             // Test if the contact is blocked
@@ -710,7 +710,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
             }
 
 			// Create a new session
-			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo, msgID, getSessionID());
+			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo, msgId, getSessionID());
 
 	        // Start the session
 			session.startSession();

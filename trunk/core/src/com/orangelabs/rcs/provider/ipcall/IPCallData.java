@@ -25,14 +25,10 @@ public class IPCallData {
 	public static final String KEY_STATUS = "status";
 	public static final String KEY_SESSION_ID = "sessionId";
 		
-	// "event_type" values
-	public static final int AUDIO_VIDEO_INCOMING = 16;
-	public static final int AUDIO_VIDEO_OUTGOING = 17;	
-	public static final int AUDIO_INCOMING = 18;
-	public static final int AUDIO_OUTGOING = 19;
-	public static final int VIDEO_ADDED = 20;
-	public static final int VIDEO_REMOVED = 21;
-		
+	// Event direction
+	public static final int EVENT_INCOMING = 16;
+	public static final int EVENT_OUTGOING = 17;	
+	
 	// "status" values
 	public static final int STATUS_STARTED = EventsLogApi.STATUS_STARTED; 
 	public static final int STATUS_FAILED = EventsLogApi.STATUS_FAILED;

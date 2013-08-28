@@ -32,11 +32,11 @@ public class IPCallApiIntents {
      * <ul>
      *   <li><em>contact</em> - Contact phone number.</li>
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
-     *   <li><em>sessionId</em> - Session ID of the call session.</li>
-     *   <li><em>audiotype</em> - Type of audio encoding.</li>
-     *   <li><em>videotype</em> - Type of video encoding.</li>
-     *   <li><em>videowidth</em> - Width of video.</li>
-     *   <li><em>videoheight</em> - Height of video.</li>
+     *   <li><em>sessionId</em> - Session ID of the IP call session.</li>
+     *   <li><em>audiotype</em> - Audio encoding.</li>
+     *   <li><em>videotype</em> - Video encoding.</li>
+     *   <li><em>videowidth</em> - Width of the video.</li>
+     *   <li><em>videoheight</em> - Height of the video.</li>
      * </ul>
      * </ul>
      */
@@ -47,10 +47,10 @@ public class IPCallApiIntents {
      * 
      * <p>The intent will have the following extra values:
      * <ul>
-     *   <li><em>sessionId</em> - Session ID of the call session.</li>
-     *   <li><em>videotype</em> - Type of video encoding.</li>
-     *   <li><em>videowidth</em> - Width of video.</li>
-     *   <li><em>videoheight</em> - Height of video.</li>
+     *   <li><em>sessionId</em> - Session ID of the IP call session.</li>
+     *   <li><em>videotype</em> - Video encoding.</li>
+     *   <li><em>videowidth</em> - Width of the video.</li>
+     *   <li><em>videoheight</em> - Height of the video.</li>
      * </ul>
      * </ul>
      */
@@ -61,12 +61,9 @@ public class IPCallApiIntents {
      * 
      * <p>The intent will have the following extra values:
      * <ul>
-     *   <li><em>sessionId</em> - Session ID of the call session.</li>
+     *   <li><em>sessionId</em> - Session ID of the IP call session.</li>
      * </ul>
      * </ul>
      */
 	public final static String IPCALL_REMOVE_VIDEO = "com.orangelabs.rcs.ipcall.IPCALL_REMOVE_VIDEO";
-
-
-
 }

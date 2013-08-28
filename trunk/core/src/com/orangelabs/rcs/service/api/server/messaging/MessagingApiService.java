@@ -160,17 +160,8 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		// Extract number from contact 
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
-		// Set the file transfer session ID from the chat session if a chat already exist
-		String ftSessionId = session.getSessionID();
-		String chatSessionId = ftSessionId;
-		Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(number);
-		if (chatSessions.size() > 0) {
-			ChatSession chatSession = chatSessions.lastElement();
-			chatSessionId = chatSession.getSessionID();
-		}
-		
 		// Update rich messaging history
-    	RichMessaging.getInstance().addIncomingFileTransfer(number, chatSessionId, ftSessionId, session.getContent());
+    	RichMessaging.getInstance().addIncomingFileTransfer(number, session.getContributionID(), session.getSessionID(), session.getContent());
 
 		// Add session in the list
 		FileTransferSession sessionApi = new FileTransferSession(session);
@@ -181,9 +172,6 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
-    	if (chatSessions.size() > 0) {
-    		intent.putExtra("chatSessionId", chatSessionId);
-    	}
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
     	intent.putExtra("filetype", session.getContent().getEncoding());
@@ -237,7 +225,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			
 			// Update rich messaging history
 			String ftSessionId = session.getSessionID();
-			RichMessaging.getInstance().addOutgoingFileTransfer(contact, ftSessionId, ftSessionId, file, session.getContent());
+			RichMessaging.getInstance().addOutgoingFileTransfer(contact, session.getContributionID(), ftSessionId, file, session.getContent());
 
 			FileTransferSession sessionApi = new FileTransferSession(session);
 			addFileTransferSession(sessionApi);

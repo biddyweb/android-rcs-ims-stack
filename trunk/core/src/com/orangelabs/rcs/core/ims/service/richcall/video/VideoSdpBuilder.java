@@ -45,14 +45,14 @@ public class VideoSdpBuilder {
     private static Logger logger = Logger.getLogger(VideoSdpBuilder.class.getName());
 
     /**
-     * Creates the SIP INVITE {@link MediaCodec} SDP without the orientation
-     * extension, ordered by the preferred codec
+     * Build SDP offer without the orientation extension ordered by the
+     * preferred codec
      * 
      * @param supportedCodecs Codecs to create SDP
      * @param localRtpPort Local RTP port
-     * @return The SDP for all the codecs
+     * @return SDP offer
      */
-    public static String buildSdpWithoutOrientation(MediaCodec[] supportedCodecs, int localRtpPort) {
+    public static String buildSdpOfferWithoutOrientation(MediaCodec[] supportedCodecs, int localRtpPort) {
         StringBuilder result = new StringBuilder();
 
         // Create video codec list
@@ -87,15 +87,15 @@ public class VideoSdpBuilder {
     }
 
     /**
-     * Creates the SIP INVITE {@link MediaCodec} SDP with the orientation
-     * extension, ordered by the preferred codec
+     * Build SDP offer without the orientation extension ordered by the
+     * preferred codec
      * 
      * @param supportedCodecs Codecs to create SDP
      * @param localRtpPort Local RTP port
-     * @return The SDP for all the codecs
+     * @return SDP offer
      */
-    public static String buildSdpWithOrientationExtension(MediaCodec[] supportedCodecs, int localRtpPort) {
-        StringBuilder sdp = new StringBuilder(buildSdpWithoutOrientation(supportedCodecs, localRtpPort))
+    public static String buildSdpOfferWithOrientation(MediaCodec[] supportedCodecs, int localRtpPort) {
+        StringBuilder sdp = new StringBuilder(buildSdpOfferWithoutOrientation(supportedCodecs, localRtpPort))
                 .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(RtpUtils.RTP_DEFAULT_EXTENSION_ID)
                 .append(" " + SdpOrientationExtension.VIDEO_ORIENTATION_URI).append(SipUtils.CRLF);
         return sdp.toString();
@@ -137,13 +137,12 @@ public class VideoSdpBuilder {
     /**
      * Create the SDP part with orientation extension for a given codec
      *
-     * @param codec
-     * @param localRtpPort
+     * @param codec Media Codec
+     * @param localRtpPort Local RTP Port
      * @param extensionId
-     * @return
+     * @return SDP
      */
-    private static String buildSdpWithOrientationExtension(MediaCodec codec, int localRtpPort,
-            int extensionId) {
+    private static String buildSdpWithOrientationExtension(MediaCodec codec, int localRtpPort, int extensionId) {
         StringBuilder sdp = new StringBuilder(buildSdpWithoutOrientation(codec, localRtpPort))
                 .append("a=").append(ATTRIBUTE_EXTENSION).append(':').append(extensionId)
                 .append(" " + SdpOrientationExtension.VIDEO_ORIENTATION_URI).append(SipUtils.CRLF);
@@ -159,10 +158,9 @@ public class VideoSdpBuilder {
      * @param codec Media Codec
      * @param localRtpPort Local RTP Port
      * @param videoMedia Invite video media
-     * @return Response SDP
+     * @return SDP answer
      */
-    public static String buildResponseSdp(MediaCodec codec, int localRtpPort,
-            MediaDescription inviteVideoMedia) {
+    public static String buildSdpAnswer(MediaCodec codec, int localRtpPort, MediaDescription inviteVideoMedia) {
         if (inviteVideoMedia != null) {
             SdpOrientationExtension extension = SdpOrientationExtension.create(inviteVideoMedia);
             if (extension != null) {

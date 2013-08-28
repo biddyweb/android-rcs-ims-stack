@@ -167,12 +167,8 @@ public class EventsLogApi extends ClientApi {
 	public static final int TYPE_OUTGOING_GROUP_GEOLOC = 15;
 
 	// IP call
-	public static final int TYPE_INCOMING_IPCALL_AUDIO_VIDEO = 16;
-	public static final int TYPE_OUTGOING_IPCALL_AUDIO_VIDEO = 17;
-	public static final int TYPE_INCOMING_IPCALL_AUDIO = 18;
-	public static final int TYPE_OUTGOING_IPCALL_AUDIO = 19;
-	public static final int TYPE_IPCALL_ADDED_VIDEO = 20;
-	public static final int TYPE_IPCALL_REMOVED_VIDEO = 21;
+	public static final int TYPE_INCOMING_IPCALL = 16;
+	public static final int TYPE_OUTGOING_IPCALL = 17;
 
 	// Possible status values
 
@@ -248,22 +244,22 @@ public class EventsLogApi extends ClientApi {
 	 * selected modes are Chat and ContentSharing, the mode value will be 1100
 	 * => 12 which is MODE_RC_CHAT
 	 */
-	public static final int MODE_IPCall_RC_CHAT_FT_SMS = 31;
-	public static final int MODE_IPCall_RC_CHAT_FT = 30;
-	public static final int MODE_IPCall_RC_CHAT_SMS = 29;
-	public static final int MODE_IPCall_RC_CHAT = 28;
-	public static final int MODE_IPCall_RC_FT_SMS = 27;
-	public static final int MODE_IPCall_RC_FT = 26;
-	public static final int MODE_IPCall_RC_SMS = 25;
-	public static final int MODE_IPCall_RC = 24;
-	public static final int MODE_IPCall_CHAT_FT_SMS = 23;
-	public static final int MODE_IPCall_CHAT_FT = 22;
-	public static final int MODE_IPCall_CHAT_SMS = 21;
-	public static final int MODE_IPCall_CHAT = 20;
-	public static final int MODE_IPCall_FT_SMS = 19;
-	public static final int MODE_IPCall_FT = 18;
-	public static final int MODE_IPCall_SMS = 17;
-	public static final int MODE_IPCall = 16;
+	public static final int MODE_IPCALL_RC_CHAT_FT_SMS = 31;
+	public static final int MODE_IPCALL_RC_CHAT_FT = 30;
+	public static final int MODE_IPCALL_RC_CHAT_SMS = 29;
+	public static final int MODE_IPCALL_RC_CHAT = 28;
+	public static final int MODE_IPCALL_RC_FT_SMS = 27;
+	public static final int MODE_IPCALL_RC_FT = 26;
+	public static final int MODE_IPCALL_RC_SMS = 25;
+	public static final int MODE_IPCALL_RC = 24;
+	public static final int MODE_IPCALL_CHAT_FT_SMS = 23;
+	public static final int MODE_IPCALL_CHAT_FT = 22;
+	public static final int MODE_IPCALL_CHAT_SMS = 21;
+	public static final int MODE_IPCALL_CHAT = 20;
+	public static final int MODE_IPCALL_FT_SMS = 19;
+	public static final int MODE_IPCALL_FT = 18;
+	public static final int MODE_IPCALL_SMS = 17;
+	public static final int MODE_IPCALL = 16;
 	public static final int MODE_RC_CHAT_FT_SMS = 15;
 	public static final int MODE_RC_CHAT_FT = 14;
 	public static final int MODE_RC_CHAT_SMS = 13;

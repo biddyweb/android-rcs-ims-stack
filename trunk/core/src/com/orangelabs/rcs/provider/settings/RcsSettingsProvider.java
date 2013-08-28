@@ -158,6 +158,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_IP_VOICE_CALL,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_IP_VIDEO_CALL,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_IM_SESSION,				RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.CAPABILITY_IM_GROUP_SESSION,		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_HTTP,		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_PRESENCE_DISCOVERY,		RcsSettingsData.FALSE);
@@ -165,7 +166,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_GEOLOCATION_PUSH,		RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL,RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_GROUP_CHAT_SF,			RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF,		RcsSettingsData.FALSE);            
+            addParameter(db, RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF,		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_RCS_EXTENSIONS,			"");
             addParameter(db, RcsSettingsData.IMS_SERVICE_POLLING_PERIOD, 		"300");
             addParameter(db, RcsSettingsData.SIP_DEFAULT_PORT, 					"5060");
@@ -199,6 +200,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.CAPABILITY_EXPIRY_TIMEOUT, 		"86400");
             addParameter(db, RcsSettingsData.CAPABILITY_POLLING_PERIOD,			"3600");
             addParameter(db, RcsSettingsData.IM_CAPABILITY_ALWAYS_ON,			RcsSettingsData.TRUE);
+            addParameter(db, RcsSettingsData.FT_CAPABILITY_ALWAYS_ON,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.IM_USE_REPORTS,					RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.NETWORK_ACCESS,					""+RcsSettingsData.ANY_ACCESS);
             addParameter(db, RcsSettingsData.SIP_TIMER_T1,						"2000");
@@ -209,7 +211,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.RCS_APN,							"");
             addParameter(db, RcsSettingsData.RCS_OPERATOR,						"");
             addParameter(db, RcsSettingsData.MAX_CHAT_LOG_ENTRIES,				"500");
-            addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");            
+            addParameter(db, RcsSettingsData.MAX_RICHCALL_LOG_ENTRIES,			"200");
             addParameter(db, RcsSettingsData.MAX_IPCALL_LOG_ENTRIES,			"200"); 
             addParameter(db, RcsSettingsData.GRUU,								RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.USE_IMEI_AS_DEVICE_ID,             RcsSettingsData.TRUE);

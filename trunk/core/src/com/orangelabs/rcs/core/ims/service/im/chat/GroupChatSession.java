@@ -76,14 +76,11 @@ public abstract class GroupChatSession extends ChatSession {
         setFeatureTags(ChatUtils.getSupportedFeatureTagsForGroupChat());
 		
 		// Set accept-types
-		String acceptTypes = CpimMessage.MIME_TYPE;
-		if (!isGroupChat()) {
-			acceptTypes += " " + IsComposingInfo.MIME_TYPE;
-		}
+		String acceptTypes = CpimMessage.MIME_TYPE;	
         setAcceptTypes(acceptTypes);
 				
 		// Set accept-wrapped-types
-		String wrappedTypes = InstantMessage.MIME_TYPE + " " + ImdnDocument.MIME_TYPE;
+		String wrappedTypes = InstantMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE;
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
         	wrappedTypes += " " + GeolocInfoDocument.MIME_TYPE;
         }

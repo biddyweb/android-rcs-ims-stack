@@ -10,9 +10,6 @@ interface IIPCallEventListener {
 	// Session is started
 	void handleSessionStarted();
 
-    // The incoming media video size has changed
-    void handleMediaResized(in int width, in int height);
-
 	// Session has been aborted
 	void handleSessionAborted(in int reason);
     
@@ -28,18 +25,21 @@ interface IIPCallEventListener {
 	// Add video has been accepted by user 
 	void handleAddVideoAccepted();
 	
-	// Remove video has been accepted (200 OK response) 
+	// Remove video has been accepted 
 	void handleRemoveVideoAccepted();
 	
-	// Add video has been declined by user or not answered
-	void handleAddVideoAborted(in int errorCode);
+	// Add video has been aborted
+	void handleAddVideoAborted(in int reason);
 
-	// Remove video aborted (No 200 OK response) 
-	void handleRemoveVideoAborted(in int errorCode);
+	// Remove video aborted 
+	void handleRemoveVideoAborted(in int reason);
 
 	// IP Call error
 	void handleCallError(in int error);
 	
 	// Called user is Busy
 	void handle486Busy();
+
+    // Video stream has been resized
+    void handleVideoResized(in int width, in int height);
 }

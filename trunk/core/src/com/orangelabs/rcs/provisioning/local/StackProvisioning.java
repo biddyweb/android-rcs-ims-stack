@@ -280,6 +280,9 @@ public class StackProvisioning extends Activity {
     	check = (CheckBox)this.findViewById(R.id.ImAlwaysOn);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_CAPABILITY_ALWAYS_ON)));
 
+    	check = (CheckBox)this.findViewById(R.id.FtAlwaysOn);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_CAPABILITY_ALWAYS_ON)));
+
     	check = (CheckBox)this.findViewById(R.id.ImUseReports);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_USE_REPORTS)));
 
@@ -440,6 +443,9 @@ public class StackProvisioning extends Activity {
 
 		check = (CheckBox)this.findViewById(R.id.ImAlwaysOn);
 		RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_CAPABILITY_ALWAYS_ON, Boolean.toString(check.isChecked()));
+
+		check = (CheckBox)this.findViewById(R.id.FtAlwaysOn);
+		RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_CAPABILITY_ALWAYS_ON, Boolean.toString(check.isChecked()));
 
     	check = (CheckBox)this.findViewById(R.id.ImUseReports);
 		RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_USE_REPORTS, Boolean.toString(check.isChecked()));

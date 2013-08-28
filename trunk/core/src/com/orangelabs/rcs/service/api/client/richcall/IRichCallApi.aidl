@@ -3,7 +3,7 @@ package com.orangelabs.rcs.service.api.client.richcall;
 import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.IGeolocSharingSession;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 
 /**
@@ -15,7 +15,7 @@ interface IRichCallApi {
 	String getRemotePhoneNumber();
 
 	// Initiate a live video sharing session
-	IVideoSharingSession initiateLiveVideoSharing(in String contact, in IMediaPlayer player);
+	IVideoSharingSession initiateLiveVideoSharing(in String contact, in IVideoPlayer player);
 
 	// Get current video sharing session from its session ID
 	IVideoSharingSession getVideoSharingSession(in String id);

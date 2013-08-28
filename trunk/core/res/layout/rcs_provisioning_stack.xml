@@ -375,6 +375,13 @@
 		android:layout_marginLeft="5dip"
 		android:layout_marginRight="5dip"
         android:text="IM always-on"/>
+		
+		<CheckBox android:id="@+id/FtAlwaysOn"
+		android:layout_height="wrap_content"
+		android:layout_width="fill_parent"
+		android:layout_marginLeft="5dip"
+		android:layout_marginRight="5dip"
+        android:text="FT always-on"/>
 
         <CheckBox android:id="@+id/ImUseReports"
 		android:layout_height="wrap_content"

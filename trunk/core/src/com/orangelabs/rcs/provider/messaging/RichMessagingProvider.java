@@ -120,7 +120,10 @@ public class RichMessagingProvider extends ContentProvider {
 
 		// Register the contexts ContentResolver to be notified if
 		// the cursor result set changes.
-        c.setNotificationUri(getContext().getContentResolver(), uri);
+        if (c != null) {
+        	c.setNotificationUri(getContext().getContentResolver(), uri);
+        }
+        
         // Also notify changes to the Event log provider
         getContext().getContentResolver().notifyChange(EventLogData.CONTENT_URI, null);
         return c;

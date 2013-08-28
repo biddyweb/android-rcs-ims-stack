@@ -91,7 +91,8 @@ public class ServerApiUtils {
 	/**
 	 * Get session state
 	 * 
-	 * @return State (see class SessionState) 
+	 * @return State
+	 * @see SessionState
 	 */
 	public static int getSessionState(ImsServiceSession session) {
 		int result = SessionState.UNKNOWN;

@@ -603,13 +603,7 @@ public abstract class ImsServiceSession extends Thread {
 	 * @param reInvite re-INVITE request
 	 */
 	public void receiveReInvite(SipRequest reInvite) {
-//		if (reInvite.getContent() == null) {
-//			// Keep alive
-//			sessionTimer.receiveReInvite(reInvite);
-//		} else {
-//			// Update session
-//			updateMgr.receiveReInvite(reInvite);
-//		}
+		// Session refresh management
 		sessionTimer.receiveReInvite(reInvite);
 	}
 

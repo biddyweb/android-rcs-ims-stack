@@ -1,7 +1,6 @@
 package com.orangelabs.rcs.ri.ipcall;
 
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
-import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 public class IPCallSessionData {
@@ -35,8 +34,6 @@ public class IPCallSessionData {
 	 * The logger
 	 */
 	private static Logger logger = Logger.getLogger(IPCallSessionData.class.getName());		
-	
-	
 	
 	public IPCallSessionData(int audioState, int videoState, String contact, String direction, IIPCallEventListener listener){
 		this.audioCallState = audioState;

@@ -103,7 +103,9 @@ public class RichCallProvider extends ContentProvider {
         Cursor c = qb.query(db, projectionIn, selection, selectionArgs, null, null, sort);
 
 		// Register the contexts ContentResolver to be notified if the cursor result set changes.
-        c.setNotificationUri(getContext().getContentResolver(), RichCallData.CONTENT_URI);
+        if (c != null) {
+        	c.setNotificationUri(getContext().getContentResolver(), RichCallData.CONTENT_URI);
+        }
 
         return c;
     }

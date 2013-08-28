@@ -46,15 +46,13 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
-import com.orangelabs.rcs.service.api.client.media.IMediaPlayer;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
- * Rich call service has in charge to monitor the GSM call in order to stop the
- * current content sharing when the call terminates, to process capability
- * request from remote and to request remote capabilities.
+ * Rich call service offers image sharing and video sharing on top of a CS call
  *
  * @author jexa7410
  */
@@ -322,7 +320,7 @@ public class RichcallService extends ImsService {
      * @return CSh session
      * @throws CoreException
      */
-    public VideoStreamingSession initiateLiveVideoSharingSession(String contact, IMediaPlayer player) throws CoreException {
+    public VideoStreamingSession initiateLiveVideoSharingSession(String contact, IVideoPlayer player) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a live video sharing session");
 		}

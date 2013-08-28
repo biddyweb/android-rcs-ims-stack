@@ -12,7 +12,12 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * @author jexa7410
  */
 public abstract class FileSharingSession extends ImsServiceSession {
-	/**
+    /**
+     * Contribution ID
+     */
+    private String contributionId = null;	
+    
+    /**
 	 * Content to be shared
 	 */
 	private MmContent content;
@@ -45,6 +50,24 @@ public abstract class FileSharingSession extends ImsServiceSession {
 		
 		this.content = content;
 		this.thumbnail = thumbnail;
+	}
+	
+	/**
+	 * Return the contribution ID
+	 * 
+	 * @return Contribution ID
+	 */
+	public String getContributionID() {
+		return contributionId;
+	}	
+	
+	/**
+	 * Set the contribution ID
+	 * 
+	 * @param id Contribution ID
+	 */
+	public void setContributionID(String id) {
+		this.contributionId = id;
 	}
 	
 	/**
