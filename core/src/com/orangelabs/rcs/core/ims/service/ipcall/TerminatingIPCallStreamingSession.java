@@ -89,7 +89,10 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 
             // Extract the video port
             MediaDescription mediaVideo = parser.getMediaDescription("video");
-            int videoRemotePort = mediaVideo.port;
+            int videoRemotePort = -1;
+            if (mediaVideo != null) {
+            	videoRemotePort = mediaVideo.port;
+            }
 
             // Extract the audio codecs from SDP
             Vector<MediaDescription> audio = parser.getMediaDescriptions("audio");
