@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.8
+Release 2.5.9
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,11 +8,12 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-
-- Media API refactoring (i.e. rename IMediaPlayer to IVideoPlayer).
-- IP call refactoring.
-- Add SIP 302 error support during registration.
-- New Blackbird parameters: FT always-on, Group chat auth.
+- Add open source contribs.
+- FT over HTTP: add delivery report.
+- FT over HTTP: add new method handleFileUploaded and new status UPLOADED.
+- FT over HTTP: add Chat Session Id and Chat Contribution ID in API for FT session and intent.
+- Remove method transferFileGroup in Messaging API (keep only sendFile in chatSession).
+- Add new parameter for convergent messaging UX option (ie. /joyn/UX/messagingUX).
 
 
 Bugs fixed:
@@ -20,6 +21,11 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.9
+- Issue 147		Stack: No request capabilities after a session failed by MSRP error
+- Deutsche Telekom	Stack: Correct timestamp and IFrame interval
+- Deutsche Telekom	Stack: Send SPS/PPS only on IDR frame
 
 v2.5.8
 - Issue 145		Stack: "application/vnd.gsma.rcs-ft-http+xml" missing in accept-wrapped-types header for 1-1 chat

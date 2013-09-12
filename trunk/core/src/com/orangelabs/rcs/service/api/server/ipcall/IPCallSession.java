@@ -2,6 +2,9 @@ package com.orangelabs.rcs.service.api.server.ipcall;
 
 import android.os.RemoteCallbackList;
 
+import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.content.LiveAudioContent;
+import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
@@ -97,6 +100,10 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			setVideoPlayer(null);
 			setVideoRenderer(null);
 		}
+		
+		session.setAudioContent(ContentManager.createGenericLiveAudioContent());
+        LiveVideoContent liveVideoContent = (session.getVideoPlayer()==null) ? null:ContentManager.createGenericLiveVideoContent();
+        session.setVideoContent(liveVideoContent);
 
 		// Accept invitation
 		session.acceptSession();
@@ -450,7 +457,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	/**
 	 * Remove video invitation
 	 */
-	public void handleRemoveVideoInvitation() {
+	public void handleRemoveVideo() {
 		synchronized (lock) {
 			if (logger.isActivated()) {
 				logger.info("Remove video invitation");
@@ -460,7 +467,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			final int N = listeners.beginBroadcast();
 			for (int i = 0; i < N; i++) {
 				try {
-					listeners.getBroadcastItem(i).handleRemoveVideoInvitation();
+					listeners.getBroadcastItem(i).handleRemoveVideo();
 				} catch (Exception e) {
 					if (logger.isActivated()) {
 						logger.error("Can't notify listener", e);

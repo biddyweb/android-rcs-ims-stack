@@ -11,9 +11,6 @@ import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 interface IMessagingApi {
 	// Transfer a file to a single contact
 	IFileTransferSession transferFile(in String contact, in String file, in boolean thumbnail);
-	
-	// Transfer a file to a group of contacts
-	IFileTransferSession transferFileGroup(in List<String> contacts, in String file, in boolean thumbnail);
 
 	// Get current file transfer session from its session ID
 	IFileTransferSession getFileTransferSession(in String id);

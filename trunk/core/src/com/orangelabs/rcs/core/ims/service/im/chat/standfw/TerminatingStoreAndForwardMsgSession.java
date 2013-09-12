@@ -40,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -102,44 +103,54 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 				}
 			}
 
-			// Wait invitation answer
-	    	int answer = waitInvitationAnswer();
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected by user");
-				}
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
-		        }
-				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				if (logger.isActivated()) {
-					logger.debug("Session has been rejected on timeout");
-				}
-
-				// Ringing period timeout
-				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-    	    	for(int i=0; i < getListeners().size(); i++) {
-    	    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
-		        }
-				return;
-			} else
-            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+			 // Check if Auto-accept (FT HTTP force auto-accept for the chat session)
+            if (RcsSettings.getInstance().isChatAutoAccepted() || ChatUtils.getHttpFTInfo(getDialogPath().getInvite()) != null) {
                 if (logger.isActivated()) {
-                    logger.debug("Session has been canceled");
+                    logger.debug("Auto accept store and forward chat invitation");
                 }
-                return;
+            } else {
+            	if (logger.isActivated()) {
+                    logger.debug("Accept manually store and forward chat invitation");
+                }
+				// Wait invitation answer
+		    	int answer = waitInvitationAnswer();
+				if (answer == ImsServiceSession.INVITATION_REJECTED) {
+					if (logger.isActivated()) {
+						logger.debug("Session has been rejected by user");
+					}
+					
+			    	// Remove the current session
+			    	getImsService().removeSession(this);
+	
+			    	// Notify listeners
+			    	for(int i=0; i < getListeners().size(); i++) {
+			    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
+			        }
+					return;
+				} else
+				if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+					if (logger.isActivated()) {
+						logger.debug("Session has been rejected on timeout");
+					}
+	
+					// Ringing period timeout
+					send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+					
+			    	// Remove the current session
+			    	getImsService().removeSession(this);
+	
+			    	// Notify listeners
+	    	    	for(int i=0; i < getListeners().size(); i++) {
+	    	    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+			        }
+					return;
+				} else
+	            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+	                if (logger.isActivated()) {
+	                    logger.debug("Session has been canceled");
+	                }
+	                return;
+	            }
             }
 
         	// Parse the remote SDP part

@@ -174,6 +174,9 @@ public class HttpUploadManager extends HttpTransferManager {
                     }
             }
 
+            // Notify listener
+            getListener().httpTransferStarted();
+
             // Send a second POST request
             return sendMultipartPost(resp);
         } catch (Exception e) {

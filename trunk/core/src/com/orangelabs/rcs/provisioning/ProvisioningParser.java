@@ -156,6 +156,9 @@ public class ProvisioningParser {
                             } else
                             if (typenode.getNodeValue().equalsIgnoreCase("SUPL")) {
                                 parseSupl(childnode);
+                            } else
+                            if (typenode.getNodeValue().equalsIgnoreCase("SERVICEPROVIDEREXT")) {
+                                parseServiceProviderExt(childnode);
                             }
                         }
                     }
@@ -476,7 +479,7 @@ public class ProvisioningParser {
 
             	 if (groupChatAuth == null) {
                      if ((groupChatAuth = getValueByParamName("groupChatAuth", childnode, TYPE_INT)) != null) {
-                         if (chatAuth.equals("1")) {
+                         if (groupChatAuth.equals("1")) {
                              RcsSettings.getInstance().writeParameter(
                                      RcsSettingsData.CAPABILITY_IM_GROUP_SESSION, RcsSettingsData.TRUE);
                          } else {
@@ -655,6 +658,95 @@ public class ProvisioningParser {
                 
             } while((childnode = childnode.getNextSibling()) != null);
         }
+    }
+    
+    /**
+     * Parse service provider ext
+     * 
+     * @param node Node
+     */
+    private void parseServiceProviderExt(Node node) {
+        Node typenode = null;
+        if (node == null) {
+            return;
+        }
+        Node childnode = node.getFirstChild();
+        if (childnode != null) {
+            do {
+                if (childnode.getNodeName().equals("characteristic")) {
+                    if (childnode.getAttributes().getLength() > 0) {
+                        typenode = childnode.getAttributes().getNamedItem("type");
+                        if (typenode != null) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("joyn")) {
+                                parseJoyn(childnode);
+                            }
+                        }
+                    }
+                }
+            } while ((childnode = childnode.getNextSibling()) != null);
+        }
+    }
+    
+    /**
+     * Parse joyn
+     * 
+     * @param node Node
+     */
+    private void parseJoyn(Node node) {
+        Node typenode = null;
+        if (node == null) {
+            return;
+        }
+        Node childnode = node.getFirstChild();
+        if (childnode != null) {
+            do {
+                if (childnode.getNodeName().equals("characteristic")) {
+                    if (childnode.getAttributes().getLength() > 0) {
+                        typenode = childnode.getAttributes().getNamedItem("type");
+                        if (typenode != null) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("UX")) {
+                                parseUx(childnode);
+                            }
+                        }
+                    }
+                }
+            } while ((childnode = childnode.getNextSibling()) != null);
+        }
+    }
+    
+    /**
+     * Parse joyn
+     * 
+     * @param node Node
+     */
+    private void parseUx(Node node) {
+        String messagingUX = null;
+        if (node == null) {
+            return;
+        }
+        Node childnode = node.getFirstChild();
+
+        if (childnode != null) {
+            do {
+                if (messagingUX == null) {
+                    if ((messagingUX = getValueByParamName("messagingUX", childnode, TYPE_INT)) != null) {
+                        if (messagingUX.equals("1")) {
+                        	RcsSettings.getInstance().writeParameter(
+                                RcsSettingsData.CONVERGENT_MESSAGING_UX, RcsSettingsData.TRUE);
+                        } else {
+                            RcsSettings.getInstance().writeParameter(
+                        		RcsSettingsData.CONVERGENT_MESSAGING_UX, RcsSettingsData.FALSE);
+                        }
+                        continue;
+                    }
+                }
+
+            } while((childnode = childnode.getNextSibling()) != null);
+        }
+        // Not used: e2eIPCallLabel
+     	// Not used: breakoutIPCallLabel
+        // Not used: e2eVoiceCapabilityHandling
+        // Not used: oneButtonVideoCall
     }
     
     /**
@@ -1723,8 +1815,8 @@ public class ProvisioningParser {
             if (nameNode.getNodeValue().equalsIgnoreCase(paramName)) {
             	String value = valueNode.getNodeValue();
                 if (logger.isActivated()) {
-                    logger.debug("Read parameter " + paramName + ": " + value);
-                 // For debug only: logger.debug("Read parameter " + paramName);
+                    // logger.debug("Read parameter " + paramName + ": " + value);
+                    logger.debug("Read parameter " + paramName);
                 }
             	
             	// Check type

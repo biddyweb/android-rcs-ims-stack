@@ -268,27 +268,11 @@ public class ImsServiceDispatcher extends Thread {
 	    		
                 FileTransferHttpInfoDocument ftHttpInfo = ChatUtils.getHttpFTInfo(request);
                 if (ftHttpInfo != null) {
-                    if (ChatUtils.isGroupChatInvitation(request)) {
-                        // Group HTTP file transfer invitation
-                    	if (RcsSettings.getInstance().isImGroupSessionSupported()) {
-                            if (logger.isActivated()) {
-                                logger.debug("Group file transfer over HTTP invitation");
-                            }
-                            imsModule.getInstantMessagingService().receiveHttpGroupFileTranferInvitation(request, ftHttpInfo);
-                    	} else {
-        					// Service not supported: reject the invitation with a 603 Decline
-        					if (logger.isActivated()) {
-        						logger.debug("Group file transfer service not supported: automatically reject");
-        					}
-        					sendFinalResponse(request, 603);
-        	    		}
-                    } else {
-                        // HTTP file transfer invitation
-                        if (logger.isActivated()) {
-                            logger.debug("Single file transfer over HTTP invitation");
-                        }
-                        imsModule.getInstantMessagingService().receiveHttpFileTranferInvitation(request, ftHttpInfo);
+                    // HTTP file transfer invitation
+                    if (logger.isActivated()) {
+                        logger.debug("Single file transfer over HTTP invitation");
                     }
+                    imsModule.getInstantMessagingService().receiveHttpFileTranferInvitation(request, ftHttpInfo);
                 } else {
 	    			if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
 		    			(!request.getContentType().contains("multipart"))) { // TODO: to be removed when corrected by ALU

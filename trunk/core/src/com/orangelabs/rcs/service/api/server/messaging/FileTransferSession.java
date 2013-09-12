@@ -32,7 +32,6 @@ import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
-import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -46,7 +45,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 * Core session
 	 */
 	private FileSharingSession session;
-	
+
 	/**
 	 * List of listeners
 	 */
@@ -117,6 +116,32 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
         return (session instanceof HttpFileTransferSession);
     }
 
+    /**
+     * Get chat ID (ie. Contribution ID) used to send file transfer URL via chat
+     *
+     * @return ChatId or null if no chat
+     */
+    public String getChatID() {
+        if (isHttpTransfer()) {
+            return ((HttpFileTransferSession)session).getContributionID();
+        } else {
+	        return null;
+		}
+    }
+
+    /**
+     * Get session ID of the chat used to send file transfer URL via chat
+     *
+     * @return SessionId of chat or null if no chat
+     */
+    public String getChatSessionID() {
+        if (isHttpTransfer()) {
+            return ((HttpFileTransferSession)session).getChatSessionID();
+        } else {
+        	return null;
+		}
+    }
+
 	/**
 	 * Get session state
 	 * 
@@ -124,7 +149,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	 * @see SessionState
 	 */
 	public int getSessionState() {
-		return ServerApiUtils.getSessionState(session);
+        return session.getSessionState();
 	}
 	
 	/**
@@ -251,7 +276,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			if (logger.isActivated()) {
 				logger.info("Session started");
 			}
-	
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -280,7 +305,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	
 			// Update rich messaging history
 			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
-			
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -307,7 +332,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			if (logger.isActivated()) {
 				logger.info("Session terminated by remote");
 			}
-	
+
 	  		if (session.isFileTransfered()) {
 				// The file has been received, so only remove session from the list
 				MessagingApiService.removeFileTransferSession(session.getSessionID());
@@ -316,7 +341,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	  		
 			// Update rich messaging history
 	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-	
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -348,7 +373,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	
 			// Update rich messaging history
 	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
-			
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -406,7 +431,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	
 			// Update rich messaging history
 			RichMessaging.getInstance().updateFileTransferUrl(session.getSessionID(), filename);
-	
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -422,6 +447,29 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			
 			// Remove session from the list
 	        MessagingApiService.removeFileTransferSession(session.getSessionID());			
+	    }	
+    }
+    
+    /**
+     * File has been uploaded
+     */
+    public void handleFileUploaded() {
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Content uploaded");
+			}
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleFileUploaded();
+	            } catch(Exception e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();		
 	    }	
     }
 }

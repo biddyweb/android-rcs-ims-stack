@@ -23,8 +23,11 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.service.api.client.SessionState;
+import com.orangelabs.rcs.service.api.server.ServerApiUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -159,5 +162,55 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
         for(int j=0; j < getListeners().size(); j++) {
             ((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(error));
         }
+    }
+
+    /**
+     * Data transfer error
+     *
+     * @param msgId Message ID
+     * @param error Error code
+     */
+    public void msrpTransferError(String msgId, String error) {
+        if (isInterrupted()) {
+            return;
+        }
+        if (logger.isActivated()) {
+            logger.info("Data transfer error " + error);
+        }
+
+        try {
+            // Close the media session
+            closeMediaSession();
+
+            // Terminate session
+            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Can't close correctly the file transfer session", e);
+            }
+        }
+
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
+        // Remove the current session
+        getImsService().removeSession(this);
+
+        // Notify listeners
+        if (!isInterrupted()) {
+            for(int j=0; j < getListeners().size(); j++) {
+                ((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED, error));
+            }
+        }
+    }
+
+    /**
+     * Get session state
+     *
+     * @return State 
+     * @see SessionState
+     */
+    public int getSessionState() {
+        return ServerApiUtils.getSessionState(this);
     }
 }

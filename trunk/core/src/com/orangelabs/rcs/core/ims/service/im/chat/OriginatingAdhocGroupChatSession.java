@@ -60,9 +60,9 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 
 		// Set subject
 		if ((subject != null) && (subject.length() > 0)) {
-			setSubject(subject);		
+			setSubject(subject);
 		}
-		
+
 		// Create dialog path
 		createOriginatingDialogPath();
 		

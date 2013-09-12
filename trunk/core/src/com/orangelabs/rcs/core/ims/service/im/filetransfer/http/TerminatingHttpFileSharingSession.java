@@ -63,16 +63,20 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
      * @param fileTransferInfo File transfer info
      * @param msgId Message ID
 	 * @param chatSessionId Chat session ID
+	 * @param chatContributionId Chat contribution Id
      */
-    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgId, String chatSessionID) {
+    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgId, String chatSessionID, String chatContributionId) {
         super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(),
-                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), invite.getFromUri(), null, chatSessionID);
+                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), invite.getFromUri(), null, chatSessionID, chatContributionId);
 
         this.msgId = msgId;
 
         // Create dialog path
         createTerminatingDialogPath(invite);
-
+        
+        // Setting name of MmContent
+        getContent().setName(fileTransferInfo.getFilename());
+        
 		// Instantiate the download manager
 		downloadManager = new HttpDownloadManager(getContent(), this, fileTransferInfo.getFilename());
 		
@@ -222,17 +226,17 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	            remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
 	        }
 	        
-			if (getChatSessionID() == null) {
+			ChatSession chatSession = (ChatSession)Core.getInstance().getImService().getSession(getChatSessionID());
+			if (chatSession != null) {
+	            // Send message delivery status via a MSRP
+				chatSession.sendMsrpMessageDeliveryStatus(getRemoteContact(), msgId, status);
+			}
+			else
+			{
 	            // Send message delivery status via a SIP MESSAGE
 	            ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
-	                            SipUtils.getAssertedIdentity(getDialogPath().getInvite()),
+	            				getRemoteContact(),
 	                            msgId, status, remoteInstanceId);
-			} else {
-	            // Send message delivery status via a MSRP
-				ChatSession chatSession = (ChatSession)Core.getInstance().getImService().getSession(getChatSessionID());
-				if (chatSession != null) {
-					chatSession.sendMsrpMessageDeliveryStatus(getRemoteContact(), msgId, status);
-				}
 			}
 		}
     }

@@ -14,6 +14,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 public class IPCallSessionsData {
 
+	private static IPCallSessionsData instance = null;
+	
 	/**
 	 * list of constant value for IP Call states
 	 */
@@ -31,144 +33,139 @@ public class IPCallSessionsData {
 	/**
 	 * list of established sessions
 	 */
-	public static ArrayList<IBinder> sessions;
+	public ArrayList<IBinder> sessions = null;
 	
 	/**
 	 * stored sessions data HashMap
 	 */
-	public static HashMap<String, IPCallSessionData> sessionsStates = new HashMap<String, IPCallSessionData>();
+	public HashMap<String, IPCallSessionData> sessionsStates = null;
 
-	/**
-	 * current session
-	 */
-	public static IIPCallSession session = null;
-
-	/**
-	 *  current session ID
-	 */
-	public static String sessionId = null;
-
-	/**
-	 * current RemoteContact
-	 */
-	public static String remoteContact;
-
-	/**
-	 * event listener of the current session
-	 */
-	public static IIPCallEventListener sessionEventListener;
-
-	/**
-	 * Audio Call State of the current session
-	 */
-	public static int audioCallState = IDLE;
-
-	/**
-	 * Video Call State of the current session
-	 */
-	public static int videoCallState = IDLE;
-	
-	/**
-	 * direction ("outgoing" "incoming") of current session
-	 */
-	public static String direction  = "";
-	
 	/**
 	 * IP call API object
 	 */
-	public static IPCallApi callApi = null;
+	public IPCallApi callApi;
 
 	/**
 	 * IP call API connected status
 	 */
-	public static boolean isCallApiConnected = false;
+	public boolean isCallApiConnected;
 	
 	/**
 	 * Client API listener
 	 */
-	public static ClientApiListener callApiListener = null;
+	public ClientApiListener callApiListener;
 	
 	/**
 	 * Ims Event listener
 	 */
-	public static ImsEventListener imsEventListener = null;
-
+	public ImsEventListener imsEventListener;
+	
 	/**
-	 * Wait API connected to do getIncomingSession
+	 * event listener of the current session
 	 */
-	public static boolean getIncomingSessionWhenApiConnected = false;
-
-	/**
-	 * Wait API connected to do startOutgoingSession
-	 */
-	public static boolean startOutgoingSessionWhenApiConnected = false;
-
-	/**
-	 * Wait API connected to launch recoverSessions()
-	 */
-	public static boolean recoverSessionsWhenApiConnected = false;
+	public IIPCallEventListener sessionEventListener;
 
 	/**
 	 * The logger
 	 */
-	private static Logger logger = Logger.getLogger(IPCallSessionsData.class.getName());		
+	private static Logger logger = Logger.getLogger(IPCallSessionsData.class.getName());	
+	
+	/**
+	 * constructor
+	 */
+	public IPCallSessionsData() {
+		this.sessions = null;
+		this.sessionsStates = new HashMap<String, IPCallSessionData>();
+		this.callApi = null;
+		this.isCallApiConnected= false;
+		this.callApiListener = null;
+		this.imsEventListener = null;
+		
+	}
+	
+	public static IPCallSessionsData getInstance(){
+		if (instance == null) {
+			instance = new IPCallSessionsData();
+		}
+
+		return instance;
+	}
 	
 	
 	/**
 	 * store session data 
 	 */
-	public static void saveSessionData(String key,
+	public void saveSessionData(String key,
 			IPCallSessionData value) {
 		if (logger.isActivated()) {
 			logger.debug("saveSessionData()");		
 		}
-		IPCallSessionData previousSessionData = sessionsStates.put(key, value);
+		IPCallSessionData savedSessionData = this.sessionsStates.put(key, value);
 		if (logger.isActivated()) {
-			logger.debug("previousSessionData ="+previousSessionData);		
+			logger.debug("savedSessionData ="+savedSessionData);		
 		}
 	}
 
 	/**
-	 * get session data in IPCallSessionsData
+	 * set session data
 	 */
-	public static void getSessionData(String sessionId) {
+	public void setSessionData(String sessionId, IPCallView sessionActivity) {
 		IPCallSessionData object = null ;
 		if (logger.isActivated()) {
 			logger.debug("getSessionData()");		
 		}
-		if (IPCallSessionsData.sessionsStates.containsKey(sessionId)) {
+		if (this.sessionsStates.containsKey(sessionId)) {
 			if (logger.isActivated()) {
 				logger.debug("sessionsStates contains key :"+sessionId);		
 			}
-			object = (IPCallSessionData) IPCallSessionsData.sessionsStates
+			object = (IPCallSessionData) this.sessionsStates
 					.get(sessionId);
 		}
 
 		if (object != null) {
-			IPCallSessionsData.audioCallState = object.audioCallState;
-			IPCallSessionsData.videoCallState = object.videoCallState;
-			IPCallSessionsData.remoteContact = object.remoteContact;
-			IPCallSessionsData.direction = object.sessionDirection;
-			IPCallSessionsData.sessionEventListener = object.sessionEventListener;
+			sessionActivity.audioCallState = object.getAudioCallState();
+			sessionActivity.videoCallState = object.getVideoCallState();
+			sessionActivity.remoteContact = object.getRemoteContact();
+			sessionActivity.direction = object.getSessionDirection();
+			this.sessionEventListener = object.getSessionEventListener();
 			if (logger.isActivated()) {
-				logger.debug("audioCallState ="+object.audioCallState);
-				logger.debug("videoCallState ="+object.videoCallState);
-				logger.debug("remoteContact ="+object.remoteContact);
-				logger.debug("direction ="+object.sessionDirection);
+				logger.debug("audioCallState ="+object.getAudioCallState());
+				logger.debug("videoCallState ="+object.getVideoCallState());
+				logger.debug("remoteContact ="+object.getRemoteContact());
+				logger.debug("direction ="+object.getSessionDirection());
 			}
 		}
 	}
 	
 	
 	/**
+	 * return session data 
+	 */
+	public IPCallSessionData getSessionData(String sessionId) {
+		IPCallSessionData object = null ;
+		if (logger.isActivated()) {
+			logger.debug("getSessionData()");		
+		}
+		if (this.sessionsStates.containsKey(sessionId)) {
+			if (logger.isActivated()) {
+				logger.debug("sessionsStates contains key :"+sessionId);		
+			}
+			object = (IPCallSessionData) this.sessionsStates
+					.get(sessionId);
+		}
+
+		return object;
+	}
+	
+	/**
 	 * remove session data 
 	 */
-	public static void removeSessionData(String key) {
+	public void removeSessionData(String key) {
 		if (logger.isActivated()) {
 			logger.debug("removeSessionData()");	
 			logger.debug("key :"+key);
 		}
-		IPCallSessionData savedData = sessionsStates.remove(key);
+		IPCallSessionData savedData = this.sessionsStates.remove(key);
 		
 		if (savedData != null){
 			if (logger.isActivated()) {

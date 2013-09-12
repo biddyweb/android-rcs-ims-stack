@@ -192,7 +192,17 @@ public class IPCallApiService extends IIPCallApi.Stub {
 			intent.putExtra("videowidth", videoWidth);
 			intent.putExtra("videoheight", videoHeight);
 		}
+		
+		if (logger.isActivated()) {
+			logger.info("IPCallInvitation Intent ");
+			logger.info("audiotype :"+audioEncoding);
+			logger.info("videotype :"+videoEncoding);
+			logger.info("videowidth :"+videoWidth);
+			logger.info("videoheight :"+videoHeight);
+		}
         AndroidFactory.getApplicationContext().sendBroadcast(intent);
+        
+        
 	}
 	
 	/**

@@ -297,10 +297,11 @@ public class InstantMessagingService extends ImsService {
      * @param content Content to be sent
      * @param thumbnail Thumbnail option
      * @param chatSessionId Chat session ID
+     * @param chatContributionId Chat contribution Id
      * @return File transfer session
      * @throws CoreException
      */
-	public FileSharingSession initiateFileTransferSession(String contact, MmContent content, boolean thumbnail, String chatSessionId) throws CoreException {
+	public FileSharingSession initiateFileTransferSession(String contact, MmContent content, boolean thumbnail, String chatSessionId, String chatContributionId) throws CoreException {
 		if (logger.isActivated()) {
 			logger.info("Initiate a file transfer session with contact " + contact + ", file " + content.toString());
 		}
@@ -352,7 +353,8 @@ public class InstantMessagingService extends ImsService {
 					content,
 					PhoneUtils.formatNumberToSipUri(contact),
 					thumbnailImage,
-					chatSessionId);
+					chatSessionId,
+					chatContributionId);
 		} else {
 			// Create a new session
 			session = new OriginatingFileSharingSession(
@@ -374,10 +376,11 @@ public class InstantMessagingService extends ImsService {
      * @param content Content to be sent
      * @param thumbnail Thumbnail option
      * @param chatSessionId Chat session ID
+     * @param chatContributionId Chat contribution ID
      * @return File transfer session
      * @throws CoreException
      */
-	public FileSharingSession initiateGroupFileTransferSession(List<String> contactList, MmContent content, boolean thumbnail, String chatSessionId) throws CoreException {
+	public FileSharingSession initiateGroupFileTransferSession(List<String> contactList, MmContent content, boolean thumbnail, String chatSessionId, String chatContributionId) throws CoreException {
         // Test if group FT is supported
 		// TODO: control to be removed when Group FR over MSRP is implemented
         if (!RcsSettings.getInstance().getMyCapabilities().isFileTransferHttpSupported()) {
@@ -437,7 +440,8 @@ public class InstantMessagingService extends ImsService {
 					ImsModule.IMS_USER_PROFILE.getImConferenceUri(),
 					new ListOfParticipant(contactList),
 					thumbnailImage,
-					chatSessionId);
+					chatSessionId,
+					chatContributionId);
 
 			// Start the session
 			session.startSession();
@@ -514,29 +518,29 @@ public class InstantMessagingService extends ImsService {
      * @return IM session
      * @throws CoreException
      */
-	public ChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws CoreException {
-		if (logger.isActivated()) {
-			logger.info("Initiate 1-1 chat session with " + contact);
-		}
+    public ChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws CoreException {
+        if (logger.isActivated()) {
+            logger.info("Initiate 1-1 chat session with " + contact);
+        }
 
-		// Test number of sessions
-		if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
-			if (logger.isActivated()) {
-				logger.debug("The max number of chat sessions is achieved: cancel the initiation");
-			}
-			throw new CoreException("Max chat sessions achieved");
-		}
+        // Test number of sessions
+        if ((maxChatSessions != 0) && (getImSessions().size() >= maxChatSessions)) {
+            if (logger.isActivated()) {
+                logger.debug("The max number of chat sessions is achieved: cancel the initiation");
+            }
+            throw new CoreException("Max chat sessions achieved");
+        }
 
-		// Create a new session
-		OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
-				this,
-	        	PhoneUtils.formatNumberToSipUri(contact),
-	        	firstMsg);
+        // Create a new session
+        OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
+                this,
+                PhoneUtils.formatNumberToSipUri(contact),
+                firstMsg);
 
-		// Start the session
-		session.startSession();
-		return session;
-	}
+        // Start the session
+        session.startSession();
+        return session;
+    }
 
     /**
      * Receive a one-to-one chat session invitation
@@ -955,16 +959,15 @@ public class InstantMessagingService extends ImsService {
             return;
         }
 
-		// Create a new HTTP file transfer session
-        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo, ChatUtils.getMessageId(invite), null);
-
-		// Create a chat session
+		// Create and start a chat session
         TerminatingOne2OneChatSession one2oneChatSession = new TerminatingOne2OneChatSession(this, invite);
-
-       // Start both sessions
-        httpFiletransferSession.startSession();
         one2oneChatSession.startSession();
+        
+		// Create and start a new HTTP file transfer session
+        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
+                invite, ftinfo, ChatUtils.getMessageId(invite), one2oneChatSession.getSessionID(), one2oneChatSession.getContributionID());
+        // Set the chat session ID in http session
+        httpFiletransferSession.startSession();
         
         // Notify listener
         getImsModule().getCore().getListener().handle1to1FileTransferInvitation(httpFiletransferSession, one2oneChatSession);
@@ -1014,16 +1017,16 @@ public class InstantMessagingService extends ImsService {
             return;
         }
 
-		// Create a new HTTP file transfer session
-        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo,ChatUtils.getMessageId(invite),null);
-
-		// Create a chat session
+		// Create and start a chat session
         TerminatingAdhocGroupChatSession groupChatSession = new TerminatingAdhocGroupChatSession(this, invite);
-
-       // Start both sessions
-        httpFiletransferSession.startSession();
         groupChatSession.startSession();
+        
+		// Create and start a new HTTP file transfer session
+        TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
+                invite, ftinfo,ChatUtils.getMessageId(invite),groupChatSession.getSessionID(), groupChatSession.getContributionID());
+        // Set the chat session ID in http session
+        
+        httpFiletransferSession.startSession();
         
         // Notify listener
         getImsModule().getCore().getListener().handleGroupFileTransferInvitation(httpFiletransferSession, groupChatSession);

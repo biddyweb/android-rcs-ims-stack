@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -41,6 +42,11 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     private String chatSessionId = null;
 
     /**
+     * Session state
+     */
+    private int sessionState;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -53,11 +59,14 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 	 * @param contact Remote contact
 	 * @param thumbnail Thumbnail
 	 * @param chatSessionId Chat session ID
+	 * @param chatContributionId Chat contribution Id
 	 */
-	public HttpFileTransferSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionID) {
+	public HttpFileTransferSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionID, String chatContributionId) {
 		super(parent, content, contact, thumbnail);
 		
 		this.chatSessionId = chatSessionID;
+		setContributionID(chatContributionId);
+        this.sessionState = SessionState.PENDING;
 	}
 	
 
@@ -69,6 +78,15 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 	public String getChatSessionID() {
 		return chatSessionId;
 	}
+
+    /**
+     * Set the chatSessionId
+     *
+     * @param chatSessionID
+     */
+    public void setChatSessionID(String chatSessionID) {
+       this.chatSessionId = chatSessionID;
+    }
 
     /**
      * Create an INVITE request
@@ -98,6 +116,7 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 
         // Remove the current session
         getImsService().removeSession(this);
+        this.sessionState = SessionState.TERMINATED;
 
         // Notify listeners
         for(int j=0; j < getListeners().size(); j++) {
@@ -139,6 +158,7 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 
         // Remove the current session
         getImsService().removeSession(this);
+        this.sessionState = SessionState.TERMINATED;
 
         // Notify listeners
         for (int j = 0; j < getListeners().size(); j++) {
@@ -146,9 +166,25 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
                     .handleFileTransfered(getContent().getUrl());
         }
     }
+    
+    /**
+     * Handle file uploaded
+     */
+    public void handleFileUploaded() {
+    	// File has been uploaded
+        fileUploaded();
+        this.sessionState = SessionState.UPLOADED;
+
+        // Notify listeners
+        for (int j = 0; j < getListeners().size(); j++) {
+            ((FileSharingSessionListener) getListeners().get(j))
+                    .handleFileUploaded();
+        }
+    }
 
     /**
      * HTTP transfer progress
+     * HttpTransferEventListener implementation
      *
      * @param currentSize Current transfered size in bytes
      * @param totalSize Total size in bytes
@@ -158,5 +194,27 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
         for(int j=0; j < getListeners().size(); j++) {
             ((FileSharingSessionListener)getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
         }
+    }
+
+    /**
+     * HTTP transfer started
+     * HttpTransferEventListener implementation
+     */
+    public void httpTransferStarted() {
+        this.sessionState = SessionState.ESTABLISHED;
+        // Notify listeners
+        for(int j=0; j < getListeners().size(); j++) {
+            ((FileSharingSessionListener)getListeners().get(j)).handleSessionStarted();
+        }
+    }
+
+    /**
+     * Get session state
+     *
+     * @return State 
+     * @see SessionState
+     */
+    public int getSessionState() {
+        return sessionState;
     }
 }

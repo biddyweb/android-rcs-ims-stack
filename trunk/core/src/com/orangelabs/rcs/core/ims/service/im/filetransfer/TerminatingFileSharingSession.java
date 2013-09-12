@@ -437,44 +437,6 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	}	
 
     /**
-     * Data transfer error
-     *
-     * @param msgId Message ID
-     * @param error Error code
-     */
-    public void msrpTransferError(String msgId, String error) {
-		if (isInterrupted()) {
-			return;
-		}
-		
-		if (logger.isActivated()) {
-            logger.info("Data transfer error " + error);
-    	}
-
-    	try {
-            // Close the media session
-            closeMediaSession();
-				
-			// Terminate session
-			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-	   	} catch(Exception e) {
-	   		if (logger.isActivated()) {
-	   			logger.error("Can't close correctly the file transfer session", e);
-	   		}
-	   	}
-
-    	// Remove the current session
-    	getImsService().removeSession(this);
-
-    	// Notify listeners
-		if (!isInterrupted()) {
-	    	for(int j=0; j < getListeners().size(); j++) {
-	    		((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED, error));
-	        }
-		}
-	}
-
-    /**
      * Prepare media session
      * 
      * @throws Exception 

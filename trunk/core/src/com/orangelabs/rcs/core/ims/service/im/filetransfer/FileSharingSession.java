@@ -5,6 +5,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.SessionState;
 
 /**
  * Abstract file sharing session 
@@ -36,6 +37,11 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 * Thumbnail
 	 */
 	private byte[] thumbnail = null;
+
+	/**
+	 * File uploaded
+	 */
+	private boolean fileUploaded = false;;
 	
     /**
 	 * Constructor
@@ -51,7 +57,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 		this.content = content;
 		this.thumbnail = thumbnail;
 	}
-	
+
 	/**
 	 * Return the contribution ID
 	 * 
@@ -123,6 +129,22 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	}
 	
 	/**
+	 * File has been uploaded
+	 */
+	public void fileUploaded() {
+		this.fileUploaded  = true;
+	}
+	
+	/**
+	 * Is file uploaded
+	 * 
+	 * @return Boolean
+	 */
+	public boolean isFileUploaded() {
+		return fileUploaded; 
+	}
+	
+	/**
 	 * Returns max file sharing size
 	 * 
 	 * @return Size in bytes
@@ -148,4 +170,12 @@ public abstract class FileSharingSession extends ImsServiceSession {
     public void setThumbnail(byte[] thumbnail) {
         this.thumbnail = thumbnail;
     }
+
+    /**
+     * Get session state
+     *
+     * @return State 
+     * @see SessionState
+     */
+    public abstract int getSessionState();
 }

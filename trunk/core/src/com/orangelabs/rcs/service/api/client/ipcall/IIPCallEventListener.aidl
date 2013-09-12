@@ -20,7 +20,7 @@ interface IIPCallEventListener {
 	void handleAddVideoInvitation(in String videoEncoding, in int videoWidth, in int videoHeight);
 	
 	// Remove video invitation
-	void handleRemoveVideoInvitation();
+	void handleRemoveVideo();
 	
 	// Add video has been accepted by user 
 	void handleAddVideoAccepted();

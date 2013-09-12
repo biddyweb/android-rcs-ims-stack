@@ -121,7 +121,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
             			getVideoPlayer().getLocalRtpPort());
             }
 	    	String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(),
-	    			getAudioRenderer().getLocalRtpPort());
+	    			getAudioPlayer().getLocalRtpPort());
 	    	String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
@@ -186,8 +186,13 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         int audioRemotePort = mediaAudio.port;
         MediaDescription mediaVideo = parser.getMediaDescription("video");
         int videoRemotePort = -1;
+        
         if (mediaVideo != null) {
             videoRemotePort = mediaVideo.port;
+        }
+        else { // no video in sdp 
+        	setVideoPlayer(null);
+        	setVideoRenderer(null);
         }
         
         // Extract audio codecs from SDP
@@ -199,7 +204,6 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         Vector<VideoCodec> proposedVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(video);
 
         // Audio codec negotiation
-        // TODO: what about the renderer?
         AudioCodec selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioPlayer().getSupportedAudioCodecs(), proposedAudioCodecs);
         if (selectedAudioCodec == null) {
             if (logger.isActivated()) {
@@ -215,9 +219,8 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         }
 
         // Video codec negotiation
-        // TODO: what about the renderer?
         VideoCodec selectedVideoCodec = null;
-        if (getVideoPlayer() != null) {
+        if ((mediaVideo != null)&&(getVideoPlayer() != null)) {
 	        selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
 	        if (selectedVideoCodec == null) {
 	            if (logger.isActivated()) {
@@ -241,16 +244,23 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
         getAudioRenderer().addListener(new AudioPlayerEventListener(this)); 
 
+        
+     // Set the video codec in video renderer            
+        if ((getVideoRenderer() != null) && (selectedVideoCodec != null)) {
+            getVideoRenderer().setVideoCodec(selectedVideoCodec.getMediaCodec());
+        	getVideoRenderer().addListener(new VideoPlayerEventListener(this));
+        	if (logger.isActivated()) {
+    			logger.debug("Set video codec in the video renderer: " + selectedVideoCodec.getMediaCodec().getCodecName());
+    		}
+        }
+        
         // Set the video codec in video player            
         if ((getVideoPlayer() != null) && (selectedVideoCodec != null)) {
             getVideoPlayer().setVideoCodec(selectedVideoCodec.getMediaCodec());
         	getVideoPlayer().addListener(new VideoPlayerEventListener(this));
-        }
-        
-        // Set the video codec in video renderer            
-        if ((getVideoRenderer() != null) && (selectedVideoCodec != null)) {
-            getVideoRenderer().setVideoCodec(selectedVideoCodec.getMediaCodec());
-        	getVideoRenderer().addListener(new VideoPlayerEventListener(this));
+        	if (logger.isActivated()) {
+				logger.debug("Set video codec in the video player: " + selectedVideoCodec.getMediaCodec().getCodecName());
+			}
         }
         
         // Open the audio player/renderer
@@ -258,20 +268,38 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         getAudioPlayer().open(remoteHost, audioRemotePort); //always open the player after the renderer when the RTP stream is shared
 
         // Open the video player/renderer
-        if (getVideoRenderer() != null) {
+        if ((getVideoRenderer() != null)&& (selectedVideoCodec != null)) {
         	getVideoRenderer().open(remoteHost, videoRemotePort);
+        	if (logger.isActivated()) {
+				logger.debug("Open video renderer with remoteHost ("+remoteHost+") and remotePort ("+videoRemotePort+")");
+			}
         }
-        if (getVideoPlayer() != null) {
+        if ((getVideoPlayer() != null)&& (selectedVideoCodec != null)) {
             getVideoPlayer().open(remoteHost, videoRemotePort); //always open the player after the renderer when the RTP stream is shared
+            if (logger.isActivated()) {
+				logger.debug("Open video player on renderer RTP stream");
+			}
         }
 	}
 
 	@Override
 	public void startMediaSession() throws Exception {
-		// TODO: start audio and video player/renderer
 		// getAudioPlayer().start();	
 		// getAudioRenderer().start();
-		// getVideoPlayer().start();	
-		// getVideoRenderer().start();
+		
+		if ((getVideoPlayer()!= null)&&(getVideoRenderer()!= null) ){
+			getVideoPlayer().start();
+			if (logger.isActivated()) {
+              	logger.debug("Start video player");
+              }
+			
+			getVideoRenderer().start();
+			if (logger.isActivated()) {
+              	logger.debug("Start video renderer");	
+              }
+			
+			
+			
+		}
 	}
 }

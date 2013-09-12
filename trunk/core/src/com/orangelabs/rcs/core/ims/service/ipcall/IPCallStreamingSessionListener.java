@@ -60,7 +60,7 @@ public interface IPCallStreamingSessionListener extends ImsSessionListener  {
      * Remove Video Invitation
      *
      */
-    public void handleRemoveVideoInvitation();  
+    public void handleRemoveVideo();  
 	
 	/**
      * Add Video accepted by user

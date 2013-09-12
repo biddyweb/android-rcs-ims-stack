@@ -445,7 +445,10 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	   			logger.error("Can't close correctly the image sharing session", e);
 	   		}
 	   	}
-		
+
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
     	// Remove the current session
     	getImsService().removeSession(this);
 
