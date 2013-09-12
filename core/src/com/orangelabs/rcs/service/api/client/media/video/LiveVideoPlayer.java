@@ -30,6 +30,8 @@ import com.orangelabs.rcs.core.ims.protocol.rtp.MediaRegistry;
 import com.orangelabs.rcs.core.ims.protocol.rtp.VideoRtpSender;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.JavaPacketizer;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.NalUnitHeader;
+import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.NalUnitType;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264Encoder;
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.encoder.NativeH264EncoderParams;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
@@ -73,7 +75,7 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
     /**
      * AudioRenderer for RTP stream sharing
      */
-    private VideoRenderer videoRenderer = null;     
+    private VideoRenderer videoRenderer = null;
 
     /**
      * Local RTP port
@@ -125,11 +127,6 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
      */
     private byte[] pps = new byte[0];
 
-    /**
-     * Timestamp increment
-     */
-    private int timestampInc;
-    
     /***
      * Current time stamp
      */
@@ -139,16 +136,6 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
 	 * NAL initialization
 	 */
 	private boolean nalInit = false;
-
-    /**
-     * NAL repeat
-     */
-    private int nalRepeat = 0;
-
-    /**
-     * NAL repeat MAX value
-     */
-    private static final int NALREPEATMAX = 20;
 
     /**
      * Scaling factor for encoding
@@ -366,7 +353,6 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
 
         // Init video encoder
         try {
-            timestampInc = 90000 / selectedVideoCodec.getFramerate();
             NativeH264EncoderParams nativeH264EncoderParams = new NativeH264EncoderParams();
 
             // Codec dimensions
@@ -381,7 +367,6 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
             // Codec settings optimization
             nativeH264EncoderParams.setEncMode(NativeH264EncoderParams.ENCODING_MODE_STREAMING);
             nativeH264EncoderParams.setSceneDetection(false);
-            nativeH264EncoderParams.setIFrameInterval(15);
 
             if (logger.isActivated()) {
                 logger.info("Init H264Encoder " + selectedVideoCodec.getCodecParams() + " " +
@@ -471,10 +456,7 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
             return;
         }
         nalInit = false;
-
         timeStamp = 0;
-        nalInit = false;
-        nalRepeat = 0;
 
         // Start RTP layer
         rtpSender.startSession();
@@ -816,27 +798,8 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
      * @param data
      */
     private void encode(byte[] data) {
-        // Send SPS/PPS if necessary
-        nalRepeat++;
-        if (nalRepeat > NALREPEATMAX) {
-            nalInit = false;
-            nalRepeat = 0;
-        }
-        if (!nalInit) {
-            if (logger.isActivated()) {
-                logger.debug("Send SPS");
-            }
-            rtpInput.addFrame(sps, timeStamp);
-            timeStamp += timestampInc;
-
-            if (logger.isActivated()) {
-                logger.debug("Send PPS");
-            }
-            rtpInput.addFrame(pps, timeStamp);
-            timeStamp += timestampInc;
-            
-            nalInit = true;
-        } 
+        // Set timestamp
+        timeStamp = SystemClock.uptimeMillis() - videoStartTime;
 
         // Encode frame
         byte[] encoded;
@@ -847,6 +810,13 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
         }
         int encodeResult = NativeH264Encoder.getLastEncodeStatus();
         if ((encodeResult == 0) && (encoded.length > 0)) {
+            // Send SPS/PPS if IDR or first frame
+            if (!nalInit || isIdrFrame(encoded)) {
+                rtpInput.addFrame(sps, timeStamp);
+                rtpInput.addFrame(pps, timeStamp);
+                nalInit = true;
+            }
+
             VideoOrientation videoOrientation = null;
             if (orientationHeaderId > 0 ) {
                 videoOrientation = new VideoOrientation(
@@ -855,8 +825,21 @@ public class LiveVideoPlayer extends IVideoPlayer.Stub implements Camera.Preview
                         mOrientation);
             }
             rtpInput.addFrame(encoded, timeStamp, videoOrientation);
-            timeStamp += timestampInc;
         }
+    }
+
+    /**
+     * Chech if the frame is IDR
+     *
+     * @param encodedFrame the encoded frame
+     * @return true if IDR
+     */
+    private boolean isIdrFrame(byte[] encodedFrame) {
+        if ((encodedFrame != null) && (encodedFrame.length > 0)) {
+            NalUnitHeader header = NalUnitHeader.extract(encodedFrame);
+            return header.getNalUnitType() == NalUnitType.CODE_SLICE_IDR_PICTURE;
+        }
+        return false;
     }
 
     /**

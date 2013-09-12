@@ -8,27 +8,27 @@ public class IPCallSessionData {
 	/**
 	 * Audio Call State of the session
 	 */
-	public int audioCallState = IPCallSessionsData.IDLE;
+	private int audioCallState = IPCallSessionsData.IDLE;
 
 	/**
 	 * Video Call State of the session
 	 */
-	public int videoCallState = IPCallSessionsData.IDLE;
+	private int videoCallState = IPCallSessionsData.IDLE;
 
 	/**
 	 * remote contact of the session
 	 */
-	public String remoteContact = "";
+	private String remoteContact = "";
 	
 	/**
 	 * direction of the session
 	 */
-	public String sessionDirection = "";
+	private String sessionDirection = "";
 	
 	/**
 	 * event listener of the session
 	 */	
-	public IIPCallEventListener sessionEventListener ; 
+	private IIPCallEventListener sessionEventListener ; 
 	
 	/**
 	 * The logger
@@ -52,5 +52,23 @@ public class IPCallSessionData {
 		
 	}
 	
-	
+	 public int getAudioCallState() {
+		 return audioCallState;
+	 }
+	 
+	 public int getVideoCallState() {
+		 return videoCallState;
+	 }
+	 
+	 public String getRemoteContact() {
+		 return remoteContact;
+	 }
+	 
+	 public String getSessionDirection() {
+		 return sessionDirection;
+	 }
+	 
+	 public IIPCallEventListener getSessionEventListener() {
+		 return sessionEventListener;
+	 }
 }

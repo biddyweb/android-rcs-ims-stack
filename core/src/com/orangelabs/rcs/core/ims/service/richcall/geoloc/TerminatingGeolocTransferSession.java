@@ -397,6 +397,9 @@ public class TerminatingGeolocTransferSession extends GeolocTransferSession impl
 		// Terminate session
 		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
     	// Remove the current session
     	getImsService().removeSession(this);
 

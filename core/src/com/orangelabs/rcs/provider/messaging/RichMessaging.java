@@ -252,7 +252,7 @@ public class RichMessaging {
 	 */
 	public void addIncomingFileTransfer(String contact, String chatSessionId, String ftSessionId, MmContent content) {
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, ftSessionId, chatSessionId, ftSessionId, contact, null, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
+		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, null, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -271,7 +271,7 @@ public class RichMessaging {
 
 		// Add first message entry
 		InstantMessage firstMsg = session.getFirstMessage();
-		if (firstMsg != null) {
+		if (firstMsg != null) { // TODO not save if subject used for HTTP file transfer
 			addOutgoingChatMessage(firstMsg, session);
 		}
 
@@ -312,7 +312,7 @@ public class RichMessaging {
 	 */
 	public void addOutgoingFileTransfer(String contact, String chatSessionId, String ftSessionId, String fileName, MmContent content){
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, chatSessionId, null, ftSessionId, contact, fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -333,7 +333,7 @@ public class RichMessaging {
 			}
 		}
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, chatSessionId, null, ftSessionId, sContacts.toString(), fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, sContacts.toString(), fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -867,10 +867,50 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_STATUS, status);
 		cr.update(databaseUri, 
 				values, 
-				RichMessagingData.KEY_MESSAGE_ID + " = " + sessionId, 
+				RichMessagingData.KEY_CHAT_SESSION_ID + " = " + sessionId, 
 				null);
 	}
-	
+
+    /**
+     * Update file transfer ChatId
+     *
+     * @param sessionId Session Id
+     * @param chatId chat Id
+     * @param msgId msgId of the corresponding chat
+     */
+    public void updateFileTransferChatId(String sessionId, String chatId, String msgId) {
+        ContentValues values = new ContentValues();
+        values.put(RichMessagingData.KEY_CHAT_ID, chatId);
+        values.put(RichMessagingData.KEY_MESSAGE_ID , msgId);
+        cr.update(databaseUri, 
+                values, 
+                RichMessagingData.KEY_CHAT_SESSION_ID + " = " + sessionId, 
+                null);
+    }
+
+    /**
+     * Get file transfer Id
+     *
+     * @param msgId Message Id
+     * @return session Id of the file transfer
+     */
+    public String getFileTransferId(String msgId) {
+        String result = null;
+        Cursor cursor = cr.query(databaseUri, 
+                new String[] {
+                    RichMessagingData.KEY_CHAT_SESSION_ID
+                },
+                "(" + RichMessagingData.KEY_MESSAGE_ID + "='" + msgId + "') AND (" + 
+                        RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER + ")",
+                null, 
+                RichMessagingData.KEY_TIMESTAMP + " DESC");
+        if (cursor.moveToFirst()) {
+            result = cursor.getString(0);
+        }
+        cursor.close();
+        return result;
+    }
+
 	/**
 	 * Update file transfer download progress
 	 * 
@@ -883,7 +923,7 @@ public class RichMessaging {
 		
 		Cursor cursor = cr.query(RichMessagingData.CONTENT_URI, 
 				new String[]{RichMessagingData.KEY_SIZE}, 
-				RichMessagingData.KEY_MESSAGE_ID + "='" + sessionId + "'",
+				RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'",
 				null, 
 				null);
 		if (cursor.moveToFirst()) {
@@ -916,7 +956,7 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_TERMINATED);
 		cr.update(databaseUri, 
 				values, 
-				RichMessagingData.KEY_MESSAGE_ID + " = " + sessionId, 
+				RichMessagingData.KEY_CHAT_SESSION_ID + " = " + sessionId, 
 				null);
 	}
 	
@@ -928,7 +968,7 @@ public class RichMessaging {
 	 */
 	public void deleteFileTransferSession(String sessionId, String contact) {
 		// Count entries to be deleted
-		Cursor count = cr.query(databaseUri, null, RichMessagingData.KEY_MESSAGE_ID + " = " + sessionId, null, null);
+		Cursor count = cr.query(databaseUri, null, RichMessagingData.KEY_CHAT_SESSION_ID + " = " + sessionId, null, null);
 		int toBeDeletedRows = count.getCount();
 		if (logger.isActivated()) {
 			logger.debug("Delete " + toBeDeletedRows + " rows");

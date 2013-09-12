@@ -31,7 +31,7 @@ public class RichCallApiIntents {
      * <ul>
      *   <li><em>contact</em> - Contact phone number.</li>
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
-     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     *   <li><em>sessionId</em> - Session ID of the image sharing session.</li>
      *   <li><em>filename</em> - Name of the file.</li>
      *   <li><em>filesize</em> - Size of the file in bytes.</li>
      *   <li><em>filetype</em> - Type of file encoding.</li>
@@ -47,7 +47,7 @@ public class RichCallApiIntents {
      * <ul>
      *   <li><em>contact</em> - Contact phone number.</li>
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
-     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+     *   <li><em>sessionId</em> - Session ID of the video sharing session.</li>
      *   <li><em>videotype</em> - Type of video encoding.</li>
      *   <li><em>videowidth</em> - Width of video.</li>
      *   <li><em>videoheight</em> - Height of video.</li>
@@ -63,6 +63,7 @@ public class RichCallApiIntents {
      * <ul>
      *   <li><em>contact</em> - Contact phone number.</li>
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+     *   <li><em>sessionId</em> - Session ID of the geoloc sharing session.</li>
      * </ul>
      * </ul>
      */

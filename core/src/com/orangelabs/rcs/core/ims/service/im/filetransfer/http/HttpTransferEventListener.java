@@ -24,6 +24,11 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
  */
 public interface HttpTransferEventListener {
     /**
+     * HTTP transfer started
+     */
+    public void httpTransferStarted();
+
+    /**
      * HTTP transfer progress
      *
      * @param currentSize Current transfered size in bytes

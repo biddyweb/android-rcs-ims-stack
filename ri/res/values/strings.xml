@@ -216,6 +216,7 @@
 <string name="title_ipcall">IP call</string> 
 <string name="title_recv_ipcall">New IP call invitation</string>
 <string name="label_ipcall_with">IP call with %s</string>
+<string name="label_incoming_ipcall_dialog_checkbox_text">accept video call</string>
 <string name="label_incoming_ipcall_failed">Incoming IP call failed</string>
 <string name="label_incoming_ipcall_aborted">Incoming IP call aborted</string>
 <string name="label_incoming_ipcall_terminated_by_remote">Incoming IP call terminated by remote</string>
@@ -228,6 +229,7 @@
 <string name="label_ipcall_invitation_declined">IP call invitation has been declined</string>
 <string name="label_ipcall_called_is_busy">called is busy</string>
 <string name="label_sessions_list_empty">No call</string>
+
 
 <!--  Rich call menu -->
 <string name="menu_richcall">Rich call</string>

@@ -310,9 +310,12 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
 		// Terminate session
 		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
 		// Remove the current session
     	getImsService().removeSession(this);
-    	
+
     	// Notify listeners
     	for(int j=0; j < getListeners().size(); j++) {
     		((GeolocTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));

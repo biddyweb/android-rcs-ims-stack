@@ -130,7 +130,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      * File transfer supported by remote
      */
     private boolean ftSupportedByRemote = false;
-    
+
     /**
      * The logger
      */
@@ -157,7 +157,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
 		}
 	}
-
+	
 	/**
 	 * Get feature tags
 	 * 
@@ -574,10 +574,12 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		if (isInterrupted()) {
 			return;
 		}
-		
 		if (logger.isActivated()) {
             logger.info("Data transfer error " + error);
         }
+
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
 
         if (msgId != null) {
             // Notify listeners
@@ -710,7 +712,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
             }
 
 			// Create a new session
-			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo, msgId, getSessionID());
+			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), invite, fileTransferInfo, msgId, getSessionID(), getContributionID());
 
 	        // Start the session
 			session.startSession();
@@ -741,7 +743,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Is group chat
 	 * 

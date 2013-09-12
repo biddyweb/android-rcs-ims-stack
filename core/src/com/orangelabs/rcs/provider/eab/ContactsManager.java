@@ -2352,9 +2352,9 @@ public final class ContactsManager {
 	}
 	
 	/**
-	 * Get a list of numbers that can use ip voice call features 
+	 * Get a list of numbers that can use IP voice call features 
 	 * 
-	 * @return list containing all contacts that can use ip voice call features 
+	 * @return List containing all contacts that can use IP voice call features 
 	 */
 	public List<String> getIPVoiceCallCapableContacts() {
 		List<String> ipVoiceCallCapableNumbers = new ArrayList<String>();
@@ -2362,7 +2362,7 @@ public final class ContactsManager {
 
         String selection = "( " + Data.MIMETYPE + "=? OR " + Data.MIMETYPE + "=? )";
         
-        // Get all ipcall capable contacts
+        // Get all IP call capable contacts
         String[] selectionArgs = { MIMETYPE_CAPABILITY_IP_VOICE_CALL };
         Cursor c = ctx.getContentResolver().query(Data.CONTENT_URI, 
         		projection, 

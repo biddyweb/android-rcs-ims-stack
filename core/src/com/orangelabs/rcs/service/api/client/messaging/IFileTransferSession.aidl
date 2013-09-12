@@ -21,6 +21,12 @@ interface IFileTransferSession {
 	// Is HTTP transfer
 	boolean isHttpTransfer();
 
+	// Get chat ID (ie. Contribution ID) used to send file transfer URL via chat
+	String getChatID();
+
+	// Get session ID of the chat used to send file transfer URL via chat
+	String getChatSessionID();
+
 	// Get session state
 	int getSessionState();
 

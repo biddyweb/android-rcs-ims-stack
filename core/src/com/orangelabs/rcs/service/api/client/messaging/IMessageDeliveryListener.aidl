@@ -6,4 +6,7 @@ package com.orangelabs.rcs.service.api.client.messaging;
 interface IMessageDeliveryListener {
 	// Message delivery status
 	void handleMessageDeliveryStatus(in String contact, in String msgId, in String status);
+
+    // File Transfer delivery status
+    void handleFileDeliveryStatus(in String ftSessionId, in String status);
 }

@@ -76,10 +76,10 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 */
 	private IVideoPlayer videoPlayer = null;
 	
-	/**
-	 * Video codec
-	 */
-	private VideoCodec selectedVideoCodec = null;
+//	/**
+//	 * Video codec
+//	 */
+//	private VideoCodec selectedVideoCodec = null;
 
 	/**
 	 * The logger
@@ -328,6 +328,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		// Send re-INVITE
 		getUpdateSessionManager().sendReInvite(reInvite,
 				IPCallStreamingSession.ADD_VIDEO);
+
 	}
 
 	/**
@@ -337,7 +338,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		if (logger.isActivated()) {
 			logger.info("Remove video");
 		}
-
+		
 		// Build SDP
 		String sdp = buildRemoveVideoSdpProposal();
 
@@ -498,7 +499,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 						"Video renderer null or Video codec not selected"));
 			} else {
 				// Codec negotiation
-				selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
+				VideoCodec selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
 						getVideoRenderer().getSupportedVideoCodecs(),
 						proposedVideoCodecs);
 				if (selectedVideoCodec == null) {
@@ -656,7 +657,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 				if (!isInterrupted()) {
 					for (int i = 0; i < getListeners().size(); i++) {
 						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleRemoveVideoInvitation();
+								.handleRemoveVideo();
 					}
 				}
 			}
@@ -684,7 +685,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		if (requestType == IPCallStreamingSession.ADD_VIDEO) {
 			if (code == 200) {	// 200 OK response			
 				//prepare Video media session
-				prepareVideoSession(true);
+				prepareVideoSession();
 				
 				// Notify listeners
 				if (!isInterrupted()) {
@@ -717,7 +718,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			// case Remove Video
 		} else if (requestType == IPCallStreamingSession.REMOVE_VIDEO) {
 			if (code == 200) { // 200 OK response
-				// close video media session
+				// close video media session and set player/renderer to null
 				closeVideoSession();
 				setVideoPlayer(null);
 				setVideoRenderer(null);
@@ -758,7 +759,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		// case Add video
 		if (requestType == IPCallStreamingSession.ADD_VIDEO) {
 			if (code == ImsServiceSession.INVITATION_ACCEPTED) {
-				prepareVideoSession(false);
+				prepareVideoSession();
 			} else if (code == ImsServiceSession.INVITATION_NOT_ANSWERED)
 					 {
 				// Notify listeners
@@ -770,20 +771,9 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 				}
 			}
 
-			// case Remove Video
-		} else if (requestType == IPCallStreamingSession.REMOVE_VIDEO) {
-			if (code == ImsServiceSession.INVITATION_ACCEPTED) {
-				closeVideoSession();
-			} else if (code == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleRemoveVideoAborted(code);
-					}
-				}
-			}
-		}
+			
+		} 
+		
 	}
 	
 	
@@ -826,6 +816,10 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		} else if ((requestType == IPCallStreamingSession.REMOVE_VIDEO)&&(code == 200)) {
 			// close video media session
 			closeVideoSession();
+			
+			//set video player/renderer to null
+			setVideoPlayer(null);
+			setVideoRenderer(null);
 			
 			// Notify listeners
 				if (!isInterrupted()) {
@@ -942,7 +936,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 * Prepare video session (set codec, get remote Host and port ...) 
 	 * 
 	 */
-	public void prepareVideoSession(boolean originating) {
+	public void prepareVideoSession() {
 		if (logger.isActivated()) {
 			logger.info("prepareVideoSession()");
 		}
@@ -954,7 +948,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		int remotePort = mediaVideo.port;
 
 		try {
-			if (originating) {
+//			if (originating) {
 				// Extract video codecs from SDP
 				Vector<MediaDescription> medias = parser
 						.getMediaDescriptions("video");
@@ -962,7 +956,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 						.extractVideoCodecsFromSdp(medias);
 
 				// Codec negotiation
-				selectedVideoCodec = VideoCodecManager
+				VideoCodec  selectedVideoCodec = VideoCodecManager
 						.negociateVideoCodec(getVideoPlayer()
 								.getSupportedVideoCodecs(), proposedCodecs);
 
@@ -979,7 +973,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 							IPCallError.UNSUPPORTED_VIDEO_TYPE));
 					return;
 				}
-			}
+//			}
 			
 			// getContent().setEncoding("video/" +
 			// selectedPlayerVideoCodec.getCodecName()); => to remove is not used

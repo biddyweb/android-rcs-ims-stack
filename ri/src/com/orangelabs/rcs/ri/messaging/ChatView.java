@@ -621,6 +621,12 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				});
     		}
     	}
+
+    	// Http File Transfer status
+        public void handleFileDeliveryStatus(String ftSessionId, String status) throws RemoteException {
+            // TODO Auto-generated method stub
+            
+        }
     };
     	
     /**

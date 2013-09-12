@@ -328,6 +328,11 @@ public class RcsSettingsData {
      * Minimum storage capacity
      */
     public static final String MIN_STORAGE_CAPACITY = "MinStorageCapacity";
+    
+    /**
+     * Convergent messaging UX option
+     */
+    public static final String CONVERGENT_MESSAGING_UX = "ConvergentMessagingUx";
 
     // ---------------------------------------------------------------------------
 	// User profile settings

@@ -57,9 +57,10 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	 * @param contact Remote contact
 	 * @param thumbnail Thumbnail
 	 * @param chatSessionId Chat session ID
+	 * @param chatContributionId Chat contribution Id
 	 */
-	public OriginatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionId) {
-		super(parent, content, contact, thumbnail, chatSessionId);
+	public OriginatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail, String chatSessionId, String chatContributionId) {
+		super(parent, content, contact, thumbnail, chatSessionId, chatContributionId);
 
 		// Instantiate the upload manager
 		uploadManager = new HttpUploadManager(getContent(), getThumbnail(), this);
@@ -95,6 +96,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
                 	 Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(getRemoteContact());
                 	 try {
                 		 chatSession = chatSessions.lastElement();
+                		 setChatSessionID(chatSession.getSessionID());
+                		 setContributionID(chatSession.getContributionID());
                 	 } catch(NoSuchElementException nsee) {
                          chatSession = null;
                      }
@@ -116,9 +119,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 					// Send content
 					chatSession.sendDataChunks(msgId, content, mime);
-
-                    // File transfered
-                    handleFileTransfered();
+                    RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
 				} else {
 					// A chat session should be initiated
 	                if (logger.isActivated()) {
@@ -127,6 +128,9 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 	                // Initiate a new chat session to send file transfer info in the first message, session does not need to be retrieved since it is not used
 	                chatSession = Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo);
+	                setChatSessionID(chatSession.getSessionID());
+                    setContributionID(chatSession.getContributionID());
+	                RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), chatSession.getFirstMessage().getMessageId());
 
 	                // Update rich messaging history
 	    			RichMessaging.getInstance().addOutgoingChatSessionByFtHttp(chatSession);
@@ -135,10 +139,9 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    			ImSession sessionApi = new ImSession(chatSession);
 	    			MessagingApiService.addChatSession(sessionApi);
                     // TODO : Check session response ?
-
-                    // File transfered
-                    handleFileTransfered();
 				}
+                // File uploaded
+                handleFileUploaded();
 			} else {
                 if (logger.isActivated()) {
                     logger.debug("Upload has failed");

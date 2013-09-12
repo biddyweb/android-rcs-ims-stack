@@ -427,11 +427,6 @@ public class InitiateFileTransfer extends Activity {
     			public void run() {
 					// Display transfer progress
     				updateProgressBar(currentSize, totalSize);
-
-                    if (currentSize >= totalSize) {
-                        TextView statusView = (TextView)findViewById(R.id.progress_status);
-                        statusView.setText("uploaded");
-                    }
     			}
     		});
 		}
@@ -470,6 +465,20 @@ public class InitiateFileTransfer extends Activity {
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transfered");
+				}
+			});
+		}
+
+		// File uploaded
+		public void handleFileUploaded() {
+			handler.post(new Runnable() { 
+				public void run() {
+					// Hide progress dialog
+					hideProgressDialog();
+
+					// Display transfer progress
+					TextView statusView = (TextView)findViewById(R.id.progress_status);
+					statusView.setText("uploaded");
 				}
 			});
 		}

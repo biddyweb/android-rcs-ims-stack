@@ -31,11 +31,13 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.SessionState;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
@@ -341,18 +343,17 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
 			
 			String chatSessionId = this.getSessionID();
+			String chatId = this.getChatID();
 			FileSharingSession fileSharingsession = null;
 			if (isGroupChat()) {
-                fileSharingsession = Core.getInstance().getImService().initiateGroupFileTransferSession(getParticipants(), content, thumbnail, chatSessionId);
+                fileSharingsession = Core.getInstance().getImService().initiateGroupFileTransferSession(getParticipants(), content, thumbnail, chatSessionId, chatId);
+                // Update rich messaging history
+                RichMessaging.getInstance().addOutgoingGroupFileTransfer(getParticipants(), chatSessionId, fileSharingsession.getSessionID(), file, fileSharingsession.getContent());
 			} else {
-	            fileSharingsession = Core.getInstance().getImService().initiateFileTransferSession(getRemoteContact(), content, thumbnail, chatSessionId);
+	            fileSharingsession = Core.getInstance().getImService().initiateFileTransferSession(getRemoteContact(), content, thumbnail, chatSessionId, chatId);
+                // Update rich messaging history
+                RichMessaging.getInstance().addOutgoingFileTransfer(getRemoteContact(), chatSessionId, fileSharingsession.getSessionID(), file, fileSharingsession.getContent());
 			}
-			
-			// Set the file transfer session ID from the chat session if a chat already exist
-			String ftSessionId = fileSharingsession.getSessionID();
-			
-			// Update rich messaging history
-			RichMessaging.getInstance().addOutgoingFileTransfer(getRemoteContact(), chatSessionId, ftSessionId, file, fileSharingsession.getContent());
 
 			// Add session in the list
 			FileTransferSession sessionApi = new FileTransferSession(fileSharingsession);
@@ -662,25 +663,40 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      */
     public void handleMessageDeliveryStatus(String msgId, String status) {
     	synchronized(lock) {
-			if (logger.isActivated()) {
-				logger.info("New message delivery status for message " + msgId + ", status " + status);
-			}
-	
-			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-			
-	  		// Notify event listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
-	            } catch(Exception e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
+            // Check FileTransfer in chat session
+    		String transferSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
+    		if (transferSessionId == null) {
+				if (logger.isActivated()) {
+					logger.info("New message delivery status for message " + msgId + ", status " + status);
+				}
+		
+				// Update rich messaging history
+				RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+				
+		  		// Notify event listeners
+				final int N = listeners.beginBroadcast();
+		        for (int i=0; i < N; i++) {
+		            try {
+		            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
+		            } catch(Exception e) {
+		            	if (logger.isActivated()) {
+		            		logger.error("Can't notify listener", e);
+		            	}
+		            }
+		        }
+		        listeners.finishBroadcast();
+            } else {
+                // Handle file transfered
+    			if (logger.isActivated()) {
+					logger.info("New message delivery status for message " + msgId + ", status " + status + ", removing associated http file transfer");
+				}
+                HttpFileTransferSession httpFileTransferSession = (HttpFileTransferSession) Core.getInstance().getImService().getSession(transferSessionId);
+                if (httpFileTransferSession != null) {
+                    httpFileTransferSession.handleFileTransfered();
+                } else {
+                    RichMessaging.getInstance().updateFileTransferStatus(transferSessionId, EventsLogApi.STATUS_TERMINATED);
+                }
+    		}
 	    }
     }
     

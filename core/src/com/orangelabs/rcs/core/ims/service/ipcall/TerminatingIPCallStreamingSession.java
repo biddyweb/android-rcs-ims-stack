@@ -32,6 +32,8 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession.VideoPlayerEventListener;
+import com.orangelabs.rcs.core.ims.service.richcall.video.SdpOrientationExtension;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.service.api.client.media.audio.AudioCodec;
@@ -89,9 +91,10 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 
             // Extract the video port
             MediaDescription mediaVideo = parser.getMediaDescription("video");
+            //int videoRemotePort = mediaVideo.port;
             int videoRemotePort = -1;
             if (mediaVideo != null) {
-            	videoRemotePort = mediaVideo.port;
+                videoRemotePort = mediaVideo.port;
             }
 
             // Extract the audio codecs from SDP
@@ -180,17 +183,33 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
             
             // Video codec negotiation
-			VideoCodec selectedVideoCodec = null;
-			if (proposedVideoCodecs.size() > 0) {
-				selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoRenderer().getSupportedVideoCodecs(), proposedVideoCodecs);
+			VideoCodec selectedVideoCodec2 = null;
+			if (getVideoPlayer() != null) {
+					selectedVideoCodec2 = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
+					if (selectedVideoCodec2 == null) {
+			            if (logger.isActivated()) {
+			                logger.debug("Proposed video codecs are not supported");
+			            }
+			            
+			            // Terminate session
+			            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+			            
+			            // Report error
+			            handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
+			            return;
+			        }
 			}
-			
+
 			// Set the OrientationHeaderID
-			// TODO do this for video only            
-//            SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
-//            if (extensionHeader != null) {
-//                getMediaRenderer().setOrientationHeaderId(extensionHeader.getExtensionId());
-//            }
+			if (getVideoRenderer()!= null) {          
+	            SdpOrientationExtension extensionHeader = SdpOrientationExtension.create(mediaVideo);
+	            if (extensionHeader != null) {
+	                getVideoRenderer().setOrientationHeaderId(extensionHeader.getExtensionId());
+	            }
+			}
+
+				
+			
 
             // Set the audio codec in audio renderer            
             getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
@@ -218,29 +237,68 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 				logger.debug("Open audio player on renderer RTP stream");
 			}
 			
-            // Build SDP part for response
+			// Set the video codec in video renderer   
+			if ((getVideoRenderer() != null) && (selectedVideoCodec2 != null)) {
+				getVideoRenderer().setVideoCodec(selectedVideoCodec2.getMediaCodec());
+	            getVideoRenderer().addListener(new VideoPlayerEventListener(this));
+				if (logger.isActivated()) {
+					logger.debug("Set video codec in the video renderer: " + selectedVideoCodec2.getMediaCodec().getCodecName());
+				}
+			}
+            
+			
+            // Set the video codec in video player    
+			if ((getVideoPlayer() != null) && (selectedVideoCodec2 != null)) {
+				getVideoPlayer().setVideoCodec(selectedVideoCodec2.getMediaCodec());
+	            getVideoPlayer().addListener(new VideoPlayerEventListener(this));
+				if (logger.isActivated()) {
+					logger.debug("Set video codec in the video player: " + selectedVideoCodec2.getMediaCodec().getCodecName());
+				}
+			}
+            
+			// Open the video renderer
+			if (getVideoRenderer() != null) {
+	        	getVideoRenderer().open(remoteHost, videoRemotePort);
+	        	if (logger.isActivated()) {
+					logger.debug("Open video renderer with remoteHost ("+remoteHost+") and remotePort ("+videoRemotePort+")");
+				}
+	        }
+			
+			// Open the video player
+	        if (getVideoPlayer() != null) {
+	            getVideoPlayer().open(remoteHost, videoRemotePort); //always open the player after the renderer when the RTP stream is shared
+	            if (logger.isActivated()) {
+					logger.debug("Open video player on renderer RTP stream");
+				}
+	        }
+					
+            // Build audioSdp and videoSdp part
             String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 	    	
 	    	String audioSdp = AudioSdpBuilder.buildSdpAnswer(selectedAudioCodec.getMediaCodec(),
-	    			getAudioRenderer().getLocalRtpPort());
-            String videoSdp = "";
-            if (selectedVideoCodec != null) {
-            	videoSdp = VideoSdpBuilder.buildSdpAnswer(selectedVideoCodec.getMediaCodec(),
-            			getVideoRenderer().getLocalRtpPort(), mediaVideo);
-            }	    	
-	    	
+	    			getAudioPlayer().getLocalRtpPort());
+            
+	    	String videoSdp = "";
+            if ((getVideoContent() != null) && (getVideoPlayer() != null)){
+            	if (selectedVideoCodec2 != null) {
+                	videoSdp = VideoSdpBuilder.buildSdpAnswer(selectedVideoCodec2.getMediaCodec(),
+                			getVideoPlayer().getLocalRtpPort(), mediaVideo);
+                }	
+            }
+            
+            // Build SDP for response
             String sdp =
             	"v=0" + SipUtils.CRLF +
             	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
             	"s=-" + SipUtils.CRLF +
             	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
                 "t=0 0" + SipUtils.CRLF +
-                videoSdp +
                 audioSdp +
+                videoSdp +
                 "a=sendrcv" + SipUtils.CRLF;
 
-            // Set the local SDP part in the dialog path
+            // Set the local SDP in the dialog path
             getDialogPath().setLocalContent(sdp);
             
             if (logger.isActivated()) {
@@ -296,6 +354,22 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 //                if (logger.isActivated()) {
 //                	logger.debug("Start audio player");
 //                }
+                
+              // Start the video renderer and video player
+				if ((getVideoPlayer() != null) && (getVideoRenderer() != null)) {
+
+					getVideoPlayer().start();
+					if (logger.isActivated()) {
+						logger.debug("Start video player");
+					}
+
+					getVideoRenderer().start();
+					if (logger.isActivated()) {
+						logger.debug("Start video renderer");
+					}
+
+				}
+
 
                 // Start session timer
                 if (getSessionTimerManager().isSessionTimerActivated(resp)) {

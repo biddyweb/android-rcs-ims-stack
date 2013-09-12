@@ -369,6 +369,9 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
 		// Terminate session
 		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 
+        // Request capabilities
+        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
+
 		// Remove the current session
     	getImsService().removeSession(this);
     	

@@ -56,11 +56,12 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 
 		// Set first message
 		if ((msg != null) && (msg.length() > 0)) {
+		    // TODO if msg is for file transfer don't save it in Rich Messaging
 			InstantMessage firstMessage = ChatUtils.createFirstMessage(getRemoteContact(),
 					msg, getImdnManager().isImdnActivated());
 			setFirstMesssage(firstMessage);
 		}
-		
+
 		// Create dialog path
 		createOriginatingDialogPath();
 		
@@ -68,7 +69,7 @@ public class OriginatingOne2OneChatSession extends OneOneChatSession {
 		String id = ContributionIdGenerator.getContributionId(getDialogPath().getCallId());
 		setContributionID(id);		
 	}
-	
+
 	/**
 	 * Background processing
 	 */

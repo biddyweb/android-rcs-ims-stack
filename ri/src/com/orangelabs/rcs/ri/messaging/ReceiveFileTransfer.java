@@ -386,6 +386,12 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				}
 			});
 		}
+		
+		// File uploaded
+		public void handleFileUploaded() {
+			// Not implemented when receiving
+		}
+		
     };
 
     /**

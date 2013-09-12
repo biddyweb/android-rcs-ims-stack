@@ -34,6 +34,8 @@ public interface MessagingApiIntents {
      *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
      *   <li><em>chatSessionId</em> - Session ID of the chat session associated to the file
      *    transfer (may be null if the file transfer is outside of a chat).</li>
+     *   <li><em>chatId</em> - Contribution ID of the chat session associated to the file
+     *    transfer (may be null if the file transfer is outside of a chat).</li>
      *   <li><em>filename</em> - Name of the file.</li>
      *   <li><em>filesize</em> - Size of the file in bytes.</li>
      *   <li><em>filetype</em> - Type of file encoding.</li>

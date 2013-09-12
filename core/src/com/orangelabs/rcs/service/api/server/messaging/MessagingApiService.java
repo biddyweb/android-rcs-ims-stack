@@ -35,11 +35,13 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
@@ -172,6 +174,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("contact", number);
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
+    	if (session instanceof HttpFileTransferSession) {
+    	    intent.putExtra("chatSessionId", ((HttpFileTransferSession)session).getChatSessionID());
+    	    intent.putExtra("chatId", ((HttpFileTransferSession)session).getContributionID());
+    	}
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
     	intent.putExtra("filetype", session.getContent().getEncoding());
@@ -221,7 +227,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail, null);
+			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail, null, null);
 			
 			// Update rich messaging history
 			String ftSessionId = session.getSessionID();
@@ -259,49 +265,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		// Return a session instance
 		return ftSessions.get(id);
 	}
-	
-	/**
-     * Transfer a file to a group of contacts outside of an existing group chat
-     *
-     * @param contacts List of contact
-     * @param file File to be transfered
-     * @param thumbnail Thumbnail option
-     * @return File transfer session
-     * @throws ServerApiException
-     */
-    public IFileTransferSession transferFileGroup(List<String> contacts, String file, boolean thumbnail) throws ServerApiException {
-    	if (logger.isActivated()) {
-			logger.info("Transfer file " + file + " to " + contacts);
-		}
 
-    	// Check permission
-		ServerApiUtils.testPermission();
-
-		// Test IMS connection
-		ServerApiUtils.testIms();
-
-		try {
-			// Initiate the session
-			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
-			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
-			FileSharingSession session = Core.getInstance().getImService().initiateGroupFileTransferSession(contacts, content, thumbnail,null);
-
-			// Update rich messaging history
-			String ftSessionId = session.getSessionID();
-			RichMessaging.getInstance().addOutgoingGroupFileTransfer(contacts, ftSessionId, ftSessionId, file, session.getContent());
-
-			// Add session in the list
-			FileTransferSession sessionApi = new FileTransferSession(session);
-			addFileTransferSession(sessionApi);
-			return sessionApi;
-		} catch(Exception e) {
-			if (logger.isActivated()) {
-				logger.error("Unexpected error", e);
-			}
-			throw new ServerApiException(e.getMessage());
-		}
-    }
-	
 	/**
 	 * Get list of current file transfer sessions with a contact
 	 * 
@@ -829,25 +793,44 @@ public class MessagingApiService extends IMessagingApi.Stub {
      */
     public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
     	synchronized(lock) {
-			if (logger.isActivated()) {
-				logger.info("New message delivery status for message " + msgId + ", status " + status);
-			}
-	
-			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-			
-	  		// Notify message delivery listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
-	            } catch(Exception e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
+            // Get FileTransferId if MsgId is a HTTP File transfer
+            String ftSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
+            if (ftSessionId == null) {
+    			if (logger.isActivated()) {
+    				logger.info("New message delivery status for message " + msgId + ", status " + status);
+    			}
+    	
+    			// Update rich messaging history
+    			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+    			
+    	  		// Notify message delivery listeners
+    			final int N = listeners.beginBroadcast();
+    	        for (int i=0; i < N; i++) {
+    	            try {
+    	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
+    	            } catch(Exception e) {
+    	            	if (logger.isActivated()) {
+    	            		logger.error("Can't notify listener", e);
+    	            	}
+    	            }
+    	        }
+            } else {
+                // Update rich messaging history
+                RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_TERMINATED);
+
+                // Notify File transfer delivery listeners
+                final int N = listeners.beginBroadcast();
+                for (int i=0; i < N; i++) {
+                    try {
+                        listeners.getBroadcastItem(i).handleFileDeliveryStatus(ftSessionId, status);
+                    } catch(Exception e) {
+                        if (logger.isActivated()) {
+                            logger.error("Can't notify listener", e);
+                        }
+                    }
+                }
+            }
+            listeners.finishBroadcast();
     	}
     }
 }

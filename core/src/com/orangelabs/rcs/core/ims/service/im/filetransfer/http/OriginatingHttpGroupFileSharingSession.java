@@ -26,8 +26,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
-import com.orangelabs.rcs.service.api.server.messaging.ImSession;
-import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -43,6 +41,16 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
     private HttpUploadManager uploadManager;
 
     /**
+     * File information to send via chat
+     */
+    private String fileInfo = null;
+
+    /**
+     * Chat session used to send file info
+     */
+    private ChatSession chatSession= null;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -55,9 +63,11 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	 * @param conferenceId Conference ID
 	 * @param participants List of participants
 	 * @param thumbnail Thumbnail
+	 * @param chatSessionId Chat session ID
+     * @param chatContributionId Chat contribution Id
 	 */
-	public OriginatingHttpGroupFileSharingSession(ImsService parent, MmContent content, String conferenceId, ListOfParticipant participants, byte[] thumbnail, String chatSessionID) {
-		super(parent, content, conferenceId, thumbnail, chatSessionID);
+	public OriginatingHttpGroupFileSharingSession(ImsService parent, MmContent content, String conferenceId, ListOfParticipant participants, byte[] thumbnail, String chatSessionID, String chatContributionId) {
+		super(parent, content, conferenceId, thumbnail, chatSessionID, chatContributionId);
 
 		// Set participants involved in the transfer
 		this.participants = participants;
@@ -84,54 +94,27 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
             }
             
             if (result != null &&  ChatUtils.parseFileTransferHttpDocument(result) != null) {
-            	String fileInfo = new String(result);
+            	fileInfo = new String(result);
                 if (logger.isActivated()) {
                     logger.debug("Upload done with success: " + fileInfo);
                 }
 
 				// Send the file transfer info via a chat message
-                ChatSession chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
-                
+                chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
                 if (chatSession != null) {
 					// A chat session exists
 	                if (logger.isActivated()) {
 	                    logger.debug("Send file transfer info via an existing chat session");
 	                }
 
-	                // Get the last chat session in progress to send file transfer info
-					String mime = CpimMessage.MIME_TYPE;
-					String from = ChatUtils.ANOMYNOUS_URI;
-					String to = ChatUtils.ANOMYNOUS_URI;
-					String msgId = ChatUtils.generateMessageId();
+                    // Send file transfer info
+                    sendFileTransferInfo();
 
-					// Send file info in CPIM message
-					String content = ChatUtils.buildCpimMessage(from, to, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
-
-					// Send content
-					chatSession.sendDataChunks(msgId, content, mime);
-
-                    // File transfered
-                    handleFileTransfered();
-				} else {
-					// A chat session should be initiated
-	                if (logger.isActivated()) {
-	                    logger.debug("Send file transfer info via a new chat session");
-	                }
-
-	                // Initiate a new chat session to send file transfer info in the first message, session does not need to be retrieved since it is not used
-	                chatSession = Core.getInstance().getImService().initiateAdhocGroupChatSession(participants.getList(), fileInfo);
-
-                    // Update rich messaging history
-	    			RichMessaging.getInstance().addOutgoingChatSessionByFtHttp(chatSession);
-	    			
-	    			// Add session in the list
-	    			ImSession sessionApi = new ImSession(chatSession);
-	    			MessagingApiService.addChatSession(sessionApi);
-                    
-                    // TODO : Check session response ?
-
-                    // File transfered
-                    handleFileTransfered();
+                    // File uploaded
+                    handleFileUploaded();
+	            } else {
+	                // No chat error
+                    handleError(new FileSharingError(FileSharingError.NO_CHAT_SESSION));
 				}
 			} else {
                 if (logger.isActivated()) {
@@ -156,5 +139,22 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 		super.interrupt();
 		uploadManager.interrupt();
 	}
-	
+
+    /**
+     * Send the file transfer information
+     */
+    private void sendFileTransferInfo() {
+        // Send File transfer Info
+        String mime = CpimMessage.MIME_TYPE;
+        String from = ChatUtils.ANOMYNOUS_URI;
+        String to = ChatUtils.ANOMYNOUS_URI;
+        String msgId = ChatUtils.generateMessageId();
+
+        // Send file info in CPIM message
+        String content = ChatUtils.buildCpimMessage(from, to, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
+
+        // Send content
+        chatSession.sendDataChunks(msgId, content, mime);
+        RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
+    }
 }
