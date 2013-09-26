@@ -1,6 +1,7 @@
 package com.orangelabs.rcs.service.api.server.ipcall;
 
 import android.os.RemoteCallbackList;
+import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.LiveAudioContent;
@@ -87,6 +88,15 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	}
 
 	/**
+	 * Get session direction
+	 * 
+	 * @return direction
+	 */
+	public int getSessionDirection() {
+		return session.getSessionDirection();
+	}	
+	
+	/**
 	 * Accept the session invitation
 	 * 
 	 * @param video Activate video
@@ -97,8 +107,8 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 		}
 
 		if (video == false) {
-			setVideoPlayer(null);
-			setVideoRenderer(null);
+			session.setVideoPlayer(null);
+			session.setVideoRenderer(null);
 		}
 		
 		session.setAudioContent(ContentManager.createGenericLiveAudioContent());
@@ -670,5 +680,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			listeners.finishBroadcast();
 		}
 	}
+
+
 }
 

@@ -442,6 +442,11 @@ public class RcsSettingsData {
      * Country area code
      */
 	public static final String COUNTRY_AREA_CODE = "CountryAreaCode";
+	
+    /**
+     * Msisdn
+     */
+	public static final String MSISDN = "MSISDN";
 
 	// ---------------------------------------------------------------------------
 	// Stack settings

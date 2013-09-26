@@ -273,7 +273,7 @@ public class InstantMessagingService extends ImsService {
     }
 
 	/**
-     * Returns file transfer sessions
+     * Returns active file transfer sessions
      * 
      * @return List of sessions
      */
@@ -507,7 +507,7 @@ public class InstantMessagingService extends ImsService {
 		session.startSession();
 
 		// Notify listener
-		getImsModule().getCore().getListener().handleFileTransferInvitation(session);
+		getImsModule().getCore().getListener().handleFileTransferInvitation(session, false);
 	}
 
     /**
@@ -848,22 +848,34 @@ public class InstantMessagingService extends ImsService {
 	    	String contact = SipUtils.getAssertedIdentity(message);
 	    	String status = imdn.getStatus();
 	    	String msgId = imdn.getMsgId();
-	    	
-			// Get session associated to the contact
-			Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(contact);
-			if (sessions.size() > 0) {
-				// Notify the message delivery from the chat session
-				for(int i=0; i < sessions.size(); i++) {
-					ChatSession session = sessions.elementAt(i);
-			 	    session.receiveMessageDeliveryStatus(msgId, status);
-				}
-			} else {
-				// Notify the message delivery outside of the chat session
-				getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
-			}
-    	}
+
+            // Check if message delivery of a FileTransfer
+            String ftSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
+            if (ftSessionId == null) {
+                // Notify the file delivery outside of the chat session
+                receiveFileDeliveryStatus(ftSessionId, status);
+            } else {
+    			// Get session associated to the contact
+    			Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(contact);
+    			if (sessions.size() > 0) {
+    				// Notify the message delivery from the chat session
+    				for(int i=0; i < sessions.size(); i++) {
+    					ChatSession session = sessions.elementAt(i);
+    			 	    session.receiveMessageDeliveryStatus(msgId, status);
+    				}
+    			} else {
+    				// Notify the message delivery outside of the chat session
+    				getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
+    			}
+            }
+        }
     }
-   
+
+    public void receiveFileDeliveryStatus(String ftSessionId, String status) {
+        // Notify the file delivery outside of the chat session
+        getImsModule().getCore().getListener().handleFileDeliveryStatus(ftSessionId, status);
+    }
+
     /**
      * Receive S&F push messages
      * 
@@ -965,8 +977,7 @@ public class InstantMessagingService extends ImsService {
         
 		// Create and start a new HTTP file transfer session
         TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo, ChatUtils.getMessageId(invite), one2oneChatSession.getSessionID(), one2oneChatSession.getContributionID());
-        // Set the chat session ID in http session
+                one2oneChatSession, ftinfo, ChatUtils.getMessageId(invite));
         httpFiletransferSession.startSession();
         
         // Notify listener
@@ -1023,9 +1034,7 @@ public class InstantMessagingService extends ImsService {
         
 		// Create and start a new HTTP file transfer session
         TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
-                invite, ftinfo,ChatUtils.getMessageId(invite),groupChatSession.getSessionID(), groupChatSession.getContributionID());
-        // Set the chat session ID in http session
-        
+                groupChatSession, ftinfo,ChatUtils.getMessageId(invite));
         httpFiletransferSession.startSession();
         
         // Notify listener

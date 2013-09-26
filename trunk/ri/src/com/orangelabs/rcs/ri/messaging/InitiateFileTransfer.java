@@ -30,6 +30,7 @@ import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Data;
 import android.provider.MediaStore;
@@ -465,20 +466,6 @@ public class InitiateFileTransfer extends Activity {
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transfered");
-				}
-			});
-		}
-
-		// File uploaded
-		public void handleFileUploaded() {
-			handler.post(new Runnable() { 
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
-					// Display transfer progress
-					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("uploaded");
 				}
 			});
 		}

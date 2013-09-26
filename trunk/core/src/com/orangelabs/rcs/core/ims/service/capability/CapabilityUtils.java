@@ -120,6 +120,15 @@ public class CapabilityUtils {
 			supported += FeatureTags.FEATURE_RCSE_GC_SF + ",";
 		}
 
+        // IP call support
+        if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
+            tags.add(FeatureTags.FEATURE_RCSE_IP_VOICE_CALL);
+            tags.add(FeatureTags.FEATURE_3GPP_IP_VOICE_CALL);
+        }
+        if (RcsSettings.getInstance().isIPVideoCallSupported()) {
+            tags.add(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL);
+        }
+
 		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
 		if ((exts != null) && (exts.length() > 0)) {
@@ -131,10 +140,10 @@ public class CapabilityUtils {
 			if (supported.endsWith(",")) {
 				supported = supported.substring(0, supported.length()-1);
 			}
-			supported = FeatureTags.FEATURE_RCSE + "=\"" + supported + "\"";
+			supported = FeatureTags.FEATURE_RCSE + "=\"" + supported + "\"";		
 			tags.add(supported);
 		}
-		
+
 		return tags;
 	}	
 
@@ -145,6 +154,7 @@ public class CapabilityUtils {
      * @return Capabilities
      */
     public static Capabilities extractCapabilities(SipMessage msg) {
+
     	// Analyze feature tags
     	Capabilities capabilities = new Capabilities(); 
     	ArrayList<String> tags = msg.getFeatureTags();
@@ -197,21 +207,21 @@ public class CapabilityUtils {
         	if (tag.contains(FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)) {
         		// Support IP Call
         		if (iPCall_3GPP) {
-        			capabilities.setIPVoiceCallSupport(true);
+        			capabilities.setIPVoiceCallSupport(true);		 	
         		} else {
-        			iPCall_RCSE = true;
+        			iPCall_RCSE = true;	
         		}
         	} else
         	if (tag.contains(FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)) {
         		// Support IP Call
         		if (iPCall_RCSE) {
-        			capabilities.setIPVoiceCallSupport(true);
+        			capabilities.setIPVoiceCallSupport(true);		       	    	
         		} else {
-        			iPCall_3GPP = true;
+        			iPCall_3GPP = true;	
         		}
         	} else
         	if (tag.contains(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
-            	capabilities.setIPVideoCallSupport(true);
+            	capabilities.setIPVideoCallSupport(true);		
             } else
         	if (tag.contains(FeatureTags.FEATURE_RCSE_FT_SF)) {
         		// Support FT S&F service

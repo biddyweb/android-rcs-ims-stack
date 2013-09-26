@@ -484,7 +484,7 @@ public class ChatUtils {
 	}
 	
 	/**
-	 * Build a CPIM message with IMDN headers
+	 * Build a CPIM message with full IMDN headers
 	 * 
 	 * @param from From URI
 	 * @param to To URI
@@ -501,6 +501,32 @@ public class ChatUtils {
 			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
+			CRLF +  
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
+			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
+			CRLF + 
+			content;	
+		return cpim;
+	}
+	
+	/**
+	 * Build a CPIM message with IMDN delivered header
+	 * 
+	 * @param from From URI
+	 * @param to To URI
+	 * @param messageId Message ID
+	 * @param content Content
+	 * @param contentType Content type
+	 * @return String
+	 */
+	public static String buildCpimMessageWithDeliveredImdn(String from, String to, String messageId, String content, String contentType) {
+		String cpim =
+			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatCpimSipUri(from) + CRLF + 
+			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
+			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
+			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + messageId + CRLF +
+			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
+			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + CRLF +
 			CRLF +  
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
@@ -909,6 +935,22 @@ public class ChatUtils {
 			return null;
 		}		
 		return null;
+    }
+
+    /**
+     * Is request is for FToHTTP
+     *
+     * @param request
+     * @return true if FToHTTP
+     */
+    public static boolean isFileTransferOverHttp(SipRequest request) {
+        InstantMessage message = getFirstMessage(request);
+        if (message != null && message.getTextMessage() != null
+                && message.getTextMessage().toLowerCase().indexOf("<file-info") != -1) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

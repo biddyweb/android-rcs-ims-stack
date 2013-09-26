@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -59,6 +60,8 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
 	 * contacts list spinner
 	 */
 	private Spinner spinner;
+	
+	public static ProgressDialog initCallProgressDialog ;
 	
 	
 	 /* *****************************************
@@ -173,6 +176,8 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
         	if (logger.isActivated()) {
     			logger.debug("audioInviteBtnListener - onClick()");
     		}
+        	
+        	initCallProgressDialog = Utils.showProgressDialog(InitiateIPCall.this, getString(R.string.label_command_in_progress));
         	// Get the remote contact
             Spinner spinner = (Spinner)findViewById(R.id.contact);
             MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
@@ -192,12 +197,15 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
        	if (logger.isActivated()) {
     			logger.debug("audioVideoInviteBtnListener - onClick()");
     		}
+       	
+       		initCallProgressDialog = Utils.showProgressDialog(InitiateIPCall.this, getString(R.string.label_command_in_progress));
         	// Get the remote contact
             Spinner spinner = (Spinner)findViewById(R.id.contact);
             MatrixCursor cursor = (MatrixCursor)spinner.getSelectedItem();
             final String remote = cursor.getString(1);
 
             getApplicationContext().startActivity(setIntentOutgoingSession(remote, true));
+            
             InitiateIPCall.this.finish();
         }
     };
@@ -249,6 +257,7 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
 		Intent intent = new Intent(InitiateIPCall.this.getApplicationContext(),
 				IPCallView.class);
 		intent.setAction("ExitActivity");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
 	}
@@ -265,6 +274,7 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
 		// Service has been disconnected
 		Intent intent = new Intent(InitiateIPCall.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
 	}
@@ -288,6 +298,7 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
 		// IMS has been disconnected
 		Intent intent = new Intent(InitiateIPCall.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
 	}

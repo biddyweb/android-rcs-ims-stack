@@ -152,6 +152,7 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.ENDUSER_CONFIRMATION_URI,			"");
             addParameter(db, RcsSettingsData.COUNTRY_CODE,						"+33");
             addParameter(db, RcsSettingsData.COUNTRY_AREA_CODE,					"0");
+            addParameter(db, RcsSettingsData.MSISDN,							"");
             addParameter(db, RcsSettingsData.CAPABILITY_CS_VIDEO, 				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CAPABILITY_IMAGE_SHARING,			RcsSettingsData.TRUE);
             addParameter(db, RcsSettingsData.CAPABILITY_VIDEO_SHARING,			RcsSettingsData.TRUE);

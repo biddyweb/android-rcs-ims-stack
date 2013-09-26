@@ -159,17 +159,18 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 				handler.post(new Runnable() {
 					public void run() {
 				
-						sessionsList.setAdapter(new SessionsListAdapter(
-								IPCallSessionsList.this,
-								R.layout.ipcall_sessions_list_item,
-								IPCallSessionsData.getInstance().sessions){
-							
-						});
+						
 
 						if (IPCallSessionsData.getInstance().sessions.isEmpty()) {
 							Utils.showMessage(IPCallSessionsList.this,
 									getString(R.string.label_list_empty));
 						} else {
+							sessionsList.setAdapter(new SessionsListAdapter(
+									IPCallSessionsList.this,
+									R.layout.ipcall_sessions_list_item,
+									IPCallSessionsData.getInstance().sessions){
+								
+							});
 							sessionsList
 									.setOnItemClickListener(sessionsListListener);
 						}
@@ -220,25 +221,29 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 			}
 
 			// get session and session data
-			IIPCallSession session = IIPCallSession.Stub.asInterface(sessionsList.get(position));
-			IPCallSessionData sessionData = null;
+			IIPCallSession session = IIPCallSession.Stub.asInterface(sessionsList.get(position));			
 			try {
-				sessionData = IPCallSessionsData.getInstance().getSessionData(session
-						.getSessionID());
-			} catch (RemoteException e1) {
+				if (logger.isActivated()) {
+					logger.info("session.getSessionDirection() ="+session.getSessionDirection());
+				}
+				String labelText;
+				int direction = session.getSessionDirection() ;
+				String contact = session.getRemoteContact() ;
+				int beginIdx = contact.indexOf("tel");
+				int endIdx = contact.indexOf(">", beginIdx);
+				if (endIdx == -1) {endIdx = contact.length();}
+				String remoteContact = contact.substring(beginIdx, endIdx);
+				
+				if (direction== IPCallSessionsData.TYPE_OUTGOING_IPCALL){
+					labelText = "Outgoing call to:";
+				}
+				else {labelText = "Incoming call from:";}				
+				labelText += remoteContact;
+				holder.label.setText(labelText);			
+			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e.printStackTrace();
 			}
-
-			// constructs label to display with direction and remote contact
-			String labelText = (sessionData != null) ? sessionData.getSessionDirection() : null ;		
-			if (labelText.equals("incoming")) {
-				labelText += " call from :" + sessionData.getRemoteContact();
-			} else if  (labelText.equals("outgoing")){
-				labelText += " call to :" + sessionData.getRemoteContact();
-			}
-			holder.label.setText(labelText);
-
 			return row;
 		}
      
@@ -280,6 +285,7 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 		// Api disabled
 				Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 				intent.setAction("ExitActivity");
+				intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				intent.putExtra("messages", msg);
 				getApplicationContext().startActivity(intent);
 	}
@@ -296,6 +302,7 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 		// Service has been disconnected
 		Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
 	}
@@ -319,6 +326,7 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 		// IMS has been disconnected
 		Intent intent = new Intent(IPCallSessionsList.this.getApplicationContext(), IPCallView.class);
 		intent.setAction("ExitActivity");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.putExtra("messages", msg);
 		getApplicationContext().startActivity(intent);
 	}
@@ -333,10 +341,7 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 	    	IBinder  iBinder  = (IBinder) parent.getItemAtPosition(position);
 	    	IIPCallSession session = IIPCallSession.Stub.asInterface(iBinder);
 	        
-	        try {	        	
-	        	 // set Session Data in IPCallSessionsData
-	        	//IPCallSessionsData.setSessionData(sessionId);
-	        	
+	        try {	        		        	
 	        	//launch IPCallSessionActivity with recover action on sessionId
 				getApplicationContext().startActivity(setIntentRecoverSession(session.getSessionID()));
 				IPCallSessionsList.this.finish();

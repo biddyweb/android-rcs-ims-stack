@@ -21,6 +21,9 @@ interface IIPCallSession {
 	// Get session state
 	int getSessionState();
 
+	// Get session direction
+	int getSessionDirection();
+
 	// Accept the session invitation
 	void acceptSession(in boolean video);
 

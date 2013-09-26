@@ -36,6 +36,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -386,12 +387,6 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				}
 			});
 		}
-		
-		// File uploaded
-		public void handleFileUploaded() {
-			// Not implemented when receiving
-		}
-		
     };
 
     /**

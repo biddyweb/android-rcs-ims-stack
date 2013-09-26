@@ -71,6 +71,11 @@ public abstract class ImsServiceSession extends Thread {
 	private String contact;
 
     /**
+     * Remote display name
+     */
+    private String remoteDisplayName = null;
+
+    /**
 	 * Dialog path
 	 */
     private SipDialogPath dialogPath = null;
@@ -308,8 +313,21 @@ public abstract class ImsServiceSession extends Thread {
 	 * @return String
 	 */
 	public String getRemoteDisplayName() {
-		return SipUtils.getDisplayNameFromUri(getDialogPath().getInvite().getFrom());
+	    if (getDialogPath() == null) {
+	        return remoteDisplayName;
+	    } else {
+	        return SipUtils.getDisplayNameFromUri(getDialogPath().getInvite().getFrom());
+	    }
 	}
+
+    /**
+     * Set display name of the remote contact
+     * 
+     * @param String
+     */
+    public void setRemoteDisplayName(String remoteDisplayName) {
+        this.remoteDisplayName = remoteDisplayName;
+    }
 
 	/**
 	 * Get the dialog path of the session
@@ -1137,7 +1155,7 @@ public abstract class ImsServiceSession extends Thread {
      * @param int code response code
      * @param reInvite reInvite SIP request
      */
-    public void handleReInviteAckResponse(int  code, int requestType) {   	
+    public void handleReInviteAck(int  code, int requestType) {   	
     }
     
     /**

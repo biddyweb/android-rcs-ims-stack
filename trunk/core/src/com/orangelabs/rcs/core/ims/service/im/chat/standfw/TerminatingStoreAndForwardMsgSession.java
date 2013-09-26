@@ -35,7 +35,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipTransactionContext;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;

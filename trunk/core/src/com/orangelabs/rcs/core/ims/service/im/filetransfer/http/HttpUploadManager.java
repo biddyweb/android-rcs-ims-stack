@@ -242,7 +242,7 @@ public class HttpUploadManager extends HttpTransferManager {
 
         connection.setDoInput(true);
         connection.setDoOutput(true);
-        connection.setUseCaches(false);
+        connection.setReadTimeout(2000); 
 
         // POST construction
         connection.setRequestMethod("POST");
@@ -270,7 +270,7 @@ public class HttpUploadManager extends HttpTransferManager {
                     getHttpServerPwd());
             auth.readWwwAuthenticateHeader(authHeaders[0].getValue());
 
-            String authValue = auth.generateAuthorizationHeaderValue("post", url.getPath(), body);
+            String authValue = auth.generateAuthorizationHeaderValue(connection.getRequestMethod(), url.getPath(), body);
             if (authValue != null) {
                 connection.setRequestProperty("Authorization", authValue);
             }
@@ -301,8 +301,7 @@ public class HttpUploadManager extends HttpTransferManager {
 
         // Add File
         writreFileMultipart(outputStream, filepath);
-        if(!isCancelled())
-        {
+        if(!isCancelled()) {
         	outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the last boundary to get bad request
             
 	        // Check response status code
@@ -361,8 +360,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	        outputStream.flush();
 	        outputStream.close();
 	        connection.disconnect();
-	        
-	        
+
 	        if (success) {
 	            return result;
 	        } else
@@ -376,11 +374,9 @@ public class HttpUploadManager extends HttpTransferManager {
             outputStream.flush();
             outputStream.close();
             connection.disconnect();
-            
             if (logger.isActivated()) {
 	            logger.debug("File transfer cancelled by user");
 	        }
-            
             return null;
         }
     }

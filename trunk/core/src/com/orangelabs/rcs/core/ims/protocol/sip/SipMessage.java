@@ -39,6 +39,7 @@ import javax2.sip.header.ToHeader;
 import javax2.sip.header.ViaHeader;
 import javax2.sip.message.Message;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
@@ -420,7 +421,8 @@ public abstract class SipMessage {
 	        String tag = temp.get(i);
 			
 	        // Reject parameter not starting with a +
-			if (!tag.startsWith("+")) {
+	        // TODO FEATURE_RCSE_IP_VIDEO_CALL doesn't start with '+'
+			if (!tag.startsWith("+") && (!tag.equals(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))) {
 				continue;
 			}
 

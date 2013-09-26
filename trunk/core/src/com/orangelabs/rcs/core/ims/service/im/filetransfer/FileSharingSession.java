@@ -38,11 +38,6 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	private byte[] thumbnail = null;
 
-	/**
-	 * File uploaded
-	 */
-	private boolean fileUploaded = false;;
-	
     /**
 	 * Constructor
 	 * 
@@ -127,23 +122,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	public boolean isFileTransfered() {
 		return fileTransfered; 
 	}
-	
-	/**
-	 * File has been uploaded
-	 */
-	public void fileUploaded() {
-		this.fileUploaded  = true;
-	}
-	
-	/**
-	 * Is file uploaded
-	 * 
-	 * @return Boolean
-	 */
-	public boolean isFileUploaded() {
-		return fileUploaded; 
-	}
-	
+
 	/**
 	 * Returns max file sharing size
 	 * 

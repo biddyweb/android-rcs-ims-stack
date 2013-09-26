@@ -370,9 +370,9 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			if (logger.isActivated()) {
 				logger.info("Sharing error " + error.getErrorCode());
 			}
-	
-			// Update rich messaging history
-	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+
+    		// Update rich messaging history
+      		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -419,7 +419,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     }
     
     /**
-     * File has been transfered
+     * File has been transfered.
+     * In case of file transfer over MSRP, the terminating side has received the file, 
+     * but in case of file transfer over HTTP, only the content server has received the
+     * file.
      * 
      * @param filename Filename associated to the received content
      */
@@ -447,29 +450,6 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			
 			// Remove session from the list
 	        MessagingApiService.removeFileTransferSession(session.getSessionID());			
-	    }	
-    }
-    
-    /**
-     * File has been uploaded
-     */
-    public void handleFileUploaded() {
-    	synchronized(lock) {
-			if (logger.isActivated()) {
-				logger.info("Content uploaded");
-			}
-	  		// Notify event listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleFileUploaded();
-	            } catch(Exception e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();		
 	    }	
     }
 }

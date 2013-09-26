@@ -30,6 +30,15 @@ public class RegistrationUtils {
 			tags.add(FeatureTags.FEATURE_3GPP_VIDEO_SHARE);
 		}
 		
+		// IP call support
+		if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
+			tags.add(FeatureTags.FEATURE_RCSE_IP_VOICE_CALL);
+			tags.add(FeatureTags.FEATURE_3GPP_IP_VOICE_CALL);
+		}
+		if (RcsSettings.getInstance().isIPVideoCallSupported()) {
+			tags.add(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL);
+		}
+		
 		String additionalTags = "";
 
 		// Image share support

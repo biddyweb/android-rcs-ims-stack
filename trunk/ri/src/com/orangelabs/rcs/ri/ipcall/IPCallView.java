@@ -80,24 +80,19 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	public String remoteContact;
 
 	/**
-	 * Audio Call State of the current session
-	 */
-	public int audioCallState = IPCallSessionsData.IDLE;
-
-	/**
-	 * Video Call State of the current session
-	 */
-	public int videoCallState = IPCallSessionsData.IDLE;
-	
-	/**
 	 * direction ("outgoing" "incoming") of current session
 	 */
 	public String direction  = "";
 	
 	/**
-	 * direction ("outgoing" "incoming") of current session
+	 * video requested
 	 */
 	private boolean videoSelected  = false;
+	
+	/**
+	 * video connected
+	 */
+	private boolean videoConnected  = false;
 	
 	/**
 	 * Progress dialog
@@ -213,6 +208,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		if (logger.isActivated()) {
 			logger.info("onCreate()");
 		}
+		
 		// Set layout
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -241,90 +237,97 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 
 		incomingVideoView = (VideoSurfaceView) findViewById(R.id.incoming_ipcall_video_view);
 		incomingVideoView.setVisibility(View.GONE);
-
-		// instantiate Audio Player and Renderer
-		incomingAudioRenderer = new AudioRenderer(this);
-		outgoingAudioPlayer = new LiveAudioPlayer(incomingAudioRenderer);
-
+		
 		String action = getIntent().getAction();
-
-		if (action != null){	
-			// IP call already established - recover existing session
-			if (action.equals("recover")) {
-				// get sessionId from Intent
-				sessionId = getIntent().getStringExtra("sessionId");
-				
-				recoverSessions();
-
-			} else if ((action.equals("incoming")||(action.equals("outgoing")))) {
-				// Get remote contact from intent
-				remoteContact = getIntent().getStringExtra("contact");
-
-				// set direction of call
-				direction = action ;
-
-				// reset session and sessionid 
-				session = null;
-				sessionId = "";
-				
-				// set call state
-				audioCallState = IPCallSessionsData.IDLE;
-				videoCallState = IPCallSessionsData.IDLE;
-				
-				// incoming ip call
-				if (action.equals("incoming")){
-					// Get intent info
-					sessionId = getIntent().getStringExtra("sessionId");
-					videoSelected =  (getIntent().getStringExtra("videotype")!=null)? true: false;
-					if (logger.isActivated()) {
-						logger.info("video =" + videoSelected);
-					}
-					
-					// remove notification
-					if (!sessionId.equals(null)) {
-						InitiateIPCall.removeIPCallNotification(
-								getApplicationContext(), sessionId);
-					}
-
-					getIncomingSession();
-				}
-				// initiate an outgoing ip call
-				else if (action.equals("outgoing")) {
-					
-					// Get intent info
-					videoSelected = getIntent().getBooleanExtra("video", false);
-					if (logger.isActivated()) {
-						logger.info("video =" + videoSelected);
-					}
-					
-					// display loader
-					displayProgressDialog();
-					
-					// prepare video session (camera surface View ...)
-					prepareVideoSession() ;
-
-					audioCallState = IPCallSessionsData.CONNECTING ;
-					
-					// set video state - layout and buttons for video
-					if (videoSelected){
-						videoCallState = IPCallSessionsData.CONNECTING ;
-						addVideoBtn.setEnabled(false);
-						addVideoBtn.setText(R.string.label_remove_video_btn);
-						outgoingVideoView.setVisibility(View.VISIBLE);
-						incomingVideoView.setVisibility(View.VISIBLE);
-						switchCamBtn.setVisibility(View.VISIBLE);
-						switchCamBtn.setEnabled(false);
-					}
-					
-					if ((!videoSelected)||((videoSelected)&& isSurfaceCreated)){
-						startOutgoingSession();	
-					}
-					else {
-						startOutgoingSessionWhenSurfaceCreated = true ;
-					}										
-				}		
-			}
+		if (logger.isActivated()) {
+			logger.info("action =" + action);
 		}
+		
+		if (action != null){
+			// API or IMS disconnection
+			if (action.equals("ExitActivity")) {
+				exitActivity(getIntent().getStringExtra("messages"));	
+			}
+			else {
+				// instantiate Audio Player and Renderer
+				incomingAudioRenderer = new AudioRenderer(this);
+				outgoingAudioPlayer = new LiveAudioPlayer(incomingAudioRenderer);
+				
+				// IP call already established - recover existing session
+				if (action.equals("recover")) {
+					// get sessionId from Intent
+					sessionId = getIntent().getStringExtra("sessionId");	
+					if (sessionId == null) {
+						exitActivity("sessionId is null");
+					} else {
+						recoverSessions();
+					}
+					
+				} 
+				else if ((action.equals("incoming")||(action.equals("outgoing")))) {
+					// Get remote contact from intent
+					remoteContact = getIntent().getStringExtra("contact");
+
+					// set direction of call
+					direction = action ;
+
+					// reset session and sessionid 
+					session = null;
+					sessionId = "";
+					
+					// incoming ip call
+					if (action.equals("incoming")){
+						// Get intent info
+						sessionId = getIntent().getStringExtra("sessionId");
+						videoSelected =  (getIntent().getStringExtra("videotype")!=null)? true: false;
+						if (logger.isActivated()) {
+							logger.info("video =" + videoSelected);
+						}
+						
+						// remove notification
+						if (!sessionId.equals(null)) {
+							InitiateIPCall.removeIPCallNotification(
+									getApplicationContext(), sessionId);
+						}
+						getIncomingSession();
+					}
+					// initiate an outgoing ip call
+					else if (action.equals("outgoing")) {					
+						// Get intent info
+						videoSelected = getIntent().getBooleanExtra("video", false);
+						if (logger.isActivated()) {
+							logger.info("video =" + videoSelected);
+						}
+						
+						InitiateIPCall.initCallProgressDialog.dismiss();
+						// display loader
+						displayProgressDialog();
+						
+						// prepare video session (camera surface View ...)
+						prepareVideoSession() ;
+						
+						// set video state - layout and buttons for video
+						if (videoSelected){
+							addVideoBtn.setEnabled(false);
+							addVideoBtn.setText(R.string.label_remove_video_btn);
+							outgoingVideoView.setVisibility(View.VISIBLE);
+							incomingVideoView.setVisibility(View.VISIBLE);
+							switchCamBtn.setVisibility(View.VISIBLE);
+							switchCamBtn.setEnabled(false);
+						}
+						
+						if ((!videoSelected)||((videoSelected)&& isSurfaceCreated)){
+							startOutgoingSession();	
+						}
+						else {
+							startOutgoingSessionWhenSurfaceCreated = true ;
+						}										
+					}			
+				}
+			}
+
+		} 
+		else {exitActivity(null);}
 	}
 	
 
@@ -350,6 +353,11 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		
 		isVisible = false; 
 	}
+	
+	public void onFinish(){
+		super.finish();
+		isVisible = false ;
+	}
 
 	@Override
 	protected void onNewIntent(Intent intent) {
@@ -358,14 +366,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			logger.info("onNewIntent()");
 		}
 		if (intent.getAction().equals("ExitActivity")) {
-			final String msg = intent.getExtras().getString("message") ;
-
-				handler.post(new Runnable() {
-					public void run()  {
-						displayErrorAndExitActivity(msg);
-					}
-				});
-	
+			exitActivity(intent.getExtras().getString("messages")) ;
 		}
 		// other actions
 		else {setIntent(intent);}
@@ -373,32 +374,27 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 
 	 @Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		 if (logger.isActivated()) {
-				logger.info("onKeyDown()");
-			}
+		if (logger.isActivated()) {
+			logger.info("onKeyDown()");
+		}
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_BACK:
 			// save current session data
 			if (logger.isActivated()) {
 				logger.info("onKeyBack()");
 			}
-			if (videoCallState == IPCallSessionsData.CONNECTED) {
+			if (videoConnected) {
 				removeVideo();
 			}
-			// if session established => save session data and exit activity
-			if (audioCallState == IPCallSessionsData.CONNECTED) {
-				IPCallSessionData sessionData = new IPCallSessionData(
-						audioCallState,
-						videoCallState,
-						remoteContact,
-						direction,
-						IPCallSessionsData.getInstance().sessionEventListener) {
-				};
-				IPCallSessionsData.getInstance().saveSessionData(
-						sessionId, sessionData);
 
-				this.finish();
-			}		
+			try {
+				session.removeSessionListener(sessionEventListener);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			this.finish();
 			return true;
 		}
 		return super.onKeyDown(keyCode, event);
@@ -454,8 +450,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			else {//videoOption And surface Not created
 				acceptIncomingSessionWhenSurfaceCreated = true ;
 			}
-			
-	
 		}
 	};
 
@@ -486,6 +480,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		public void onClick(View v) {
 			Thread thread = new Thread() {
 				public void run() {
+					releaseCamera() ;
 					stopSession();
 					exitActivity(null);
 				}
@@ -500,11 +495,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	private View.OnClickListener btnAddVideoListener = new View.OnClickListener() {
 		public void onClick(View v) {
 			if (logger.isActivated()) {
-				logger.info("btnAddVideoListener.onClick()");
-				logger.info("videoCallState =" + videoCallState);			
+				logger.info("btnAddVideoListener.onClick()");			
 			}
 			
-			if (videoCallState == IPCallSessionsData.IDLE) {
+			if (!videoConnected) {
 				addVideoBtn.setEnabled(false);
 				addVideoBtn.setText(R.string.label_remove_video_btn);
 				outgoingVideoView.setVisibility(View.VISIBLE);
@@ -512,11 +506,11 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				switchCamBtn.setVisibility(View.VISIBLE);
 				switchCamBtn.setEnabled(false);
 				addVideo();
-			} else if (videoCallState == IPCallSessionsData.CONNECTED) {
+			} else if (videoConnected) {
 				addVideoBtn.setEnabled(false);
 				addVideoBtn.setText(R.string.label_add_video_btn);
 				switchCamBtn.setEnabled(false);
-				videoCallState = IPCallSessionsData.IDLE;
+				videoConnected = false;
 				removeVideo();
 			}
 		}
@@ -562,23 +556,14 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					hangUpBtn.setEnabled(true);
 					//setOnHoldBtn.setEnabled(true);
 					addVideoBtn.setEnabled(true);
-					audioCallState = IPCallSessionsData.CONNECTED;
 					// video
 					if (videoSelected){
 						try {
 							boolean video = ((session.getVideoPlayer()== null)||(session.getVideoRenderer()== null)) ? false : true ;
 							if (video) {
-								videoCallState = IPCallSessionsData.CONNECTED;
+								videoConnected = true;
 								addVideoBtn.setEnabled(true);
 								switchCamBtn.setEnabled(true);
-//								synchronized(this){
-//									try {
-//										wait(3500);
-//									} catch (InterruptedException e) {
-//										// TODO Auto-generated catch block
-//										e.printStackTrace();
-//									}
-//								}
 								// Update Camera
 			                    outgoingHeight = outgoingVideoPlayer.getVideoCodecHeight();
 			                    outgoingWidth = outgoingVideoPlayer.getVideoCodecWidth();
@@ -588,7 +573,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			                    reStartCamera();
 							}
 							else { // video declined
-								videoCallState = IPCallSessionsData.IDLE;
+								videoConnected = false;
 								addVideoBtn.setText(R.string.label_add_video_btn);
 								switchCamBtn.setEnabled(false);
 								outgoingVideoView.setVisibility(View.GONE);
@@ -597,8 +582,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							}
 								
 						} catch (RemoteException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							releaseCamera();
+							stopSession();
+							exitActivity(getString(R.string.label_ipcall_failed)+"-"+ e.getMessage());
+							
 						} 
 						
 					}
@@ -624,7 +611,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					releaseCamera() ;
 					//setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
-					//hideProgressDialog();
 					if (direction.equals("outgoing")){
 						exitActivity(getString(R.string.label_outgoing_ipcall_aborted));
 					}
@@ -632,8 +618,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 						exitActivity(getString(R.string.label_incoming_ipcall_aborted));
 					}
 					else {exitActivity(getString(R.string.label_ipcall_failed));}
-					
-
 				}
 			});
 		}
@@ -643,13 +627,18 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleSessionTerminatedByRemote()");
 			}
+			Thread thread = new Thread() {
+				public void run() {
+					stopSession();
+				}
+			};
+			thread.start();
 			handler.post(new Runnable() {
 				public void run() {
 					releaseCamera() ;
 					//setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
-					//hideProgressDialog();
-					stopSession();
+//					stopSession();
 					if ((direction != null) && (direction.equals("outgoing"))){
 						exitActivity(getString(R.string.label_outgoing_ipcall_terminated_by_remote));
 					}
@@ -678,8 +667,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					//setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					addVideoBtn.setEnabled(false);
-					//hideProgressDialog();
-					
+
 					if (error == IPCallError.SESSION_INITIATION_DECLINED) {
 						exitActivity(getString(R.string.label_ipcall_invitation_declined));
 					}
@@ -723,8 +711,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					//setOnHoldBtn.setEnabled(false);
-					hangUpBtn.setEnabled(false);
-					//hideProgressDialog();				
+					hangUpBtn.setEnabled(false);			
 					exitActivity(getString(R.string.label_ipcall_called_is_busy));
 				}
 			});
@@ -756,7 +743,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				public void run() {
 					releaseCamera() ;
 					recreateVideoPlayer();
-					videoCallState = IPCallSessionsData.IDLE;
+					videoConnected = false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
 					addVideoBtn.setEnabled(true);
 					outgoingVideoView.setVisibility(View.GONE);
@@ -777,7 +764,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					videoCallState = IPCallSessionsData.CONNECTED;
+					videoConnected= true;
 					addVideoBtn.setText(R.string.label_remove_video_btn);
 					addVideoBtn.setEnabled(true);
 					switchCamBtn.setEnabled(true);
@@ -800,7 +787,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					videoCallState = IPCallSessionsData.IDLE;
+					videoConnected = false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
 					addVideoBtn.setEnabled(false);
 				}
@@ -815,7 +802,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				public void run() {
 					releaseCamera();
 					recreateVideoPlayer();
-					videoCallState = IPCallSessionsData.IDLE;
+					videoConnected= false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
 					addVideoBtn.setEnabled(true);
 					outgoingVideoView.setVisibility(View.GONE);
@@ -831,7 +818,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					videoCallState = IPCallSessionsData.CONNECTED;
+					videoConnected = true;
 					addVideoBtn.setText(R.string.label_remove_video_btn);
 					addVideoBtn.setEnabled(true);
 					
@@ -858,8 +845,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			public void run() {
 				try {
 					session = IPCallSessionsData.getInstance().callApi.getSession(sessionId);
-					IPCallSessionsData.getInstance().sessionEventListener = IPCallView.this.sessionEventListener ;
-					session.addSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
+					session.addSessionListener(sessionEventListener);
 					
 					// construct AlertDialog to accept/reject call if incoming call
 					View checkBoxView = View.inflate(IPCallView.this, R.layout.ipcall_incoming_session_dialogbox_checkbox, null);
@@ -875,10 +861,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							}
 						});
 					}
-					else {
-						checkBox.setClickable(false);
-					}
-					
+					else {checkBox.setClickable(false);}					
 					
 					// construct AlertDialog
 					AlertDialog.Builder builder = new AlertDialog.Builder(IPCallView.this);
@@ -897,7 +880,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				} catch (final Exception e) {
 					handler.post(new Runnable() {
 						public void run() {
-							displayErrorAndExitActivity(getString(R.string.label_incoming_ipcall_failed)+" - error:"+e.getMessage());
+							exitActivity(getString(R.string.label_incoming_ipcall_failed)+" - error:"+e.getMessage());
 						}
 					});
 				}
@@ -931,15 +914,14 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 								remoteContact, outgoingAudioPlayer,
 								incomingAudioRenderer);
 					}
-					IPCallSessionsData.getInstance().sessionEventListener = IPCallView.this.sessionEventListener;
-					session.addSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
+					session.addSessionListener(sessionEventListener);
 					sessionId = session.getSessionID();
 					// cancel session requested by user
 					if (cancelOutgoingSessionWhenCreated) {
 						stopSession();
 						cancelOutgoingSessionWhenCreated = false;}
 				} catch (final Exception e) {
-					displayErrorAndExitActivity(getString(R.string.label_outgoing_ipcall_failed)
+					exitActivity(getString(R.string.label_outgoing_ipcall_failed)
 							+ " - error:" + e.getMessage());
 				}
 			}
@@ -956,62 +938,57 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			logger.debug("recoverSessions()");
 		}
 
-		if (sessionId == null){
-			exitActivity("sessionId is null");
-		}
-		
 		// recover session and session data
 		try {
-			session = IPCallSessionsData.getInstance().callApi.getSession(sessionId);
-			IPCallSessionsData.getInstance().setSessionData(sessionId, this);
-		} catch (ClientApiException e1) {
+			session = IPCallSessionsData.getInstance().callApi
+					.getSession(sessionId);
+		} catch (ClientApiException e) {
 			exitActivity("Call Api exception - unable to get session");
 		}
-	
-		if (audioCallState != IPCallSessionsData.CONNECTED) {
-			exitActivity("no session established");
-		}
-		
-		else  {	// session established	
-			// enables buttons
-			//setOnHoldBtn.setText(R.string.label_set_onhold_btn);
-			hangUpBtn.setEnabled(true);
-			//setOnHoldBtn.setEnabled(true);
-			addVideoBtn.setEnabled(true);
-			
-			// prepare video session (camera surface View ...)
-			prepareVideoSession() ;
-			 
-			//video is in IDDLE State (video always stopped when user exit activity by "back" button )
-			addVideoBtn.setText(R.string.label_add_video_btn);
-			
-			
+
+		if (session != null) {
 			Thread thread = new Thread() {
 				public void run() {
 					try {
-						if (session != null) {
-							if (logger.isActivated()) {
-								logger.info("incomingIPCallSession= "
-										+ session);
-							// remove "old" session event listener
-							session.removeSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
-							//store "new" session event listener in IPCallSessionsData class
-							IPCallSessionsData.getInstance().sessionEventListener = sessionEventListener ;
-							//add "new" session event listener on session
-							session.addSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
 
-							}									
-						} else {
-							exitActivity("no session established");
+						session.addSessionListener(sessionEventListener);
+						try {
+							String contact = session.getRemoteContact() ;
+							int beginIdx = contact.indexOf("tel");
+							int endIdx = contact.indexOf(">", beginIdx);
+							if (endIdx == -1) {endIdx = contact.length();}
+							remoteContact = contact.substring(beginIdx, endIdx);
+							
+							direction = (session.getSessionDirection() == IPCallSessionsData.TYPE_OUTGOING_IPCALL) ? "outgoing"
+									: "incoming";
+						} catch (RemoteException e1) {
+							exitActivity("Call Api exception - unable to get session");
 						}
+
 					} catch (final Exception e) {
-						displayErrorAndExitActivity("Recover sessions failed - error:"
+						exitActivity("Recover sessions failed - error:"
 								+ e.getMessage());
 					}
 				}
 			};
 			thread.start();
+		} else {
+			exitActivity("no session established");
 		}
+
+		// enables buttons
+		// setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+		hangUpBtn.setEnabled(true);
+		// setOnHoldBtn.setEnabled(true);
+		addVideoBtn.setEnabled(true);
+
+		// prepare video session (camera surface View ...)
+		prepareVideoSession();
+
+		// video is in IDDLE State (video always stopped when user exit activity
+		// by "back" button )
+		addVideoBtn.setText(R.string.label_add_video_btn);
+
 	}
 
 
@@ -1019,13 +996,15 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 * Accept incoming session.
 	 */
 	private void acceptIncomingSession() {
-		
+		if (logger.isActivated()) {
+			logger.debug("acceptIncomingSession()");
+			logger.debug("videoSelected :"+videoSelected);
+		}
 		
 		// Accept the session in background
 		Thread thread = new Thread() {
 			public void run() {
 				try {
-
 					// Accept the invitation
 					session.setAudioPlayer(outgoingAudioPlayer);
 					session.setAudioRenderer(incomingAudioRenderer);
@@ -1035,12 +1014,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 						instantiateOutgoingVideoPlayer();
 						session.setVideoPlayer(outgoingVideoPlayer);
 						session.setVideoRenderer(incomingVideoRenderer);
-						videoCallState = IPCallSessionsData.CONNECTING;
 					}
 					session.acceptSession(videoSelected);
-					audioCallState = IPCallSessionsData.CONNECTING;
 				} catch (final Exception e) {
-					displayErrorAndExitActivity(getString(R.string.label_invitation_failed)
+					exitActivity(getString(R.string.label_invitation_failed)
 							+ " - error:" + e.getMessage());
 				}
 
@@ -1059,18 +1036,15 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			public void run() {
 				try {
 					// Reject the invitation
-					session.removeSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
+					session.removeSessionListener(sessionEventListener);
 					session.rejectSession();
 					session = null;
-					IPCallSessionsData.getInstance().sessionEventListener = null;
-
-					audioCallState = IPCallSessionsData.IDLE;
-					videoCallState = IPCallSessionsData.IDLE;
+					videoConnected = false;
 
 					// Exit activity
 					exitActivity(null);
 				} catch (final Exception e) {
-					displayErrorAndExitActivity(getString(R.string.label_invitation_failed)
+					exitActivity(getString(R.string.label_invitation_failed)
 							+ " - error:" + e.getMessage());
 				}
 			}
@@ -1094,7 +1068,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -1137,7 +1110,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				instantiateOutgoingVideoPlayer();
 
 				if (session != null) {
-					videoCallState = IPCallSessionsData.CONNECTING;
 					try {
 						session.addVideo(
 								outgoingVideoPlayer, incomingVideoRenderer);
@@ -1148,7 +1120,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 		};
 		thread.start();
-
 	}
 
 	/**
@@ -1254,7 +1225,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					session
 							.setVideoRenderer(incomingVideoRenderer);
 					session.acceptAddVideo();
-					videoCallState = IPCallSessionsData.CONNECTED;
+					videoConnected = true;
 					
 					
 				} catch (RemoteException e) {
@@ -1275,7 +1246,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 		try {
 			session.rejectAddVideo();
-			videoCallState = IPCallSessionsData.IDLE;
+			videoConnected = false;
 			
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -1300,18 +1271,15 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
                     incomingVideoRenderer.setVideoSurface(incomingVideoView);
  
                 } catch (Exception e) {
-                	displayErrorAndExitActivity(getString(R.string.label_videorenderer_start_failed)
-							+ " - error:" + e.getMessage());
+                	exitActivity(getString(R.string.label_videorenderer_start_failed)
+        					+ " - error:" + e.getMessage());
                 }
-
-
     }
 	
     /**
      * Runnable to start outgoing session
      */
     private void  instantiateOutgoingVideoPlayer() {
-
         	if (logger.isActivated()){
                 logger.error("instantiateOutgoingVideoPlayer");
                 logger.info("isCallApiConnected : "+IPCallSessionsData.getInstance().isCallApiConnected);
@@ -1327,7 +1295,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
          
                 // Start camera
                 startCamera();
-
     };
 
     /**
@@ -1393,18 +1360,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 
 		hideProgressDialog();
-		audioCallState = IPCallSessionsData.IDLE;
-		videoCallState = IPCallSessionsData.IDLE;
-		IPCallSessionsData.getInstance().removeSessionData(sessionId);
+		videoConnected = false;
+		//IPCallSessionsData.getInstance().removeSessionData(sessionId);
 		session = null;
 		sessionId = null;
-		IPCallSessionsData.getInstance().sessionEventListener = null;
-		
-		// Disconnect ip call API   	
-//    	if (IPCallSessionsData.callApi!= null){	
-//    		IPCallSessionsData.callApi.disconnectApi();
-//			IPCallSessionsData.isCallApiConnected = false;	
-//    	}
 
 		if (message == null) {
 			this.finish();
@@ -1413,27 +1372,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 	}
 
-	private void displayErrorAndExitActivity(final String errorMsg) {
-		if (logger.isActivated()) {
-			logger.info("displayErrorAndExitActivity()");
-		}
-		handler.post(new Runnable() {
-			public void run() {
-				hideProgressDialog();
-				audioCallState = IPCallSessionsData.DISCONNECTED;
-				videoCallState = IPCallSessionsData.DISCONNECTED;								
-				AlertDialog alert =Utils.showMessage(IPCallView.this,
-							errorMsg);				
-				alert.setButton("OK",
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int which) {
-								IPCallView.this.exitActivity(null);
-							}
-						});
-			}
-		});
-	}
-	
 	/**
 	 * Display progress dialog
 	 */
@@ -1466,13 +1404,12 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
             }
 			
 		});
-
 	}
 
 	/**
 	 * Hide progress dialog
 	 */
-	public void hideProgressDialog() {
+	private void hideProgressDialog() {
 		if (logger.isActivated()) {
 			logger.debug("hideProgressDialog()");
 			logger.debug("outgoingProgressDialog= "+outgoingProgressDialog);

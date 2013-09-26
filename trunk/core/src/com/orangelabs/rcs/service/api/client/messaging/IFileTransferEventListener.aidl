@@ -21,7 +21,4 @@ interface IFileTransferEventListener {
 
 	// File has been transfered
 	void handleFileTransfered(in String filename);
-	
-	// File has been uploaded
-	void handleFileUploaded();
 }

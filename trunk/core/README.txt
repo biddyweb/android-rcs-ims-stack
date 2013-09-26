@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.9
+Release 2.5.10
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,12 +8,10 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- Add open source contribs.
-- FT over HTTP: add delivery report.
-- FT over HTTP: add new method handleFileUploaded and new status UPLOADED.
-- FT over HTTP: add Chat Session Id and Chat Contribution ID in API for FT session and intent.
-- Remove method transferFileGroup in Messaging API (keep only sendFile in chatSession).
-- Add new parameter for convergent messaging UX option (ie. /joyn/UX/messagingUX).
+
+- Add IMDN delivery report for group chat.
+- FT over HTTP: refactor FtoHTTP, remove uploaded status.
+- Control Msg ID on incoming message to avoid duplicate.
 
 
 Bugs fixed:
@@ -21,6 +19,16 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.10
+- Issue 155		Stack: IP Voice Call and IP VIdeo Call not supported
+- Issue 153		Stack: Bad remote contact on FToHTTP
+- Issue 152		Stack: NullPointerException on SIP MESSAGE Delivered notification reception about a FToHTTP
+- Issue 151		Stack: Waiting 60s before the second POST of the second FToHTTP
+- Issue 150		Stack: Mime type of Received file transfer
+- Issue 146		Stack: The REGISTER and 200 OPTIONS does not contains all Tag which are checked in provisioning
+- Issue 117		Stack: No header imdn.Disposition-Notification in MSRP messages in case of Group Chat
+- Issue 63		Stack: Request rejected because IP doesn't match (NAT)
 
 v2.5.9
 - Issue 147		Stack: No request capabilities after a session failed by MSRP error

@@ -182,15 +182,17 @@ public class IPCallService extends ImsService {
      */
     public void receiveCapabilityRequest(SipRequest options) { 
     	String contact = SipUtils.getAssertedIdentity(options);
-
     	if (logger.isActivated()) {
-			logger.debug("OPTIONS request received from " + contact);
+			logger.debug("IPCallService.receiveCapabilityRequest()");
 		}
 
 	    try {
 	    	// Create 200 OK response
 	    	String ipAddress = getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
 			boolean ipcall = getImsModule().getIPCallService().isCallConnectedWith(contact);
+			if (logger.isActivated()) {
+				logger.debug("boolean ipcall " + ipcall);
+			}
 	        SipResponse resp = SipMessageFactory.create200OkOptionsResponse(options,
 	        		getImsModule().getSipManager().getSipStack().getLocalContact(),
 	        		CapabilityUtils.getSupportedFeatureTags(false, ipcall),

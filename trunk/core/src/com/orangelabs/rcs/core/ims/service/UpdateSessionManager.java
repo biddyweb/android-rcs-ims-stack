@@ -237,7 +237,7 @@ public class UpdateSessionManager {
     		                    logger.info("ACK request received");
     		                }
     		                //notify local listener 
-    		            	session.handleReInviteAckResponse( 200, reInviteContext) ;
+    		            	session.handleReInviteAck( 200, reInviteContext) ;
     		            } else {
     		                if (logger.isActivated()) {
     		                    logger.debug("No ACK received for ReINVITE");
@@ -334,7 +334,7 @@ public class UpdateSessionManager {
 							}
 
 							//notify local listener  
-    		            	session.handleReInviteAckResponse(200, reInviteContext) ;
+    		            	session.handleReInviteAck(200, reInviteContext) ;
 						} else {
 							if (logger.isActivated()) {
 								logger.debug("No ACK received for INVITE");

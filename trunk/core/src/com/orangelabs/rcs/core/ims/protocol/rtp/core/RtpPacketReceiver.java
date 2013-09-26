@@ -222,9 +222,9 @@ public class RtpPacketReceiver extends Thread {
 
 		} catch (Exception e) {
             if (!isClosed) {
-                if (logger.isActivated()) {
-                    logger.error("Can't parse the RTP packet", e);
-                }
+//                if (logger.isActivated()) {
+//                    logger.error("Can't parse the RTP packet", e);
+//                }
                 stats.numBadRtpPkts++;
             }
 			return null;
