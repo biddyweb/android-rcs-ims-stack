@@ -107,6 +107,21 @@ public abstract class ImsNetworkInterface {
      * Registration manager
      */
     private RegistrationManager registration;
+    
+	/**
+	 * NAT traversal
+	 */
+	private boolean natTraversal = false;    
+    
+	/**
+     * NAT public IP address for last registration
+     */
+	private String natPublicAddress = null;
+	
+	/**
+	 * NAT public UDP port
+	 */
+	private int natPublicPort = -1;	
 
 	/**
      * The logger
@@ -150,8 +165,57 @@ public abstract class ImsNetworkInterface {
      * @return Boolean
      */
     public boolean isBehindNat() {
-		return registration.isBehindNat();
+		return natTraversal;
     }
+    
+    /**
+     * Set NAT traversal flag
+     *
+     * @return Boolean
+     */
+    public void setNatTraversal(boolean flag) {
+		natTraversal = flag;
+    }
+    
+    /**
+     * Returns last known NAT public address as discovered by UAC. Returns null if unknown, UAC is not registered or
+	 * no NAT traversal is detected.
+	 * 
+	 * @return Last known NAT public address discovered by UAC or null if UAC is not registered
+	 */
+	public String getNatPublicAddress() {
+		return natPublicAddress;
+	}
+
+	/**
+	 * Sets the last known NAT public address as discovered by UAC. Set to null on unregistering or if no
+	 * NAT traversal is detected.
+	 * 
+	 * @param publicAddress Public address
+	 */
+	public void setNatPublicAddress(String publicAddress) {
+		this.natPublicAddress = publicAddress;
+	}	
+	
+	/**
+	 * Returns last known NAT public UDP port as discovered by UAC. Returns -1 if unknown, UAC is not registered or
+	 * no NAT traversal is detected.
+	 * 
+	 * @return Last known NAT public UDP port discovered by UAC or -1 if UAC is not registered
+	 */
+	public int getNatPublicPort() {
+		return natPublicPort;
+	}    
+	
+	/**
+	 * Sets the last known NAT public address as discovered by UAC. Set to -1 on unregistering or if no
+	 * NAT traversal is detected.
+	 * 
+	 * @param publicPort Public port
+	 */
+	public void setNatPublicPort(int publicPort) {
+		this.natPublicPort = publicPort;
+	}	
 	
     /**
      * Is network interface configured
@@ -474,7 +538,7 @@ public abstract class ImsNetworkInterface {
 			}
 
             // Start keep-alive for NAT if activated
-            if (registration.isBehindNat() && RcsSettings.getInstance().isSipKeepAliveEnabled()) {
+            if (isBehindNat() && RcsSettings.getInstance().isSipKeepAliveEnabled()) {
                 sip.getSipStack().getKeepAliveManager().start();
             }
 		} else {

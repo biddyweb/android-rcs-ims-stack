@@ -1270,7 +1270,28 @@ public class RichMessaging {
 		cursor.close();
 		return false;
 	}
-	
+
+    /**
+     * Check if it's a new message
+     *
+     * @param chatId chat ID
+     * @param msgId message ID
+     * @return true if new message
+     */
+    public boolean isNewMessage(String chatId, String msgId) {
+        Cursor cursor = cr.query(databaseUri, 
+                new String[]{RichMessagingData.KEY_MESSAGE_ID}, 
+                "(" + RichMessagingData.KEY_CHAT_ID + " = '" + chatId + "') AND (" + RichMessagingData.KEY_MESSAGE_ID + " = \"" + msgId + "\")",
+                null,
+                null);
+        if (cursor.moveToFirst()) {
+            cursor.close();
+            return false;
+        }
+        cursor.close();
+        return true;
+    }
+
 	/**
 	 * Get all outgoing messages still marked undisplayed for a given contact
 	 * 

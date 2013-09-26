@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.service;
 
 import java.util.Enumeration;
 
+import javax2.sip.address.SipURI;
 import javax2.sip.header.ContactHeader;
 import javax2.sip.header.EventHeader;
 import javax2.sip.message.Request;
@@ -27,6 +28,7 @@ import javax2.sip.message.Request;
 import android.content.Intent;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface;
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
@@ -136,10 +138,40 @@ public class ImsServiceDispatcher extends Thread {
 		
 		// Check the IP address of the request-URI
 		String localIpAddress = imsModule.getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
-		if (!request.getRequestURI().contains(localIpAddress)) {
+		ImsNetworkInterface imsNetIntf = imsModule.getCurrentNetworkInterface();
+		boolean isMatchingRegistered = false;		
+		SipURI requestURI;
+		try {
+			requestURI = SipUtils.ADDR_FACTORY.createSipURI(request.getRequestURI());
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Unable to parse request URI " + request.getRequestURI(), e);
+			}
+			sendFinalResponse(request, 400);			
+			return;
+		}
+
+		// First check if the request URI matches with the local interface address
+		isMatchingRegistered = localIpAddress.equals(requestURI.getHost());
+		
+		// If no matching, perhaps we are behind a NAT
+		if ((!isMatchingRegistered) && imsNetIntf.isBehindNat()) {
+			// We are behind NAT: check if the request URI contains the previously
+			// discovered public IP address and port number
+			String natPublicIpAddress = imsNetIntf.getNatPublicAddress();
+			int natPublicUdpPort = imsNetIntf.getNatPublicPort();
+			if ((natPublicUdpPort != -1) && (natPublicIpAddress != null)) {
+				isMatchingRegistered = natPublicIpAddress.equals(requestURI.getHost()) && (natPublicUdpPort == requestURI.getPort());
+			} else {
+				// NAT traversal and unknown public address/port
+				isMatchingRegistered = false;
+			}
+		}
+
+		if (!isMatchingRegistered) {		
 			// Send a 404 error
 			if (logger.isActivated()) {
-				logger.debug("Request-URI IP doesn't match with registered contact: reject the request");
+				logger.debug("Request-URI address and port do not match with registered contact: reject the request");
 			}
 			sendFinalResponse(request, 404);
 			return;
@@ -265,14 +297,23 @@ public class ImsServiceDispatcher extends Thread {
 					sendFinalResponse(request, 603);
 					return;
 	    		}
-	    		
-                FileTransferHttpInfoDocument ftHttpInfo = ChatUtils.getHttpFTInfo(request);
-                if (ftHttpInfo != null) {
-                    // HTTP file transfer invitation
-                    if (logger.isActivated()) {
-                        logger.debug("Single file transfer over HTTP invitation");
+
+                if (ChatUtils.isFileTransferOverHttp(request)) {
+                    FileTransferHttpInfoDocument ftHttpInfo = ChatUtils.getHttpFTInfo(request);
+                    if (ftHttpInfo != null) {
+                        // HTTP file transfer invitation
+                        if (logger.isActivated()) {
+                            logger.debug("Single file transfer over HTTP invitation");
+                        }
+                        imsModule.getInstantMessagingService().receiveHttpFileTranferInvitation(request, ftHttpInfo);
+                    } else {
+                        // TODO : else return error to Originating side
+                        // Malformed xml for FToHTTP: automatically reject with a 606 Not Acceptable
+                        if (logger.isActivated()) {
+                            logger.debug("Malformed xml for FToHTTP: automatically reject");
+                        }
+                        sendFinalResponse(request, 606);
                     }
-                    imsModule.getInstantMessagingService().receiveHttpFileTranferInvitation(request, ftHttpInfo);
                 } else {
 	    			if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
 		    			(!request.getContentType().contains("multipart"))) { // TODO: to be removed when corrected by ALU
@@ -547,6 +588,9 @@ public class ImsServiceDispatcher extends Thread {
      * @return IMS session
      */
     private ImsServiceSession searchSession(String callId) {
+        if (callId == null) {
+            return null;
+        }
     	ImsService[] list = imsModule.getImsServices();
     	for(int i=0; i< list.length; i++) {
     		for(Enumeration<ImsServiceSession> e = list[i].getSessions(); e.hasMoreElements();) {

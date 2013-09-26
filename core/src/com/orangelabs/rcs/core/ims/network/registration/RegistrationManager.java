@@ -96,11 +96,6 @@ public class RegistrationManager extends PeriodicRefresher {
     private boolean needUnregister = false;
 
 	/**
-	 * NAT traversal
-	 */
-	private boolean natTraversal = false;
-	
-	/**
 	 * Number of 401 failures
 	 */
 	private int nb401Failures = 0;
@@ -412,12 +407,30 @@ public class RegistrationManager extends PeriodicRefresher {
     	ViaHeader respViaHeader = ctx.getSipResponse().getViaHeaders().next();
     	String received = respViaHeader.getParameter("received");
     	if (!respViaHeader.getHost().equals(localIpAddr) || ((received != null) && !received.equals(localIpAddr))) {
-    		natTraversal = true;
+    		networkInterface.setNatTraversal(true);
+    		networkInterface.setNatPublicAddress(received);
+    		String viaRportStr = respViaHeader.getParameter("rport");
+    		int viaRport = -1;
+    		if (viaRportStr != null) {
+	    		try {
+	    			viaRport = Integer.parseInt(viaRportStr);
+	    		} catch (NumberFormatException e) {
+	    			if (logger.isActivated()) {
+	    				logger.warn("Non-numeric rport value \"" + viaRportStr + "\"");
+	    			} 
+	    		}
+	    	}
+    		networkInterface.setNatPublicPort(viaRport);
+    		if (logger.isActivated()) {
+    			logger.debug("NAT public interface detected: " + received + ":" + viaRport);
+    		}
     	} else {
-    		natTraversal = false;
+    		networkInterface.setNatTraversal(false);
+    		networkInterface.setNatPublicAddress(null);
+    		networkInterface.setNatPublicPort(-1);
     	}        	
         if (logger.isActivated()) {
-            logger.debug("NAT traversal detection: " + natTraversal);
+            logger.debug("NAT traversal detection: " + networkInterface.isBehindNat());
         }
 		
         // Read the security header
@@ -453,6 +466,11 @@ public class RegistrationManager extends PeriodicRefresher {
         if (logger.isActivated()) {
             logger.info("200 OK response received");
         }
+        
+    	// Reset the NAT parameters as we are not expecting any more messages
+        // for this registration
+    	networkInterface.setNatPublicAddress(null);
+    	networkInterface.setNatPublicPort(-1);
 	}
 	
 	/**
@@ -637,14 +655,5 @@ public class RegistrationManager extends PeriodicRefresher {
     		logger.info("Execute re-registration");
     	}
         registration();
-    }
-    
-    /**
-     * Is behind a NAT
-     *
-     * @return Boolean
-     */
-    public boolean isBehindNat() {
-    	return natTraversal;
     }
 }

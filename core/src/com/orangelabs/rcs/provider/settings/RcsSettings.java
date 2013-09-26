@@ -579,6 +579,28 @@ public class RcsSettings {
 		}
     }
 
+    /**
+     * Get the value of the MSISDN
+     *
+     * @return MSISDN
+     */
+	public String getMsisdn() {
+		String result = null;
+		if (instance != null) {
+			result = readParameter(RcsSettingsData.MSISDN);
+		}
+		return result;
+    }
+	
+	/**
+     * Set the value of the MSISDN
+     */
+	public void setMsisdn(String value) {
+		if (instance != null) {
+			writeParameter(RcsSettingsData.MSISDN, value);
+		}
+    }
+
 	/**
      * Get user profile IMS display name associated to IMPU
      *
@@ -2376,6 +2398,7 @@ public class RcsSettings {
         setXdmPassword("");
         setXdmServer("");
         setProvisioningVersion("0");
+        setMsisdn("");
     }
 
     /**
@@ -2610,5 +2633,15 @@ public class RcsSettings {
 			} catch(Exception e) {}
 		}
 		return result;
+	}
+
+	public void setProvisioningToken(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String getProvisioningToken() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

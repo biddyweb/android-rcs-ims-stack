@@ -33,9 +33,11 @@ public interface MessagingApiIntents {
      *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
      *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
      *   <li><em>chatSessionId</em> - Session ID of the chat session associated to the file
-     *    transfer (may be null if the file transfer is outside of a chat).</li>
+     *    transfer (may be null if the file transfer is outside of a chat). Only present if FToHTTP.</li>
      *   <li><em>chatId</em> - Contribution ID of the chat session associated to the file
-     *    transfer (may be null if the file transfer is outside of a chat).</li>
+     *    transfer (may be null if the file transfer is outside of a chat). Only present if FToHTTP 
+     *    and associated to a group chat.</li>
+     *   <li><em>isGroupChat</em> - Boolean indicating if it's a group chat. Only present if FToHTTP.</li>
      *   <li><em>filename</em> - Name of the file.</li>
      *   <li><em>filesize</em> - Size of the file in bytes.</li>
      *   <li><em>filetype</em> - Type of file encoding.</li>

@@ -150,7 +150,10 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     }
 
     /**
-     * Handle file transfered
+     * Handle file transfered. 
+     * In case of file transfer over MSRP, the terminating side has received the file, 
+     * but in case of file transfer over HTTP, only the content server has received the
+     * file.
      */
     public void handleFileTransfered() {
         // File has been transfered
@@ -164,21 +167,6 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
         for (int j = 0; j < getListeners().size(); j++) {
             ((FileSharingSessionListener) getListeners().get(j))
                     .handleFileTransfered(getContent().getUrl());
-        }
-    }
-    
-    /**
-     * Handle file uploaded
-     */
-    public void handleFileUploaded() {
-    	// File has been uploaded
-        fileUploaded();
-        this.sessionState = SessionState.UPLOADED;
-
-        // Notify listeners
-        for (int j = 0; j < getListeners().size(); j++) {
-            ((FileSharingSessionListener) getListeners().get(j))
-                    .handleFileUploaded();
         }
     }
 

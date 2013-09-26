@@ -47,10 +47,4 @@ public interface SessionState {
 	 * Session is pending (not yet accepted by a final response by the remote)
 	 */
 	public final static int PENDING = 3;
-
-    /**
-     * Session is uploaded (i.e. for FToHTTP, file uploaded)
-     * Not used in IMS sesison
-     */
-    public final static int UPLOADED = 4;
 }

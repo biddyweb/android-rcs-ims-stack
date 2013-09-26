@@ -7,6 +7,9 @@ interface IMessageDeliveryListener {
 	// Message delivery status
 	void handleMessageDeliveryStatus(in String contact, in String msgId, in String status);
 
-    // File Transfer delivery status
+    // File Transfer delivery status.
+    // In FToHTTP, Delivered status is done just after download information are received by the
+    // terminating, and Displayed status is done when the file is downloaded.
+    // In FToMSRP, the two status are directly done just after MSRP transfer complete.
     void handleFileDeliveryStatus(in String ftSessionId, in String status);
 }

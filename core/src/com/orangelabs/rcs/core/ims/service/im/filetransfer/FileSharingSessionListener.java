@@ -43,13 +43,11 @@ public interface FileSharingSessionListener extends ImsSessionListener  {
     
     /**
      * File has been transfered
-     * 
+     * In case of file transfer over MSRP, the terminating side has received the file, 
+     * but in case of file transfer over HTTP, only the content server has received the
+     * file.
+     *
      * @param filename Filename associated to the received file
      */
     public void handleFileTransfered(String filename);
-    
-    /**
-     * File has been uploaded
-     */
-    public void handleFileUploaded();
 }

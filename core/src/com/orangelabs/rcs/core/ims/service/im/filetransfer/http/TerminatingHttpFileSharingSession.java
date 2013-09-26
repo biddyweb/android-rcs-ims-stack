@@ -23,7 +23,6 @@ import javax2.sip.header.ContactHeader;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
@@ -51,6 +50,11 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
     private String msgId;
 
     /**
+     * Remote instance Id
+     */
+    private String remoteInstanceId = null;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -59,24 +63,24 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
      * Constructor
      * 
      * @param parent IMS service
-     * @param invite initial INVITE
+     * @param chatSession chat session
      * @param fileTransferInfo File transfer info
      * @param msgId Message ID
-	 * @param chatSessionId Chat session ID
-	 * @param chatContributionId Chat contribution Id
      */
-    public TerminatingHttpFileSharingSession(ImsService parent, SipRequest invite, FileTransferHttpInfoDocument fileTransferInfo, String msgId, String chatSessionID, String chatContributionId) {
-        super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFileUrl(),
-                fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), invite.getFromUri(), null, chatSessionID, chatContributionId);
+    public TerminatingHttpFileSharingSession(ImsService parent, ChatSession chatSession,
+            FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
+        super(parent, ContentManager.createMmContentFromFilename(fileTransferInfo.getFilename(),
+                fileTransferInfo.getFileUrl(), fileTransferInfo.getFileSize()),
+                chatSession.getRemoteContact(), null, chatSession.getSessionID(),
+                chatSession.getContributionID());
 
+        setRemoteDisplayName(chatSession.getRemoteDisplayName());
+        ContactHeader inviteContactHeader = (ContactHeader)chatSession.getDialogPath().getInvite().getHeader(ContactHeader.NAME);
+        if (inviteContactHeader != null) {
+            this.remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+        }
         this.msgId = msgId;
 
-        // Create dialog path
-        createTerminatingDialogPath(invite);
-        
-        // Setting name of MmContent
-        getContent().setName(fileTransferInfo.getFilename());
-        
 		// Instantiate the download manager
 		downloadManager = new HttpDownloadManager(getContent(), this, fileTransferInfo.getFilename());
 		
@@ -220,23 +224,15 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 			if (logger.isActivated()){
 				logger.debug("Send delivery report " + status);
 			}
-	        String remoteInstanceId = null;
-	        ContactHeader inviteContactHeader = (ContactHeader)getDialogPath().getInvite().getHeader(ContactHeader.NAME);
-	        if (inviteContactHeader != null) {
-	            remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
-	        }
-	        
+
 			ChatSession chatSession = (ChatSession)Core.getInstance().getImService().getSession(getChatSessionID());
-			if (chatSession != null) {
+			if (chatSession != null && chatSession.getDialogPath().isSessionEstablished()) {
 	            // Send message delivery status via a MSRP
 				chatSession.sendMsrpMessageDeliveryStatus(getRemoteContact(), msgId, status);
-			}
-			else
-			{
+			} else {
 	            // Send message delivery status via a SIP MESSAGE
 	            ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
-	            				getRemoteContact(),
-	                            msgId, status, remoteInstanceId);
+	                    getRemoteContact(), msgId, status, remoteInstanceId);
 			}
 		}
     }

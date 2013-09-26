@@ -140,6 +140,11 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
      * Is player started
      */
     private boolean started = false;
+    
+    /**
+     *  player stop requested
+     */
+    private boolean mediaPlayerStopRequested = false ;
 
     /**
      * Audio start time
@@ -372,14 +377,19 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         }
         
         // Close the file streams
-        try {
-	        fop.close();
-	        fin.close();
-		} catch (IOException e) {
-		}
-
+//        try {
+//	        fop.close();
+//	        fin.close();
+//		} catch (IOException e) {
+//		}
+//        if (logger.isActivated()) {
+//    		logger.info("fop and fin are closed");
+//    	}
         // Close the RTP layer
         rtpOutput.close();
+        if (logger.isActivated()) {
+    		logger.info("rtpOutput is closed");
+    	}
         rtpReceiver.stopSession();
         rtpDummySender.stopSession();
 
@@ -482,26 +492,34 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
 			@Override
 			public void onCompletion(MediaPlayer mp) {
 				if (started) {
-					// Reset mediaPlayer so it use new buffered data in the file
-					int timePosition = mp.getCurrentPosition();
-	                mp.reset();
-	                try {
-		                mp.setDataSource(fin.getFD());
-		                mp.prepare();
-		                mp.seekTo(timePosition);
-	        		} catch (IllegalArgumentException e) {
-	        			e.printStackTrace();
-	        		} catch (SecurityException e) {
-	        			e.printStackTrace();
-	        		} catch (IllegalStateException e) {
-	        			e.printStackTrace();
-	        		} catch (IOException e) {
-	        			e.printStackTrace();
-	        		}
-					// The mediaPlayer stops
-					if (logger.isActivated()) {
-						logger.info("the mediaplayer is rebuffering");
+					
+					if (!mediaPlayerStopRequested) {
+						// Reset mediaPlayer so it use new buffered data in the
+						// file
+						int timePosition = mp.getCurrentPosition();
+						mp.reset();
+						try {
+							mp.setDataSource(fin.getFD());
+							mp.prepare();
+							mp.seekTo(timePosition);
+						} catch (IllegalArgumentException e) {
+							e.printStackTrace();
+						} catch (SecurityException e) {
+							e.printStackTrace();
+						} catch (IllegalStateException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+						// The mediaPlayer stops
+						if (logger.isActivated()) {
+							logger.info("the mediaplayer is rebuffering");
+						}
+					} else {
+						mp.stop();
+						mediaPlayerStopRequested = false;
 					}
+					
 				} else {
 					mp.release();
 					// The mediaPlayer stops
@@ -546,7 +564,14 @@ public class AudioRenderer extends IAudioRenderer.Stub implements RtpStreamListe
         }
         
         // Stop the mediaplayer
-        mediaPlayer.stop();
+        
+        mediaPlayerStopRequested = true;
+        //mediaPlayer.stop();
+        
+		
+        	
+
+
 
         // Renderer is stopped
         started = false;

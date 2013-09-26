@@ -110,8 +110,8 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
                     // Send file transfer info
                     sendFileTransferInfo();
 
-                    // File uploaded
-                    handleFileUploaded();
+                    // File transfered
+                    handleFileTransfered();
 	            } else {
 	                // No chat error
                     handleError(new FileSharingError(FileSharingError.NO_CHAT_SESSION));
@@ -151,7 +151,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
         String msgId = ChatUtils.generateMessageId();
 
         // Send file info in CPIM message
-        String content = ChatUtils.buildCpimMessage(from, to, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
+        String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 
         // Send content
         chatSession.sendDataChunks(msgId, content, mime);

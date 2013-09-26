@@ -1040,16 +1040,17 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * A new file transfer invitation has been received
 	 * 
 	 * @param session File transfer session
+	 * @param isGroup is group file transfer
 	 */
-	public void handleFileTransferInvitation(FileSharingSession session) {
+	public void handleFileTransferInvitation(FileSharingSession session, boolean isGroup) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event file transfer invitation within an existing session");
 		}
-		
+
     	// Broadcast the invitation
-    	messagingApi.receiveFileTransferInvitation(session);
+    	messagingApi.receiveFileTransferInvitation(session, isGroup);
 	}
-	
+
 	/**
 	 * A new one to one file transfer invitation has been received
 	 * 
@@ -1152,7 +1153,22 @@ public class RcsCoreService extends Service implements CoreListener {
 		// Notify listeners
 		messagingApi.handleMessageDeliveryStatus(contact, msgId, status);
     }
-    
+
+    /**
+     * New file delivery status
+     *
+     * @param ftSessionId File transfer session ID
+     * @param status Delivery status
+     */
+    public void handleFileDeliveryStatus(String ftSessionId, String status) {
+        if (logger.isActivated()) {
+            logger.debug("Handle file delivery status: session " + ftSessionId + " status " + status);
+        }
+
+        // Notify listeners
+        messagingApi.handleFileDeliveryStatus(ftSessionId, status);
+    }
+
     /**
      * New SIP session invitation
      * 

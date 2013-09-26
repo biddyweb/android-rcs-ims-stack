@@ -105,6 +105,24 @@ public class ContentManager{
 		String mime = MimeManager.getMimeType(ext);
 		return createMmContentFromMime(url, mime, size);
 	}
+	
+
+    /**
+     * Create a content object from Filename
+     * 
+     * @param filename Name of the file
+     * @param url Content URL
+     * @param size Content size
+     * @return Content instance
+     */
+	public static MmContent createMmContentFromFilename(String filename, String url, long size) {
+		String ext = MimeManager.getFileExtension(filename);
+		String mime = MimeManager.getMimeType(ext);
+		MmContent content = createMmContentFromMime(url, mime, size);
+		content.setName(filename);
+		
+		return content;
+	}
 
     /**
      * Create a content object from MIME type

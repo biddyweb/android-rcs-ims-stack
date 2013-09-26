@@ -34,6 +34,7 @@ import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
@@ -153,8 +154,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * Receive a new file transfer invitation
 	 * 
 	 * @param session File transfer session
+	 * @param isGroup is group file transfer
 	 */
-    public void receiveFileTransferInvitation(FileSharingSession session) {
+    public void receiveFileTransferInvitation(FileSharingSession session, boolean isGroup) {
 		if (logger.isActivated()) {
 			logger.info("Receive file transfer invitation from " + session.getRemoteContact());
 		}
@@ -176,14 +178,17 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	intent.putExtra("sessionId", session.getSessionID());
     	if (session instanceof HttpFileTransferSession) {
     	    intent.putExtra("chatSessionId", ((HttpFileTransferSession)session).getChatSessionID());
-    	    intent.putExtra("chatId", ((HttpFileTransferSession)session).getContributionID());
+    	    if (isGroup) {
+    	        intent.putExtra("chatId", ((HttpFileTransferSession)session).getContributionID());
+    	    }
+    	    intent.putExtra("isGroupTransfer", isGroup);
     	}
     	intent.putExtra("filename", session.getContent().getName());
     	intent.putExtra("filesize", session.getContent().getSize());
     	intent.putExtra("filetype", session.getContent().getEncoding());
     	intent.putExtra("thumbnail", session.getThumbnail());
     	intent.putExtra("autoAccept", RcsSettings.getInstance().isFileTransferAutoAccepted());
-    	AndroidFactory.getApplicationContext().sendBroadcast(intent);    	
+    	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 
 	/**
@@ -193,7 +198,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 */
 	public void receiveFileTransferInvitation(FileSharingSession session, ChatSession chatSession) {
 		// Display invitation
-		receiveFileTransferInvitation(session);
+		receiveFileTransferInvitation(session, chatSession.isGroupChat());
 		
 		// Update rich messaging history
 		RichMessaging.getInstance().addIncomingChatSessionByFtHttp(chatSession);
@@ -814,23 +819,42 @@ public class MessagingApiService extends IMessagingApi.Stub {
     	            	}
     	            }
     	        }
+    	        listeners.finishBroadcast();
             } else {
-                // Update rich messaging history
-                RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_TERMINATED);
+                // File Transfer delivery status
+                handleFileDeliveryStatus(ftSessionId, status);
+            }
+    	}
+    }
 
-                // Notify File transfer delivery listeners
-                final int N = listeners.beginBroadcast();
-                for (int i=0; i < N; i++) {
-                    try {
-                        listeners.getBroadcastItem(i).handleFileDeliveryStatus(ftSessionId, status);
-                    } catch(Exception e) {
-                        if (logger.isActivated()) {
-                            logger.error("Can't notify listener", e);
-                        }
-                    }
+    /**
+     * File Transfer delivery status.
+     * In FToHTTP, Delivered status is done just after download information are received by the
+     * terminating, and Displayed status is done when the file is downloaded.
+     * In FToMSRP, the two status are directly done just after MSRP transfer complete.
+     *
+     * @param ftSessionId File transfer session Id
+     * @param status status of File transfer
+     */
+    public void handleFileDeliveryStatus(String ftSessionId, String status) {
+        // Update rich messaging history
+        if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DELIVERED);
+        } else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DISPLAYED);
+        }
+
+        // Notify File transfer delivery listeners
+        final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+                listeners.getBroadcastItem(i).handleFileDeliveryStatus(ftSessionId, status);
+            } catch(Exception e) {
+                if (logger.isActivated()) {
+                    logger.error("Can't notify listener", e);
                 }
             }
-            listeners.finishBroadcast();
-    	}
+        }
+        listeners.finishBroadcast();
     }
 }

@@ -115,7 +115,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 					String msgId = ChatUtils.generateMessageId();
 
 					// Send file info in CPIM message
-					String content = ChatUtils.buildCpimMessage(from, to, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
+					String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 
 					// Send content
 					chatSession.sendDataChunks(msgId, content, mime);
@@ -140,8 +140,9 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    			MessagingApiService.addChatSession(sessionApi);
                     // TODO : Check session response ?
 				}
-                // File uploaded
-                handleFileUploaded();
+
+                // File transfered
+                handleFileTransfered();
 			} else {
                 if (logger.isActivated()) {
                     logger.debug("Upload has failed");
