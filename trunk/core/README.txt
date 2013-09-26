@@ -9,8 +9,9 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Add IMDN delivery report for group chat.
-- FT over HTTP: refactor FtoHTTP, remove uploaded status.
+- Wi-Fi provisioning.
+- Add IMDN delivery report for group chat (delivered & displayed).
+- FT over HTTP: refactoring, remove uploaded status.
 - Control Msg ID on incoming message to avoid duplicate.
 
 
