@@ -18,6 +18,9 @@
 
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -163,7 +166,7 @@ public class FileTransferHttpInfoParser extends DefaultHandler {
 				if (logger.isActivated()) {
 					logger.error("Could not parse tranfer validity:"+validity);
 				}
-				return java.lang.System.currentTimeMillis()+300000;	// TODO Validité par défaut ?
+				return java.lang.System.currentTimeMillis()+300000;	// TODO default validity ?
 			}
 		}
 	}
@@ -182,17 +185,25 @@ public class FileTransferHttpInfoParser extends DefaultHandler {
 		} else
 		if (localName.equals("file-name")) {
 			if (ftInfo != null) {
-				ftInfo.setFilename(accumulator.toString().trim());
+				String s;
+				try {
+					s = URLDecoder.decode(accumulator.toString().trim(), "UTF-8");
+					ftInfo.setFilename(s);
+				} catch (UnsupportedEncodingException e) {
+					if (logger.isActivated()) {
+						logger.debug("Coulnd not decode filename");
+					}
+				}
 			}
 		} else
-			if (localName.equals("content-type")) {			                  
-				if (ftInfo != null && (ftInfo.getFileThumbnail() != null  || thumbnailInfo == null )) {
-					ftInfo.setFileType(accumulator.toString().trim());
-				} else
-				if (thumbnailInfo != null) {
-					thumbnailInfo.setThumbnailType(accumulator.toString().trim());
-				}
-			} 
+		if (localName.equals("content-type")) {			                  
+			if (ftInfo != null && (ftInfo.getFileThumbnail() != null  || thumbnailInfo == null )) {
+				ftInfo.setFileType(accumulator.toString().trim());
+			} else
+			if (thumbnailInfo != null) {
+				thumbnailInfo.setThumbnailType(accumulator.toString().trim());
+			}
+		} 
 	}
 
 	/**

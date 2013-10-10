@@ -132,6 +132,12 @@ public class InitiateFileTransfer extends Activity {
     	inviteBtn.setEnabled(false);
         Button selectBtn = (Button)findViewById(R.id.select_btn);
         selectBtn.setOnClickListener(btnSelectListener);
+        Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        pauseBtn.setOnClickListener(btnPauseListener);
+        pauseBtn.setEnabled(false);
+        Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        resumeBtn.setOnClickListener(btnResumeListener);
+        resumeBtn.setEnabled(false);
                
         // Disable button if no contact available
         if (spinner.getAdapter().getCount() == 0) {
@@ -214,7 +220,55 @@ public class InitiateFileTransfer extends Activity {
             }
     	}
 	};
+	
+    /**
+     * Pause button listener
+     */
+    private OnClickListener btnPauseListener = new OnClickListener() {
+        public void onClick(View v) {
+        	Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        	resumeBtn.setEnabled(true);
+        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        	pauseBtn.setEnabled(false);
+        	
+        	try {
+				transferSession.pauseSession();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				handler.post(new Runnable(){
+					public void run(){
+						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
+					}
+				});
+			}
+    	}
+	};
       
+	
+    /**
+     * Resume button listener
+     */
+    private OnClickListener btnResumeListener = new OnClickListener() {
+        public void onClick(View v) {
+        	Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        	resumeBtn.setEnabled(false);
+        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        	pauseBtn.setEnabled(true);
+        	
+        	try {
+				transferSession.resumeSession();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				handler.post(new Runnable(){
+					public void run(){
+						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
+					}
+				});
+			}
+    	}
+	};
 	/**
 	 * Initiate transfer
 	 */
@@ -245,6 +299,9 @@ public class InitiateFileTransfer extends Activity {
         	}
         };
         thread.start();
+
+        Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        pauseBtn.setEnabled(true);
         
         // Display a progress dialog
         progressDialog = Utils.showProgressDialog(InitiateFileTransfer.this, getString(R.string.label_command_in_progress));
@@ -466,6 +523,20 @@ public class InitiateFileTransfer extends Activity {
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transfered");
+				}
+			});
+		}
+
+		@Override
+		public void handleFileUploadPaused() throws RemoteException {
+			handler.post(new Runnable() { 
+				public void run() {
+					// Hide progress dialog
+					hideProgressDialog();
+					
+					// Display session status
+					TextView statusView = (TextView)findViewById(R.id.progress_status);
+					statusView.setText("paused");
 				}
 			});
 		}

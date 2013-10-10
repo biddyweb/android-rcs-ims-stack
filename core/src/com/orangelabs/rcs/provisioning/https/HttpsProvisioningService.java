@@ -18,10 +18,12 @@
 
 package com.orangelabs.rcs.provisioning.https;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 
@@ -41,6 +43,11 @@ public class HttpsProvisioningService extends Service {
      * Provisioning manager
      */
     HttpsProvisioningManager httpsProvisioningMng;
+    
+    /**
+	 * Retry action for provisioning failure
+	 */
+    protected String ACTION_RETRY = "com.orangelabs.rcs.provisioning.https.HttpsProvisioningService.ACTION_RETRY";
 
 	/**
 	 * The logger
@@ -51,7 +58,10 @@ public class HttpsProvisioningService extends Service {
     public void onCreate() {
         // Instantiate RcsSettings and Provisioning manager
         RcsSettings.createInstance(getApplicationContext());
-        httpsProvisioningMng = new HttpsProvisioningManager(getApplicationContext());
+        
+        PendingIntent retryIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(ACTION_RETRY), 0);
+        registerReceiver(retryReceiver, new IntentFilter(ACTION_RETRY));
+        httpsProvisioningMng = new HttpsProvisioningManager(getApplicationContext(), retryIntent);
 	}
 
     @Override

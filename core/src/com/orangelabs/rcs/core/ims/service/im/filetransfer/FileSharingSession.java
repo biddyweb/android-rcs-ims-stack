@@ -37,6 +37,11 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 * Thumbnail
 	 */
 	private byte[] thumbnail = null;
+	
+	/**
+	 * File transfer paused
+	 */
+	private boolean fileTransferPaused = false;
 
     /**
 	 * Constructor
@@ -112,6 +117,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	public void fileTransfered() {
 		this.fileTransfered = true;
+		
 	}
 	
 	/**
@@ -121,6 +127,29 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	public boolean isFileTransfered() {
 		return fileTransfered; 
+	}
+	
+	/**
+	 * File has been paused
+	 */
+	public void fileTransferPaused() {
+		this.fileTransferPaused = true;
+	}
+	
+	/**
+	 * File is resuming
+	 */
+	public void fileTransferResumed() {
+		this.fileTransferPaused = false;
+	}
+	
+	/**
+	 * Is file transfer paused
+	 * 
+	 * @return fileTransferPaused
+	 */
+	public boolean isFileTransferPaused() {
+		return fileTransferPaused; 
 	}
 
 	/**

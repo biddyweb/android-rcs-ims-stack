@@ -232,6 +232,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 			// Initiate the session
 			FileDescription desc = FileFactory.getFactory().getFileDescription(file);
 			MmContent content = ContentManager.createMmContentFromUrl(file, desc.getSize());
+			contact = PhoneUtils.formatNumberToInternational(contact);
 			FileSharingSession session = Core.getInstance().getImService().initiateFileTransferSession(contact, content, thumbnail, null, null);
 			
 			// Update rich messaging history
@@ -840,7 +841,8 @@ public class MessagingApiService extends IMessagingApi.Stub {
         // Update rich messaging history
         if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
             RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DELIVERED);
-        } else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+        } else
+        if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
             RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DISPLAYED);
         }
 

@@ -421,8 +421,10 @@ public abstract class SipMessage {
 	        String tag = temp.get(i);
 			
 	        // Reject parameter not starting with a +
-	        // TODO FEATURE_RCSE_IP_VIDEO_CALL doesn't start with '+'
-			if (!tag.startsWith("+") && (!tag.equals(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))) {
+	        // FEATURE_SIP_AUTOMATA and FEATURE_RCSE_IP_VIDEO_CALL doesn't start with '+'
+			if (!tag.startsWith("+")
+				&& (!tag.equals(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))
+					&& (!tag.equals(FeatureTags.FEATURE_SIP_AUTOMATA))) {
 				continue;
 			}
 
@@ -437,7 +439,7 @@ public abstract class SipMessage {
             }
         }
         
-		return tags;
+		return tags;		
 	}
 	
 	/**

@@ -169,7 +169,7 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
                     .handleFileTransfered(getContent().getUrl());
         }
     }
-
+    
     /**
      * HTTP transfer progress
      * HttpTransferEventListener implementation
@@ -195,8 +195,22 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
             ((FileSharingSessionListener)getListeners().get(j)).handleSessionStarted();
         }
     }
-
+    
     /**
+     * Handle file transfer paused
+     */
+    public void httpTransferPaused() {
+    	
+    	// TODO new state paused or not
+    	
+    	// Notify listeners
+        for (int j = 0; j < getListeners().size(); j++) {
+            ((FileSharingSessionListener) getListeners().get(j))
+                    .handleFileUploadPaused();
+        }
+    }
+
+	/**
      * Get session state
      *
      * @return State 
@@ -205,4 +219,24 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     public int getSessionState() {
         return sessionState;
     }
+    
+    /**
+     * Pausing file transfer
+     * Implementation should be overridden in subclasses
+     */
+	public void pauseFileTransfer() {
+		if (logger.isActivated()){
+			logger.debug("Pausing is not available");
+		}
+	}
+	
+	 /**
+     * Resuming file transfer
+     * Implementation should be overridden in subclasses
+     */
+	public void resumeFileTransfer() {
+		if (logger.isActivated()){
+			logger.debug("Resuming is not available");
+		}
+	}
 }

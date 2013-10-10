@@ -62,6 +62,16 @@
 		 android:layout_marginLeft="5dip"
 		 android:layout_marginRight="5dip"
 		 android:id="@+id/invite_btn"/>
+		
+		<Button android:text="@string/label_pause_transfer"
+		 android:layout_marginLeft="5dip"
+		 android:layout_marginRight="5dip"
+		 android:id="@+id/pause_btn"/>
+		
+		<Button android:text="@string/label_resume_transfer"
+		 android:layout_marginLeft="5dip"
+		 android:layout_marginRight="5dip"
+		 android:id="@+id/resume_btn"/>
 	
 	</TableLayout>
 	

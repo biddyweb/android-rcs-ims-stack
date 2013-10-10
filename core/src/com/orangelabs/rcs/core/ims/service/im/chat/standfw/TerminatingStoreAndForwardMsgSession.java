@@ -87,9 +87,6 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 	    		logger.info("Initiate a store & forward session for messages");
 	    	}
 
-	    	// Send a 180 Ringing response
-			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-			
 			// Send message delivery report if requested
 			if (ChatUtils.isImdnDeliveredRequested(getDialogPath().getInvite())) {
 				// Check notification disposition
@@ -111,7 +108,11 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
             	if (logger.isActivated()) {
                     logger.debug("Accept manually store and forward chat invitation");
                 }
-				// Wait invitation answer
+
+    	    	// Send a 180 Ringing response
+    			send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+
+    			// Wait invitation answer
 		    	int answer = waitInvitationAnswer();
 				if (answer == ImsServiceSession.INVITATION_REJECTED) {
 					if (logger.isActivated()) {

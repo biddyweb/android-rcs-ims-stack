@@ -212,6 +212,18 @@
              android:text="@string/label_capabilities_ip_video_call" />
         </TableRow>
         
+        <TableRow>
+            <TextView android:text=""
+             android:layout_marginLeft="5dip"
+             android:gravity="right"/>
+            <CheckBox android:id="@+id/sip_automata"
+             android:layout_marginLeft="5dip"
+             android:layout_marginRight="5dip"
+             android:textStyle="bold"
+             android:clickable="false"
+             android:text="@string/label_sip_automata" />
+        </TableRow>
+        
 		<TableRow>
 	        <TextView android:text="@string/label_capabilities_extensions"
  			 android:layout_marginLeft="5dip"

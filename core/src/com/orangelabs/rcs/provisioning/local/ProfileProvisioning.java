@@ -199,7 +199,10 @@ public class ProfileProvisioning extends Activity {
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF)));	
 
         box = (CheckBox)findViewById(R.id.group_chat_sf);
-        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF)));	
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF)));
+        
+        box = (CheckBox)findViewById(R.id.sip_automata);
+        box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA)));
 	}
 
     /**
@@ -332,6 +335,9 @@ public class ProfileProvisioning extends Activity {
         box = (CheckBox)findViewById(R.id.group_chat_sf);
         RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_GROUP_CHAT_SF, Boolean.toString(box.isChecked()));
 
+        box = (CheckBox)findViewById(R.id.sip_automata);
+        RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA, Boolean.toString(box.isChecked()));
+        
         Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();    	
     }
     
@@ -428,7 +434,7 @@ public class ProfileProvisioning extends Activity {
 	            			imsAddrForWifi = "172.20.84.114";
 	            			imsPortForWifi = 5080;
 	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-	            			ftHttpServerAddr = "https://172.20.65.52/rcse-hcs/upload";
+	            			ftHttpServerAddr = "https://ftcontentserver.rcs.mnc001.mcc208.pub.3gppnetwork.org/rcse-hcs/upload";
 	            			ftHttpServerLogin = sipUri;
 	            			ftHttpServerPwd = "imt30imt30";
                             break;
@@ -443,7 +449,7 @@ public class ProfileProvisioning extends Activity {
                             imsAddrForWifi = "172.20.84.114";
                             imsPortForWifi = 5080;
                             confUri  = "sip:Conference-Factory@" + homeDomain;
-                            ftHttpServerAddr = "https://172.20.65.52/rcse-hcs/upload";
+                            ftHttpServerAddr = "https://ftcontentserver.rcs.mnc001.mcc208.pub.3gppnetwork.org/rcse-hcs/upload";
                             ftHttpServerLogin = sipUri;
                             ftHttpServerPwd = "imt30imt30";
                             break;

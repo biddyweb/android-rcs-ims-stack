@@ -50,4 +50,9 @@ public interface FileSharingSessionListener extends ImsSessionListener  {
      * @param filename Filename associated to the received file
      */
     public void handleFileTransfered(String filename);
+    
+    /**
+     * File transfer has been paused
+     */
+    public void handleFileUploadPaused();
 }

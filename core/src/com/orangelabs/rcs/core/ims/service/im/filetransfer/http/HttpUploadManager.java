@@ -1,6 +1,8 @@
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
@@ -22,11 +25,17 @@ import javax.net.ssl.SSLSession;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.util.EntityUtils;
+import org.xml.sax.InputSource;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.protocol.http.HttpAuthenticationAgent;
+import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -55,6 +64,16 @@ public class HttpUploadManager extends HttpTransferManager {
      * Maximum value of retry
      */
     private final static int RETRY_MAX = 3;
+
+    /**
+     * GET is to get Download info (use for resume call flow)
+     */
+	private static final String DOWNLOAD_INFO_REQUEST = "&get_download_info";
+
+	 /**
+     * GET is to get upload resume info
+     */
+	private static final String UPLOAD_INFO_REQUEST = "&get_upload_info";
 
     /**
      * File content to upload
@@ -96,6 +115,10 @@ public class HttpUploadManager extends HttpTransferManager {
      */
     private int retryCount = 0;
 
+    /**
+     * Http Authentication Agent
+     */
+    private HttpAuthenticationAgent auth;
     /**
      * The logger
      */
@@ -258,7 +281,7 @@ public class HttpUploadManager extends HttpTransferManager {
         if (tidFlag) {
             body += generateTidMultipart();
         }
-        
+
 
         // Update authentication agent from response
         if (authenticationFlag) {
@@ -266,7 +289,7 @@ public class HttpUploadManager extends HttpTransferManager {
             if (authHeaders.length == 0) {
                 throw new IOException("headers malformed in 401 response");
             }
-            HttpAuthenticationAgent auth = new HttpAuthenticationAgent(getHttpServerLogin(),
+            auth = new HttpAuthenticationAgent(getHttpServerLogin(),
                     getHttpServerPwd());
             auth.readWwwAuthenticateHeader(authHeaders[0].getValue());
 
@@ -299,85 +322,96 @@ public class HttpUploadManager extends HttpTransferManager {
             writeThumbnailMultipart(outputStream,filepath);
         }
 
-        // Add File
-        writreFileMultipart(outputStream, filepath);
-        if(!isCancelled()) {
-        	outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the last boundary to get bad request
-            
-	        // Check response status code
-	        int responseCode = connection.getResponseCode();
-	        if (logger.isActivated()) {
-	            logger.debug("Second POST response " + responseCode);
-	        }
-	        byte[] result = null;
-	        boolean success = false;
-	        boolean retry = false;
-	        if (HTTP_TRACE_ENABLED) {
-	            String trace = "<<< Receive HTTP response:";
-	            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
-	            System.out.println(trace);
-	        }
-	        switch (responseCode) {
-	            case 200 :
-	                // 200 OK
-	                success = true;
-	                InputStream inputStream = connection.getInputStream();
-	                result = convertStreamToString(inputStream);
-	                inputStream.close();
-	                if (HTTP_TRACE_ENABLED) {
-	                    System.out.println("\n" + new String(result));
-	                }
-	                break;
-	            case 503 :
-	                // INTERNAL ERROR
-	                String header = connection.getHeaderField("Retry-After");
-	                int retryAfter = 0;
-	                if (header != null) {
-	                    try {
-	                        retryAfter = Integer.parseInt(header);
-	                    } catch (NumberFormatException e) {
-	                        // Nothing to do
-	                    }
-		                if (retryAfter >= 0) {
+        try{
+	        // Add File
+	        writeFileMultipart(outputStream, filepath);
+	        if(!isCancelled()) {
+	        	outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the last boundary to get bad request
+	            
+		        // Check response status code
+		        int responseCode = connection.getResponseCode(); 
+		        
+		        if (logger.isActivated()) {
+		            logger.debug("Second POST response " + responseCode);
+		        }
+		        byte[] result = null;
+		        boolean success = false;
+		        boolean retry = false;
+		        if (HTTP_TRACE_ENABLED) {
+		            String trace = "<<< Receive HTTP response:";
+		            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
+		            System.out.println(trace);
+		        }
+		        switch (responseCode) {
+		            case 200 :
+		                // 200 OK
+		                success = true;
+		                InputStream inputStream = connection.getInputStream();
+		                result = convertStreamToString(inputStream);
+		                inputStream.close();
+		                if (HTTP_TRACE_ENABLED) {
+		                    System.out.println("\n" + new String(result));
+		                }
+		                break;
+		            case 503 :
+		                // INTERNAL ERROR
+		                String header = connection.getHeaderField("Retry-After");
+		                int retryAfter = 0;
+		                if (header != null) {
 		                    try {
-		                        Thread.sleep(retryAfter * 1000);
-		    	                // Retry procedure
-		    	                if (retryCount < RETRY_MAX) {
-		    	                    retryCount++;
-		    	                    retry = true;
-		    	                }
-		                    } catch (InterruptedException e) {
+		                        retryAfter = Integer.parseInt(header);
+		                    } catch (NumberFormatException e) {
 		                        // Nothing to do
 		                    }
+			                if (retryAfter >= 0) {
+			                    try {
+			                        Thread.sleep(retryAfter * 1000);
+			    	                // Retry procedure
+			    	                if (retryCount < RETRY_MAX) {
+			    	                    retryCount++;
+			    	                    retry = true;
+			    	                }
+			                    } catch (InterruptedException e) {
+			                        // Nothing to do
+			                    }
+			                }
 		                }
-	                }
-	                break;
-	            default :
-	            	break; // no success, no retry
-	        }
-
-	        // Close streams
-	        outputStream.flush();
-	        outputStream.close();
-	        connection.disconnect();
-
-	        if (success) {
-	            return result;
-	        } else
-	        if (retry) {
-	            return sendMultipartPost(resp);
+		                break;
+		            default :
+		            	break; // no success, no retry
+		        }
+	
+		        // Close streams
+		        outputStream.flush();
+		        outputStream.close();
+		        connection.disconnect();
+	
+		        if (success) {
+		            return result;
+		        } else
+		        if (retry) {
+		            return sendMultipartPost(resp);
+		        } else {
+		            throw new IOException("Received " + responseCode + " from server");
+		        } 
 	        } else {
-	            throw new IOException("Received " + responseCode + " from server");
-	        } 
-        } else {
-        	// Close streams
-            outputStream.flush();
-            outputStream.close();
-            connection.disconnect();
-            if (logger.isActivated()) {
-	            logger.debug("File transfer cancelled by user");
+	        	// Close streams
+	            outputStream.flush();
+	            outputStream.close();
+	            connection.disconnect();
+	            if (logger.isActivated()) {
+		            logger.debug("File transfer cancelled by user");
+		        }
+	            return null;
 	        }
-            return null;
+        }
+        catch(Exception e)
+        {
+        	if (logger.isActivated()) {
+	            logger.warn("File Upload aborted due to "+e.getLocalizedMessage()+" now in state pause, waiting for resume...");
+	        }
+        	getListener().httpTransferPaused();
+        	throw e;
         }
     }
 
@@ -424,20 +458,21 @@ public class HttpUploadManager extends HttpTransferManager {
      * @param filepath File path
      * @throws IOException
      */
-    private void writreFileMultipart(DataOutputStream outputStream, String filepath) throws IOException {
+    private void writeFileMultipart(DataOutputStream outputStream, String filepath) throws IOException {
         // Check file path
         String[] splittedPath = content.getUrl().split("/");
         String filename = splittedPath[splittedPath.length - 1];
-
+        
         // Build and write headers
         String filePartHeader = twoHyphens + BOUNDARY_TAG + lineEnd;
-        filePartHeader += "Content-Disposition: form-data; name=\"File\"; filename=\"" + filename
+        filePartHeader += "Content-Disposition: form-data; name=\"File\"; filename=\"" +  URLEncoder.encode(filename, "UTF-8")
                 + "\"" + lineEnd;
         filePartHeader += "Content-Type: " + content.getEncoding() + lineEnd;
         File file = new File(filepath);
         filePartHeader += "Content-Length: " + file.length() + lineEnd + lineEnd;
-        outputStream.writeBytes(filePartHeader);
 
+        outputStream.writeBytes(filePartHeader);
+        
         // Write file content
         FileInputStream fileInputStream = new FileInputStream(file);
         int bytesAvailable = fileInputStream.available();
@@ -500,4 +535,372 @@ public class HttpUploadManager extends HttpTransferManager {
             return true;
         }
     }
+    
+    
+    /**
+	 * Resume the upload
+	 *
+	 * @return byte[] contains the info to send to terminating side
+	 * @throws ParseException, IOException
+	 */
+	public byte[] resumeUpload() throws ParseException, IOException {
+        // Try to get upload info
+		HttpResponse resp;
+		try{
+        	resp = sendGetUploadInfo();
+		}
+		catch(Exception e)
+		{
+			if (logger.isActivated()) {
+	            logger.warn("Could not get upload info due to "+ e.getLocalizedMessage());
+	        }
+        	getListener().httpTransferPaused();
+    		return null;
+		}
+    	resetCancelled();
+		
+        
+        if(resp == null)
+        {
+        	if (logger.isActivated()) {
+        		logger.debug("Unexpected Server response, will restart upload from begining");
+        	}
+        	return uploadFile();
+        }
+        else
+        {
+        	
+        	String content = EntityUtils.toString(resp.getEntity());
+        	byte[] bytes = content.getBytes("UTF8");
+        	
+        	FileTransferHttpResumeInfo ftResumeInfo = ChatUtils.parseFileTransferHttpResumeInfo(bytes);
+        	if(ftResumeInfo == null)
+        	{
+        		return uploadFile();
+        	}
+        	else if((ftResumeInfo.getEnd()-ftResumeInfo.getStart()) >= this.content.getSize())
+        	{
+        		return null; // Nothing to do, the file has already been uploaded completely
+        	}
+        	
+            try {
+            	sendPutForResumingUpload(ftResumeInfo);
+				return getDownloadInfo();
+			} catch (Exception e) {
+				return null;
+			}
+        }
+	}
+
+     
+	/**
+     * Write a part of the file in a PUT request for resuming upload
+     *
+     * @param FileTransferHttpResumeInfo infos on already uploaded content
+     * @return byte[] containing the server's response
+     * @throws Exception
+     */
+	private byte[] sendPutForResumingUpload(FileTransferHttpResumeInfo resumeInfo) throws Exception {
+		DataOutputStream outputStream = null;
+        String filepath = content.getUrl();
+
+        // Get the connection
+        HttpsURLConnection connection = null;
+        HttpsURLConnection.setDefaultHostnameVerifier(new NullHostNameVerifier());
+        connection = (HttpsURLConnection) new URL(resumeInfo.getUrl()).openConnection();
+
+        try {
+            connection.setSSLSocketFactory(FileTransSSLFactory.getFileTransferSSLContext().getSocketFactory());
+        } catch(Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Failed to initiate SSL for connection:", e);
+            }
+        }
+
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+        connection.setReadTimeout(2000); 
+
+        // POST construction
+        connection.setRequestMethod("PUT");
+        connection.setRequestProperty("Connection", "Keep-Alive");
+        connection.setRequestProperty("User-Agent", "Joyn");
+        connection.setRequestProperty("Content-Type", this.content.getEncoding());
+        connection.setRequestProperty("Content-Length", String.valueOf(resumeInfo.getEnd() - resumeInfo.getStart()));
+        connection.setRequestProperty("Content-Range", "bytes "+ resumeInfo.getEnd() + "-" + (content.getSize()-1) + "//" + content.getSize());
+        
+        // Construct the Body
+        String body = "";
+        
+        // Update authentication agent from response
+        if (authenticationFlag && auth != null) {
+            String authValue = auth.generateAuthorizationHeaderValue(connection.getRequestMethod(), url.getPath(), body);
+            if (authValue != null) {
+                connection.setRequestProperty("Authorization", authValue);
+            }
+        }
+        
+        // Trace
+        if (HTTP_TRACE_ENABLED) {
+            String trace = ">>> Send HTTP request:";
+            trace += "\n" + connection.getRequestMethod() + " " + url.toString();
+            Set<String> strs = connection.getRequestProperties().keySet();
+            Iterator<String> itr = strs.iterator();
+            while (itr.hasNext()) {
+                Object element = itr.next();
+                trace += "\n" + element + ": " + connection.getRequestProperty((String) element);
+            }
+            trace += "\n" + body;
+            System.out.println(trace);
+        }
+
+        // Create the DataOutputStream and start writing its body
+        outputStream = new DataOutputStream(connection.getOutputStream());
+        outputStream.writeBytes(body);
+
+        try{
+	        // Add File
+	        writeRequestedFileData(outputStream, filepath, resumeInfo.getStart(), resumeInfo.getEnd());
+	        if(!isCancelled()) {
+	        	outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the last boundary to get bad request
+	            
+		        // Check response status code
+		        int responseCode = connection.getResponseCode(); 
+		        
+		        if (logger.isActivated()) {
+		            logger.debug("PUT response " + responseCode);
+		        }
+		        byte[] result = null;
+		        boolean success = false;
+		        boolean retry = false;
+		        if (HTTP_TRACE_ENABLED) {
+		            String trace = "<<< Receive HTTP response:";
+		            trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
+		            System.out.println(trace);
+		        }
+		        switch (responseCode) {
+		            case 200 :
+		                // 200 OK
+		                success = true;
+		                InputStream inputStream = connection.getInputStream();
+		                result = convertStreamToString(inputStream);
+		                inputStream.close();
+		                if (HTTP_TRACE_ENABLED) {
+		                    System.out.println("\n" + new String(result));
+		                }
+		                break;
+		            default :
+		            	break; // no success, no retry
+		        }
+	
+		        // Close streams
+		        outputStream.flush();
+		        outputStream.close();
+		        connection.disconnect();
+	
+		        if (success) {
+		            return result;
+		        } else
+		        if (retry) {
+		            return sendPutForResumingUpload(resumeInfo);
+		        } else {
+		            throw new IOException("Received " + responseCode + " from server");
+		        } 
+	        } else {
+	        	// Close streams
+	            outputStream.flush();
+	            outputStream.close();
+	            connection.disconnect();
+	            if (logger.isActivated()) {
+		            logger.debug("File transfer cancelled by user");
+		        }
+	            return null;
+	        }
+        }
+        catch(Exception e)
+        {
+        	if (logger.isActivated()) {
+	            logger.warn("File Upload aborted due to "+e.getLocalizedMessage()+" now in state pause, waiting for resume...");
+	        }
+        	getListener().httpTransferPaused();
+        	throw e;
+        }
+	}
+	
+	/**
+	 * Send a get for info on the upload
+	 *
+	 * @param suffix String that specifies if it is for upload or download info
+	 * @param authRequired Boolean that indicates whether or not the request has to be authenticated with a authorization header
+	 * @return HttpResponse The last response of the server (401 are hidden)
+	 */
+	private void writeRequestedFileData(DataOutputStream outputStream,
+			String filepath, int startingByte, int endingByte) throws IOException {        
+        // Write file content
+        File file = new File(filepath);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        
+        int bytesAvailable = Long.valueOf(file.length()).intValue() - endingByte;
+        int bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
+        
+        byte[] buffer = new byte[bufferSize];
+        int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        
+        int progress = 0;
+        
+        while (progress < endingByte && !isCancelled()) {
+            progress += bytesRead;
+            bytesAvailable = fileInputStream.available(); 
+            bufferSize = Math.min(Math.min(bytesAvailable, CHUNK_MAX_SIZE),endingByte - progress);
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        }
+        if (logger.isActivated()) {
+            logger.warn(endingByte + " bytes already uploaded, resuming upload from byte "+progress);
+        }
+
+        bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
+        bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        
+        while (bytesRead > 0 && !isCancelled()) {
+            progress += bytesRead;
+            outputStream.write(buffer, 0, bytesRead);
+            bytesAvailable = fileInputStream.available(); 
+            getListener().httpTransferProgress(progress, file.length());
+            bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
+            buffer = new byte[bufferSize];
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+        }
+        outputStream.writeBytes(lineEnd);
+        fileInputStream.close();
+	}
+
+	/**
+	 * Parse a file transfer over HTTP document
+	 *
+	 * @param xml XML document
+	 * @return File transfer document
+	 */
+	public static FileTransferHttpInfoDocument parseFileTransferHttpDocument(byte[] xml) {
+		try {
+		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml));
+		    FileTransferHttpInfoParser ftHttpParser = new FileTransferHttpInfoParser(ftHttpInput);
+		    return ftHttpParser.getFtInfo();
+		} catch(Exception e) {
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * Send a get for info on the upload
+	 *
+	 * @param suffix String that specifies if it is for upload or download info
+	 * @param authRequired Boolean that indicates whether or not the request has to be authenticated with a authorization header
+	 * @return HttpResponse The last response of the server (401 are hidden)
+	 */
+	private HttpResponse sendGetInfo(String suffix, boolean authRequired) throws Exception {
+		// Check server address
+        url = new URL(getHttpServerAddr());
+        String protocol = url.getProtocol();    // TODO : exit if not HTTPS
+        String host = url.getHost();
+        String serviceRoot = url.getPath();
+
+        // Build POST request
+        HttpGet get = new HttpGet(new URI(protocol + "://" + host + serviceRoot + "?tid="+ tid + suffix));
+        
+        if(authRequired)
+        {
+        	get.addHeader("Authorization", auth.generateAuthorizationHeaderValue(get.getMethod(), get.getURI().toString(), ""));
+        }
+        	
+        if (HTTP_TRACE_ENABLED) {
+            String trace = ">>> Send HTTP request:";
+            trace += "\n" + get.getMethod() + " " + get.getRequestLine().getUri();
+            System.out.println(trace);
+        }
+        
+        HttpResponse resp = executeRequest(get);
+        		
+     // Check response status code
+        int statusCode = resp.getStatusLine().getStatusCode();
+        if (logger.isActivated()) {
+            logger.debug("Get Resume Info Response " + statusCode);
+        }
+        switch (statusCode) {
+		    case 401 :
+		    	if(authRequired)
+		    	{
+		    		throw new Exception("Unexpected response from server, got "+statusCode + " for the second time. Authentication rejected.");
+		    	}
+		    	Header[] authHeaders = resp.getHeaders("www-authenticate");
+	            if (authHeaders.length == 0) {
+	                throw new IOException("headers malformed in 401 response");
+	            }
+	            auth.readWwwAuthenticateHeader(authHeaders[0].getValue());
+	            return sendGetInfo(suffix, true);
+		    case 200 :
+		    	return resp;
+	        default :
+	        	 if (HTTP_TRACE_ENABLED) {
+	                 String trace = "<<< Receive HTTP response:";
+	                 trace += "\n" + resp.getStatusLine().toString();
+	                 Header[] headers = resp.getAllHeaders();
+	                 for (Header header : headers) {
+	                     trace += "\n" + header.getName() + " " + header.getValue();
+	                 }
+	                 System.out.println(trace);
+	             }
+	    		return null;
+        }
+	}
+
+	/**
+	 * Send a request to get the download info and bring the response
+	 *
+	 * @return byte[] contains the response of the server to the upload
+	 */
+	public byte[] getDownloadInfo() {
+    	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		try{
+			HttpResponse resp = sendGetDownloadInfo();
+			
+    		InputStream is = resp.getEntity().getContent();
+
+        	int nRead;
+        	byte[] data = new byte[16384];
+
+        	while ((nRead = is.read(data, 0, data.length)) != -1) {
+        	  buffer.write(data, 0, nRead);
+        	}
+
+        	buffer.flush();
+		}
+		catch(Exception e)
+		{
+			if (logger.isActivated()) {
+	            logger.warn("Could not get upload info due to "+ e.getLocalizedMessage());
+	        }
+        	getListener().httpTransferPaused();
+    		return null;
+		}
+		return buffer.toByteArray();
+	}
+
+	/**
+	 * Send a request to get info on the upload for download purpose on terminating
+	 *
+	 * @return HttpResponse The last response of the server (401 are hidden)
+	 */
+	private HttpResponse sendGetDownloadInfo() throws Exception {
+		return sendGetInfo(DOWNLOAD_INFO_REQUEST,false);
+	}
+	
+	/**
+	 * Send a get for info on the upload
+	 *
+	 * @return HttpResponse The last response of the server (401 are hidden)
+	 */ 
+	private HttpResponse sendGetUploadInfo() throws Exception {
+		return sendGetInfo(UPLOAD_INFO_REQUEST,false);
+	}
 }

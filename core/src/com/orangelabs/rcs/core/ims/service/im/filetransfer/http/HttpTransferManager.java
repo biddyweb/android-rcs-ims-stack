@@ -94,6 +94,11 @@ public abstract class HttpTransferManager {
      * HTTP context
      */
     private HttpContext httpContext = null;
+    
+    /**
+     * HTTP response
+     */
+    private HttpResponse response = null;
 
     /**
      * HTTP client
@@ -215,8 +220,12 @@ public abstract class HttpTransferManager {
      * @throws ClientProtocolException 
      */
     public HttpResponse executeRequest(HttpRequestBase request) throws ClientProtocolException, IOException {
+    	if(response != null)
+    	{
+			response.getEntity().consumeContent();
+    	}
         if (httpClient != null) {
-            HttpResponse response = httpClient.execute(request, httpContext);
+        	response = httpClient.execute(request, httpContext);
             if (HTTP_TRACE_ENABLED) {
                 String trace = "<<< Receive HTTP response:";
                 trace += "\n" + response.getStatusLine().toString();
@@ -246,6 +255,13 @@ public abstract class HttpTransferManager {
      */
 	public void interrupt() {
 		isCancelled = true;
+	}
+	
+	/**
+     * Resuming upload so resetting cancelled boolean
+     */
+	public void resetCancelled() {
+		isCancelled = false;
 	}
 	
 	/**

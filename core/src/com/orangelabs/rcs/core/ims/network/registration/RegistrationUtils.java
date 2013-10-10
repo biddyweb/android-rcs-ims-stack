@@ -38,6 +38,11 @@ public class RegistrationUtils {
 		if (RcsSettings.getInstance().isIPVideoCallSupported()) {
 			tags.add(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL);
 		}
+
+		// Automata support
+		if (RcsSettings.getInstance().isSipAutomata()) {
+			tags.add(FeatureTags.FEATURE_SIP_AUTOMATA);
+		}
 		
 		String additionalTags = "";
 

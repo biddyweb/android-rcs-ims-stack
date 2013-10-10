@@ -35,6 +35,8 @@ import org.apache.http.HttpVersion;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.params.CookiePolicy;
+import org.apache.http.client.params.HttpClientParams;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerPNames;
@@ -72,6 +74,7 @@ import com.orangelabs.rcs.provisioning.TermsAndConditionsRequest;
 import com.orangelabs.rcs.service.LauncherUtils;
 import com.orangelabs.rcs.utils.HttpUtils;
 import com.orangelabs.rcs.utils.NetworkUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -132,9 +135,12 @@ public class HttpsProvisioningManager {
      * Constructor
      *
      * @param applicationContext
+     * @param retryIntent 
      */
-    public HttpsProvisioningManager(Context applicationContext) {
+    public HttpsProvisioningManager(Context applicationContext, PendingIntent retryIntent) {
 		this.context = applicationContext;
+		this.retryIntent = retryIntent;
+		
 		smsManager = new HttpsProvisioningSMS(this);
 		networkConnection = new HttpsProvisioningConnection(this);
 	}
@@ -232,18 +238,25 @@ public class HttpsProvisioningManager {
      * @throws ClientProtocolException 
      */
     protected HttpResponse executeRequest(String protocol, String request, DefaultHttpClient client, HttpContext localContext) throws URISyntaxException, ClientProtocolException, IOException {
-        HttpGet get = new HttpGet();
-        get.setURI(new URI(protocol + "://" + request));
-        get.addHeader("Accept-Language", HttpsProvisioningUtils.getUserLanguage());
-        if (logger.isActivated()) {
-            logger.debug("HTTP request: " + get.getURI().toString());
+        try {
+            HttpGet get = new HttpGet();
+            get.setURI(new URI(protocol + "://" + request));
+            get.addHeader("Accept-Language", HttpsProvisioningUtils.getUserLanguage());
+            if (logger.isActivated()) {
+                logger.debug("HTTP request: " + get.getURI().toString());
+            }
+            
+            HttpResponse response = client.execute(get, localContext);
+            if (logger.isActivated()) {
+                logger.debug("HTTP response: " + response.getStatusLine().toString());
+            }
+            return response;
+        } catch (UnknownHostException e) {
+            if (logger.isActivated()) {
+                logger.debug("The server " + request + " can't be reached!");
+            }
+            return null;
         }
-        
-        HttpResponse response = client.execute(get, localContext);
-        if (logger.isActivated()) {
-            logger.debug("HTTP response: " + response.getStatusLine().toString());
-        }
-        return response;
     }
 
     /**
@@ -269,25 +282,30 @@ public class HttpsProvisioningManager {
     private String getHttpsRequestArguments(String imsi, String imei, String smsPort, String token, String msisdn) {
         String args = "?vers=" + RcsSettings.getInstance().getProvisioningVersion()
         		+ "&rcs_version=" + HttpsProvisioningUtils.getRcsVersion()
-//                + "&rcs_profile=" + HttpsProvisioningUtils.getRcsProfile()
+                + "&rcs_profile=" + HttpsProvisioningUtils.getRcsProfile()
                 + "&client_vendor=" + HttpsProvisioningUtils.getClientVendorFromContext(context)
                 + "&client_version=" + HttpsProvisioningUtils.getClientVersionFromContext(context)
                 + "&terminal_vendor=" + HttpUtils.encodeURL(HttpsProvisioningUtils.getTerminalVendor())
                 + "&terminal_model=" + HttpUtils.encodeURL(HttpsProvisioningUtils.getTerminalModel())
                 + "&terminal_sw_version=" + HttpUtils.encodeURL(HttpsProvisioningUtils.getTerminalSoftwareVersion());
-        if (imsi != null) { // add optional parameter IMSI only if available
+        if (imsi != null) {
+        	// Add optional parameter IMSI only if available
             args += "&IMSI=" + imsi;
         }
-        if (imei != null) { // add optional parameter IMEI only if available
+        if (imei != null) {
+        	// Add optional parameter IMEI only if available
             args += "&IMEI=" + imei;
         }
-        if (smsPort != null) { // add SMS port if available
+        if (smsPort != null) {
+        	// Add SMS port if available
             args += "&SMS_port=" + smsPort;
         }
-        if (msisdn != null) { // add token if available
+        if (msisdn != null) {
+        	// Add token if available
             args += "&msisdn=" + msisdn;
         }
-        if (token != null) { // add token if available
+        if (token != null) {
+        	// Add token if available
             args += "&token=" + token;
         }
         return args;
@@ -303,7 +321,7 @@ public class HttpsProvisioningManager {
 	 * @param localContext Instance of {@link HttpContext}
 	 * @return Instance of {@link HttpsProvisioningResult} or null in case of internal exception
 	 */
-    protected HttpsProvisioningResult sendFirstRequestsToRequireOTP(String imsi, String imei, String msisdn, String requestUri, String oldRequestUri, DefaultHttpClient client, HttpContext localContext) {
+    protected HttpsProvisioningResult sendFirstRequestsToRequireOTP(String imsi, String imei, String msisdn, String primaryUri, String secondaryUri, DefaultHttpClient client, HttpContext localContext) {
         HttpsProvisioningResult result = new HttpsProvisioningResult();
         try {
             if (logger.isActivated()) {
@@ -313,46 +331,37 @@ public class HttpsProvisioningManager {
             // Generate the SMS port for provisioning
             String smsPortForOTP = HttpsProvisioningSMS.generateSmsPortForProvisioning();
 
-            // Register SMS provisioning receiver
-            smsManager.registerSmsProvisioningReceiver(smsPortForOTP, requestUri, client, localContext);
-
             // Format first HTTPS request with extra parameters (IMSI and IMEI if available plus SMS_port and token)
             String token = (!TextUtils.isEmpty(RcsSettings.getInstance().getProvisioningToken()) ? RcsSettings.getInstance().getProvisioningToken() : "");
             String args = getHttpsRequestArguments(imsi, imei, smsPortForOTP, token, msisdn);
-            String request = requestUri + args;
-            if (logger.isActivated()) {
-                logger.info("First HTTPS request to require OTP: Request provisioning: " + request);
-            }
 
             // Execute first HTTPS request with extra parameters
-            HttpResponse response = null;
-            try {
-                response = executeRequest("https", request, client, localContext);
-            } catch (UnknownHostException e) {
-                // If the new URI is not reachable, try the old
-                if (logger.isActivated()) {
-                    logger.debug("First HTTPS request to require OTP: The server " + request + " can't be reached!");
-                }
-                
+            String request = primaryUri + args;
+            HttpResponse response = executeRequest("https", request, client, localContext);
+            if (response == null && !StringUtils.isEmpty(secondaryUri)) {
+                // First server not available, try the secondaryUri
+                request = secondaryUri + args;
+                response = executeRequest("http", request, client, localContext);
+            }
+            if (response == null) {
                 return null;
             }
-            
+
             result.code = response.getStatusLine().getStatusCode();
             result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
-			msisdn = RcsSettings.getInstance().getMsisdn();
             if (result.code != 200) {
                 if (result.code == 403) {
                     if (logger.isActivated()) {
-                        logger.debug("First HTTPS request to require OTP failed: Forbidden (request status code: 403)");
+                        logger.debug("First HTTPS request to require OTP failed: Forbidden (request status code: 403) for msisdn "+msisdn);
                     }
-                    if (msisdn == null || "".equalsIgnoreCase(msisdn)) {
-                        msisdn = HttpsProvionningMSISDNInput.getInstance().displayPopupAndWaitResponse(context);
-                    }
+                    
+                    msisdn = RcsSettings.getInstance().getMsisdn();
+                    msisdn = HttpsProvionningMSISDNInput.getInstance().displayPopupAndWaitResponse(context);
 
                     if (msisdn == null) {
                         return null;
                     } else {
-                        return sendFirstRequestsToRequireOTP(imsi, imei, msisdn, requestUri, oldRequestUri, client, localContext);
+                        return sendFirstRequestsToRequireOTP(imsi, imei, msisdn, primaryUri, secondaryUri, client, localContext);
                     }
 
                 } else if (result.code == 503) {
@@ -366,13 +375,17 @@ public class HttpsProvisioningManager {
                     }
                 }
 
-                // Save the MSISDN
-                RcsSettings.getInstance().setMsisdn(msisdn);
-
             } else {
                 if (logger.isActivated()) {
                     logger.debug("HTTPS request returns with 200 OK.");
                 }
+                
+                // Register SMS provisioning receiver
+                smsManager.registerSmsProvisioningReceiver(smsPortForOTP, primaryUri, client, localContext);
+                
+                // Save the MSISDN
+                RcsSettings.getInstance().setMsisdn(msisdn);
+                
                 // If the content is empty, means that the configuration XML is not present 
                 // and the Token is invalid then we need to wait for the SMS with OTP
                 if (TextUtils.isEmpty(result.content)) {
@@ -440,6 +453,28 @@ public class HttpsProvisioningManager {
     
 
     /**
+     * Build the provisioning address with SIM information
+     *
+     * @return provisioning URI
+     */
+    private String buildProvisioningAddress(TelephonyManager tm) {
+        // Get SIM info
+        String ope = tm.getSimOperator();
+        if (ope == null || ope.length() < 4) {
+            if (logger.isActivated()) {
+                logger.warn("Can not read network operator from SIM card!");
+            }
+            return null;
+        }
+        String mnc = ope.substring(3);
+        String mcc = ope.substring(0, 3);
+        while (mnc.length() < 3) { // Set mnc on 3 digits
+            mnc = "0" + mnc;
+        }
+        return "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
+    }
+
+    /**
 	 * Get configuration
 	 * 
 	 * @return Result or null in case of internal exception
@@ -451,52 +486,38 @@ public class HttpsProvisioningManager {
 				logger.debug("Request config via HTTPS");
 			}
 
-	    	// Get SIM info
-	    	TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-            // Build provisioning address if empty in settings 
-            String requestUri = RcsSettings.getInstance().getProvisioningAddress();
-            String oldRequestUri = "";
-            if (requestUri.length() == 0) {
-    	    	String ope = tm.getSimOperator();
-                // Cancel operation if no valid SIM operator
-                if (ope == null || ope.length() < 4) {
-                    if (logger.isActivated()) {
-                        logger.warn("Can not read network operator from SIM card!");
-                    }
-                    return null;
-                }
-                String mnc = ope.substring(3);
-                String mcc = ope.substring(0, 3);
-                oldRequestUri = "config." + mcc + mnc + ".rcse";
-                while (mnc.length() < 3) { // Set mnc on 3 digits
-                    mnc = "0" + mnc;
-                }
-                requestUri = "config.rcs." + "mnc" + mnc + ".mcc" + mcc + ".pub.3gppnetwork.org";
+            // Get provisioning address
+            TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+            String primaryUri = null;
+            String secondaryUri = null;
+            if (RcsSettings.getInstance().isSecondaryProvisioningAddressOnly()) {
+                primaryUri = RcsSettings.getInstance().getSecondaryProvisioningAddress();
+            } else {
+                primaryUri = buildProvisioningAddress(tm);
+                secondaryUri = RcsSettings.getInstance().getSecondaryProvisioningAddress();
             }
-			
+
             // Check if a configuration file for HTTPS provisioning exists
             String PROVISIONING_FILE = Environment.getExternalStorageDirectory().getPath() + "/joyn_provisioning.txt";
             try {
                 File file = new File(PROVISIONING_FILE);
                 if (file.exists()) {
                 	if (logger.isActivated()) {
-                        logger.debug("### getConfig: Provisioning file found !");
+                        logger.debug("Provisioning file found !");
                     }
                     FileInputStream fis = new FileInputStream(PROVISIONING_FILE);
                     DataInputStream in = new DataInputStream(fis);
                     BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                    requestUri = br.readLine();
+                    primaryUri = br.readLine();
+                    secondaryUri = null;
                     in.close();
                 }
             } catch (Exception e) {
-                if (logger.isActivated()) {
-                    logger.debug("The configuration file \"/" + PROVISIONING_FILE + "\" could not read, " +
-                            "default HTTPS provisioning server \"" + requestUri + "\" " + "is used.");
-                }
+                // Nothing to do
             }
-            
+
             if (logger.isActivated()) {
-                logger.debug("### getConfig: HCS/RCS Uri to connect: "+ requestUri);
+                logger.debug("HCS/RCS Uri to connect: "+ primaryUri + " or " + secondaryUri);
             }
 
 			String imsi = tm.getSubscriberId();
@@ -505,14 +526,12 @@ public class HttpsProvisioningManager {
 
 	    	// Format HTTP request
 			SchemeRegistry schemeRegistry = new SchemeRegistry();
-			schemeRegistry.register(new Scheme("http",
-					PlainSocketFactory.getSocketFactory(), 80));
-			schemeRegistry.register(new Scheme("https",
-					new EasySSLSocketFactory(), 443));
+			schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+			schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(), 443));
 
 			HttpParams params = new BasicHttpParams();
 			params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
-			params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+			params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE, 
 					new ConnPerRouteBean(30));
 			params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
             NetworkInfo networkInfo = networkConnection.getConnectionMngr().getActiveNetworkInfo();
@@ -526,34 +545,35 @@ public class HttpsProvisioningManager {
             }
 			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 
+			
+			// Support broad variety of different cookie types (not just Netscape but RFC 2109 and RFC2965 compliant ones, too)  
+			HttpClientParams.setCookiePolicy(params, CookiePolicy.BROWSER_COMPATIBILITY);
+						
 			ClientConnectionManager cm = new SingleClientConnManager(params, schemeRegistry);
 			DefaultHttpClient client = new DefaultHttpClient(cm, params);
-
-			// Create a local instance of cookie store
 			CookieStore cookieStore = (CookieStore) new BasicCookieStore();
-
-			// Create local HTTP context
 			HttpContext localContext = new BasicHttpContext();
-
-			// Bind custom cookie store to the local context
 			localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
-            // If no network or network is not moblie network
+            // If network is not mobile network, use request with OTP
             if (networkInfo != null && networkInfo.getType() != ConnectivityManager.TYPE_MOBILE) {
                 // Proceed with non mobile network registration
-                return sendFirstRequestsToRequireOTP(imsi, imei, null, requestUri, oldRequestUri, client, localContext);
+                return sendFirstRequestsToRequireOTP(imsi, imei, null, primaryUri, secondaryUri, client, localContext);
             }
+
             if (logger.isActivated()) {
                 logger.debug("HTTP provisioning on mobile network");
             }
+            
 			// Execute first HTTP request
-            HttpResponse response = null;
-            try {
+            String requestUri = primaryUri;
+            HttpResponse response = executeRequest("http", requestUri, client, localContext);
+            if (response == null && !StringUtils.isEmpty(secondaryUri)) {
+                // First server not available, try the secondaryUri
+                requestUri = secondaryUri;
                 response = executeRequest("http", requestUri, client, localContext);
-            } catch (UnknownHostException e) {
-                if (logger.isActivated()) {
-                    logger.debug("The server " + requestUri + " can't be reached !");
-                }
+            }
+            if (response == null) {
                 return null;
             }
 
@@ -563,7 +583,6 @@ public class HttpsProvisioningManager {
                 if (result.code == 503) {
                     result.retryAfter = getRetryAfter(response);
                 }
-
                 return result;
             }
 
@@ -576,6 +595,9 @@ public class HttpsProvisioningManager {
 
             // Execute second HTTPS request
             response = executeRequest("https", request, client, localContext);
+            if (response == null) {
+                return null;
+            }
 			result.code = response.getStatusLine().getStatusCode();
 			if (result.code != 200) {
                 if (result.code == 503) {
@@ -638,6 +660,9 @@ public class HttpsProvisioningManager {
 
             // Execute second HTTPS request
             HttpResponse response = executeRequest("https", request, client, localContext);
+            if (response == null) {
+                return null;
+            }
             result.code = response.getStatusLine().getStatusCode();
             if (result.code != 200) {
                 if (result.code == 503) {
@@ -652,11 +677,6 @@ public class HttpsProvisioningManager {
             result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
 
             return result;
-        } catch (UnknownHostException e) {
-            if (logger.isActivated()) {
-                logger.warn("Second HTTPS request with OTP failed: Provisioning server not reachable");
-            }
-            return null;
         } catch (Exception e) {
             if (logger.isActivated()) {
                 logger.error("Second HTTPS request with OTP failed: Can't get config via HTTPS", e);
@@ -718,7 +738,15 @@ public class HttpsProvisioningManager {
                         logger.debug("Provisioning version " + version + ", validity " + validity);
                     }
                     RcsSettings.getInstance().setProvisioningVersion(version);
-
+                    
+                    // Save token
+                    String token = info.getToken();
+                    long tokenValidity = info.getTokenValidity();
+                    if (logger.isActivated()) {
+                        logger.debug("Provisioning Token " + token + ", validity " + tokenValidity);
+                    }
+                    RcsSettings.getInstance().setProvisioningToken(token);
+                    
                     if (version.equals("-1") && validity == -1) {
                         // Forbidden: reset account + version = 0-1 (doesn't restart)
                         if (logger.isActivated()) {
@@ -738,7 +766,6 @@ public class HttpsProvisioningManager {
 
                         // Reset config
                         LauncherUtils.resetRcsConfig(context);
-                        
                     } else {
                         // Start retry alarm
                         if (validity > 0) {

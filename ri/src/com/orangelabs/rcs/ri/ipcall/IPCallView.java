@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
@@ -58,7 +60,19 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 * UI handler
 	 */
 	public static final  Handler handler = new Handler();
-
+	 
+	private static final int INACTIVE = 0;
+	private static final int HOLD_IN_PROGRESS = 1;
+	private static final int HOLD = 2;
+	private static final int UNHOLD_IN_PROGRESS = 3;
+	private static final int REMOTE_HOLD_IN_PROGRESS = 4;
+	private static final int REMOTE_HOLD = 5;
+	private static final int REMOTE_UNHOLD_IN_PROGRESS = 6;
+	
+	/**
+	 * Context
+	 */
+	private Context context = this;
 	/**
 	 * Activity is in state onResume
 	 */ 
@@ -93,6 +107,11 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 * video connected
 	 */
 	private boolean videoConnected  = false;
+	
+	/**
+	 * hold status
+	 */
+	private int holdStatus  = INACTIVE ;
 	
 	/**
 	 * Progress dialog
@@ -209,34 +228,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			logger.info("onCreate()");
 		}
 		
-		// Set layout
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-		setContentView(R.layout.ipcall_session2);
-
-		// Set title
-		setTitle(R.string.title_ipcall);
-
-		// set buttons
-		setOnHoldBtn = (Button) findViewById(R.id.set_onhold_btn);
-		setOnHoldBtn.setOnClickListener(btnOnHoldListener);
-
-		hangUpBtn = (Button) findViewById(R.id.hangup_btn);
-		hangUpBtn.setOnClickListener(btnHangUpListener);
-		hangUpBtn.setEnabled(false);
-
-		addVideoBtn = (Button) findViewById(R.id.add_video_btn);
-		addVideoBtn.setOnClickListener(btnAddVideoListener);
-		addVideoBtn.setEnabled(false);
-
-		switchCamBtn = (Button) findViewById(R.id.switch_cam_btn);
-		switchCamBtn.setVisibility(View.GONE);
-
-		outgoingVideoView = (VideoSurfaceView) findViewById(R.id.outgoing_ipcall_video_preview);
-		outgoingVideoView.setVisibility(View.GONE);
-
-		incomingVideoView = (VideoSurfaceView) findViewById(R.id.incoming_ipcall_video_view);
-		incomingVideoView.setVisibility(View.GONE);
+		
 		
 		String action = getIntent().getAction();
 		if (logger.isActivated()) {
@@ -246,9 +238,39 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		if (action != null){
 			// API or IMS disconnection
 			if (action.equals("ExitActivity")) {
-				exitActivity(getIntent().getStringExtra("messages"));	
+				exitActivity(null);	
 			}
 			else {
+				// Set layout
+				requestWindowFeature(Window.FEATURE_NO_TITLE);
+				setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+				setContentView(R.layout.ipcall_session2);
+
+				// Set title
+				setTitle(R.string.title_ipcall);
+
+				// set buttons
+				setOnHoldBtn = (Button) findViewById(R.id.set_onhold_btn);
+				setOnHoldBtn.setOnClickListener(btnOnHoldListener);
+				setOnHoldBtn.setEnabled(false);
+
+				hangUpBtn = (Button) findViewById(R.id.hangup_btn);
+				hangUpBtn.setOnClickListener(btnHangUpListener);
+				hangUpBtn.setEnabled(false);
+
+				addVideoBtn = (Button) findViewById(R.id.add_video_btn);
+				addVideoBtn.setOnClickListener(btnAddVideoListener);
+				addVideoBtn.setEnabled(false);
+
+				switchCamBtn = (Button) findViewById(R.id.switch_cam_btn);
+				switchCamBtn.setVisibility(View.GONE);
+
+				outgoingVideoView = (VideoSurfaceView) findViewById(R.id.outgoing_ipcall_video_preview);
+				outgoingVideoView.setVisibility(View.GONE);
+
+				incomingVideoView = (VideoSurfaceView) findViewById(R.id.incoming_ipcall_video_view);
+				incomingVideoView.setVisibility(View.GONE);
+				
 				// instantiate Audio Player and Renderer
 				incomingAudioRenderer = new AudioRenderer(this);
 				outgoingAudioPlayer = new LiveAudioPlayer(incomingAudioRenderer);
@@ -383,17 +405,13 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			if (logger.isActivated()) {
 				logger.info("onKeyBack()");
 			}
-			if (videoConnected) {
+			
+			if (videoConnected){
 				removeVideo();
 			}
+			isVisible = false ;
 
-			try {
-				session.removeSessionListener(sessionEventListener);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
+			IPCallSessionsData.getInstance().sessionEventListener= this.sessionEventListener ;
 			this.finish();
 			return true;
 		}
@@ -468,8 +486,20 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 */
 	private View.OnClickListener btnOnHoldListener = new View.OnClickListener() {
 		public void onClick(View v) {
-			Utils.showMessage(IPCallView.this, getString(R.string.label_not_implemented));
-			// TODO
+			Utils.showMessage(IPCallView.this, "Feature "+ getString(R.string.label_not_implemented));
+			
+//			 if (holdStatus == INACTIVE){
+//				 setOnHold(true) ;
+//				 setOnHoldBtn.setText(R.string.label_resume_btn);
+//				 setOnHoldBtn.setEnabled(false);
+//				 holdStatus = HOLD_IN_PROGRESS;
+//			 }
+//			 else if (holdStatus == HOLD){
+//				 setOnHold(false);
+//				 setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+//				 setOnHoldBtn.setEnabled(false);
+//				 holdStatus = UNHOLD_IN_PROGRESS;
+//			 }
 		}
 	};
 
@@ -554,7 +584,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				public void run() {
 					hideProgressDialog();
 					hangUpBtn.setEnabled(true);
-					//setOnHoldBtn.setEnabled(true);
+					setOnHoldBtn.setEnabled(true);
 					addVideoBtn.setEnabled(true);
 					// video
 					if (videoSelected){
@@ -586,11 +616,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							stopSession();
 							exitActivity(getString(R.string.label_ipcall_failed)+"-"+ e.getMessage());
 							
-						} 
-						
-					}
-
-					
+						} 						
+					}					
 				}
 			});
 		}
@@ -609,7 +636,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					releaseCamera() ;
-					//setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					if (direction.equals("outgoing")){
 						exitActivity(getString(R.string.label_outgoing_ipcall_aborted));
@@ -636,9 +663,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					releaseCamera() ;
-					//setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
-//					stopSession();
 					if ((direction != null) && (direction.equals("outgoing"))){
 						exitActivity(getString(R.string.label_outgoing_ipcall_terminated_by_remote));
 					}
@@ -664,7 +690,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					releaseCamera() ;
-					//setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					addVideoBtn.setEnabled(false);
 
@@ -678,7 +704,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			});	
 		}
 
-		@Override
+
 		public void handleVideoResized(final int width, final int height)
 				throws RemoteException {
 			if (logger.isActivated()) {
@@ -694,10 +720,9 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							incomingHeight);
 				}
 			});
-
 		}
 
-		@Override
+
 		public void handle486Busy() throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handle486Busy()");
@@ -710,18 +735,21 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			thread.start();
 			handler.post(new Runnable() {
 				public void run() {
-					//setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);			
 					exitActivity(getString(R.string.label_ipcall_called_is_busy));
 				}
 			});
 		}
 
-		@Override
+
 		public void handleAddVideoInvitation(String arg0, int arg1, int arg2)
 				throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleAddVideoInvitation()");
+				logger.info("Encoding ="+arg0);
+				logger.info("Width ="+arg1);
+				logger.info("height ="+arg2);
 			}
 			handler.post(new Runnable() {
 				public void run() {
@@ -734,7 +762,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			});
 		}
 
-		@Override
+
 		public void handleAddVideoAborted(int arg0) throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleAddVideoAborted()");
@@ -750,40 +778,53 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					incomingVideoView.setVisibility(View.GONE);
 					switchCamBtn.setVisibility(View.GONE);
 					if (addVideoInvitationDialog != null){
-						addVideoInvitationDialog.dismiss();
-						
+						addVideoInvitationDialog.dismiss();						
 					}
 				}
 			});
 		}
 
-		@Override
 		public void handleAddVideoAccepted() throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleAddVideoAccepted()");
 			}
-			handler.post(new Runnable() {
-				public void run() {
-					videoConnected= true;
-					addVideoBtn.setText(R.string.label_remove_video_btn);
-					addVideoBtn.setEnabled(true);
-					switchCamBtn.setEnabled(true);
-					
-					// Update Camera
-                    outgoingHeight = outgoingVideoPlayer.getVideoCodecHeight();
-                    outgoingWidth = outgoingVideoPlayer.getVideoCodecWidth();
-                    if (logger.isActivated()) {
-        				logger.info("Update Camera - outGoingHeight ="+outgoingHeight+"- outGoingWidth = "+outgoingWidth);
-        			}
-                    reStartCamera();
-				}
-			});
-		}
 
-		@Override
+			if (isVisible){
+				handler.post(new Runnable() {
+					public void run() {
+						videoConnected = true;
+						addVideoBtn.setText(R.string.label_remove_video_btn);
+						addVideoBtn.setEnabled(true);
+						switchCamBtn.setEnabled(true);
+
+						// Update Camera
+						outgoingHeight = outgoingVideoPlayer.getVideoCodecHeight();
+						outgoingWidth = outgoingVideoPlayer.getVideoCodecWidth();
+						if (logger.isActivated()) {
+							logger.info("Update Camera - outGoingHeight ="
+									+ outgoingHeight + "- outGoingWidth = "
+									+ outgoingWidth);
+						}
+						reStartCamera();
+					}
+				});
+			} else { // activity not visible
+				Thread thread = new Thread() {				
+					public void run(){
+						stopSession();
+					}
+				};
+				thread.start();
+			}			
+		}
+		
+
 		public void handleRemoveVideo() throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleRemoveVideoInvitation()");
+			}
+			if (addVideoInvitationDialog != null){
+				addVideoInvitationDialog.dismiss();				
 			}
 			handler.post(new Runnable() {
 				public void run() {
@@ -821,10 +862,115 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					videoConnected = true;
 					addVideoBtn.setText(R.string.label_remove_video_btn);
 					addVideoBtn.setEnabled(true);
-					
+
 				}
 			});
-			
+		}
+
+		public void handleCallHold() throws RemoteException {
+			handler.post(new Runnable() {
+				@Override
+				public void run() {
+					CharSequence text = "handleCallHold";
+					int duration = Toast.LENGTH_SHORT;
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setText(R.string.label_resume_btn);
+				}
+			});
+
+			holdStatus = REMOTE_HOLD_IN_PROGRESS;
+		}
+
+		public void handleCallHoldAborted(int arg0) throws RemoteException {
+			handler.post(new Runnable() {
+				public void run() {
+					CharSequence text = "handleCallHoldAborted";
+					int duration = Toast.LENGTH_SHORT;
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					setOnHoldBtn.setEnabled(true);
+					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+				}
+			});
+
+			holdStatus = INACTIVE;
+		}
+
+		public void handleCallHoldAccepted() throws RemoteException {
+			handler.post(new Runnable() {
+				public void run() {
+					CharSequence text = "handleCallHoldAccepted";
+					int duration = Toast.LENGTH_SHORT;
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					setOnHoldBtn.setEnabled(true);
+					setOnHoldBtn.setText(R.string.label_resume_btn);
+				}
+			});
+
+			if (holdStatus == HOLD_IN_PROGRESS) {
+				holdStatus = HOLD;
+			} else if (holdStatus == REMOTE_HOLD_IN_PROGRESS) {
+				holdStatus = REMOTE_HOLD;
+			}
+		}
+
+		@Override
+		public void handleCallResume() throws RemoteException {
+			handler.post(new Runnable() {
+				@Override
+				public void run() {
+					CharSequence text = "handleCallResume";
+					int duration = Toast.LENGTH_SHORT;
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					setOnHoldBtn.setEnabled(false);
+					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+				}
+			});
+
+			holdStatus = REMOTE_UNHOLD_IN_PROGRESS;
+		}
+
+		@Override
+		public void handleCallResumeAborted(int arg0) throws RemoteException {
+			handler.post(new Runnable() {
+				@Override
+				public void run() {
+					setOnHoldBtn.setEnabled(true);
+					setOnHoldBtn.setText(R.string.label_resume_btn);
+				}
+			});
+
+			if (holdStatus == UNHOLD_IN_PROGRESS) {
+				holdStatus = HOLD;
+			} else if (holdStatus == REMOTE_UNHOLD_IN_PROGRESS) {
+				holdStatus = REMOTE_HOLD;
+			}
+		}
+
+		@Override
+		public void handleCallResumeAccepted() throws RemoteException {
+			handler.post(new Runnable() {
+				@Override
+				public void run() {
+					CharSequence text = "handleCallResumeAccepted";
+					int duration = Toast.LENGTH_SHORT;
+					Toast toast = Toast.makeText(context, text, duration);
+					toast.show();
+
+					setOnHoldBtn.setEnabled(true);
+					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+				}
+			});
+
+			holdStatus = INACTIVE;
 		}
 	};
 
@@ -950,7 +1096,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			Thread thread = new Thread() {
 				public void run() {
 					try {
-
+						session.removeSessionListener(IPCallSessionsData.getInstance().sessionEventListener);
 						session.addSessionListener(sessionEventListener);
 						try {
 							String contact = session.getRemoteContact() ;
@@ -977,9 +1123,9 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 
 		// enables buttons
-		// setOnHoldBtn.setText(R.string.label_set_onhold_btn);
+		setOnHoldBtn.setText(R.string.label_set_onhold_btn);
 		hangUpBtn.setEnabled(true);
-		// setOnHoldBtn.setEnabled(true);
+		 setOnHoldBtn.setEnabled(true);
 		addVideoBtn.setEnabled(true);
 
 		// prepare video session (camera surface View ...)
@@ -1087,9 +1233,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				// wait api connection & video surface creation to instantiate
 				// video player
 				while (!isSurfaceCreated) {
-					if (logger.isActivated()) {
-						logger.info("wait isSurfaceCreated");
-					}
 					synchronized(this){
 						try {
 							wait(500);
@@ -1097,10 +1240,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
-					
-					if (logger.isActivated()) {
-						logger.info("sortie wait");
 					}
 				}
 				if (logger.isActivated()) {
@@ -1150,10 +1289,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(
 				IPCallView.this).setTitle("Add Video Invitation");
-		if (logger.isActivated()) {
-			logger.debug("IPCallSessionActivity.this :"
-					+ IPCallView.this);
-		}
 
 		// Add the buttons
 		builder.setPositiveButton(R.string.label_accept,
@@ -1197,9 +1332,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				// wait api connection & video surface creation to instantiate
 				// video player
 				while (!isSurfaceCreated) {
-					if (logger.isActivated()) {
-						logger.info("wait isSurfaceCreated");
-					}
 					synchronized(this){
 						try {
 							wait(500);
@@ -1207,10 +1339,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
-					
-					if (logger.isActivated()) {
-						logger.info("sortie wait");
 					}
 				}
 				if (logger.isActivated()) {
@@ -1254,12 +1382,33 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	}
 	
 	/**
+	 * Set call On Hold 
+	 */
+	private void setOnHold(boolean holdAction){
+		if (logger.isActivated()) {
+			logger.info("setOnHold()");
+		}
+		final boolean action = holdAction;
+		Thread thread = new Thread() {
+			public void run() {
+				if (session != null) {
+						try {
+							session.setCallHold(action);
+						} catch (RemoteException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				}
+			}
+		};
+		thread.start();
+	}
+	/**
      * Runnable to Receive incoming session
      */
     private void instantiateIncomingVideoRenderer() {
         	if (logger.isActivated()){
-                logger.error("instantiateIncomingVideoRenderer");
-                logger.info("isCallApiConnected : "+IPCallSessionsData.getInstance().isCallApiConnected);
+                logger.info("instantiateIncomingVideoRenderer");
             }
 
                 try {
@@ -1281,8 +1430,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
      */
     private void  instantiateOutgoingVideoPlayer() {
         	if (logger.isActivated()){
-                logger.error("instantiateOutgoingVideoPlayer");
-                logger.info("isCallApiConnected : "+IPCallSessionsData.getInstance().isCallApiConnected);
+                logger.info("instantiateOutgoingVideoPlayer");
                 logger.info("isSurfaceCreated : "+isSurfaceCreated);
             }
 
@@ -1377,32 +1525,34 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 */
 	private void displayProgressDialog() {
 		if (logger.isActivated()) {
-			logger.debug("displayProgressDialog()");
-			logger.debug("outgoingProgressDialog= "+outgoingProgressDialog);
+			logger.info("displayProgressDialog()");
+			logger.debug("outgoingProgressDialog= " + outgoingProgressDialog);
 		}
 		// Display a progress dialog
-		outgoingProgressDialog = Utils.showProgressDialog(
-				IPCallView.this,
+		outgoingProgressDialog = Utils.showProgressDialog(IPCallView.this,
 				getString(R.string.label_command_in_progress));
 		outgoingProgressDialog.setCancelable(false);
-		outgoingProgressDialog.setOnKeyListener(new Dialog.OnKeyListener(){
+		outgoingProgressDialog.setOnKeyListener(new Dialog.OnKeyListener() {
 
 			@Override
-            public boolean onKey(DialogInterface arg0, int keyCode,
-                    KeyEvent event) {
+			public boolean onKey(DialogInterface arg0, int keyCode,
+					KeyEvent event) {
 				if (logger.isActivated()) {
 					logger.debug("onKey()");
 				}
-                // TODO Auto-generated method stub
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                	
-                if (session != null){stopSession();}
-                else {cancelOutgoingSessionWhenCreated = true; }
-                exitActivity(null);
-                }
-                return true;
-            }
-			
+				// TODO Auto-generated method stub
+				if (keyCode == KeyEvent.KEYCODE_BACK) {
+
+					if (session != null) {
+						stopSession();
+					} else {
+						cancelOutgoingSessionWhenCreated = true;
+					}
+					exitActivity(null);
+				}
+				return true;
+			}
+
 		});
 	}
 
@@ -1629,8 +1779,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
                 p.setPreviewSize(outgoingWidth, outgoingHeight);
                 outgoingVideoPlayer.activateResizing(outgoingWidth, outgoingHeight); // same size = no resizing
                 if (logger.isActivated()) {
-                	logger.info("Use the existing size without resizing");
-                    logger.info("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight);
+                	logger.debug("Use the existing size without resizing");
+                    logger.debug("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight);
                 }
             } else {
                 // Check if can use a other known size (QVGA, CIF or VGA)
@@ -1650,13 +1800,13 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
                     p.setPreviewSize(w, h);
                     outgoingVideoPlayer.activateResizing(w, h);
                     if (logger.isActivated()) {
-                        logger.info("Camera preview initialized with size " + w + "x" + h + " with a resizing to " + outgoingWidth + "x" + outgoingHeight);
-                        logger.info("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
+                        logger.debug("Camera preview initialized with size " + w + "x" + h + " with a resizing to " + outgoingWidth + "x" + outgoingHeight);
+                        logger.debug("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
                     }
                 } else {
                     // The camera don't have known size, we can't use it
                     if (logger.isActivated()) {
-                        logger.warn("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
+                        logger.debug("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
                     }
                     camera = null;
                     return;
@@ -1712,24 +1862,24 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
      */
     private void startCamera() {
     	if (logger.isActivated()) {
-            logger.error("startCamera()");
+            logger.info("startCamera()");
         }
         if (camera == null) {
             // Open camera
             OpenCamera(openedCameraId);
             if (logger.isActivated()) {
-                logger.error("camera is null - openedCameraId ="+openedCameraId);
+                logger.debug("camera is null - openedCameraId ="+openedCameraId);
             }
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
                 outgoingVideoView.setAspectRatio(outgoingWidth, outgoingHeight);
                 if (logger.isActivated()) {
-                    logger.info("Landscape mode - "+outgoingWidth+"x"+outgoingHeight);
+                    logger.debug("Landscape mode - "+outgoingWidth+"x"+outgoingHeight);
                 }
             } else {
                 outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
                 if (logger.isActivated()) {
-                    logger.info("Portrait mode - outGoingWidth ="+outgoingWidth+"- outGoingHeith ="+outgoingHeight);
-                    logger.info("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
+                    logger.debug("Portrait mode - outGoingWidth ="+outgoingWidth+"- outGoingHeith ="+outgoingHeight);
+                    logger.debug("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
                 }
             }
             // Start camera
@@ -1737,7 +1887,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
             startCameraPreview();
         } else {
             if (logger.isActivated()) {
-                logger.error("Camera is not null");
+                logger.debug("Camera is not null");
             }
         }
     }
@@ -1759,9 +1909,9 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
     	if (logger.isActivated()) {
-			logger.info("surfaceChanged()");
-			logger.info("width ="+arg2);
-			logger.info("height ="+arg3);
+			logger.debug("surfaceChanged()");
+			logger.debug("width ="+arg2);
+			logger.debug("height ="+arg3);
 			
 		}
         isSurfaceCreated = true;
@@ -1771,7 +1921,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder arg0) {
     	if (logger.isActivated()) {
-			logger.info("surfaceCreated()");
+			logger.debug("surfaceCreated()");
 		}
         isSurfaceCreated = true;
         
@@ -1789,7 +1939,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
     	if (logger.isActivated()) {
-			logger.info("surfaceDestroyed()");
+			logger.debug("surfaceDestroyed()");
 		}
         isSurfaceCreated = false;
     }
@@ -1806,7 +1956,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     	
     	numberOfCameras = getNumberOfCameras();
     	if (logger.isActivated()) {
-			logger.info("number of cameras ="+numberOfCameras);
+			logger.debug("number of cameras ="+numberOfCameras);
 		}
         if (numberOfCameras > 1) {
             boolean backAvailable = checkCameraSize(CameraOptions.BACK);
@@ -1851,8 +2001,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
             } else {
                 outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
                 if (logger.isActivated()) {
-        			logger.info("Portrait mode - height ="+outgoingHeight+" - width ="+outgoingWidth);
-        			logger.info("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
+        			logger.debug("Portrait mode - height ="+outgoingHeight+" - width ="+outgoingWidth);
+        			logger.debug("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
         		}
             }
         }

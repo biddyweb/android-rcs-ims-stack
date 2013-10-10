@@ -1,16 +1,13 @@
 package com.orangelabs.rcs.ri.ipcall;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import android.os.IBinder;
 
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
-import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
 import com.orangelabs.rcs.service.api.client.ipcall.IPCallApi;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 public class IPCallSessionsData {
 	
@@ -47,6 +44,11 @@ public class IPCallSessionsData {
 	 * Ims Event listener
 	 */
 	public ImsEventListener imsEventListener;	
+	
+	/**
+	 * Ims Event listener
+	 */
+	public IIPCallEventListener sessionEventListener;	
 	
 	/**
 	 * constructor

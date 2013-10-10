@@ -278,7 +278,29 @@ public abstract class GroupChatSession extends ChatSession {
 		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
 		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);	
 	}
-	
+
+    /**
+     * Send message delivery status via MSRP
+     *
+     * @param contact Contact that requested the delivery status
+     * @param msgId Message ID
+     * @param status Status
+     */
+    public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
+        // Send status in CPIM + IMDN headers
+        String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+        String to = contact;
+        String imdn = ChatUtils.buildDeliveryReport(msgId, status);
+        String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
+        
+        // Send data
+        boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+        if (result) {
+            // Update rich messaging history
+            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+        }
+    }
+
 	/**
 	 * Add a participant to the session
 	 * 

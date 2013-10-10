@@ -225,6 +225,7 @@ public class CapabilitiesDiscovery extends Activity {
         CheckBox gcSF = (CheckBox)findViewById(R.id.group_chat_sf);
         CheckBox ipVoiceCall = (CheckBox)findViewById(R.id.ip_voice_call);
         CheckBox ipVideoCall = (CheckBox)findViewById(R.id.ip_video_call);
+        CheckBox sipAutomata = (CheckBox)findViewById(R.id.sip_automata);
         TextView extensions = (TextView)findViewById(R.id.extensions);
 
     	if (capabilities != null) {
@@ -258,7 +259,7 @@ public class CapabilitiesDiscovery extends Activity {
             gcSF.setChecked(capabilities.isGroupChatStoreForwardSupported());
             ipVoiceCall.setChecked(capabilities.isIPVoiceCallSupported());
             ipVideoCall.setChecked(capabilities.isIPVideoCallSupported());
-            
+            sipAutomata.setChecked(capabilities.isSipAutomata());
             // Set extensions
     		extensions.setVisibility(View.VISIBLE);
             String result = "";
@@ -284,6 +285,7 @@ public class CapabilitiesDiscovery extends Activity {
     		gcSF.setVisibility(View.GONE);
     		ipVoiceCall.setVisibility(View.GONE);
     		ipVideoCall.setVisibility(View.GONE);
+    		sipAutomata.setVisibility(View.GONE);
     		extensions.setVisibility(View.GONE);
     	}
     }

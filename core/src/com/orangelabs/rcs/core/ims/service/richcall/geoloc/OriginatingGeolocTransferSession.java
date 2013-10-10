@@ -296,7 +296,7 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-    	if (isInterrupted()) {
+        if (isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}
 

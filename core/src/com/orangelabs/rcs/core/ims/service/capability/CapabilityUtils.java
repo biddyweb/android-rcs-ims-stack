@@ -128,6 +128,9 @@ public class CapabilityUtils {
         if (RcsSettings.getInstance().isIPVideoCallSupported()) {
             tags.add(FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL);
         }
+        if (RcsSettings.getInstance().isSipAutomata()) {
+            tags.add(FeatureTags.FEATURE_SIP_AUTOMATA);
+        }
 
 		// RCS extensions support
 		String exts = RcsSettings.getInstance().getSupportedRcsExtensions();
@@ -235,7 +238,9 @@ public class CapabilityUtils {
     			// Support a RCS extension
     			String[] value = tag.split("=");
 				capabilities.addSupportedExtension(StringUtils.removeQuotes(value[1]));
-    		}
+			} else if (tag.contains(FeatureTags.FEATURE_SIP_AUTOMATA)) {
+				capabilities.setSipAutomata(true);
+			}
     	}
     	
     	// Analyze SDP part

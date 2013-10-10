@@ -124,7 +124,10 @@ public class ProvisioningParser {
                             if (typenode.getNodeValue().equalsIgnoreCase("VERS")) {
                                 parseVersion(childnode);
                             } else
-                            if (typenode.getNodeValue().equalsIgnoreCase("MSG")) {
+                            if (typenode.getNodeValue().equalsIgnoreCase("TOKEN")) {
+                                parseToken(childnode);
+                            } else
+                        	if (typenode.getNodeValue().equalsIgnoreCase("MSG")) {
                                 parseTermsMessage(childnode);
                             } else
                             if (typenode.getNodeValue().equalsIgnoreCase("APPLICATION")) {
@@ -201,6 +204,37 @@ public class ProvisioningParser {
                     }
                 }
             } while((versionchild = versionchild.getNextSibling()) != null);
+        }
+    }
+    
+    /**
+     * Parse the provisioning Token
+     *
+     * @param node Node
+     */
+    private void parseToken(Node node) {
+        String version = null;
+        String validity = null;
+        if (node == null) {
+            return;
+        }
+        Node tokenChild = node.getFirstChild();
+
+        if (tokenChild != null) {
+            do {
+                if (version == null) {
+                    if ((version = getValueByParamName("token", tokenChild, TYPE_TXT)) != null) {
+                        provisioningInfo.setVersion(version);
+                        continue;
+                    }
+                }
+                if (validity == null) {
+                    if ((validity = getValueByParamName("validity", tokenChild, TYPE_INT)) != null) {
+                        provisioningInfo.setValidity(Long.parseLong(validity));
+                        continue;
+                    }
+                }
+            } while((tokenChild = tokenChild.getNextSibling()) != null);
         }
     }
 

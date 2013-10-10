@@ -1,7 +1,6 @@
 package com.orangelabs.rcs.ri.ipcall;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import android.app.Activity;
@@ -143,7 +142,6 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
     	
     	Thread thread = new Thread() {
 			public void run() {
-				List<String> sessionsLabel = new ArrayList();
 				
 				try {
 					IPCallSessionsData.getInstance().sessions = (ArrayList<IBinder>) IPCallSessionsData.getInstance().callApi

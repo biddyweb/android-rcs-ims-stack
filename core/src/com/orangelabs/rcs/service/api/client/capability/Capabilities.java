@@ -99,6 +99,11 @@ public class Capabilities implements Parcelable {
      */
     private boolean groupChatStoreForward = false;
 
+	/**
+     * SIP automata (@see RFC 3840)
+     */
+    private boolean sipAutomata = false;
+
     /**
 	 * List of supported extensions
 	 */
@@ -135,6 +140,7 @@ public class Capabilities implements Parcelable {
         this.fileTransferThumbnail = source.readInt() != 0;
         this.fileTransferStoreForward = source.readInt() != 0;
         this.groupChatStoreForward = source.readInt() != 0;
+        this.sipAutomata = source.readInt() != 0;
 		this.timestamp = source.readLong();
 		source.readStringList(this.extensions);
     }
@@ -170,6 +176,7 @@ public class Capabilities implements Parcelable {
         dest.writeInt(fileTransferThumbnail ? 1 : 0);
         dest.writeInt(fileTransferStoreForward ? 1 : 0);
         dest.writeInt(groupChatStoreForward ? 1 : 0);
+        dest.writeInt(sipAutomata ? 1 : 0);
     	dest.writeLong(timestamp);
 		if (extensions!=null && extensions.size()>0){
 			dest.writeStringList(extensions);
@@ -443,6 +450,22 @@ public class Capabilities implements Parcelable {
 	}
 
 	/**
+	 * Is device an automata ?
+	 * @return True if automata
+	 */
+	public boolean isSipAutomata() {
+		return sipAutomata;
+	}
+
+	/**
+	 * Set the SIP automata feature tag
+	 * @param sipAutomata
+	 */
+	public void setSipAutomata(boolean sipAutomata) {
+		this.sipAutomata = sipAutomata;
+	}
+
+	/**
 	 * Add supported extension
 	 * 
 	 * @param tag Feature tag
@@ -496,6 +519,7 @@ public class Capabilities implements Parcelable {
             ", FT_http=" + fileTransferHttp +
             ", Geolocation_push=" + geolocationPush +
             ", FT_thumbnail=" + fileTransferThumbnail +
+            ", SipAutomata=" + sipAutomata +
 			", Timestamp=" + timestamp;
 	}
 }

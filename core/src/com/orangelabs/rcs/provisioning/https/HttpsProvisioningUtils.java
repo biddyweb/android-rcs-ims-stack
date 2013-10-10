@@ -41,10 +41,9 @@ public class HttpsProvisioningUtils {
     public static final String FIRST_KEY = "first";
 
     /**
-     * Input msisdn timeout
+     * Input MSISDN timeout
      */
     protected static final int INPUT_MSISDN_TIMEOUT = 30000;
-    
 
     /**
      * Unknown value
