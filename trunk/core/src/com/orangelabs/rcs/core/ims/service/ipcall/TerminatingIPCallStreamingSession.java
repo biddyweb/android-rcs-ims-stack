@@ -69,327 +69,166 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
     /**
      * Background processing
      */
-    public void run() {
-        try {
-            if (logger.isActivated()) {
-                logger.info("Initiate a new IP call session as terminating");
-            }
+	public void run() {
+		try {
+			if (logger.isActivated()) {
+				logger.info("Initiate a new IP call session as terminating");
+			}
 
-            // Send a 180 Ringing response
-            send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+			// Send a 180 Ringing response
+			send180Ringing(getDialogPath().getInvite(), getDialogPath()
+					.getLocalTag());
 
-            // Parse the remote SDP part
-            SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-            
-            // Extract the remote host (same between audio and video)
-            String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
-            // TODO String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
-           
-            // Extract the audio port
-            MediaDescription mediaAudio = parser.getMediaDescription("audio");
-            int audioRemotePort = mediaAudio.port;
+			// Notify listener
+			getImsService().getImsModule().getCore().getListener()
+					.handleIPCallInvitation(this);
 
-            // Extract the video port
-            MediaDescription mediaVideo = parser.getMediaDescription("video");
-            //int videoRemotePort = mediaVideo.port;
-            int videoRemotePort = -1;
-            if (mediaVideo != null) {
-                videoRemotePort = mediaVideo.port;
-            }
-
-            // Extract the audio codecs from SDP
-            Vector<MediaDescription> audio = parser.getMediaDescriptions("audio");
-            Vector<AudioCodec> proposedAudioCodecs = AudioCodecManager.extractAudioCodecsFromSdp(audio);
-
-            // Extract video codecs from SDP            
-            Vector<MediaDescription> video = parser.getMediaDescriptions("video");
-            Vector<VideoCodec> proposedVideoCodecs = VideoCodecManager.extractVideoCodecsFromSdp(video);
-
-            // Notify listener            
-            getImsService().getImsModule().getCore().getListener().handleIPCallInvitation(this);
-
-            // Wait invitation answer
-            int answer = waitInvitationAnswer();
-            if (answer == ImsServiceSession.INVITATION_REJECTED) {
-                if (logger.isActivated()) {
-                    logger.debug("Session has been rejected by user");
-                }
-
-                // Remove the current session
-                getImsService().removeSession(this);
-
-                // Notify listeners
-                for (int i = 0; i < getListeners().size(); i++) {
-                    getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
-                }
-                return;
-            } else
-            if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-                if (logger.isActivated()) {
-                    logger.debug("Session has been rejected on timeout");
-                }
-              
-                // Ringing period timeout
-                send603Decline(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-
-                // Remove the current session
-                getImsService().removeSession(this);
-                
-                // Notify listeners
-                for (int i = 0; i < getListeners().size(); i++) {
-                    getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
-                }
-                return;
-            } else
-            if (answer == ImsServiceSession.INVITATION_CANCELED) {
-                if (logger.isActivated()) {
-                    logger.debug("Session has been canceled");
-                }
-                return;
-            }
-
-            // Check if an audio renderer has been set            
-            if (getAudioRenderer() == null) { 
-            	if (logger.isActivated()) {
-                    logger.debug("Audio renderer not initialized");
-                }
-                handleError(new IPCallError(IPCallError.AUDIO_RENDERER_NOT_INITIALIZED));
-                return;
-            }
-            
-            // Check if an audio player has been set
-            if (getAudioPlayer() == null) { 
-            	if (logger.isActivated()) {
-                    logger.debug("Audio player not initialized");
-                }
-                handleError(new IPCallError(
-                		IPCallError.AUDIO_PLAYER_NOT_INITIALIZED));
-                return;
-            }
-
-            // Audio codec negotiation
-			AudioCodec selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioRenderer().getSupportedAudioCodecs(), proposedAudioCodecs);
-			if (selectedAudioCodec == null) {
+			// Wait invitation answer
+			int answer = waitInvitationAnswer();
+			if (answer == ImsServiceSession.INVITATION_REJECTED) {
 				if (logger.isActivated()) {
-					logger.debug("Proposed audio codecs are not supported");
+					logger.debug("Session has been rejected by user");
 				}
 
-				// Send a 415 Unsupported media type response
-				send415Error(getDialogPath().getInvite());
+				// Remove the current session
+				getImsService().removeSession(this);
 
-				// Unsupported media type
-				handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE));
+				// Notify listeners
+				for (int i = 0; i < getListeners().size(); i++) {
+					getListeners().get(i).handleSessionAborted(
+							ImsServiceSession.TERMINATION_BY_USER);
+				}
+				return;
+			} else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+				if (logger.isActivated()) {
+					logger.debug("Session has been rejected on timeout");
+				}
+
+				// Ringing period timeout
+				send603Decline(getDialogPath().getInvite(), getDialogPath()
+						.getLocalTag());
+
+				// Remove the current session
+				getImsService().removeSession(this);
+
+				// Notify listeners
+				for (int i = 0; i < getListeners().size(); i++) {
+					getListeners().get(i).handleSessionAborted(
+							ImsServiceSession.TERMINATION_BY_TIMEOUT);
+				}
+				return;
+			} else if (answer == ImsServiceSession.INVITATION_CANCELED) {
+				if (logger.isActivated()) {
+					logger.debug("Session has been canceled");
+				}
 				return;
 			}
-            
-            // Video codec negotiation
-			VideoCodec selectedVideoCodec = null;
-			if (getVideoPlayer() != null) {
-					selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
-					if (selectedVideoCodec == null) {
-			            if (logger.isActivated()) {
-			                logger.debug("Proposed video codecs are not supported");
-			            }
-			            
-			            // Terminate session
-			            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-			            
-			            // Report error
-			            handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
-			            return;
-			        }
-			}
 
-
-            // Set the audio codec in audio renderer            
-            getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
-            getAudioRenderer().addListener(new AudioPlayerEventListener(this));
-			if (logger.isActivated()) {
-				logger.debug("Set audio codec in the audio renderer: " + selectedAudioCodec.getMediaCodec().getCodecName());
-			}
-			
-            // Set the audio codec in audio player            
-            getAudioPlayer().setAudioCodec(selectedAudioCodec.getMediaCodec());
-            getAudioPlayer().addListener(new AudioPlayerEventListener(this));
-			if (logger.isActivated()) {
-				logger.debug("Set audio codec in the audio player: " + selectedAudioCodec.getMediaCodec().getCodecName());
-			}
-			
-//            // Open the audio renderer
-//            getAudioRenderer().open(remoteHost, audioRemotePort);
-//			if (logger.isActivated()) {
-//				logger.debug("Open audio renderer with remoteHost ("+remoteHost+") and remotePort ("+audioRemotePort+")");
-//			}
-//			
-//            // Open the audio player
-//            getAudioPlayer().open(remoteHost, audioRemotePort);
-//			if (logger.isActivated()) {
-//				logger.debug("Open audio player on renderer RTP stream");
-//			}
-			
-			// Set the video codec in video renderer   
-			if ((getVideoRenderer() != null) && (getVideoPlayer() != null) && (selectedVideoCodec != null)) {
-				getVideoRenderer().setVideoCodec(selectedVideoCodec.getMediaCodec());
-				getVideoPlayer().setVideoCodec(selectedVideoCodec.getMediaCodec());	            
+			// Check if an audio renderer has been set
+			if (getAudioRenderer() == null) {
 				if (logger.isActivated()) {
-					logger.debug("Set video codec in the video renderer: " + selectedVideoCodec.getMediaCodec().getCodecName());
-					logger.debug("Set video codec in the video player: " + selectedVideoCodec.getMediaCodec().getCodecName());
+					logger.debug("Audio renderer not initialized");
 				}
+				handleError(new IPCallError(
+						IPCallError.AUDIO_RENDERER_NOT_INITIALIZED));
+				return;
 			}
-	
-            // Set the video codec in video player    
-			if ((getVideoRenderer() != null) && (getVideoPlayer() != null)) {
-				getVideoRenderer().addListener(new VideoPlayerEventListener(this));
-	            getVideoPlayer().addListener(new VideoPlayerEventListener(this));
+
+			// Check if an audio player has been set
+			if (getAudioPlayer() == null) {
+				if (logger.isActivated()) {
+					logger.debug("Audio player not initialized");
+				}
+				handleError(new IPCallError(
+						IPCallError.AUDIO_PLAYER_NOT_INITIALIZED));
+				return;
 			}
+
+			// user has accepted the call invitation
+			String sdp = buildCallInitSdpResponse();
+			if (logger.isActivated()) {
+				logger.info("buildCallInitSdpResponse() - Done");
+			}
+
+			// Set the local SDP in the dialog path
+			getDialogPath().setLocalContent(sdp);
+
+			 // prepare media session			
+			prepareMediaSession();
 			
-			// Set the OrientationHeaderID in renderer and player
-			if (mediaVideo != null){
-				SdpOrientationExtension extensionHeader = SdpOrientationExtension
-					.create(mediaVideo);
-				if ((getVideoRenderer()!= null)&&(getVideoPlayer()!= null)&&(extensionHeader!= null)) {		
-					getVideoRenderer().setOrientationHeaderId(
-							extensionHeader.getExtensionId());
-					getVideoPlayer().setOrientationHeaderId(
-							extensionHeader.getExtensionId());	
-				}	
+			// Create a 200 OK response
+			SipResponse resp = null;
+			if (getAudioPlayer() != null) {
+				if (getVideoPlayer() != null) {
+					// audio+video IP Call
+					resp = SipMessageFactory.create200OkInviteResponse(
+							getDialogPath(),
+							IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp);
+				} else {
+					// audio IP Call
+					resp = SipMessageFactory.create200OkInviteResponse(
+							getDialogPath(),
+							IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp);
+				}
+			} else {
+				handleError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
+						"Audio player not initialized"));
 			}
-			
-					
-            
-			// Open the video renderer and player
-			if ((getVideoRenderer()!= null)&&(getVideoPlayer()!= null)) {
-	        	getVideoRenderer().open(remoteHost, videoRemotePort);
-	        	getVideoPlayer().open(remoteHost, videoRemotePort); //always open the player after the renderer when the RTP stream is shared
-	            if (logger.isActivated()) {
-	            	logger.debug("Open video renderer with remoteHost ("+remoteHost+") and remotePort ("+videoRemotePort+")");
-					logger.debug("Open video player on renderer RTP stream");
-				}
-	        }
-					
-            // Build audioSdp and videoSdp part
-            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-	    	
-	    	String audioSdp = AudioSdpBuilder.buildSdpAnswer(selectedAudioCodec.getMediaCodec(),
-	    			getAudioRenderer().getLocalRtpPort());
-            
-	    	String videoSdp = "";
-            if ((getVideoContent() != null) && (getVideoRenderer() != null)){
-            	if (selectedVideoCodec != null) {
-                	videoSdp = VideoSdpBuilder.buildSdpAnswer(selectedVideoCodec.getMediaCodec(),
-                			getVideoRenderer().getLocalRtpPort(), mediaVideo);
-                }	
-            }
-            
-            // Build SDP for response
-            String sdp =
-            	"v=0" + SipUtils.CRLF +
-            	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"s=-" + SipUtils.CRLF +
-            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-                "t=0 0" + SipUtils.CRLF +
-                audioSdp +
-                videoSdp +
-                "a=sendrcv" + SipUtils.CRLF;
 
-            // Set the local SDP in the dialog path
-            getDialogPath().setLocalContent(sdp);
-            
-            if (logger.isActivated()) {
-                logger.debug("AudioContent = "+this.getAudioContent());
-                logger.debug("VideoContent = "+this.getVideoContent());
-                logger.debug("AudioPlayer = "+this.getAudioPlayer());
-                logger.debug("VideoPlayer = "+this.getVideoPlayer());
-            }
-            
-            // Create a 200 OK response
-            SipResponse resp = null ;
-            if (getAudioPlayer()!= null) {
-            	if (getVideoPlayer() != null) {
-            		// audio+video IP Call
-	            	resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp);
-	            }
-	            else {
-	            	// audio IP Call
-	            	resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp);
-	            }
-            } else {
-            	handleError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
-                        "Audio player not initialized"));
-            }
-            
-            // The signalisation is established
-            getDialogPath().sigEstablished();
+			// The signalisation is established
+			getDialogPath().sigEstablished();
 
-            if (logger.isActivated()) {
-                logger.info("Send 200 OK");
-            }
-            // Send response
-            SipTransactionContext ctx = getImsService().getImsModule().getSipManager().sendSipMessageAndWait(resp);
+			if (logger.isActivated()) {
+				logger.info("Send 200 OK");
+			}
+			// Send response
+			SipTransactionContext ctx = getImsService().getImsModule()
+					.getSipManager().sendSipMessageAndWait(resp);
 
-            // Analyze the received response
-            if (ctx.isSipAck()) {
-                // ACK received
-                if (logger.isActivated()) {
-                    logger.info("ACK request received");
-                }
-
-                // The session is established
-                getDialogPath().sessionEstablished();
-                
-                // Start the audio renderer
-//                getAudioRenderer().start();
-//                if (logger.isActivated()) {
-//                	logger.debug("Start audio renderer");
-//                }
-                
-                // Start the audio player
-//                getAudioPlayer().start();
-//                if (logger.isActivated()) {
-//                	logger.debug("Start audio player");
-//                }
-                
-              // Start the video renderer and video player
-				if ((getVideoPlayer() != null) && (getVideoRenderer() != null)) {
-					getVideoPlayer().start();
-					if (logger.isActivated()) {
-						logger.debug("Start video player");
-					}
-					getVideoRenderer().start();
-					if (logger.isActivated()) {
-						logger.debug("Start video renderer");
-					}
+			// Analyze the received response
+			if (ctx.isSipAck()) {
+				// ACK received
+				if (logger.isActivated()) {
+					logger.info("ACK request received");
 				}
 
+				// The session is established
+				getDialogPath().sessionEstablished();
 
-                // Start session timer
-                if (getSessionTimerManager().isSessionTimerActivated(resp)) {
-                    getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
-                }
-                                
-                // Notify listeners
-                for(int i=0; i < getListeners().size(); i++) {
-                    getListeners().get(i).handleSessionStarted();
-                }
-            } else {
-                if (logger.isActivated()) {
-                    logger.debug("No ACK received for INVITE");
-                }
-                
-                // No response received: timeout
-                handleError(new IPCallError(IPCallError.SESSION_INITIATION_FAILED));
-            }
-        } catch(Exception e) {
-            if (logger.isActivated()) {
-                logger.error("Session initiation has failed", e);
-            }
-            
-            // Unexpected error
-            handleError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
-                    e.getMessage()));
-        }
-    }
+				// startmediaSession
+				startMediaSession();
+				
+
+				// Start session timer
+				if (getSessionTimerManager().isSessionTimerActivated(resp)) {
+					getSessionTimerManager().start(
+							SessionTimerManager.UAS_ROLE,
+							getDialogPath().getSessionExpireTime());
+				}
+
+				// Notify listeners
+				for (int i = 0; i < getListeners().size(); i++) {
+					getListeners().get(i).handleSessionStarted();
+				}
+			} else {
+				if (logger.isActivated()) {
+					logger.debug("No ACK received for INVITE");
+				}
+
+				// No response received: timeout
+				handleError(new IPCallError(
+						IPCallError.SESSION_INITIATION_FAILED));
+			}
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Session initiation has failed", e);
+			}
+
+			// Unexpected error
+			handleError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION,
+					e.getMessage()));
+		}
+	}
 
     /**
      * Handle error
@@ -422,9 +261,166 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
      * 
      * @throws Exception 
      */
-    public void prepareMediaSession() throws Exception {
-        // Already done in run() method
-    }
+	public void prepareMediaSession() throws Exception {
+	
+		// Parse the remote SDP part
+		SdpParser remoteParser = new SdpParser(getDialogPath()
+				.getRemoteContent().getBytes());
+
+		// Extract the remote host (same between audio and video)
+		String remoteHost = SdpUtils
+				.extractRemoteHost(remoteParser.sessionDescription.connectionInfo);
+
+		// Extract the audio port
+		MediaDescription mediaAudio = remoteParser.getMediaDescription("audio");
+		int audioRemotePort = mediaAudio.port;
+
+		// Extract the video port
+		MediaDescription mediaVideo = remoteParser.getMediaDescription("video");
+		// int videoRemotePort = mediaVideo.port;
+		int videoRemotePort = -1;
+		if (mediaVideo != null) {
+			videoRemotePort = mediaVideo.port;
+		}
+
+		if (logger.isActivated()) {
+			logger.info("Extract Audio/Video ports - Done");
+		}
+
+		// Extract the audio codecs from SDP
+		Vector<MediaDescription> audio = remoteParser
+				.getMediaDescriptions("audio");
+		Vector<AudioCodec> proposedAudioCodecs = AudioCodecManager
+				.extractAudioCodecsFromSdp(audio);
+
+		// Extract video codecs from SDP
+		Vector<MediaDescription> video = remoteParser
+				.getMediaDescriptions("video");
+		Vector<VideoCodec> proposedVideoCodecs = null;
+		if (mediaVideo != null) {
+			proposedVideoCodecs = VideoCodecManager
+					.extractVideoCodecsFromSdp(video);
+		}
+
+		// Audio codec negotiation
+		AudioCodec selectedAudioCodec;
+
+		selectedAudioCodec = AudioCodecManager.negociateAudioCodec(
+				getAudioRenderer().getSupportedAudioCodecs(),
+				proposedAudioCodecs);
+		if (selectedAudioCodec == null) {
+			if (logger.isActivated()) {
+				logger.debug("Proposed audio codecs are not supported");
+			}
+
+			// Send a 415 Unsupported media type response
+			send415Error(getDialogPath().getInvite());
+
+			// Unsupported media type
+			handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE));
+
+		}
+
+		// Video codec negotiation
+		VideoCodec selectedVideoCodec = null;
+		if ((mediaVideo != null) && (getVideoPlayer() != null)) {
+			selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
+					getVideoPlayer().getSupportedVideoCodecs(),
+					proposedVideoCodecs);
+			if (selectedVideoCodec == null) {
+				if (logger.isActivated()) {
+					logger.debug("Proposed video codecs are not supported");
+				}
+
+				// Terminate session
+				terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+
+				// Report error
+				handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
+			}
+		}
+
+		// Set the audio codec and listener in Audio Renderer
+		getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
+		getAudioRenderer().addListener(new AudioPlayerEventListener(this));
+		if (logger.isActivated()) {
+			logger.debug("Set audio codec in the audio renderer: "
+					+ selectedAudioCodec.getMediaCodec().getCodecName());
+		}
+
+		// Set the audio codec and listener in Audio Player
+		getAudioPlayer().setAudioCodec(selectedAudioCodec.getMediaCodec());
+		getAudioPlayer().addListener(new AudioPlayerEventListener(this));
+		if (logger.isActivated()) {
+			logger.debug("Set audio codec in the audio player: "
+					+ selectedAudioCodec.getMediaCodec().getCodecName());
+		}
+
+		// // Open the audio renderer
+		// getAudioRenderer().open(remoteHost, audioRemotePort);
+		// if (logger.isActivated()) {
+		// logger.debug("Open audio renderer with remoteHost ("+remoteHost+") and remotePort ("+audioRemotePort+")");
+		// }
+		//
+		// // Open the audio player
+		// getAudioPlayer().open(remoteHost, audioRemotePort);
+		// if (logger.isActivated()) {
+		// logger.debug("Open audio player on renderer RTP stream");
+		// }
+
+		// Set the video codec in Video Player/Renderer
+		if ((getVideoRenderer() != null) && (getVideoPlayer() != null)
+				&& (selectedVideoCodec != null)) {
+			getVideoRenderer()
+					.setVideoCodec(selectedVideoCodec.getMediaCodec());
+			getVideoPlayer().setVideoCodec(selectedVideoCodec.getMediaCodec());
+			if (logger.isActivated()) {
+				logger.debug("Set video codec in the video renderer: "
+						+ selectedVideoCodec.getMediaCodec().getCodecName());
+				logger.debug("Set video codec in the video player: "
+						+ selectedVideoCodec.getMediaCodec().getCodecName());
+			}
+		}
+
+		// Set the listeners on video player and renderer
+		if ((getVideoRenderer() != null) && (getVideoPlayer() != null)) {
+			getVideoRenderer().addListener(new VideoPlayerEventListener(this));
+			getVideoPlayer().addListener(new VideoPlayerEventListener(this));
+		}
+
+		// Set the OrientationHeaderID in renderer and player
+		if (mediaVideo != null) {
+			SdpOrientationExtension extensionHeader = SdpOrientationExtension
+					.create(mediaVideo);
+			if ((getVideoRenderer() != null) && (getVideoPlayer() != null)
+					&& (extensionHeader != null)) {
+				getVideoRenderer().setOrientationHeaderId(
+						extensionHeader.getExtensionId());
+				getVideoPlayer().setOrientationHeaderId(
+						extensionHeader.getExtensionId());
+			}
+		}
+
+		// Open the Video Renderer and Player
+		// always open the player after the renderer when the RTP stream is shared
+		if ((getVideoRenderer() != null) && (getVideoPlayer() != null)) {
+			getVideoRenderer().open(remoteHost, videoRemotePort);
+			getVideoPlayer().open(remoteHost, videoRemotePort); 	
+			if (logger.isActivated()) {
+				logger.debug("Open video renderer with remoteHost ("
+						+ remoteHost + ") and remotePort (" + videoRemotePort
+						+ ")");
+				logger.debug("Open video player on renderer RTP stream");
+			}
+		}
+
+		if (logger.isActivated()) {
+			logger.debug("AudioContent = " + this.getAudioContent());
+			logger.debug("VideoContent = " + this.getVideoContent());
+			logger.debug("AudioPlayer = " + this.getAudioPlayer());
+			logger.debug("VideoPlayer = " + this.getVideoPlayer());
+		}
+	}
 
     /**
      * Start media session
@@ -433,6 +429,30 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
      */
     public void startMediaSession() throws Exception {
         // Already done in run() method
+    	
+    	// Start the audio renderer
+		// getAudioRenderer().start();
+		// if (logger.isActivated()) {
+		// logger.debug("Start audio renderer");
+		// }
+
+		// Start the audio player
+		// getAudioPlayer().start();
+		// if (logger.isActivated()) {
+		// logger.debug("Start audio player");
+		// }
+
+		// Start the video renderer and video player
+		if ((getVideoPlayer() != null) && (getVideoRenderer() != null)) {
+			getVideoPlayer().start();
+			if (logger.isActivated()) {
+				logger.debug("Start video player");
+			}
+			getVideoRenderer().start();
+			if (logger.isActivated()) {
+				logger.debug("Start video renderer");
+			}
+		}
     }
 }
 

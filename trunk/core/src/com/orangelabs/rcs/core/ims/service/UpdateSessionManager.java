@@ -205,12 +205,13 @@ public class UpdateSessionManager {
      * @param featureTags featureTags to set in request
      * @param serviceContext service context of reInvite request
      */
-    public void send200OkReInviteResp(SipRequest request, String[] featureTags, int serviceContext) {
+    public void send200OkReInviteResp(SipRequest request, String[] featureTags, String sdpResponse, int serviceContext) {
         if (logger.isActivated()) {
             logger.debug("receiveReInvite()");
         }
         
     	final SipRequest reInvite = request;
+    	final String sdp = sdpResponse;
     	final int reInviteContext = serviceContext;
     	final String[] respFeatureTags = featureTags;
 
@@ -219,12 +220,7 @@ public class UpdateSessionManager {
     		        try {  		        	   		            
     		            if (logger.isActivated()) {
     		                logger.debug("Send 200 OK");
-    		            }
-    		            // build sdp response
-    		            String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
-    		            // set sdp response as local content
-    		            session.getDialogPath().setLocalContent(sdp);
-    		            
+    		            }    		            
     		            //Create 200 OK response
     		            SipResponse resp = SipMessageFactory.create200OkReInviteResponse(session.getDialogPath(), reInvite, respFeatureTags, sdp);
     		            // Send 200 OK response
@@ -280,10 +276,9 @@ public class UpdateSessionManager {
     	Thread thread = new Thread() {
 			public void run() {
 				try {
-					
+					// wait user answer
 					int answer = waitInvitationAnswer();
-					
-	
+
 					if (answer == ImsServiceSession.INVITATION_REJECTED) { 
 						// Invitation declined by user
 						if (logger.isActivated()) {
@@ -307,7 +302,7 @@ public class UpdateSessionManager {
 						if (logger.isActivated()) {
 							logger.debug("Send 200 OK");
 						}
-						// build sdp response
+//						// build sdp response
 						String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
 						
 						// set sdp response as local content

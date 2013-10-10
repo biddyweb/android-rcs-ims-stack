@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.10
+Release 2.5.11
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,10 +9,9 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Wi-Fi provisioning.
-- Add IMDN delivery report for group chat (delivered & displayed).
-- FT over HTTP: refactoring, remove uploaded status.
-- Control Msg ID on incoming message to avoid duplicate.
+- FT HTTP pause & resume (upload only).
+- SIP automata.
+- Support of RFC 6223 "Indication of Support for Keep-Alive"
 
 
 Bugs fixed:
@@ -20,6 +19,14 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+v2.5.11
+- Issue 164		Stack: Issue with delivery notifications on Black Bird Telefonica Network
+- Issue 163		Stack: Parsing error in validity date of a FToHTTP
+- Issue 162		Stack: Wrong error message received after canceling FT
+- Issue 161		Stack: FToHTTP mime type not well set in case of new chat
+- Issue 157		Stack: Inversion in receiveMessageDeliveryStatus between FToHTTP and chat
+- Issue 154		Stack: Malformed Accept-Contact header in SIP MESSAGE
 
 v2.5.10
 - Issue 155		Stack: IP Voice Call and IP VIdeo Call not supported

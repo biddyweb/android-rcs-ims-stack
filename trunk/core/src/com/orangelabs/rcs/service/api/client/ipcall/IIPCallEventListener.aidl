@@ -33,7 +33,25 @@ interface IIPCallEventListener {
 
 	// Remove video aborted 
 	void handleRemoveVideoAborted(in int reason);
+	
+	// Call Hold invitation
+	void handleCallHold();
+	
+	// Call Resume invitation
+	void handleCallResume();
+	
+	// Call Hold has been accepted  
+	void handleCallHoldAccepted();
+	
+	// Call Resume has been accepted 
+	void handleCallResumeAccepted();
+	
+	// Call Hold has been aborted
+	void handleCallHoldAborted(in int reason);
 
+	// Call Resume aborted 
+	void handleCallResumeAborted(in int reason);
+	
 	// IP Call error
 	void handleCallError(in int error);
 	

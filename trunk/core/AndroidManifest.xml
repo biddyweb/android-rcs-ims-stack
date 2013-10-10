@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.10"
+ android:versionName="2.5.11"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"

@@ -1108,6 +1108,7 @@ public class RcsSettings {
 		capabilities.setIPVoiceCallSupport(isIPVoiceCallSupported());
 		capabilities.setIPVideoCallSupport(isIPVideoCallSupported());
 		capabilities.setGroupChatStoreForwardSupport(isGroupChatStoreForwardSupported());
+		capabilities.setSipAutomata(isSipAutomata());
 		capabilities.setTimestamp(System.currentTimeMillis());
 
 		// Add extensions
@@ -2371,16 +2372,51 @@ public class RcsSettings {
     }
 
     /**
-     * Get provisioning address
+     * Get secondary provisioning address
      *
-     * @return Version
+     * @return Address
      */
-    public String getProvisioningAddress() {
+    public String getSecondaryProvisioningAddress() {
         String result = "";
         if (instance != null) {
-            result = readParameter(RcsSettingsData.PROVISIONING_ADDRESS);
+            result = readParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS);
         }
         return result;
+    }
+
+    /**
+     * Set secondary provisioning address
+     *
+     * @param Address
+     */
+    public void setSecondaryProvisioningAddress(String value) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS, value);
+        }
+    }
+
+    /**
+     * Is secondary provisioning address only used
+     *
+     * @return Boolean
+     */
+    public boolean isSecondaryProvisioningAddressOnly() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS_ONLY));
+        }
+        return result;
+    }
+
+    /**
+     * Set secondary provisioning address only used
+     *
+     * @param Boolean
+     */
+    public void setSecondaryProvisioningAddressOnly(boolean value) {
+        if (instance != null) {
+            writeParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS_ONLY, Boolean.toString(value));
+        }
     }
 
     /**
@@ -2398,6 +2434,7 @@ public class RcsSettings {
         setXdmPassword("");
         setXdmServer("");
         setProvisioningVersion("0");
+        setProvisioningToken("");
         setMsisdn("");
     }
 
@@ -2635,13 +2672,32 @@ public class RcsSettings {
 		return result;
 	}
 
-	public void setProvisioningToken(String string) {
-		// TODO Auto-generated method stub
-		
+	public void setProvisioningToken(String token) {
+		if (instance != null) {
+            writeParameter(RcsSettingsData.PROVISIONING_TOKEN, token);
+        }
 	}
 
 	public String getProvisioningToken() {
-		// TODO Auto-generated method stub
-		return null;
+		String result = "0";
+        if (instance != null) {
+            result = readParameter(RcsSettingsData.PROVISIONING_TOKEN);
+        }
+        return result;
 	}
+	
+    /**
+     * Is SIP device an automata ?
+     *
+     * @return Boolean
+     */
+	public boolean isSipAutomata() {
+		boolean result = false;
+		if (instance != null) {
+			result = Boolean.parseBoolean(readParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA));
+		}
+		return result;
+	}
+	
+	
 }

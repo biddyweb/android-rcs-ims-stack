@@ -433,6 +433,20 @@ public class SendFileInSession extends Activity {
 				}
 			});
 		}
+
+		@Override
+		public void handleFileUploadPaused() throws RemoteException {
+			handler.post(new Runnable() { 
+				public void run() {
+					// Hide progress dialog
+					hideProgressDialog();
+					
+					// Display session status
+					TextView statusView = (TextView)findViewById(R.id.progress_status);
+					statusView.setText("paused");
+				}
+			});
+		}
     };
     
     /**

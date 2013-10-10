@@ -17,10 +17,14 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.apache.http.ParseException;
+
 import com.orangelabs.rcs.core.Core;
+import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
@@ -78,97 +82,134 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile();
-
-            // Check if upload has been cancelled
-            if (uploadManager.isCancelled()) {
-            	return;
-            }
-
-            if ((result != null) && (ChatUtils.parseFileTransferHttpDocument(result) != null)) {
-            	String fileInfo = new String(result);
-                if (logger.isActivated()) {
-                    logger.debug("Upload done with success: " + fileInfo);
-                }
-
-				// Send the file transfer info via a chat message
-                ChatSession chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
-                if (chatSession == null) {
-                	 Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(getRemoteContact());
-                	 try {
-                		 chatSession = chatSessions.lastElement();
-                		 setChatSessionID(chatSession.getSessionID());
-                		 setContributionID(chatSession.getContributionID());
-                	 } catch(NoSuchElementException nsee) {
-                         chatSession = null;
-                     }
-                }
-                if (chatSession != null) {
-					// A chat session exists
-	                if (logger.isActivated()) {
-	                    logger.debug("Send file transfer info via an existing chat session");
-	                }
-
-	                // Get the last chat session in progress to send file transfer info
-					String mime = CpimMessage.MIME_TYPE;
-					String from = ChatUtils.ANOMYNOUS_URI;
-					String to = ChatUtils.ANOMYNOUS_URI;
-					String msgId = ChatUtils.generateMessageId();
-
-					// Send file info in CPIM message
-					String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
-
-					// Send content
-					chatSession.sendDataChunks(msgId, content, mime);
-                    RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
-				} else {
-					// A chat session should be initiated
-	                if (logger.isActivated()) {
-	                    logger.debug("Send file transfer info via a new chat session");
-	                }
-
-	                // Initiate a new chat session to send file transfer info in the first message, session does not need to be retrieved since it is not used
-	                chatSession = Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo);
-	                setChatSessionID(chatSession.getSessionID());
-                    setContributionID(chatSession.getContributionID());
-	                RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), chatSession.getFirstMessage().getMessageId());
-
-	                // Update rich messaging history
-	    			RichMessaging.getInstance().addOutgoingChatSessionByFtHttp(chatSession);
-	    			
-	    			// Add session in the list
-	    			ImSession sessionApi = new ImSession(chatSession);
-	    			MessagingApiService.addChatSession(sessionApi);
-                    // TODO : Check session response ?
-				}
-
-                // File transfered
-                handleFileTransfered();
-			} else {
-                if (logger.isActivated()) {
-                    logger.debug("Upload has failed");
-                }
-
-                // Upload error
-    			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
-			}
-		} catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("File transfer has failed", e);
-        	}
-
+            sendResultToContact(result);
+        } catch(Exception e) {
+	    	if (logger.isActivated()) {
+	    		logger.error("File transfer has failed", e);
+	    	}
         	// Unexpected error
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
 	
-    /**
+	private void sendResultToContact(byte[] result){
+		// Check if upload has been cancelled
+        if (uploadManager.isCancelled()) {
+        	return;
+        }
+
+        if ((result != null) && (ChatUtils.parseFileTransferHttpDocument(result) != null)) {
+        	String fileInfo = new String(result);
+            if (logger.isActivated()) {
+                logger.debug("Upload done with success: " + fileInfo);
+            }
+
+			// Send the file transfer info via a chat message
+            ChatSession chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
+            if (chatSession == null) {
+            	 Vector<ChatSession> chatSessions = Core.getInstance().getImService().getImSessionsWith(getRemoteContact());
+            	 try {
+            		 chatSession = chatSessions.lastElement();
+            		 setChatSessionID(chatSession.getSessionID());
+            		 setContributionID(chatSession.getContributionID());
+            	 } catch(NoSuchElementException nsee) {
+                     chatSession = null;
+                 }
+            }
+            if (chatSession != null) {
+				// A chat session exists
+                if (logger.isActivated()) {
+                    logger.debug("Send file transfer info via an existing chat session");
+                }
+
+                // Get the last chat session in progress to send file transfer info
+				String mime = CpimMessage.MIME_TYPE;
+				String from = ChatUtils.ANOMYNOUS_URI;
+				String to = ChatUtils.ANOMYNOUS_URI;
+				String msgId = ChatUtils.generateMessageId();
+
+				// Send file info in CPIM message
+				String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
+				
+				// Send content
+				chatSession.sendDataChunks(msgId, content, mime);
+                RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
+			} else {
+				// A chat session should be initiated
+                if (logger.isActivated()) {
+                    logger.debug("Send file transfer info via a new chat session");
+                }
+
+                // Initiate a new chat session to send file transfer info in the first message, session does not need to be retrieved since it is not used
+                try {
+					chatSession = Core.getInstance().getImService().initiateOne2OneChatSession(getRemoteContact(), fileInfo, true);
+				} catch (CoreException e) {
+					if (logger.isActivated()) {
+	                    logger.debug("Couldn't initiate One to one session :"+e);
+	                }
+					return;
+				}
+                setChatSessionID(chatSession.getSessionID());
+                setContributionID(chatSession.getContributionID());
+                RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), chatSession.getFirstMessage().getMessageId());
+
+                // Update rich messaging history
+    			RichMessaging.getInstance().addOutgoingChatSessionByFtHttp(chatSession);
+    			
+    			// Add session in the list
+    			ImSession sessionApi = new ImSession(chatSession);
+    			MessagingApiService.addChatSession(sessionApi);
+                // TODO : Check session response ?
+			}
+
+            // File transfered
+            handleFileTransfered();
+		} else {
+            if (logger.isActivated()) {
+                logger.debug("Upload has failed");
+            }
+
+            // Upload error
+			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
+		}
+
+	}
+	
+	/**
      * Posts an interrupt request to this Thread
      */
     @Override
     public void interrupt(){
 		super.interrupt();
-
+        
 		// Interrupt the upload
 		uploadManager.interrupt();
+	}
+
+    /**
+	 * Pausing the tranfer
+	 */
+	@Override
+	public void pauseFileTransfer() {
+		interruptSession();
+		uploadManager.getListener().httpTransferPaused();
+	}
+	
+	/**
+	 * Resuming the transfer
+	 */
+	@Override
+	public void resumeFileTransfer() {
+		new Thread(new Runnable() {
+		    public void run() {
+				try {
+					byte[] result = uploadManager.resumeUpload();
+					sendResultToContact(result);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+		  }).start();
 	}
 }

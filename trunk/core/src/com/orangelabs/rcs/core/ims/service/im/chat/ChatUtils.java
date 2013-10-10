@@ -50,6 +50,8 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoParser;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpResumeInfo;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpResumeInfoParser;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -476,7 +478,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF + 
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + ";charset=utf-8" + CRLF + 
 			CRLF + 
 			content;	
 		   
@@ -502,7 +504,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + ", " + ImdnDocument.DISPLAY + CRLF +
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + ";charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
 			CRLF + 
 			content;	
@@ -528,7 +530,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			ImdnUtils.HEADER_IMDN_DISPO_NOTIF + ": " + ImdnDocument.POSITIVE_DELIVERY + CRLF +
 			CRLF +  
-			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + "; charset=utf-8" + CRLF +
+			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + ";charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
 			CRLF + 
 			content;	
@@ -703,6 +705,23 @@ public class ChatUtils {
 		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml));
 		    FileTransferHttpInfoParser ftHttpParser = new FileTransferHttpInfoParser(ftHttpInput);
 		    return ftHttpParser.getFtInfo();
+		} catch(Exception e) {
+			return null;
+		}
+	}
+	
+
+	/**
+	 * Parse a file transfer resume info
+	 *
+	 * @param xml XML document
+	 * @return File transfer resume info
+	 */
+	public static FileTransferHttpResumeInfo parseFileTransferHttpResumeInfo(byte[] xml) {
+		try {
+		    InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml));
+		    FileTransferHttpResumeInfoParser ftHttpParser = new FileTransferHttpResumeInfoParser(ftHttpInput);
+		    return ftHttpParser.getResumeInfo();
 		} catch(Exception e) {
 			return null;
 		}
@@ -944,9 +963,8 @@ public class ChatUtils {
      * @return true if FToHTTP
      */
     public static boolean isFileTransferOverHttp(SipRequest request) {
-        InstantMessage message = getFirstMessage(request);
-        if (message != null && message.getTextMessage() != null
-                && message.getTextMessage().toLowerCase().indexOf("<file-info") != -1) {
+        CpimMessage message = extractCpimMessage(request);
+        if (message != null && message.getContentType().startsWith(FileTransferHttpInfoDocument.MIME_TYPE)) {
             return true;
         } else {
             return false;

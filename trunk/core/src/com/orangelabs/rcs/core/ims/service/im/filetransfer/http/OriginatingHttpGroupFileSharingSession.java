@@ -19,6 +19,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
@@ -87,43 +88,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile();
-
-            // Check if upload is cancelled
-            if(uploadManager.isCancelled()) {
-            	return;
-            }
-            
-            if (result != null &&  ChatUtils.parseFileTransferHttpDocument(result) != null) {
-            	fileInfo = new String(result);
-                if (logger.isActivated()) {
-                    logger.debug("Upload done with success: " + fileInfo);
-                }
-
-				// Send the file transfer info via a chat message
-                chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
-                if (chatSession != null) {
-					// A chat session exists
-	                if (logger.isActivated()) {
-	                    logger.debug("Send file transfer info via an existing chat session");
-	                }
-
-                    // Send file transfer info
-                    sendFileTransferInfo();
-
-                    // File transfered
-                    handleFileTransfered();
-	            } else {
-	                // No chat error
-                    handleError(new FileSharingError(FileSharingError.NO_CHAT_SESSION));
-				}
-			} else {
-                if (logger.isActivated()) {
-                    logger.debug("Upload has failed");
-                }
-
-                // Upload error
-    			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
-			}
+            sendResultToContact(result);
 		} catch(Exception e) {
         	if (logger.isActivated()) {
         		logger.error("File transfer has failed", e);
@@ -146,7 +111,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
     private void sendFileTransferInfo() {
         // Send File transfer Info
         String mime = CpimMessage.MIME_TYPE;
-        String from = ChatUtils.ANOMYNOUS_URI;
+        String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
         String to = ChatUtils.ANOMYNOUS_URI;
         String msgId = ChatUtils.generateMessageId();
 
@@ -157,4 +122,76 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
         chatSession.sendDataChunks(msgId, content, mime);
         RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
     }
+    
+    
+    /**
+     * Prepare to send the info to terminating side
+     * 
+     * @param result byte[] which contains the result of the 200 OK from the content server
+     */
+	private void sendResultToContact(byte[] result){
+        // Check if upload is cancelled
+        if(uploadManager.isCancelled()) {
+        	return;
+        }
+        
+        if (result != null &&  ChatUtils.parseFileTransferHttpDocument(result) != null) {
+        	fileInfo = new String(result);
+            if (logger.isActivated()) {
+                logger.debug("Upload done with success: " + fileInfo);
+            }
+
+			// Send the file transfer info via a chat message
+            chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
+            if (chatSession != null) {
+				// A chat session exists
+                if (logger.isActivated()) {
+                    logger.debug("Send file transfer info via an existing chat session");
+                }
+
+                // Send file transfer info
+                sendFileTransferInfo();
+
+                // File transfered
+                handleFileTransfered();
+            } else {
+                // No chat error
+                handleError(new FileSharingError(FileSharingError.NO_CHAT_SESSION));
+			}
+		} else {
+            if (logger.isActivated()) {
+                logger.debug("Upload has failed");
+            }
+
+            // Upload error
+			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
+		}
+	}
+	
+	/**
+	 * Pausing the transfer
+	 */
+	@Override
+	public void pauseFileTransfer() {
+		interruptSession();
+		uploadManager.getListener().httpTransferPaused();
+	}
+	
+	/**
+	 * Resuming the transfer
+	 */
+	@Override
+	public void resumeFileTransfer() {
+		new Thread(new Runnable() {
+		    public void run() {
+				try {
+					byte[] result = uploadManager.resumeUpload();
+					sendResultToContact(result);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    }
+		  }).start();
+	}
 }

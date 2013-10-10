@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.network.sip;
  * Feature tags
  * 
  * @author jexa7410
+ * @author yplo6403
  */
 public class FeatureTags {
 	/**
@@ -122,4 +123,17 @@ public class FeatureTags {
 	 * RCS-e extension feature tag prefix
 	 */
 	public final static String FEATURE_RCSE_EXTENSION = "urn%3Aurn-7%3A3gpp-application.ims.iari.rcse";
+	
+	/**
+	 * SIP Automata feature tag
+	 * 
+	 * <pre>
+	 * @see RFC 3840 "Indicating User Agent Capabilities in the Session Initiation Protocol (SIP)"
+	 * 
+	 * The automata tag indicates whether the UA represents an automata (such as a voicemail server, 
+	 * conference server, IVR, or recording device) or a human.
+	 * </pre>
+	 */
+	public final static String FEATURE_SIP_AUTOMATA = "automata";
+
 }

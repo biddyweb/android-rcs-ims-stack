@@ -111,27 +111,9 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
                 		"Audio codec not selected"));
                 return;
             }
-
-            // Build SDP part
-            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
-	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-            String videoSdp = "";
-            if ((getVideoContent()!= null)&&(getVideoPlayer()!= null)&&(getVideoRenderer()!= null)) {
-            	videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(
-            			getVideoPlayer().getSupportedVideoCodecs(),
-            			getVideoRenderer().getLocalRtpPort());
-            }
-	    	String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(),
-	    			getAudioRenderer().getLocalRtpPort());
-	    	String sdp =
-            	"v=0" + SipUtils.CRLF +
-            	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"s=-" + SipUtils.CRLF +
-            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"t=0 0" + SipUtils.CRLF +
-            	audioSdp +
-            	videoSdp +
-            	"a=sendrcv" + SipUtils.CRLF;
+            
+            // build SDP proposal
+            String sdp = buildAudioVideoSdpProposal();
 
             // Set the local SDP part in the dialog path
             getDialogPath().setLocalContent(sdp); 

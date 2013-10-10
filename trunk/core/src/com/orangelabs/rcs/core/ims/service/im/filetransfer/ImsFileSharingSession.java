@@ -171,9 +171,10 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-        if (isInterrupted()) {
+        if (isInterrupted() || getDialogPath().isSessionTerminated()) {
             return;
         }
+        
         if (logger.isActivated()) {
             logger.info("Data transfer error " + error);
         }

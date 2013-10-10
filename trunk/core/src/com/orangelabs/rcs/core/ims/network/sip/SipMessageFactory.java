@@ -18,6 +18,7 @@
 
 package com.orangelabs.rcs.core.ims.network.sip;
 
+import gov2.nist.core.NameValue;
 import gov2.nist.javax2.sip.Utils;
 import gov2.nist.javax2.sip.header.Subject;
 
@@ -64,7 +65,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 /**
  * SIP message factory
  * 
- * @author jexa7410
+ * @author Jean-Marc AUFFRET
  */
 public class SipMessageFactory {
 	/**
@@ -102,6 +103,13 @@ public class SipMessageFactory {
 	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
 	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, null);
 	        
+			// Insert "keep" flag to Via header (RFC6223 "Indication of Support for Keep-Alive")
+			ArrayList<ViaHeader> viaHeaders = dialog.getSipStack().getViaHeaders();
+			if (viaHeaders != null && !viaHeaders.isEmpty()) {
+				ViaHeader viaHeader = viaHeaders.get(0);
+				viaHeader.setParameter(new NameValue("keep", null, true));
+			}
+	        
 	        // Create the request
 	        Request register = SipUtils.MSG_FACTORY.createRequest(requestURI,
 	                Request.REGISTER,
@@ -109,7 +117,7 @@ public class SipMessageFactory {
 	                cseqHeader,
 					fromHeader,
 					toHeader,
-					dialog.getSipStack().getViaHeaders(),
+					viaHeaders,
 					SipUtils.buildMaxForwardsHeader());       
 	        
 	        // Set Contact header
@@ -512,6 +520,13 @@ public class SipMessageFactory {
 	        Address toAddress = SipUtils.ADDR_FACTORY.createAddress(dialog.getRemoteParty());
 	        ToHeader toHeader = SipUtils.HEADER_FACTORY.createToHeader(toAddress, null);
 
+	        // Insert "keep" flag to Via header (RFC6223 "Indication of Support for Keep-Alive")
+			ArrayList<ViaHeader> viaHeaders = dialog.getSipStack().getViaHeaders();
+			if (viaHeaders != null && !viaHeaders.isEmpty()) {
+				ViaHeader viaHeader = viaHeaders.get(0);
+				viaHeader.setParameter(new NameValue("keep", null, true));
+			}
+	        
 	        // Create the request
 	        Request invite = SipUtils.MSG_FACTORY.createRequest(requestURI,
 	                Request.INVITE,
@@ -519,7 +534,7 @@ public class SipMessageFactory {
 	                cseqHeader,
 					fromHeader,
 					toHeader,
-					dialog.getSipStack().getViaHeaders(),
+					viaHeaders,
 					SipUtils.buildMaxForwardsHeader());       
 
 	        // Set Contact header
@@ -1133,7 +1148,7 @@ public class SipMessageFactory {
             reInvite.removeHeader(ContactHeader.NAME);
             reInvite.addHeader(firstInvite.getHeader(ContactHeader.NAME));
             reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
-            reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
+			reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_ACCEPT_CONTACT));
 
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);
@@ -1185,16 +1200,9 @@ public class SipMessageFactory {
      * @throws SipException
      */
     public static SipRequest createReInvite(SipDialogPath dialog, String[] featureTags, String content) throws SipException { 	
-    	if (logger.isActivated()) {
-            logger.info("createReInvite()");  
-           
-        }
     	try {
-
             // Build the request
     		Request reInvite = dialog.getStackDialog().createRequest(Request.INVITE);          
-           
-    		// get first Invite
             SipRequest firstInvite = dialog.getInvite();
             
            	// Set the CSeq header
@@ -1207,8 +1215,8 @@ public class SipMessageFactory {
             reInvite.removeHeader(SipUtils.HEADER_ACCEPT_CONTACT);
 	        reInvite.addHeader(dialog.getSipStack().getContact());
 	        
-	        // Set feature tags
-	        SipUtils.setFeatureTags(reInvite, featureTags);
+			// Set feature tags
+			SipUtils.setFeatureTags(reInvite, featureTags);
             
             // Add remote SIP instance ID
             SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
@@ -1219,8 +1227,7 @@ public class SipMessageFactory {
             // Set the Route header
             if (firstInvite.getHeader(RouteHeader.NAME) != null){
             	reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
-            }
-            else {
+            } else {
             	Vector<String> route = dialog.getRoute();
     	        for(int i=0; i < route.size(); i++) {
     	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
@@ -1452,5 +1459,5 @@ public class SipMessageFactory {
 			}
 			throw new SipException("Can't create SIP response");
 		}
-	}     
+	}
 }

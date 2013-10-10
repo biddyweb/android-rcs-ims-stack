@@ -693,6 +693,11 @@ public class RcsSettingsData {
 	public static final String IM_CAPABILITY_ALWAYS_ON = "ImAlwaysOn";
 	
 	/**
+	 * SIP Automata capability (@see RFC3840)
+	 */
+	public static final String CAPABILITY_SIP_AUTOMATA = "CapabilitySipAutomata";
+	
+	/**
      * File transfer always on (Store & Forward server)
      */
 	public static final String FT_CAPABILITY_ALWAYS_ON = "FtAlwaysOn";
@@ -771,11 +776,21 @@ public class RcsSettingsData {
      * Provisioning version
      */
     public static final String PROVISIONING_VERSION = "ProvisioningVersion";
+    
+    /**
+     * Provisioning version
+     */
+    public static final String PROVISIONING_TOKEN = "ProvisioningToken";
 
     /**
-     * Provisioning address (for test purpose)
+     * Secondary provisioning address
      */
-    public static final String PROVISIONING_ADDRESS = "ProvisioningAddress";
+    public static final String SECONDARY_PROVISIONING_ADDRESS = "SecondaryProvisioningAddress";
+
+    /**
+     * Use only the secondary provisioning address
+     */
+    public static final String SECONDARY_PROVISIONING_ADDRESS_ONLY = "SecondaryProvisioningAddressOnly";
 
     /**
      * Directory path for photos

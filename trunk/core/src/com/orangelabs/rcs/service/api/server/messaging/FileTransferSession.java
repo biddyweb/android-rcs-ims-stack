@@ -223,19 +223,53 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		// Abort the session
 		session.abortSession(ImsServiceSession.TERMINATION_BY_USER);
 	}
-
+    
     /**
      * Pause the session (only for HTTP transfer)
      */
     public void pauseSession() {
-        // TODO: NOT YET IMPLEMENTED
+		if (logger.isActivated()) {
+			logger.info("Pause session");
+		}
+		
+		if (isHttpTransfer()) {
+            ((HttpFileTransferSession)session).pauseFileTransfer();
+        } else {
+        	if (logger.isActivated()) {
+    			logger.info("Pause available only for HTTP transfer");
+    		}
+		}
     }
 
+    /**
+     * Pause the session (only for HTTP transfer)
+     */
+    public boolean isSessionPaused() {
+		if (isHttpTransfer()) {
+			return ((HttpFileTransferSession)session).isFileTransferPaused();
+        } else {
+        	if (logger.isActivated()) {
+    			logger.info("Pause available only for HTTP transfer");
+    		}
+			return false;
+		}
+    }
+    
     /**
      * Resume the session (only for HTTP transfer)
      */
     public void resumeSession() {
-        // TODO: NOT YET IMPLEMENTED
+    	if (logger.isActivated()) {
+			logger.info("Resuming session");
+		}
+		
+		if (isHttpTransfer()) {
+            ((HttpFileTransferSession)session).resumeFileTransfer();
+        } else {
+        	if (logger.isActivated()) {
+    			logger.info("Resuming can only be used on a paused HTTP transfer");
+    		}
+		}
     }
 
     /**
@@ -450,6 +484,33 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			
 			// Remove session from the list
 	        MessagingApiService.removeFileTransferSession(session.getSessionID());			
+	    }	
+    }
+    
+    /**
+     * File transfer has been paused.
+     */
+    public void handleFileUploadPaused() {
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Transfer paused");
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_PAUSED);
+
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleFileUploadPaused();
+	            } catch(Exception e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
 	    }	
     }
 }

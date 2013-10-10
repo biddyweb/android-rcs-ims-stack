@@ -75,6 +75,7 @@
 <string name="label_capabilities_ip_video_call">IP video call</string>
 <string name="label_capabilities_extensions">Extensions:</string>
 <string name="label_request_in_background">Request has been sent in background for %s</string>
+<string name="label_sip_automata">SIP automata</string>
 
 <!--  Presence menu -->
 <string name="menu_presence">Presence</string>
@@ -254,6 +255,8 @@
 <string name="label_select_video">Select video</string>
 <string name="label_selected_video">File:</string>
 <string name="label_initiate_sharing">Invite</string>
+<string name="label_pause_transfer">Pause</string>
+<string name="label_resume_transfer">Resume</string>
 <string name="label_display">Display:</string>
 <string name="label_select_file">Select file</string>
 <string name="title_recv_image_sharing">New image sharing invitation</string>

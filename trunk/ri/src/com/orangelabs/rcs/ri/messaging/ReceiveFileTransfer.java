@@ -387,6 +387,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				}
 			});
 		}
+
+		@Override
+		public void handleFileUploadPaused() throws RemoteException {
+			// should not happen
+		}
     };
 
     /**

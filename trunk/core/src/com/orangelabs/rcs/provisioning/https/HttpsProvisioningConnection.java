@@ -28,17 +28,17 @@ import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 
 /**
- * HTTPS provisioning - Connection management
+ * HTTPS provisioning connection management
  *
  * @author Orange
  */
 public class HttpsProvisioningConnection {
 
     /**
-     * HttpsProvisioningManager manages http and SMS reception to load
+     * HttpsProvisioningManager manages HTTP and SMS reception to load
      * provisioning from network
      */
-    HttpsProvisioningManager manager;
+    private HttpsProvisioningManager manager;
 
     /**
      * Network state listener
@@ -63,7 +63,7 @@ public class HttpsProvisioningConnection {
     /**
      * Constructor
      *
-     * @param httpsProvisioningManager
+     * @param httpsProvisioningManager HTTP provisioning manager
      */
     public HttpsProvisioningConnection(HttpsProvisioningManager httpsProvisioningManager) {
         manager = httpsProvisioningManager;

@@ -109,11 +109,12 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 		if (video == false) {
 			session.setVideoPlayer(null);
 			session.setVideoRenderer(null);
+			session.setVideoContent(null);
 		}
 		
-		session.setAudioContent(ContentManager.createGenericLiveAudioContent());
-        LiveVideoContent liveVideoContent = (session.getVideoPlayer()==null) ? null:ContentManager.createGenericLiveVideoContent();
-        session.setVideoContent(liveVideoContent);
+//		session.setAudioContent(ContentManager.createGenericLiveAudioContent());
+//        LiveVideoContent liveVideoContent = (session.getVideoPlayer()==null) ? null:ContentManager.createGenericLiveVideoContent();
+//        session.setVideoContent(liveVideoContent);
 
 		// Accept invitation
 		session.acceptSession();
@@ -194,6 +195,8 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 		if (logger.isActivated()) {
 			logger.info("Reject invitation to add video");
 		}
+		//set video content to null
+		session.setVideoContent(null);
 		
 		// Reject add video
 		session.getUpdateSessionManager().rejectReInvite(603);
@@ -209,7 +212,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			logger.info("Set call hold to " + flag);
 		}
 
-		// TODO
+		session.setOnHold(flag);
 	}
 
 	/**
@@ -587,6 +590,159 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			listeners.finishBroadcast();
 		}		
 	}
+	
+	/**
+	 * Call Hold invitation
+	 * 
+	 */
+	public void handleCallHold() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Hold invitation");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallHold();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Call Resume invitation
+	 * 
+	 */
+	public void handleCallResume() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Resume invitation");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallResume();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Call Hold has been accepted
+	 * 
+	 */
+	public void handleCallHoldAccepted() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Hold accepted");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallHoldAccepted();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Call Hold has been aborted
+	 * 
+	 * @param reason Termination reason
+	 */
+	public void handleCallHoldAborted(int errorCode) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Hold aborted (reason " + errorCode + ")");
+			}
+
+	        // Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallHoldAborted(errorCode);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}		
+	}
+
+	/**
+	 * Call Resume has been accepted
+	 * 
+	 */
+	public void handleCallResumeAccepted() {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Resume accepted");
+			}
+
+			// Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallResumeAccepted();
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}
+	}
+
+	/**
+	 * Call Resume has been aborted
+	 * 
+	 * @param reason Termination reason
+	 */
+	public void handleCallResumeAborted(int code) {
+		synchronized (lock) {
+			if (logger.isActivated()) {
+				logger.info("Call Resume aborted (reason " + code + ")");
+			}
+
+	        // Notify event listeners
+			final int N = listeners.beginBroadcast();
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleCallResumeAborted(code);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+		}		
+	}
+
 
 	/**
 	 * IP Call error
@@ -681,6 +837,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 		}
 	}
 
+	
 
 }
 

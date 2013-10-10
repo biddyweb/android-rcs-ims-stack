@@ -107,8 +107,11 @@ public class StackProvisioning extends Activity {
             spinner.setSelection(0);
         }
 
-        EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
-        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.PROVISIONING_ADDRESS));
+        EditText txt = (EditText)this.findViewById(R.id.SecondaryProvisioningAddress);
+        txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS));
+
+        CheckBox check = (CheckBox)this.findViewById(R.id.SecondaryProvisioningAddressOnly);
+        check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS_ONLY)));
 
         spinner = (Spinner)findViewById(R.id.NetworkAccess);
         adapter = new ArrayAdapter<String>(this,
@@ -268,7 +271,7 @@ public class StackProvisioning extends Activity {
         txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_POLLING_PERIOD));
 
-        CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
+        check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
         check.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.SIP_KEEP_ALIVE)));
 
         check = (CheckBox)this.findViewById(R.id.PermanentState);
@@ -366,8 +369,11 @@ public class StackProvisioning extends Activity {
         spinner = (Spinner)findViewById(R.id.FtProtocol);
         RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_PROTOCOL, (String)spinner.getSelectedItem());
 
-		EditText txt = (EditText)this.findViewById(R.id.ProvisioningAddress);
-		RcsSettings.getInstance().writeParameter(RcsSettingsData.PROVISIONING_ADDRESS, txt.getText().toString());
+		EditText txt = (EditText)this.findViewById(R.id.SecondaryProvisioningAddress);
+		RcsSettings.getInstance().writeParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS, txt.getText().toString());
+
+        CheckBox check = (CheckBox)this.findViewById(R.id.SecondaryProvisioningAddressOnly);
+        RcsSettings.getInstance().writeParameter(RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS_ONLY, Boolean.toString(check.isChecked()));
 
 		txt = (EditText)this.findViewById(R.id.SipListeningPort);
 		RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_DEFAULT_PORT, txt.getText().toString());
@@ -432,7 +438,7 @@ public class StackProvisioning extends Activity {
 		txt = (EditText)this.findViewById(R.id.CapabilityPollingPeriod);
 		RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_POLLING_PERIOD, txt.getText().toString());
 		
-    	CheckBox check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
+    	check = (CheckBox)this.findViewById(R.id.SipKeepAlive);
 		RcsSettings.getInstance().writeParameter(RcsSettingsData.SIP_KEEP_ALIVE, Boolean.toString(check.isChecked()));
 
 		check = (CheckBox)this.findViewById(R.id.PermanentState);

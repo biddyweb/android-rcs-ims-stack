@@ -2,9 +2,14 @@ package com.orangelabs.rcs.service.api.client;
 
 import java.util.List;
 
+import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
+import com.orangelabs.rcs.service.RcsCoreService;
+import com.orangelabs.rcs.service.StartService;
+
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 
 /**
  * Client API utils
@@ -33,5 +38,25 @@ public class ClientApiUtils {
 	           }
 	     }
 	     return false;
-	}	
+	}
+
+    /**
+     * Start RCS service
+     *
+     * @param ctx Context
+     */
+    public static void startRcsService(Context ctx) {
+        ctx.startService(new Intent(ctx, StartService.class));
+    }
+
+    /**
+     * Stop RCS service
+     *
+     * @param ctx Context
+     */
+    public static void stopRcsService(Context ctx) {
+        ctx.stopService(new Intent(ctx, StartService.class));
+        ctx.stopService(new Intent(ctx, HttpsProvisioningService.class));
+        ctx.stopService(new Intent(ctx, RcsCoreService.class));
+    }
 }

@@ -66,6 +66,7 @@ import com.orangelabs.rcs.service.api.client.messaging.GroupChatInfo;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -519,6 +520,19 @@ public class InstantMessagingService extends ImsService {
      * @throws CoreException
      */
     public ChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws CoreException {
+        return initiateOne2OneChatSession(contact, firstMsg, false);
+    }
+
+    /**
+     * Initiate a one-to-one chat session
+     * 
+     * @param contact Remote contact
+     * @param firstMsg First message
+     * @param isFileTransferInit Is initiated by a file transfer
+     * @return IM session
+     * @throws CoreException
+     */
+    public ChatSession initiateOne2OneChatSession(String contact, String firstMsg, boolean isFileTransferInit) throws CoreException {
         if (logger.isActivated()) {
             logger.info("Initiate 1-1 chat session with " + contact);
         }
@@ -535,7 +549,8 @@ public class InstantMessagingService extends ImsService {
         OriginatingOne2OneChatSession session = new OriginatingOne2OneChatSession(
                 this,
                 PhoneUtils.formatNumberToSipUri(contact),
-                firstMsg);
+                firstMsg,
+                isFileTransferInit);
 
         // Start the session
         session.startSession();
@@ -851,7 +866,7 @@ public class InstantMessagingService extends ImsService {
 
             // Check if message delivery of a FileTransfer
             String ftSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
-            if (ftSessionId == null) {
+            if (!StringUtils.isEmpty(ftSessionId)) {
                 // Notify the file delivery outside of the chat session
                 receiveFileDeliveryStatus(ftSessionId, status);
             } else {

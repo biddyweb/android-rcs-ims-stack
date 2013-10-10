@@ -388,6 +388,14 @@
         android:textStyle="bold"
 		android:enabled="true"
         android:text="Group chat Store &amp; Forward" />
+		
+		<CheckBox android:id="@+id/sip_automata"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+        android:textStyle="bold"
+		android:enabled="true"
+        android:text="SIP automata" />
+		
 	</LinearLayout>
 	</ScrollView>
 	

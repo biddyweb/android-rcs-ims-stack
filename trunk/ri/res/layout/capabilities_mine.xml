@@ -186,7 +186,7 @@
              android:clickable="false"
              android:text="@string/label_capabilities_group_chat_sf" />
         </TableRow>
-        
+	    
    		<TableRow>
 	        <TextView android:text="@string/label_capabilities_extensions"
  			 android:layout_marginLeft="5dip"
