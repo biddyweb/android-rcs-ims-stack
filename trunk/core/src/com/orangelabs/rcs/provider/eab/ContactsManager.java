@@ -697,12 +697,12 @@ public final class ContactsManager {
     				ops.add(op);
     			}
     			// IP Voice call
-    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VOICE_CALL, (newInfo.getCapabilities().isIPVoiceCallSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()), oldInfo.getCapabilities().isIPVoiceCallSupported());
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VOICE_CALL, newInfo.getCapabilities().isIPVoiceCallSupported() && isRegistered, oldInfo.getCapabilities().isIPVoiceCallSupported());
     			if (op!=null){
     				ops.add(op);
     			}
     			// IP video call
-    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VIDEO_CALL, (newInfo.getCapabilities().isIPVideoCallSupported() && isRegistered)||(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact()), oldInfo.getCapabilities().isIPVideoCallSupported());
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_IP_VIDEO_CALL, newInfo.getCapabilities().isIPVideoCallSupported() && isRegistered, oldInfo.getCapabilities().isIPVideoCallSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -2819,6 +2819,7 @@ public final class ContactsManager {
 				.withValue(Data.MIMETYPE, MIMETYPE_CAPABILITY_EXTENSIONS)
 				.withValue(Data.DATA1, info.getContact())
 				.withValue(Data.DATA2, extension.toString())
+				.withValue(Data.DATA3, info.getContact())
 				.build());
 		if (hasCommonExtensions) {
 			// Insert common extensions item

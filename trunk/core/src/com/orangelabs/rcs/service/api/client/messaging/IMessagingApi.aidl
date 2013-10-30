@@ -56,4 +56,5 @@ interface IMessagingApi {
 
 	// Remove message delivery listener
 	void removeMessageDeliveryListener(in IMessageDeliveryListener listener);	
+
 }

@@ -41,33 +41,25 @@ public class VideoCodecManager {
      * @return Selected codec or null if no codec supported
      */
     public static VideoCodec negociateVideoCodec(MediaCodec[] supportedCodecs, Vector<VideoCodec> proposedCodecs) {
-        VideoCodec selectedCodec = null;
-        int pref = -1;
-        for (int i = 0; i < proposedCodecs.size(); i++) {
-            VideoCodec proposedCodec = proposedCodecs.get(i);
-            for (int j = 0; j < supportedCodecs.length; j++) {
-                VideoCodec videoCodec = new VideoCodec(supportedCodecs[j]);
-                int videoCodecPref = supportedCodecs.length - 1 - j;
-                // Compare Codec
-                if (proposedCodec.compare(videoCodec)) {
-                    if (videoCodecPref > pref) {
-                        pref = videoCodecPref;
-                        selectedCodec = new VideoCodec(proposedCodec.getCodecName(),
-                                (proposedCodec.getPayload() == 0) ? videoCodec.getPayload() : proposedCodec.getPayload(),
-                                (proposedCodec.getClockRate() == 0) ? videoCodec.getClockRate() : proposedCodec.getClockRate(),
-                                (proposedCodec.getCodecParams().length() == 0) ? videoCodec.getCodecParams() : proposedCodec.getCodecParams(),
-                                (proposedCodec.getFramerate() == 0) ? videoCodec.getFramerate() : proposedCodec.getFramerate(),
-                                (proposedCodec.getBitrate() == 0) ? videoCodec.getBitrate() : proposedCodec.getBitrate(),
-                                (proposedCodec.getWidth() == 0) ? videoCodec.getWidth() : proposedCodec.getWidth(),
-                                (proposedCodec.getHeight() == 0) ? videoCodec.getHeight() : proposedCodec.getHeight());
-                    }
-                }
-            }
-        }
+    	// Supported codecs are sorted in descending level order. We select the highest level among proposed ones.
+		VideoCodec selectedCodec = null;
+		for (MediaCodec supportedMediaCodec : supportedCodecs) {
+			for (VideoCodec proposedCodec : proposedCodecs) {
+				VideoCodec supportedCodec = new VideoCodec(supportedMediaCodec);
+				if (proposedCodec.compare(supportedCodec)) {
+					return new VideoCodec(proposedCodec.getCodecName(),
+                            (proposedCodec.getPayload() == 0) ? supportedCodec.getPayload() : proposedCodec.getPayload(),
+                            (proposedCodec.getClockRate() == 0) ? supportedCodec.getClockRate() : proposedCodec.getClockRate(),
+                            (proposedCodec.getCodecParams().length() == 0) ? supportedCodec.getCodecParams() : proposedCodec.getCodecParams(),
+                            (proposedCodec.getFramerate() == 0) ? supportedCodec.getFramerate() : proposedCodec.getFramerate(),
+                            (proposedCodec.getBitrate() == 0) ? supportedCodec.getBitrate() : proposedCodec.getBitrate(),
+                            (proposedCodec.getWidth() == 0) ? supportedCodec.getWidth() : proposedCodec.getWidth(),
+                            (proposedCodec.getHeight() == 0) ? supportedCodec.getHeight() : proposedCodec.getHeight());
+				}
+			}
+		}
         return selectedCodec;
     }
-
-    
 
     /**
      * Create a video codec from its SDP description

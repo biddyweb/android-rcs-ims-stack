@@ -141,7 +141,7 @@ public interface CoreListener {
 	 * 
 	 * @param session File transfer session
 	 */
-	public void handle1to1FileTransferInvitation(FileSharingSession fileSharingSession, TerminatingOne2OneChatSession one2oneChatSession);
+	public void handle1to1FileTransferInvitation(FileSharingSession fileSharingSession, OneOneChatSession one2oneChatSession);
 
 	/**
 	 * A new file transfer invitation has been received and creating a chat session

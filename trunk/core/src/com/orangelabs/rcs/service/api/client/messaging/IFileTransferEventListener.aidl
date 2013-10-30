@@ -23,5 +23,8 @@ interface IFileTransferEventListener {
 	void handleFileTransfered(in String filename);
 	
 	// File transfer has been paused
-	void handleFileUploadPaused();
+	void handleFileTransferPaused();
+	
+	// File transfer has been resumed
+	void handleFileTransferResumed();
 }

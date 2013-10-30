@@ -20,7 +20,8 @@ package com.orangelabs.rcs.core.ims.service.im.chat;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -51,6 +52,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
+    
+    // Invite missing participants upon reception of 1rst conference event notification.
+    boolean inviteMissingParticipants = false;
 
     /**
      * Constructor
@@ -266,8 +270,9 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     	    	// Subscribe to event package
             	getConferenceEventSubscriber().subscribe();
 
-            	// Invite missing participant
-            	inviteMissingParticipants();
+				// Set inviteMissingParticipants so that missing participants will be invited upon
+				// reception of the first conference event notification
+				inviteMissingParticipants = true;
             	
             	// Start session timer
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
@@ -292,37 +297,39 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		}		
 	}
 	
-	/***
-	 * Invite missing participants in background
+	/**
+	 * Invite missing participants.
+	 * <p>
+	 * This method is executed once upon reception of the first conference event notification after invite.
 	 */
-	private void inviteMissingParticipants() {
+	public void inviteMissingParticipants() {
+		// Check if it is first conference event notification after invite
+		if (!inviteMissingParticipants)
+			return;
+		inviteMissingParticipants = false;
 		Thread t = new Thread() {
 			public void run() {
 				try {
-		        	if (logger.isActivated()) {
-		        		logger.debug("Check if participants are missing in the conference");
-		        	}
-					List<String> connected = RichMessaging.getInstance().getGroupChatConnectedParticipants(getContributionID());
-					List<String> invited = getParticipants().getList();
-					List<String> missing = new ArrayList<String>();
-					for(int i= 0; i < connected.size(); i++) {
-						String contact = connected.get(i);
-						if (!invited.contains(contact)) {
-							missing.add(contact);
-						}
+					if (logger.isActivated()) {
+						logger.debug("Check if participants are missing in the conference");
 					}
-					if (missing.size() > 0) {
-			        	if (logger.isActivated()) {
-			        		logger.debug("Add " + missing.size() + " missing participants in the conference");
-			        	}
-						addParticipants(missing);
+					Set<String> connectedProvider = new HashSet<String>(RichMessaging.getInstance().getGroupChatConnectedParticipants(
+							getContributionID()));
+					Set<String> connectedNotify = new HashSet<String>(getConnectedParticipants().getList());
+					// Only keep participants who are not seen as connected by the AS
+					connectedProvider.removeAll(connectedNotify);
+					if (!connectedProvider.isEmpty()) {
+						if (logger.isActivated())
+							logger.debug("Add " + connectedProvider.size() + " missing participants in the conference");
+						addParticipants(new ArrayList<String>(connectedProvider));
 					}
-				} catch(Exception e) {
-		        	if (logger.isActivated()) {
-		        		logger.error("Session initiation has failed", e);
-		        	}
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Session initiation has failed", e);
+					}
 				}
 			}
+
 		};
 		t.start();
 	}

@@ -67,6 +67,7 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.provisioning.ProvisioningFailureReasons;
 import com.orangelabs.rcs.provisioning.ProvisioningInfo;
 import com.orangelabs.rcs.provisioning.ProvisioningParser;
@@ -726,6 +727,10 @@ public class HttpsProvisioningManager {
 
                 // Parse the received content
                 ProvisioningParser parser = new ProvisioningParser(result.content);
+                // Save GSMA release set into the provider
+                int gsmaRelease = RcsSettings.getInstance().getGsmaRelease();
+                // Before parsing the provisioning, the GSMA release is set to Albatros
+                RcsSettings.getInstance().setGsmaRelease(RcsSettingsData.VALUE_GSMA_REL_ALBATROS);
                 if (parser.parse()) {
                     // Successfully provisioned, 1st time reg finalized
                     first = false;
@@ -792,6 +797,8 @@ public class HttpsProvisioningManager {
                     if (logger.isActivated()) {
                         logger.debug("Can't parse provisioning document");
                     }
+                    // Restore GSMA release before parsing of the provisioning
+                    RcsSettings.getInstance().setGsmaRelease(""+gsmaRelease);
                     if (first){
                     	if (logger.isActivated()){
                     		logger.debug("As this is first launch and we do not have a valid configuration yet, retry later");

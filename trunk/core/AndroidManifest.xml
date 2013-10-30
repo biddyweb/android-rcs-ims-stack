@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.11"
+ android:versionName="2.5.12"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"
@@ -205,12 +205,12 @@
 		</receiver>
 		
 		<!-- SMS for Provisioning -->	
-        <receiver android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningManager">
+        <receiver android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningSMS">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"></action>
             </intent-filter>
         </receiver>
-		
+        
 		<!-- HTTPS provisioning service -->
 		<service android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningService">
 	    </service>

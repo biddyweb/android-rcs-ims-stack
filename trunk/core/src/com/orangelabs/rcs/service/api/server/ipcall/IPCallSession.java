@@ -110,11 +110,8 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			session.setVideoPlayer(null);
 			session.setVideoRenderer(null);
 			session.setVideoContent(null);
+			
 		}
-		
-//		session.setAudioContent(ContentManager.createGenericLiveAudioContent());
-//        LiveVideoContent liveVideoContent = (session.getVideoPlayer()==null) ? null:ContentManager.createGenericLiveVideoContent();
-//        session.setVideoContent(liveVideoContent);
 
 		// Accept invitation
 		session.acceptSession();

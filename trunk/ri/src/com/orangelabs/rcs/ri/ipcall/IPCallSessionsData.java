@@ -33,12 +33,7 @@ public class IPCallSessionsData {
 	/**
 	 * IP call API connected status
 	 */
-	public boolean isCallApiConnected;
-	
-	/**
-	 * Client API listener
-	 */
-	public ClientApiListener callApiListener;
+	public boolean isCallApiConnected;	
 	
 	/**
 	 * Ims Event listener
@@ -57,7 +52,6 @@ public class IPCallSessionsData {
 		this.sessions = null;
 		this.callApi = null;
 		this.isCallApiConnected= false;
-		this.callApiListener = null;
 		this.imsEventListener = null;
 		
 	}

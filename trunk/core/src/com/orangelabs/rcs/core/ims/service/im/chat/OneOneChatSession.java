@@ -40,6 +40,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.StringUtils;
 
 /**
@@ -124,19 +125,22 @@ public abstract class OneOneChatSession extends ChatSession {
 	/**
 	 * Send a text message
 	 * 
-	 * @param id Message-ID
 	 * @param txt Text message
+	 * @return id Message-ID
 	 */
-	public void sendTextMessage(String msgId, String txt) {
-		boolean useImdn = getImdnManager().isImdnActivated();
-		String mime = CpimMessage.MIME_TYPE;
+	public String sendTextMessage(String txt) {
+        boolean useImdn = getImdnManager().isImdnActivated();
+        String msgId = ChatUtils.generateMessageId();
+        String imdnMsgId = null;
+        String mime = CpimMessage.MIME_TYPE;
 		String from = ChatUtils.ANOMYNOUS_URI;
 		String to = ChatUtils.ANOMYNOUS_URI;
 
 		String content;
 		if (useImdn) {
-			// Send message in CPIM + IMDN
-			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
+            // Send message in CPIM + IMDN
+            imdnMsgId = IdGenerator.getIdentifier();
+			content = ChatUtils.buildCpimMessageWithImdn(from, to, imdnMsgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		} else {
 			// Send message in CPIM
 			content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
@@ -144,6 +148,11 @@ public abstract class OneOneChatSession extends ChatSession {
 
 		// Send content
 		boolean result = sendDataChunks(msgId, content, mime);
+
+        // Use IMDN MessageID as reference if existing
+        if (useImdn) {
+            msgId = imdnMsgId;
+        }
 
 		// Update rich messaging history
 		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn);
@@ -159,16 +168,19 @@ public abstract class OneOneChatSession extends ChatSession {
 	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
+        return msgId;
 	}
 
 	/**
 	 * Send a geoloc message
 	 * 
-	 * @param msgId Message ID
 	 * @param geoloc Geoloc info
+     * @return id Message-ID
 	 */
-	public void sendGeolocMessage(String msgId, GeolocPush geoloc) {
+	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
+        String msgId = ChatUtils.generateMessageId();
+        String imdnMsgId = null;
 		String mime = CpimMessage.MIME_TYPE;
 		String from = ChatUtils.ANOMYNOUS_URI;
 		String to = ChatUtils.ANOMYNOUS_URI;
@@ -177,7 +189,8 @@ public abstract class OneOneChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN
-			content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
+            imdnMsgId = IdGenerator.getIdentifier();
+			content = ChatUtils.buildCpimMessageWithImdn(from, to, imdnMsgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
 		} else {
 			// Send message in CPIM
 			content = ChatUtils.buildCpimMessage(from, to, geoDoc, GeolocInfoDocument.MIME_TYPE);
@@ -185,6 +198,11 @@ public abstract class OneOneChatSession extends ChatSession {
 
 		// Send content
 		boolean result = sendDataChunks(msgId, content, mime);
+
+        // Use IMDN MessageID as reference if existing
+        if (useImdn) {
+            msgId = imdnMsgId;
+        }
 
 		// Update rich messaging history
 		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn);
@@ -200,6 +218,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
+        return msgId;
 	}
 	
 	/**

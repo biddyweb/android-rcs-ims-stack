@@ -22,30 +22,31 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.provider.ContactsContract.Data;
 import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.orangelabs.rcs.provider.eventlogs.EventLogData;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
@@ -162,6 +163,7 @@ public class EventLog extends Activity {
         // Set cursor adpator
         resourceCursorAdapter = new EventLogAdapter(this);
         ListView view = (ListView)findViewById(android.R.id.list);
+
         TextView emptyView = (TextView)findViewById(android.R.id.empty);
         view.setEmptyView(emptyView);
         view.setAdapter(resourceCursorAdapter);
@@ -395,7 +397,7 @@ public class EventLog extends Activity {
     		ImageView eventIconView = (ImageView) view.findViewById(R.id.call_icon);
     		
     		// Set the number
-    		String number = cursor.getString(EventsLogApi.CONTACT_COLUMN);
+    		String number = cursor.getString(cursor.getColumnIndex(RichMessagingData.KEY_CONTACT));
     		numberView.setText(number);
     		numberView.setVisibility(View.VISIBLE);
     		
@@ -404,14 +406,14 @@ public class EventLog extends Activity {
     		labelView.setVisibility(View.VISIBLE);
     		
     		// Set the date/time field by mixing relative and absolute times
-    		long date = cursor.getLong(EventsLogApi.DATE_COLUMN);		
+    		long date = cursor.getLong(cursor.getColumnIndex(RichMessagingData.KEY_TIMESTAMP));		
     		dateView.setText(DateUtils.getRelativeTimeSpanString(date,
     				System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS,
     				DateUtils.FORMAT_ABBREV_RELATIVE));
     		
     		// Set the status text and destination icon
-    		int type = cursor.getInt(EventsLogApi.TYPE_COLUMN);
-    		int status = cursor.getInt(EventsLogApi.STATUS_COLUMN);
+    		int type = cursor.getInt(cursor.getColumnIndex(RichMessagingData.KEY_TYPE));
+    		int status = cursor.getInt(cursor.getColumnIndex(RichMessagingData.KEY_STATUS));
     		switch (type) {
 	    		case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
 	    		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
@@ -438,10 +440,10 @@ public class EventLog extends Activity {
     		}
     		
     		// Set icon and data
-    		String data = cursor.getString(EventsLogApi.DATA_COLUMN);
-    		String mimeType = cursor.getString(EventsLogApi.MIMETYPE_COLUMN);
-    		if(data!=null){
-    			line1View.setText(data);
+    		String name = cursor.getString(cursor.getColumnIndex(RichMessagingData.KEY_NAME));
+    		String mimeType = cursor.getString(cursor.getColumnIndex(RichMessagingData.KEY_MIME_TYPE));
+    		if(name!=null){
+    			line1View.setText(name);
     		}else{
     			line1View.setText(mimeType);
     		}

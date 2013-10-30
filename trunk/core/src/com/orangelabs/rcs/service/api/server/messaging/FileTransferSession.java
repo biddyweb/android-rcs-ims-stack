@@ -260,10 +260,10 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
      */
     public void resumeSession() {
     	if (logger.isActivated()) {
-			logger.info("Resuming session");
+			logger.info("Resuming session"+isSessionPaused()+" "+isHttpTransfer());
 		}
 		
-		if (isHttpTransfer()) {
+		if (isHttpTransfer() && isSessionPaused()) {
             ((HttpFileTransferSession)session).resumeFileTransfer();
         } else {
         	if (logger.isActivated()) {
@@ -490,7 +490,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     /**
      * File transfer has been paused.
      */
-    public void handleFileUploadPaused() {
+    public void handleFileTransferPaused() {
     	synchronized(lock) {
 			if (logger.isActivated()) {
 				logger.info("Transfer paused");
@@ -503,7 +503,34 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleFileUploadPaused();
+	            	listeners.getBroadcastItem(i).handleFileTransferPaused();
+	            } catch(Exception e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
+	    }	
+    }
+    
+    /**
+     * File transfer has been paused.
+     */
+    public void handleFileTransferResumed() {
+    	synchronized(lock) {
+			if (logger.isActivated()) {
+				logger.info("Transfer resumed");
+			}
+	
+			// Update rich messaging history
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_IN_PROGRESS);
+
+	  		// Notify event listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleFileTransferResumed();
 	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);

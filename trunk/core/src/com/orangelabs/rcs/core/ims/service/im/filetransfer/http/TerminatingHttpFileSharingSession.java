@@ -111,19 +111,6 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                 logger.info("Initiate a new HTTP file transfer session as terminating");
             }
             
-            // Send delivery report "delivered"
-            sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DELIVERED);
-            
-            // Check content
-            if (getContent() == null) {
-                if (logger.isActivated()) {
-                    logger.debug("MIME type is not supported");
-                }
-                // Unsupported media type
-                handleError(new FileSharingError(FileSharingError.UNSUPPORTED_MEDIA_TYPE));
-                return;
-            }
-
             if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
                 if (logger.isActivated()) {
                     logger.debug("Auto accept file transfer invitation");
@@ -235,5 +222,57 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	                    getRemoteContact(), msgId, status, remoteInstanceId);
 			}
 		}
+    }
+    
+    /**
+     * Resume File Transfer
+     */
+    @Override
+    public void resumeFileTransfer() {
+    	fileTransferResumed();
+		downloadManager.getListener().httpTransferResumed();
+		
+    	new Thread(new Runnable() {
+		    public void run() {
+	            // Download file from the HTTP server
+				if (downloadManager.resumeDownload()) {
+					if (logger.isActivated()){
+						logger.debug("Download file with success");
+					}
+
+	                // Set filename
+	                getContent().setUrl(downloadManager.getFilename());
+
+	                // File transfered
+	                handleFileTransfered();
+
+	                // Send delivery report "displayed"
+	                sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+				} else {
+					if (downloadManager.isCancelled()) {
+						return;
+					}
+
+					if (logger.isActivated()){
+						logger.info("Download file has failed");
+					}
+
+	                // Upload error
+	    			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
+				}
+		    }
+		  }).start();
+    }
+    
+    /**
+     * Pause File Transfer
+     */
+    @Override
+    public void pauseFileTransfer() {
+    	fileTransferPaused();
+    	interruptSession();
+    	
+		downloadManager.pauseTransfer();
+		downloadManager.getListener().httpTransferPaused();
     }
 }

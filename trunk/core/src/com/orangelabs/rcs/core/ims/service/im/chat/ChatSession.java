@@ -51,8 +51,10 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.messaging.MessageInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
@@ -475,6 +477,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 				if (cpimMsg != null) {
 			    	Date date = cpimMsg.getMessageDate();
 			    	String cpimMsgId = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_MSG_ID);
+                    if (cpimMsgId == null) {
+                        cpimMsgId = msgId;
+                    }
+
 			    	String contentType = cpimMsg.getContentType();
 			    	
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
@@ -485,20 +491,23 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	// Check if the message needs a delivery report
 	    			boolean imdnDisplayedRequested = false;
 			    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
-			    	if (dispositionNotification != null) {
+                    boolean isFToHTTP = ChatUtils.isFileTransferHttpType(contentType);
+                    if (isFToHTTP) {
+                        sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+                    } else if (dispositionNotification != null) {
 			    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
 			    			// Positive delivery requested, send MSRP message with status "delivered" 
 			    			sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 			    		}
 			    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
 			    			imdnDisplayedRequested = true;
-			    		}			    		
+			    		}
 			    	}
 
 			    	// Analyze received message thanks to the MIME type 
-                    if (ChatUtils.isFileTransferHttpType(contentType)) {
+                    if (isFToHTTP) {
                         // File transfer over HTTP message
-                        receiveHttpFileTransfer(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite(), msgId);
+                        receiveHttpFileTransfer(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite(), cpimMsgId);
                     } else
 	                if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
@@ -770,20 +779,18 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Send a GeoLoc message
 	 * 
-	 * @param msgId Message-ID
 	 * @param geoloc GeoLocation
-	 * @return Boolean result
+	 * @return String msgId
 	 */
-	public abstract void sendGeolocMessage(String msgId, GeolocPush geoloc);
+	public abstract String sendGeolocMessage(GeolocPush geoloc);
 	
 	/**
 	 * Send a text message
 	 * 
-	 * @param msgId Message-ID
 	 * @param txt Text message
-	 * @return Boolean result
+	 * @return String msgId
 	 */
-	public abstract void sendTextMessage(String msgId, String txt);
+	public abstract String sendTextMessage(String txt);
 	
 	/**
 	 * Send is composing status
@@ -821,7 +828,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
 		
 		// Send data
-		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+		boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
 		if (result) {
 			// Update rich messaging history
 			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
@@ -829,44 +836,46 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 	
 	/**
-     * Receive a message delivery status from a SIP message
+     * Handle a message delivery status from a SIP message
      * 
    	 * @param msgId Message ID
      * @param status Delivery status
      */
-    public void receiveMessageDeliveryStatus(String msgId, String status) {
-        // Check if message delivery of a FileTransfer
-        String ftSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
-        if (ftSessionId == null) {
-    		// Notify listeners
-        	for(int i=0; i < getListeners().size(); i++) {
-        		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, status);
-    		}
-        } else {
-            ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(ftSessionId, status);
+    public void handleMessageDeliveryStatus(String msgId, String status) {
+        // Notify listeners
+        for (int i = 0; i < getListeners().size(); i++) {
+            ((ChatSessionListener) getListeners().get(i)).handleMessageDeliveryStatus(
+                    msgId, status);
         }
     }
-    
+
 	/**
      * Receive a message delivery status from an XML document
-     * 
+     *
      * @param xml XML document
      */
     public void receiveMessageDeliveryStatus(String xml) {
     	try {
 			ImdnDocument imdn = ChatUtils.parseDeliveryReport(xml);
-			if (imdn != null) {
-	            // Check if message delivery of a FileTransfer
-	            String ftSessionId = RichMessaging.getInstance().getFileTransferId(imdn.getMsgId());
-	            if (ftSessionId == null) {
-	                // Notify listeners
-                    for (int i = 0; i < getListeners().size(); i++) {
-                        ((ChatSessionListener) getListeners().get(i)).handleMessageDeliveryStatus(
-                                imdn.getMsgId(), imdn.getStatus());
-                    }
-                } else {
-                    ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(
-                            ftSessionId, imdn.getStatus());
+            if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+                // Check message in RichMessaging
+                MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(imdn.getMsgId());
+                if (msgInfo == null) {
+                    return;
+                }
+                switch (msgInfo.getType()) {
+                    case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+                    case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+                    case EventsLogApi.TYPE_OUTGOING_GEOLOC:
+                    case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
+                        // Notify listeners
+                        handleMessageDeliveryStatus(imdn.getMsgId(), imdn.getStatus());
+                        break;
+                    case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
+                        // Notify the file delivery
+                        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(
+                                msgInfo.getSessionId(), imdn.getStatus());
+                        break;
                 }
 			}
     	} catch(Exception e) {

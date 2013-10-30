@@ -1200,6 +1200,10 @@ public class SipMessageFactory {
      * @throws SipException
      */
     public static SipRequest createReInvite(SipDialogPath dialog, String[] featureTags, String content) throws SipException { 	
+    	 if (logger.isActivated()) {
+             logger.error("createReInvite");
+         }
+    	
     	try {
             // Build the request
     		Request reInvite = dialog.getStackDialog().createRequest(Request.INVITE);          
@@ -1224,17 +1228,18 @@ public class SipMessageFactory {
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);    
             
-            // Set the Route header
-            if (firstInvite.getHeader(RouteHeader.NAME) != null){
+            // Set the Route header  
+            Vector<String> route = dialog.getRoute();             
+            if (!route.isEmpty()){
+            	for(int i=0; i < route.size(); i++) {
+	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
+	        	reInvite.addHeader(routeHeader);
+            	}
+	        }
+            else if (firstInvite.getHeader(RouteHeader.NAME) != null){
             	reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
-            } else {
-            	Vector<String> route = dialog.getRoute();
-    	        for(int i=0; i < route.size(); i++) {
-    	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
-    	        	reInvite.addHeader(routeHeader);
-    	        }
-            }        
-	        
+            }           	
+          
                         
             // Set the P-Preferred-Identity header
             if (firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY) != null){

@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.core.ims.service.im.chat.event;
 
 import java.io.ByteArrayInputStream;
+import java.util.List;
 import java.util.Vector;
 
 import javax2.sip.header.ExpiresHeader;
@@ -39,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
+import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
@@ -168,7 +170,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    	}
                         session.setMaxParticipants(maxParticipants);
                     }
-                    
+                    ListOfParticipant disconnectedParticipants = new ListOfParticipant();	
 			    	Vector<User> users = conference.getUsers();
 			    	for(int i=0; i < users.size(); i++) {
 			    		User user = (User)users.elementAt(i);
@@ -215,20 +217,32 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    		if (User.isDisconnected(state)) {
 			    			// A participant has quit the session
 			    			connectedParticipants.removeParticipant(entity);
+			    			disconnectedParticipants.addParticipant(entity);
 			    		}
-			    		
+			    			
 			    		// Notify session listeners
 		    	    	for(int j=0; j < session.getListeners().size(); j++) {
 		    	    		((ChatSessionListener)session.getListeners().get(j)).handleConferenceEvent(entity,
 		    	    				user.getDisplayName(), state);
 				        }
 			    	}
+			    	if (session instanceof TerminatingAdhocGroupChatSession) {
+			    		// Update the list of participants of the terminating group chat session
+			    		UpdateSessionParticipantList(connectedParticipants, disconnectedParticipants, ((TerminatingAdhocGroupChatSession)session).getParticipants());
+						if (conference.getState().equals(ConferenceInfoDocument.STATE_FULL)) {
+							/*
+							 * Check if the list of connected participants of the terminating group chat session differs from the
+							 * provider's provisioning in order to invite missing participants if any.
+							 */
+							((TerminatingAdhocGroupChatSession) session).inviteMissingParticipants();
+						}
+					}
 		    	}
 	    	} catch(Exception e) {
 	    		if (logger.isActivated()) {
 	    			logger.error("Can't parse XML notification", e);
 	    		}
-	    	}    	
+	    	}
 		}
 		
 		// Check subscription state
@@ -240,8 +254,27 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			terminatedByServer();
 		}    	
     }
+	
+	/**
+	 * Update the list of participants of the group chat session to be aligned with the provider content
+	 * 
+	 * @param connectedUsers
+	 *            the list of connected users to add to the session list if not already present
+	 * @param disconnectedUsers
+	 *            the list of connected users to remove from the session list if present
+	 * @param sessionUsers
+	 *            the list of participants of the group chat session
+	 */
+	private void UpdateSessionParticipantList(ListOfParticipant connectedUsers, ListOfParticipant disconnectedUsers, ListOfParticipant sessionUsers) {
+		for (String user : connectedUsers.getList()) {
+			sessionUsers.addParticipant(user);
+		}
+		for (String user : disconnectedUsers.getList()) {
+			sessionUsers.removeParticipant(user);
+		}
+	}
 
-    /**
+	/**
      * Check if the received notification if for this subscriber
      * 
      * @param SipRequest notify
@@ -527,7 +560,11 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
         
     	SipResponse resp = ctx.getSipResponse();
 
-    	// Set the remote tag
+        // Set the route path with the Record-Route header
+        Vector<String> newRoute = SipUtils.routeProcessing(resp, true);
+        dialogPath.setRoute(newRoute);
+
+        // Set the remote tag
     	dialogPath.setRemoteTag(resp.getToTag());
     	
     	// Set the target
@@ -541,7 +578,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
         
         // Start the periodic subscribe
         startTimer(expirePeriod, 0.5);
-	}	
+	}
 	
 	/**
 	 * Handle 200 0K response of UNSUBSCRIBE
