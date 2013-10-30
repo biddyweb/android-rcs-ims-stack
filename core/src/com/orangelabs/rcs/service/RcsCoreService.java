@@ -60,6 +60,8 @@ import com.orangelabs.rcs.provider.ipcall.IPCall;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.sharing.RichCall;
+import com.orangelabs.rcs.provisioning.https.HttpsProvisioningSMS;
+import com.orangelabs.rcs.provisioning.https.HttpsProvisioningUtils;
 import com.orangelabs.rcs.service.api.client.ClientApiIntents;
 import com.orangelabs.rcs.service.api.client.IImsApi;
 import com.orangelabs.rcs.service.api.client.ImsApiIntents;
@@ -153,7 +155,12 @@ public class RcsCoreService extends Service implements CoreListener {
     /**
      * Account changed broadcast receiver
      */
-    private AccountChangedReceiver accountChangedReceiver = null;
+    private AccountChangedReceiver accountChangedReceiver = null;    
+    
+    /**
+     * Account changed broadcast receiver
+     */
+    private HttpsProvisioningSMS reconfSMSReceiver = null;
 
 	/**
 	 * The logger
@@ -181,10 +188,19 @@ public class RcsCoreService extends Service implements CoreListener {
 
     @Override
     public void onDestroy() {
-        // Unregister account changed broadcast receiver
+    	 // Unregister account changed broadcast receiver
 	    if (accountChangedReceiver != null) {
 	        try {
 	        	unregisterReceiver(accountChangedReceiver);
+	        } catch (IllegalArgumentException e) {
+	        	// Nothing to do
+	        }
+	    }
+	    
+	    // Unregister SMS receiver for network initiated configuration
+	    if (reconfSMSReceiver != null) {
+	        try {
+	        	reconfSMSReceiver.unregisterSmsProvisioningReceiver();
 	        } catch (IllegalArgumentException e) {
 	        	// Nothing to do
 	        }
@@ -262,7 +278,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			// Init CPU manager
 			cpuManager.init();
 
-            // Register account changed event receiver
+			// Register account changed event receiver
             if (accountChangedReceiver == null) {
                 accountChangedReceiver = new AccountChangedReceiver();
 
@@ -278,6 +294,14 @@ public class RcsCoreService extends Service implements CoreListener {
                             }},
                         2000);
             }
+            
+            // Register SMS receiver for network initiated configuration
+            if (reconfSMSReceiver == null) {
+            	reconfSMSReceiver = new HttpsProvisioningSMS(this);
+            	reconfSMSReceiver.registerSmsProvisioningReceiver(Integer.toString(HttpsProvisioningUtils.DEFAULT_SMS_PORT), null, null, null);
+            }
+            
+            
 
 	        // Show a first notification
 	    	addRcsServiceNotification(false, getString(R.string.rcs_core_loaded));
@@ -1057,7 +1081,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	 * @param session File transfer session
 	 * @param one2oneChatSession the created chat session (1to1)
 	 */
-	public void handle1to1FileTransferInvitation(FileSharingSession session, TerminatingOne2OneChatSession one2oneChatSession) {
+	public void handle1to1FileTransferInvitation(FileSharingSession session, OneOneChatSession one2oneChatSession) {
 		if (logger.isActivated()) {
 			logger.debug("Handle event file transfer invitation outside an existing session");
 		}

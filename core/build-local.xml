@@ -30,6 +30,14 @@
 	<jar destfile="${terminal.api}" basedir="${terminal.root}/bin/classes"
 		includesfile="${terminal.root}/jarfiles.txt">
 	</jar>
+
+	<copy file="${terminal.api}" todir="${terminal.root}/../ri/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/responder/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../appdemo/tts/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/extension/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/gsma/libs"/>
+	<copy file="${terminal.api}" todir="${terminal.root}/../apidemo/sip/libs"/>
+
     </target>
 
 

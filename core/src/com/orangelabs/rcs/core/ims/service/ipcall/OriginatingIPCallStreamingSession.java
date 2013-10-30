@@ -20,6 +20,8 @@ package com.orangelabs.rcs.core.ims.service.ipcall;
 
 import java.util.Vector;
 
+import android.os.RemoteException;
+
 import com.orangelabs.rcs.core.content.LiveAudioContent;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
@@ -113,7 +115,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
             }
             
             // build SDP proposal
-            String sdp = buildAudioVideoSdpProposal();
+            String sdp = buildCallInitSdpProposal();
 
             // Set the local SDP part in the dialog path
             getDialogPath().setLocalContent(sdp); 
@@ -151,6 +153,57 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         }
     }
 
+    
+    /**
+	 * Build SDP proposal for audio+ video session (call init or addVideo)
+	 * 
+	 * @return SDP content or null in case of error
+	 */
+	protected String buildCallInitSdpProposal() {
+		if (logger.isActivated()) {
+			logger.debug("Build SDP proposal to add video stream in the session");
+		}
+
+		try {
+			// Build SDP part
+			String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+			String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
+			
+			String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(), 
+					getAudioPlayer().getLocalRtpPort());
+			
+			String videoSdp = "";
+	        if ((getVideoContent()!= null)&&(getVideoPlayer()!= null)&&(getVideoRenderer()!= null)) {	        	
+					videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(
+							getVideoPlayer().getSupportedVideoCodecs(),
+							getVideoRenderer().getLocalRtpPort());		
+	        }
+			
+	        String  sdp =
+	            	"v=0" + SipUtils.CRLF +
+	            	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
+	            	"s=-" + SipUtils.CRLF +
+	            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
+	            	"t=0 0" + SipUtils.CRLF +
+	            	audioSdp + "a=sendrcv" + SipUtils.CRLF +
+	            	videoSdp + "a=sendrcv" + SipUtils.CRLF;
+
+	        	return sdp;
+
+		} catch (RemoteException e) {
+			if (logger.isActivated()) {
+				logger.error("Add video has failed", e);
+			}
+
+			// Unexpected error
+			handleError(new IPCallError(IPCallError.UNEXPECTED_EXCEPTION, e.getMessage()));
+			return null;
+		}
+	}
+
+
+    
+    
     /**
      * Prepare media session
      *
@@ -178,6 +231,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 		} else { // no video in sdp
 			setVideoPlayer(null);
 			setVideoRenderer(null);
+			setVideoContent(null);
 		}
 
 		// Extract audio codecs from SDP
@@ -266,10 +320,10 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 		}
 		
 
-//		// Open the audio renderer
+		// Open the audio renderer
 //		getAudioRenderer().open(remoteHost, audioRemotePort);
-//		// Open the audio player - always open the player after 
-//		// the renderer when the RTP stream is shared
+		
+		// Open the audio player - always open the player after the renderer when the RTP stream is shared
 //		getAudioPlayer().open(remoteHost, audioRemotePort); 
 
 		// Open the video player/renderer

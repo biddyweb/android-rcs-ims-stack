@@ -56,6 +56,13 @@ public class ProfileProvisioning extends Activity {
     private static final String[] WIFI_IMS_AUTHENT = {
     	RcsSettingsData.DIGEST_AUTHENT
     };
+    
+	/**
+	 * IMS authentication for Wi-Fi access
+	 */
+    private static final String[] GSMA_RELEASE = {
+    	"Albatros", "Blackbird", "Crane"
+    };
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -203,6 +210,12 @@ public class ProfileProvisioning extends Activity {
         
         box = (CheckBox)findViewById(R.id.sip_automata);
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA)));
+        
+		spinner = (Spinner)findViewById(R.id.GsmaRelease);
+		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, GSMA_RELEASE);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
+		spinner.setSelection(RcsSettings.getInstance().getGsmaRelease());	
 	}
 
     /**
@@ -338,6 +351,9 @@ public class ProfileProvisioning extends Activity {
         box = (CheckBox)findViewById(R.id.sip_automata);
         RcsSettings.getInstance().writeParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA, Boolean.toString(box.isChecked()));
         
+		spinner = (Spinner)findViewById(R.id.GsmaRelease);
+		RcsSettings.getInstance().setGsmaRelease(""+spinner.getSelectedItemPosition() );
+        
         Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();    	
     }
     
@@ -362,7 +378,7 @@ public class ProfileProvisioning extends Activity {
 
         final String[] platforms = {
                 "NSN Brune", "NSN Lannion", "Margaux (albatros)", "Margaux (blackbird)", "VCOM1", "VCOM2",
-                "RCS", "Kamailio1", "MargauxIPv6", "Huawei", "Capgemini", "JibeNet"
+                "RCS", "Kamailio1", "MargauxIPv6", "Huawei", "Capgemini", "JibeNet", "JibeOrange"
         };
         Spinner spinner = (Spinner)view.findViewById(R.id.ims);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
@@ -552,6 +568,18 @@ public class ProfileProvisioning extends Activity {
                             imsAddrForWifi = "goose.jibemobile.com";
                             imsPortForWifi = 5671;
                             confUri  = "sip:conference@" + homeDomain;
+                            break;
+                        case 12: // JibeOrange
+                            homeDomain = "orange.jibemobile.com";
+                            sipUri = number;
+                            privateSipUri = sipUri;
+                            imsPwd = "0000";
+                            imsRealm = "orange.jibemobile.com";
+                            imsAddrForMobile = "46.16.77.146";
+                            imsPortForMobile = 5671;
+                            imsAddrForWifi = "46.16.77.146";
+                            imsPortForWifi = 5671;
+                            confUri  = "sip:conference@jibemobile.com";
                             break;
                     }
 

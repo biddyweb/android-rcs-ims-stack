@@ -286,7 +286,8 @@ public class UpdateSessionManager {
 						}	
 						
 						// send error to remote client
-						session.sendErrorResponse(reInvite, session.getDialogPath().getLocalTag(), 603);				
+						session.sendErrorResponse(reInvite, session.getDialogPath().getLocalTag(), 603);	
+						session.handleReInviteUserAnswer(ImsServiceSession.INVITATION_REJECTED, reInviteContext);
 					} else 
 					if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) { 
 						if (logger.isActivated()) {

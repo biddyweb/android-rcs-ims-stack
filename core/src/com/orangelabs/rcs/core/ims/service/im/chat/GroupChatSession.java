@@ -39,9 +39,11 @@ import com.orangelabs.rcs.core.ims.service.im.chat.iscomposing.IsComposingInfo;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -190,18 +192,21 @@ public abstract class GroupChatSession extends ChatSession {
 	/**
 	 * Send a text message
 	 * 
-	 * @param msgId Message-ID
 	 * @param txt Text message
+     * @return id Message-ID
 	 */ 
-	public void sendTextMessage(String msgId, String txt) {
+	public String sendTextMessage(String txt) {
 		boolean useImdn = getImdnManager().isImdnActivated();
+        String msgId = ChatUtils.generateMessageId();
+        String imdnMsgId = null;
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = ChatUtils.ANOMYNOUS_URI;
 		
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN delivered
-			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, msgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
+            imdnMsgId = IdGenerator.getIdentifier();
+			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, imdnMsgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		} else {
 			// Send message in CPIM
 			content = ChatUtils.buildCpimMessage(from, to, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
@@ -209,6 +214,11 @@ public abstract class GroupChatSession extends ChatSession {
 		
 		// Send data
 		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+
+        // Use IMDN MessageID as reference if existing
+        if (useImdn) {
+            msgId = imdnMsgId;
+        }
 
 		// Update rich messaging history
 		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn);
@@ -224,16 +234,19 @@ public abstract class GroupChatSession extends ChatSession {
 	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
+        return msgId;
 	}
 	
 	/**
 	 * Send a geoloc message
 	 * 
-	 * @param msgId Message ID
 	 * @param geoloc Geoloc info
+     * @return id Message-ID
 	 */ 
-	public void sendGeolocMessage(String msgId, GeolocPush geoloc) {
+	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
+        String msgId = ChatUtils.generateMessageId();
+        String imdnMsgId = null;
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = ChatUtils.ANOMYNOUS_URI;
 		String geoDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
@@ -241,7 +254,8 @@ public abstract class GroupChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN delivered
-			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, msgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
+            imdnMsgId = IdGenerator.getIdentifier();
+			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, imdnMsgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
 		} else {
 			// Send message in CPIM
 			content = ChatUtils.buildCpimMessage(from, to, geoDoc, GeolocInfoDocument.MIME_TYPE);
@@ -249,6 +263,11 @@ public abstract class GroupChatSession extends ChatSession {
 		
 		// Send data
 		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+
+        // Use IMDN MessageID as reference if existing
+        if (useImdn) {
+            msgId = imdnMsgId;
+        }
 
 		// Update rich messaging history
 		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn);
@@ -264,6 +283,7 @@ public abstract class GroupChatSession extends ChatSession {
 	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
 			}
 		}
+        return msgId;
 	}
 	
 	/**
@@ -287,6 +307,11 @@ public abstract class GroupChatSession extends ChatSession {
      * @param status Status
      */
     public void sendMsrpMessageDeliveryStatus(String contact, String msgId, String status) {
+        // Do not perform Message Delivery Status in Albatros for group chat 
+        if (RcsSettingsData.VALUE_GSMA_REL_ALBATROS.equals(""+RcsSettings.getInstance().getGsmaRelease())) {
+            return;
+        }
+
         // Send status in CPIM + IMDN headers
         String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
         String to = contact;
@@ -294,7 +319,7 @@ public abstract class GroupChatSession extends ChatSession {
         String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
         
         // Send data
-        boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+        boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
         if (result) {
             // Update rich messaging history
             RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);

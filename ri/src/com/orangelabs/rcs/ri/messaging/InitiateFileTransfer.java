@@ -527,8 +527,8 @@ public class InitiateFileTransfer extends Activity {
 			});
 		}
 
-		@Override
-		public void handleFileUploadPaused() throws RemoteException {
+
+		public void handleFileTransferPaused() throws RemoteException {
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
@@ -537,6 +537,20 @@ public class InitiateFileTransfer extends Activity {
 					// Display session status
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("paused");
+				}
+			});
+		}
+
+		@Override
+		public void handleFileTransferResumed() throws RemoteException {
+			handler.post(new Runnable() { 
+				public void run() {
+					// Hide progress dialog
+					hideProgressDialog();
+					
+					// Display session status
+					TextView statusView = (TextView)findViewById(R.id.progress_status);
+					statusView.setText("Resumed");
 				}
 			});
 		}

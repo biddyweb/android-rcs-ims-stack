@@ -816,5 +816,62 @@ public class RcsSettingsData {
      * Secured RTP over Wi-Fi
      */
     public static final String SECURE_RTP_OVER_WIFI = "SecureRtpOverWifi";
-
+    
+    /**
+     * Key and associated values for GSMA release of the device as provisioned by the network
+     */
+    public static final String KEY_GSMA_RELEASE = "GsmaRelease";
+    public static final String VALUE_GSMA_REL_ALBATROS = "0";
+    public static final String VALUE_GSMA_REL_BLACKBIRD = "1";
+    public static final String VALUE_GSMA_REL_CRANE = "2";
+    
+    /**
+     * Authorization for user to use best effort IP Voice Call service /depending on network 
+     */
+	public static final String BE_IPVOICECALL_AUTH = "beIPVoiceCallAuth";
+	
+	/**
+     * Authorization for user to use best effort IP Video Call service /depending on network 
+     */
+	public static final String BE_IPVIDEOCALL_AUTH = "beIPVideoCallAuth";
+	
+	/**
+     *  Authorization for device in RCS-AA mode to initiate IP Voice Call even if remote doesn't show its voice service capabilities
+     */
+	public static final String IPVOICECALL_BREAKOUT ="beIPCallBreakOut";
+	
+	/**
+     *  Authorization for device in RCS-CS mode to initiate IP Voice Call even if remote doesn't show its voice service capabilities
+     */
+	public static final String IPVOICECALL_BREAKOUT_CS ="beIPCallBreakOutCS";
+	
+	/**
+     *  Authorization for device in RCS-CS mode to upgrade to video a CS call
+     */
+	public static final String IPVIDEOCALL_UPGRADE_FROM_CS="beIPVideoCallUpgradeFromCS";
+	
+	/** 
+     *  Authorization for device in RCS-AA or RCS-CS mode to upgrade to video even if no answer to capability request (fails with 480 or 408 error)
+     */
+	public static final String IPVIDEOCALL_UPGRADE_ON_CAPERROR = "beIPVideoCallUpgradeOnCapError";
+	
+	/**
+     *  Authorization for device in RCS-CS mode to upgrade to video without first tearing down CS call
+     */
+	public static final String IPVIDEOCALL_UPGRADE_ATTEMPT_EARLY = "beIPVideoCallUpgradeAttemptEarly";
+	
+	/**
+     *  label to be used when presenting to user the option for initiating an end-to-end ip call 
+     */
+	public static final String IPCALL_E2E_LABEL = "e2eIPCallLabel";
+	
+	/**
+     *  label to be used when presenting to user the option for initiating a breakout ip call 
+     */
+	public static final String IPCALL_BREAKOUT_LABEL = "breakoutIPCallLabel";
+	
+	/**
+     *  parameter to control whether "end-to-end ip call" button is presented to user (case false) or breakout button (case true)
+     */
+	public static final String IPCALL_E2E_VOICECAPABILITYHANDLING = "e2eVoiceCapabilityHandling";
 }

@@ -42,6 +42,8 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -113,6 +115,13 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.messaging_receive_filetransfer);
+        
+        Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        pauseBtn.setOnClickListener(btnPauseListener);
+        pauseBtn.setEnabled(true);
+        Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        resumeBtn.setOnClickListener(btnResumeListener);
+        resumeBtn.setEnabled(false);
 
         // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
@@ -388,9 +397,16 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			});
 		}
 
+
+		public void handleFileTransferPaused() throws RemoteException {
+			TextView statusView = (TextView)findViewById(R.id.progress_status);
+			statusView.setText("Paused");
+		}
+
 		@Override
-		public void handleFileUploadPaused() throws RemoteException {
-			// should not happen
+		public void handleFileTransferResumed() throws RemoteException {
+			TextView statusView = (TextView)findViewById(R.id.progress_status);
+			statusView.setText("Resumed");
 		}
     };
 
@@ -524,4 +540,56 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		}
 		return true;
 	}     
+    
+	
+    /**
+     * Pause button listener
+     */
+    private  android.view.View.OnClickListener btnPauseListener = new  android.view.View.OnClickListener() {
+		@Override
+		public void onClick(View arg0) {
+			Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        	resumeBtn.setEnabled(true);
+        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        	pauseBtn.setEnabled(false);
+        	
+        	try {
+				transferSession.pauseSession();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				handler.post(new Runnable(){
+					public void run(){
+						Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
+					}
+				});
+			}
+		}
+	};
+      
+	
+    /**
+     * Resume button listener
+     */
+    private  android.view.View.OnClickListener btnResumeListener = new android.view.View.OnClickListener() {
+		@Override
+		public void onClick(View arg0) {
+			Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+        	resumeBtn.setEnabled(false);
+        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+        	pauseBtn.setEnabled(true);
+        	
+        	try {
+				transferSession.resumeSession();
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				handler.post(new Runnable(){
+					public void run(){
+						Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
+					}
+				});
+			}
+		}
+	};
 }

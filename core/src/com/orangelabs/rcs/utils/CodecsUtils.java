@@ -36,6 +36,8 @@ import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
  * Codecs utility functions
  *
  * @author hlxn7157
+ * @author yplo6403
+ *
  */
 public class CodecsUtils {
 
@@ -137,4 +139,22 @@ public class CodecsUtils {
 
         return supportedMediaCodecs;
     }
+    
+	/**
+	 * Retrieve the video codec with profile 1B from list of media codecs
+	 * 
+	 * @param mediaCodecs
+	 *            list of media codecs
+	 * @return the video codec with profile 1B or null
+	 */
+	public static VideoCodec getVideoCodecProfile1b(MediaCodec[] mediaCodecs) {
+		for (MediaCodec mediaCodec : mediaCodecs) {
+			VideoCodec videoCodec = new VideoCodec(mediaCodec);
+			if (H264Profile1b.BASELINE_PROFILE_ID
+					.compareToIgnoreCase(H264Config.getCodecProfileLevelId(videoCodec.getCodecParams())) == 0) {
+				return videoCodec;
+			}
+		}
+		return null;
+	}
 }

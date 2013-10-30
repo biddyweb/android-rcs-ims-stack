@@ -76,39 +76,31 @@ public class IPCallSessionsList extends Activity implements ClientApiListener, I
 
 		RcsSettings.createInstance(getApplicationContext());
 
-		if (IPCallSessionsData.getInstance().isCallApiConnected) {
-			// remove "old" listeners and set "new" listeners
-			IPCallSessionsData.getInstance().callApi.removeAllApiEventListeners();
+		
+		// Instantiate callApi if null
+		if (IPCallSessionsData.getInstance().callApi == null) {
+			IPCallSessionsData.getInstance().callApi = new IPCallApi(
+					getApplicationContext());
+		}
+		
+		// callApi already exists remove "old" listeners
+		else {
+			IPCallSessionsData.getInstance().callApi
+					.removeAllApiEventListeners();
 			IPCallSessionsData.getInstance().callApi
 					.removeImsEventListener(IPCallSessionsData.getInstance().imsEventListener);
-			IPCallSessionsData.getInstance().callApi.addApiEventListener(this);
-			IPCallSessionsData.getInstance().callApiListener = this;
-			IPCallSessionsData.getInstance().callApi.addImsEventListener(this);
-			IPCallSessionsData.getInstance().imsEventListener = this;
 		}
-		else { // connect API - get sessions when connected		
-			refreshWhenApiConnected = true;
 
-			// instantiate callApi if null
-			if (IPCallSessionsData.getInstance().callApi == null) { 
-				IPCallSessionsData.getInstance().callApi = new IPCallApi(getApplicationContext());
-			} 
-			else { // callApi already exists remove "old" listeners
-				IPCallSessionsData.getInstance().callApi.removeAllApiEventListeners();
-				IPCallSessionsData.getInstance().callApi
-						.removeImsEventListener(IPCallSessionsData.getInstance().imsEventListener);
-			}
-			
-			//set "new" listeners
-			IPCallSessionsData.getInstance().callApi.addApiEventListener(this);
-			IPCallSessionsData.getInstance().callApiListener = this;
-			IPCallSessionsData.getInstance().callApi.addImsEventListener(this);
-			IPCallSessionsData.getInstance().imsEventListener = this;
-			
-			//connect api
+		// set new listeners
+		IPCallSessionsData.getInstance().callApi.addApiEventListener(this);
+		IPCallSessionsData.getInstance().callApi.addImsEventListener(this);
+		IPCallSessionsData.getInstance().imsEventListener = this;
+
+		// connect api if not connected
+		if (!IPCallSessionsData.getInstance().isCallApiConnected) {
 			IPCallSessionsData.getInstance().callApi.connectApi();
 		}
-	
+
 	}
 
    

@@ -434,12 +434,11 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
             logger.info("Data transfer error " + error);
     	}
 		
-		try {
-	        // Close the media session
-	        closeMediaSession();
-	        
+		try {        
 			// Terminate session
 			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+	        // Close the media session
+	        closeMediaSession();
 	   	} catch(Exception e) {
 	   		if (logger.isActivated()) {
 	   			logger.error("Can't close correctly the image sharing session", e);

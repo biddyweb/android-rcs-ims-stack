@@ -29,7 +29,6 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
@@ -279,13 +278,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	 * @return Message ID
 	 */
 	public String sendMessage(String text) {
-		// Generate a message Id
-		String msgId = ChatUtils.generateMessageId();
-
 		// Send text message
-		session.sendTextMessage(msgId, text);
-
-		return msgId;
+		return session.sendTextMessage(text);
 	}
 
 	/**
@@ -304,13 +298,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * @return Message ID
      */
     public String sendGeoloc(GeolocPush geoloc) {
-		// Generate a message Id
-		String msgId = ChatUtils.generateMessageId();
-
 		// Send text message
-		session.sendGeolocMessage(msgId, geoloc);
-
-		return msgId;
+        return session.sendGeolocMessage(geoloc);
     }
 
 	/**

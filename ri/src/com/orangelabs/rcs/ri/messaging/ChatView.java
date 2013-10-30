@@ -154,7 +154,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	 * Messages that were received while we were in background as have to be marked as read
 	 */
 	private List<InstantMessage> imReceivedInBackgroundToBeRead = new ArrayList<InstantMessage>();
-	
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -655,13 +655,13 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable(){
-				public void run(){
+			handler.post(new Runnable() {
+				public void run() {
 					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
 				}
 			});
 		}
-		
+
 		// New text message received
 		public void handleReceiveMessage(final InstantMessage msg) {
 			if (msg.isImdnDisplayedRequested()) {

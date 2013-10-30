@@ -418,4 +418,5 @@ public class MessagingApi extends ClientApi {
 			throw new CoreServiceNotAvailableException();
 		}
 	}
+	
 }

@@ -26,7 +26,6 @@ import javax.net.ssl.SSLSession;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.util.EntityUtils;
@@ -557,7 +556,7 @@ public class HttpUploadManager extends HttpTransferManager {
         	getListener().httpTransferPaused();
     		return null;
 		}
-    	resetCancelled();
+    	resetParamForResume();
 		
         
         if(resp == null)
@@ -722,6 +721,7 @@ public class HttpUploadManager extends HttpTransferManager {
         	if (logger.isActivated()) {
 	            logger.warn("File Upload aborted due to "+e.getLocalizedMessage()+" now in state pause, waiting for resume...");
 	        }
+        	pauseTransfer();
         	getListener().httpTransferPaused();
         	throw e;
         }

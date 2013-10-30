@@ -396,6 +396,20 @@
 		android:enabled="true"
         android:text="SIP automata" />
 		
+		<TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="5dip"
+        android:text="GSMA release:" />
+
+        <Spinner
+        android:id="@+id/GsmaRelease"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip"
+        android:drawSelectorOnTop="true" />
+
 	</LinearLayout>
 	</ScrollView>
 	

@@ -49,6 +49,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author mhsm6403
  * @author Deutsche Telekom AG
+ * @author yplo6403
+ *
  */
 public class RichMessaging {
 	/**
@@ -111,21 +113,51 @@ public class RichMessaging {
 	/**
 	 * Get list of participants into a string
 	 * 
+	 * @param participants
+	 *            List of participants
+	 * @return String (contacts are semicolon separated)
+	 */
+	private static String getParticipants(List<String> participants) {
+		if (participants == null)
+			return null;
+		StringBuffer result = new StringBuffer();
+		boolean firstiteration=true;
+		for (String contact : participants) {
+			if (!firstiteration) {
+				result.append(";");
+			}
+			result.append(PhoneUtils.extractNumberFromUri(contact));
+			firstiteration = false;
+		}
+		if (result.length() == 0)
+			return null;
+		return result.toString();
+	}
+
+	/**
+	 * Get list of participants into a string
+	 * 
 	 * @param session Chat session
-	 * @return String (contacts are comma separated)
+	 * @return String (contacts are semicolon separated)
 	 */
 	private static String getParticipants(ChatSession session) {
 		StringBuffer participants = new StringBuffer();
 		if (session.isGroupChat()) {
-			for(String contact : session.getParticipants().getList()){
-				if (contact!=null) {
-					participants.append(PhoneUtils.extractNumberFromUri(contact)+";");
-				}
-			}
+			return getParticipants(session.getParticipants().getList());
 		} else {
 			participants.append(PhoneUtils.extractNumberFromUri(session.getRemoteContact()));
+			return participants.toString();
 		}
-		return participants.toString();
+	}
+	
+	private static List<String> getListParticipants(ChatSession session) {
+		if (session.isGroupChat()) {
+			return session.getParticipants().getList();
+		} else {
+			List<String> participants = new ArrayList<String>();
+			participants.add(PhoneUtils.extractNumberFromUri(session.getRemoteContact()) );
+			return participants;
+		}
 	}
 
 	/**
@@ -216,7 +248,7 @@ public class RichMessaging {
 		// Add session entry
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INVITED);
@@ -237,7 +269,7 @@ public class RichMessaging {
         // Add session entry
         String sessionId = session.getSessionID();
         String chatId = session.getContributionID();
-        String participants = RichMessaging.getParticipants(session);
+        List<String> participants = RichMessaging.getListParticipants(session);
         int type = getChatSystemEventType(session);
         addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INVITED);
     }
@@ -264,7 +296,7 @@ public class RichMessaging {
 		// Add session entry
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
@@ -296,7 +328,7 @@ public class RichMessaging {
         // Add session entry
         String sessionId = session.getSessionID();
         String chatId = session.getContributionID();
-        String participants = RichMessaging.getParticipants(session);
+        List<String> participants = RichMessaging.getListParticipants(session);
         int type = getChatSystemEventType(session);
         addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
     }
@@ -325,15 +357,8 @@ public class RichMessaging {
 	 * @param content File content 
 	 */
 	public void addOutgoingGroupFileTransfer(List<String> contactList, String chatSessionId, String ftSessionId, String fileName, MmContent content){
-		
-		StringBuilder sContacts = new StringBuilder();
-		for(String contact : contactList){
-			if (contact!=null) {
-				sContacts.append(PhoneUtils.extractNumberFromUri(contact)+";");
-			}
-		}
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, sContacts.toString(), fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contactList, fileName, content.getEncoding(), content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);	
 	}
 	
 	/**
@@ -507,8 +532,8 @@ public class RichMessaging {
 	public void addChatSessionTermination(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
 		int type = getChatSystemEventType(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
 	}
 	
@@ -520,11 +545,11 @@ public class RichMessaging {
 	public void addChatSessionTerminationByUser(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
 	}
-
+	
 	/**
 	 * Add chat session termination by remote
 	 * 
@@ -533,7 +558,7 @@ public class RichMessaging {
 	public void addChatSessionTerminationByRemote(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_REMOTE);
 	}
@@ -546,7 +571,7 @@ public class RichMessaging {
 	public void addChatSessionError(ChatSession session) {
 		String sessionId = session.getSessionID();
 		String chatId = session.getContributionID();
-		String participants = RichMessaging.getParticipants(session);
+		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
 		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 	}
@@ -729,12 +754,32 @@ public class RichMessaging {
 	 * @return URI of the new entry
 	 */
 	private Uri addEntry(int type, String sessionId, String chatId, String messageId, String contact, String data, String mimeType, String name, long size, Date date, int status) {
-		
 		contact = PhoneUtils.extractNumberFromUri(contact);
-		
+		List<String> participants = new ArrayList<String>();
+		participants.add(contact);
+		return addEntry( type,  sessionId,  chatId,  messageId, participants, data,  mimeType,  name,  size,  date,  status);
+	}
+	
+	/**
+	 * Add a new entry (chat event, chat message or file transfer)
+	 * 
+	 * @param type Type of entry
+	 * @param sessionId Session ID of a chat session or a file transfer session
+	 * @param chatId Chat ID of a chat session
+	 * @param messageId Message ID of a chat message 
+	 * @param contacts List of contacts
+	 * @param data Content of the entry (an URI for FT or a simple text for IM)
+	 * @param mimeType MIME type for a file transfer
+	 * @param name Name of the transfered file
+	 * @param size Size of the  transfered file
+	 * @param status Status of the entry
+	 * @return URI of the new entry
+	 */
+	private Uri addEntry(int type, String sessionId, String chatId, String messageId, List<String> contacts, String data, String mimeType, String name, long size, Date date, int status) {
+		String participants = getParticipants(contacts);
 		if (logger.isActivated()){
 			logger.debug("Add new entry: type=" + type + ", sessionID=" + sessionId +
-					", chatID=" + chatId + ", messageID=" + messageId + ", contact=" + contact +
+					", chatID=" + chatId + ", messageID=" + messageId + ", contact=" + participants +
 					", MIME=" + mimeType + ", status=" + status);
 		}
 		ContentValues values = new ContentValues();
@@ -742,13 +787,13 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_CHAT_SESSION_ID, sessionId);
 		values.put(RichMessagingData.KEY_CHAT_ID, chatId);
 		values.put(RichMessagingData.KEY_MESSAGE_ID, messageId);
-		values.put(RichMessagingData.KEY_CONTACT, contact);
+		values.put(RichMessagingData.KEY_CONTACT, participants);
 		values.put(RichMessagingData.KEY_MIME_TYPE, mimeType);
 		values.put(RichMessagingData.KEY_TOTAL_SIZE, size);
 		values.put(RichMessagingData.KEY_NAME, name);
 		values.put(RichMessagingData.KEY_DATA, data);
 		values.put(RichMessagingData.KEY_STATUS, status);
-		values.put(RichMessagingData.KEY_NUMBER_MESSAGES, recycler(contact)+1);
+		values.put(RichMessagingData.KEY_NUMBER_MESSAGES, recycler(participants)+1);
 		values.put(RichMessagingData.KEY_IS_SPAM, EventsLogApi.MESSAGE_IS_NOT_SPAM);
 		if(date == null) {
 			values.put(RichMessagingData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
@@ -759,7 +804,6 @@ public class RichMessaging {
 		Uri uri = cr.insert(databaseUri, values);
 		return uri;
 	}
-	
 	/**
 	 * Manage the max size of the history for a given contact
 	 * 
@@ -889,23 +933,27 @@ public class RichMessaging {
     }
 
     /**
-     * Get file transfer Id
+     * Get Message info from msgId
      *
      * @param msgId Message Id
-     * @return session Id of the file transfer
+     * @return message info
      */
-    public String getFileTransferId(String msgId) {
-        String result = null;
+    public MessageInfo getMessageInfo(String msgId) {
+        if (logger.isActivated()) {
+            logger.debug("RichMessaging getMessageInfo(" + msgId + ")");
+        }
+        MessageInfo result = null;
         Cursor cursor = cr.query(databaseUri, 
                 new String[] {
-                    RichMessagingData.KEY_CHAT_SESSION_ID
+                    RichMessagingData.KEY_CONTACT,
+                    RichMessagingData.KEY_TYPE,
+                    RichMessagingData.KEY_CHAT_SESSION_ID,
                 },
-                "(" + RichMessagingData.KEY_MESSAGE_ID + "='" + msgId + "') AND (" + 
-                        RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER + ")",
+                RichMessagingData.KEY_MESSAGE_ID + "='" + msgId + "'",
                 null, 
                 RichMessagingData.KEY_TIMESTAMP + " DESC");
         if (cursor.moveToFirst()) {
-            result = cursor.getString(0);
+            result = new MessageInfo(msgId, cursor.getString(0), cursor.getInt(1), cursor.getString(2));
         }
         cursor.close();
         return result;
@@ -1291,6 +1339,28 @@ public class RichMessaging {
         cursor.close();
         return true;
     }
+    
+	/**
+	 * doesMessageIdAlreadyExist
+	 * 
+	 * @param msgId
+	 *            message ID
+	 * @return true if the message ID already exists
+	 */
+	public boolean doesMessageIdAlreadyExist(String msgId) {
+		Cursor cursor = null;
+		try {
+			cursor = cr.query(databaseUri, new String[] { RichMessagingData.KEY_MESSAGE_ID }, "(" + RichMessagingData.KEY_MESSAGE_ID + " = \""
+					+ msgId + "\")", null, null);
+			int messagesNumber = cursor.getCount();
+			return messagesNumber != 0;
+		} catch (Exception e) {
+			return false;
+		} finally {
+			if (cursor != null)
+				cursor.close();
+		}
+	}
 
 	/**
 	 * Get all outgoing messages still marked undisplayed for a given contact
@@ -1445,6 +1515,7 @@ public class RichMessaging {
     			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_LEFT_CHAT
     			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_FAILED
     			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_DECLINED
+    			 +" OR "+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.STATUS_TERMINATED_BY_USER
     			 +")",    			 
     			new String[]{chatId}, 
     			RichMessagingData.KEY_TIMESTAMP + " DESC");
@@ -1452,6 +1523,11 @@ public class RichMessaging {
     		String contact = cursor.getString(0);
     		int status = cursor.getInt(1);
 			for(String participant: RichMessaging.getParticipants(contact)) {
+				// Only consider history until user left voluntary the group chat
+	    		if (status == EventsLogApi.STATUS_TERMINATED_BY_USER) {
+	    			cursor.close();
+	    	    	return result;
+	    		}
 				// If we already have a status for this contact, do not take it (we only want the last one)
 	    		if (!alreadyTreated.contains(participant) && status!=EventsLogApi.EVENT_LEFT_CHAT
 	    				&& status!=EventsLogApi.EVENT_FAILED && status!=EventsLogApi.EVENT_DECLINED) {	

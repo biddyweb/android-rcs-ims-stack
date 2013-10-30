@@ -304,11 +304,11 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
             logger.info("Data transfer error " + error);
     	}
 
-        // Close the media session
-        closeMediaSession();
-
 		// Terminate session
 		terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+		
+        // Close the media session
+        closeMediaSession();
 
         // Request capabilities
         getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());

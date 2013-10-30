@@ -180,11 +180,11 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
         }
 
         try {
-            // Close the media session
+			// Terminate session
+        	// ChunkReceiver thread is used to send SIP-Bye so close media session afterwards
+			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+			 // Close the media session
             closeMediaSession();
-
-            // Terminate session
-            terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
         } catch(Exception e) {
             if (logger.isActivated()) {
                 logger.error("Can't close correctly the file transfer session", e);

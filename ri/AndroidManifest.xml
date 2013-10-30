@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.11"
+ android:versionName="2.5.12"
  package="com.orangelabs.rcs.ri">
 
 	<uses-sdk android:minSdkVersion="5"
@@ -224,7 +224,7 @@
         <activity android:name=".messaging.GroupChatView"/>
 
         <activity android:name=".messaging.ChatList"/>
-        
+                
         <activity android:name=".messaging.BlockContact"/>
 
         <activity android:name=".messaging.SpamBox"/>
@@ -289,6 +289,7 @@
 		    	<action android:name="com.orangelabs.rcs.ipcall.IPCALL_INVITATION"/>
             </intent-filter>
         </receiver>        
+		
 		
 		<!-- Event log RI -->
 		<activity android:name=".eventlog.EventLog">

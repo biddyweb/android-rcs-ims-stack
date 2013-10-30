@@ -58,6 +58,37 @@
 				android:layout_width="fill_parent"
 		        android:layout_height="wrap_content"/>
 	      </LinearLayout>
+	      		
+		<LinearLayout
+			android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal">
+
+				<Button
+				    android:id="@+id/pause_btn"
+				    android:layout_width="match_parent"
+				    android:layout_height="match_parent"
+				    android:layout_marginLeft="5dip"
+				    android:layout_marginRight="5dip"
+				    android:text="@string/label_pause_transfer" />
+
+		</LinearLayout>
+		
+			      		
+		<LinearLayout
+			android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:orientation="horizontal">
+
+				<Button
+				    android:id="@+id/resume_btn"
+				    android:layout_width="match_parent"
+				    android:layout_height="wrap_content"
+				    android:layout_marginLeft="5dip"
+				    android:layout_marginRight="5dip"
+				    android:text="@string/label_resume_transfer" />
+
+	  	</LinearLayout>
 	      
 	</LinearLayout>
 	

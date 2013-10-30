@@ -799,32 +799,21 @@ public class MessagingApiService extends IMessagingApi.Stub {
      */
     public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
     	synchronized(lock) {
-            // Get FileTransferId if MsgId is a HTTP File transfer
-            String ftSessionId = RichMessaging.getInstance().getFileTransferId(msgId);
-            if (ftSessionId == null) {
-    			if (logger.isActivated()) {
-    				logger.info("New message delivery status for message " + msgId + ", status " + status);
-    			}
-    	
-    			// Update rich messaging history
-    			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
-    			
-    	  		// Notify message delivery listeners
-    			final int N = listeners.beginBroadcast();
-    	        for (int i=0; i < N; i++) {
-    	            try {
-    	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
-    	            } catch(Exception e) {
-    	            	if (logger.isActivated()) {
-    	            		logger.error("Can't notify listener", e);
-    	            	}
-    	            }
-    	        }
-    	        listeners.finishBroadcast();
-            } else {
-                // File Transfer delivery status
-                handleFileDeliveryStatus(ftSessionId, status);
-            }
+			// Update rich messaging history
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			
+	  		// Notify message delivery listeners
+			final int N = listeners.beginBroadcast();
+	        for (int i=0; i < N; i++) {
+	            try {
+	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
+	            } catch(Exception e) {
+	            	if (logger.isActivated()) {
+	            		logger.error("Can't notify listener", e);
+	            	}
+	            }
+	        }
+	        listeners.finishBroadcast();
     	}
     }
 
@@ -859,4 +848,5 @@ public class MessagingApiService extends IMessagingApi.Stub {
         }
         listeners.finishBroadcast();
     }
+
 }

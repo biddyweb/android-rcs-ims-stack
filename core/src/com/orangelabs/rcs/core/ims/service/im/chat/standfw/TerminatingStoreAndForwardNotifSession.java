@@ -42,7 +42,10 @@ import com.orangelabs.rcs.core.ims.service.im.chat.OneOneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
+import com.orangelabs.rcs.provider.messaging.MessageInfo;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -386,10 +389,27 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
     	try {
 	    	// Parse the IMDN document
     		ImdnDocument imdn = ChatUtils.parseDeliveryReport(xml);
-			if (imdn != null) {
-				// Notify the message delivery outside of the chat session
-				getImsService().getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact,
-						imdn.getMsgId(), imdn.getStatus());
+            if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+                // Check message in RichMessaging
+                MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(imdn.getMsgId());
+                if (msgInfo == null) {
+                    return;
+                }
+                switch (msgInfo.getType()) {
+                    case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+                    case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+                    case EventsLogApi.TYPE_OUTGOING_GEOLOC:
+                    case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
+                        // Notify the message delivery outside of the chat session
+                        getImsService().getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact,
+                                imdn.getMsgId(), imdn.getStatus());
+                        break;
+                    case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
+                        // Notify the file delivery
+                        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(
+                                msgInfo.getSessionId(), imdn.getStatus());
+                        break;
+                }
 			}
     	} catch(Exception e) {
     		if (logger.isActivated()) {

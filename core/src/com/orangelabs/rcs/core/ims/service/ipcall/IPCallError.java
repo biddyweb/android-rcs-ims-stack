@@ -53,6 +53,11 @@ public class IPCallError extends ImsSessionBasedServiceError {
 	public final static int UNSUPPORTED_VIDEO_TYPE = IPCALL_ERROR_CODES + 8;
 	
 	/**
+	 * Command not accepted (e.g. add video requested while a previous addVideo request is being processed)
+	 */
+	public final static int INVALID_COMMAND = IPCALL_ERROR_CODES + 9;
+	
+	/**
      * Constructor
      *
      * @param error Error
