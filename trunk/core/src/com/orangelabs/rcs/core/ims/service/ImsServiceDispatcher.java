@@ -323,7 +323,7 @@ public class ImsServiceDispatcher extends Thread {
                     }
                 } else {
 	    			if (SipUtils.getAssertedIdentity(request).contains(StoreAndForwardManager.SERVICE_URI) &&
-		    			(!request.getContentType().contains("multipart"))) { // TODO: to be removed when corrected by ALU
+		    			(!request.getContentType().contains("multipart"))) {
 	    				// Store & Forward push notifs session
 			    		if (logger.isActivated()) {
 			    			logger.debug("Store & Forward push notifications");

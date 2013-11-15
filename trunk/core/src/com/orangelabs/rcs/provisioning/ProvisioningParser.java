@@ -80,12 +80,15 @@ public class ProvisioningParser {
         return provisioningInfo;
     }
 
-    /**
-     * Parse the provisioning document
-     *
-     * @return Boolean result
-     */
-    public boolean parse() {
+	/**
+	 * Parse the provisioning document
+	 * 
+	 * @param gsmaRelease
+	 *            The GSMA release (Albatros, Blackbird, Crane...) before parsing
+	 * 
+	 * @return Boolean result
+	 */
+	public boolean parse(int gsmaRelease) {
         try {
             if (logger.isActivated()) {
                 logger.debug("Start the parsing of content");
@@ -116,6 +119,7 @@ public class ProvisioningParser {
                 return false;
             }
 
+            int nodeNumber = 0;
             do {
                 if (childnode.getNodeName().equals("characteristic")) {
                     if (childnode.getAttributes().getLength() > 0) {
@@ -125,6 +129,7 @@ public class ProvisioningParser {
                                 logger.debug("Node " + childnode.getNodeName() + " with type "
                                         + typenode.getNodeValue());
                             }
+                            nodeNumber++;
                             if (typenode.getNodeValue().equalsIgnoreCase("VERS")) {
                                 parseVersion(childnode);
                             } else
@@ -171,6 +176,12 @@ public class ProvisioningParser {
                     }
                 }
             } while((childnode = childnode.getNextSibling()) != null);
+            if (nodeNumber ==1) {
+				// We received a single node (the version one) !
+				// This is the case if the version number is negative or in order to extend the validity of the provisioning.
+				// In that case we restore the relevant GSMA release saved before parsing.
+				RcsSettings.getInstance().setGsmaRelease("" + gsmaRelease);
+            }
             return true;
         } catch (Exception e) {
             if (logger.isActivated()) {
@@ -502,9 +513,10 @@ public class ProvisioningParser {
         Node childnode = node.getFirstChild();
 
         if (childnode != null) {
-        	// Node "SERVICES" is mandatory in GSMA release Blackbird and not present in previous one Albatros.
-        	// This trick is used to detect the GSMA release as provisioned by the network.
-        	RcsSettings.getInstance().setGsmaRelease(RcsSettingsData.VALUE_GSMA_REL_BLACKBIRD );
+			// Node "SERVICES" is mandatory in GSMA release Blackbird and not present in previous one Albatros.
+			// Only if the parsing result contains a SERVICE tree, Blackbird is assumed as release.
+			// This trick is used to detect the GSMA release as provisioned by the network.
+			RcsSettings.getInstance().setGsmaRelease(RcsSettingsData.VALUE_GSMA_REL_BLACKBIRD);
             do {
 
                 if (chatAuth == null) {

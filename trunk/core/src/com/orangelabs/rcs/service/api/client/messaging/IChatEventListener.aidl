@@ -29,7 +29,7 @@ interface IChatEventListener {
 	void handleConferenceEvent(in String contact, in String contactDisplayname, in String state);
 
 	// Message delivery status
-	void handleMessageDeliveryStatus(in String msgId, in String status);
+	void handleMessageDeliveryStatus(in String msgId, in String status, in String contact);
 
 	// Request to add participant is successful
 	void handleAddParticipantSuccessful();

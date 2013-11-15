@@ -23,8 +23,11 @@ import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
+import com.orangelabs.rcs.core.ims.service.sip.OriginatingSipSession;
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionError;
 import com.orangelabs.rcs.core.ims.service.sip.SipSessionListener;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
+import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.sip.ISipSession;
 import com.orangelabs.rcs.service.api.client.sip.ISipSessionEventListener;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
@@ -84,6 +87,20 @@ public class SipSession extends ISipSession.Stub implements SipSessionListener {
 	public String getRemoteContact() {
 		return session.getRemoteContact();
 	}
+	
+	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if (session instanceof OriginatingSipSession) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
+	}	  	
 	
 	/**
 	 * Get session state

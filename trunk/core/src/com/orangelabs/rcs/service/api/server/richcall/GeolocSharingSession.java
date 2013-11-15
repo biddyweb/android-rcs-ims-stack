@@ -25,9 +25,11 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSessionListener;
+import com.orangelabs.rcs.core.ims.service.richcall.geoloc.OriginatingGeolocTransferSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
@@ -89,6 +91,20 @@ public class GeolocSharingSession extends IGeolocSharingSession.Stub implements 
      */
 	public String getRemoteContact() {
 		return session.getRemoteContact();
+	}
+	
+	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if (session instanceof OriginatingGeolocTransferSession) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
 	}
 	
 	/**

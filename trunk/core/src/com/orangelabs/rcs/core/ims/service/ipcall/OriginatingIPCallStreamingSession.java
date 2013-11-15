@@ -159,9 +159,9 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 	 * 
 	 * @return SDP content or null in case of error
 	 */
-	protected String buildCallInitSdpProposal() {
+	private String buildCallInitSdpProposal() {
 		if (logger.isActivated()) {
-			logger.debug("Build SDP proposal to add video stream in the session");
+			logger.debug("Build SDP proposal for call init");
 		}
 
 		try {
@@ -192,7 +192,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 
 		} catch (RemoteException e) {
 			if (logger.isActivated()) {
-				logger.error("Add video has failed", e);
+				logger.error("Session initiation has failed", e);
 			}
 
 			// Unexpected error
@@ -217,8 +217,6 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 		// Extract the remote host (same between audio and video)
 		String remoteHost = SdpUtils
 				.extractRemoteHost(parser.sessionDescription.connectionInfo);
-		// TODO String remoteHost =
-		// SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
 
 		// Extract media ports
 		MediaDescription mediaAudio = parser.getMediaDescription("audio");
@@ -245,7 +243,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 				.extractVideoCodecsFromSdp(video);
 
 		// Audio codec negotiation
-		AudioCodec selectedAudioCodec = AudioCodecManager
+		selectedAudioCodec = AudioCodecManager
 				.negociateAudioCodec(
 						getAudioPlayer().getSupportedAudioCodecs(),
 						proposedAudioCodecs);
@@ -263,7 +261,6 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 		}
 
 		// Video codec negotiation
-		VideoCodec selectedVideoCodec = null;
 		if ((mediaVideo != null) && (getVideoPlayer() != null)) {
 			selectedVideoCodec = VideoCodecManager.negociateVideoCodec(
 					getVideoPlayer().getSupportedVideoCodecs(),

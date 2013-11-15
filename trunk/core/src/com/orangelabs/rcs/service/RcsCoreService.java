@@ -1068,7 +1068,7 @@ public class RcsCoreService extends Service implements CoreListener {
 	 */
 	public void handleFileTransferInvitation(FileSharingSession session, boolean isGroup) {
 		if (logger.isActivated()) {
-			logger.debug("Handle event file transfer invitation within an existing session");
+			logger.debug("Handle event file transfer invitation");
 		}
 
     	// Broadcast the invitation
@@ -1076,33 +1076,33 @@ public class RcsCoreService extends Service implements CoreListener {
 	}
 
 	/**
-	 * A new one to one file transfer invitation has been received
-	 * 
-	 * @param session File transfer session
-	 * @param one2oneChatSession the created chat session (1to1)
-	 */
-	public void handle1to1FileTransferInvitation(FileSharingSession session, OneOneChatSession one2oneChatSession) {
-		if (logger.isActivated()) {
-			logger.debug("Handle event file transfer invitation outside an existing session");
-		}
-		
-    	// Broadcast the invitation
-    	messagingApi.receiveFileTransferInvitation(session, one2oneChatSession);
-	}
-	
-	/**
 	 * A new file transfer invitation has been received
 	 * 
 	 * @param session File transfer session
-	 * @param groupChatSession the created chat session (group)
+	 * @param chatSession Chat session
 	 */
-	public void handleGroupFileTransferInvitation(FileSharingSession session, TerminatingAdhocGroupChatSession groupChatSession) {
+	public void handle1to1FileTransferInvitation(FileSharingSession session, OneOneChatSession chatSession) {
 		if (logger.isActivated()) {
-			logger.debug("Handle event file transfer invitation outside an existing session");
+			logger.debug("Handle event file transfer invitation from an existing 1-1 chat session");
 		}
 		
     	// Broadcast the invitation
-    	messagingApi.receiveFileTransferInvitation(session,groupChatSession);
+    	messagingApi.receiveFileTransferInvitation(session, chatSession);
+	}
+	
+	/**
+	 * A new file transfer invitation has been received and creating a chat session
+	 * 
+	 * @param session File transfer session
+	 * @param chatSession Group chat session
+	 */
+	public void handleGroupFileTransferInvitation(FileSharingSession session, TerminatingAdhocGroupChatSession chatSession) {
+		if (logger.isActivated()) {
+			logger.debug("Handle event file transfer invitation from an existing group chat session");
+		}
+		
+    	// Broadcast the invitation
+    	messagingApi.receiveFileTransferInvitation(session, chatSession);
 	}
     
 	/**
@@ -1183,14 +1183,15 @@ public class RcsCoreService extends Service implements CoreListener {
      *
      * @param ftSessionId File transfer session ID
      * @param status Delivery status
+     * @param contact contact who notified delivery
      */
-    public void handleFileDeliveryStatus(String ftSessionId, String status) {
+    public void handleFileDeliveryStatus(String ftSessionId, String status, String contact) {
         if (logger.isActivated()) {
-            logger.debug("Handle file delivery status: session " + ftSessionId + " status " + status);
+            logger.debug("Handle file delivery status: session=" + ftSessionId + " status=" + status + " contact="+contact);
         }
 
         // Notify listeners
-        messagingApi.handleFileDeliveryStatus(ftSessionId, status);
+        messagingApi.handleFileDeliveryStatus(ftSessionId, status, contact);
     }
 
     /**
@@ -1292,6 +1293,6 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		// Restart the RCS service
         LauncherUtils.stopRcsService(getApplicationContext());
-        LauncherUtils.launchRcsService(getApplicationContext(), true);
+        LauncherUtils.launchRcsService(getApplicationContext(), true, false);
     }
 }

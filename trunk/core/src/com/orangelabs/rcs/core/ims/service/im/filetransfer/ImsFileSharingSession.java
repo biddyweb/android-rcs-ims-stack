@@ -181,9 +181,9 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
 
         try {
 			// Terminate session
-        	// ChunkReceiver thread is used to send SIP-Bye so close media session afterwards
 			terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-			 // Close the media session
+
+			// Close the media session
             closeMediaSession();
         } catch(Exception e) {
             if (logger.isActivated()) {

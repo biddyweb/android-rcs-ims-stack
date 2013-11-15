@@ -18,6 +18,9 @@ interface IChatSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session direction
+	int getSessionDirection();
+
 	// Get session state
 	int getSessionState();
 

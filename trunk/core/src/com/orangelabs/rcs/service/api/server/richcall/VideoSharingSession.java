@@ -22,10 +22,12 @@ import android.os.RemoteCallbackList;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingVideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSessionListener;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
@@ -88,6 +90,20 @@ public class VideoSharingSession extends IVideoSharingSession.Stub implements Vi
 	 */
 	public String getRemoteContact() {
 		return session.getRemoteContact();
+	}
+	
+	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if (session instanceof OriginatingVideoStreamingSession) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
 	}
 	
 	/**

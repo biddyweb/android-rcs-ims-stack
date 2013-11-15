@@ -26,8 +26,12 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpFileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpGroupFileSharingSession;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
@@ -143,6 +147,22 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
     }
 
 	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if ((session instanceof OriginatingFileSharingSession) ||
+				(session instanceof OriginatingHttpFileSharingSession) ||
+					(session instanceof OriginatingHttpGroupFileSharingSession)) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
+	}	    
+    
+	/**
 	 * Get session state
 	 * 
 	 * @return State 
@@ -201,7 +221,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 		}
 		
 		// Update rich messaging history
-  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
+  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED, this.getRemoteContact());
 
   		// Reject invitation
 		session.rejectSession(603);
@@ -338,7 +358,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED);
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_CANCELED,this.getRemoteContact());
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -374,7 +394,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 	  		}
 	  		
 			// Update rich messaging history
-	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+	  		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED, this.getRemoteContact());
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -406,7 +426,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 
     		// Update rich messaging history
-      		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED);
+      		RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_FAILED,this.getRemoteContact());
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -497,7 +517,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_PAUSED);
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_PAUSED,this.getRemoteContact());
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
@@ -524,7 +544,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_IN_PROGRESS);
+			RichMessaging.getInstance().updateFileTransferStatus(session.getSessionID(), EventsLogApi.STATUS_IN_PROGRESS,this.getRemoteContact());
 
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();

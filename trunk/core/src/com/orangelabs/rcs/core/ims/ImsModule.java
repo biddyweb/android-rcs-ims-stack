@@ -82,8 +82,13 @@ public class ImsModule implements SipEventListener {
     /**
 	 * Call manager
 	 */
-	private CallManager callManager;    
-    
+	private CallManager callManager;
+
+    /**
+     * flag to indicate whether instantiation is finished
+     */
+    private boolean isReady = false;
+
 	/**
      * The logger
      */
@@ -157,7 +162,9 @@ public class ImsModule implements SipEventListener {
 
         // Create the call manager
     	callManager = new CallManager(this);
-        
+
+        isReady = true;
+
     	if (logger.isActivated()) {
     		logger.info("IMS module has been created");
     	}
@@ -448,4 +455,13 @@ public class ImsModule implements SipEventListener {
             }
         }
 	}
+
+    /**
+     * Check whether ImsModule instantiation has finished
+     *
+     * @return true if ImsModule is completely initialized
+     */
+    public boolean isReady(){
+        return isReady;
+    }
 }

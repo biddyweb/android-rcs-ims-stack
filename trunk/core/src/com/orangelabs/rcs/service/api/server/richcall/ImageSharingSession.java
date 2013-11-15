@@ -24,8 +24,10 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSessionListener;
+import com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession;
 import com.orangelabs.rcs.provider.sharing.RichCall;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
@@ -85,6 +87,20 @@ public class ImageSharingSession extends IImageSharingSession.Stub implements Im
      */
 	public String getRemoteContact() {
 		return session.getRemoteContact();
+	}
+	
+	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if (session instanceof OriginatingImageTransferSession) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
 	}
 	
 	/**

@@ -32,7 +32,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 9;
+	private static final int DATABASE_VERSION = 10;
 
 	@Override
 	public void onCreate(SQLiteDatabase db){
@@ -56,7 +56,11 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ RichMessagingData.KEY_SIZE + " long, "
 				+ RichMessagingData.KEY_TOTAL_SIZE + " long, "
 				
-				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer)"
+				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer,"
+				
+				// fields for IMDN in chat or FT group
+				+ RichMessagingData.KEY_IMDN_DELIVERED_LIST + " TEXT, "
+				+ RichMessagingData.KEY_IMDN_DISPLAYED_LIST + " TEXT);"
 				);
 		
 		db.execSQL("create table " + RichCallProvider.TABLE + " ("

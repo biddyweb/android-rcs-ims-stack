@@ -24,6 +24,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
@@ -246,7 +247,8 @@ public class RejoinChat {
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(final String msgId, final String status) {
+	    @Override
+		public void handleMessageDeliveryStatus(final String msgId, final String status, final String contact )  throws RemoteException {
 			// Not used here
 		}
 		
@@ -264,6 +266,7 @@ public class RejoinChat {
 		public void handleReceiveGeoloc(GeolocMessage geoloc) {
 			// Not used here
 		}
+
     };
 
 	/**

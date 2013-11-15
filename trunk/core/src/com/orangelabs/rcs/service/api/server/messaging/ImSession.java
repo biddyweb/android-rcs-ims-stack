@@ -29,11 +29,16 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
+import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.RestartGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
@@ -108,6 +113,23 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	public String getRemoteContact() {
 		return session.getRemoteContact();
 	}
+	
+	/**
+	 * Get session direction
+	 * 
+	 * @return Direction
+	 * @see SessionDirection
+	 */
+	public int getSessionDirection() {
+		if ((session instanceof OriginatingOne2OneChatSession) ||
+				(session instanceof OriginatingAdhocGroupChatSession) ||
+					(session instanceof RejoinGroupChatSession) ||
+						(session instanceof RestartGroupChatSession)) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
+	}	  	
 	
 	/**
 	 * Get session state
@@ -642,26 +664,30 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	    }
     }
     
-    /**
-     * New message delivery status
-     * 
-	 * @param msgId Message ID
-     * @param status Delivery status
-     */
-    public void handleMessageDeliveryStatus(String msgId, String status) {
+	/**
+	 * New message delivery status
+	 * 
+	 * @param msgId
+	 *            Message ID
+	 * @param status
+	 *            Delivery status
+	 * @param contact
+	 *            the contact who notified delivery
+	 */
+    public void handleMessageDeliveryStatus(String msgId, String status, String contact) {
     	synchronized(lock) {
 			if (logger.isActivated()) {
-				logger.info("New message delivery status for message " + msgId + ", status " + status);
+				logger.info("New delivery status for message " + msgId + ", status " + status+" contact "+contact);
 			}
 	
 			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status, contact);
 			
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
 	            try {
-	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status);
+	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(msgId, status, contact);
 	            } catch(Exception e) {
 	            	if (logger.isActivated()) {
 	            		logger.error("Can't notify listener", e);
@@ -750,4 +776,5 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        listeners.finishBroadcast();		
 	    }
     }
+
 }

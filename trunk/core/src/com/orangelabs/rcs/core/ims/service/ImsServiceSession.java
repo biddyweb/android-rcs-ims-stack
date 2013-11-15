@@ -108,7 +108,6 @@ public abstract class ImsServiceSession extends Thread {
 	/**
 	 * Update session manager
 	 */
-	//private UpdateSessionManager updateMgr = new UpdateSessionManager(this);
 	protected UpdateSessionManager updateMgr;
 	
     /**
@@ -495,7 +494,6 @@ public abstract class ImsServiceSession extends Thread {
     	getSessionTimerManager().stop();		
 
 		// Update dialog path
-		dialogPath.sessionTerminated();
     	if (reason == ImsServiceSession.TERMINATION_BY_USER) {
     		dialogPath.sessionTerminated(200, "Call completed");
     	} else {
@@ -931,13 +929,13 @@ public abstract class ImsServiceSession extends Thread {
             // The session is established
             getDialogPath().sessionEstablished();
 
+            // Start Media Session
+            startMediaSession();
+
             // Notify listeners
             for(int i=0; i < getListeners().size(); i++) {
                 getListeners().get(i).handleSessionStarted();
             }
-
-            // Start Media Session
-            startMediaSession();
 
             // Start session timer
             if (getSessionTimerManager().isSessionTimerActivated(resp)) {

@@ -131,24 +131,26 @@ public interface CoreListener {
 	/**
 	 * A new file transfer invitation has been received when already in a chat session
 	 * 
-	 * @param session File transfer session
+	 * @param fileSharingSession File transfer session
 	 * @param isGroup is Group file transfer
 	 */
 	public void handleFileTransferInvitation(FileSharingSession fileSharingSession, boolean isGroup);
 
 	/**
-	 * A new file transfer invitation has been received and creating a chat session
+	 * A new file transfer invitation has been received
 	 * 
 	 * @param session File transfer session
+	 * @param chatSession Chat session
 	 */
-	public void handle1to1FileTransferInvitation(FileSharingSession fileSharingSession, OneOneChatSession one2oneChatSession);
+	public void handle1to1FileTransferInvitation(FileSharingSession session, OneOneChatSession chatSession);
 
 	/**
 	 * A new file transfer invitation has been received and creating a chat session
 	 * 
 	 * @param session File transfer session
+	 * @param chatSession Group chat session
 	 */
-	public void handleGroupFileTransferInvitation(FileSharingSession fileSharingSession, TerminatingAdhocGroupChatSession groupChatSession);
+	public void handleGroupFileTransferInvitation(FileSharingSession session, TerminatingAdhocGroupChatSession chatSession);
 
     /**
      * New one-to-one chat session invitation
@@ -193,8 +195,9 @@ public interface CoreListener {
      *
      * @param ftSessionId File transfer session Id
      * @param status Delivery status
+     * @param contact who notified status
      */
-    public void handleFileDeliveryStatus(String ftSessionId, String status); 
+    public void handleFileDeliveryStatus(String ftSessionId, String status, String contact); 
 
     /**
      * New SIP session invitation

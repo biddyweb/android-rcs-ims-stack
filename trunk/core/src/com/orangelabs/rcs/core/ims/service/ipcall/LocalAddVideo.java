@@ -32,11 +32,13 @@ public class LocalAddVideo extends AddVideoManager {
 	
 	/**
 	 * Add video to the session
+	 *  
+	 * @param videoPlayer video player instance
+	 * @param videoRenderer video renderer instance
 	 */
 	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) {
 		if (logger.isActivated()) {
 			logger.info("addVideo() - LocalAddVideo");
-			logger.info("video status =" + session.getVideoContent());
 		}
 		synchronized (this) {
 			state = AddVideoManager.ADD_VIDEO_INPROGRESS;
@@ -52,18 +54,22 @@ public class LocalAddVideo extends AddVideoManager {
 
 			// Build SDP
 			String sdp = buildAddVideoSdpProposal();
+			
+			if (sdp != null) {
+				// Set SDP proposal as the local SDP part in the dialog path
+				session.getDialogPath().setLocalContent(sdp);
 
-			// Set SDP proposal as the local SDP part in the dialog path
-			session.getDialogPath().setLocalContent(sdp);
+				// Create re-INVITE
+				SipRequest reInvite = session.getUpdateSessionManager()
+						.createReInvite(IPCallService.FEATURE_TAGS_IP_VIDEO_CALL,
+								sdp);
 
-			// Create re-INVITE
-			SipRequest reInvite = session.getUpdateSessionManager()
-					.createReInvite(IPCallService.FEATURE_TAGS_IP_VIDEO_CALL,
-							sdp);
+				// Send re-INVITE
+				session.getUpdateSessionManager().sendReInvite(reInvite,
+						IPCallStreamingSession.ADD_VIDEO);
+			}
 
-			// Send re-INVITE
-			session.getUpdateSessionManager().sendReInvite(reInvite,
-					IPCallStreamingSession.ADD_VIDEO);
+			
 		}
 	}
 	
@@ -82,17 +88,20 @@ public class LocalAddVideo extends AddVideoManager {
 			// Build SDP
 			String sdp = buildRemoveVideoSdpProposal();
 
-			// Set the SDP proposal as local SDP content in the dialog path
-			session.getDialogPath().setLocalContent(sdp);
+			if (sdp != null) {
+				// Set the SDP proposal as local SDP content in the dialog path
+				session.getDialogPath().setLocalContent(sdp);
 
-			// Create re-INVITE
-			SipRequest reInvite = session.getUpdateSessionManager()
-					.createReInvite(IPCallService.FEATURE_TAGS_IP_VOICE_CALL,
-							sdp);
+				// Create re-INVITE
+				SipRequest reInvite = session.getUpdateSessionManager()
+						.createReInvite(IPCallService.FEATURE_TAGS_IP_VOICE_CALL,
+								sdp);
 
-			// Send re-INVITE
-			session.getUpdateSessionManager().sendReInvite(reInvite,
-					IPCallStreamingSession.REMOVE_VIDEO);
+				// Send re-INVITE
+				session.getUpdateSessionManager().sendReInvite(reInvite,
+						IPCallStreamingSession.REMOVE_VIDEO);
+			}
+			
 		}
 	}
 	
@@ -100,7 +109,7 @@ public class LocalAddVideo extends AddVideoManager {
 	/**
 	 * Build SDP proposal for audio+ video session (call init or addVideo)
 	 * 
-	 * @return SDP content or null in case of error
+	 * @return String (SDP content) or null in case of error
 	 */
 	private String buildAddVideoSdpProposal() {
 		if (logger.isActivated()) {
@@ -148,7 +157,7 @@ public class LocalAddVideo extends AddVideoManager {
 	/**
 	 * Build SDP proposal to remove video stream from the session
 	 * 
-	 * @return SDP content or null in case of error
+	 * @return String (SDP content) or null in case of error
 	 */
 	private String buildRemoveVideoSdpProposal() {
 		if (logger.isActivated()) {

@@ -19,7 +19,6 @@
 package com.orangelabs.rcs.core.ims.service.im.chat.event;
 
 import java.io.ByteArrayInputStream;
-import java.util.List;
 import java.util.Vector;
 
 import javax2.sip.header.ExpiresHeader;
@@ -226,10 +225,10 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 		    	    				user.getDisplayName(), state);
 				        }
 			    	}
-			    	if (session instanceof TerminatingAdhocGroupChatSession) {
+			    	if (session instanceof GroupChatSession) {
 			    		// Update the list of participants of the terminating group chat session
-			    		UpdateSessionParticipantList(connectedParticipants, disconnectedParticipants, ((TerminatingAdhocGroupChatSession)session).getParticipants());
-						if (conference.getState().equals(ConferenceInfoDocument.STATE_FULL)) {
+			    		UpdateSessionParticipantList(connectedParticipants, disconnectedParticipants, ((GroupChatSession)session).getParticipants());
+						if (session instanceof TerminatingAdhocGroupChatSession && conference.getState().equals(ConferenceInfoDocument.STATE_FULL)) {
 							/*
 							 * Check if the list of connected participants of the terminating group chat session differs from the
 							 * provider's provisioning in order to invite missing participants if any.

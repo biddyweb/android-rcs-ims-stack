@@ -49,4 +49,8 @@ public class RichMessagingData {
 	public static final String KEY_TOTAL_SIZE = "total_size";	
 	
 	public static final String KEY_NUMBER_MESSAGES ="number_of_messages";
+	
+	// Fields for group IMDN: group chat or file transfer group
+	public static final String KEY_IMDN_DELIVERED_LIST ="imdn_delivered";
+	public static final String KEY_IMDN_DISPLAYED_LIST ="imdn_displayed";
 }
