@@ -39,56 +39,77 @@ public abstract class AddVideoManager {
 	 */
 	protected static int state  ;
 	
-	
 	/**
-	 * session handled by Hold manager
+	 * session handled by AddVideoManager
 	 */
-	IPCallStreamingSession session ; 
+	IPCallStreamingSession session ; 	
 	
 	/**
 	 * The logger
 	 */
-	protected Logger logger = Logger.getLogger(this.getClass().getName());
+	protected Logger logger = Logger.getLogger(this.getClass().getName());	
 	
-	
+	/**
+	 * constructor
+	 */
 	public AddVideoManager(IPCallStreamingSession session){
 		if (logger.isActivated()){
 			logger.info("AddVideoManager()");
 		}
 		this.state = AddVideoManager.IDLE;
 		this.session = session;
-	}
+	}	
 	
 	/**
-	 * getter
+	 * get AddVideoManager state
+	 * 
+	 * @return int state
 	 */
 	public static int getState(){
 		return state;
-	}
+	}	
 	
 	/**
-	 * inti state
+	 * set AddVideoManager state
 	 */
 	public static void setState(int val){
 		state = val;
 	}
 	
+	
+	/**
+	 * add Video to session (case local AddVideoManager)
+	 * 
+	 * @param videoPlayer video player instance
+	 * @param videoRenderer video renderer instance
+	 */
 	public abstract void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer);
 	
 	
+	/**
+	 * add Video to session (case remote AddVideoManager)
+	 * 
+	 * @param reInvite reInvite SIP request received
+	 */
 	public abstract LiveVideoContent addVideo(SipRequest reInvite);
 	
 	
+	/**
+	 * remove Video from session (case local AddVideoManager)
+	 */
 	public abstract void removeVideo();
 	
 	
+	/**
+	 * remove Video from session (case remote AddVideoManager)
+	 * 
+	 * @param reInvite reInvite SIP request received
+	 */
 	public abstract void removeVideo(SipRequest reInvite);
 		
 	
 	/**
 	 * Prepare video session (set codec, get remote Host and port ...) 
-	 * @throws RemoteException 
-	 * 
 	 */
 	public void prepareVideoSession() {
 		if (logger.isActivated()) {
@@ -111,11 +132,11 @@ public abstract class AddVideoManager {
 					.extractVideoCodecsFromSdp(medias);
 
 			// Codec negotiation
-			VideoCodec selectedVideoCodec = VideoCodecManager
+			session.selectedVideoCodec = VideoCodecManager
 					.negociateVideoCodec(session.getVideoPlayer()
 							.getSupportedVideoCodecs(), proposedCodecs);
 
-			if (selectedVideoCodec == null) {
+			if (session.selectedVideoCodec == null) {
 				if (logger.isActivated()) {
 					logger.debug("Proposed codecs are not supported");
 				}
@@ -131,9 +152,9 @@ public abstract class AddVideoManager {
 
 			// Set the selected video codec
 			session.getVideoPlayer().setVideoCodec(
-					selectedVideoCodec.getMediaCodec());
+					session.selectedVideoCodec.getMediaCodec());
 			session.getVideoRenderer().setVideoCodec(
-					selectedVideoCodec.getMediaCodec());
+					session.selectedVideoCodec.getMediaCodec());
 
 			// Set the OrientationHeaderID
 			SdpOrientationExtension extensionHeader = SdpOrientationExtension
@@ -168,8 +189,6 @@ public abstract class AddVideoManager {
 	
 	/**
      * Start video session
-     *
-     * @throws Exception 
      */
 	public void startVideoSession() {
 		if (logger.isActivated()) {

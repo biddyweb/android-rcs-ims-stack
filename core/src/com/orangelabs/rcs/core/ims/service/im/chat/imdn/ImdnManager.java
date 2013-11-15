@@ -101,7 +101,7 @@ public class ImdnManager extends Thread {
 				sendSipMessageDeliveryStatus(delivery, null); // TODO: add sip.instance
 
 				// Update rich messaging history
-				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus());
+				RichMessaging.getInstance().setChatMessageDeliveryStatus(delivery.getMsgId(), delivery.getStatus(),delivery.getContact());
 			} catch(Exception e) {
 				if (logger.isActivated()) {
 					logger.error("Unexpected exception", e);

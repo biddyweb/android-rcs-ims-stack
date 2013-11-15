@@ -65,6 +65,12 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
 		super(parent, ChatUtils.getReferredIdentity(invite), ChatUtils.getListOfParticipants(invite));
 
+		if (this.getParticipants().getList().size() == 0) {
+			if (logger.isActivated()) {
+	    		logger.info("Invite to join a group chat");
+	    	}
+		}
+		
 		// Set subject
 		String subject = ChatUtils.getSubject(invite);
 		setSubject(subject);
@@ -74,7 +80,17 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 		
 		// Set contribution ID
 		String id = ChatUtils.getContributionId(invite);
-		setContributionID(id);				
+		setContributionID(id);
+		
+		// Check if chatID already exists in provider
+		if (RichMessaging.getInstance().getGroupChatStatus(id) != -1) {
+			if (logger.isActivated()) {
+	    		logger.info("Invite to rejoin or restart a group chat");
+	    	}
+        	// Set inviteMissingParticipants so that missing participants will be invited upon
+			// reception of the first conference event notification
+        	inviteMissingParticipants = true;
+		}
 	}
 
 	/**
@@ -269,10 +285,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 
     	    	// Subscribe to event package
             	getConferenceEventSubscriber().subscribe();
-
-				// Set inviteMissingParticipants so that missing participants will be invited upon
-				// reception of the first conference event notification
-				inviteMissingParticipants = true;
             	
             	// Start session timer
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
@@ -292,8 +304,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
         	}
 
         	// Unexpected error
-			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION,
-					e.getMessage()));
+			handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}		
 	}
 	

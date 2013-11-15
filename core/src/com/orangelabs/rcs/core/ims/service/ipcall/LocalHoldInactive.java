@@ -10,13 +10,13 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 
 public class LocalHoldInactive extends HoldManager {
+	
 	/**
 	 * Constructor
 	 */
 	public LocalHoldInactive(IPCallStreamingSession session){
 		super(session);
-	}
-	
+	}	
 	
 	/**
 	 * Set Call Hold

@@ -306,6 +306,14 @@ public class UpdateSessionManager {
 //						// build sdp response
 						String sdp = session.buildReInviteSdpResponse(reInvite, reInviteContext);
 						
+						if (sdp == null) {
+							// sdp null -  terminate session and send error
+								session.handleError(new ImsSessionBasedServiceError(
+										ImsSessionBasedServiceError.UNEXPECTED_EXCEPTION,
+										"error on sdp building, sdp is null "));
+								return;
+						 }
+						
 						// set sdp response as local content
 						session.getDialogPath().setLocalContent(sdp);
 						

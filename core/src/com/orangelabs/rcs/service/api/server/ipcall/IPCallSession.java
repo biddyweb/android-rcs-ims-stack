@@ -1,17 +1,15 @@
 package com.orangelabs.rcs.service.api.server.ipcall;
 
 import android.os.RemoteCallbackList;
-import android.os.RemoteException;
 
-import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.content.LiveAudioContent;
-import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSessionListener;
+import com.orangelabs.rcs.core.ims.service.ipcall.OriginatingIPCallStreamingSession;
 import com.orangelabs.rcs.provider.ipcall.IPCall;
 import com.orangelabs.rcs.provider.ipcall.IPCallData;
+import com.orangelabs.rcs.service.api.client.SessionDirection;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallSession;
@@ -90,10 +88,15 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 	/**
 	 * Get session direction
 	 * 
-	 * @return direction
+	 * @return Direction
+	 * @see SessionDirection
 	 */
 	public int getSessionDirection() {
-		return session.getSessionDirection();
+		if (session instanceof OriginatingIPCallStreamingSession) {
+			return SessionDirection.OUTGOING;
+		} else {
+			return SessionDirection.INCOMING;
+		}
 	}	
 	
 	/**

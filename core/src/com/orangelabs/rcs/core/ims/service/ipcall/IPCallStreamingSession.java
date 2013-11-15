@@ -1,29 +1,15 @@
 package com.orangelabs.rcs.core.ims.service.ipcall;
-
-import java.util.Vector;
-
 import android.os.RemoteException;
 
-import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.LiveAudioContent;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
-import com.orangelabs.rcs.core.content.VideoContent;
-import com.orangelabs.rcs.core.ims.ImsError;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
-import com.orangelabs.rcs.core.ims.service.richcall.video.SdpOrientationExtension;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.service.api.client.media.IAudioEventListener;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
@@ -49,12 +35,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	public final static int SET_ON_HOLD = 2;
 	public final static int SET_ON_RESUME = 3;
 
-	/**
-	 * Constant values for session direction type
-	 */
-	public static final int TYPE_INCOMING_IPCALL = 16;
-	public static final int TYPE_OUTGOING_IPCALL = 17;	
-	
 	/**
 	 * Live video content to be shared
 	 */
@@ -95,10 +75,16 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 */
 	private AddVideoManager addVideoMgr;
 	
-//	/** 
-//	* Video Status (false: AUDIO connected / true: AUDIO_VIDEO connected ) 
-//	*/
-//	public boolean video ;
+	/**
+	 * Selected Audio Codec
+	 */
+	protected AudioCodec selectedAudioCodec = null;
+	
+	
+	/**
+	 * Selected Video Codec
+	 */
+	protected VideoCodec selectedVideoCodec = null;
 
 	/**
 	 * The logger
@@ -230,17 +216,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		this.videoPlayer = videoPlayer;
 	}
 
-	/**
-	 * Set the video player
-	 * 
-	 * @param videoPlayer Video player
-	 */
-	public int getSessionDirection() {
-		int direction =  (this instanceof OriginatingIPCallStreamingSession)?TYPE_OUTGOING_IPCALL : TYPE_INCOMING_IPCALL ;
-		return direction;
-	}
-	
-	
 	/**
 	 * Receive BYE request
 	 * 

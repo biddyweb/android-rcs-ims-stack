@@ -12,6 +12,9 @@ interface IImageSharingSession {
 	// Get remote contact
 	String getRemoteContact();
 	
+	// Get session direction
+	int getSessionDirection();
+
 	// Get session state
 	int getSessionState();
 
@@ -21,8 +24,8 @@ interface IImageSharingSession {
 	// Get file size
 	long getFilesize();
 
-    // Get file thumbnail
-    byte[] getFileThumbnail();
+	// Get file thumbnail
+	byte[] getFileThumbnail();
 
 	// Accept the session invitation
 	void acceptSession();

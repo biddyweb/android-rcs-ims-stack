@@ -193,7 +193,6 @@ public abstract class GroupChatSession extends ChatSession {
 	 * Send a text message
 	 * 
 	 * @param txt Text message
-     * @return id Message-ID
 	 */ 
 	public String sendTextMessage(String txt) {
 		boolean useImdn = getImdnManager().isImdnActivated();
@@ -231,7 +230,7 @@ public abstract class GroupChatSession extends ChatSession {
 			
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED, null);
 			}
 		}
         return msgId;
@@ -241,7 +240,6 @@ public abstract class GroupChatSession extends ChatSession {
 	 * Send a geoloc message
 	 * 
 	 * @param geoloc Geoloc info
-     * @return id Message-ID
 	 */ 
 	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
@@ -280,7 +278,7 @@ public abstract class GroupChatSession extends ChatSession {
 			
 			// Notify listeners
 	    	for(int i=0; i < getListeners().size(); i++) {
-	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+	    		((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED, null);
 			}
 		}
         return msgId;
@@ -321,8 +319,12 @@ public abstract class GroupChatSession extends ChatSession {
         // Send data
         boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
         if (result) {
+			if (logger.isActivated()) {
+				logger.info("New delivery status for message " + msgId + ", status " + status + " contact " + contact);
+			}
+        	contact = PhoneUtils.formatNumberToInternational(contact);
             // Update rich messaging history
-            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status, contact);
         }
     }
 

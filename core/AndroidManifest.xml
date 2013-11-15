@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  android:versionCode="1"
- android:versionName="2.5.12"
+ android:versionName="2.5.13"
  package="com.orangelabs.rcs">
       
 	<uses-sdk android:minSdkVersion="5"
@@ -51,6 +51,10 @@
 		 can be used by other applications to start the joyn client settings screen -->
 		<meta-data android:name="gsma.joyn.settings.activity"
 			android:value="com.orangelabs.rcs.SETTINGS" />
+
+		<!-- the following meta-data is used to separate the various joyn client implementations -->
+		<meta-data android:name="gsma.joyn.preferences"
+			android:value="com.orangelabs.rcs.gsma.joyn.preferences" />
 
 		<!-- RCS service -->	
 

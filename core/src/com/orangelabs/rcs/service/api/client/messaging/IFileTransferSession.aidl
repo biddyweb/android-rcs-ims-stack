@@ -27,6 +27,9 @@ interface IFileTransferSession {
 	// Get session ID of the chat used to send file transfer URL via chat
 	String getChatSessionID();
 
+	// Get session direction
+	int getSessionDirection();
+
 	// Get session state
 	int getSessionState();
 

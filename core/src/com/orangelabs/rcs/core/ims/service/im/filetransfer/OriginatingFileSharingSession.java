@@ -292,8 +292,8 @@ public class OriginatingFileSharingSession extends ImsFileSharingSession impleme
         }
 
         // Notify delivery
-        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(getSessionID(), ImdnDocument.DELIVERY_STATUS_DELIVERED);
-        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(getSessionID(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(getSessionID(), ImdnDocument.DELIVERY_STATUS_DELIVERED, getRemoteContact());
+        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(getSessionID(), ImdnDocument.DELIVERY_STATUS_DISPLAYED, getRemoteContact());
 	}
 	
 	/**

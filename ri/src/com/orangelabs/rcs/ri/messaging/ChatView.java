@@ -600,30 +600,28 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     /**
      * Chat message delivery event listener
      */
-    private IMessageDeliveryListener deliveryListener = new IMessageDeliveryListener.Stub() {
-    	// Message delivery status
-    	public void handleMessageDeliveryStatus(final String contact, String msgId, final String status) {
-    		if (contact.indexOf(participants.get(0)) != -1) {
-				handler.post(new Runnable(){
-					public void run(){
-						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) ||
-								status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR) ||
-									status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
+	private IMessageDeliveryListener deliveryListener = new IMessageDeliveryListener.Stub() {
+		// Message delivery status
+		public void handleMessageDeliveryStatus(final String contact, String msgId, final String status) {
+			if (contact.indexOf(participants.get(0)) != -1) {
+				handler.post(new Runnable() {
+					public void run() {
+						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED)
+								|| status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)
+								|| status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
 							addNotifHistory(getString(R.string.label_receive_delivery_status_failed));
-						} else
-						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-							addNotifHistory(getString(R.string.label_receive_delivery_status_displayed));
-						} else
-						if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-							addNotifHistory(getString(R.string.label_receive_delivery_status_delivered));
+						} else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+							addNotifHistory(getString(R.string.label_receive_delivery_status_displayed, contact));
+						} else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+							addNotifHistory(getString(R.string.label_receive_delivery_status_delivered, contact));
 						}
 					}
 				});
-    		}
-    	}
+			}
+		}
 
     	// Http File Transfer status
-        public void handleFileDeliveryStatus(String ftSessionId, String status) throws RemoteException {
+        public void handleFileDeliveryStatus( final String ftSessionId, final String status, final String contact) throws RemoteException {
             // TODO Auto-generated method stub
             
         }
@@ -730,19 +728,17 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(final String msgId, final String status) {
+	    @Override
+		public void handleMessageDeliveryStatus(final String msgId, final String status, final String contact ) throws RemoteException {
 			handler.post(new Runnable(){
 				public void run(){
-					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) ||
-							status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR) ||
-								status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
+					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) || status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)
+							|| status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
 						addNotifHistory(getString(R.string.label_receive_delivery_status_failed));
-					} else
-					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-						addNotifHistory(getString(R.string.label_receive_delivery_status_displayed));
-					} else
-					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-						addNotifHistory(getString(R.string.label_receive_delivery_status_delivered));
+					} else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+						addNotifHistory(getString(R.string.label_receive_delivery_status_displayed, contact));
+					} else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+						addNotifHistory(getString(R.string.label_receive_delivery_status_delivered, contact));
 					}
 				}
 			});
@@ -792,6 +788,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				}
 			});			
 		}
+
     };
     
     /**

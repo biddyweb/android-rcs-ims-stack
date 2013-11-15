@@ -54,11 +54,13 @@ import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.messaging.MessageInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.settings.RcsSettingsData;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -484,9 +486,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String contentType = cpimMsg.getContentType();
 			    	
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
-			    	if (from.indexOf("anonymous@anonymous.invalid") != -1) {
-			    		from = getRemoteContact();
-			    	}			    	
+			    	from = PhoneUtils.extractNumberFromUri(from);
+					if (!PhoneUtils.isGlobalPhoneNumber(from)) {
+						from = getRemoteContact();
+					}
 			    	
 			    	// Check if the message needs a delivery report
 	    			boolean imdnDisplayedRequested = false;
@@ -515,7 +518,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
 		    			if (imdnDisplayedRequested) {
-		    				RichMessaging.getInstance().setChatMessageDeliveryRequested(cpimMsgId);
+		    				// Check if displayed delivery report is enabled
+		    				if (RcsSettings.getInstance().isImDisplayedNotificationActivated())
+		    					RichMessaging.getInstance().setChatMessageDeliveryRequested(cpimMsgId);
 		    			}
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
@@ -524,7 +529,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	} else
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
 						// Delivery report
-						receiveMessageDeliveryStatus(cpimMsg.getMessageContent());
+						receiveMessageDeliveryStatus(from,cpimMsg.getMessageContent());
 			    	} else	
 			    	if (ChatUtils.isGeolocType(contentType)) {
 						// Geoloc message
@@ -587,13 +592,10 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
             logger.info("Data transfer error " + error);
         }
 
-        // Request capabilities
-        getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
-
         if (msgId != null) {
             // Notify listeners
 	        for(int i=0; i < getListeners().size(); i++) {
-                ((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED);
+                ((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED, null);
 	        }
         } else {
             // Notify listeners
@@ -780,7 +782,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * Send a GeoLoc message
 	 * 
 	 * @param geoloc GeoLocation
-	 * @return String msgId
 	 */
 	public abstract String sendGeolocMessage(GeolocPush geoloc);
 	
@@ -788,7 +789,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * Send a text message
 	 * 
 	 * @param txt Text message
-	 * @return String msgId
 	 */
 	public abstract String sendTextMessage(String txt);
 	
@@ -831,59 +831,64 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
 		if (result) {
 			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);
 		}
 	}
 	
 	/**
-     * Handle a message delivery status from a SIP message
      * 
    	 * @param msgId Message ID
      * @param status Delivery status
+     * @param contact contact who notified status
      */
-    public void handleMessageDeliveryStatus(String msgId, String status) {
-        // Notify listeners
-        for (int i = 0; i < getListeners().size(); i++) {
-            ((ChatSessionListener) getListeners().get(i)).handleMessageDeliveryStatus(
-                    msgId, status);
-        }
-    }
+	public void handleMessageDeliveryStatus(String msgId, String status, String contact) {
+		// Notify listeners
+		for (int i = 0; i < getListeners().size(); i++) {
+			((ChatSessionListener) getListeners().get(i)).handleMessageDeliveryStatus(msgId, status, contact);
+		}
+	}
 
 	/**
      * Receive a message delivery status from an XML document
      *
      * @param xml XML document
      */
-    public void receiveMessageDeliveryStatus(String xml) {
-    	try {
+	public void receiveMessageDeliveryStatus(String contact, String xml) {
+		try {
 			ImdnDocument imdn = ChatUtils.parseDeliveryReport(xml);
-            if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-                // Check message in RichMessaging
-                MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(imdn.getMsgId());
-                if (msgInfo == null) {
-                    return;
-                }
-                switch (msgInfo.getType()) {
-                    case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
-                    case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
-                    case EventsLogApi.TYPE_OUTGOING_GEOLOC:
-                    case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
-                        // Notify listeners
-                        handleMessageDeliveryStatus(imdn.getMsgId(), imdn.getStatus());
-                        break;
-                    case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
-                        // Notify the file delivery
-                        ((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(
-                                msgInfo.getSessionId(), imdn.getStatus());
-                        break;
-                }
+			if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+				// Check message in RichMessaging
+				MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(imdn.getMsgId());
+				if (msgInfo == null) {
+					return;
+				}
+				switch (msgInfo.getType()) {
+				case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+				case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
+					// Do not handle Message Delivery Status in Albatros for group chat and geo-localization
+					if (RcsSettingsData.VALUE_GSMA_REL_ALBATROS.equals("" + RcsSettings.getInstance().getGsmaRelease())) {
+						break;
+					}
+					// Notify listeners
+					handleMessageDeliveryStatus(imdn.getMsgId(), imdn.getStatus(), contact);
+					break;
+				case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+				case EventsLogApi.TYPE_OUTGOING_GEOLOC:
+					// Notify listeners
+					handleMessageDeliveryStatus(imdn.getMsgId(), imdn.getStatus(), contact);
+					break;
+				case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
+					// Notify the file delivery
+					((InstantMessagingService) getImsService()).receiveFileDeliveryStatus(msgInfo.getSessionId(), imdn.getStatus(), contact);
+					break;
+				}
 			}
-    	} catch(Exception e) {
-    		if (logger.isActivated()) {
-    			logger.error("Can't parse IMDN document", e);
-    		}
-    	}
-    }
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't parse IMDN document", e);
+			}
+		}
+	}
 
     /**
      * Get max number of participants in the session including the initiator
@@ -922,12 +927,6 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
         session.setFailureReportOption(false);
         session.setSuccessReportOption(false);
-
-        // Open the MSRP session
-        getMsrpMgr().openMsrpSession();
-
-        // Send an empty packet
-        sendEmptyDataChunk();
     }
 
     /**
@@ -936,7 +935,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      * @throws Exception 
      */
     public void startMediaSession() throws Exception {
-        // Nothing to do
+        // Open the MSRP session
+        getMsrpMgr().openMsrpSession();
+
+        // Send an empty packet
+        sendEmptyDataChunk();
     }
 
 	/**

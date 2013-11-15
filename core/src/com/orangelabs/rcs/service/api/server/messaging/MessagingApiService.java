@@ -800,7 +800,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
     public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
     	synchronized(lock) {
 			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status);
+			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);
 			
 	  		// Notify message delivery listeners
 			final int N = listeners.beginBroadcast();
@@ -825,21 +825,22 @@ public class MessagingApiService extends IMessagingApi.Stub {
      *
      * @param ftSessionId File transfer session Id
      * @param status status of File transfer
+     * @param contact contact who received file
      */
-    public void handleFileDeliveryStatus(String ftSessionId, String status) {
+    public void handleFileDeliveryStatus(String ftSessionId, String status, String contact) {
         // Update rich messaging history
         if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
-            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DELIVERED);
+            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DELIVERED, contact);
         } else
         if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
-            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DISPLAYED);
+            RichMessaging.getInstance().updateFileTransferStatus(ftSessionId, EventsLogApi.STATUS_DISPLAYED, contact);
         }
 
         // Notify File transfer delivery listeners
         final int N = listeners.beginBroadcast();
         for (int i=0; i < N; i++) {
             try {
-                listeners.getBroadcastItem(i).handleFileDeliveryStatus(ftSessionId, status);
+                listeners.getBroadcastItem(i).handleFileDeliveryStatus(ftSessionId, status, contact);
             } catch(Exception e) {
                 if (logger.isActivated()) {
                     logger.error("Can't notify listener", e);

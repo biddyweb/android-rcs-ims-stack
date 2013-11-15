@@ -25,25 +25,25 @@ public abstract class  HoldManager {
 	public static final int REMOTE_HOLD_INPROGRESS = 4;
 	public static final int REMOTE_HOLD = 5;
 	public static final int REMOTE_UNHOLD_INPROGRESS = 6;
-
 	
 	/**
 	 * Hold state
 	 */
-	protected static int  state;
+	protected static int  state;	
 	
 	/**
 	 * session handled by Hold manager
 	 */
-	IPCallStreamingSession session ; 
-	
+	IPCallStreamingSession session ; 	
 	
 	/**
 	 * The logger
 	 */
 	protected Logger logger = Logger.getLogger(this.getClass().getName());
 	
-	
+	/**
+	 * constructor
+	 */
 	public HoldManager(IPCallStreamingSession session){
 		if (logger.isActivated()){
 			logger.info("HoldManager()");
@@ -52,29 +52,44 @@ public abstract class  HoldManager {
 	}
 	
 	/**
-	 * getter
+	 * get HoldManager state
+	 * 
+	 * @return int state
 	 */
 	public static int getState(){
 		return state;
 	}
 	
-
 	/**
-	 * inti state
+	 * set HoldManager state
 	 */
 	public static void setState(int val){
 		state = val;
 	}
 	
+	/**
+	 * set call on Hold/onResume (case local HoldManager)
+	 * 
+	 * @param calHoldAction hold action (true: call hold/false: call resume)
+	 */
 	public abstract void setCallHold(boolean callHoldAction);
 	
-	
+	/**
+	 * set call on Hold/onResume (case remote HoldManager)
+	 * 
+	 * @param calHoldAction hold action (true: call hold/false: call resume)
+	 * @param reInvite reInvite SIP request received
+	 */
 	public abstract void setCallHold(boolean callHoldAction, SipRequest reInvite);
 		
-	
+	/**
+	 * set on Hold the media session
+	 */
 	public abstract void holdMediaSession();
 	
-	
+	/**
+	 * set resume the media session
+	 */
 	public abstract void resumeMediaSession();
 	
 

@@ -188,20 +188,16 @@ public class EventsLogApi extends ClientApi {
 	public static final int STATUS_MISSED = 6;
 
 	// IMDN
-	public static final int STATUS_DELIVERED = 7; // sender side
-	public static final int STATUS_DISPLAYED = 8; // the IMDN "displayed" report
-													// has been received (sender
-													// side) or the user has
-													// read the received message
-													// (receiver side)
-	public static final int STATUS_ALL_DISPLAYED = 9; // sender side
-	public static final int STATUS_REPORT_REQUESTED = 10; // receiver side : the
-															// sender has
-															// requested a
-															// "displayed"
-															// report when the
-															// message will be
-															// displayed
+	// sender and receiver side
+	public static final int STATUS_DELIVERED = 7; 
+	// the IMDN "displayed" report has been received (sender side) or the user has read the received message (receiver side)
+	public static final int STATUS_DISPLAYED = 8; 
+	// sender side
+	public static final int STATUS_ALL_DISPLAYED = 9;
+	// sender side
+	public static final int STATUS_ALL_DELIVERED = 10; 
+	// receiver side : the sender has requested a "displayed" report when the message will be displayed
+	public static final int STATUS_REPORT_REQUESTED = 11; 
 
 	// Possible data for chat system event
 	public static final int EVENT_JOINED_CHAT = 12; // Contact has joined

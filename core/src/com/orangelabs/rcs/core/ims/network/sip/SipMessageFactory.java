@@ -1199,11 +1199,7 @@ public class SipMessageFactory {
      * @return SIP request
      * @throws SipException
      */
-    public static SipRequest createReInvite(SipDialogPath dialog, String[] featureTags, String content) throws SipException { 	
-    	 if (logger.isActivated()) {
-             logger.error("createReInvite");
-         }
-    	
+    public static SipRequest createReInvite(SipDialogPath dialog, String[] featureTags, String content) throws SipException {
     	try {
             // Build the request
     		Request reInvite = dialog.getStackDialog().createRequest(Request.INVITE);          
@@ -1224,23 +1220,15 @@ public class SipMessageFactory {
             
             // Add remote SIP instance ID
             SipUtils.setRemoteInstanceID(firstInvite.getStackMessage(), dialog.getRemoteSipInstance());
-                       
+
             // Set Allow header
-            SipUtils.buildAllowHeader(reInvite);    
-            
-            // Set the Route header  
-            Vector<String> route = dialog.getRoute();             
-            if (!route.isEmpty()){
-            	for(int i=0; i < route.size(); i++) {
-	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
-	        	reInvite.addHeader(routeHeader);
-            	}
-	        }
-            else if (firstInvite.getHeader(RouteHeader.NAME) != null){
-            	reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
-            }           	
-          
-                        
+            SipUtils.buildAllowHeader(reInvite);
+
+            // Set the Route header
+            if (reInvite.getHeader(RouteHeader.NAME) == null && firstInvite.getHeader(RouteHeader.NAME) != null) {
+                reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
+            }
+
             // Set the P-Preferred-Identity header
             if (firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY) != null){
             	reInvite.addHeader(firstInvite.getHeader(SipUtils.HEADER_P_PREFERRED_IDENTITY));

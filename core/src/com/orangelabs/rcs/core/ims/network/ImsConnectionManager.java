@@ -100,6 +100,11 @@ public class ImsConnectionManager implements Runnable {
     private boolean disconnectedByBattery = false;
 
     /**
+     * IMS services already started
+     */
+    private boolean imsServicesStarted = false;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -505,7 +510,10 @@ public class ImsConnectionManager implements Runnable {
 		}
 		
 		// Stop IMS services
-		imsModule.stopImsServices();
+        if (imsServicesStarted) {
+            imsModule.stopImsServices();
+            imsServicesStarted = false;
+        }
 	}
 
 	/**
@@ -546,9 +554,11 @@ public class ImsConnectionManager implements Runnable {
                             if (logger.isActivated()) {
                                 logger.debug("Registered to the IMS with success: start IMS services");
                             }
-                            // Start IMS services
-                            imsModule.startImsServices();
-    
+                            if (imsModule.isReady() && !imsServicesStarted) {
+                                imsModule.startImsServices();
+                                imsServicesStarted = true;
+                            }
+
                             // Reset number of failures
                             nbFailures = 0;
                         }
@@ -561,11 +571,25 @@ public class ImsConnectionManager implements Runnable {
     	            	nbFailures++;
     	    		}
     			} else {
-    	        	if (logger.isActivated()) {
-    	        		logger.debug("Already registered to IMS: check IMS services");
-    	        	}
-    	        	imsModule.checkImsServices();
-    			}
+                    if (imsModule.isReady()) {
+                        if (!imsServicesStarted) {
+                            if (logger.isActivated()) {
+                                logger.debug("Already registered to IMS: start IMS services");
+                            }
+                            imsModule.startImsServices();
+                            imsServicesStarted = true;
+                        } else {
+                            if (logger.isActivated()) {
+                                logger.debug("Already registered to IMS: check IMS services");
+                            }
+                            imsModule.checkImsServices();
+                        }
+                    } else {
+                        if (logger.isActivated()) {
+                            logger.debug("Already registered to IMS: IMS services not yet started");
+                        }
+                    }
+                }
             } catch (Exception e) {
 				if (logger.isActivated()) {
 		    		logger.error("Internal exception", e);
@@ -590,6 +614,12 @@ public class ImsConnectionManager implements Runnable {
     	        		logger.debug("Wait " + retryPeriod + "s before retry registration (failures=" + nbFailures + ", coeff="+ coeff + ")");
     	        	}
     				Thread.sleep(retryPeriod * 1000);
+                } else if (!imsServicesStarted) {
+                    int retryPeriod = 5;
+                    if (logger.isActivated()) {
+                        logger.debug("Wait " + retryPeriod + "s before retry to start services");
+                    }
+                    Thread.sleep(retryPeriod * 1000);
 	    		} else {
     				// Pause before the next service check
 	    			Thread.sleep(servicePollingPeriod * 1000);

@@ -333,7 +333,8 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		}
 	    
 		// Message delivery status
-		public void handleMessageDeliveryStatus(String msgId, String status) {
+		@Override
+		public void handleMessageDeliveryStatus(final String msgId, final String status, final String contact) throws RemoteException {
 			// Not yet used here
 		}
 		
@@ -351,6 +352,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		public void handleReceiveGeoloc(GeolocMessage geoloc) {
 			// Not yet used here
 		}
+
 	};
     
     /**

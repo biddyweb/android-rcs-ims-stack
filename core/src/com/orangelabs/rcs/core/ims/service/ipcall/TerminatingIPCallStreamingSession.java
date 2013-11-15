@@ -263,24 +263,17 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 	 * 
 	 * @param reInvite  reInvite Request received
 	 */
-	protected String buildCallInitSdpResponse() {
+	private String buildCallInitSdpResponse() {
+		if (logger.isActivated()) {
+			logger.debug("Build SDP proposal for call init");
+		}
+		
 		// Parse the remote SDP part
         SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
         
-        // Extract the remote host (same between audio and video)
-        //String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription.connectionInfo);
-        // TODO String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
-       
-        // Extract the audio port
-        MediaDescription mediaAudio = parser.getMediaDescription("audio");
-        int audioRemotePort = mediaAudio.port;
-
-        // Extract the video port
+        // Extract the video description
         MediaDescription mediaVideo = parser.getMediaDescription("video");
-        int videoRemotePort = -1;
-        if (mediaVideo != null) {
-            videoRemotePort = mediaVideo.port;
-        }
+
 
         // Extract the audio codecs from SDP
         Vector<MediaDescription> audio = parser.getMediaDescriptions("audio");
@@ -294,8 +287,7 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
         }
         
         
-        // Audio codec negotiation
-		AudioCodec selectedAudioCodec;
+//        // Audio codec negotiation
 		try {
 			selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioRenderer().getSupportedAudioCodecs(), proposedAudioCodecs);
 			if (selectedAudioCodec == null) {
@@ -312,7 +304,6 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
 			
 	        // Video codec negotiation
-			VideoCodec selectedVideoCodec = null;
 			if ((mediaVideo != null) && (getVideoPlayer() != null)) {
 				selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
 				if (selectedVideoCodec == null) {
@@ -325,8 +316,8 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 						if (logger.isActivated())
 							logger.debug("Proposed video codecs are not supported");
 
-						// Terminate session
-						terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
+						// Send a 415 Unsupported media type response
+						send415Error(getDialogPath().getInvite());
 
 						// Report error
 						handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
@@ -409,64 +400,6 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			logger.info("Extract Audio/Video ports - Done");
 		}
 
-		// Extract the audio codecs from SDP
-		Vector<MediaDescription> audio = remoteParser
-				.getMediaDescriptions("audio");
-		Vector<AudioCodec> proposedAudioCodecs = AudioCodecManager
-				.extractAudioCodecsFromSdp(audio);
-
-		// Extract video codecs from SDP
-		Vector<MediaDescription> video = remoteParser
-				.getMediaDescriptions("video");
-		Vector<VideoCodec> proposedVideoCodecs = null;
-		if (mediaVideo != null) {
-			proposedVideoCodecs = VideoCodecManager
-					.extractVideoCodecsFromSdp(video);
-		}
-
-		// Audio codec negotiation
-		AudioCodec selectedAudioCodec;
-
-		selectedAudioCodec = AudioCodecManager.negociateAudioCodec(
-				getAudioRenderer().getSupportedAudioCodecs(),
-				proposedAudioCodecs);
-		if (selectedAudioCodec == null) {
-			if (logger.isActivated()) {
-				logger.debug("Proposed audio codecs are not supported");
-			}
-
-			// Send a 415 Unsupported media type response
-			send415Error(getDialogPath().getInvite());
-
-			// Unsupported media type
-			handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE));
-
-		}
-
-		// Video codec negotiation
-		VideoCodec selectedVideoCodec = null;
-		if ((mediaVideo != null) && (getVideoPlayer() != null)) {
-			selectedVideoCodec = VideoCodecManager.negociateVideoCodec(getVideoPlayer().getSupportedVideoCodecs(), proposedVideoCodecs);
-			if (selectedVideoCodec == null) {
-				// Support of video codec of profile 1B is compulsory. Even if not proposed explicitly it shall be selected.
-				selectedVideoCodec = CodecsUtils.getVideoCodecProfile1b(getVideoRenderer().getSupportedVideoCodecs());
-				if (selectedVideoCodec != null) {
-					if (logger.isActivated())
-						logger.info("Video codec profile 1B is selected by default");
-				} else {
-					if (logger.isActivated())
-						logger.debug("Proposed video codecs are not supported");
-
-					// Terminate session
-					terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-
-					// Report error
-					handleError(new IPCallError(IPCallError.UNSUPPORTED_VIDEO_TYPE));
-					
-					// TODO shall we continue or return ???
-				}
-			}
-		}
 
 		// Set the audio codec and listener in Audio Renderer
 		getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
@@ -542,12 +475,6 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
 		}
 
-		if (logger.isActivated()) {
-			logger.debug("AudioContent = " + this.getAudioContent());
-			logger.debug("VideoContent = " + this.getVideoContent());
-			logger.debug("AudioPlayer = " + this.getAudioPlayer());
-			logger.debug("VideoPlayer = " + this.getVideoPlayer());
-		}
 	}
 
     /**

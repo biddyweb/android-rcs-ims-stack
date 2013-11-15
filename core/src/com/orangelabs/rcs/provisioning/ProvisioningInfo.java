@@ -62,7 +62,36 @@ public class ProvisioningInfo {
 	 * Reject button for terms and conditions
 	 */
     private boolean rejectBtn = false;
+      
+	/**
+	 * Enumerated for the provisioning version
+	 */
+	public enum Version {
+		RESETED(0), // the configuration is reseted : RCS client is temporary disabled
+		RESETED_NOQUERY(-1), // The configuration is reseted : RCS client is forbidden
+		DISABLED_NOQUERY(-2), // The RCS client is disabled and configuration query stopped
+		DISABLED_DORMANT(-3); // The RCS client is in dormant state: RCS is disabled but provisioning is still running 
 
+		private int vers;
+
+		private Version(int vers) {
+			this.vers = vers;
+		}
+
+		public int getVersion() {
+			return this.vers;
+		}
+
+		@Override
+		public String toString() {
+			return "" + this.vers;
+		}
+
+		public boolean equals(String vers) {
+			return this.toString().equals(vers);
+		}
+	}
+	
     /**
      * Set version
      *

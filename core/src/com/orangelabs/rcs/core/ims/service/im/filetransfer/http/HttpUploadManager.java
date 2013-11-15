@@ -264,7 +264,7 @@ public class HttpUploadManager extends HttpTransferManager {
 
         connection.setDoInput(true);
         connection.setDoOutput(true);
-        connection.setReadTimeout(2000); 
+        connection.setReadTimeout(5000);
 
         // POST construction
         connection.setRequestMethod("POST");

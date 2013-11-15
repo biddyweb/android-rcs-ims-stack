@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.12
+Release 2.5.13
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,9 +9,11 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- FToHTTP Pause & Resume download.
-- Optimization on Video codec negotiation: propose H264 level 1b in response even if not proposed.
-- IP call hold.
+- Add method "getSessionDirection" for API sessions.
+- Add management of version/validity -2 and -3 for provisioning.
+- Add 2 columns to the messaging table (provider eventlog) to manage delivery status and displayed status.
+- Use of delivery in group chat is now limited to blackbird version.
+- Add new multi client check according to BB implementation guideline
 
 
 Bugs fixed:
@@ -19,6 +21,14 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+V2.5.13
+- Issue 178		Stack: Used GSMA release is reset to Albatros once an empty HTTPS provisioning message is received
+- Issue 177		Stack: Media session handling
+- Issue 176		Stack: Route issue on IP Call addVideo
+- Issue 175		Stack: Not wanted REFER on participant adding
+- Issue 173		Stack: Group chat - send useless REFER
+- Deutsche Telekom	Stack: Race condition if ImsModule is not yet completely instantiated
 
 V2.5.12
 - Issue 174		Stack: Bad use of MSRP MsgId and IMDN MsgID

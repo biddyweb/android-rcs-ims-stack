@@ -38,25 +38,28 @@ public class RemoteHoldInactive extends HoldManager {
 
 			// build sdp response
 			String sdp = buildCallHoldSdpResponse(callHoldAction);
+			
+			if (sdp != null){
+				// set sdp response as local content
+				session.getDialogPath().setLocalContent(sdp);
 
-			// set sdp response as local content
-			session.getDialogPath().setLocalContent(sdp);
+				// get feature tags
+				String[] featureTags = null;
+				if (session.isTagPresent(reInvite.getContent(), "m=video")) { // audio+
+																				// video
+					featureTags = IPCallService.FEATURE_TAGS_IP_VIDEO_CALL;
+				} else { // audio only
+					featureTags = IPCallService.FEATURE_TAGS_IP_VOICE_CALL;
+				}
 
-			// get feature tags
-			String[] featureTags = null;
-			if (session.isTagPresent(reInvite.getContent(), "m=video")) { // audio+
-																			// video
-				featureTags = IPCallService.FEATURE_TAGS_IP_VIDEO_CALL;
-			} else { // audio only
-				featureTags = IPCallService.FEATURE_TAGS_IP_VOICE_CALL;
+				int requestType = (callHoldAction) ? IPCallStreamingSession.SET_ON_HOLD
+						: IPCallStreamingSession.SET_ON_RESUME;
+
+				// process user Answer and SIP response
+				session.getUpdateSessionManager().send200OkReInviteResp(reInvite,
+						featureTags, sdp, requestType);
 			}
-
-			int requestType = (callHoldAction) ? IPCallStreamingSession.SET_ON_HOLD
-					: IPCallStreamingSession.SET_ON_RESUME;
-
-			// process user Answer and SIP response
-			session.getUpdateSessionManager().send200OkReInviteResp(reInvite,
-					featureTags, sdp, requestType);
+	
 		}
 
 	}
@@ -66,6 +69,7 @@ public class RemoteHoldInactive extends HoldManager {
 	 * 
 	 * @param callHoldAction
 	 *            call hold action (true : call hold - false: call resume)
+	 * @return	String sdp or null if error
 	 */
 	private String buildCallHoldSdpResponse(boolean action) {
 		try {

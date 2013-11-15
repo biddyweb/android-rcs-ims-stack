@@ -1,9 +1,6 @@
 package com.orangelabs.rcs.ri.ipcall;
 
-import java.lang.reflect.Method;
-import java.util.List;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -13,20 +10,14 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.hardware.Camera.Parameters;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.view.Display;
 import android.view.KeyEvent;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
@@ -34,11 +25,9 @@ import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
-import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.Orientation;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.richcall.VideoSettings;
-import com.orangelabs.rcs.ri.richcall.VisioSharing;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.ipcall.IIPCallEventListener;
@@ -166,7 +155,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	/**
 	 * Video player
 	 */
-	private LiveVideoPlayer outgoingVideoPlayer = null;
+	public LiveVideoPlayer outgoingVideoPlayer = null;
 	
 	/**
 	 * Video renderer
@@ -174,16 +163,16 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	private VideoRenderer incomingVideoRenderer = null;
 	
     /** Camera */
-    private Camera camera = null;
+    public Camera camera = null;
 
     /** Opened camera id */
-    private CameraOptions openedCameraId = CameraOptions.FRONT;
+    public CameraOptions openedCameraId = CameraOptions.FRONT;
 
     /** Camera preview started flag */
-    private boolean cameraPreviewRunning = false;
+    public boolean cameraPreviewRunning = false;
 
     /** Number of cameras */
-    private int numberOfCameras = 1;
+    public int numberOfCameras = 1;
     
     /** Incoming Video preview */
     private VideoSurfaceView incomingVideoView = null;
@@ -195,16 +184,16 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     private int incomingHeight = 0;
     
     /** Outgoing Video preview */
-    private VideoSurfaceView outgoingVideoView = null;
+    public VideoSurfaceView outgoingVideoView = null;
     
     /** Outgoing Video width */
-    private int outgoingWidth = H264Config.QCIF_WIDTH;
+    public int outgoingWidth = H264Config.QCIF_WIDTH;
 
     /** Outgoing Video height */
-    private int outgoingHeight = H264Config.QCIF_HEIGHT;
+    public int outgoingHeight = H264Config.QCIF_HEIGHT;
 
     /** Outgoing Video surface holder */
-    private SurfaceHolder surface;
+    public SurfaceHolder surface;
     
     /** Preview surface view is created */
     private boolean isSurfaceCreated = false;
@@ -214,6 +203,12 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     
     /** wait surface creation to accept incoming session */
     private boolean acceptIncomingSessionWhenSurfaceCreated = false;
+    
+    /** wait surface creation to request video upgrade of session*/
+    private boolean addVideoWhenSurfaceCreated = false;
+    
+    /** wait surface creation to accept Video upgrade of session*/
+    private boolean acceptAddVideoWhenSurfaceCreated = false;
     
     /**  (session cancellation requested) stop session as soon as initiated */
     private boolean cancelOutgoingSessionWhenCreated = false ;
@@ -298,9 +293,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					sessionId = getIntent().getStringExtra("sessionId");	
 					if (sessionId == null) {
 						exitActivityIfNoSession("sessionId is null");
-					} else {
-						recoverSessions();
-					}
+					} else {recoverSessions(); }
 					
 				} 
 				else if ((action.equals("incoming")||(action.equals("outgoing")))) {
@@ -357,10 +350,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 						
 						if ((!videoSelected)||((videoSelected)&& isSurfaceCreated)){
 							startOutgoingSession();	
-						}
-						else {
-							startOutgoingSessionWhenSurfaceCreated = true ;
-						}										
+						} else {startOutgoingSessionWhenSurfaceCreated = true ;	}										
 					}			
 				}
 			}
@@ -382,11 +372,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		fromTxt.setText(getString(R.string.label_ipcall_with, remoteContact));
 	}
 
-//	@Override
-//    protected void onSaveInstanceState(Bundle outState) {
-//        super.onSaveInstanceState(outState);
-//        outState.putInt("holdStatus", holdStatus);      
-//    };
 	
 	@Override
 	public void onPause() {
@@ -510,8 +495,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 */
 	private View.OnClickListener btnOnHoldListener = new View.OnClickListener() {
 		public void onClick(View v) {
-			//Utils.showMessage(IPCallView.this, "Feature "+ getString(R.string.label_not_implemented));
-			
 			 if (holdStatus == INACTIVE){
 				 setOnHold(true) ;
 				 setOnHoldBtn.setText(R.string.label_resume_btn);
@@ -534,7 +517,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		public void onClick(View v) {
 			Thread thread = new Thread() {
 				public void run() {
-					releaseCamera() ;
+					CameraUtils.releaseCamera(IPCallView.this) ;
 					stopSession();
 					exitActivityIfNoSession(null);
 				}
@@ -559,12 +542,12 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				incomingVideoView.setVisibility(View.VISIBLE);
 				switchCamBtn.setVisibility(View.VISIBLE);
 				switchCamBtn.setEnabled(false);
-				addVideo();
+				if (isSurfaceCreated){addVideo(); }
+				else {addVideoWhenSurfaceCreated = true; }				
 			} else if (videoConnected) {
 				addVideoBtn.setEnabled(false);
 				addVideoBtn.setText(R.string.label_add_video_btn);
 				switchCamBtn.setEnabled(false);
-				//videoConnected = false;
 				removeVideo();
 			}
 		}
@@ -576,18 +559,18 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     private View.OnClickListener btnSwitchCamListener = new View.OnClickListener() {
         public void onClick(View v) {
             // Release camera
-            releaseCamera();
+            CameraUtils.releaseCamera(IPCallView.this);
 
             // Open the other camera
             if (openedCameraId.getValue() == CameraOptions.BACK.getValue()) {
-                OpenCamera(CameraOptions.FRONT);
+                CameraUtils.openCamera(CameraOptions.FRONT, IPCallView.this);
             } else {
-                OpenCamera(CameraOptions.BACK);
+            	CameraUtils.openCamera(CameraOptions.BACK, IPCallView.this);
             }
 
             // Restart the preview
             camera.setPreviewCallback(outgoingVideoPlayer);
-            startCameraPreview();
+            CameraUtils.startCameraPreview(IPCallView.this);
         }
     };
 	
@@ -624,7 +607,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			                    if (logger.isActivated()) {
 			        				logger.info("Update Camera - outGoingHeight ="+outgoingHeight+"- outGoingWidth = "+outgoingWidth);
 			        			}
-			                    reStartCamera();
+			                    CameraUtils.reStartCamera(IPCallView.this);
 							}
 							else { // video declined
 								videoConnected = false;
@@ -636,7 +619,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 							}
 								
 						} catch (RemoteException e) {
-							releaseCamera();
+							CameraUtils.releaseCamera(IPCallView.this);
 							stopSession();
 							exitActivityIfNoSession(getString(R.string.label_ipcall_failed)+"-"+ e.getMessage());
 							
@@ -659,7 +642,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			thread.start();
 			handler.post(new Runnable() {
 				public void run() {
-					releaseCamera() ;
+					CameraUtils.releaseCamera(IPCallView.this) ;
 					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					if (direction.equals("outgoing")){
@@ -686,7 +669,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			thread.start();
 			handler.post(new Runnable() {
 				public void run() {
-					releaseCamera() ;
+					CameraUtils.releaseCamera(IPCallView.this) ;
 					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					if ((direction != null) && (direction.equals("outgoing"))){
@@ -713,7 +696,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			thread.start();
 			handler.post(new Runnable() {
 				public void run() {
-					releaseCamera() ;
+					CameraUtils.releaseCamera(IPCallView.this) ;
 					setOnHoldBtn.setEnabled(false);
 					hangUpBtn.setEnabled(false);
 					addVideoBtn.setEnabled(false);
@@ -793,7 +776,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					releaseCamera() ;
+					CameraUtils.releaseCamera(IPCallView.this) ;
 					recreateVideoPlayer();
 					videoConnected = false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
@@ -817,7 +800,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				handler.post(new Runnable() {
 					public void run() {
 						videoConnected = true;
-						addVideoBtn.setText(R.string.label_remove_video_btn);
 						addVideoBtn.setEnabled(true);
 						switchCamBtn.setEnabled(true);
 
@@ -829,7 +811,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 									+ outgoingHeight + "- outGoingWidth = "
 									+ outgoingWidth);
 						}
-						reStartCamera();
+						CameraUtils.reStartCamera(IPCallView.this);
 					}
 				});
 			} else { // activity not visible
@@ -852,7 +834,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					//videoConnected = false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
 					addVideoBtn.setEnabled(false);
 				}
@@ -865,7 +846,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 			handler.post(new Runnable() {
 				public void run() {
-					releaseCamera();
+					CameraUtils.releaseCamera(IPCallView.this);
 					recreateVideoPlayer();
 					videoConnected= false;
 					addVideoBtn.setText(R.string.label_add_video_btn);
@@ -1057,12 +1038,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			}
 		});
 
-
 	}
 	
 	
 	private void startOutgoingSession() {
-
 		if (logger.isActivated()) {
 			logger.debug("startOutgoingSession(" + videoSelected + ")" );
 		}
@@ -1251,7 +1230,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			try {
 				session.removeSessionListener(sessionEventListener);
 				session.cancelSession();
-				releaseCamera();
+				CameraUtils.releaseCamera(IPCallView.this);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1270,21 +1249,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 
 		Thread thread = new Thread() {
 			public void run() {
-
-				// wait api connection & video surface creation to instantiate
-				// video player
-				while (!isSurfaceCreated) {
-					synchronized(this){
-						try {
-							wait(500);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-				if (logger.isActivated()) {
-					logger.info("call api connected and isSurfaceCreated - instantiate video Renderer + instantiate video Player ");
-				}
 				instantiateIncomingVideoRenderer();			
 				instantiateOutgoingVideoPlayer();
 
@@ -1310,7 +1274,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 		
 		if (session != null) {
-			releaseCamera();			
+			CameraUtils.releaseCamera(IPCallView.this);			
 			try {
 				session.removeVideo();
 			} catch (Exception e) {
@@ -1338,11 +1302,11 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 						incomingVideoView.setVisibility(View.VISIBLE);
 						switchCamBtn.setVisibility(View.VISIBLE);	
 						switchCamBtn.setEnabled(false);
-
-						
-						acceptAddVideo();
+						if(isSurfaceCreated){
+							acceptAddVideo();
+						} else {acceptAddVideoWhenSurfaceCreated = true;}					
 						addVideoBtn.setText(R.string.label_remove_video_btn);
-						addVideoBtn.setEnabled(true);
+						addVideoBtn.setEnabled(false);
 					}
 				});
 		builder.setNegativeButton(R.string.label_decline,
@@ -1369,20 +1333,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 		Thread thread = new Thread() {
 			public void run() {
-				// wait api connection & video surface creation to instantiate
-				// video player
-				while (!isSurfaceCreated) {
-					synchronized(this){
-						try {
-							wait(500);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-				if (logger.isActivated()) {
-					logger.info("isSurfaceCreated - instantiate video Renderer + instantiate video Player ");
-				}
 				instantiateIncomingVideoRenderer();
 				instantiateOutgoingVideoPlayer();
 
@@ -1479,7 +1429,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
                 }
          
                 // Start camera
-                startCamera();
+                CameraUtils.startCamera(IPCallView.this);
     };
 
     /**
@@ -1584,7 +1534,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				}
 				return true;
 			}
-
 		});
 	}
 
@@ -1603,336 +1552,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 	}
 
-	
 
-    /* *****************************************
-     *                Camera
-     ***************************************** */
-
-    /**
-     * Get Camera "open" Method
-     *
-     * @return Method
-     */
-    private Method getCameraOpenMethod() {
-        ClassLoader classLoader = VisioSharing.class.getClassLoader();
-        Class cameraClass = null;
-        try {
-            cameraClass = classLoader.loadClass("android.hardware.Camera");
-            try {
-                return cameraClass.getMethod("open", new Class[] {
-                    int.class
-                });
-            } catch (NoSuchMethodException e) {
-                return null;
-            }
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get Camera "numberOfCameras" Method
-     *
-     * @return Method
-     */
-    private Method getCameraNumberOfCamerasMethod() {
-        ClassLoader classLoader = VisioSharing.class.getClassLoader();
-        Class cameraClass = null;
-        try {
-            cameraClass = classLoader.loadClass("android.hardware.Camera");
-            try {
-                return cameraClass.getMethod("getNumberOfCameras", (Class[])null);
-            } catch (NoSuchMethodException e) {
-                return null;
-            }
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get number of cameras
-     *
-     * @return number of cameras
-     */
-    private int getNumberOfCameras() {
-        Method method = getCameraNumberOfCamerasMethod();
-        if (method != null) {
-            try {
-                Integer ret = (Integer)method.invoke(null, (Object[])null);
-                return ret.intValue();
-            } catch (Exception e) {
-                return 1;
-            }
-        } else {
-            return 1;
-        }
-    }
-
-    /**
-     * Open a camera
-     *
-     * @param cameraId
-     */
-    private void OpenCamera(CameraOptions cameraId) {
-        Method method = getCameraOpenMethod();
-        if (numberOfCameras > 1 && method != null) {
-            try {
-                camera = (Camera)method.invoke(camera, new Object[] {
-                    cameraId.getValue()
-                });
-                openedCameraId = cameraId;
-            } catch (Exception e) {
-                camera = Camera.open();
-                openedCameraId = CameraOptions.BACK;
-            }
-        } else {
-            camera = Camera.open();
-            openedCameraId = CameraOptions.BACK;
-        }
-        if (outgoingVideoPlayer != null) {
-            outgoingVideoPlayer.setCameraId(openedCameraId.getValue());
-        }
-    }
-
-    /**
-     * Check if good camera sizes are available for encoder.
-     * Must be used only before open camera.
-     * 
-     * @param cameraId
-     * @return false if the camera don't have the good preview size for the encoder
-     */
-    private boolean checkCameraSize(CameraOptions cameraId) {
-        boolean sizeAvailable = false;
-
-        // Open the camera
-        OpenCamera(cameraId);
-
-        // Check common sizes
-        Parameters param = camera.getParameters();
-        List<Camera.Size> sizes = param.getSupportedPreviewSizes();
-        for (Camera.Size size:sizes) {
-            if (    (size.width == H264Config.QVGA_WIDTH && size.height == H264Config.QVGA_HEIGHT) ||
-                    (size.width == H264Config.CIF_WIDTH && size.height == H264Config.CIF_HEIGHT) ||
-                    (size.width == H264Config.VGA_WIDTH && size.height == H264Config.VGA_HEIGHT)) {
-                sizeAvailable = true;
-                break;
-            }
-        }
-
-        // Release camera
-        releaseCamera();
-
-        return sizeAvailable;
-    }
-
-    /**
-     * Start the camera preview
-     */
-    @SuppressLint("NewApi")
-	private void startCameraPreview() {
-		if (logger.isActivated()) {
-            logger.debug("startCameraPreview()");  
-            logger.debug("openedCameraId ="+openedCameraId);
-            
-        }
-		
-        if (camera != null) {
-            // Camera settings
-            Camera.Parameters p = camera.getParameters();
-            p.setPreviewFormat(PixelFormat.YCbCr_420_SP); //ImageFormat.NV21);
-
-            // Orientation
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-                switch (display.getRotation()) {
-                    case Surface.ROTATION_0:
-                        if (logger.isActivated()) {
-                            logger.debug("ROTATION_0");
-                        }
-                        if (openedCameraId == CameraOptions.FRONT) {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_90_CCW);
-                        } else {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_90_CW);
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                            camera.setDisplayOrientation(90);
-                        } else {
-                            p.setRotation(90);
-                        }
-                        break;
-                    case Surface.ROTATION_90:
-                        if (logger.isActivated()) {
-                            logger.debug("ROTATION_90");
-                        }
-                        outgoingVideoPlayer.setOrientation(Orientation.NONE);
-                        break;
-                    case Surface.ROTATION_180:
-                        if (logger.isActivated()) {
-                            logger.debug("ROTATION_180");
-                        }
-                        if (openedCameraId == CameraOptions.FRONT) {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_90_CW);
-                        } else {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_90_CCW);
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                            camera.setDisplayOrientation(270);
-                        } else {
-                            p.setRotation(270);
-                        }
-                        break;
-                    case Surface.ROTATION_270:
-                        if (logger.isActivated()) {
-                            logger.debug("ROTATION_270");
-                        }
-                        if (openedCameraId == CameraOptions.FRONT) {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_180);
-                        } else {
-                            outgoingVideoPlayer.setOrientation(Orientation.ROTATE_180);
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO) {
-                            camera.setDisplayOrientation(180);
-                        } else {
-                            p.setRotation(180);
-                        }
-                        break;
-                }
-            } else {
-                // getRotation not managed under Froyo
-                outgoingVideoPlayer.setOrientation(Orientation.NONE);
-            }
-
-            // Camera size
-            List<Camera.Size> sizes = p.getSupportedPreviewSizes();
-            if (sizeContains(sizes, outgoingWidth, outgoingHeight)) {
-                // Use the existing size without resizing
-                p.setPreviewSize(outgoingWidth, outgoingHeight);
-                outgoingVideoPlayer.activateResizing(outgoingWidth, outgoingHeight); // same size = no resizing
-                if (logger.isActivated()) {
-                	logger.debug("Use the existing size without resizing");
-                    logger.debug("Camera preview initialized with size " + outgoingWidth + "x" + outgoingHeight);
-                }
-            } else {
-                // Check if can use a other known size (QVGA, CIF or VGA)
-                int w = 0;
-                int h = 0;
-                for (Camera.Size size:sizes) {
-                    w = size.width;
-                    h = size.height;
-                    if (    (w == H264Config.QVGA_WIDTH && h == H264Config.QVGA_HEIGHT) ||
-                            (w == H264Config.CIF_WIDTH && h == H264Config.CIF_HEIGHT) ||
-                            (w == H264Config.VGA_WIDTH && h == H264Config.VGA_HEIGHT)) {
-                        break;
-                    }
-                }
-
-                if (w != 0) {
-                    p.setPreviewSize(w, h);
-                    outgoingVideoPlayer.activateResizing(w, h);
-                    if (logger.isActivated()) {
-                        logger.debug("Camera preview initialized with size " + w + "x" + h + " with a resizing to " + outgoingWidth + "x" + outgoingHeight);
-                        logger.debug("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
-                    }
-                } else {
-                    // The camera don't have known size, we can't use it
-                    if (logger.isActivated()) {
-                        logger.debug("Camera preview can't be initialized with size " + outgoingWidth + "x" + outgoingHeight);
-                    }
-                    camera = null;
-                    return;
-                }
-            }
-         
-            camera.setParameters(p);
-            try {
-                camera.setPreviewDisplay(surface);
-                camera.startPreview();
-                cameraPreviewRunning = true;
-            } catch (Exception e) {
-                camera = null;
-            }
-        }
-    }
-
-    /**
-     * Release the camera
-     */
-    private void releaseCamera() {
-        if (camera != null) {
-            camera.setPreviewCallback(null);
-            if (cameraPreviewRunning) {
-                cameraPreviewRunning = false;
-                camera.stopPreview();
-            }
-            camera.release();
-            camera = null;
-        }
-    }
-
-    /**
-     * Test if size is in list.
-     * Can't use List.contains because it doesn't work with some devices.
-     *
-     * @param list
-     * @param width
-     * @param height
-     * @return boolean
-     */
-    private boolean sizeContains(List<Camera.Size> list, int width, int height) {
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).width == width && list.get(i).height == height) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Start the camera
-     */
-    private void startCamera() {
-    	if (logger.isActivated()) {
-            logger.info("startCamera()");
-        }
-        if (camera == null) {
-            // Open camera
-            OpenCamera(openedCameraId);
-            if (logger.isActivated()) {
-                logger.debug("camera is null - openedCameraId ="+openedCameraId);
-            }
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                outgoingVideoView.setAspectRatio(outgoingWidth, outgoingHeight);
-                if (logger.isActivated()) {
-                    logger.debug("Landscape mode - "+outgoingWidth+"x"+outgoingHeight);
-                }
-            } else {
-                outgoingVideoView.setAspectRatio(outgoingHeight, outgoingWidth);
-                if (logger.isActivated()) {
-                    logger.debug("Portrait mode - outGoingWidth ="+outgoingWidth+"- outGoingHeith ="+outgoingHeight);
-                    logger.debug("outGoingVideoView size ="+outgoingVideoView.getWidth()+"x"+outgoingVideoView.getHeight());
-                }
-            }
-            // Start camera
-            camera.setPreviewCallback(outgoingVideoPlayer);
-            startCameraPreview();
-        } else {
-            if (logger.isActivated()) {
-                logger.debug("Camera is not null");
-            }
-        }
-    }
-
-    /**
-     * ReStart the camera
-     */
-    private void reStartCamera() {
-        if (camera != null) {
-            releaseCamera();
-        }
-        startCamera();
-    }
 
     /* *****************************************
      *          SurfaceHolder.Callback
@@ -1966,6 +1586,16 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
         	acceptIncomingSession();
         	acceptIncomingSessionWhenSurfaceCreated = false;
         }
+        
+        if (acceptAddVideoWhenSurfaceCreated) {
+        	acceptAddVideo();
+        	acceptAddVideoWhenSurfaceCreated = false;
+        }
+        
+        if (addVideoWhenSurfaceCreated) {
+        	addVideo();
+        	addVideoWhenSurfaceCreated = false;
+        }
     }
 
     @Override
@@ -1977,22 +1607,22 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     }
     
     
-    /* *****************************************
+    /******************************************
     * Video session methods
-    ***************************************** */
+    *******************************************/
     
     public void prepareVideoSession(){
     	if (logger.isActivated()) {
 			logger.info("prepareVideoSession()");
 		}
     	
-    	numberOfCameras = getNumberOfCameras();
+    	numberOfCameras = CameraUtils.getNumberOfCameras();
     	if (logger.isActivated()) {
 			logger.debug("number of cameras ="+numberOfCameras);
 		}
         if (numberOfCameras > 1) {
-            boolean backAvailable = checkCameraSize(CameraOptions.BACK);
-            boolean frontAvailable = checkCameraSize(CameraOptions.FRONT);
+            boolean backAvailable = CameraUtils.checkCameraSize(CameraOptions.BACK, IPCallView.this);
+            boolean frontAvailable = CameraUtils.checkCameraSize(CameraOptions.FRONT, IPCallView.this);
             if (frontAvailable && backAvailable) {
                 switchCamBtn.setOnClickListener(btnSwitchCamListener);
             } else if (frontAvailable) {
@@ -2005,7 +1635,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
                 // TODO: Error - no camera available for encoding
             }
         } else {
-            if (checkCameraSize(CameraOptions.FRONT)) {
+            if (CameraUtils.checkCameraSize(CameraOptions.FRONT, IPCallView.this)) {
                 switchCamBtn.setVisibility(View.INVISIBLE);
             } else {
                 // TODO: Error - no camera available for encoding
@@ -2041,7 +1671,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
         surface = outgoingVideoView.getHolder();
         surface.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surface.setKeepScreenOn(true);
-        surface.addCallback(this);
-        
+        surface.addCallback(this);        
     }
 }

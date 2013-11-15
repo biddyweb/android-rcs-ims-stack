@@ -224,6 +224,24 @@ public class InstantMessagingService extends ImsService {
     }
 	
 	/**
+	 * Returns IM session having session ID
+	 * 
+	 * @param sessionId
+	 * @return the IsmServiceSession
+	 */
+	public ImsServiceSession getImSession(String sessionId) {
+		// Search over all IM sessions
+		Enumeration<ImsServiceSession> list = getSessions();
+		while (list.hasMoreElements()) {
+			ImsServiceSession session = list.nextElement();
+			if (session.getSessionID().equals(sessionId)) {
+				return session;
+			}
+		}
+		return null;
+	}
+	
+	/**
      * Returns IM sessions with a list of contact
      * 
      * @param contact Contact
@@ -854,69 +872,85 @@ public class InstantMessagingService extends ImsService {
      * 
      * @param message Received message
      */
-    public void receiveMessageDeliveryStatus(SipRequest message) {
+	public void receiveMessageDeliveryStatus(SipRequest message) {
 		// Send a 200 OK response
 		try {
 			if (logger.isActivated()) {
 				logger.info("Send 200 OK");
 			}
-	        SipResponse response = SipMessageFactory.createResponse(message,
-	        		IdGenerator.getIdentifier(), 200);
+			SipResponse response = SipMessageFactory.createResponse(message, IdGenerator.getIdentifier(), 200);
 			getImsModule().getSipManager().sendSipResponse(response);
-		} catch(Exception e) {
-	       	if (logger.isActivated()) {
-	    		logger.error("Can't send 200 OK response", e);
-	    	}
-	       	return;
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 200 OK response", e);
+			}
+			return;
 		}
 
 		// Parse received message
 		ImdnDocument imdn = ChatUtils.parseCpimDeliveryReport(message.getContent());
-    	if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
-            String contact = SipUtils.getAssertedIdentity(message);
-            String status = imdn.getStatus();
-            String msgId = imdn.getMsgId();
+		if ((imdn != null) && (imdn.getMsgId() != null) && (imdn.getStatus() != null)) {
+			String contact = PhoneUtils.extractNumberFromUri(SipUtils.getAssertedIdentity(message));
+			String status = imdn.getStatus();
+			String msgId = imdn.getMsgId();
 
-            // Check message in RichMessaging
-            MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(msgId);
-            if (msgInfo == null) {
-                return;
-            }
-            switch (msgInfo.getType()) {
-                case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE :
-                case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE :
-                case EventsLogApi.TYPE_OUTGOING_GEOLOC :
-                case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC :
-                    // Get session associated to the contact
-                    Vector<ChatSession> sessions = Core.getInstance().getImService().getImSessionsWith(contact);
-                    if (sessions.size() > 0) {
-                        // Notify the message delivery from the chat session
-                        for(int i=0; i < sessions.size(); i++) {
-                            ChatSession session = sessions.elementAt(i);
-                            session.handleMessageDeliveryStatus(msgId, status);
-                        }
-                    } else {
-                        // Notify the message delivery outside of the chat session
-                        getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
-                    }
-                    break;
-                case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER :
-                    // Notify the file delivery
-                    receiveFileDeliveryStatus(msgInfo.getSessionId(), status);
-                    break;
-            }
-        }
-    }
+			// Check message in RichMessaging
+			MessageInfo msgInfo = RichMessaging.getInstance().getMessageInfo(msgId);
+			if (msgInfo == null) {
+				return;
+			}
+			switch (msgInfo.getType()) {
+			case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+			case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC: {
+				// Do not handle Message Delivery Status in Albatros for group chat and geo-localization
+				if (RcsSettingsData.VALUE_GSMA_REL_ALBATROS.equals("" + RcsSettings.getInstance().getGsmaRelease())) {
+					break;
+				}
+				// Get session associated to the message ID
+				String sessionId = RichMessaging.getInstance().getChatSessionIdForMessageId(msgId);
+				ImsServiceSession session = Core.getInstance().getImService().getImSession(sessionId);
+				if (session != null) {
+					// A session is on-going. Notify the message delivery for the group chat session
+					((GroupChatSession) session).handleMessageDeliveryStatus(msgId, status, contact);
+				} else {
+					// Notify the message delivery outside of the chat session
+					getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
+				}
+				break;
+			}
 
-    /**
-     * Receive a file delivery status
-     *
-     * @param ftSessionId
-     * @param status
-     */
-    public void receiveFileDeliveryStatus(String ftSessionId, String status) {
+			case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+			case EventsLogApi.TYPE_OUTGOING_GEOLOC: {
+				String sessionId = RichMessaging.getInstance().getChatSessionIdForMessageId(msgId);
+				ImsServiceSession session = Core.getInstance().getImService().getImSession(sessionId);
+				if (session != null) {
+					// A session is on-going. Notify the message delivery for the one to one chat session
+					((OneOneChatSession) session).handleMessageDeliveryStatus(msgId, status, contact);
+				} else {
+					// Notify the message delivery outside of the chat session
+					getImsModule().getCore().getListener().handleMessageDeliveryStatus(contact, msgId, status);
+				}
+				break;
+			}
+			case EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER:
+				// Notify the file delivery
+				receiveFileDeliveryStatus(msgInfo.getSessionId(), status, contact);
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Receive a file delivery status
+	 * 
+	 * @param ftSessionId
+	 * @param status
+	 * @param contact
+	 *            the contact who notified status
+	 */
+    public void receiveFileDeliveryStatus(String ftSessionId, String status, String contact) {
         // Notify the file delivery outside of the chat session
-        getImsModule().getCore().getListener().handleFileDeliveryStatus(ftSessionId, status);
+        getImsModule().getCore().getListener().handleFileDeliveryStatus(ftSessionId, status, contact);
     }
 
     /**
@@ -1002,7 +1036,8 @@ public class InstantMessagingService extends ImsService {
 				logger.debug("Contact " + remote + " is blocked, automatically reject the HTTP File transfer");
 			}
 
-            // TODO : reject (SIP MESSAGE ?)
+			// Send a 603 Decline response
+			sendErrorResponse(invite, 603);
 			return;
 	    }
 
@@ -1012,7 +1047,8 @@ public class InstantMessagingService extends ImsService {
 				logger.debug("The max number of FT sessions is achieved, reject the HTTP File transfer");
 			}
 
-            // TODO : reject (SIP MESSAGE ?)
+			// Send a 603 Decline response
+			sendErrorResponse(invite, 603);
 			return;
 		}
 
@@ -1022,7 +1058,8 @@ public class InstantMessagingService extends ImsService {
                 logger.debug("File is too big, reject the HTTP File transfer");
             }
 
-            // TODO : reject (SIP MESSAGE ?)
+			// Send a 603 Decline response
+			sendErrorResponse(invite, 603);
             return;
         }
 
@@ -1061,9 +1098,9 @@ public class InstantMessagingService extends ImsService {
                 logger.debug("File is too big, reject file transfer invitation");
             }
 
-            // Send a 403 Decline response
+            // Send a 603 Decline response
             //TODO add warning header "xxx Size exceeded"
-            one2oneChatSession.sendErrorResponse(invite, one2oneChatSession.getDialogPath().getLocalTag(), 403);
+            one2oneChatSession.sendErrorResponse(invite, one2oneChatSession.getDialogPath().getLocalTag(), 603);
 
             // Close session
             one2oneChatSession.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
@@ -1087,12 +1124,11 @@ public class InstantMessagingService extends ImsService {
      * @return {@code true} if file size limit is exceeded, otherwise {@code false}
      */
     private boolean isFileSizeExceeded(long size) {
-        // Auto reject if file too big
         int maxSize = FileSharingSession.getMaxFileSharingSize();
         if (maxSize > 0 && size > maxSize) {
             return true;
+        } else {
+        	return false;
         }
-
-        return false;
     }
 }
