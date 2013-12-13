@@ -60,6 +60,7 @@ import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Chat utility functions
@@ -67,6 +68,7 @@ import com.orangelabs.rcs.utils.StringUtils;
  * @author jexa7410
  */
 public class ChatUtils {
+	private static Logger logger = Logger.getLogger(ChatUtils.class.getSimpleName());
 	/**
 	 * Anonymous URI
 	 */
@@ -447,12 +449,8 @@ public class ChatUtils {
 
     	// It's a SIP address: remove display name
 		if (input.startsWith("\"")) {
-			int index1 = input.indexOf("\"", 1);
-			if (index1 > 0) {
-				input = input.substring(index1+2);
-			}
 			return input;
-		}   
+		}
 
     	if (input.startsWith("sip:") || input.startsWith("tel:")) {
     		// Just add URI delimiter
@@ -533,7 +531,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_CONTENT_TYPE + ": " + contentType + ";charset=utf-8" + CRLF +
 			CpimMessage.HEADER_CONTENT_LENGTH + ": " + content.getBytes().length + CRLF + 
 			CRLF + 
-			content;	
+			content;
 		return cpim;
 	}
 	
@@ -741,7 +739,8 @@ public class ChatUtils {
 			return new InstantMessage(msgId,
 					remote,
 					StringUtils.encodeUTF8(msg),
-					imdn);
+					imdn, 
+					null);
 		} else {
 			return null;
 		}	
@@ -790,7 +789,8 @@ public class ChatUtils {
 						remote,
 						StringUtils.decodeUTF8(txt),
 						ChatUtils.isImdnDisplayedRequested(invite),
-						date);
+						date,
+						null);
 			} else {
 				return null;
 			}
@@ -814,7 +814,8 @@ public class ChatUtils {
 						remote,
 						StringUtils.decodeUTF8(subject),
 						ChatUtils.isImdnDisplayedRequested(invite),
-						new Date());
+						new Date(),
+						null);
 			} else {
 				return null;
 			}

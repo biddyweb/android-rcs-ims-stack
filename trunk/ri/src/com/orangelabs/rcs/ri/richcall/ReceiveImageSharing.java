@@ -42,6 +42,8 @@ import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -50,6 +52,8 @@ import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
+import com.orangelabs.rcs.utils.StorageUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Receive image sharing
@@ -57,6 +61,9 @@ import com.orangelabs.rcs.service.api.client.richcall.RichCallApi;
  * @author jexa7410
  */
 public class ReceiveImageSharing extends Activity implements ClientApiListener, ImsEventListener {
+    /** The logger */
+    private static Logger logger = Logger.getLogger(ReceiveImageSharing.class.getSimpleName());
+    
     /**
      * UI handler
      */
@@ -124,13 +131,44 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      * API disabled
      */
     public void handleApiDisabled() {
-		handler.post(new Runnable() { 
-			public void run() {
-				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_disabled));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_api_disabled));
     }
     
+    /**
+     * Check whether image size exceeds the limit
+     * 
+     * @param size of image
+     * @return {@code true} if image size limit is exceeded, otherwise {@code false}
+     */
+    private static boolean isImageSizeExceeded(long size) {
+        int maxSize = RcsSettings.getInstance().getMaxImageSharingSize()*1024;
+        return (maxSize > 0 && size > maxSize);
+    }
+    
+	/**
+	 * Check if image capacity is acceptable
+	 * 
+	 * @param imageSize
+	 *            the image size in bytes
+	 * @return ContentSharingError or null if image capacity is acceptable
+	 */
+	private static ContentSharingError isImageCapacityAcceptable(long imageSize) {
+		boolean imageIsToBig = isImageSizeExceeded(imageSize);
+		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? imageSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		if (imageIsToBig) {
+			if (logger.isActivated())
+				logger.warn("Image is too big, reject the image sharing");
+			return new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG);
+		} else {
+			if (storageIsTooSmall) {
+				if (logger.isActivated())
+					logger.warn("Not enough storage capacity, reject the image sharing");
+				return new ContentSharingError(ContentSharingError.NOT_ENOUGH_STORAGE_SPACE);
+			}
+		}
+		return null;
+	}
+	
     /**
      * API connected
      */
@@ -141,11 +179,12 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     			sharingSession = callApi.getImageSharingSession(sessionId);
     			if (sharingSession == null) {
     				// Session not found or expired
-    				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_session_has_expired));
+    				Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_session_has_expired));
     				return;
     			}
-    			sharingSession.addSessionListener(imageSharingEventListener);
     			
+    			sharingSession.addSessionListener(imageSharingEventListener);
+
     			String sizeDesc;
     			long fileSize = sharingSession.getFilesize();
     	    	if (fileSize != -1) {
@@ -153,7 +192,21 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     	    	} else {
     	    		sizeDesc = getString(R.string.label_file_size_unknown);
     	    	}
-    			
+    	    	
+				ContentSharingError error = isImageCapacityAcceptable(fileSize);
+				if (error != null) {
+					rejectInvitation();
+					switch (error.getErrorCode()) {
+					case FileSharingError.MEDIA_SIZE_TOO_BIG:
+						Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_transfer_failed_too_big));
+						break;
+					case FileSharingError.NOT_ENOUGH_STORAGE_SPACE:
+					default:
+						Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_transfer_failed_capacity_too_small));
+					}
+					return;
+				}
+				
     			AlertDialog.Builder builder = new AlertDialog.Builder(this);
     			builder.setTitle(R.string.title_recv_image_sharing);
     			builder.setMessage(getString(R.string.label_from) + " " + remoteContact + "\n" + sizeDesc);
@@ -169,11 +222,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
     			builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
     			builder.show();    			
     		} catch(Exception e) {
-    			handler.post(new Runnable(){
-    				public void run(){
-    					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
-    				}
-    			});
+    			Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_api_failed));
 			}
     	}
     }
@@ -182,11 +231,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      * API disconnected
      */
     public void handleApiDisconnected() {
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_api_disconnected));
 	}
     
     /**
@@ -202,11 +247,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      */
 	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_ims_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_ims_disconnected));
 	}
     
     /**
@@ -214,7 +255,6 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-        	            
             // Set title
             setTitle(R.string.title_recv_image_sharing);
             
@@ -227,44 +267,45 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 		    	TextView size = (TextView)findViewById(R.id.image_size);
 		    	size.setText(getString(R.string.label_file_size, " " + (sharingSession.getFilesize()/1024), " Kb"));
             } catch(Exception e){
-            	Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_api_failed));
+            	Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_api_failed));
             }
             
-            Thread thread = new Thread() {
-            	public void run() {
-                	try {
-                		// Accept the invitation
-            			sharingSession.acceptSession();
-	            	} catch(Exception e) {
-	    				handler.post(new Runnable() { 
-	    					public void run() {
-	    						Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
-	    					}
-	    				});
-	            	}
-            	}
-            };
-            thread.start();
+			new Thread() {
+				public void run() {
+					try {
+						// Accept the invitation
+						sharingSession.acceptSession();
+					} catch (Exception e) {
+						Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_invitation_failed));
+					}
+				}
+			}.start();
         }
     };
     
+	/**
+	 * Reject invitation
+	 */
+	private void rejectInvitation() {
+		new Thread() {
+			public void run() {
+				try {
+					// Reject the invitation
+					sharingSession.removeSessionListener(imageSharingEventListener);
+					sharingSession.rejectSession();
+				} catch (Exception e) {
+				}
+			}
+		}.start();
+	}
+	
+	
     /**
      * Reject button listener
      */
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            Thread thread = new Thread() {
-            	public void run() {
-                	try {
-                		// Reject the invitation
-                		sharingSession.removeSessionListener(imageSharingEventListener);
-                		sharingSession.rejectSession();
-	            	} catch(Exception e) {
-	            	}
-            	}
-            };
-            thread.start();
-            
+            rejectInvitation();            
             // Exit activity
 			finish();
 		}
@@ -286,22 +327,14 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
-			handler.post(new Runnable() { 
-				public void run() {
-					// Display session status
-					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_aborted));
-				}
-			});
+			// Display session status
+			Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_sharing_aborted));
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable() { 
-				public void run() {
-					// Display session status
-					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
-				}
-			});
+			// Display session status
+			Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_sharing_terminated_by_remote));
 		}
 	
 		// Sharing progress
@@ -315,11 +348,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 		
 		// Sharing error
 		public void handleSharingError(final int error) {
-			handler.post(new Runnable() { 
-				public void run() {
-					Utils.showMessageAndExit(ReceiveImageSharing.this, getString(R.string.label_csh_failed, error));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveImageSharing.this, getString(R.string.label_csh_failed, error));
 		}
 		
 		// Image has been transfered

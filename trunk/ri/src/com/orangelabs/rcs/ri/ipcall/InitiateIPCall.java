@@ -332,10 +332,8 @@ public class InitiateIPCall extends Activity implements ClientApiListener, ImsEv
 	/**
 	 * Add IP call notification
 	 * 
-	 * @param context
-	 *            Context
-	 * @param Intent
-	 *            invitation
+	 * @param Context	context
+	 * @param Intent	IPCall invitation
 	 */
 	public static void addIPCallInvitationNotification(Context context,	Intent invitation) {
 		// Initialize settings

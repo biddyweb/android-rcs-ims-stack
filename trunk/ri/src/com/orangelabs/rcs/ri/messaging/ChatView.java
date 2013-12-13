@@ -75,6 +75,7 @@ import com.orangelabs.rcs.service.api.client.messaging.IMessageDeliveryListener;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
 import com.orangelabs.rcs.utils.PhoneUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Chat view
@@ -155,6 +156,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	 */
 	private List<InstantMessage> imReceivedInBackgroundToBeRead = new ArrayList<InstantMessage>();
 
+	private static Logger logger = Logger.getLogger(ChatView.class.getSimpleName());
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -473,13 +476,15 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	 * @param msg Instant message
 	 */
     private void displayReceivedMessage(InstantMessage msg) {
-		String contact = msg.getRemote();
-		String txt;
+		String contact = PhoneUtils.extractNumberFromUri(msg.getRemote());
+    	if (msg.getDisplayName() != null) {
+    		contact = msg.getDisplayName();
+    	}
 		if (msg instanceof GeolocMessage) {
 			GeolocMessage geoloc = (GeolocMessage)msg;
 	        addGeolocHistory(MessageItem.IN, contact, geoloc.getGeoloc());
 		} else {
-			txt = msg.getTextMessage();
+			String txt = msg.getTextMessage();
 			if (txt.equals(WIZZ_MSG)) {
 		    	txt = getString(R.string.label_chat_wizz);
 		        
@@ -495,11 +500,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * API disabled
      */
     public void handleApiDisabled() {
-		handler.post(new Runnable() { 
-			public void run() {
-				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_disabled));
-			}
-		});
+		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disabled));
     }
     
     /**
@@ -522,7 +523,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 
 		    			// Register to receive session events
 						if (chatSession == null) {
-			    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_session_has_expired));
+			    			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_session_has_expired));
 			    			return;
 						}
 
@@ -548,7 +549,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		    			initSession();
 	    			}
 	    		} catch(Exception e) {
-	    			Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_failed));
+	    			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_failed));
 	    		}
 			}
 		});
@@ -570,11 +571,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * API disconnected
      */
     public void handleApiDisconnected() {
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_api_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disconnected));
     }  
     
     /**
@@ -590,11 +587,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      */
 	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ChatView.this, getString(R.string.label_ims_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_ims_disconnected));
 	}
     
     /**
@@ -643,21 +636,13 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
-			handler.post(new Runnable(){
-				public void run(){
-					// Session aborted
-					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_aborted));
-				}
-			});
+			// Session aborted
+			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_aborted));
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable() {
-				public void run() {
-					Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
-				}
-			});
+			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
 		}
 
 		// New text message received
@@ -689,16 +674,12 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				
 		// Chat error
 		public void handleImError(final int error) {
-			handler.post(new Runnable() {
-				public void run() {
-					// Display error
-					if (error == ChatError.SESSION_INITIATION_DECLINED) {
-						Utils.showMessageAndExit(ChatView.this, getString(R.string.label_invitation_declined));
-					} else {
-						Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_failed, error));
-					}					
-				}
-			});
+			// Display error
+			if (error == ChatError.SESSION_INITIATION_DECLINED) {
+				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_invitation_declined));
+			} else {
+				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_failed, error));
+			}
 		}	
 		
 		// Is composing event
@@ -1272,7 +1253,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    public MessageItem(int direction, String contact) {
 	    	this.direction = direction;
 	    	if (direction == IN) {
-	    		this.contact = PhoneUtils.extractNumberFromUri(contact);
+	    		this.contact = contact;
 	    	} else {
 	    		this.contact = contact;
 	    	}
@@ -1370,7 +1351,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         	if (item.getDirection() == MessageItem.OUT) {
         		line = "[" + getString(R.string.label_me) + "] ";
         	} else {
-        		line = "[" + PhoneUtils.extractNumberFromUri(item.getContact()) + "] ";
+        		line = "[" + item.getContact() + "] ";
         	}
         	if (item instanceof GeolocMessageItem) {
         		GeolocMessageItem geoItem = (GeolocMessageItem)item;

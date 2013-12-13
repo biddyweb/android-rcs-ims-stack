@@ -44,19 +44,25 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class HttpsProvisioningService extends Service {
     /**
-     * Intent key
+     * Intent key - Provisioning requested after (re)boot
      */
-	// Provisioning requested after (re)boot
     private static final String FIRST_KEY = "first";
-    // Provisioning requested by user
+
+    /**
+     * Intent key - Provisioning requested by user
+     */
     private static final String USER_KEY = "user";
-    
+
+    /**
+     * Retry Intent
+     */
     private PendingIntent retryIntent = null;
+
     /**
      * Provisioning manager
      */
     HttpsProvisioningManager httpsProvisioningMng;
-    
+
     /**
 	 * Retry action for provisioning failure
 	 */
@@ -82,7 +88,7 @@ public class HttpsProvisioningService extends Service {
 		if (logger.isActivated()) {
 			logger.debug("Start HTTPS provisioning");
 		}
-		// Instantiate the Provisioning manager
+
 		boolean first = false;
 		boolean user = false;
 		if (intent != null) {
@@ -90,19 +96,23 @@ public class HttpsProvisioningService extends Service {
 			user = intent.getBooleanExtra(USER_KEY, false);
 		}
 		String version = RcsSettings.getInstance().getProvisioningVersion();
-		// it makes no sense to start service if version is 0 (unconfigured)
+		// It makes no sense to start service if version is 0 (unconfigured)
 		// if version = 0, then (re)set first to true
 		try {
 			int ver = Integer.parseInt(version);
-			if (ver == 0)
-				first = true;
+            if (ver == 0) {
+                first = true;
+            }
 		} catch (NumberFormatException e) {
+            // Nothing to do
 		}
 		registerReceiver(retryReceiver, new IntentFilter(ACTION_RETRY));
+
 		httpsProvisioningMng = new HttpsProvisioningManager(getApplicationContext(), retryIntent, first, user);
 		if (logger.isActivated()) {
 			logger.debug("Provisioning parameter: boot=" + first + ", user=" + user + ", version=" + version);
 		}
+
 		boolean requestConfig = false;
         if (first) {
             requestConfig = true;

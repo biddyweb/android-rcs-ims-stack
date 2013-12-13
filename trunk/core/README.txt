@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.13
+Release 2.5.14
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,11 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Add method "getSessionDirection" for API sessions.
-- Add management of version/validity -2 and -3 for provisioning.
-- Add 2 columns to the messaging table (provider eventlog) to manage delivery status and displayed status.
-- Use of delivery in group chat is now limited to blackbird version.
-- Add new multi client check according to BB implementation guideline
+- Reject FT & ISh and handle application after accept if not enough disk storage or file too big. 
+- Manage display name for IM in group chat according to RFC 3862.
 
 
 Bugs fixed:
@@ -21,6 +18,16 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+V2.5.14
+- BB Guidelines	Stack: ID_4_11 Clarification on FT feature tags
+- BB Guidelines	Stack: ID_2_8 Clarification on usage of the FT CAP ALWAYS ON parameter
+- BB Guidelines	Stack: ID_2_6 Configuration mechanism over PS without Header Enrichment
+- Issue 186		Stack: Rejoin is not Blackbird compliant
+- Issue 184		Stack: WiFi 1st time registration token parsing overwrites provisioning version
+- Issue 183		Stack: File transfer thumbnail uses wrong content-type if the orignal file is not a jpeg
+- Issue 181		Stack: Capabilities Parcelable may be malformed
+
 
 V2.5.13
 - Issue 178		Stack: Used GSMA release is reset to Albatros once an empty HTTPS provisioning message is received

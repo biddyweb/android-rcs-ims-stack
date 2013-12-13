@@ -56,6 +56,8 @@ import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.StorageUtils;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Received file transfer
@@ -63,6 +65,10 @@ import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
  * @author jexa7410
  */
 public class ReceiveFileTransfer extends Activity implements ClientApiListener, ImsEventListener {
+    /** The logger */
+    private static Logger logger = Logger.getLogger(ReceiveFileTransfer.class.getSimpleName());
+
+    
     /**
      * UI handler
      */
@@ -102,6 +108,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * File thumbnail
      */
     private byte[] thumbnail;
+    
     
     /**
      * File transfer session
@@ -161,11 +168,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
             		// Accept the invitation
         			transferSession.acceptSession();
             	} catch(Exception e) {
-        			handler.post(new Runnable() { 
-        				public void run() {
-        					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
-						}
-	    			});
+        			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
             	}
         	}
         };
@@ -192,14 +195,66 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	/**
      * API disabled
      */
-    public void handleApiDisabled() {
-		handler.post(new Runnable() { 
-			public void run() {
-				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_disabled));
-			}
-		});
+	public void handleApiDisabled() {
+		Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_api_disabled));
+	}
+    
+    /**
+     * Check whether file size exceeds the limit
+     * 
+     * @param size of file
+     * @return {@code true} if file size limit is exceeded, otherwise {@code false}
+     */
+    private static boolean isFileSizeExceeded(long size) {
+        int maxSize = RcsSettings.getInstance().getMaxFileTransferSize()*1024;
+        return (maxSize > 0 && size > maxSize);
     }
-        
+    
+	/**
+	 * Check if file capacity is acceptable
+	 * 
+	 * @param fileSize
+	 * @return FileSharingError or null if file capacity is acceptable
+	 */
+	private static FileSharingError isFileCapacityAcceptable(long fileSize) {
+		boolean fileIsToBig = isFileSizeExceeded(fileSize);
+		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		if (fileIsToBig) {
+			if (logger.isActivated())
+				logger.warn("File is too big, reject the File Transfer");
+			return new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG);
+		} else {
+			if (storageIsTooSmall) {
+				if (logger.isActivated())
+					logger.warn("Not enough storage capacity, reject the File Transfer");
+				return new FileSharingError(FileSharingError.NOT_ENOUGH_STORAGE_SPACE);
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Check if file size is less than maximum or then free space on disk
+	 * @param activity
+	 * @param fileSize
+	 * @return boolean
+	 */
+	private static boolean isCapacityOk(Activity activity, long fileSize) {
+		FileSharingError error = isFileCapacityAcceptable(fileSize);
+		if (error != null) {
+			switch (error.getErrorCode()) {
+			case FileSharingError.MEDIA_SIZE_TOO_BIG:
+				Utils.ShowDialogAndFinish(activity, activity.getString(R.string.label_transfer_failed_too_big));
+				break;
+			case FileSharingError.NOT_ENOUGH_STORAGE_SPACE:
+			default:
+				Utils.ShowDialogAndFinish(activity, activity.getString(R.string.label_transfer_failed_capacity_too_small));
+			}
+			return false;
+		}
+		return true;
+	}
+         
     /**
      * API connected
      */
@@ -209,7 +264,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     		transferSession = messagingApi.getFileTransferSession(sessionId);
 			if (transferSession == null) {
 				// Session not found or expired
-				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_session_has_expired));
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_session_has_expired));
 				return;
 			}
 			transferSession.addSessionListener(fileTransferSessionListener);
@@ -227,10 +282,16 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	        from.setText(getString(R.string.label_from) + " " + remoteContact);
 	    	TextView sizeTxt = (TextView)findViewById(R.id.image_size);
 	    	sizeTxt.setText(size);
-
+	    	    	
 	    	if (autoAccept) {
-	    		// Auto accept
+	    		// Auto accept. Check capacity
+	    		isCapacityOk( ReceiveFileTransfer.this, fileSize);
+	    		// Do not reject: already done by the stack
 	    	} else {
+				if (isCapacityOk( ReceiveFileTransfer.this, fileSize) == false) {
+					rejectInvitation();
+					return;
+				}
 				// Manual accept
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle(R.string.title_recv_file_transfer);
@@ -249,12 +310,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				builder.setNegativeButton(getString(R.string.label_decline), declineBtnListener);
 				builder.show();
 			}
-		} catch(Exception e) {
-			handler.post(new Runnable(){
-				public void run(){					
-					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
-				}
-			});
+		} catch(Exception e) {				
+			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_api_failed));
 		}
     }
 
@@ -263,11 +320,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */
     public void handleApiDisconnected() {
     	// Service has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_api_disconnected));
 	}
 
     /**
@@ -283,11 +336,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */
 	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_ims_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_ims_disconnected));
 	}     
     
     /**
@@ -295,7 +344,6 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {     
-        	  	
         	// Accept invitation
         	acceptInvitation();
         }
@@ -306,7 +354,6 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      */    
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-        	
         	// Reject invitation
         	rejectInvitation();
         	
@@ -331,20 +378,12 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
-			handler.post(new Runnable() { 
-				public void run() {
-					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_sharing_aborted));
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable() { 
-				public void run() {
-					Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
 		}
 	
 		// File transfer progress
@@ -358,17 +397,17 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		
 		// File transfer error
 		public void handleTransferError(final int error) {
-			handler.post(new Runnable() { 
-				public void run() {
-                    if (error == FileSharingError.MEDIA_SIZE_TOO_BIG) {
-                        Utils.showMessageAndExit(ReceiveFileTransfer.this,
-                                getString(R.string.label_transfer_failed_too_big));
-                    } else {
-                        Utils.showMessageAndExit(ReceiveFileTransfer.this,
-                                getString(R.string.label_transfer_failed, error));
-                    }
-				}
-			});
+			switch (error) {
+			case FileSharingError.MEDIA_SIZE_TOO_BIG:
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_transfer_failed_too_big));
+				break;
+			case FileSharingError.NOT_ENOUGH_STORAGE_SPACE:
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_transfer_failed_capacity_too_small));
+				break;
+			default:
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_transfer_failed, error));
+				break;
+			}
 		}
 
 		// File has been transfered
@@ -443,7 +482,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * @param invitation Intent invitation
      */
     public static void addFileTransferInvitationNotification(Context context, Intent invitation) {
-    	// Instanciate settings
+    	// Instantiate settings
         RcsSettings.createInstance(context);
     	
     	// Create notification
@@ -558,11 +597,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
-					}
-				});
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 			}
 		}
 	};
@@ -584,11 +619,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
-					}
-				});
+				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 			}
 		}
 	};

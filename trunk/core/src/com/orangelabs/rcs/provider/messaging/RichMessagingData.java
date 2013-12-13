@@ -41,6 +41,7 @@ public class RichMessagingData {
 	public static final String KEY_IS_SPAM = "is_spam";
 	public static final String KEY_CHAT_ID = "chat_id";
 	public static final String KEY_CHAT_REJOIN_ID = "chat_rejoin_id";
+	public static final String KEY_DISPLAY_NAME = "display_name";
 	
 	// Fields for file transfer
 	public static final String KEY_MIME_TYPE = "mime_type";
@@ -51,6 +52,7 @@ public class RichMessagingData {
 	public static final String KEY_NUMBER_MESSAGES ="number_of_messages";
 	
 	// Fields for group IMDN: group chat or file transfer group
-	public static final String KEY_IMDN_DELIVERED_LIST ="imdn_delivered";
-	public static final String KEY_IMDN_DISPLAYED_LIST ="imdn_displayed";
+	public static final String KEY_IMDN_DELIVERED_LIST = "imdn_delivered";
+	public static final String KEY_IMDN_DISPLAYED_LIST = "imdn_displayed";
+
 }

@@ -179,10 +179,7 @@ public class HttpsProvisioningManager {
     			
     			// Check received network info
     	    	NetworkInfo networkInfo = networkConnection.getConnectionMngr().getActiveNetworkInfo();
-    			if ((networkInfo != null) &&
-    			     // Changed by Deutsche Telekom (workaround)
-					 //(networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) &&
-						 networkInfo.isConnected()) {
+    			if ((networkInfo != null) && networkInfo.isConnected()) {
                     isPending = true;
     				if (logger.isActivated()) {
     					logger.debug("Connected to data network");
@@ -193,7 +190,7 @@ public class HttpsProvisioningManager {
     	                }
     	            };
     	            t.start();
-    				
+
                     // Unregister network state listener
     	            networkConnection.unregisterNetworkStateListener();
                     isPending = false;
@@ -512,10 +509,9 @@ public class HttpsProvisioningManager {
             }
 			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 
-			
 			// Support broad variety of different cookie types (not just Netscape but RFC 2109 and RFC2965 compliant ones, too)  
 			HttpClientParams.setCookiePolicy(params, CookiePolicy.BROWSER_COMPATIBILITY);
-						
+
 			ClientConnectionManager cm = new SingleClientConnManager(params, schemeRegistry);
 			DefaultHttpClient client = new DefaultHttpClient(cm, params);
 			CookieStore cookieStore = (CookieStore) new BasicCookieStore();
@@ -531,7 +527,7 @@ public class HttpsProvisioningManager {
             if (logger.isActivated()) {
                 logger.debug("HTTP provisioning on mobile network");
             }
-            
+
 			// Execute first HTTP request
             String requestUri = primaryUri;
             HttpResponse response = executeRequest("http", requestUri, client, localContext);
@@ -546,7 +542,11 @@ public class HttpsProvisioningManager {
 
             result.code = response.getStatusLine().getStatusCode(); 
 			result.content = new String(EntityUtils.toByteArray(response.getEntity()), "UTF-8");
-			if (result.code != 200) {
+            if (result.code == 511) {
+                // Blackbird guidelines ID_2_6 Configuration mechanism over PS without Header Enrichment
+                // Use SMS provisionning on PS data network if server reply 511 NETWORK AUTHENTICATION REQUIRED 
+                return sendFirstRequestsToRequireOTP(imsi, imei, null, primaryUri, secondaryUri, client, localContext);
+            } else if (result.code != 200) {
                 if (result.code == 503) {
                     result.retryAfter = getRetryAfter(response);
                 }

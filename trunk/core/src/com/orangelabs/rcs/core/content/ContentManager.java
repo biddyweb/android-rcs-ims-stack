@@ -204,34 +204,37 @@ public class ContentManager{
 		 // Parse the remote SDP part
         SdpParser parser = new SdpParser(sdp);
     	Vector<MediaDescription> media = parser.getMediaDescriptions();
-    	if (media.size()==0) { // there is no media in SDP
-    		return null;
-    	}
-    	MediaDescription desc = media.elementAt(0);
-    	if (media.size()==1) { // if only one media in SDP, test if 'video', if not then return null 		
-    		if (!desc.name.equals("video")) {
-    			return null;
-    		}	
-    	}	
-    	if (media.size()==2) { // if two media in SDP, test if first 'video', if not then choose second and test if video, if not return null
-    		if (!desc.name.equals("video")) {
-    			desc = media.elementAt(1);
-    			if (!desc.name.equals("video")) {
-    				return null;
-    			}
-    		}	
-    	}		
-	
-        String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
+    	LiveVideoContent result = null;
 
-        // Extract the video encoding
-        String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
-        String codec = encoding.toLowerCase().trim();
-        int index = encoding.indexOf("/");
-		if (index != -1) {
-			codec = encoding.substring(0, index);
-        }
-		return createLiveVideoContent(codec);
+    	if (media.size()==0) { // there is no media in SDP
+    		return result;
+    	}
+    	
+    	MediaDescription desc = null;    
+    	boolean found = false;
+    	
+    	for (int i=0; i<media.size(); i++){
+    		desc = media.elementAt(i);
+    		if (desc.name.equals("video")){
+    			found = true;
+    			break;
+    		}
+    	}
+
+    	if (found){
+    		String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
+
+            // Extract the video encoding
+            String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
+            String codec = encoding.toLowerCase().trim();
+            int index = encoding.indexOf("/");
+    		if (index != -1) {
+    			codec = encoding.substring(0, index);
+            }
+    		result = createLiveVideoContent(codec);
+    	}
+    	return result;
+
 	}
 	
 	/**
@@ -244,36 +247,36 @@ public class ContentManager{
 		 // Parse the remote SDP part
         SdpParser parser = new SdpParser(sdp);
     	Vector<MediaDescription> media = parser.getMediaDescriptions(); // TODO replace with getMediaDescriptions(audio)
+    	LiveAudioContent result = null;
+    	
     	if (media.size()==0) {
-    		return null;
+    		return result;
     	}
-		MediaDescription desc = media.elementAt(0);
-    	if (media.size()==1) { // if only one media in SDP, test if 'audio', if not then return null 		
-    		if (!desc.name.equals("audio")) {
-    			return null;
-    		}	
+    	
+		MediaDescription desc = null;    
+    	boolean found = false;
+    	
+    	for (int i=0; i<media.size(); i++){
+    		desc = media.elementAt(i);
+    		if (desc.name.equals("audio")){
+    			found = true;
+    			break;
+    		}
     	}	
-    	if (media.size()==2) { // if two media in SDP, test if first 'audio', if not then choose second and test if 'audio', if not return null
-    		if (!desc.name.equals("audio")) {
-    			desc = media.elementAt(1);
-    			if (!desc.name.equals("audio")) {
-    				return null;
-    			}
-    		}	
-    	}	
-		if (!desc.name.equals("audio")) {
-			return null;
-		}	
-        String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
+		
+    	if (found){
+    		String rtpmap = desc.getMediaAttribute("rtpmap").getValue();
 
-        // Extract the audio encoding
-        String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
-        String codec = encoding.toLowerCase().trim();        
-        int index = encoding.indexOf("/");
-		if (index != -1) {
-			codec = encoding.substring(0, index);
-        }
-		return createLiveAudioContent(codec);
+            // Extract the audio encoding
+            String encoding = rtpmap.substring(rtpmap.indexOf(desc.payload)+desc.payload.length()+1);
+            String codec = encoding.toLowerCase().trim();        
+            int index = encoding.indexOf("/");
+    		if (index != -1) {
+    			codec = encoding.substring(0, index);
+            }
+    		result = createLiveAudioContent(codec);
+    	}
+        return result ;
 	}
 
 	/**

@@ -198,9 +198,9 @@ public abstract class GroupChatSession extends ChatSession {
 		boolean useImdn = getImdnManager().isImdnActivated();
         String msgId = ChatUtils.generateMessageId();
         String imdnMsgId = null;
-		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+       
+		String from = ImsModule.IMS_USER_PROFILE.getPublicAddress();
 		String to = ChatUtils.ANOMYNOUS_URI;
-		
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN delivered
@@ -220,7 +220,7 @@ public abstract class GroupChatSession extends ChatSession {
         }
 
 		// Update rich messaging history
-		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn);
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn, null);
 		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not
@@ -245,7 +245,7 @@ public abstract class GroupChatSession extends ChatSession {
 		boolean useImdn = getImdnManager().isImdnActivated();
         String msgId = ChatUtils.generateMessageId();
         String imdnMsgId = null;
-		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+		String from = ImsModule.IMS_USER_PROFILE.getPublicAddress();
 		String to = ChatUtils.ANOMYNOUS_URI;
 		String geoDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
 		
@@ -268,7 +268,7 @@ public abstract class GroupChatSession extends ChatSession {
         }
 
 		// Update rich messaging history
-		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn);
+		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn, null);
 		RichMessaging.getInstance().addOutgoingGeoloc(geolocMsg, this);
 
 		// Check if message has been sent with success or not

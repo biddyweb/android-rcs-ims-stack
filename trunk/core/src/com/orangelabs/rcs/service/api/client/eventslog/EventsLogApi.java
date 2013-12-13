@@ -496,7 +496,8 @@ public class EventsLogApi extends ClientApi {
 						RichMessagingData.KEY_CONTACT,
 						RichMessagingData.KEY_DATA,
 						RichMessagingData.KEY_TIMESTAMP,
-						RichMessagingData.KEY_STATUS },
+						RichMessagingData.KEY_STATUS,
+						RichMessagingData.KEY_DISPLAY_NAME},
 				RichMessagingData.KEY_CHAT_SESSION_ID + "='" + sessionId + "'",
 				null, RichMessagingData.KEY_TIMESTAMP + " DESC");
 		while (cursor.moveToNext()) {
@@ -505,7 +506,7 @@ public class EventsLogApi extends ClientApi {
 				boolean imdnDisplayedRequested = (cursor.getInt(4) == EventsLogApi.STATUS_REPORT_REQUESTED);
 				result = new InstantMessage(cursor.getString(0),
 						cursor.getString(1), msg, imdnDisplayedRequested,
-						new Date(cursor.getLong(3)));
+						new Date(cursor.getLong(3)),cursor.getString(5));
 				break;
 			}
 		}

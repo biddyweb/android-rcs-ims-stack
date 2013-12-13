@@ -191,19 +191,24 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
         // Open the MSRP session
         msrpMgr.openMsrpSession();
 
-        try {
-            // Start sending data chunks
-            byte[] data = getContent().getData();
-            InputStream stream = new ByteArrayInputStream(data);
-            msrpMgr.sendChunks(stream, getFileTransferId(), getContent().getEncoding(), getContent().getSize());
-        } catch(Exception e) {
-            // Unexpected error
-            if (logger.isActivated()) {
-                logger.error("Session initiation has failed", e);
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    // Start sending data chunks
+                    byte[] data = getContent().getData();
+                    InputStream stream = new ByteArrayInputStream(data);
+                    msrpMgr.sendChunks(stream, getFileTransferId(), getContent().getEncoding(), getContent().getSize());
+                } catch(Exception e) {
+                    // Unexpected error
+                    if (logger.isActivated()) {
+                        logger.error("Session initiation has failed", e);
+                    }
+                    handleError(new ImsServiceError(ImsServiceError.UNEXPECTED_EXCEPTION,
+                            e.getMessage()));
+                }
             }
-            handleError(new ImsServiceError(ImsServiceError.UNEXPECTED_EXCEPTION,
-                    e.getMessage()));
-        }
+        };
+        thread.start();
     }
 
     /**
@@ -296,7 +301,7 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-        if (isInterrupted() || getDialogPath().isSessionTerminated()) {
+        if (isSessionInterrupted() || isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}
 

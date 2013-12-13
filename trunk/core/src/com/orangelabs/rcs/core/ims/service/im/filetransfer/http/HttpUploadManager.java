@@ -428,7 +428,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	        outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + lineEnd);
 	        outputStream.writeBytes("Content-Disposition: form-data; name=\"Thumbnail\"; filename=\"thumb_"
 	                + filename + "\"" + lineEnd);
-	        outputStream.writeBytes("Content-Type: " + content.getEncoding() + lineEnd);
+	        outputStream.writeBytes("Content-Type: image/jpeg" + lineEnd);
 	        outputStream.writeBytes("Content-Length: " + thumbnail.length);
 	        outputStream.writeBytes(lineEnd + lineEnd);
 	        outputStream.write(thumbnail);

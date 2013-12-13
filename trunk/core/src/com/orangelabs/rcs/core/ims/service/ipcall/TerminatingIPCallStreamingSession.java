@@ -265,7 +265,7 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 	 */
 	private String buildCallInitSdpResponse() {
 		if (logger.isActivated()) {
-			logger.debug("Build SDP proposal for call init");
+			logger.debug("Build SDP response for call init");
 		}
 		
 		// Parse the remote SDP part
@@ -292,7 +292,7 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			selectedAudioCodec = AudioCodecManager.negociateAudioCodec(getAudioRenderer().getSupportedAudioCodecs(), proposedAudioCodecs);
 			if (selectedAudioCodec == null) {
 				if (logger.isActivated()) {
-					logger.debug("Proposed audio codecs are not supported");
+					logger.info("Proposed audio codecs are not supported");
 				}
 
 				// Send a 415 Unsupported media type response
@@ -327,14 +327,17 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
 			  	
 	    	String audioSdp = AudioSdpBuilder.buildSdpAnswer(selectedAudioCodec.getMediaCodec(),
-	    			getAudioPlayer().getLocalRtpPort());
-	        
+	    			getAudioRenderer().getLocalRtpPort());
+	       
+	    	
 	    	String videoSdp = "";
 	        if ((getVideoContent() != null) && (getVideoRenderer() != null)){
 	        	if (selectedVideoCodec != null) {
 	            	videoSdp = VideoSdpBuilder.buildSdpAnswer(selectedVideoCodec.getMediaCodec(),
 	            			getVideoRenderer().getLocalRtpPort(), mediaVideo);
-	            }	
+	            	videoSdp.concat("a=sendrcv" + SipUtils.CRLF);
+	            }
+	        	
 	        }
 	        
 	     // Build audioSdp and videoSdp part
@@ -348,9 +351,8 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 	        	"s=-" + SipUtils.CRLF +
 	        	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            "t=0 0" + SipUtils.CRLF +
-	            audioSdp +
-	            videoSdp +
-	            "a=sendrcv" + SipUtils.CRLF;
+	            audioSdp + "a=sendrcv" + SipUtils.CRLF +
+	            videoSdp ;
 	        
 			return sdp;
 	        
@@ -396,11 +398,6 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 			videoRemotePort = mediaVideo.port;
 		}
 
-		if (logger.isActivated()) {
-			logger.info("Extract Audio/Video ports - Done");
-		}
-
-
 		// Set the audio codec and listener in Audio Renderer
 		getAudioRenderer().setAudioCodec(selectedAudioCodec.getMediaCodec());
 		getAudioRenderer().addListener(new AudioPlayerEventListener(this));
@@ -417,17 +414,17 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
 					+ selectedAudioCodec.getMediaCodec().getCodecName());
 		}
 
-		// // Open the audio renderer
-		// getAudioRenderer().open(remoteHost, audioRemotePort);
-		// if (logger.isActivated()) {
-		// logger.debug("Open audio renderer with remoteHost ("+remoteHost+") and remotePort ("+audioRemotePort+")");
-		// }
-		//
-		// // Open the audio player
-		// getAudioPlayer().open(remoteHost, audioRemotePort);
-		// if (logger.isActivated()) {
-		// logger.debug("Open audio player on renderer RTP stream");
-		// }
+//		 // Open the audio renderer
+//		 getAudioRenderer().open(remoteHost, audioRemotePort);
+//		 if (logger.isActivated()) {
+//		 logger.debug("Open audio renderer with remoteHost ("+remoteHost+") and remotePort ("+audioRemotePort+")");
+//		 }
+//		
+//		 // Open the audio player
+//		 getAudioPlayer().open(remoteHost, audioRemotePort);
+//		 if (logger.isActivated()) {
+//		 logger.debug("Open audio player on renderer RTP stream");
+//		 }
 
 		// Set the video codec in Video Player/Renderer
 		if ((getVideoRenderer() != null) && (getVideoPlayer() != null)
@@ -483,13 +480,12 @@ public class TerminatingIPCallStreamingSession extends IPCallStreamingSession {
      * @throws Exception 
      */
     public void startMediaSession() throws Exception {
-        // Already done in run() method
     	
-    	// Start the audio renderer
-		// getAudioRenderer().start();
-
-		// Start the audio player
-		// getAudioPlayer().start();
+//    	// Start the audio renderer
+//		 getAudioRenderer().start();
+//
+//		// Start the audio player
+//		 getAudioPlayer().start();
 
 
 		// Start the video renderer and video player

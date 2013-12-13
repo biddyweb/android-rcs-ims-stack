@@ -210,11 +210,29 @@ public class ProvisioningInfo {
     }
 
     /**
+     * Set token
+     *
+     * @param token
+     */
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    /**
      * Get token validity
      *
      * @return token validity
      */
     public long getTokenValidity() {
         return tokenValidity;
+    }
+
+    /**
+     * Set token validity
+     *
+     * @return token validity
+     */
+    public void setTokenValidity(long tokenValidity) {
+        this.tokenValidity = tokenValidity;
     }
 }

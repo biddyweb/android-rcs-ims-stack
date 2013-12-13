@@ -207,64 +207,64 @@ public class LocalHoldInactive extends HoldManager {
 	 */
 	public void holdMediaSession() {
 		// if (audioRenderer != null) {
-				// // Close the audio renderer
-				// try {
-				// audioRenderer.stop();
-				// audioRenderer.close();
-				// if (logger.isActivated()) {
-				// logger.info("Stop and Close the audio renderer");
-				// }
-				// } catch (RemoteException e) {
-				// if (logger.isActivated()) {
-				// logger.error("Exception when closing the audio renderer", e);
-				// }
-				// }
-				// }
-				// if (audioPlayer != null) {
-				// // Close the audio player
-				// try {
-				// audioPlayer.stop();
-				// audioPlayer.close();
-				// if (logger.isActivated()) {
-				// logger.info("Stop and Close the audio player");
-				// }
-				// } catch (RemoteException e) {
-				// if (logger.isActivated()) {
-				// logger.error("Exception when closing the audio player", e);
-				// }
-				// }
-				// }
+		// // Close the audio renderer
+		// try {
+		// audioRenderer.stop();
+		// audioRenderer.close();
+		// if (logger.isActivated()) {
+		// logger.info("Stop and Close the audio renderer");
+		// }
+		// } catch (RemoteException e) {
+		// if (logger.isActivated()) {
+		// logger.error("Exception when closing the audio renderer", e);
+		// }
+		// }
+		// }
+		// if (audioPlayer != null) {
+		// // Close the audio player
+		// try {
+		// audioPlayer.stop();
+		// audioPlayer.close();
+		// if (logger.isActivated()) {
+		// logger.info("Stop and Close the audio player");
+		// }
+		// } catch (RemoteException e) {
+		// if (logger.isActivated()) {
+		// logger.error("Exception when closing the audio player", e);
+		// }
+		// }
+		// }
 
-				if (session.getVideoRenderer() != null) {
-					// Close the video renderer
-					try {
-						session.getVideoRenderer().stop();
-						session.getVideoRenderer().close();
-						if (logger.isActivated()) {
-							logger.info("Stop and close video renderer");
-						}
-					} catch (RemoteException e) {
-						if (logger.isActivated()) {
-							logger.error("Exception when closing the video renderer", e);
-						}
-					}
+		if (session.getVideoRenderer() != null) {
+			// Close the video renderer
+			try {
+				session.getVideoRenderer().stop();
+				session.getVideoRenderer().close();
+				if (logger.isActivated()) {
+					logger.info("Stop and close video renderer");
 				}
-				if (session.getVideoPlayer() != null) {
-					// Close the video player
-					try {
-						session.getVideoPlayer().stop();
-						session.getVideoPlayer().close();
-						if (logger.isActivated()) {
-							logger.info("stop and close video player");
-						}
-					} catch (Exception e) {
-						if (logger.isActivated()) {
-							logger.error("Exception when closing the video player", e);
-						}
-					}
+			} catch (RemoteException e) {
+				if (logger.isActivated()) {
+					logger.error("Exception when closing the video renderer", e);
 				}
-				
-				HoldManager.state = HoldManager.HOLD;
+			}
+		}
+		if (session.getVideoPlayer() != null) {
+			// Close the video player
+			try {
+				session.getVideoPlayer().stop();
+				session.getVideoPlayer().close();
+				if (logger.isActivated()) {
+					logger.info("stop and close video player");
+				}
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Exception when closing the video player", e);
+				}
+			}
+		}
+
+		HoldManager.state = HoldManager.HOLD;
 	}
 
 	

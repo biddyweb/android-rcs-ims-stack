@@ -42,28 +42,5 @@ public class IPCallApiIntents {
      */
 	public final static String IPCALL_INVITATION = "com.orangelabs.rcs.ipcall.IPCALL_INVITATION";
 
-	/**
-     * Intent broadcasted when an action to add video has been received
-     * 
-     * <p>The intent will have the following extra values:
-     * <ul>
-     *   <li><em>sessionId</em> - Session ID of the IP call session.</li>
-     *   <li><em>videotype</em> - Video encoding.</li>
-     *   <li><em>videowidth</em> - Width of the video.</li>
-     *   <li><em>videoheight</em> - Height of the video.</li>
-     * </ul>
-     * </ul>
-     */
-	public final static String IPCALL_ADD_VIDEO = "com.orangelabs.rcs.ipcall.IPCALL_ADD_VIDEO";
-	
-	/**
-     * Intent broadcasted when an action to remove video has been received
-     * 
-     * <p>The intent will have the following extra values:
-     * <ul>
-     *   <li><em>sessionId</em> - Session ID of the IP call session.</li>
-     * </ul>
-     * </ul>
-     */
-	public final static String IPCALL_REMOVE_VIDEO = "com.orangelabs.rcs.ipcall.IPCALL_REMOVE_VIDEO";
+
 }

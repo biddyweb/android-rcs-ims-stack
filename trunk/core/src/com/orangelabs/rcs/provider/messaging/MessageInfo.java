@@ -46,6 +46,11 @@ public class MessageInfo {
     private String sessionId;
 
     /**
+     * Status of message
+     */
+    private int status;
+
+    /**
      * Constructor
      *
      * @param msgId msgId
@@ -53,11 +58,12 @@ public class MessageInfo {
      * @param type type of message
      * @param sessionId sessionId
      */
-    public MessageInfo(String msgId, String contact, int type, String sessionId) {
+    public MessageInfo(String msgId, String contact, int type, String sessionId, int status) {
         this.msgId = msgId;
         this.contact = contact;
         this.type = type;
         this.sessionId = sessionId;
+        this.status = status;
     }
 
     /**
@@ -94,5 +100,14 @@ public class MessageInfo {
      */
     public String getSessionId() {
         return sessionId;
+    }
+
+    /**
+     * Get status
+     *
+     * @return status
+     */
+    public int getStatus() {
+        return status;
     }
 }

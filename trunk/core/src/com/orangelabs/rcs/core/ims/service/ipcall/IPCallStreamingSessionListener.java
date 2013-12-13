@@ -54,7 +54,7 @@ public interface IPCallStreamingSessionListener extends ImsSessionListener  {
      * @param videoWidth
      * @param videoHeight
      */
-    public void handleAddVideoInvitation(String videoEncoding, int videoWidth, int videoHeight);
+    public void handleAddVideo(String videoEncoding, int videoWidth, int videoHeight);
 
     /**
      * Remove Video Invitation

@@ -29,7 +29,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
@@ -44,15 +43,12 @@ import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Receive chat
  */
 public class ReceiveChat extends Activity implements ClientApiListener, ImsEventListener  {
-	/**
-     * UI handler
-     */
-    private Handler handler = new Handler();
     
     /**
 	 * Messaging API 
@@ -88,11 +84,15 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      * Chat session
      */
     private IChatSession chatSession = null;
+    
+    /** The logger */
+    private static Logger logger = Logger.getLogger(ReceiveChat.class.getSimpleName());
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+		if (logger.isActivated())
+			logger.debug("onCreate");
         // Set title
         setTitle(R.string.title_recv_chat);
         
@@ -116,6 +116,13 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		if (logger.isActivated())
+			logger.debug("onDestroy");
+		try {
+			if (chatSession != null)
+				chatSession.removeSessionListener(chatSessionListener);
+		} catch (RemoteException e) {
+		}
 
 		// Disconnect messaging API
 		messagingApi.removeApiEventListener(this);
@@ -126,11 +133,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      * API disabled
      */
     public void handleApiDisabled() {
-		handler.post(new Runnable() { 
-			public void run() {
-				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_disabled));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_api_disabled));
     }
     
     /**
@@ -142,7 +145,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 			chatSession = messagingApi.getChatSession(sessionId);
 			if (chatSession == null) {
 				// Session not found or expired
-				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_session_has_expired));
+				Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_session_has_expired));
 				return;
 			}
 			chatSession.addSessionListener(chatSessionListener);
@@ -168,11 +171,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
     			builder.show();
             }
 		} catch(Exception e) {
-			handler.post(new Runnable(){
-				public void run(){
-					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_failed));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_api_failed));
 		}
     }
 
@@ -180,11 +179,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      * API disconnected
      */
     public void handleApiDisconnected() {
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_api_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_api_disconnected));
     }
     
     /**
@@ -200,11 +195,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      */
 	public void handleImsDisconnected(int reason) {
     	// IMS has been disconnected
-		handler.post(new Runnable(){
-			public void run(){
-				Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_ims_disconnected));
-			}
-		});
+		Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_ims_disconnected));
 	}    
     
     /**
@@ -212,21 +203,16 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      */
     private OnClickListener acceptBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            Thread thread = new Thread() {
+            new Thread() {
             	public void run() {
                 	try {
                 		// Accept the invitation
             			chatSession.acceptSession();
 	            	} catch(Exception e) {
-	        			handler.post(new Runnable() { 
-	        				public void run() {
-	        					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
-	        				}
-	        			});
+	        			Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_invitation_failed));
 	            	}
             	}
-            };
-            thread.start();
+            }.start();
         }
     };
 
@@ -235,7 +221,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      */
     private OnClickListener declineBtnListener = new OnClickListener() {
         public void onClick(DialogInterface dialog, int which) {
-            Thread thread = new Thread() {
+            new Thread() {
             	public void run() {
                 	try {
                 		// Reject the invitation
@@ -243,9 +229,7 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	            	} catch(Exception e) {
 	            	}
             	}
-            };
-            thread.start();
-
+            }.start();
             // Exit activity
 			finish();
         }
@@ -278,43 +262,26 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	        	intent.putExtra("sessionId", sessionId);
 	        	startActivity(intent);
-
 	        	// Exit activity
-	        	finish();     
+	        	finish();
 			} catch(Exception e) {
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
-					}
-				});
+				Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_invitation_failed));
 			}
 		}
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
-			handler.post(new Runnable(){
-				public void run(){
-					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_declined));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_invitation_declined));
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable(){
-				public void run(){
-					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_chat_terminated_by_remote));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_chat_terminated_by_remote));
 		}
 		
 		// Chat error
 		public void handleImError(final int error) {
-			handler.post(new Runnable(){
-				public void run(){
-					Utils.showMessageAndExit(ReceiveChat.this, getString(R.string.label_invitation_failed));
-				}
-			});
+			Utils.ShowDialogAndFinish(ReceiveChat.this, getString(R.string.label_invitation_failed));
 		}
 
 		// Receive a message

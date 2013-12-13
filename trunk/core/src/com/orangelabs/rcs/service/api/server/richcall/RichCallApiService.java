@@ -508,7 +508,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 	    			RichCallData.STATUS_STARTED);
 
 			// Update rich messaging history
-			GeolocMessage geolocMsg = new GeolocMessage(null, contact, geoloc, false);
+			GeolocMessage geolocMsg = new GeolocMessage(null, contact, geoloc, false, null);
 			RichMessaging.getInstance().addOutgoingGeoloc(geolocMsg);
 
 			// Add session in the list

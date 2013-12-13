@@ -40,6 +40,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransfer
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileDescription;
 import com.orangelabs.rcs.platform.file.FileFactory;
+import com.orangelabs.rcs.provider.messaging.MessageInfo;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
@@ -799,22 +800,50 @@ public class MessagingApiService extends IMessagingApi.Stub {
      */
     public void handleMessageDeliveryStatus(String contact, String msgId, String status) {
     	synchronized(lock) {
-			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);
-			
-	  		// Notify message delivery listeners
-			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
-	            } catch(Exception e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
-    	}
+            if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+                MessageInfo info = RichMessaging.getInstance().getMessageInfo(msgId);
+                // If "displayed" happens before "delivered, generate a handle delivered
+                if (info.getStatus() == EventsLogApi.STATUS_DELIVERED) {
+                    updateStatus(msgId, status, contact);
+                } else {
+                    updateStatus(msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED, contact);
+                    updateStatus(msgId, status, contact);
+                }
+            } else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+                MessageInfo info = RichMessaging.getInstance().getMessageInfo(msgId);
+                // Nothing to do if already displayed
+                if (info.getStatus() != EventsLogApi.STATUS_DISPLAYED) {
+                    updateStatus(msgId, status, contact);
+                }
+            } else {
+                updateStatus(msgId, status, contact);
+            }
+        }
+    }
+
+    /**
+     * Update status of a message
+     *
+     * @param msgId Message ID
+     * @param status Delivery status
+     * @param contact the contact who notified delivery
+     */
+    private void updateStatus(String msgId, String status, String contact) {
+        // Update rich messaging history
+        RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status, contact);
+
+        // Notify event listeners
+        final int N = listeners.beginBroadcast();
+        for (int i=0; i < N; i++) {
+            try {
+                listeners.getBroadcastItem(i).handleMessageDeliveryStatus(contact, msgId, status);
+            } catch(Exception e) {
+                if (logger.isActivated()) {
+                    logger.error("Can't notify listener", e);
+                }
+            }
+        }
+        listeners.finishBroadcast();
     }
 
     /**

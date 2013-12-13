@@ -521,8 +521,8 @@ public final class ContactsManager {
 		boolean isRegistered = (newInfo.getRegistrationState() == ContactInfo.REGISTRATION_STATUS_ONLINE);
 		Capabilities newCapabilities = newInfo.getCapabilities();
 		values.put(RichAddressBookData.KEY_CAPABILITY_CS_VIDEO, Boolean.toString(newCapabilities.isCsVideoSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER, Boolean.toString((newCapabilities.isFileTransferSupported() && isRegistered)||
-				(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact())));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER, Boolean.toString((newCapabilities.isFileTransferSupported() && isRegistered) ||
+                (RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact())));
 		values.put(RichAddressBookData.KEY_CAPABILITY_IMAGE_SHARING, Boolean.toString(newCapabilities.isImageSharingSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_IM_SESSION, Boolean.toString((newCapabilities.isImSessionSupported() && isRegistered)||
 				(RcsSettings.getInstance().isImAlwaysOn() && newInfo.isRcsContact())));
@@ -532,10 +532,10 @@ public final class ContactsManager {
 		values.put(RichAddressBookData.KEY_CAPABILITY_GEOLOCATION_PUSH, Boolean.toString(newCapabilities.isGeolocationPushSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_IP_VOICE_CALL, Boolean.toString(newCapabilities.isIPVoiceCallSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_IP_VIDEO_CALL, Boolean.toString(newCapabilities.isIPVideoCallSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString(newCapabilities.isFileTransferHttpSupported() && isRegistered));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_HTTP, Boolean.toString((newCapabilities.isFileTransferHttpSupported() && isRegistered) ||
+                (RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact())));
 		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_THUMBNAIL, Boolean.toString(newCapabilities.isFileTransferThumbnailSupported() && isRegistered));
-		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString((newCapabilities.isFileTransferStoreForwardSupported() && isRegistered) ||
-				(RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact())));
+		values.put(RichAddressBookData.KEY_CAPABILITY_FILE_TRANSFER_SF, Boolean.toString(newCapabilities.isFileTransferStoreForwardSupported() && isRegistered));
 		values.put(RichAddressBookData.KEY_CAPABILITY_GROUP_CHAT_SF, Boolean.toString(newCapabilities.isGroupChatStoreForwardSupported() && isRegistered));
 
 		// Save the capabilities extensions
@@ -675,8 +675,7 @@ public final class ContactsManager {
     				ops.add(op);
     			}
     			// File transfer
-    			// For FT, also check if the FT S&F is activated, for RCS contacts
-    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, (newInfo.getCapabilities().isFileTransferSupported() && isRegistered)||(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()), oldInfo.getCapabilities().isFileTransferSupported());
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER, newInfo.getCapabilities().isFileTransferSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -727,7 +726,8 @@ public final class ContactsManager {
     				ops.add(op);
     			}
     			// File transfer HTTP
-    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP, newInfo.getCapabilities().isFileTransferHttpSupported() && isRegistered, oldInfo.getCapabilities().isFileTransferHttpSupported());
+                // For FToHTTP, also check if the FT S&F is activated, for RCS contacts
+    			op = modifyMimeTypeForContact(rcsRawContactId, contact, MIMETYPE_CAPABILITY_FILE_TRANSFER_HTTP, (newInfo.getCapabilities().isFileTransferHttpSupported() && isRegistered) || (RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()), oldInfo.getCapabilities().isFileTransferHttpSupported());
     			if (op!=null){
     				ops.add(op);
     			}
@@ -2486,9 +2486,9 @@ public final class ContactsManager {
 
 		// File transfer. This capability is enabled:
 		// - if the capability is present and the contact is registered
-		// - if the FT S&F is enabled and the contact is RCS capable		
-		capabilities.setFileTransferSupport((capabilities.isFileTransferSupported() && isRegistered) ||
-				(RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()));
+        // - if the FT CAP ALWAYS ON is enabled and the contact is RCS capable
+		capabilities.setFileTransferSupport((capabilities.isFileTransferSupported() && isRegistered) || 
+		        (RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact()));
 		
 		// Image sharing
 		capabilities.setImageSharingSupport(capabilities.isImageSharingSupported() && isRegistered);
@@ -2509,11 +2509,13 @@ public final class ContactsManager {
 		capabilities.setFileTransferThumbnailSupport(capabilities.isFileTransferThumbnailSupported() && isRegistered);
 
 		// FT HTTP
-		capabilities.setFileTransferHttpSupport(capabilities.isFileTransferHttpSupported() && isRegistered);
+        // - if the capability is present and the contact is registered
+        // - if the FT S&F is enabled and the contact is RCS capable    
+		capabilities.setFileTransferHttpSupport((capabilities.isFileTransferHttpSupported() && isRegistered) ||
+		        (RcsSettings.getInstance().isFileTransferStoreForwardSupported() && newInfo.isRcsContact()));
 		
 		// FT S&F
-		capabilities.setFileTransferStoreForwardSupport((capabilities.isFileTransferStoreForwardSupported() && isRegistered)||
-				(RcsSettings.getInstance().isFtAlwaysOn() && newInfo.isRcsContact()));
+		capabilities.setFileTransferStoreForwardSupport(capabilities.isFileTransferStoreForwardSupported() && isRegistered);
 
 		// Group chat S&F
 		capabilities.setGroupChatStoreForwardSupport(capabilities.isGroupChatStoreForwardSupported() && isRegistered);

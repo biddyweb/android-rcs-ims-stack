@@ -41,6 +41,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -73,6 +74,30 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 	}
 	
 	/**
+	 * Check if image capacity is acceptable
+	 * 
+	 * @param imageSize
+	 *            image size in bytes
+	 * @return ContentSharingError or null if image capacity is acceptable
+	 */
+	private ContentSharingError isImageCapacityAcceptable(long imageSize) {
+		boolean fileIsToBig = (ImageTransferSession.getMaxImageSharingSize() > 0) ? imageSize > ImageTransferSession.getMaxImageSharingSize() : false;
+		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? imageSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		if (fileIsToBig) {
+			if (logger.isActivated())
+				logger.warn("Image is too big, reject the Image Sharing");
+			return new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG);
+		} else {
+			if (storageIsTooSmall) {
+				if (logger.isActivated())
+					logger.warn("Not enough storage capacity, reject the Image Sharing");
+				return new ContentSharingError(ContentSharingError.NOT_ENOUGH_STORAGE_SPACE);
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * Background processing
 	 */
 	public void run() {
@@ -99,45 +124,57 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
         	}
 
 			// Wait invitation answer
-	    	int answer = waitInvitationAnswer();
-			if (answer == ImsServiceSession.INVITATION_REJECTED) {
+			int answer = waitInvitationAnswer();
+			switch (answer) {
+			case ImsServiceSession.INVITATION_REJECTED:
 				if (logger.isActivated()) {
 					logger.debug("Session has been rejected by user");
 				}
-				
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
-		        }
+				// Remove the current session
+				getImsService().removeSession(this);
+				// Notify listeners
+				for (int i = 0; i < getListeners().size(); i++) {
+					getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
+				}
 				return;
-			} else
-			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+				
+			case ImsServiceSession.INVITATION_NOT_ANSWERED:
 				if (logger.isActivated()) {
 					logger.debug("Session has been rejected on timeout");
 				}
-
-                // Ringing period timeout
+				// Ringing period timeout
 				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-
-		    	// Remove the current session
-		    	getImsService().removeSession(this);
-
-		    	// Notify listeners
-		    	for(int i=0; i < getListeners().size(); i++) {
-		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
-		        }
+				// Remove the current session
+				getImsService().removeSession(this);
+				// Notify listeners
+				for (int i = 0; i < getListeners().size(); i++) {
+					getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+				}
 				return;
-			} else
-            if (answer == ImsServiceSession.INVITATION_CANCELED) {
-                if (logger.isActivated()) {
-                    logger.debug("Session has been canceled");
-                }
-                return;
-            }
+				
+			case ImsServiceSession.INVITATION_CANCELED:
+				if (logger.isActivated()) {
+					logger.debug("Session has been canceled");
+				}
+				return;
+				
+			default:
+				break;
+			}
 
+			// Auto reject if file too big or if storage capacity is too small
+			ContentSharingError error = isImageCapacityAcceptable(this.getContent().getSize());
+			if (error != null) {
+				if (logger.isActivated()) {
+					logger.debug("Auto reject image sharing invitation");
+				}
+				// Decline the invitation
+				sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
+				// Close session
+				handleError(new ContentSharingError(error));
+				return;
+			}
+			
 	    	// Parse the remote SDP part
 			String remoteSdp = getDialogPath().getInvite().getSdpContent();
         	SdpParser parser = new SdpParser(remoteSdp.getBytes());
@@ -264,11 +301,23 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
                 	// Active mode: client should connect
                 	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
 
-					// Open the MSRP session
-					msrpMgr.openMsrpSession(ImageTransferSession.DEFAULT_SO_TIMEOUT);
-					
-	    	        // Send an empty packet
-	            	sendEmptyDataChunk();
+                    // Open the connection
+                    Thread thread = new Thread(){
+                        public void run(){
+                            try {
+                                // Open the MSRP session
+                                msrpMgr.openMsrpSession(ImageTransferSession.DEFAULT_SO_TIMEOUT);
+
+                                // Send an empty packet
+                                sendEmptyDataChunk();
+                            } catch (IOException e) {
+                                if (logger.isActivated()) {
+                                    logger.error("Can't create the MSRP server session", e);
+                                }
+                            }
+                        }
+                    };
+                    thread.start();
                 }
 
                 // The session is established
@@ -426,7 +475,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-        if (isInterrupted() || getDialogPath().isSessionTerminated()) {
+        if (isSessionInterrupted() || isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}
 

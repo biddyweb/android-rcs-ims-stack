@@ -254,11 +254,23 @@ public class TerminatingGeolocTransferSession extends GeolocTransferSession impl
                 	// Active mode: client should connect
                 	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
 
-					// Open the MSRP session
-					msrpMgr.openMsrpSession(GeolocTransferSession.DEFAULT_SO_TIMEOUT);
-					
-	    	        // Send an empty packet
-	            	sendEmptyDataChunk();
+                    // Open the connection
+                    Thread thread = new Thread(){
+                        public void run(){
+                            try {
+                                // Open the MSRP session
+                                msrpMgr.openMsrpSession(GeolocTransferSession.DEFAULT_SO_TIMEOUT);
+
+                                // Send an empty packet
+                                sendEmptyDataChunk();
+                            } catch (IOException e) {
+                                if (logger.isActivated()) {
+                                    logger.error("Can't create the MSRP server session", e);
+                                }
+                            }
+                        }
+                    };
+                    thread.start();
                 }
 
                 // The session is established
@@ -383,7 +395,7 @@ public class TerminatingGeolocTransferSession extends GeolocTransferSession impl
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-        if (isInterrupted() || getDialogPath().isSessionTerminated()) {
+        if (isSessionInterrupted() || isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}
 

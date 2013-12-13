@@ -445,7 +445,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
      * @param width Video width
      * @param height Video height
 	 */
-	public void handleAddVideoInvitation(String videoEncoding, int videoWidth, int videoHeight) {
+	public void handleAddVideo(String videoEncoding, int videoWidth, int videoHeight) {
 		synchronized (lock) {
 			if (logger.isActivated()) {
 				logger.info("Add video invitation");
@@ -455,7 +455,7 @@ public class IPCallSession extends IIPCallSession.Stub implements IPCallStreamin
 			final int N = listeners.beginBroadcast();
 			for (int i = 0; i < N; i++) {
 				try {
-					listeners.getBroadcastItem(i).handleAddVideoInvitation(
+					listeners.getBroadcastItem(i).handleAddVideo(
 							videoEncoding, videoWidth, videoHeight);
 				} catch (Exception e) {
 					if (logger.isActivated()) {
