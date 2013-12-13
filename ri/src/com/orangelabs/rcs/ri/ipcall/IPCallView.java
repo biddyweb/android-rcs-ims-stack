@@ -1,10 +1,11 @@
 package com.orangelabs.rcs.ri.ipcall;
 
 
+
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
@@ -21,7 +22,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.protocol.rtp.codec.video.h264.H264Config;
 import com.orangelabs.rcs.core.ims.protocol.rtp.format.video.CameraOptions;
@@ -49,7 +49,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	 * UI handler
 	 */
 	public static final  Handler handler = new Handler();
-	 
+
+	/**
+	 * HOLD states
+	 */
 	private static final int INACTIVE = 0;
 	private static final int HOLD_IN_PROGRESS = 1;
 	private static final int HOLD = 2;
@@ -58,10 +61,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	private static final int REMOTE_HOLD = 5;
 	private static final int REMOTE_UNHOLD_IN_PROGRESS = 6;
 	
-	/**
-	 * Context
-	 */
-	private Context context = this;
+
 	/**
 	 * Activity is in state onResume
 	 */ 
@@ -110,7 +110,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	/**
 	 * Progress dialog
 	 */
-	private static Dialog outgoingProgressDialog = null;
+	private Dialog outgoingProgressDialog = null;
 	
 	/**
 	 * Add Video Invitation dialog
@@ -143,19 +143,19 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     private static Button switchCamBtn = null;
 
 	/**
-	 * Audio player
+	 * RCS stack Audio player
 	 */
 	private LiveAudioPlayer outgoingAudioPlayer = null;
 
 	/**
-	 * Audio renderer
+	 * RCS stack Audio renderer
 	 */
 	private AudioRenderer incomingAudioRenderer = null;
 
 	/**
 	 * Video player
 	 */
-	public LiveVideoPlayer outgoingVideoPlayer = null;
+	protected LiveVideoPlayer outgoingVideoPlayer = null;
 	
 	/**
 	 * Video renderer
@@ -163,16 +163,16 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	private VideoRenderer incomingVideoRenderer = null;
 	
     /** Camera */
-    public Camera camera = null;
+    protected Camera camera = null;
 
     /** Opened camera id */
-    public CameraOptions openedCameraId = CameraOptions.FRONT;
+    protected CameraOptions openedCameraId = CameraOptions.FRONT;
 
     /** Camera preview started flag */
-    public boolean cameraPreviewRunning = false;
+    protected boolean cameraPreviewRunning = false;
 
     /** Number of cameras */
-    public int numberOfCameras = 1;
+    protected int numberOfCameras = 1;
     
     /** Incoming Video preview */
     private VideoSurfaceView incomingVideoView = null;
@@ -184,16 +184,16 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     private int incomingHeight = 0;
     
     /** Outgoing Video preview */
-    public VideoSurfaceView outgoingVideoView = null;
+    protected VideoSurfaceView outgoingVideoView = null;
     
     /** Outgoing Video width */
-    public int outgoingWidth = H264Config.QCIF_WIDTH;
+    protected int outgoingWidth = H264Config.QCIF_WIDTH;
 
     /** Outgoing Video height */
-    public int outgoingHeight = H264Config.QCIF_HEIGHT;
+    protected int outgoingHeight = H264Config.QCIF_HEIGHT;
 
     /** Outgoing Video surface holder */
-    public SurfaceHolder surface;
+    protected SurfaceHolder surface;
     
     /** Preview surface view is created */
     private boolean isSurfaceCreated = false;
@@ -643,8 +643,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					CameraUtils.releaseCamera(IPCallView.this) ;
-					setOnHoldBtn.setEnabled(false);
-					hangUpBtn.setEnabled(false);
+
 					if (direction.equals("outgoing")){
 						exitActivityIfNoSession(getString(R.string.label_outgoing_ipcall_aborted));
 					}
@@ -670,8 +669,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					CameraUtils.releaseCamera(IPCallView.this) ;
-					setOnHoldBtn.setEnabled(false);
-					hangUpBtn.setEnabled(false);
+
 					if ((direction != null) && (direction.equals("outgoing"))){
 						exitActivityIfNoSession(getString(R.string.label_outgoing_ipcall_terminated_by_remote));
 					}
@@ -697,9 +695,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				public void run() {
 					CameraUtils.releaseCamera(IPCallView.this) ;
-					setOnHoldBtn.setEnabled(false);
-					hangUpBtn.setEnabled(false);
-					addVideoBtn.setEnabled(false);
+
 
 					if (error == IPCallError.SESSION_INITIATION_DECLINED) {
 						exitActivityIfNoSession(getString(R.string.label_ipcall_invitation_declined));
@@ -750,7 +746,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		}
 
 
-		public void handleAddVideoInvitation(String arg0, int arg1, int arg2)
+		public void handleAddVideo(String arg0, int arg1, int arg2)
 				throws RemoteException {
 			if (logger.isActivated()) {
 				logger.info("sessionEventListener - handleAddVideoInvitation()");
@@ -867,7 +863,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 					videoConnected = true;
 					addVideoBtn.setText(R.string.label_remove_video_btn);
 					addVideoBtn.setEnabled(true);
-
 				}
 			});
 		}
@@ -876,11 +871,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					CharSequence text = "handleCallHold";
-					int duration = Toast.LENGTH_SHORT;
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-
 					setOnHoldBtn.setEnabled(false);
 					setOnHoldBtn.setText(R.string.label_resume_btn);
 				}
@@ -892,11 +882,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		public void handleCallHoldAborted(int arg0) throws RemoteException {
 			handler.post(new Runnable() {
 				public void run() {
-					CharSequence text = "handleCallHoldAborted";
-					int duration = Toast.LENGTH_SHORT;
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-
 					setOnHoldBtn.setEnabled(true);
 					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
 				}
@@ -908,11 +893,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		public void handleCallHoldAccepted() throws RemoteException {
 			handler.post(new Runnable() {
 				public void run() {
-					CharSequence text = "handleCallHoldAccepted";
-					int duration = Toast.LENGTH_SHORT;
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-
 					setOnHoldBtn.setEnabled(true);
 					setOnHoldBtn.setText(R.string.label_resume_btn);
 				}
@@ -930,11 +910,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					CharSequence text = "handleCallResume";
-					int duration = Toast.LENGTH_SHORT;
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-
 					setOnHoldBtn.setEnabled(false);
 					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
 				}
@@ -965,11 +940,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 			handler.post(new Runnable() {
 				@Override
 				public void run() {
-					CharSequence text = "handleCallResumeAccepted";
-					int duration = Toast.LENGTH_SHORT;
-					Toast toast = Toast.makeText(context, text, duration);
-					toast.show();
-
 					setOnHoldBtn.setEnabled(true);
 					setOnHoldBtn.setText(R.string.label_set_onhold_btn);
 				}
@@ -1151,7 +1121,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		// video is in IDDLE State (video always stopped when user exit activity
 		// by "back" button )
 		addVideoBtn.setText(R.string.label_add_video_btn);
-
 	}
 
 
@@ -1161,7 +1130,6 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	private void acceptIncomingSession() {
 		if (logger.isActivated()) {
 			logger.debug("acceptIncomingSession()");
-			logger.debug("videoSelected :"+videoSelected);
 		}
 		
 		// Accept the session in background
@@ -1231,6 +1199,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 				session.removeSessionListener(sessionEventListener);
 				session.cancelSession();
 				CameraUtils.releaseCamera(IPCallView.this);
+				outgoingAudioPlayer = null;
+				incomingAudioRenderer = null;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1321,9 +1291,8 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		addVideoInvitationDialog = builder.create();
 		addVideoInvitationDialog.setCancelable(false);
 		addVideoInvitationDialog.show();
-
 	}
-	
+
 	/**
 	 * Accept Add Video Invitation 
 	 */
@@ -1370,7 +1339,9 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 	}
 	
 	/**
-	 * Set call On Hold 
+	 * Set call On Hold/on Resume 
+	 * 
+	 * @param boolean	holdAction (true: on hold - false: on resume)
 	 */
 	private void setOnHold(boolean holdAction) {
 		if (logger.isActivated()) {
@@ -1390,8 +1361,10 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
 		};
 		thread.start();
 	}
+	
+	
 	/**
-     * Runnable to Receive incoming session
+     * Instantiation of video renderer
      */
     private void instantiateIncomingVideoRenderer() {
         	if (logger.isActivated()){
@@ -1413,7 +1386,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     }
 	
     /**
-     * Runnable to start outgoing session
+     * Instantiation of video player
      */
     private void  instantiateOutgoingVideoPlayer() {
         	if (logger.isActivated()){
@@ -1457,8 +1430,9 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     
     /**
      * Create a list of supported video codecs
+     * @param boolean[] tab of codecs provided by player/render from the complete codecs list
      *
-     * @return codecs list
+     * @return MediaCodec[]	supported codecs list
      */
     private MediaCodec[] createSupportedCodecList(boolean[] codecs) {
         // Set number of codecs
@@ -1611,7 +1585,7 @@ public class IPCallView extends Activity implements SurfaceHolder.Callback {
     * Video session methods
     *******************************************/
     
-    public void prepareVideoSession(){
+    private void prepareVideoSession(){
     	if (logger.isActivated()) {
 			logger.info("prepareVideoSession()");
 		}

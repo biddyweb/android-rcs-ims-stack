@@ -51,7 +51,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
@@ -509,20 +508,6 @@ public class InstantMessagingService extends ImsService {
 
     	// Create a new session
 		FileSharingSession session = new TerminatingFileSharingSession(this, invite);
-
-        // Auto reject if file too big
-        if (isFileSizeExceeded(session.getContent().getSize())) {
-            if (logger.isActivated()) {
-                logger.debug("File is too big, reject file transfer invitation");
-            }
-
-            // Send a 603 Decline response
-            session.sendErrorResponse(invite, session.getDialogPath().getLocalTag(), 603);
-
-            // Close session
-            session.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
-            return;
-        }
 
 		// Start the session
 		session.startSession();
@@ -1037,29 +1022,18 @@ public class InstantMessagingService extends ImsService {
 			}
 
 			// Send a 603 Decline response
-			sendErrorResponse(invite, 603);
+			sendErrorResponse(invite, Response.DECLINE);
 			return;
 	    }
 
-		// Test number of sessions
-		if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
-			if (logger.isActivated()) {
-				logger.debug("The max number of FT sessions is achieved, reject the HTTP File transfer");
-			}
-
-			// Send a 603 Decline response
-			sendErrorResponse(invite, 603);
-			return;
-		}
-
-        // Auto reject if file too big
-        if (isFileSizeExceeded(ftinfo.getFileSize())) {
+        // Test number of sessions
+        if ((maxFtSessions != 0) && (getFileTransferSessions().size() >= maxFtSessions)) {
             if (logger.isActivated()) {
-                logger.debug("File is too big, reject the HTTP File transfer");
+                logger.debug("The max number of file transfer sessions is achieved: reject the invitation");
             }
-
-			// Send a 603 Decline response
-			sendErrorResponse(invite, 603);
+            
+            // Send a 603 Decline response
+            sendErrorResponse(invite, Response.DECLINE);
             return;
         }
 
@@ -1092,21 +1066,6 @@ public class InstantMessagingService extends ImsService {
         TerminatingStoreAndForwardMsgSession one2oneChatSession = new TerminatingStoreAndForwardMsgSession(this, invite);
         one2oneChatSession.startSession();
         
-        // Auto reject if file too big
-        if (isFileSizeExceeded(ftinfo.getFileSize())) {
-            if (logger.isActivated()) {
-                logger.debug("File is too big, reject file transfer invitation");
-            }
-
-            // Send a 603 Decline response
-            //TODO add warning header "xxx Size exceeded"
-            one2oneChatSession.sendErrorResponse(invite, one2oneChatSession.getDialogPath().getLocalTag(), 603);
-
-            // Close session
-            one2oneChatSession.handleError(new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG));
-            return;
-        }
-        
         // Create and start a new HTTP file transfer session
         TerminatingHttpFileSharingSession httpFiletransferSession = new TerminatingHttpFileSharingSession(this,
                 one2oneChatSession, ftinfo, ChatUtils.getMessageId(invite));
@@ -1123,7 +1082,7 @@ public class InstantMessagingService extends ImsService {
      * @param size of file
      * @return {@code true} if file size limit is exceeded, otherwise {@code false}
      */
-    private boolean isFileSizeExceeded(long size) {
+    public static boolean isFileSizeExceeded(long size) {
         int maxSize = FileSharingSession.getMaxFileSharingSize();
         if (maxSize > 0 && size > maxSize) {
             return true;

@@ -318,7 +318,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 				if (!isInterrupted()) {
 					for (int i = 0; i < getListeners().size(); i++) {
 						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleAddVideoInvitation(videoEncoding,
+								.handleAddVideo(videoEncoding,
 										videoWidth, videoHeight);
 					}
 				}
@@ -869,7 +869,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 		if (logger.isActivated()) {
 			logger.info("Close media session");
 		}
-
+//
 //		if (audioRenderer != null) {
 //			// Close the audio renderer
 //			try {

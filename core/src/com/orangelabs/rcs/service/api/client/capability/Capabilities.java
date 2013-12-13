@@ -178,9 +178,7 @@ public class Capabilities implements Parcelable {
         dest.writeInt(groupChatStoreForward ? 1 : 0);
         dest.writeInt(sipAutomata ? 1 : 0);
     	dest.writeLong(timestamp);
-		if (extensions!=null && extensions.size()>0){
-			dest.writeStringList(extensions);
-		}
+        dest.writeStringList(extensions);
     }
 
     /**

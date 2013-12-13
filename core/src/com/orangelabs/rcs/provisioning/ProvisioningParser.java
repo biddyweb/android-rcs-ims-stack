@@ -228,8 +228,8 @@ public class ProvisioningParser {
      * @param node Node
      */
     private void parseToken(Node node) {
-        String version = null;
-        String validity = null;
+        String token = null;
+        String tokenValidity = null;
         if (node == null) {
             return;
         }
@@ -237,15 +237,15 @@ public class ProvisioningParser {
 
         if (tokenChild != null) {
             do {
-                if (version == null) {
-                    if ((version = getValueByParamName("token", tokenChild, TYPE_TXT)) != null) {
-                        provisioningInfo.setVersion(version);
+                if (token == null) {
+                    if ((token = getValueByParamName("token", tokenChild, TYPE_TXT)) != null) {
+                        provisioningInfo.setToken(token);
                         continue;
                     }
                 }
-                if (validity == null) {
-                    if ((validity = getValueByParamName("validity", tokenChild, TYPE_INT)) != null) {
-                        provisioningInfo.setValidity(Long.parseLong(validity));
+                if (tokenValidity == null) {
+                    if ((tokenValidity = getValueByParamName("validity", tokenChild, TYPE_INT)) != null) {
+                        provisioningInfo.setTokenValidity(Long.parseLong(tokenValidity));
                         continue;
                     }
                 }

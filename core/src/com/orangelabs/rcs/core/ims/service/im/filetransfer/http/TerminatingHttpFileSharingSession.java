@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Software Name : RCS IMS Stack
+w * Software Name : RCS IMS Stack
  *
  * Copyright (C) 2010 France Telecom S.A.
  *
@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -75,6 +76,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                 chatSession.getContributionID());
 
         setRemoteDisplayName(chatSession.getRemoteDisplayName());
+        this.setDialogPath(chatSession.getDialogPath());
         ContactHeader inviteContactHeader = (ContactHeader)chatSession.getDialogPath().getInvite().getHeader(ContactHeader.NAME);
         if (inviteContactHeader != null) {
             this.remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
@@ -112,9 +114,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             }
             
             if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
-                if (logger.isActivated()) {
-                    logger.debug("Auto accept file transfer invitation");
-                }
+				if (logger.isActivated()) {
+					logger.debug("Auto accept file transfer invitation");
+				}
             } else {
                 if (logger.isActivated()) {
                     logger.debug("Accept manually file transfer invitation");
@@ -158,6 +160,21 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
                     }
                     return;
                 }
+            }
+
+            /**
+             * Reject if file is too big or size exceeds device storage capacity.<br>
+             * This control should be done on UI. It is done after end user accepts invitation to enable prior handling by the
+             * application.
+             */
+            FileSharingError error = TerminatingFileSharingSession.isFileCapacityAcceptable(getContent().getSize());
+            if (error != null) {
+                // Send a 603 Decline response
+                ((InstantMessagingService) getImsService()).sendErrorResponse(getDialogPath().getInvite(), 603);
+
+                // Close session and notify listeners
+                handleError(new FileSharingError(error));
+                return;
             }
 
             // Notify listeners

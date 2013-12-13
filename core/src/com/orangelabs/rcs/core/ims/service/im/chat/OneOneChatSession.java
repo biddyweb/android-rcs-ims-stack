@@ -155,7 +155,7 @@ public abstract class OneOneChatSession extends ChatSession {
         }
 
 		// Update rich messaging history
-		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn);
+		InstantMessage msg = new InstantMessage(msgId, getRemoteContact(), txt, useImdn, null);
 		RichMessaging.getInstance().addOutgoingChatMessage(msg, this);
 
 		// Check if message has been sent with success or not
@@ -205,7 +205,7 @@ public abstract class OneOneChatSession extends ChatSession {
         }
 
 		// Update rich messaging history
-		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn);
+		GeolocMessage geolocMsg = new GeolocMessage(msgId, getRemoteContact(), geoloc, useImdn, null);
 		RichMessaging.getInstance().addOutgoingGeoloc(geolocMsg, this);
 
 		// Check if message has been sent with success or not

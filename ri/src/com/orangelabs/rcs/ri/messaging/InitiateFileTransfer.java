@@ -506,6 +506,8 @@ public class InitiateFileTransfer extends Activity {
 					} else
                     if (error == FileSharingError.MEDIA_SIZE_TOO_BIG) {
                         Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed_too_big));
+                    }  if (error == FileSharingError.NOT_ENOUGH_STORAGE_SPACE) {
+                        Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed_capacity_too_small));
                     } else {
 						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed, error));
 					}

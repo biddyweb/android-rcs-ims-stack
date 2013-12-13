@@ -435,6 +435,7 @@ public abstract class ImsServiceSession extends Thread {
 			
 			if (!isSessionInterrupted()) {
 				// Interrupt thread
+                sessionInterrupted = true;
 				interrupt();
 			}
 		} catch (Exception e) {

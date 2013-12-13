@@ -469,7 +469,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		} else
 		if (ChatUtils.isTextPlainType(mimeType)) {
 	    	// Text message
-			receiveText(getRemoteContact(), StringUtils.decodeUTF8(data), null, false, new Date());
+			receiveText(getRemoteContact(), StringUtils.decodeUTF8(data), null, false, new Date(), null);
 		} else
 		if (ChatUtils.isMessageCpimType(mimeType)) {
 	    	// Receive a CPIM message
@@ -486,6 +486,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String contentType = cpimMsg.getContentType();
 			    	
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
+			    	String pseudo = PhoneUtils.extractDisplayNameFromHeader(from);
 			    	from = PhoneUtils.extractNumberFromUri(from);
 					if (!PhoneUtils.isGlobalPhoneNumber(from)) {
 						from = getRemoteContact();
@@ -514,7 +515,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
                     } else
 	                if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
-		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
+		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date, pseudo);
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
 		    			if (imdnDisplayedRequested) {
@@ -533,7 +534,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	} else	
 			    	if (ChatUtils.isGeolocType(contentType)) {
 						// Geoloc message
-						receiveGeoloc(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date);
+						receiveGeoloc(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date,pseudo);
 			    	} 
 				}
 	    	} catch(Exception e) {
@@ -585,7 +586,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      * @param error Error code
      */
     public void msrpTransferError(String msgId, String error) {
-		if (isInterrupted()) {
+        if (isSessionInterrupted() || isInterrupted()) {
 			return;
 		}
 		if (logger.isActivated()) {
@@ -613,15 +614,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param msgId Message Id
 	 * @param flag indicating that an IMDN "displayed" is requested for this message
 	 * @param date Date of the message
+	 * @param displayName the display name
 	 */
-	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested, Date date) {
+	private void receiveText(String contact, String txt, String msgId, boolean imdnDisplayedRequested, Date date, String displayName) {
         if (RichMessaging.getInstance().isNewMessage(getContributionID(), msgId)) {
     		// Is composing event is reset
     	    isComposingMgr.receiveIsComposingEvent(contact, false);
 
     	    // Notify listeners
         	for(int i=0; i < getListeners().size(); i++) {
-        		((ChatSessionListener)getListeners().get(i)).handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested, date));
+        		((ChatSessionListener)getListeners().get(i)).handleReceiveMessage(new InstantMessage(msgId, contact, txt, imdnDisplayedRequested, date, displayName));
     		}
         }
 	}
@@ -657,8 +659,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param msgId Message Id
 	 * @param flag Flag indicating that an IMDN "displayed" is requested for this message
 	 * @param date Date of the message
+	 * @param pseudo the display name
 	 */
-	private void receiveGeoloc(String contact, String geolocDoc, String msgId, boolean imdnDisplayedRequested, Date date) {
+	private void receiveGeoloc(String contact, String geolocDoc, String msgId, boolean imdnDisplayedRequested, Date date, String pseudo) {
 		// Is composing event is reset
 	    isComposingMgr.receiveIsComposingEvent(contact, false);
 	    
@@ -666,7 +669,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			GeolocPush geoloc = ChatUtils.parseGeolocDocument(geolocDoc);		
 			if (geoloc != null ) {				
 				// Notify listeners
-				GeolocMessage geolocMsg = new GeolocMessage(msgId, contact, geoloc, imdnDisplayedRequested, date);
+				GeolocMessage geolocMsg = new GeolocMessage(msgId, contact, geoloc, imdnDisplayedRequested, date, pseudo);
 				for(int i=0; i < getListeners().size(); i++) {
 					((ChatSessionListener)getListeners().get(i)).handleReceiveGeoloc(geolocMsg);
 				}

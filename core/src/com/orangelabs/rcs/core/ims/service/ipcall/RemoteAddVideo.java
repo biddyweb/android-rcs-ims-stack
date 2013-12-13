@@ -255,30 +255,6 @@ public class RemoteAddVideo extends AddVideoManager {
 		int remotePort = mediaVideo.port;
 
 		try {
-//			// Extract video codecs from SDP
-//			Vector<MediaDescription> medias = parser
-//					.getMediaDescriptions("video");
-//			Vector<VideoCodec> proposedCodecs = VideoCodecManager
-//					.extractVideoCodecsFromSdp(medias);
-
-//			// Codec negotiation
-//			session.selectedVideoCodec = VideoCodecManager
-//					.negociateVideoCodec(session.getVideoPlayer()
-//							.getSupportedVideoCodecs(), proposedCodecs);
-//
-//			if (session.selectedVideoCodec == null) {
-//				if (logger.isActivated()) {
-//					logger.debug("Proposed codecs are not supported");
-//				}
-//
-//				// Terminate session
-//				session.terminateSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
-//
-//				// Report error Unsupported video type
-//				session.handleError(new IPCallError(
-//						IPCallError.UNSUPPORTED_VIDEO_TYPE));
-//				return;
-//			}
 
 			// Set the selected video codec
 			session.getVideoPlayer().setVideoCodec(

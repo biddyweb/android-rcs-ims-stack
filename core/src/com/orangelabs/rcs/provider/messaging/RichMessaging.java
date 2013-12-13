@@ -235,7 +235,7 @@ public class RichMessaging {
 
 		if (event != -1) {
 			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, session.getSessionID(), session.getContributionID(), null, contact, null, null,
-					null, 0, null, event);
+					null, null, 0, null, event);
 		}
 	}
 
@@ -251,7 +251,7 @@ public class RichMessaging {
 		List<String> participants = RichMessaging.getListParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INVITED);
+		addEntry(type, sessionId, chatId, null, participants, null, subject, null, null, 0, null, EventsLogApi.EVENT_INVITED);
 
 		// Add first message entry
 		InstantMessage firstMsg = session.getFirstMessage();
@@ -271,7 +271,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INVITED);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, null, EventsLogApi.EVENT_INVITED);
 	}
 
 	/**
@@ -284,8 +284,8 @@ public class RichMessaging {
 	 */
 	public void addIncomingFileTransfer(String contact, String chatSessionId, String ftSessionId, MmContent content) {
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, null, content.getEncoding(), content.getName(),
-				content.getSize(), null, EventsLogApi.EVENT_INITIATED);
+		addEntry(EventsLogApi.TYPE_INCOMING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, null, null, content.getEncoding(),
+				content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);
 	}
 
 	/**
@@ -300,7 +300,7 @@ public class RichMessaging {
 		List<String> participants = RichMessaging.getListParticipants(session);
 		String subject = session.getSubject();
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, subject, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
+		addEntry(type, sessionId, chatId, null, participants, null, subject, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
 
 		// Add first message entry
 		InstantMessage firstMsg = session.getFirstMessage();
@@ -328,7 +328,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, null, EventsLogApi.EVENT_INITIATED);
 	}
 
 	/**
@@ -342,7 +342,7 @@ public class RichMessaging {
 	 */
 	public void addOutgoingFileTransfer(String contact, String chatSessionId, String ftSessionId, String fileName, MmContent content) {
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, fileName, content.getEncoding(),
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contact, null, fileName, content.getEncoding(),
 				content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);
 	}
 
@@ -357,7 +357,7 @@ public class RichMessaging {
 	 */
 	public void addOutgoingGroupFileTransfer(List<String> contactList, String chatSessionId, String ftSessionId, String fileName, MmContent content) {
 		// Add session entry
-		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contactList, fileName, content.getEncoding(),
+		addEntry(EventsLogApi.TYPE_OUTGOING_FILE_TRANSFER, ftSessionId, chatSessionId, null, contactList, null, fileName, content.getEncoding(),
 				content.getName(), content.getSize(), null, EventsLogApi.EVENT_INITIATED);
 	}
 
@@ -379,8 +379,8 @@ public class RichMessaging {
 		if (msg.isImdnDisplayedRequested() && RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(),
-				InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), status);
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
+				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), status);
 	}
 
 	/**
@@ -397,8 +397,9 @@ public class RichMessaging {
 		} else {
 			type = EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getTextMessage(),
-				InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), EventsLogApi.STATUS_SENT);
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
+				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(),
+				EventsLogApi.STATUS_SENT);
 	}
 
 	/**
@@ -420,8 +421,8 @@ public class RichMessaging {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geolocData,
-				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), status);
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(),
+				geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), status);
 	}
 
     /**
@@ -435,7 +436,7 @@ public class RichMessaging {
 		int status = EventsLogApi.STATUS_RECEIVED;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
 		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
-				geolocData.length(), geoloc.getDate(), status);
+				geoloc.getDisplayName(), geolocData.length(), geoloc.getDate(), status);
 	}
 
     /**
@@ -453,8 +454,8 @@ public class RichMessaging {
 			type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geolocData,
-				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(),
+				geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
     /**
@@ -467,7 +468,7 @@ public class RichMessaging {
 		int type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
 		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
-				geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
+				geoloc.getDisplayName(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
     /**
@@ -620,7 +621,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		int type = getChatSystemEventType(session);
 		List<String> participants = RichMessaging.getListParticipants(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED);
 	}
 
     /**
@@ -633,7 +634,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_USER);
 	}
 
     /**
@@ -646,7 +647,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_REMOTE);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, new Date(), EventsLogApi.STATUS_TERMINATED_BY_REMOTE);
 	}
 
     /**
@@ -659,7 +660,7 @@ public class RichMessaging {
 		String chatId = session.getContributionID();
 		List<String> participants = RichMessaging.getListParticipants(session);
 		int type = getChatSystemEventType(session);
-		addEntry(type, sessionId, chatId, null, participants, null, null, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
+		addEntry(type, sessionId, chatId, null, participants, null, null, null, null, 0, new Date(), EventsLogApi.STATUS_FAILED);
 	}
 
     /**
@@ -725,7 +726,8 @@ public class RichMessaging {
 		// TODO: 2 queries may be avoided
 		String id = SessionIdGenerator.getNewId();
 		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, id, id, msg.getMessageId(), msg.getRemote(), msg.getTextMessage(),
-				InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), EventsLogApi.STATUS_RECEIVED);
+				InstantMessage.MIME_TYPE, msg.getRemote(), msg.getDisplayName(), msg.getTextMessage().getBytes().length, msg.getDate(),
+				EventsLogApi.STATUS_RECEIVED);
 		markChatMessageAsSpam(msg.getMessageId(), true);
 	}
 
@@ -741,7 +743,8 @@ public class RichMessaging {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
 		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), chatId, msg.getMessageId(), msg.getRemote(),
-				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), status);
+				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getDisplayName(), msg.getTextMessage().getBytes().length,
+				msg.getDate(), status);
 	}
 
     /**
@@ -815,6 +818,7 @@ public class RichMessaging {
      * @param chatId Chat ID of a chat session
      * @param messageId Message ID of a chat message
      * @param contact Contact phone number
+     * @param displayName the display name of the remote contact
      * @param data Content of the entry (an URI for FT or a simple text for IM)
      * @param mimeType MIME type for a file transfer
      * @param name Name of the transfered file
@@ -822,12 +826,12 @@ public class RichMessaging {
      * @param status Status of the entry
      * @return URI of the new entry
      */
-	private Uri addEntry(int type, String sessionId, String chatId, String messageId, String contact, String data, String mimeType, String name,
+	private Uri addEntry(int type, String sessionId, String chatId, String messageId, String contact, String displayName, String data, String mimeType, String name,
 			long size, Date date, int status) {
 		contact = PhoneUtils.extractNumberFromUri(contact);
 		List<String> participants = new ArrayList<String>();
 		participants.add(contact);
-		return addEntry(type, sessionId, chatId, messageId, participants, data, mimeType, name, size, date, status);
+		return addEntry(type, sessionId, chatId, messageId, participants, displayName, data, mimeType, name, size, date, status);
 	}
 
     /**
@@ -838,6 +842,7 @@ public class RichMessaging {
      * @param chatId Chat ID of a chat session
      * @param messageId Message ID of a chat message
      * @param contacts List of contacts
+     * @param displayName the display name of the remote contact
      * @param data Content of the entry (an URI for FT or a simple text for IM)
      * @param mimeType MIME type for a file transfer
      * @param name Name of the transfered file
@@ -845,12 +850,12 @@ public class RichMessaging {
      * @param status Status of the entry
      * @return URI of the new entry
      */
-	private Uri addEntry(int type, String sessionId, String chatId, String messageId, List<String> contacts, String data, String mimeType,
+	private Uri addEntry(int type, String sessionId, String chatId, String messageId, List<String> contacts, String displayName, String data, String mimeType,
 			String name, long size, Date date, int status) {
 		String participants = getParticipants(contacts);
 		if (logger.isActivated()) {
 			logger.debug("Add new entry: type=" + type + ", sessionID=" + sessionId + ", chatID=" + chatId + ", messageID=" + messageId
-					+ ", contact=" + participants + ", MIME=" + mimeType + ", status=" + status);
+					+ ", contact=" + participants + ", display=" + displayName + ", MIME=" + mimeType + ", status=" + status);
 		}
 		ContentValues values = new ContentValues();
 		values.put(RichMessagingData.KEY_TYPE, type);
@@ -858,6 +863,7 @@ public class RichMessaging {
 		values.put(RichMessagingData.KEY_CHAT_ID, chatId);
 		values.put(RichMessagingData.KEY_MESSAGE_ID, messageId);
 		values.put(RichMessagingData.KEY_CONTACT, participants);
+		values.put(RichMessagingData.KEY_DISPLAY_NAME, displayName);
 		values.put(RichMessagingData.KEY_MIME_TYPE, mimeType);
 		values.put(RichMessagingData.KEY_TOTAL_SIZE, size);
 		values.put(RichMessagingData.KEY_NAME, name);
@@ -1099,10 +1105,10 @@ public class RichMessaging {
 		}
 		MessageInfo result = null;
 		Cursor cursor = cr.query(databaseUri, new String[] { RichMessagingData.KEY_CONTACT, RichMessagingData.KEY_TYPE,
-				RichMessagingData.KEY_CHAT_SESSION_ID, }, RichMessagingData.KEY_MESSAGE_ID + "='" + msgId + "'", null,
+				RichMessagingData.KEY_CHAT_SESSION_ID, RichMessagingData.KEY_STATUS}, RichMessagingData.KEY_MESSAGE_ID + "='" + msgId + "'", null,
 				RichMessagingData.KEY_TIMESTAMP + " DESC");
 		if (cursor.moveToFirst()) {
-			result = new MessageInfo(msgId, cursor.getString(0), cursor.getInt(1), cursor.getString(2));
+			result = new MessageInfo(msgId, cursor.getString(0), cursor.getInt(1), cursor.getString(2), cursor.getInt(3));
 		}
 		cursor.close();
 		return result;

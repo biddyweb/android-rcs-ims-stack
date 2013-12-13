@@ -81,12 +81,12 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         // Set the video renderer
         setVideoRenderer(videoRenderer);
 
-        // Set the audio player
-        setAudioPlayer(audioPlayer);
-        
         // Set the audio renderer
         setAudioRenderer(audioRenderer);
         
+        // Set the audio player
+        setAudioPlayer(audioPlayer);
+     
     }
     
     /**
@@ -161,7 +161,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 	 */
 	private String buildCallInitSdpProposal() {
 		if (logger.isActivated()) {
-			logger.debug("Build SDP proposal for call init");
+			logger.info("Build SDP proposal for call init");
 		}
 
 		try {
@@ -170,13 +170,16 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 			String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 			
 			String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(), 
-					getAudioPlayer().getLocalRtpPort());
+					getAudioRenderer().getLocalRtpPort());
+
+
 			
 			String videoSdp = "";
 	        if ((getVideoContent()!= null)&&(getVideoPlayer()!= null)&&(getVideoRenderer()!= null)) {	        	
 					videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(
 							getVideoPlayer().getSupportedVideoCodecs(),
-							getVideoRenderer().getLocalRtpPort());		
+							getVideoRenderer().getLocalRtpPort());	
+					videoSdp.concat("a=sendrcv" + SipUtils.CRLF);
 	        }
 			
 	        String  sdp =
@@ -186,7 +189,7 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 	            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
 	            	"t=0 0" + SipUtils.CRLF +
 	            	audioSdp + "a=sendrcv" + SipUtils.CRLF +
-	            	videoSdp + "a=sendrcv" + SipUtils.CRLF;
+	            	videoSdp ;
 
 	        	return sdp;
 
@@ -316,11 +319,11 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
 		}
 		
-
-		// Open the audio renderer
+//
+//		// Open the audio renderer
 //		getAudioRenderer().open(remoteHost, audioRemotePort);
-		
-		// Open the audio player - always open the player after the renderer when the RTP stream is shared
+//		
+//		// Open the audio player - always open the player after the renderer when the RTP stream is shared
 //		getAudioPlayer().open(remoteHost, audioRemotePort); 
 
 		// Open the video player/renderer
@@ -339,8 +342,9 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 
 	@Override
 	public void startMediaSession() throws Exception {
-//		getAudioPlayer().start();	
 //		getAudioRenderer().start();
+//		getAudioPlayer().start();	
+
 		
 		if ((getVideoPlayer()!= null)&&(getVideoRenderer()!= null) ){
 			getVideoPlayer().start();

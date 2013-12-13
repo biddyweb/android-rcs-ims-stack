@@ -242,26 +242,31 @@ public class OriginatingFileSharingSession extends ImsFileSharingSession impleme
         // Open the MSRP session
         msrpMgr.openMsrpSession();
 
-        try {
-            // Start sending data chunks
-            byte[] data = getContent().getData();
-            InputStream stream; 
-            if (data == null) {
-                // Load data from URL
-                stream = FileFactory.getFactory().openFileInputStream(getContent().getUrl());
-            } else {
-                // Load data from memory
-                stream = new ByteArrayInputStream(data);
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    // Start sending data chunks
+                    byte[] data = getContent().getData();
+                    InputStream stream; 
+                    if (data == null) {
+                        // Load data from URL
+                        stream = FileFactory.getFactory().openFileInputStream(getContent().getUrl());
+                    } else {
+                        // Load data from memory
+                        stream = new ByteArrayInputStream(data);
+                    }
+                    msrpMgr.sendChunks(stream, ChatUtils.generateMessageId(), getContent().getEncoding(), getContent().getSize());
+                } catch(Exception e) {
+                    // Unexpected error
+                    if (logger.isActivated()) {
+                        logger.error("Session initiation has failed", e);
+                    }
+                    handleError(new ImsServiceError(ImsServiceError.UNEXPECTED_EXCEPTION,
+                            e.getMessage()));
+                }
             }
-            msrpMgr.sendChunks(stream, ChatUtils.generateMessageId(), getContent().getEncoding(), getContent().getSize());
-        } catch(Exception e) {
-            // Unexpected error
-            if (logger.isActivated()) {
-                logger.error("Session initiation has failed", e);
-            }
-            handleError(new ImsServiceError(ImsServiceError.UNEXPECTED_EXCEPTION,
-                    e.getMessage()));
-        }
+        };
+        thread.start();
     }
 
 	/**

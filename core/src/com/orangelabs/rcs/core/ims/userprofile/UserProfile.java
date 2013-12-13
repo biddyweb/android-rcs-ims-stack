@@ -23,6 +23,7 @@ import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 import javax2.sip.header.ExtensionHeader;
 import javax2.sip.header.Header;
@@ -169,10 +170,15 @@ public class UserProfile {
 	 * @return Public address
 	 */
 	public String getPublicAddress() {
-		String addr = getPublicUri();	 
+		String addr = getPublicUri();
 		String displayName = RcsSettings.getInstance().getUserProfileImsDisplayName();
 		if ((displayName != null) && (displayName.length() > 0)) {
-			addr = "\"" + displayName + "\" <" + addr + ">"; 
+			String number = PhoneUtils.extractNumberFromUri(addr);
+			if (number != null && number.equals(displayName)) {
+				// Do no insert display name if it is equal to the international number
+				return addr;
+			}
+			addr = "\"" + displayName + "\" <" + addr + ">";
 		}
 		return addr;
 	}

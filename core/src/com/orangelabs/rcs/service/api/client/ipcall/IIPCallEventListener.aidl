@@ -17,7 +17,7 @@ interface IIPCallEventListener {
 	void handleSessionTerminatedByRemote();
 	
 	// Add video invitation
-	void handleAddVideoInvitation(in String videoEncoding, in int videoWidth, in int videoHeight);
+	void handleAddVideo(in String videoEncoding, in int videoWidth, in int videoHeight);
 	
 	// Remove video invitation
 	void handleRemoveVideo();

@@ -168,6 +168,7 @@
 <string name="label_contact_is_composing">is typing...</string>
 <string name="label_transfer_failed">Transfer has failed or is aborted (error code %d)</string>
 <string name="label_transfer_failed_too_big">Transfer is aborted because file is too big</string>
+<string name="label_transfer_failed_capacity_too_small">Not enough free space on device storage for File Transfer</string>
 <string name="label_select_contacts">Select contacts</string>
 <string name="label_chat_wizz">Wizz</string>
 <string name="label_chat_initiation_canceled">Chat session has been canceled</string>

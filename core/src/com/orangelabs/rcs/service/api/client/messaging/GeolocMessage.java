@@ -45,9 +45,10 @@ public class GeolocMessage extends InstantMessage implements Parcelable {
      * @param remote Remote user
      * @param geoloc Geoloc info
      * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
+     * @param displayName the display name of the remote contact
 	 */
-	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested) {
-		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested);
+	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested, String displayName) {
+		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested, displayName);
 		
 		this.geoloc = geoloc;
 	}
@@ -60,9 +61,10 @@ public class GeolocMessage extends InstantMessage implements Parcelable {
      * @param geoloc Geoloc info
      * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested
 	 * @param serverReceiptAt Receipt date of the message on the server
+	 * @param displayName the display name of the remote contact
 	 */
-	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested, Date serverReceiptAt) {
-		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested, serverReceiptAt);
+	public GeolocMessage(String messageId, String remote, GeolocPush geoloc, boolean imdnDisplayedRequested, Date serverReceiptAt, String displayName) {
+		super(messageId, remote, GeolocPush.formatGeolocToStr(geoloc), imdnDisplayedRequested, serverReceiptAt, displayName);
 		
 		this.geoloc = geoloc;
 	}

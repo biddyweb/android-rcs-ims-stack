@@ -41,6 +41,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
+import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -57,7 +58,7 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	/**
      * The logger
      */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static Logger logger = Logger.getLogger(TerminatingFileSharingSession.class.getSimpleName());
 
     /**
      * Constructor
@@ -78,6 +79,29 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	}
 	
 	/**
+	 * Check if file capacity is acceptable
+	 * 
+	 * @param fileSize
+	 * @return FileSharingError or null if file capacity is acceptable
+	 */
+	public static FileSharingError isFileCapacityAcceptable(long fileSize) {
+		boolean fileIsToBig = InstantMessagingService.isFileSizeExceeded(fileSize);
+		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		if (fileIsToBig) {
+			if (logger.isActivated())
+				logger.warn("File is too big, reject the File Transfer");
+			return new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG);
+		} else {
+			if (storageIsTooSmall) {
+				if (logger.isActivated())
+					logger.warn("Not enough storage capacity, reject the File Transfer");
+				return new FileSharingError(FileSharingError.NOT_ENOUGH_STORAGE_SPACE);
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * Background processing
 	 */
 	public void run() {
@@ -85,59 +109,71 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new file transfer session as terminating");
 	    	}
-	
-    		if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
-    	    	if (logger.isActivated()) {
-    	    		logger.debug("Auto accept file transfer invitation");
-    	    	}
-    		} else {
-    	    	if (logger.isActivated()) {
-    	    		logger.debug("Accept manually file transfer invitation");
-    	    	}    			
+			
+			if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
+				if (logger.isActivated()) {
+					logger.debug("Auto accept file transfer invitation");
+				}
+			} else {
+				if (logger.isActivated()) {
+					logger.debug("Accept manually file transfer invitation");
+				}
 
-    	    	// Send a 180 Ringing response
+				// Send a 180 Ringing response
 				send180Ringing(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				
+
 				// Wait invitation answer
-		    	int answer = waitInvitationAnswer();
+				int answer = waitInvitationAnswer();
 				if (answer == ImsServiceSession.INVITATION_REJECTED) {
 					if (logger.isActivated()) {
 						logger.debug("Session has been rejected by user");
 					}
-					
-			    	// Remove the current session
-			    	getImsService().removeSession(this);
-	
-			    	// Notify listeners
-			    	for(int i=0; i < getListeners().size(); i++) {
-			    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
-			        }
+
+					// Remove the current session
+					getImsService().removeSession(this);
+
+					// Notify listeners
+					for (int i = 0; i < getListeners().size(); i++) {
+						getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
+					}
 					return;
-				} else
-				if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+				} else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
 					if (logger.isActivated()) {
 						logger.debug("Session has been rejected on timeout");
 					}
-	
-                    // Ringing period timeout
-    				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
+					// Ringing period timeout
+					send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
 
-			    	// Remove the current session
-			    	getImsService().removeSession(this);
-	
-			    	// Notify listeners
-	            	for(int j=0; j < getListeners().size(); j++) {
-	            		getListeners().get(j).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
-			        }
+					// Remove the current session
+					getImsService().removeSession(this);
+
+					// Notify listeners
+					for (int j = 0; j < getListeners().size(); j++) {
+						getListeners().get(j).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+					}
 					return;
-				} else
-                if (answer == ImsServiceSession.INVITATION_CANCELED) {
-                    if (logger.isActivated()) {
-                        logger.debug("Session has been canceled");
-                    }
-                    return;
-                }
-    		}
+				} else if (answer == ImsServiceSession.INVITATION_CANCELED) {
+					if (logger.isActivated()) {
+						logger.debug("Session has been canceled");
+					}
+					return;
+				}
+			}
+
+            /**
+             * Reject if file is too big or size exceeds device storage capacity.<br>
+             * This control should be done on UI. It is done after end user accepts invitation to enable prior handling by the
+             * application.
+             */
+            FileSharingError error = isFileCapacityAcceptable(this.getContent().getSize());
+            if (error != null) {
+                // Send a 603 Decline response
+                sendErrorResponse(getDialogPath().getInvite(), this.getDialogPath().getLocalTag(), 603);
+
+                // Close session
+                handleError(error);
+                return;
+            }
 
 			// Parse the remote SDP part
 			String remoteSdp = getDialogPath().getInvite().getSdpContent();
@@ -265,11 +301,23 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
                 	// Active mode: client should connect
                 	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
 
-					// Open the MSRP session
-					msrpMgr.openMsrpSession(ImsFileSharingSession.DEFAULT_SO_TIMEOUT);
-					
-	    	        // Send an empty packet
-	            	sendEmptyDataChunk();
+                    // Open the connection
+                    Thread thread = new Thread() {
+                        public void run() {
+                            try {
+                                // Open the MSRP session
+                                msrpMgr.openMsrpSession(ImsFileSharingSession.DEFAULT_SO_TIMEOUT);
+
+                                // Send an empty packet
+                                sendEmptyDataChunk();
+                            } catch (IOException e) {
+                                if (logger.isActivated()) {
+                                    logger.error("Can't create the MSRP server session", e);
+                                }
+                            }
+                        }
+                    };
+                    thread.start();
                 }
 
                 // The session is established
@@ -385,15 +433,16 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
      * @param data received data chunk
      */
     public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
+        if (isSessionInterrupted() || isInterrupted()) {
+            return true;
+        }
         try {
         	// Update content with received data
             getContent().writeData2File(data);
             
             // Notify listeners
-            if (!isInterrupted()) {
-                for(int j = 0; j < getListeners().size(); j++) {
-                    ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
-                }
+            for(int j = 0; j < getListeners().size(); j++) {
+                ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
             }
         } catch(Exception e) {
 	   		// Delete the temp file

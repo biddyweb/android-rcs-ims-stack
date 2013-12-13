@@ -73,11 +73,7 @@ public class GroupChatView extends ChatView {
         			chatSession = messagingApi.initiateAdhocGroupChatSession(participants, subject);
             		chatSession.addSessionListener(chatSessionListener);
             	} catch(Exception e) {
-            		handler.post(new Runnable(){
-            			public void run(){
-            				Utils.showMessageAndExit(GroupChatView.this, getString(R.string.label_invitation_failed));		
-            			}
-            		});
+            		Utils.ShowDialogAndFinish(GroupChatView.this, getString(R.string.label_invitation_failed));		
             	}
         	}
         };

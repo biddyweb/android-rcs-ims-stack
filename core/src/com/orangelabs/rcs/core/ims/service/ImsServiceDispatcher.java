@@ -386,7 +386,7 @@ public class ImsServiceDispatcher extends Thread {
 	    		}		
 		    } else 
 			if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL))	{
+	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)&&(!SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)))	{
 	    		// IP voice call
 	    		if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
 		    		if (logger.isActivated()) {

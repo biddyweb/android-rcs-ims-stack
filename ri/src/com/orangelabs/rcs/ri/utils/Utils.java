@@ -280,6 +280,39 @@ public class Utils {
     }
 
 	/**
+	 * Display the dialog and finish the activity when dialog is acknowledged.<br>
+	 * <b>Can be launched from a worker thread (different from the UI thread then)</b>
+	 * 
+	 * @param activity
+	 *            Activity
+	 * @param msg
+	 *            Message to be displayed
+	 */
+	public static void ShowDialogAndFinish(final Activity activity, final String msg) {
+		Thread runnable = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+				builder.setMessage(msg);
+				builder.setTitle(R.string.title_msg);
+				builder.setCancelable(false);
+				builder.setPositiveButton(activity.getString(R.string.label_ok),
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								activity.finish();
+							}
+						});
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+		});
+		/*
+		 * Display the toast
+		 */
+		activity.runOnUiThread(runnable);
+	}
+
+	/**
 	 * Show an message
 	 * 
 	 * @param activity Activity
