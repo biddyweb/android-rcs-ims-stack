@@ -11,6 +11,7 @@ News:
 
 - Reject FT & ISh and handle application after accept if not enough disk storage or file too big. 
 - Manage display name for IM in group chat according to RFC 3862.
+- H264 Decoder - not return success status if picture not ready.
 
 
 Bugs fixed:
@@ -27,7 +28,6 @@ V2.5.14
 - Issue 184		Stack: WiFi 1st time registration token parsing overwrites provisioning version
 - Issue 183		Stack: File transfer thumbnail uses wrong content-type if the orignal file is not a jpeg
 - Issue 181		Stack: Capabilities Parcelable may be malformed
-
 
 V2.5.13
 - Issue 178		Stack: Used GSMA release is reset to Albatros once an empty HTTPS provisioning message is received
