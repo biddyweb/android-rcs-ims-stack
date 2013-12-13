@@ -19,7 +19,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.15
-- 
+- Issue 187		Stack: FT capability must not be removed in case of low storage.
 
 
 V2.5.14

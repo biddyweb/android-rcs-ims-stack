@@ -42,7 +42,6 @@ import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.capability.CapabilityApiIntents;
 import com.orangelabs.rcs.utils.MimeManager;
 import com.orangelabs.rcs.utils.NetworkUtils;
-import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.StringUtils;
 
 /**
@@ -76,17 +75,17 @@ public class CapabilityUtils {
 		}
 		
 		// FT support
-		if (RcsSettings.getInstance().isFileTransferSupported() && isFileStorageAvailable()) {
+		if (RcsSettings.getInstance().isFileTransferSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_FT + ",";
 		}
 		
 		// FT over HTTP support
-		if (RcsSettings.getInstance().isFileTransferHttpSupported() && isFileStorageAvailable()) {
+		if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
 			supported += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
 		}
 
 		// Image share support
-		if (RcsSettings.getInstance().isImageSharingSupported() && (richcall || ipcall) && isFileStorageAvailable()) {
+		if (RcsSettings.getInstance().isImageSharingSupported() && (richcall || ipcall)) {
 			supported += FeatureTags.FEATURE_RCSE_IMAGE_SHARE + ",";
 		}
 
@@ -372,12 +371,10 @@ public class CapabilityUtils {
 					StringBuffer supportedTransferFormats = new StringBuffer();
 
 					// Get supported image formats
-		        	if (isFileStorageAvailable()) {
-			        	Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
-						for(int i=0; i < mimeTypes.size(); i++) {
-							supportedTransferFormats.append(mimeTypes.elementAt(i) + " ");
-					    }
-		        	}
+		        	Vector<String> mimeTypes = MimeManager.getSupportedImageMimeTypes();
+					for(int i=0; i < mimeTypes.size(); i++) {
+						supportedTransferFormats.append(mimeTypes.elementAt(i) + " ");
+				    }
 		        	
 		        	// Get supported geoloc
 		        	if (geoloc) {
@@ -397,21 +394,5 @@ public class CapabilityUtils {
 	        }
 		}
 		return sdp;
-    }
-
-    /**
-     * Is the current storage conditions allow to receive files
-     *
-     * @return <code>true</code> if supported, otherwise <code>false</code>
-     */
-    private static boolean isFileStorageAvailable() {
-        long minStockage = 1024 * (long)RcsSettings.getInstance().getMinStorageCapacity();
-        if (minStockage > 0) {
-            long freeSpace = StorageUtils.getExternalStorageFreeSpace();
-            if (freeSpace < minStockage) {
-                return false;
-            }
-        }
-        return true;
     }
 }
