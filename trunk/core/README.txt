@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.14
+Release 2.5.15
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,9 +9,7 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Reject FT & ISh and handle application after accept if not enough disk storage or file too big. 
-- Manage display name for IM in group chat according to RFC 3862.
-- H264 Decoder - not return success status if picture not ready.
+- 
 
 
 Bugs fixed:
@@ -19,6 +17,10 @@ Bugs fixed:
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+V2.5.15
+- 
+
 
 V2.5.14
 - BB Guidelines	Stack: ID_4_11 Clarification on FT feature tags
