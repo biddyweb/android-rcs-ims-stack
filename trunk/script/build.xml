@@ -1,0 +1,197 @@
+<!-- ******************************************************************* -->
+<!--                         Joyn Opensource Stack                       -->
+<!-- ******************************************************************* -->
+
+<project
+    name="Joyn Opensource Stack"
+    basedir=".">
+
+    <!-- ********************* -->
+    <!-- Properties            -->
+    <!-- ********************* -->
+
+    <property environment="env" />
+    <property
+        name="android.root"
+        value="${env.ANDROID_SDK}" />
+    <property
+        name="stack.root"
+        value="../core" />
+    <property
+        name="stack.api"
+        value="${stack.root}/rcs_api.jar" />
+    <property
+        name="stack.build"
+        value="${stack.root}/build" />
+    <property
+        name="ri.root"
+        value="../ri" />
+    <property
+        name="apidemo.root"
+        value="../apidemo" />
+    <property
+        name="generate.root"
+        value="../gen" />
+    <property
+        name="javadoc.root"
+        value="${generate.root}/javadoc" />
+    <property
+        name="javadoc.zip"
+        value="${generate.root}/javadoc.zip" />
+    <property
+        name="sdk.zip"
+        value="${generate.root}/sdk.zip" />
+    <property
+        name="doc.root"
+        value="../../doc" />
+
+
+    <path id="j2se.lib">
+        <fileset dir="${env.JAVA_HOME}/lib/">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+    <property
+        name="j2se.classpath"
+        refid="j2se.lib" />
+    <path id="stack.classpath">
+        <pathelement
+            path="${j2se.classpath};${android.root}/android.jar;${stack.build}/classes;${stack.root}/build/classes" />
+    </path>
+
+    <!-- ********************* -->
+    <!-- Generate RCS API JAR  -->
+    <!-- ********************* -->
+    <target name="generate_api">
+        <echo>Generate ${stack.api} file</echo>
+        <delete file="${stack.api}" />
+        <jar
+            destfile="${stack.api}"
+            basedir="${stack.root}/bin/classes"
+            includesfile="${stack.root}/jarfiles.txt">
+        </jar>
+    </target>
+
+    <!-- ********************* -->
+    <!-- Copy rcs_api.jar in   -->
+    <!-- each project          -->
+    <!-- ********************* -->
+    <target name="copy_api">
+        <echo>Copy ${stack.api} file</echo>
+        <copy
+            file="${stack.api}"
+            todir="${stack.root}/../ri/libs" />
+        <copy
+            file="${stack.api}"
+            todir="${stack.root}/../apidemo/extension/libs" />
+        <copy
+            file="${stack.api}"
+            todir="${stack.root}/../apidemo/gsma/libs" />
+        <copy
+            file="${stack.api}"
+            todir="${stack.root}/../apidemo/sip/libs" />
+    </target>
+
+    <!-- ********************* -->
+    <!-- Generate javadoc      -->
+    <!-- ********************* -->
+    <target name="generate_javadoc">
+        <mkdir dir="${javadoc.root}" />
+        <javadoc
+            classpath="${android.root}/platforms/android-8/android.jar"
+            destdir="${javadoc.root}"
+            author="true"
+            version="true"
+            use="true"
+            windowtitle="RCS API">
+            <packageset
+                dir="${stack.root}/src"
+                defaultexcludes="yes">
+                <include name="com/orangelabs/rcs/service/api/client/**" />
+                <include name="com/orangelabs/rcs/provider/**" />
+            </packageset>
+            <fileset dir="${stack.root}/src">
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/ImsServiceError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/ImsSessionBasedServiceError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/richcall/ContentSharingError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/im/chat/ChatError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/im/filetransfer/FileSharingError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/ipcall/IPCallError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/sip/SipSessionError.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/im/chat/imdn/ImdnDocument.java" />
+                <include
+                    name="com/orangelabs/rcs/core/ims/service/im/chat/event/User.java" />
+            </fileset>
+            <doctitle><![CDATA[<h1>Joyn API</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Joyn stack for Android</i>]]></bottom>
+            <link href="${android.root}/docs/reference" />
+        </javadoc>
+        <zip destfile="${javadoc.zip}">
+            <zipfileset
+                dir="${javadoc.root}"
+                prefix="api/javadoc" />
+        </zip>
+    </target>
+
+    <!-- ********************* -->
+    <!-- Generate sdk.zip      -->
+    <!-- ********************* -->
+    <target name="generate_sdk">
+        <zip destfile="${sdk.zip}">
+            <fileset
+                dir="${stack.root}"
+                includes="LICENSE*.txt" />
+            <fileset
+                dir="${stack.root}"
+                includes="README.txt" />
+            <zipfileset
+                dir="${stack.root}"
+                includes="rcs_api.jar"
+                prefix="api" />
+            <zipfileset
+                dir="${doc.root}/spec"
+                includes="RCS-e_API_specification.pdf"
+                prefix="api" />
+            <zipfileset
+                dir="${stack.root}/../ri/libs/armeabi"
+                includes="lib*.so"
+                prefix="api/codecs" />
+            <zipgroupfileset
+                dir="${generate.root}"
+                includes="javadoc.zip" />
+            <zipfileset
+                dir="."
+                includes="under_construction"
+                prefix="api/tutorial" />
+            <zipfileset
+                dir="${apidemo.root}/extension/bin"
+                includes="*.apk"
+                fullpath="samples/RCS_extension.apk" />
+            <zipfileset
+                dir="${apidemo.root}/gsma/bin"
+                includes="*.apk"
+                fullpath="samples/RCS_gsma.apk" />
+            <zipfileset
+                dir="${apidemo.root}/sip/bin"
+                includes="*.apk"
+                fullpath="samples/RCS_sip.apk" />
+            <zipfileset
+                dir="${stack.root}/bin"
+                includes="*.apk"
+                fullpath="stack/RCS_core.apk" />
+            <zipfileset
+                dir="${ri.root}/bin"
+                includes="*.apk"
+                fullpath="tools/RCS_RI.apk" />
+        </zip>
+    </target>
+
+</project>
