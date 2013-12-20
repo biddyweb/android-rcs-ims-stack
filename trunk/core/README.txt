@@ -20,7 +20,7 @@ See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/i
 
 V2.5.15
 - Issue 187		Stack: FT capability must not be removed in case of low storage.
-
+- Issue 190 	Stack: The new display name parameter is being passed on the wrong position on some RichMessaging's functions
 
 V2.5.14
 - BB Guidelines	Stack: ID_4_11 Clarification on FT feature tags
