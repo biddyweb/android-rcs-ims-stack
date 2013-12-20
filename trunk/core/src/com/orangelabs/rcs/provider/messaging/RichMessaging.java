@@ -379,8 +379,9 @@ public class RichMessaging {
 		if (msg.isImdnDisplayedRequested() && RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
-				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(), status);
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(),
+				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage()
+						.getBytes().length, msg.getDate(), status);
 	}
 
 	/**
@@ -397,9 +398,9 @@ public class RichMessaging {
 		} else {
 			type = EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
-				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length, msg.getDate(),
-				EventsLogApi.STATUS_SENT);
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(),
+				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage()
+						.getBytes().length, msg.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
 	/**
@@ -421,8 +422,9 @@ public class RichMessaging {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(),
-				geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), status);
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(),
+				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(),
+				geoloc.getDate(), status);
 	}
 
     /**
@@ -435,8 +437,8 @@ public class RichMessaging {
 		int type = EventsLogApi.TYPE_INCOMING_GEOLOC;
 		int status = EventsLogApi.STATUS_RECEIVED;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
-				geoloc.getDisplayName(), geolocData.length(), geoloc.getDate(), status);
+		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(), geolocData,
+				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), status);
 	}
 
     /**
@@ -454,8 +456,9 @@ public class RichMessaging {
 			type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(),
-				geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(),
+				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(),
+				geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
     /**
@@ -467,8 +470,8 @@ public class RichMessaging {
 		// Add session entry
 		int type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(),
-				geoloc.getDisplayName(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
+		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(), geolocData,
+				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
     /**
@@ -725,9 +728,9 @@ public class RichMessaging {
 	public void addSpamMessage(InstantMessage msg) {
 		// TODO: 2 queries may be avoided
 		String id = SessionIdGenerator.getNewId();
-		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, id, id, msg.getMessageId(), msg.getRemote(), msg.getTextMessage(),
-				InstantMessage.MIME_TYPE, msg.getRemote(), msg.getDisplayName(), msg.getTextMessage().getBytes().length, msg.getDate(),
-				EventsLogApi.STATUS_RECEIVED);
+		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, id, id, msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
+				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length,
+				msg.getDate(), EventsLogApi.STATUS_RECEIVED);
 		markChatMessageAsSpam(msg.getMessageId(), true);
 	}
 
@@ -742,9 +745,9 @@ public class RichMessaging {
 		if (msg.isImdnDisplayedRequested() && RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
-		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), chatId, msg.getMessageId(), msg.getRemote(),
-				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getDisplayName(), msg.getTextMessage().getBytes().length,
-				msg.getDate(), status);
+		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), chatId, msg.getMessageId(),
+				msg.getRemote(), msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg
+						.getTextMessage().getBytes().length, msg.getDate(), status);
 	}
 
     /**
