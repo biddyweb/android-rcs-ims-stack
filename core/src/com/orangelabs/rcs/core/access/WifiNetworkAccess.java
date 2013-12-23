@@ -92,7 +92,7 @@ public class WifiNetworkAccess extends NetworkAccess {
 		} else {
 			return "IEEE-802.11a";
 		}
-	}    
+	}  
 	
 	/**
 	 * Return the network name
