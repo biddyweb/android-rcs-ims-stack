@@ -179,8 +179,8 @@ public class SipManager {
             ctx.waitResponse(timeout);
 
             // Analyze the received response
-            if (    message instanceof SipRequest
-                    && !((SipRequest)message).getMethod().equals(Request.REGISTER)
+            if (message instanceof SipRequest
+                && !((SipRequest)message).getMethod().equals(Request.REGISTER)
                     && ctx.isSipResponse()) {
                 // Check if not registered and warning header
                 WarningHeader warn = (WarningHeader)ctx.getSipResponse().getHeader(WarningHeader.NAME);
