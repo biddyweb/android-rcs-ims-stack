@@ -173,15 +173,15 @@
                 prefix="api/tutorial" />
             <zipfileset
                 dir="${apidemo.root}/extension/bin"
-                includes="*.apk"
+                includes="*debug.apk"
                 fullpath="samples/RCS_extension.apk" />
             <zipfileset
                 dir="${apidemo.root}/gsma/bin"
-                includes="*.apk"
+                includes="*debug.apk"
                 fullpath="samples/RCS_gsma.apk" />
             <zipfileset
                 dir="${apidemo.root}/sip/bin"
-                includes="*.apk"
+                includes="*debug.apk"
                 fullpath="samples/RCS_sip.apk" />
             <zipfileset
                 dir="${stack.root}/bin"
@@ -189,7 +189,7 @@
                 fullpath="stack/RCS_core.apk" />
             <zipfileset
                 dir="${ri.root}/bin"
-                includes="*.apk"
+                includes="*debug.apk"
                 fullpath="tools/RCS_RI.apk" />
         </zip>
     </target>
