@@ -43,7 +43,7 @@
         value="${generate.root}/sdk.zip" />
     <property
         name="doc.root"
-        value="../../doc" />
+        value=".." />
 
 
     <path id="j2se.lib">
