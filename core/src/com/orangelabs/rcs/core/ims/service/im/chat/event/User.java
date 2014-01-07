@@ -101,6 +101,6 @@ public class User {
 	}
 	
 	public static boolean isDisconnected(String state) {
-		return (state.equals(User.STATE_DISCONNECTED) || state.equals(User.STATE_DEPARTED) || state.equals(User.STATE_DECLINED) || state.equals(User.STATE_BUSY) || state.equals(User.STATE_FAILED));
+		return !isConnected(state);
 	}
 }

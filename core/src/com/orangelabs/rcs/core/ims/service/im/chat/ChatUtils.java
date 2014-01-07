@@ -60,7 +60,6 @@ import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
-import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Chat utility functions
@@ -68,7 +67,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class ChatUtils {
-	private static Logger logger = Logger.getLogger(ChatUtils.class.getSimpleName());
 	/**
 	 * Anonymous URI
 	 */
