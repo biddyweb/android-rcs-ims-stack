@@ -48,7 +48,7 @@ public class ChunkReceiver extends Thread {
     /**
      * maximum length of MSRP chunk buffer
      */
-    private int buffer_length = 0;
+    private int buffer_length = MsrpConstants.CHUNK_MAX_SIZE;
 
 	/**
 	 * The logger
@@ -218,9 +218,7 @@ public class ChunkReceiver extends Thread {
 									buffer.append(dataline);
 								}								
 							}
-							data = buffer.toString().getBytes();
-							totalSize = data.length;
-							
+							data = buffer.toString().getBytes();							
 							if (MsrpConnection.MSRP_TRACE_ENABLED) {
 								trace.append(new String(data));
 								trace.append(MsrpConstants.NEW_LINE);
@@ -230,7 +228,7 @@ public class ChunkReceiver extends Thread {
 						}
 						if (logger.isActivated()) {
 							logger.debug("Data: " + data.length);
-						}						
+						}
 					} else
 					if (line.toString().startsWith(end)) {
 						continuationFlag = line.charAt(line.length()-1);
@@ -326,6 +324,9 @@ public class ChunkReceiver extends Thread {
 	 * @throws IOException
 	 */
 	private byte[] readChunkedData(int chunkSize, String endTag) throws IOException {
+		if (logger.isActivated()) {
+			logger.warn("readChunkedData (chunkSize="+ chunkSize+") (endTag="+ endTag+")");
+		}
         // Read data until chunk size is reached
         byte[] result = null;
         if (chunkSize != 0) {
