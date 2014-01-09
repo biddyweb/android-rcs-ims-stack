@@ -19,6 +19,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.15
+- Issue 182 	Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
 - Issue 187		Stack: FT capability must not be removed in case of low storage.
 - Issue 190 	Stack: The new display name parameter is being passed on the wrong position on some RichMessaging's functions
 
