@@ -783,6 +783,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
                     if (chatSession != null) {
                 		chatSession.removeSessionListener(chatSessionListener);
                 		chatSession.cancelSession();
+                		if (logger.isActivated()) {
+							logger.debug("quitSession");
+						}
                     }
             	} catch(Exception e) {
             	}
@@ -806,6 +809,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     					public void onClick(DialogInterface dialog, int which) {
     		            	// Quit the session
     		            	quitSession();
+    		            	if (logger.isActivated()) {
+    							logger.debug("onKeyDown: quit the session");
+    						}
     					}
     				});
     				builder.setNegativeButton(getString(R.string.label_cancel), new DialogInterface.OnClickListener() {
@@ -920,6 +926,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				builder.setTitle(getString(R.string.title_chat_exit));
 				builder.setPositiveButton(getString(R.string.label_ok), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
+						if (logger.isActivated()) {
+							logger.debug("onOptionsItemSelected: close the session");
+						}
 		            	// Quit the session
 		            	quitSession();
 					}
