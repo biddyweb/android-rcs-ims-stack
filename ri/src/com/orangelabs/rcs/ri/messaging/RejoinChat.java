@@ -35,6 +35,7 @@ import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Rejoin a group chat session
@@ -75,6 +76,11 @@ public class RejoinChat {
 	 */
 	private RestartChat restartChat = null;
 
+	/**
+	 * The logger
+	 */
+	private static Logger logger = Logger.getLogger(RejoinChat.class.getSimpleName());
+	
 	/**
      * Constructor
      * 
@@ -139,6 +145,7 @@ public class RejoinChat {
     public synchronized void stop() {
     	if (restartChat != null) {
     		restartChat.stop();
+    		restartChat = null;
     	}
     	
     	if (chatSession == null) {
@@ -151,7 +158,13 @@ public class RejoinChat {
             	try {
                     if (chatSession != null) {
                 		chatSession.removeSessionListener(chatSessionListener);
-                		chatSession.cancelSession();
+                		// Only cancel session if rejoin is in progress
+                		if (progressDialog != null) {
+                			if (logger.isActivated()) {
+    							logger.debug("cancel rejoin");
+    						}
+                			chatSession.cancelSession();
+                		}
                     }
             	} catch(Exception e) {
             	}
@@ -172,7 +185,9 @@ public class RejoinChat {
 					try {
 	                    // Hide progress dialog
 						hideProgressDialog();
-	
+						if (logger.isActivated()) {
+							logger.debug("handleSessionStarted: sessionID="+chatSession.getSessionID());
+						}
 						// Remove listener now
                 		chatSession.removeSessionListener(chatSessionListener);
 
@@ -195,7 +210,9 @@ public class RejoinChat {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-
+					if (logger.isActivated()) {
+						logger.debug("handleImError: error="+error);
+					}
 					if (error == ChatError.SESSION_NOT_FOUND) {
 						// Propose to restart the session
 						restartChat = new RestartChat(activity, messagingApi, chatId);
@@ -209,11 +226,14 @@ public class RejoinChat {
 		}	
 		
 		// Session has been aborted
-		public void handleSessionAborted(int reason) {
+		public void handleSessionAborted(final int reason) {
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
+					if (logger.isActivated()) {
+						logger.debug("handleSessionAborted: reason="+reason);
+					}
 				}
 			});
 		}
@@ -224,9 +244,12 @@ public class RejoinChat {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-
+					if (logger.isActivated()) {
+						logger.debug("handleSessionTerminatedByRemote");
+					}
 					// Display error
 					Utils.showMessage(activity, activity.getString(R.string.label_rejoin_chat_terminated_by_remote));
+					
 				}
 			});
 		}

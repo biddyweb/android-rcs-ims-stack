@@ -34,6 +34,7 @@ import com.orangelabs.rcs.service.api.client.messaging.IChatEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Restart a group chat session
@@ -69,6 +70,8 @@ public class RestartChat {
 	 */
 	private IChatSession chatSession = null; 
 
+	private static Logger logger = Logger.getLogger(RestartChat.class.getSimpleName());
+	
 	/**
      * Constructor
      * 
@@ -141,7 +144,13 @@ public class RestartChat {
             	try {
                     if (chatSession != null) {
                 		chatSession.removeSessionListener(chatSessionListener);
-                		chatSession.cancelSession();
+                		// Only cancel session if restart is in progress
+                		if (progressDialog != null) {
+                			if (logger.isActivated()) {
+    							logger.debug("cancel restart");
+    						}
+                			chatSession.cancelSession();
+                		}
                     }
             	} catch(Exception e) {
             	}

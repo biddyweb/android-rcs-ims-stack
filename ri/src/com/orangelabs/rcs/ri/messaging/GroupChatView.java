@@ -32,6 +32,7 @@ import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Group chat view
@@ -41,6 +42,8 @@ public class GroupChatView extends ChatView {
 	 * Subject
 	 */
 	private String subject;
+	
+	private static Logger logger = Logger.getLogger(GroupChatView.class.getSimpleName());
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +87,9 @@ public class GroupChatView extends ChatView {
         progressDialog.setOnCancelListener(new OnCancelListener() {
 			public void onCancel(DialogInterface dialog) {
 				Toast.makeText(GroupChatView.this, getString(R.string.label_chat_initiation_canceled), Toast.LENGTH_SHORT).show();
+				if (logger.isActivated()) {
+					logger.debug("initSession: cancel session");
+				}
 				quitSession();
 			}
 		});
