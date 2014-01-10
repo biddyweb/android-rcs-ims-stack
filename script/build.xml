@@ -185,7 +185,7 @@
                 fullpath="samples/RCS_sip.apk" />
             <zipfileset
                 dir="${stack.root}/bin"
-                includes="*.apk"
+                includes="*debug.apk"
                 fullpath="stack/RCS_core.apk" />
             <zipfileset
                 dir="${ri.root}/bin"
