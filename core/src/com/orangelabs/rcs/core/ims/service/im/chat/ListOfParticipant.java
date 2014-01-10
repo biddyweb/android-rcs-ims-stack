@@ -45,8 +45,8 @@ public class ListOfParticipant {
 	/**
      * The logger
      */
-    private Logger logger = Logger.getLogger(this.getClass().getName());	
-	
+    private static Logger logger = Logger.getLogger(ListOfParticipant.class.getSimpleName());	
+
 	/**
 	 * Constructor
 	 */
@@ -69,28 +69,28 @@ public class ListOfParticipant {
 	 */
 	public ListOfParticipant(String xml) {
 		try {
-	    	InputSource pidfInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
-	    	ResourceListParser listParser = new ResourceListParser(pidfInput);
-	    	ResourceListDocument resList = listParser.getResourceList();
-	    	if (resList != null) {
-	    		Vector<String> entries = resList.getEntries();
-	    		for(int i=0; i < entries.size(); i++) {
-	    			String entry = entries.elementAt(i); 
+			InputSource pidfInput = new InputSource(new ByteArrayInputStream(xml.getBytes()));
+			ResourceListParser listParser = new ResourceListParser(pidfInput);
+			ResourceListDocument resList = listParser.getResourceList();
+			if (resList != null) {
+				Vector<String> entries = resList.getEntries();
+				for (int i = 0; i < entries.size(); i++) {
+					String entry = entries.elementAt(i);
 					if (!PhoneUtils.compareNumbers(entry, ImsModule.IMS_USER_PROFILE.getPublicUri())) {
 						String number = PhoneUtils.extractNumberFromUri(entry);
-						if ((!StringUtils.isEmpty(number)) && (!list.contains(number))) {
-					    	if (logger.isActivated()) {
-					    		logger.debug("Add participant " + number + " to the list");
-					    	}	
+						if ((!StringUtils.isEmpty(number)) && (!list.contains(number)) && PhoneUtils.isGlobalPhoneNumber(number)) {
+							if (logger.isActivated()) {
+								logger.debug("Add participant " + number + " to the list");
+							}
 							list.add(number);
 						}
-	    			}
-	    		}
-	    	}
-	    } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Can't parse resource-list document", e);
-        	}
+					}
+				}
+			}
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't parse resource-list document", e);
+			}
 		}
 	}
 	
@@ -101,11 +101,11 @@ public class ListOfParticipant {
 	 */
 	public void addParticipant(String participant) {
 		String number = PhoneUtils.extractNumberFromUri(participant);
-		if ((!StringUtils.isEmpty(number)) && (!list.contains(number))) {
-	    	if (logger.isActivated()) {
-	    		logger.debug("Add participant " + number + " to the list");
-	    	}	
-	    	list.add(number);
+		if ((!StringUtils.isEmpty(number)) && (!list.contains(number)) && PhoneUtils.isGlobalPhoneNumber(number)) {
+			if (logger.isActivated()) {
+				logger.debug("Add participant " + number + " to the list");
+			}
+			list.add(number);
 		}
 	}
 
