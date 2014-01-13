@@ -22,6 +22,7 @@ V2.5.15
 - Issue 182 	Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
 - Issue 187		Stack: FT capability must not be removed in case of low storage.
 - Issue 190 	Stack: The new display name parameter is being passed on the wrong position on some RichMessaging's functions
+- Issue 191		Stack: User send a Refer with Refer-To:tel:+33 header after INVITE reception
 
 V2.5.14
 - BB Guidelines	Stack: ID_4_11 Clarification on FT feature tags
