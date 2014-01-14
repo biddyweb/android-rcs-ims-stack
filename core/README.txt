@@ -9,7 +9,7 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- 
+- Checking of input parameter validity for API client methods
 
 
 Bugs fixed:
