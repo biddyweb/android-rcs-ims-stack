@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -113,6 +114,9 @@ public class CapabilityApi extends ClientApi {
      * @return Capabilities
      */
     public Capabilities getContactCapabilities(String contact) {
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	ContactInfo contactInfo = ContactsManager.getInstance().getContactInfo(contact);
     	if (contactInfo != null) {
     		return contactInfo.getCapabilities();
@@ -128,6 +132,9 @@ public class CapabilityApi extends ClientApi {
      * @return Contact info
      */
     public ContactInfo getContactInfo(String contact) {
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	return ContactsManager.getInstance().getContactInfo(contact);
     }    
 
@@ -139,6 +146,9 @@ public class CapabilityApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public Capabilities requestCapabilities(String contact) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		if (coreApi != null) {
 			try {
 				// Request capabilities

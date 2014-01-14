@@ -25,7 +25,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
+import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.CoreServiceNotAvailableException;
@@ -101,6 +103,9 @@ public class SipApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public ISipSession initiateSession(String contact, String featureTag, String sdp) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || TextUtils.isEmpty(featureTag) || TextUtils.isEmpty(sdp)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateSession(contact, featureTag, sdp);
@@ -120,6 +125,9 @@ public class SipApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public ISipSession getSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getSession(id);
@@ -139,6 +147,9 @@ public class SipApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getSessionsWith(String contact) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getSessionsWith(contact);
@@ -179,6 +190,10 @@ public class SipApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public boolean sendSipInstantMessage(String contact, String featureTag, String content, String contentType) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || TextUtils.isEmpty(featureTag) || TextUtils.isEmpty(content)
+				|| TextUtils.isEmpty(contentType)) {
+			throw new IllegalArgumentException();
+		}
 		if (coreApi != null) {
 			try {
 		    	return coreApi.sendSipInstantMessage(contact, featureTag, content, contentType);

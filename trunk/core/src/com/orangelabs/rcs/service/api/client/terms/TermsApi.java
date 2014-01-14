@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -97,7 +98,10 @@ public class TermsApi extends ClientApi {
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean acceptTerms(String id, String pin) throws ClientApiException {	
+    public boolean acceptTerms(String id, String pin) throws ClientApiException {
+    	if (TextUtils.isEmpty(id) || TextUtils.isEmpty(pin)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 				return coreApi.acceptTerms(id, pin);
@@ -117,7 +121,10 @@ public class TermsApi extends ClientApi {
 	 * @return Boolean result
      * @throws ClientApiException
      */
-    public boolean rejectTerms(String id, String pin) throws ClientApiException {	
+    public boolean rejectTerms(String id, String pin) throws ClientApiException {
+    	if (TextUtils.isEmpty(id) || TextUtils.isEmpty(pin)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 				return coreApi.rejectTerms(id, pin);

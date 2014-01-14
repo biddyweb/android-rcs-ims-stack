@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -114,6 +115,9 @@ public class MessagingApi extends ClientApi {
      * @throws ClientApiException
      */
     public IFileTransferSession transferFile(String contact, String file, boolean thumbnail) throws ClientApiException {	
+    	if (TextUtils.isEmpty(contact) || TextUtils.isEmpty(file)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 				IFileTransferSession session = coreApi.transferFile(contact, file, thumbnail);
@@ -134,6 +138,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IFileTransferSession getFileTransferSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getFileTransferSession(id);
@@ -153,6 +160,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getFileTransferSessionsWith(String contact) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getFileTransferSessionsWith(contact);
@@ -191,6 +201,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession initiateOne2OneChatSession(String contact, String firstMsg) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateOne2OneChatSession(contact, firstMsg);
@@ -210,6 +223,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession initiateAdhocGroupChatSession(List<String> participants) throws ClientApiException {
+		if (participants == null) {
+			throw new IllegalArgumentException();
+		}
 		return initiateAdhocGroupChatSession(participants, null);
 	}
 		
@@ -222,6 +238,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession initiateAdhocGroupChatSession(List<String> participants, String subject) throws ClientApiException {
+		if (participants == null) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateAdhocGroupChatSession(participants, subject);
@@ -241,6 +260,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession rejoinGroupChatSession(String chatId) throws ClientApiException {
+		if (TextUtils.isEmpty(chatId)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.rejoinGroupChatSession(chatId);
@@ -260,6 +282,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession restartGroupChatSession(String chatId) throws ClientApiException {
+		if (TextUtils.isEmpty(chatId)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.restartGroupChatSession(chatId);
@@ -279,6 +304,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IChatSession getChatSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getChatSession(id);
@@ -298,6 +326,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getChatSessionsWith(String contact) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+			throw new IllegalArgumentException();
+		}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getChatSessionsWith(contact);
@@ -352,6 +383,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getGroupChatSessionsWith(String chatId) throws ClientApiException {
+		if (TextUtils.isEmpty(chatId)) {
+			throw new IllegalArgumentException();
+		}
 		if (coreApi != null) {
 			try {
 		    	return coreApi.getGroupChatSessionsWith(chatId);
@@ -372,6 +406,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public void setMessageDeliveryStatus(String contact, String msgId, String status) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || TextUtils.isEmpty(msgId) || TextUtils.isEmpty(status)) {
+			throw new IllegalArgumentException();
+		}
 		if (coreApi != null) {
 			try {
 		    	coreApi.setMessageDeliveryStatus(contact, msgId, status);
@@ -390,6 +427,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public void addMessageDeliveryListener(IMessageDeliveryListener listener) throws ClientApiException {
+		if (listener == null) {
+			throw new IllegalArgumentException();
+		}
 		if (coreApi != null) {
 			try {
 		    	coreApi.addMessageDeliveryListener(listener);
@@ -408,6 +448,9 @@ public class MessagingApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public void removeMessageDeliveryListener(IMessageDeliveryListener listener) throws ClientApiException {
+		if (listener == null) {
+			throw new IllegalArgumentException();
+		}
 		if (coreApi != null) {
 			try {
 		    	coreApi.removeMessageDeliveryListener(listener);

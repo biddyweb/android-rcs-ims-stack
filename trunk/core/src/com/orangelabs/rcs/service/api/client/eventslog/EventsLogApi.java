@@ -24,6 +24,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.provider.eventlogs.EventLogData;
 import com.orangelabs.rcs.provider.ipcall.IPCall;
@@ -334,6 +335,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param contact
 	 */
 	public void clearHistoryForContact(String contact) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().clearHistory(
 				PhoneUtils.formatNumberToInternational(contact));
 	}
@@ -379,6 +383,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param date
 	 */
 	public void deleteRichCallEntry(String contact, long date) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichCall.getInstance().removeCall(contact, date);
 	}
 
@@ -398,6 +405,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param contact
 	 */
 	public void deleteMessagingLogForContact(String contact) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().deleteContactHistory(contact);
 	}
 
@@ -408,6 +418,9 @@ public class EventsLogApi extends ClientApi {
 	 *            Chat ID
 	 */
 	public void deleteGroupChatConversation(String chatId) {
+		if (TextUtils.isEmpty(chatId)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().deleteGroupChatConversation(chatId);
 	}
 
@@ -418,6 +431,9 @@ public class EventsLogApi extends ClientApi {
 	 *            Session ID
 	 */
 	public void deleteImSessionEntry(String sessionId) {
+		if (TextUtils.isEmpty(sessionId)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().deleteChatSession(sessionId);
 	}
 
@@ -428,6 +444,9 @@ public class EventsLogApi extends ClientApi {
 	 * @return cursor
 	 */
 	public Cursor getChatSessionCursor(String sessionId) {
+		if (TextUtils.isEmpty(sessionId)) {
+    		throw new IllegalArgumentException();
+    	}
 		// Do not take the chat terminated messages
 		String chatTerminatedExcludedSelection = " AND NOT(("
 				+ RichMessagingData.KEY_TYPE + "==" + TYPE_CHAT_SYSTEM_MESSAGE
@@ -459,6 +478,9 @@ public class EventsLogApi extends ClientApi {
 	 * @return cursor
 	 */
 	public Cursor getChatContactCursor(String contact) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		// Do not take the chat terminated messages
 		String chatTerminatedExcludedSelection = " AND NOT(("
 				+ RichMessagingData.KEY_TYPE + "==" + TYPE_CHAT_SYSTEM_MESSAGE
@@ -489,6 +511,9 @@ public class EventsLogApi extends ClientApi {
 	 * @return Instant message
 	 */
 	public InstantMessage getLastChatMessage(String sessionId) {
+		if (TextUtils.isEmpty(sessionId)) {
+    		throw new IllegalArgumentException();
+    	}
 		InstantMessage result = null;
 		Cursor cursor = ctx.getContentResolver().query(
 				RichMessagingData.CONTENT_URI,
@@ -522,6 +547,9 @@ public class EventsLogApi extends ClientApi {
 	 * @return Geoloc info
 	 */
 	public GeolocPush getLastGeoloc(String contact) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		GeolocPush result = null;
 
 		String sortOrder = RichMessagingData.KEY_TIMESTAMP + " DESC ";
@@ -590,6 +618,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param isSpam
 	 */
 	public void markChatMessageAsSpam(String msgId, boolean isSpam) {
+		if (TextUtils.isEmpty(msgId)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().markChatMessageAsSpam(msgId, isSpam);
 	}
 
@@ -600,6 +631,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param isRead
 	 */
 	public void markChatMessageAsRead(String msgId, boolean isRead) {
+		if (TextUtils.isEmpty(msgId)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().markChatMessageAsRead(msgId, isRead);
 	}
 
@@ -610,6 +644,9 @@ public class EventsLogApi extends ClientApi {
 	 * @return number of unread messages in this chat session
 	 */
 	public int getNumberOfUnreadChatMessages(String sessionId) {
+		if (TextUtils.isEmpty(sessionId)) {
+    		throw new IllegalArgumentException();
+    	}
 		// Get incoming messages count
 		Cursor cursor = ctx.getContentResolver().query(
 				RichMessagingData.CONTENT_URI,
@@ -658,6 +695,9 @@ public class EventsLogApi extends ClientApi {
 	 *            Spam message Id
 	 */
 	public void deleteSpamMessage(String msgId) {
+		if (TextUtils.isEmpty(msgId)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().deleteSpamMessage(msgId);
 	}
 
@@ -668,6 +708,9 @@ public class EventsLogApi extends ClientApi {
 	 * @param contact
 	 */
 	public void clearSpamMessagesForContact(String contact) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		RichMessaging.getInstance().clearSpamMessages(
 				PhoneUtils.formatNumberToInternational(contact));
 	}
