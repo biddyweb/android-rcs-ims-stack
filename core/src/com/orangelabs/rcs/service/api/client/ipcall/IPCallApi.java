@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -107,7 +108,10 @@ public class IPCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IIPCallSession initiateCall(String contact, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer, IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws ClientApiException {
-    	if (coreApi != null) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
+		if (coreApi != null) {
 			try {
 		    	return coreApi.initiateCall(contact, audioPlayer, audioRenderer, videoPlayer, videoRenderer);
 			} catch(Exception e) {
@@ -128,6 +132,9 @@ public class IPCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IIPCallSession initiateCall(String contact, IAudioPlayer audioPlayer, IAudioRenderer audioRenderer) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		if (coreApi != null) {
 			try {
 				return coreApi.initiateCall(contact, audioPlayer, audioRenderer, null, null);
@@ -147,6 +154,9 @@ public class IPCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IIPCallSession getSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getSession(id);

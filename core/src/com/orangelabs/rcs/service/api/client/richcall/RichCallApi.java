@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.service.api.client.ClientApi;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -120,6 +121,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IVideoSharingSession initiateLiveVideoSharing(String contact, IVideoPlayer player) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || player == null) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateLiveVideoSharing(contact, player);
@@ -139,6 +143,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IVideoSharingSession getVideoSharingSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getVideoSharingSession(id);
@@ -158,6 +165,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getVideoSharingSessionsWith(String contact) throws ClientApiException {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getVideoSharingSessionsWith(contact);
@@ -178,17 +188,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IImageSharingSession initiateImageSharing(String contact, String file) throws ClientApiException {
-    	if (coreApi != null) {
-			try {
-		    	return coreApi.initiateImageSharing(contact, file, false);
-			} catch(Exception e) {
-				throw new ClientApiException(e.getMessage());
-			}
-		} else {
-			throw new CoreServiceNotAvailableException();
-		}
+		return initiateImageSharing(contact, file, false);
 	}
-	
+
 	/**
 	 * Initiate an image sharing session
 	 * 
@@ -199,6 +201,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IImageSharingSession initiateImageSharing(String contact, String file, boolean thumbnail) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || TextUtils.isEmpty(file)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateImageSharing(contact, file, thumbnail);
@@ -218,6 +223,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IImageSharingSession getImageSharingSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getImageSharingSession(id);
@@ -237,7 +245,10 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public List<IBinder> getImageSharingSessionsWith(String contact) throws ClientApiException {
-   	if (coreApi != null) {
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
+		if (coreApi != null) {
 			try {
 		    	return coreApi.getImageSharingSessionsWith(contact);
 			} catch(Exception e) {
@@ -293,6 +304,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IGeolocSharingSession initiateGeolocSharing(String contact, GeolocPush geoloc) throws ClientApiException {
+		if (TextUtils.isEmpty(contact) || geoloc == null) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.initiateGeolocSharing(contact, geoloc);
@@ -312,6 +326,9 @@ public class RichCallApi extends ClientApi {
 	 * @throws ClientApiException
 	 */
 	public IGeolocSharingSession getGeolocSharingSession(String id) throws ClientApiException {
+		if (TextUtils.isEmpty(id)) {
+    		throw new IllegalArgumentException();
+    	}
     	if (coreApi != null) {
 			try {
 		    	return coreApi.getGeolocSharingSession(id);

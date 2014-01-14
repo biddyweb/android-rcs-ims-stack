@@ -22,6 +22,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
@@ -57,6 +58,9 @@ public class ContactsApi {
      * @return ContactInfo
      */
     public ContactInfo getContactInfo(String contact) {
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	return ContactsManager.getInstance().getContactInfo(contact);
     }
 
@@ -149,6 +153,9 @@ public class ContactsApi {
 	 * @return boolean
 	 */
 	public boolean isNumberBlocked(String number) {
+		if (TextUtils.isEmpty(number)) {
+    		throw new IllegalArgumentException();
+    	}
 		return ContactsManager.getInstance().isNumberBlocked(number);
 	}
 	
@@ -159,6 +166,9 @@ public class ContactsApi {
 	 * @return boolean
 	 */
 	public boolean isNumberShared(String number) {
+		if (TextUtils.isEmpty(number)) {
+    		throw new IllegalArgumentException();
+    	}
 		return ContactsManager.getInstance().isNumberShared(number);
 	}
 
@@ -169,6 +179,9 @@ public class ContactsApi {
 	 * @return boolean
 	 */
 	public boolean isNumberInvited(String number) {
+		if (TextUtils.isEmpty(number)) {
+    		throw new IllegalArgumentException();
+    	}
 		return ContactsManager.getInstance().isNumberInvited(number);
 	}
 
@@ -179,6 +192,9 @@ public class ContactsApi {
 	 * @return boolean
 	 */
 	public boolean isNumberWilling(String number) {
+		if (TextUtils.isEmpty(number)) {
+    		throw new IllegalArgumentException();
+    	}
 		return ContactsManager.getInstance().isNumberWilling(number);
 	}
 	
@@ -189,6 +205,9 @@ public class ContactsApi {
 	 * @return boolean
 	 */
 	public boolean isNumberCancelled(String number) {
+		if (TextUtils.isEmpty(number)) {
+    		throw new IllegalArgumentException();
+    	}
 		return ContactsManager.getInstance().isNumberCancelled(number);
 	}
     
@@ -199,6 +218,9 @@ public class ContactsApi {
      * @param status of the IM-blocked
      */
     public void setImBlockedForContact(String contact, boolean status){
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	ContactsManager.getInstance().setImBlockedForContact(contact, status);
     }
     
@@ -208,6 +230,9 @@ public class ContactsApi {
      * @param contact
      */
     public boolean isContactImBlocked(String contact){
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	return ContactsManager.getInstance().isImBlockedForContact(contact);
     }    
     
@@ -228,6 +253,9 @@ public class ContactsApi {
      * @param status of the FT-blocked
      */
     public void setFtBlockedForContact(String contact, boolean status){
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	ContactsManager.getInstance().setFtBlockedForContact(contact, status);
     }
     
@@ -237,6 +265,9 @@ public class ContactsApi {
      * @param contact
      */
     public boolean isContactFtBlocked(String contact){
+    	if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
     	return ContactsManager.getInstance().isFtBlockedForContact(contact);
     }
     
@@ -276,6 +307,9 @@ public class ContactsApi {
 	 * @param contact
 	 */
 	public void removeCancelledPresenceInvitation(String contact){
+		if (TextUtils.isEmpty(contact)) {
+    		throw new IllegalArgumentException();
+    	}
 		ContactsManager.getInstance().removeCancelledPresenceInvitation(contact);
 	}
     
@@ -286,6 +320,9 @@ public class ContactsApi {
      * @return vCard filename
      */
     public String getVisitCard(Uri uri) {
+    	if (uri == null) {
+    		throw new IllegalArgumentException();
+    	}
     	return ContactsManager.getInstance().getVisitCard(uri);
     }
 }
