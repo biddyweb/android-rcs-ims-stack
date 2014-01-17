@@ -121,6 +121,11 @@ public abstract class ImsServiceSession extends Thread {
     private boolean sessionInterrupted = false;
 
     /**
+     * Session terminated by remote flag
+     */
+    private boolean sessionTerminatedByRemote = false;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
@@ -544,7 +549,8 @@ public abstract class ImsServiceSession extends Thread {
     	
         // Update the dialog path status
 		getDialogPath().sessionTerminated();
-	
+        sessionTerminatedByRemote = true;
+
     	// Remove the current session
     	getImsService().removeSession(this);
 	
@@ -821,6 +827,15 @@ public abstract class ImsServiceSession extends Thread {
 	public boolean isSessionInterrupted() {
 		return sessionInterrupted;
 	}
+
+    /**
+     * Is session terminated by remote
+     * 
+     * @return Boolean
+     */
+    public boolean isSessionTerminatedByRemote() {
+        return sessionTerminatedByRemote;
+    }
 
     /**
      * Create an INVITE request

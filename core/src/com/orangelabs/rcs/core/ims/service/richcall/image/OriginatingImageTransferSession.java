@@ -377,8 +377,10 @@ public class OriginatingImageTransferSession extends ImageTransferSession implem
     	getImsService().removeSession(this);
     	
     	// Notify listeners
-    	for(int j=0; j < getListeners().size(); j++) {
-    		((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
+        if (!isSessionInterrupted() && !isSessionTerminatedByRemote()) {
+            for(int j=0; j < getListeners().size(); j++) {
+                ((ImageTransferSessionListener)getListeners().get(j)).handleSharingError(new ContentSharingError(ContentSharingError.MEDIA_TRANSFER_FAILED, error));
+            }
         }
 	}
 }

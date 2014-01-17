@@ -198,7 +198,7 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
         getImsService().removeSession(this);
 
         // Notify listeners
-        if (!isInterrupted()) {
+        if (!isSessionInterrupted() && !isSessionTerminatedByRemote()) {
             for(int j=0; j < getListeners().size(); j++) {
                 ((FileSharingSessionListener)getListeners().get(j)).handleTransferError(new FileSharingError(FileSharingError.MEDIA_TRANSFER_FAILED, error));
             }
