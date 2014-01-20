@@ -27,6 +27,7 @@ import java.util.Vector;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
+import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
@@ -878,5 +879,27 @@ public class MessagingApiService extends IMessagingApi.Stub {
         }
         listeners.finishBroadcast();
     }
+
+	@Override
+	public void quitGroupChat(String chatId, String chatSessionId) throws RemoteException {
+		IChatSession chatSession = getChatSession(chatSessionId);
+		if (chatSession != null) {
+			if (chatSession.isGroupChat()) {
+				if (logger.isActivated())
+					logger.info("quitGroupChat (chatSessionId=" + chatSessionId + ") : cancel active session");
+				// If session is active, cancel it
+				chatSession.cancelSession();
+			} else {
+				if (logger.isActivated())
+					logger.warn("quitGroupChat (chatSessionId=" + chatSessionId + ") : session is active but not group chat");
+			}
+		} else {
+			// The group chat session is not active, just insert new status in provider
+			if (logger.isActivated())
+				logger.info("quitGroupChat (chatId=" + chatId + ") (chatSessionId=" + chatSessionId + ") : cancel idle session");
+			// Update rich messaging history
+			RichMessaging.getInstance().quitIdleGroupChat(chatSessionId, chatId);
+		}
+	}
 
 }

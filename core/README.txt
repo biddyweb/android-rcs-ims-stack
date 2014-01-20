@@ -10,6 +10,7 @@ News:
 -----
 
 - Checking of input parameter validity for API client methods
+- Add possibility to leave an idle group chat. First re-invite is rejected (blackbird)
 
 
 Bugs fixed:

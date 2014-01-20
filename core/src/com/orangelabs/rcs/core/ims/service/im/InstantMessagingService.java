@@ -713,6 +713,25 @@ public class InstantMessagingService extends ImsService {
 		// Create a new session
 		TerminatingAdhocGroupChatSession session = new TerminatingAdhocGroupChatSession(this, invite);
 
+		/*--
+		 * 6.3.3.1 Leaving a Group Chat that is idle
+		 * In case the user expresses their desire to leave the Group Chat while it is inactive, the device will not offer the user
+		 * the possibility any more to enter new messages and restart the chat and automatically decline the first incoming INVITE 
+		 * request for the chat with a SIP 603 DECLINE response. Subsequent INVITE requests should not be rejected as they may be
+		 * received when the user is added again to the Chat by one of the participants.
+		 */
+		boolean reject = RichMessaging.getInstance().isGroupChatNextInviteRejected(session.getContributionID());
+		if (reject) {
+			if (logger.isActivated()) {
+				logger.debug("Chat Id " + session.getContributionID() + " is declined since previously terminated by user while disconnected");
+			}
+			// Send a 603 Decline response
+			sendErrorResponse(invite, Response.DECLINE);
+			RichMessaging.getInstance().acceptGroupChatNextInvitation(session.getContributionID());
+			return;
+		}
+
+		
 		// Start the session
 		session.startSession();
 
