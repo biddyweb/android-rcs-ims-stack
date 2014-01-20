@@ -62,6 +62,7 @@ import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.SmileyParser;
 import com.orangelabs.rcs.ri.utils.Smileys;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.SessionState;
@@ -642,7 +643,50 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
+			handler.post(new Runnable() {
+				public void run() {
+					if (ChatView.this instanceof GroupChatView) {
+						AlertDialog.Builder builder = new AlertDialog.Builder(ChatView.this);
+						builder.setMessage(R.string.label_groupchat_terminated_by_remote);
+						builder.setNegativeButton(R.string.label_no, new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int which) {
+								ChatView.this.finish();
+							}
+						});
+						builder.setCancelable(false);
+						builder.setPositiveButton(ChatView.this.getString(R.string.label_yes),
+								new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int which) {
+										if (chatSession != null) {
+											try {
+												String sessionId = chatSession.getSessionID();
+												String chatId = chatSession.getChatID();
+												if (messagingApi != null) {
+													try {
+														messagingApi.quitGroupChat(chatId, sessionId);
+													} catch (ClientApiException e) {
+														if (logger.isActivated())
+															logger.warn("ClientApiException occurred: cannot quit group chat");
+													}
+												}
+											} catch (RemoteException e) {
+												if (logger.isActivated())
+													logger.warn("RemoteException occurred: cannot quit group chat");
+											}
+										} else {
+											if (logger.isActivated())
+												logger.warn("chat session is null: cannot quit group chat");
+										}
+										ChatView.this.finish();
+									}
+								});
+						AlertDialog alert = builder.create();
+						alert.show();
+					} else {
+						Utils.showMessageAndExit(ChatView.this, getString(R.string.label_chat_terminated_by_remote));
+					}
+				}
+			});
 		}
 
 		// New text message received
