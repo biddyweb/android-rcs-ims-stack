@@ -1645,4 +1645,69 @@ public class RichMessaging {
 		cursor.close();
 		return result;
 	}
+	
+
+	/**
+	 * Quit idle group chat
+	 * 
+	 * @param sessionId
+	 * @param chatId
+	 */
+	public void quitIdleGroupChat(String sessionId, String chatId) {
+		String participants = getParticipants(getGroupChatConnectedParticipants(chatId));
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_TYPE, EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE);
+		values.put(RichMessagingData.KEY_CHAT_SESSION_ID, sessionId);
+		values.put(RichMessagingData.KEY_CHAT_ID, chatId);
+		values.put(RichMessagingData.KEY_CONTACT, participants);
+		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_TERMINATED_BY_USER);
+		values.put(RichMessagingData.KEY_TIMESTAMP, Calendar.getInstance().getTimeInMillis());
+		values.put(RichMessagingData.KEY_REJECT_GC, "1");
+		cr.insert(databaseUri, values);
+		if (logger.isActivated()) {
+			logger.debug("quitIdleGroup new entry: sessionID=" + sessionId + ", chatID=" + chatId + ", contact=" + participants);
+		}
+	}
+	
+	/**
+	 * @param chatId
+	 */
+	public void acceptGroupChatNextInvitation(String chatId) {
+		ContentValues values = new ContentValues();
+		values.put(RichMessagingData.KEY_REJECT_GC, "0");
+		String selection = RichMessagingData.KEY_CHAT_ID + " = ? AND " //
+				+ RichMessagingData.KEY_TYPE + " = ? AND "//
+				+ RichMessagingData.KEY_STATUS + " = ? AND "//
+				+ RichMessagingData.KEY_REJECT_GC + " = 1";
+		String[] selectionArgs = { chatId, "" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE,
+				"" + EventsLogApi.STATUS_TERMINATED_BY_USER };
+		cr.update(databaseUri, values, selection, selectionArgs);
+		if (logger.isActivated()) {
+			logger.debug("acceptGroupChatNextInvitation update entry: chatID=" + chatId);
+		}
+	}
+	
+    /**
+     * Is group chat next Invite rejected
+     * 
+     * @param chatId Chat ID
+     * @return true if next GC should be rejected
+     */
+	public boolean isGroupChatNextInviteRejected(String chatId) {
+		boolean result = false;
+		String selection = RichMessagingData.KEY_CHAT_ID + " = ? AND " //
+				+ RichMessagingData.KEY_TYPE + " = ? AND "//
+				+ RichMessagingData.KEY_STATUS + " = ? AND "//
+				+ RichMessagingData.KEY_REJECT_GC + " = 1";
+		logger.warn( "isGroupChatNextInviteRejected "+selection);
+		String[] selectionArgs = { chatId, "" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE,
+				"" + EventsLogApi.STATUS_TERMINATED_BY_USER };
+		Cursor cursor = cr.query(databaseUri, null, selection, selectionArgs, RichMessagingData.KEY_TIMESTAMP + " DESC");
+		if (cursor.getCount() != 0) {
+			result = true;
+		}
+		cursor.close();
+		return result;
+	}
+	
 }

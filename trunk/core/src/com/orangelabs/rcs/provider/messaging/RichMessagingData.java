@@ -54,5 +54,8 @@ public class RichMessagingData {
 	// Fields for group IMDN: group chat or file transfer group
 	public static final String KEY_IMDN_DELIVERED_LIST = "imdn_delivered";
 	public static final String KEY_IMDN_DISPLAYED_LIST = "imdn_displayed";
-
+	
+	// Field for Group Chat: reject next Group Chat
+	public static final String KEY_REJECT_GC = "reject_gc";
+	
 }

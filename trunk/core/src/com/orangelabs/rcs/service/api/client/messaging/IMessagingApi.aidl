@@ -57,4 +57,7 @@ interface IMessagingApi {
 	// Remove message delivery listener
 	void removeMessageDeliveryListener(in IMessageDeliveryListener listener);	
 
+	// Quit group chat 
+	void quitGroupChat(in String chatId, in String chatSessionId);
+
 }

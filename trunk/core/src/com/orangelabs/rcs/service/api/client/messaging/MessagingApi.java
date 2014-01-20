@@ -462,4 +462,29 @@ public class MessagingApi extends ClientApi {
 		}
 	}
 	
+	/**
+	 * Quit the group chat
+	 * 
+	 * @param chatId
+	 *            the group chat Id
+	 * @param chatSessionId
+	 *            the group chat session Id
+	 * @throws ClientApiException
+	 */
+	public void quitGroupChat(String chatId, String chatSessionId) throws ClientApiException {
+		if (TextUtils.isEmpty(chatId) || TextUtils.isEmpty(chatSessionId)) {
+				throw new IllegalArgumentException();
+		}
+		if (coreApi != null) {
+			try {
+				coreApi.quitGroupChat(chatId, chatSessionId);
+			} catch (Exception e) {
+				throw new ClientApiException(e.getMessage());
+			}
+		} else {
+			throw new CoreServiceNotAvailableException();
+		}
+	}
+	
+	
 }
