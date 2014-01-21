@@ -322,7 +322,7 @@ public class HttpsProvisioningManager {
             if (response == null && !StringUtils.isEmpty(secondaryUri)) {
                 // First server not available, try the secondaryUri
                 request = secondaryUri + args;
-                response = executeRequest("http", request, client, localContext);
+                response = executeRequest("https", request, client, localContext);
             }
             if (response == null) {
                 return null;
