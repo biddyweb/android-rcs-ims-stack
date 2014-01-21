@@ -1699,7 +1699,6 @@ public class RichMessaging {
 				+ RichMessagingData.KEY_TYPE + " = ? AND "//
 				+ RichMessagingData.KEY_STATUS + " = ? AND "//
 				+ RichMessagingData.KEY_REJECT_GC + " = 1";
-		logger.warn( "isGroupChatNextInviteRejected "+selection);
 		String[] selectionArgs = { chatId, "" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE,
 				"" + EventsLogApi.STATUS_TERMINATED_BY_USER };
 		Cursor cursor = cr.query(databaseUri, null, selection, selectionArgs, RichMessagingData.KEY_TIMESTAMP + " DESC");
