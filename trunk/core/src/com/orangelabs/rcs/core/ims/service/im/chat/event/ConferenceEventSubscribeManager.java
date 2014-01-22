@@ -41,6 +41,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.PeriodicRefresher;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -218,7 +219,25 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    			connectedParticipants.removeParticipant(entity);
 			    			disconnectedParticipants.addParticipant(entity);
 			    		}
-			    			
+			    		
+						/*
+						 * There are some states that we do not want to notify to listeners. These are all the states that have not
+						 * changed since last notification. It is important to bypass them, else they will produce noise in the
+						 * notification behavior (for example we will see "participant has departed" once again, even if he departed
+						 * during the last session and was not reinvited this time).
+						 */
+						if (!RichMessaging.getInstance().hasLastKnownStateForParticipantChanged(session.getContributionID(),
+								entity, state)) {
+							if (logger.isActivated()) {
+								logger.debug("State for " + entity + " was already " + state + ", do not notify listeners");
+							}
+							continue;
+						} else {
+							if (logger.isActivated()) {
+								logger.debug("State for " + entity + " has changed and is now " + state + ", notify listeners");
+							}
+						}
+						
 			    		// Notify session listeners
 		    	    	for(int j=0; j < session.getListeners().size(); j++) {
 		    	    		((ChatSessionListener)session.getListeners().get(j)).handleConferenceEvent(entity,

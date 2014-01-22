@@ -25,6 +25,7 @@ V2.5.15
 - Issue 190		Stack: The new display name parameter is being passed on the wrong position on some RichMessaging's functions
 - Issue 191		Stack: User send a Refer with Refer-To:tel:+33 header after INVITE reception
 - Issue 197		Stack: Cancel file transfer, handle Error after handle Terminated
+- Issue 201: 	Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 - Issue 202		Stack: Bad protocol for Wifi provisioning on secondary address
 
 V2.5.14

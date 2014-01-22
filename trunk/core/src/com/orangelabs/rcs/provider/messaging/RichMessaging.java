@@ -206,6 +206,22 @@ public class RichMessaging {
 	 * @param state Conference state
 	 */
 	public void addConferenceEvent(ChatSession session, String contact, String state) {
+		int event = getEventLogValue(state);
+
+		if (event != -1) {
+			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, session.getSessionID(), session.getContributionID(), null, contact, null, null,
+					null, null, 0, null, event);
+		}
+	}
+	
+	/**
+	 * Get state event log value from conference state name
+	 * 
+	 * @param state Conference state
+	 * @return event log value 
+	 * 
+	 */
+	private int getEventLogValue(String state){
 		int event = -1;
 		if (state.equals(User.STATE_BOOTED)) {
 			// Contact has lost the session and may rejoin the session after
@@ -232,11 +248,8 @@ public class RichMessaging {
 			// Any SIP error related to the contact invitation
 			event = EventsLogApi.EVENT_FAILED;
 		}
-
-		if (event != -1) {
-			addEntry(EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE, session.getSessionID(), session.getContributionID(), null, contact, null, null,
-					null, null, 0, null, event);
-		}
+		
+		return event;
 	}
 
     /**
@@ -1707,6 +1720,36 @@ public class RichMessaging {
 		}
 		cursor.close();
 		return result;
+	}
+	
+	/**
+	 * Has the last known state changed for a participant
+	 * 
+	 * @param chatId
+	 * @param participant
+	 * @param lastState
+	 * @return true if the state has changed for the participant since the last time
+	 */
+	public boolean hasLastKnownStateForParticipantChanged(String chatId, String participant, String lastState){
+		int lastKnownState = -1;
+		String selection = RichMessagingData.KEY_CHAT_ID + " = ? AND " //
+				+ RichMessagingData.KEY_TYPE + " = ? AND "//
+				+ RichMessagingData.KEY_CONTACT + " = ? ";
+		String[] selectionArgs = { chatId, 
+				"" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE,
+				"" + participant };
+		Cursor cursor = cr.query(databaseUri, 
+				new String[]{RichMessagingData.KEY_STATUS}, 
+				selection, 
+				selectionArgs, 
+				RichMessagingData.KEY_TIMESTAMP + " DESC");
+		if (cursor.moveToNext()){
+			lastKnownState = cursor.getInt(0);
+		}
+		cursor.close();
+	
+		return (lastKnownState==-1 // There was no known state yet 
+				||	getEventLogValue(lastState)!=lastKnownState); // Or the state has changed 
 	}
 	
 }
