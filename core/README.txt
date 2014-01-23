@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.15
+Release 2.5.16
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -9,9 +9,6 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 News:
 -----
 
-- Checking of input parameter validity for API client methods
-- Add possibility to leave an idle group chat. First re-invite is rejected (blackbird)
-
 
 Bugs fixed:
 -----------
@@ -19,13 +16,15 @@ Bugs fixed:
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
+V2.5.16
+
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
 - Issue 187		Stack: FT capability must not be removed in case of low storage.
 - Issue 190		Stack: The new display name parameter is being passed on the wrong position on some RichMessaging's functions
 - Issue 191		Stack: User send a Refer with Refer-To:tel:+33 header after INVITE reception
 - Issue 197		Stack: Cancel file transfer, handle Error after handle Terminated
-- Issue 201: 	Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
+- Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 - Issue 202		Stack: Bad protocol for Wifi provisioning on secondary address
 
 V2.5.14
