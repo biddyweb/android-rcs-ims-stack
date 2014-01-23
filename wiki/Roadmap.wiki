@@ -6,12 +6,11 @@ RCS-e open source stack roadmap
 
 = Roadmap 2014 =
 
-_*
  * January 23: Sprint 16, v2.5.15
   * Code Review.
   * Refactoring.
   * Bug fixes.
-*
+
 _*
  * February 24: Sprint 17, v2.5.16
   * Pause/resume of Store & Forward group chat
