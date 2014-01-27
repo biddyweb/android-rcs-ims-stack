@@ -355,11 +355,6 @@ public class ChatList extends Activity implements ClientApiListener {
 						// The session was terminated by user itself: rejoin or restart are not authorized
 						Utils.showMessage(ChatList.this, getString(R.string.label_rejoin_unauthorized));
 						break;
-					case EventsLogApi.STATUS_TERMINATED_BY_REMOTE:
-						// The session was terminated: only a restart may be done
-						restartChat = new RestartChat(ChatList.this, messagingApi, cache.chatId);
-						restartChat.start();
-						break;
 					default:
 						// Session terminated on the device: try to rejoin the session
 						rejoinChat = new RejoinChat(ChatList.this, messagingApi, cache.chatId);
