@@ -17,6 +17,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.16
+- Issue 204:	stack: INVITE RESTART is not blackbird compliant
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
