@@ -30,7 +30,6 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -168,7 +167,7 @@ public class RestartGroupChatSession extends GroupChatSession {
 	 */
 	private SipRequest createInviteRequest(String content) throws SipException {
         SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
-        		InstantMessagingService.CHAT_FEATURE_TAGS,
+        		getFeatureTags(),
         		content, BOUNDARY_TAG);
 
     	// Test if there is a subject
