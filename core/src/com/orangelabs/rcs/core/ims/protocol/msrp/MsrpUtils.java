@@ -71,25 +71,4 @@ public class MsrpUtils {
 		}
 		return -1;
 	}
-	
-	/**
-	 * Get the start range
-	 * 
-	 * @param header MSRP header
-	 * @return Starting value
-	 */
-	public static int getStartRange(String header) {
-		if (header == null) {
-			return -1;
-		}
-		int index = header.indexOf("-");
-		if (index != -1) {
-			try {
-				return Integer.parseInt(header.substring(0,index));
-			} catch (NumberFormatException e) {
-				return -1;
-			}
-		}
-		return -1;
-	}
 }
