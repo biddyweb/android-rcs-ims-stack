@@ -3,7 +3,6 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.SessionState;
@@ -202,7 +201,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 * @return Error or null if file capacity is acceptable
 	 */
 	protected FileSharingError isFileCapacityAcceptable(long fileSize) {
-		boolean fileIsToBig = InstantMessagingService.isFileSizeExceeded(fileSize);
+		boolean fileIsToBig = (FileSharingSession.getMaxFileSharingSize() > 0) ? fileSize > FileSharingSession.getMaxFileSharingSize() : false;
 		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
 		if (fileIsToBig) {
 			if (logger.isActivated()) {

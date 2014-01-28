@@ -166,10 +166,10 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             FileSharingError error = isFileCapacityAcceptable(getContent().getSize());
             if (error != null) {
                 // Send a 603 Decline response
-                ((InstantMessagingService) getImsService()).sendErrorResponse(getDialogPath().getInvite(), 603);
+                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
 
                 // Close session and notify listeners
-                handleError(new FileSharingError(error));
+                handleError(error);
                 return;
             }
 

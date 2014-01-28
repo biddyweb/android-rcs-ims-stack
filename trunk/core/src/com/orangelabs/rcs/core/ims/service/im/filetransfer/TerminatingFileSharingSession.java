@@ -86,7 +86,7 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 	    		logger.info("Initiate a new file transfer session as terminating");
 	    	}
 			
-			if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
+            if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
 				if (logger.isActivated()) {
 					logger.debug("Auto accept file transfer invitation");
 				}
@@ -135,13 +135,13 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 					return;
 				}
 			}
-
+            
             // Reject if file is too big or size exceeds device storage capacity. This control should be done
             // on UI. It is done after end user accepts invitation to enable prior handling by the application.
-            FileSharingError error = isFileCapacityAcceptable(this.getContent().getSize());
+            FileSharingError error = isFileCapacityAcceptable(getContent().getSize());
             if (error != null) {
                 // Send a 603 Decline response
-                sendErrorResponse(getDialogPath().getInvite(), this.getDialogPath().getLocalTag(), 603);
+                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
 
                 // Close session
                 handleError(error);

@@ -99,43 +99,44 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
         	}
 
 			// Wait invitation answer
-			int answer = waitInvitationAnswer();
-			switch (answer) {
-			case ImsServiceSession.INVITATION_REJECTED:
+	    	int answer = waitInvitationAnswer();
+			if (answer == ImsServiceSession.INVITATION_REJECTED) {
 				if (logger.isActivated()) {
 					logger.debug("Session has been rejected by user");
 				}
-				// Remove the current session
-				getImsService().removeSession(this);
-				// Notify listeners
-				for (int i = 0; i < getListeners().size(); i++) {
-					getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
-				}
-				return;
 				
-			case ImsServiceSession.INVITATION_NOT_ANSWERED:
+		    	// Remove the current session
+		    	getImsService().removeSession(this);
+
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
+		        }
+				return;
+			} else
+			if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
 				if (logger.isActivated()) {
 					logger.debug("Session has been rejected on timeout");
 				}
-				// Ringing period timeout
+
+                // Ringing period timeout
 				send486Busy(getDialogPath().getInvite(), getDialogPath().getLocalTag());
-				// Remove the current session
-				getImsService().removeSession(this);
-				// Notify listeners
-				for (int i = 0; i < getListeners().size(); i++) {
-					getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
-				}
+
+		    	// Remove the current session
+		    	getImsService().removeSession(this);
+
+		    	// Notify listeners
+		    	for(int i=0; i < getListeners().size(); i++) {
+		    		getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+		        }
 				return;
-				
-			case ImsServiceSession.INVITATION_CANCELED:
-				if (logger.isActivated()) {
-					logger.debug("Session has been canceled");
-				}
-				return;
-				
-			default:
-				break;
-			}
+			} else
+            if (answer == ImsServiceSession.INVITATION_CANCELED) {
+                if (logger.isActivated()) {
+                    logger.debug("Session has been canceled");
+                }
+                return;
+            }			
 
 			// Auto reject if file too big or if storage capacity is too small
 			ContentSharingError error = isImageCapacityAcceptable(getContent().getSize());
@@ -143,8 +144,10 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 				if (logger.isActivated()) {
 					logger.debug("Auto reject image sharing invitation");
 				}
+				
 				// Decline the invitation
 				sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
+				
 				// Close session
 				handleError(new ContentSharingError(error));
 				return;
