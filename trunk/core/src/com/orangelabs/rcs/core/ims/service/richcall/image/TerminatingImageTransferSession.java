@@ -41,7 +41,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.RichcallService;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -71,30 +70,6 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 
 		// Create dialog path
 		createTerminatingDialogPath(invite);
-	}
-	
-	/**
-	 * Check if image capacity is acceptable
-	 * 
-	 * @param imageSize
-	 *            image size in bytes
-	 * @return ContentSharingError or null if image capacity is acceptable
-	 */
-	private ContentSharingError isImageCapacityAcceptable(long imageSize) {
-		boolean fileIsToBig = (ImageTransferSession.getMaxImageSharingSize() > 0) ? imageSize > ImageTransferSession.getMaxImageSharingSize() : false;
-		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? imageSize > StorageUtils.getExternalStorageFreeSpace() : false;
-		if (fileIsToBig) {
-			if (logger.isActivated())
-				logger.warn("Image is too big, reject the Image Sharing");
-			return new ContentSharingError(ContentSharingError.MEDIA_SIZE_TOO_BIG);
-		} else {
-			if (storageIsTooSmall) {
-				if (logger.isActivated())
-					logger.warn("Not enough storage capacity, reject the Image Sharing");
-				return new ContentSharingError(ContentSharingError.NOT_ENOUGH_STORAGE_SPACE);
-			}
-		}
-		return null;
 	}
 	
 	/**
@@ -163,7 +138,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
 			}
 
 			// Auto reject if file too big or if storage capacity is too small
-			ContentSharingError error = isImageCapacityAcceptable(this.getContent().getSize());
+			ContentSharingError error = isImageCapacityAcceptable(getContent().getSize());
 			if (error != null) {
 				if (logger.isActivated()) {
 					logger.debug("Auto reject image sharing invitation");

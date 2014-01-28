@@ -41,7 +41,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
-import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -76,29 +75,6 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 		// Set contribution ID
 		String id = ChatUtils.getContributionId(invite);
 		setContributionID(id);		
-	}
-	
-	/**
-	 * Check if file capacity is acceptable
-	 * 
-	 * @param fileSize
-	 * @return FileSharingError or null if file capacity is acceptable
-	 */
-	public static FileSharingError isFileCapacityAcceptable(long fileSize) {
-		boolean fileIsToBig = InstantMessagingService.isFileSizeExceeded(fileSize);
-		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
-		if (fileIsToBig) {
-			if (logger.isActivated())
-				logger.warn("File is too big, reject the File Transfer");
-			return new FileSharingError(FileSharingError.MEDIA_SIZE_TOO_BIG);
-		} else {
-			if (storageIsTooSmall) {
-				if (logger.isActivated())
-					logger.warn("Not enough storage capacity, reject the File Transfer");
-				return new FileSharingError(FileSharingError.NOT_ENOUGH_STORAGE_SPACE);
-			}
-		}
-		return null;
 	}
 	
 	/**
@@ -160,11 +136,8 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 				}
 			}
 
-            /**
-             * Reject if file is too big or size exceeds device storage capacity.<br>
-             * This control should be done on UI. It is done after end user accepts invitation to enable prior handling by the
-             * application.
-             */
+            // Reject if file is too big or size exceeds device storage capacity. This control should be done
+            // on UI. It is done after end user accepts invitation to enable prior handling by the application.
             FileSharingError error = isFileCapacityAcceptable(this.getContent().getSize());
             if (error != null) {
                 // Send a 603 Decline response
