@@ -29,7 +29,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -164,7 +163,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 
             // Reject if file is too big or size exceeds device storage capacity. This control should be done
             // on UI. It is done after end user accepts invitation to enable prior handling by the application.
-            FileSharingError error = TerminatingFileSharingSession.isFileCapacityAcceptable(getContent().getSize());
+            FileSharingError error = isFileCapacityAcceptable(getContent().getSize());
             if (error != null) {
                 // Send a 603 Decline response
                 ((InstantMessagingService) getImsService()).sendErrorResponse(getDialogPath().getInvite(), 603);
