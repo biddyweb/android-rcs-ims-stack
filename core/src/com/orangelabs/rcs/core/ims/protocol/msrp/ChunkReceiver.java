@@ -324,9 +324,6 @@ public class ChunkReceiver extends Thread {
 	 * @throws IOException
 	 */
 	private byte[] readChunkedData(int chunkSize, String endTag) throws IOException {
-		if (logger.isActivated()) {
-			logger.warn("readChunkedData (chunkSize="+ chunkSize+") (endTag="+ endTag+")");
-		}
         // Read data until chunk size is reached
         byte[] result = null;
         if (chunkSize != 0) {

@@ -48,14 +48,16 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class TerminatingAdhocGroupChatSession extends GroupChatSession implements MsrpEventListener {
-	/**
+    /**
+     * Invite missing participants upon reception of 1rst conference event notification
+     */
+    private boolean inviteMissingParticipants = false;
+
+    /**
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
     
-    // Invite missing participants upon reception of 1rst conference event notification.
-    boolean inviteMissingParticipants = false;
-
     /**
      * Constructor
      * 
@@ -65,7 +67,8 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	public TerminatingAdhocGroupChatSession(ImsService parent, SipRequest invite) {
 		super(parent, ChatUtils.getReferredIdentity(invite), ChatUtils.getListOfParticipants(invite));
 
-		if (this.getParticipants().getList().size() == 0) {
+		// Detect if it's a rejoin
+		if (getParticipants().getList().size() == 0) {
 			if (logger.isActivated()) {
 	    		logger.info("Invite to join a group chat");
 	    	}
