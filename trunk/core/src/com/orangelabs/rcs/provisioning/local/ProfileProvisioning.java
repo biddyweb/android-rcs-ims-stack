@@ -556,6 +556,9 @@ public class ProfileProvisioning extends Activity {
                             imsAddrForWifi = "10.67.102.151";
                             imsPortForWifi = 5060;
                             confUri  = "sip:Conference-Factory@" + homeDomain;
+                            ftHttpServerAddr = "https://10.67.102.138/rcse-hcs/upload";
+                            ftHttpServerLogin = number;
+                            ftHttpServerPwd = imsPwd;
                             break;
                         case 11: // JibeNet
                             homeDomain = "jibemobile.com";

@@ -85,11 +85,6 @@ public class HttpUploadManager extends HttpTransferManager {
     private byte[] thumbnail;
 
     /**
-     * Thumbnail flag
-     */
-    private boolean thumbnailFlag = true;
-
-    /**
      * TID of the upload
      */
     private String tid;
@@ -317,7 +312,7 @@ public class HttpUploadManager extends HttpTransferManager {
         outputStream.writeBytes(body);
 
         // Add thumbnail
-        if (thumbnailFlag && thumbnail != null) {
+        if (thumbnail != null) {
             writeThumbnailMultipart(outputStream,filepath);
         }
 

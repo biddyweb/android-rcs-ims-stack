@@ -45,7 +45,7 @@ public class ListOfParticipant {
 	/**
      * The logger
      */
-    private static Logger logger = Logger.getLogger(ListOfParticipant.class.getSimpleName());	
+    private Logger logger = Logger.getLogger(this.getClass().getName());	
 
 	/**
 	 * Constructor
