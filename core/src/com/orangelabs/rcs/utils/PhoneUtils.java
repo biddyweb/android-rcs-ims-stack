@@ -231,12 +231,14 @@ public class PhoneUtils {
 	
 	/**
 	 * Check if phone number is global
-	 * @param phone
-	 * @return
+	 * 
+	 * @param phone Phone numner
+	 * @return Boolean
 	 */
 	public static boolean isGlobalPhoneNumber(final String phone) {
-		if (phone == null)
+		if (phone == null) {
 			return false;
+		}
 		if (PhoneNumberUtils.isGlobalPhoneNumber(phone)) {
 			if (phone.length() > PhoneUtils.getCountryCode().length()) {
 				return true;

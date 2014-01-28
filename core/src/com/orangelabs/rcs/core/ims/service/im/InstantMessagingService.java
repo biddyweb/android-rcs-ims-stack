@@ -1094,19 +1094,4 @@ public class InstantMessagingService extends ImsService {
         getImsModule().getCore().getListener().handle1to1FileTransferInvitation(httpFiletransferSession, one2oneChatSession);
 
     }
-    
-    /**
-     * Check whether file size exceeds the limit
-     * 
-     * @param size of file
-     * @return {@code true} if file size limit is exceeded, otherwise {@code false}
-     */
-    public static boolean isFileSizeExceeded(long size) {
-        int maxSize = FileSharingSession.getMaxFileSharingSize();
-        if (maxSize > 0 && size > maxSize) {
-            return true;
-        } else {
-        	return false;
-        }
-    }
 }
