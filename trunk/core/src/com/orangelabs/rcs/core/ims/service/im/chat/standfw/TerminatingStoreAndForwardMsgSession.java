@@ -201,7 +201,7 @@ public class TerminatingStoreAndForwardMsgSession extends OneOneChatSession impl
 	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
 	            "a=setup:" + localSetup + SipUtils.CRLF +
 	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF;
+	    		"a=recvonly" + SipUtils.CRLF;
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);
