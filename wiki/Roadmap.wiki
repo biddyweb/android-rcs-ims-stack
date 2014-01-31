@@ -9,10 +9,13 @@ RCS-e open source stack roadmap
  * Next sprints:
   * SRTP.
   * LTE support.
-  * MSRPoTLS.
+  * Pause/resume of File Transfer in case of disconnection / reconnection.
 *
  * February 24: Sprint 17, v2.5.16
-  * Pause/resume of File Transfer in case of disconnection / reconnection
+  * MSRP over TLS.
+  * Wakelock mechanism.
+  * Retrigger auto-configuration if registration fails.
+  * Flexible local provisioning.
   * Code Review.
   * Refactoring.
   * Bug fixes.
