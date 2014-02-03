@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpConstants;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -158,15 +159,17 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
             if (protocol != null) {
                 isSecured = protocol.equalsIgnoreCase(MsrpConstants.SOCKET_MSRP_SECURED_PROTOCOL);
             }
-			MediaAttribute attr1 = mediaDesc.getMediaAttribute("file-selector");
-            String fileSelector = attr1.getName() + ":" + attr1.getValue();
-			MediaAttribute attr2 = mediaDesc.getMediaAttribute("file-transfer-id");
-            String fileTransferId = attr2.getName() + ":" + attr2.getValue();
+            // Changed by Deutsche Telekom
+            String fileSelector = mediaDesc.getMediaAttribute("file-selector").getValue();
+            String fileTransferId = mediaDesc.getMediaAttribute("file-transfer-id").getValue();
 			MediaAttribute attr3 = mediaDesc.getMediaAttribute("path");
             String remotePath = attr3.getValue();
             String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
+    		// Changed by Deutsche Telekom
+    		String fingerprint = SdpUtils.extractFingerprint(parser, mediaDesc);
+
             // Extract the "setup" parameter
             String remoteSetup = "passive";
 			MediaAttribute attr4 = mediaDesc.getMediaAttribute("setup");
@@ -193,29 +196,16 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
             
 	        // Create the MSRP manager
 			String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
-			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+			msrpMgr = new MsrpManager(localIpAddress, localMsrpPort, getImsService());
             msrpMgr.setSecured(isSecured);
 
 			// Build SDP part
-	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-	    	String sdp =
-	    		"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "s=-" + SipUtils.CRLF +
-				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " " + msrpMgr.getLocalSocketProtocol() + " *" + SipUtils.CRLF +
-	            "a=" + fileSelector + SipUtils.CRLF +
-	    		"a=" + fileTransferId + SipUtils.CRLF +
-	            "a=accept-types:" + getContent().getEncoding() + SipUtils.CRLF +
-	            "a=setup:" + localSetup + SipUtils.CRLF +
-	            "a=path:" + msrpMgr.getLocalMsrpPath() + SipUtils.CRLF +
-	    		"a=recvonly" + SipUtils.CRLF;
-            int maxSize = ImsFileSharingSession.getMaxFileSharingSize();
-	    	if (maxSize > 0) {
-	    		sdp += "a=max-size:" + maxSize + SipUtils.CRLF;
-	    	}
+	    	int maxSize = ImsFileSharingSession.getMaxFileSharingSize();
+	    	String sdp = SdpUtils.buildFileSDP(ipAddress, localMsrpPort,
+                    msrpMgr.getLocalSocketProtocol(), getContent().getEncoding(), fileTransferId,
+                    fileSelector, null, localSetup, msrpMgr.getLocalMsrpPath(),
+                    SdpUtils.DIRECTION_RECVONLY, maxSize);
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);
@@ -223,7 +213,10 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
     		// Create the MSRP server session
             if (localSetup.equals("passive")) {
             	// Passive mode: client wait a connection
-            	msrpMgr.createMsrpServerSession(remotePath, this);
+            	 // Changed by Deutsche Telekom
+                MsrpSession session = msrpMgr.createMsrpServerSession(remotePath, this);
+                // Do not use right now the mapping to do not increase memory and cpu consumption
+                session.setMapMsgIdFromTransationId(false);
             	
     			// Open the connection
     			Thread thread = new Thread(){
@@ -272,25 +265,27 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
         		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
-                	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	// Changed by Deutsche Telekom
+                    MsrpSession session = msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this, fingerprint);
+                    session.setMapMsgIdFromTransationId(false);
 
-                    // Open the connection
-                    Thread thread = new Thread() {
-                        public void run() {
-                            try {
-                                // Open the MSRP session
-                                msrpMgr.openMsrpSession(ImsFileSharingSession.DEFAULT_SO_TIMEOUT);
+					// Open the connection
+					Thread thread = new Thread() {
+						public void run() {
+							try {
+								// Open the MSRP session
+								msrpMgr.openMsrpSession(ImsFileSharingSession.DEFAULT_SO_TIMEOUT);
 
-                                // Send an empty packet
-                                sendEmptyDataChunk();
-                            } catch (IOException e) {
-                                if (logger.isActivated()) {
-                                    logger.error("Can't create the MSRP server session", e);
-                                }
-                            }
-                        }
-                    };
-                    thread.start();
+								// Send an empty packet
+								sendEmptyDataChunk();
+							} catch (IOException e) {
+								if (logger.isActivated()) {
+									logger.error("Can't create the MSRP server session", e);
+								}
+							}
+						}
+					};
+					thread.start();
                 }
 
                 // The session is established
@@ -406,17 +401,18 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
      * @param data received data chunk
      */
     public boolean msrpTransferProgress(long currentSize, long totalSize, byte[] data) {
-        if (isSessionInterrupted() || isInterrupted()) {
-            return true;
-        }
+		if (isSessionInterrupted() || isInterrupted()) {
+			return true;
+		}
+
         try {
         	// Update content with received data
             getContent().writeData2File(data);
             
-            // Notify listeners
-            for(int j = 0; j < getListeners().size(); j++) {
-                ((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
-            }
+			// Notify listeners
+			for (int j = 0; j < getListeners().size(); j++) {
+				((FileSharingSessionListener) getListeners().get(j)).handleTransferProgress(currentSize, totalSize);
+			}
         } catch(Exception e) {
 	   		// Delete the temp file
             deleteFile();

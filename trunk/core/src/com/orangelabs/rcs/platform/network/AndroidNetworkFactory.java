@@ -18,13 +18,10 @@
 
 package com.orangelabs.rcs.platform.network;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Enumeration;
+import java.net.Socket;
 
-import android.net.ConnectivityManager;
-
-import com.orangelabs.rcs.utils.IpAddressUtils;
+import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface.DnsResolvedFields;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Android network factory
@@ -32,36 +29,34 @@ import com.orangelabs.rcs.utils.IpAddressUtils;
  * @author jexa7410
  */
 public class AndroidNetworkFactory extends NetworkFactory {
+	// Changed by Deutsche Telekom
+	/**
+	 * The logger
+	 */
+	private Logger logger = Logger.getLogger(this.getClass().getName());
 
 	/**
 	 * Returns the local IP address of a given network interface
 	 * 
-	 * @param type Network interface type
+	 * @param dnsEntry remote address to find an according local socket address
 	 * @return Address
 	 */
-	public String getLocalIpAddress(int type) {
+	// Changed by Deutsche Telekom
+	public String getLocalIpAddress(DnsResolvedFields dnsEntry) {
 		String ipAddress = null;
 		try {
-	        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); (en != null) && en.hasMoreElements();) {
-	            NetworkInterface netIntf = (NetworkInterface)en.nextElement();
-	            for (Enumeration<InetAddress> addr = netIntf.getInetAddresses(); addr.hasMoreElements();) {
-	                InetAddress inetAddress = (InetAddress)addr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && !inetAddress.isLinkLocalAddress()) {
-                    	ipAddress = IpAddressUtils.extractHostAddress(inetAddress.getHostAddress());
-                    	String intfName = netIntf.getDisplayName().toLowerCase();
-                    	if ((type == ConnectivityManager.TYPE_WIFI) && intfName.startsWith("wlan")) {
-                            return ipAddress;
-                       } else
-                       if ((type == ConnectivityManager.TYPE_MOBILE) && !intfName.startsWith("wlan")) {
-                            return ipAddress;
-                       }
-                    }
-	            }
-	        }
-	        return ipAddress;
+			// The local IP address depends on the remote address to be reached (in a multi IP stack
+			// environment); so let the Android OS set up an appropriate socket for the given
+			// (P-CSCF) remote address and discover the local IP address from that socket.
+			Socket clientSock = new Socket(dnsEntry.ipAddress, dnsEntry.port);
+			ipAddress = clientSock.getLocalAddress().getHostAddress();
+			clientSock.close();
 		} catch(Exception e) {
-			return ipAddress;
+			if(logger.isActivated()){
+				logger.error("getLocalIpAddress failed with ", e);
+			}
 		}
+		return ipAddress;
 	}
 
     /**
@@ -101,7 +96,18 @@ public class AndroidNetworkFactory extends NetworkFactory {
 		return new AndroidSecureSocketConnection();
 	}
 	
-    /**
+	// Changed by Deutsche Telekom
+	/**
+	 * Create a secure socket client connection w/o checking certificates
+	 * 
+	 * @param fingerprint
+	 * @return Socket connection
+	 */
+	public SocketConnection createSimpleSecureSocketClientConnection(String fingerprint) {
+		return new AndroidSecureSocketConnection(fingerprint);
+	}
+	
+	/**
      * Create a socket server connection
      * 
      * @return Socket server connection

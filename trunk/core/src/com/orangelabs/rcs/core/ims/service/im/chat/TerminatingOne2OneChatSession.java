@@ -159,6 +159,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
             String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
+    		// Changed by Deutsche Telekom
+    		String fingerprint = SdpUtils.extractFingerprint(parser, mediaDesc);
+
             // Extract the "setup" parameter
             String remoteSetup = "passive";
 			MediaAttribute attr2 = mediaDesc.getMediaAttribute("setup");
@@ -186,18 +189,8 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 			// Build SDP part
 	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-	    	String sdp =
-	    		"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "s=-" + SipUtils.CRLF +
-				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
-	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
-	            "a=setup:" + localSetup + SipUtils.CRLF +
-	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	    		"a=sendrecv" + SipUtils.CRLF;
+	    	String sdp = SdpUtils.buildChatSDP(ipAddress, localMsrpPort, getMsrpMgr().getLocalSocketProtocol(),
+                    getAcceptTypes(), getWrappedTypes(), localSetup, getMsrpMgr().getLocalMsrpPath(), getDirection());
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);
@@ -224,8 +217,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 							// Open the MSRP session
 							getMsrpMgr().openMsrpSession();
 							
-			    	        // Send an empty packet
-			            	sendEmptyDataChunk();
+							// Changed by Deutsche Telekom
+							//***###*** no need to send an empty chunk if we are passive
+			            	//sendEmptyDataChunk();
 						} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
@@ -262,7 +256,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
         		// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
-                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this, fingerprint);
         			session.setFailureReportOption(false);
         			session.setSuccessReportOption(false);
         			
@@ -304,4 +298,10 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 					e.getMessage()));
 		}		
 	}
+	
+    // Changed by Deutsche Telekom
+    @Override
+    public String getDirection() {
+        return SdpUtils.DIRECTION_SENDRECV;
+    }
 }

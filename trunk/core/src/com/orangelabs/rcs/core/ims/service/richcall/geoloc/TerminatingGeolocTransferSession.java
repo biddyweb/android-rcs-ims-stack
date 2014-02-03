@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -251,26 +252,27 @@ public class TerminatingGeolocTransferSession extends GeolocTransferSession impl
 
     	        // Create the MSRP client session
                 if (localSetup.equals("active")) {
+                	String fingerprint = SdpUtils.extractFingerprint(parser, mediaDesc);
                 	// Active mode: client should connect
-                	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	msrpMgr.createMsrpClientSession(remoteHost, remotePort, remotePath, this, fingerprint);
+					// Open the connection
+					Thread thread = new Thread() {
+						public void run() {
+							try {
+								// Open the MSRP session
+								msrpMgr.openMsrpSession(GeolocTransferSession.DEFAULT_SO_TIMEOUT);
 
-                    // Open the connection
-                    Thread thread = new Thread(){
-                        public void run(){
-                            try {
-                                // Open the MSRP session
-                                msrpMgr.openMsrpSession(GeolocTransferSession.DEFAULT_SO_TIMEOUT);
+								// Send an empty packet
+								sendEmptyDataChunk();
+							} catch (IOException e) {
+								if (logger.isActivated()) {
+									logger.error("Can't create the MSRP server session", e);
+								}
+							}
+						}
+					};
+					thread.start();
 
-                                // Send an empty packet
-                                sendEmptyDataChunk();
-                            } catch (IOException e) {
-                                if (logger.isActivated()) {
-                                    logger.error("Can't create the MSRP server session", e);
-                                }
-                            }
-                        }
-                    };
-                    thread.start();
                 }
 
                 // The session is established
@@ -393,8 +395,9 @@ public class TerminatingGeolocTransferSession extends GeolocTransferSession impl
      *
      * @param msgId Message ID
      * @param error Error code
+     * @param typeMsrpChunk Type of MSRP chunk
      */
-    public void msrpTransferError(String msgId, String error) {
+    public void msrpTransferError(String msgId, String error, TypeMsrpChunk typeMsrpChunk) {
         if (isSessionInterrupted() || isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}

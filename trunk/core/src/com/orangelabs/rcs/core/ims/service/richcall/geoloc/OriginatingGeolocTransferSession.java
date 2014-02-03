@@ -27,6 +27,7 @@ import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
@@ -167,17 +168,13 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
      * @throws Exception 
      */
     public void prepareMediaSession() throws Exception {
-        // Parse the remote SDP part
-        SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-        Vector<MediaDescription> media = parser.getMediaDescriptions();
-        MediaDescription mediaDesc = media.elementAt(0);
-        MediaAttribute attr = mediaDesc.getMediaAttribute("path");
-        String remoteMsrpPath = attr.getValue();
-        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
-        int remotePort = mediaDesc.port;
+        // Changed by Deutsche Telekom
+        // Get the remote SDP part
+        byte[] sdp = getDialogPath().getRemoteContent().getBytes();
 
+        // Changed by Deutsche Telekom
         // Create the MSRP session
-        MsrpSession session = msrpMgr.createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+        MsrpSession session = msrpMgr.createMsrpSession(sdp, this);
         session.setFailureReportOption(true);
         session.setSuccessReportOption(false);
     }
@@ -197,7 +194,7 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
                     // Start sending data chunks
                     byte[] data = getContent().getData();
                     InputStream stream = new ByteArrayInputStream(data);
-                    msrpMgr.sendChunks(stream, getFileTransferId(), getContent().getEncoding(), getContent().getSize());
+                    msrpMgr.sendChunks(stream, getFileTransferId(), getContent().getEncoding(), getContent().getSize(), TypeMsrpChunk.GeoLocation);
                 } catch(Exception e) {
                     // Unexpected error
                     if (logger.isActivated()) {
@@ -299,8 +296,9 @@ public class OriginatingGeolocTransferSession extends GeolocTransferSession impl
      *
      * @param msgId Message ID
      * @param error Error code
+     * @param typeMsrpChunk Type of MSRP chunk
      */
-    public void msrpTransferError(String msgId, String error) {
+    public void msrpTransferError(String msgId, String error, TypeMsrpChunk typeMsrpChunk) {
         if (isSessionInterrupted() || isInterrupted() || getDialogPath().isSessionTerminated()) {
 			return;
 		}

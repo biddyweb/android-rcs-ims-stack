@@ -19,6 +19,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer;
 
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
@@ -170,7 +171,7 @@ public abstract class ImsFileSharingSession extends FileSharingSession {
      * @param msgId Message ID
      * @param error Error code
      */
-    public void msrpTransferError(String msgId, String error) {
+    public void msrpTransferError(String msgId, String error, MsrpSession.TypeMsrpChunk typeMsrpChunk) {
         if (isSessionInterrupted() || getDialogPath().isSessionTerminated()) {
             return;
         }

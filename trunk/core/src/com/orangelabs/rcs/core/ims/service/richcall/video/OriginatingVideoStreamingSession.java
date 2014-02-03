@@ -82,17 +82,9 @@ public class OriginatingVideoStreamingSession extends VideoStreamingSession {
             }
 
             // Build SDP part
-            String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
             String videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(getVideoPlayer().getSupportedVideoCodecs(), getVideoPlayer().getLocalRtpPort());
-	    	String sdp =
-            	"v=0" + SipUtils.CRLF +
-            	"o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"s=-" + SipUtils.CRLF +
-            	"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-            	"t=0 0" + SipUtils.CRLF +
-            	videoSdp +
-            	"a=sendonly" + SipUtils.CRLF;
+            String sdp = SdpUtils.buildVideoSDP(ipAddress, videoSdp, SdpUtils.DIRECTION_SENDONLY);
 
             // Set the local SDP part in the dialog path
             getDialogPath().setLocalContent(sdp);

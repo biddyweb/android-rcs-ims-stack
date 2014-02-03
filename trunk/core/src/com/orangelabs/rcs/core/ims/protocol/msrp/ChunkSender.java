@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.protocol.msrp;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -117,7 +118,8 @@ public class ChunkSender extends Thread {
 				}
 				
 				// Notify the msrp session listener that an error has occured
-				connection.getSession().getMsrpEventListener().msrpTransferError(null, e.getMessage());
+				// Changed by Deutsche Telekom
+				connection.getSession().getMsrpEventListener().msrpTransferError(null, e.getMessage(), TypeMsrpChunk.Unknown);
 			}
 		}
 	}
@@ -129,11 +131,18 @@ public class ChunkSender extends Thread {
 	 * @throws IOException
 	 */
 	public void sendChunk(byte chunk[]) throws IOException {
-		if (connection.getSession().isFailureReportRequested()) {
-			buffer.putMessage(chunk);
-		} else {
-			sendChunkImmediately(chunk);
-		}
+        // Changed by Deutsche Telekom
+        //CpuManager.setTempLock();
+        try {
+    		if (connection.getSession().isFailureReportRequested()) {
+    			buffer.putMessage(chunk);
+    		} else {
+    			sendChunkImmediately(chunk);
+    		}
+        } finally {
+            // Changed by Deutsche Telekom
+            //CpuManager.releaseTempLock();
+        }
 	}	
 
 	/**
@@ -143,20 +152,34 @@ public class ChunkSender extends Thread {
 	 * @throws IOException
 	 */
 	public void sendChunkImmediately(byte chunk[]) throws IOException {
-		if (MsrpConnection.MSRP_TRACE_ENABLED) {
-			System.out.println(">>> Send MSRP message:\n" + new String(chunk));
-		}
-		writeData(chunk);
+		// Changed by Deutsche Telekom
+	    //CpuManager.setTempLock();
+	    try {
+    		if (MsrpConnection.MSRP_TRACE_ENABLED) {
+    			System.out.println(">>> Send MSRP message:\n" + new String(chunk));
+    		}
+    		writeData(chunk);
+	    } finally {
+	    	// Changed by Deutsche Telekom
+	        //CpuManager.releaseTempLock();
+	    }
 	}
 	
 	/**
 	 * Write data to the stream
 	 * 
-	 * @param chunk Data chunck
+	 * @param chunk Data chunk
 	 * @throws IOException
 	 */
 	private synchronized void writeData(byte chunk[]) throws IOException {
-		stream.write(chunk);
-		stream.flush();
+		// Changed by Deutsche Telekom
+	    //CpuManager.setTempLock();
+	    try {
+	        stream.write(chunk);
+	        stream.flush();
+	    } finally {
+	    	// Changed by Deutsche Telekom
+	        //CpuManager.releaseTempLock();
+	    }
 	}
 }

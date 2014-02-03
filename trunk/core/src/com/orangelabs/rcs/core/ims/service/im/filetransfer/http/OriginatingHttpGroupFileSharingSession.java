@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
@@ -120,7 +121,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
         String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 
         // Send content
-        chatSession.sendDataChunks(ChatUtils.generateMessageId(), content, mime);
+        chatSession.sendDataChunks(ChatUtils.generateMessageId(), content, mime, TypeMsrpChunk.FileSharing);
         RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
     }
     

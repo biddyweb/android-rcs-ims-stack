@@ -22,17 +22,13 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
@@ -155,7 +151,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
         // Create the MSRP manager
 		int localMsrpPort = NetworkRessourceManager.generateLocalMsrpPort();
 		String localIpAddress = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().getIpAddress();
-		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort);
+		msrpMgr = new MsrpManager(localIpAddress, localMsrpPort,parent);
 		if (parent.getImsModule().isConnectedToWifiAccess()) {
 			msrpMgr.setSecured(RcsSettings.getInstance().isSecureMsrpOverWifi());
 		}
@@ -591,25 +587,76 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      *
      * @param msgId Message ID
      * @param error Error code
+     * @param typeMsrpChunk Type of MSRP chunk
      */
-    public void msrpTransferError(String msgId, String error) {
+    public void msrpTransferError(String msgId, String error, TypeMsrpChunk typeMsrpChunk) {
         if (isSessionInterrupted() || isInterrupted()) {
 			return;
 		}
 		if (logger.isActivated()) {
-            logger.info("Data transfer error " + error);
+			logger.info("Data transfer error " + error + " for message " + msgId + " (MSRP chunk type: " + typeMsrpChunk + ")");
         }
 
-        if (msgId != null) {
+        // Changed by Deutsche Telekom
+		// first: handle affected message
+        if (TypeMsrpChunk.MessageDeliveredReport.equals(typeMsrpChunk)) {
+            if (logger.isActivated()) {
+                logger.info("Failed to send delivered message via MSRP, so try to send via SIP message to " + getRemoteContact() + ". (msgId = " + msgId + ")");
+            }
+            
+            // Send the delivered notification by SIP
+            getImdnManager().sendMessageDeliveryStatus(getRemoteContact(), msgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+        } else if (TypeMsrpChunk.MessageDisplayedReport.equals(typeMsrpChunk)) {
+            if (logger.isActivated()) {
+                logger.info("Failed to send displayed message via MSRP, so try to send via SIP message to " + getRemoteContact() + ". (msgId = " + msgId + ")");
+            }
+            
+            // Send the displayed notification by SIP
+            getImdnManager().sendMessageDeliveryStatus(getRemoteContact(), msgId, ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+        } else if ((msgId != null) && TypeMsrpChunk.TextMessage.equals(typeMsrpChunk)) {
             // Notify listeners
 	        for(int i=0; i < getListeners().size(); i++) {
                 ((ChatSessionListener)getListeners().get(i)).handleMessageDeliveryStatus(msgId, ImdnDocument.DELIVERY_STATUS_FAILED, null);
 	        }
         } else {
-            // Notify listeners
-	        for(int i=0; i < getListeners().size(); i++) {
-                ((ChatSessionListener)getListeners().get(i)).handleImError(new ChatError(ChatError.MEDIA_SESSION_FAILED, error));
-	        }
+            // do nothing
+            if (logger.isActivated()) {
+                logger.debug("MSRP transfer error not handled!");
+            }
+        }
+
+        // Changed by Deutsche Telekom
+        // second: take care of the associated MSRP session
+        
+        int errorCode;
+        
+        if ((error != null) && (error.contains("413") || error.contains("408"))) {
+            // session should not be torn down immediately as there may be more errors to come
+            // but as errors occurred we shouldn't use it for sending any longer
+
+            // RFC 4975
+            // 408: An endpoint MUST treat a 408 response in the same manner as it would
+            // treat a local timeout.
+            // 413: If a message sender receives a 413 in a response, or in a REPORT
+            // request, it MUST NOT send any further chunks in the message, that is,
+            // any further chunks with the same Message-ID value. If the sender
+            // receives the 413 while in the process of sending a chunk, and the
+            // chunk is interruptible, the sender MUST interrupt it.
+
+            errorCode = ChatError.MEDIA_SESSION_BROKEN;
+        } else {
+            // default error; used e.g. for 481 or any other error 
+            // RFC 4975
+            // 481: A 481 response indicates that the indicated session does not exist.
+            // The sender should terminate the session.
+            
+            errorCode = ChatError.MEDIA_SESSION_FAILED;            
+        }
+
+        // Notify listeners
+        for (int i = 0; i < getListeners().size(); i++) {
+            ((ChatSessionListener) getListeners().get(i)).handleImError(new ChatError(
+                    errorCode, error));
         }
     }
 
@@ -742,12 +789,13 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param msgId Message ID
 	 * @param data Data
 	 * @param mime MIME type
+     * @param typeMsrpChunk Type of MSRP chunk
 	 * @return Boolean result
 	 */
-	public boolean sendDataChunks(String msgId, String data, String mime) {
+	public boolean sendDataChunks(String msgId, String data, String mime, TypeMsrpChunk typeMsrpChunk) {
 		try {
 			ByteArrayInputStream stream = new ByteArrayInputStream(data.getBytes()); 
-			msrpMgr.sendChunks(stream, msgId, mime, data.getBytes().length);
+			msrpMgr.sendChunks(stream, msgId, mime, data.getBytes().length, typeMsrpChunk);
 			return true;
 		} catch(Exception e) {
 			// Error
@@ -825,17 +873,47 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		// Send status in CPIM + IMDN headers
 		String from = ChatUtils.ANOMYNOUS_URI;
 		String to = ChatUtils.ANOMYNOUS_URI;
-		String imdn = ChatUtils.buildDeliveryReport(msgId, status);
-		String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
-		
-		// Send data
-		boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
-		if (result) {
-			// Update rich messaging history
-			RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);
-		}
+		sendMsrpMessageDeliveryStatus(contact, from, to, msgId, status);
 	}
 	
+	   // Changed by Deutsche Telekom
+		/**
+		 * Send message delivery status via MSRP
+		 * 
+		 * @param from Uri from who will send the delivery status
+		 * @param to Uri from who requested the delivery status
+		 * @param msgId Message ID
+		 * @param status Status
+		 */
+	    public void sendMsrpMessageDeliveryStatus(String contact, String from, String to, String msgId, String status) {
+	        // Send status in CPIM + IMDN headers
+	        // Changed by Deutsche Telekom
+
+	        String imdn = ChatUtils.buildDeliveryReport(msgId, status);
+	        // Changed by Deutsche Telekom
+	        if (logger.isActivated()) {
+	            logger.debug("Send delivery status " + status + " for message " + msgId );
+	        }
+	        // Changed by Deutsche Telekom
+	        String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
+	        
+	        // Changed by Deutsche Telekom
+	        TypeMsrpChunk typeMsrpChunk = TypeMsrpChunk.OtherMessageDeliveredReportStatus; 
+	        if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
+	            typeMsrpChunk = TypeMsrpChunk.MessageDisplayedReport;
+	        } else
+	        if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
+	            typeMsrpChunk = TypeMsrpChunk.MessageDeliveredReport;
+	        }
+	        
+	        // Send data
+	        boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE, typeMsrpChunk);
+	        if (result) {
+	            // Update rich messaging history
+	            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);
+	        }
+		}
+	    
 	/**
      * 
    	 * @param msgId Message ID
@@ -915,17 +993,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
      * @throws Exception 
      */
     public void prepareMediaSession() throws Exception {
-        // Parse the remote SDP part
-        SdpParser parser = new SdpParser(getDialogPath().getRemoteContent().getBytes());
-        Vector<MediaDescription> media = parser.getMediaDescriptions();
-        MediaDescription mediaDesc = media.elementAt(0);
-        MediaAttribute attr = mediaDesc.getMediaAttribute("path");
-        String remoteMsrpPath = attr.getValue();
-        String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
-        int remotePort = mediaDesc.port;
+        // Changed by Deutsche Telekom
+        // Get the remote SDP part
+        byte[] sdp = getDialogPath().getRemoteContent().getBytes();
 
+        // Changed by Deutsche Telekom
         // Create the MSRP session
-        MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remoteMsrpPath, this);
+		MsrpSession session = getMsrpMgr().createMsrpSession(sdp, this);
+
         session.setFailureReportOption(false);
         session.setSuccessReportOption(false);
     }

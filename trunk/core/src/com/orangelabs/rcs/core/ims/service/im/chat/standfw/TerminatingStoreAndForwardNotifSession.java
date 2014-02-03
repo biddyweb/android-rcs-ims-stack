@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpManager;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
@@ -105,6 +104,9 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
             String remoteHost = SdpUtils.extractRemoteHost(parser.sessionDescription, mediaDesc);
     		int remotePort = mediaDesc.port;
 			
+    		// Changed by Deutsche Telekom
+    		String fingerprint = SdpUtils.extractFingerprint(parser, mediaDesc);
+    		
             // Extract the "setup" parameter
             String remoteSetup = "passive";
 			MediaAttribute attr2 = mediaDesc.getMediaAttribute("setup");
@@ -130,20 +132,9 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 	    	}            
 
             // Build SDP part
-	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
-	    	String sdp =
-	    		"v=0" + SipUtils.CRLF +
-	            "o=- " + ntpTime + " " + ntpTime + " " + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "s=-" + SipUtils.CRLF +
-				"c=" + SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF +
-	            "t=0 0" + SipUtils.CRLF +			
-	            "m=message " + localMsrpPort + " " + getMsrpMgr().getLocalSocketProtocol() + " *" + SipUtils.CRLF +
-	    		"a=accept-types:" + getAcceptTypes() + SipUtils.CRLF +
-	            "a=accept-wrapped-types:" + getWrappedTypes() + SipUtils.CRLF +
-	            "a=setup:" + localSetup + SipUtils.CRLF +
-	            "a=path:" + getMsrpMgr().getLocalMsrpPath() + SipUtils.CRLF +
-	    		"a=recvonly" + SipUtils.CRLF;
+	    	String sdp = SdpUtils.buildChatSDP(ipAddress, localMsrpPort, getMsrpMgr().getLocalSocketProtocol(),
+                    getAcceptTypes(), getWrappedTypes(), localSetup, getMsrpMgr().getLocalMsrpPath(), getDirection());
 
 	    	// Set the local SDP part in the dialog path
 	        getDialogPath().setLocalContent(sdp);
@@ -208,7 +199,7 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
     			// Create the MSRP client session
                 if (localSetup.equals("active")) {
                 	// Active mode: client should connect
-                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this);
+                	MsrpSession session = getMsrpMgr().createMsrpClientSession(remoteHost, remotePort, remotePath, this, fingerprint);
         			session.setFailureReportOption(false);
         			session.setSuccessReportOption(false);
         			
@@ -423,4 +414,11 @@ public class TerminatingStoreAndForwardNotifSession extends OneOneChatSession im
 			}
 		}
 	}
+	
+    // Changed by Deutsche Telekom
+    @Override
+    public String getDirection() {
+        return SdpUtils.DIRECTION_RECVONLY;
+    }
+
 }
