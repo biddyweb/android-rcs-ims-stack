@@ -589,15 +589,6 @@ public class MsrpSession {
 		buffer.write((headers.get(MsrpConstants.HEADER_TO_PATH)).getBytes());
 		buffer.write(MsrpConstants.NEW_LINE.getBytes());
 			
-		// Byte-range header may not be present
-		if (headers.get(MsrpConstants.HEADER_BYTE_RANGE) != null) {
-			buffer.write(MsrpConstants.HEADER_BYTE_RANGE.getBytes());
-			buffer.write(MsrpConstants.CHAR_DOUBLE_POINT);
-			buffer.write(MsrpConstants.CHAR_SP);
-			buffer.write((headers.get(MsrpConstants.HEADER_BYTE_RANGE)).getBytes());
-			buffer.write(MsrpConstants.NEW_LINE.getBytes());
-		}
-		
 		buffer.write(MsrpConstants.END_MSRP_MSG.getBytes());
 		buffer.write(txId.getBytes());
 		buffer.write(MsrpConstants.FLAG_LAST_CHUNK);

@@ -20,6 +20,7 @@ V2.5.16
 - Issue 207		Stack: Bad SDP response in case of S&F callflow
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
+- Issue 208     Stack: Remove superfluous Byte-Range header in MSRP response
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
