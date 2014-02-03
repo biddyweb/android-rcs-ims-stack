@@ -17,10 +17,11 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.16
-- Issue 207		Stack: Bad SDP response in case of S&F callflow
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant
-- Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
+- Issue 207		Stack: Bad SDP response in case of S&F callflow
 - Issue 208     Stack: Remove superfluous Byte-Range header in MSRP response
+- Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
+- Issue 210		Stack: FTHTTP-GC wrong sender in notification
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
