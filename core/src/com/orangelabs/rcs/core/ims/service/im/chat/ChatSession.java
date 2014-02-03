@@ -33,7 +33,6 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
-import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
@@ -510,8 +509,16 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 
 			    	// Analyze received message thanks to the MIME type 
                     if (isFToHTTP) {
-                        // File transfer over HTTP message
-                        receiveHttpFileTransfer(StringUtils.decodeUTF8(cpimMsg.getMessageContent()), getDialogPath().getInvite(), cpimMsgId);
+						// File transfer over HTTP message
+						// Parse HTTP document
+						FileTransferHttpInfoDocument fileInfo = ChatUtils.parseFileTransferHttpDocument(cpimMsg.getMessageContent()
+								.getBytes());
+						if (fileInfo != null) {
+							fileInfo.setContact(from);
+							receiveHttpFileTransfer(fileInfo, cpimMsgId);
+						} else {
+							// TODO : else return error to Originating side
+						}
                     } else
 	                if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
@@ -684,58 +691,49 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Receive HTTP file transfer event
 	 * 
-	 * @param fileInfo File info in XML
-	 * @param invite Incoming request
+	 * @param fileTransferInfo Information of on file to transfer over HTTP
 	 * @param msgId Message ID
 	 */
-	private void receiveHttpFileTransfer(String fileInfo, SipRequest invite, String msgId) {
-		// Parse HTTP document
-		FileTransferHttpInfoDocument fileTransferInfo = ChatUtils.parseFileTransferHttpDocument(fileInfo.getBytes());
-		if (fileTransferInfo != null ) {
+	private void receiveHttpFileTransfer(FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
+		// Test if the contact is blocked
+		if (ContactsManager.getInstance().isFtBlockedForContact(fileTransferInfo.getContact())) {
+			if (logger.isActivated()) {
+				logger.debug("Contact " + fileTransferInfo.getContact() + " is blocked, automatically reject the HTTP File transfer");
+			}
+			// TODO : reject (SIP MESSAGE ?)
+			return;
+		}
 
-            // Test if the contact is blocked
-            if (ContactsManager.getInstance().isFtBlockedForContact(getRemoteContact())) {
-                if (logger.isActivated()) {
-                    logger.debug("Contact " + getRemoteContact()
-                            + " is blocked, automatically reject the HTTP File transfer");
-                }
+		// Auto reject if file too big
+		int maxSize = FileSharingSession.getMaxFileSharingSize();
+		if (maxSize > 0 && fileTransferInfo.getFileSize() > maxSize) {
+			if (logger.isActivated()) {
+				logger.debug("File is too big, reject the HTTP File transfer");
+			}
 
-                // TODO : reject (SIP MESSAGE ?)
-                return;
-            }
+			// TODO : reject (SIP MESSAGE ?)
+			return;
+		}
 
-            // Auto reject if file too big
-            int maxSize = FileSharingSession.getMaxFileSharingSize();
-            if (maxSize > 0 && fileTransferInfo.getFileSize() > maxSize) {
-                if (logger.isActivated()) {
-                    logger.debug("File is too big, reject the HTTP File transfer");
-                }
+		// Auto reject if number max of FT reached
+		maxSize = RcsSettings.getInstance().getMaxFileTransferSessions();
+		if (maxSize > 0 && getImsService().getImsModule().getInstantMessagingService().getFileTransferSessions().size() > maxSize) {
+			if (logger.isActivated()) {
+				logger.debug("Max number of File Tranfer reached, rejecting the HTTP File transfer");
+			}
 
-                // TODO : reject (SIP MESSAGE ?)
-                return;
-            }
-            
-            // Auto reject if number max of FT reached
-            maxSize = RcsSettings.getInstance().getMaxFileTransferSessions();
-            if (maxSize > 0 && getImsService().getImsModule().getInstantMessagingService().getFileTransferSessions().size() > maxSize) {
-                if (logger.isActivated()) {
-                    logger.debug("Max number of File Tranfer reached, rejecting the HTTP File transfer");
-                }
+			// TODO : reject (SIP MESSAGE ?)
+			return;
+		}
 
-                // TODO : reject (SIP MESSAGE ?)
-                return;
-            }
+		// Create a new session
+		FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo, msgId);
 
-			// Create a new session
-			FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo, msgId);
+		// Start the session
+		session.startSession();
 
-	        // Start the session
-			session.startSession();
-
-			// Notify listener
-			getImsService().getImsModule().getCoreListener().handleFileTransferInvitation(session, isGroupChat());
-	    }
-		// TODO : else return error to Originating side
+		// Notify listener
+		getImsService().getImsModule().getCoreListener().handleFileTransferInvitation(session, isGroupChat());
 	}
 	
 	/**

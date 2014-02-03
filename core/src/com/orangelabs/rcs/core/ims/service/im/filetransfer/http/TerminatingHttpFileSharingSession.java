@@ -71,7 +71,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
         super(parent, ContentManager.createMmContentFromFilename(fileTransferInfo.getFilename(),
                 fileTransferInfo.getFileUrl(), fileTransferInfo.getFileSize()),
-                chatSession.getRemoteContact(), null, chatSession.getSessionID(),
+                fileTransferInfo.getContact(), null, chatSession.getSessionID(),
                 chatSession.getContributionID());
 
         setRemoteDisplayName(chatSession.getRemoteDisplayName());
