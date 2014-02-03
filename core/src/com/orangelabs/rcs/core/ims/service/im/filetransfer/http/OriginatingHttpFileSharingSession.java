@@ -23,6 +23,7 @@ import java.util.Vector;
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
@@ -130,7 +131,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 				String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 				
 				// Send content
-				chatSession.sendDataChunks(ChatUtils.generateMessageId(), content, mime);
+				chatSession.sendDataChunks(ChatUtils.generateMessageId(), content, mime, MsrpSession.TypeMsrpChunk.HttpFileSharing);
                 RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
 			} else {
 				// A chat session should be initiated

@@ -25,6 +25,7 @@ import javax2.sip.header.SubjectHeader;
 
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
@@ -147,7 +148,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		}
 
 		// Send content
-		boolean result = sendDataChunks(msgId, content, mime);
+		boolean result = sendDataChunks(msgId, content, mime, MsrpSession.TypeMsrpChunk.TextMessage);
 
         // Use IMDN MessageID as reference if existing
         if (useImdn) {
@@ -197,7 +198,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		}
 
 		// Send content
-		boolean result = sendDataChunks(msgId, content, mime);
+		boolean result = sendDataChunks(msgId, content, mime, MsrpSession.TypeMsrpChunk.GeoLocation);
 
         // Use IMDN MessageID as reference if existing
         if (useImdn) {
@@ -229,7 +230,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	public void sendIsComposingStatus(boolean status) {
 		String content = IsComposingInfo.buildIsComposingInfo(status);
 		String msgId = ChatUtils.generateMessageId();
-		sendDataChunks(msgId, content, IsComposingInfo.MIME_TYPE);
+		sendDataChunks(msgId, content, IsComposingInfo.MIME_TYPE, MsrpSession.TypeMsrpChunk.IsComposing);
 	}
 	
 	/**
@@ -344,15 +345,29 @@ public abstract class OneOneChatSession extends ChatSession {
     }
 
     /**
+     * Get SDP direction
+     *
+     * @return Direction
+     *
+     * @see com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils#DIRECTION_RECVONLY
+     * @see com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils#DIRECTION_SENDONLY
+     * @see com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils#DIRECTION_SENDRECV
+     */
+    public abstract String getDirection();
+    
+    /**
      * Data transfer error
      *
      * @param msgId Message ID
      * @param error Error code
      */
-    public void msrpTransferError(String msgId, String error) {
-    	super.msrpTransferError(msgId, error);
+    // Changed by Deutsche Telekom
+    @Override
+    public void msrpTransferError(String msgId, String error, MsrpSession.TypeMsrpChunk typeMsrpChunk) {
+    	super.msrpTransferError(msgId, error, typeMsrpChunk);
     	
         // Request capabilities
         getImsService().getImsModule().getCapabilityService().requestContactCapabilities(getDialogPath().getRemoteParty());
     }
+
 }

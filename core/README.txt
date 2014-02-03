@@ -4,11 +4,12 @@ Release 2.5.16
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
  - DNS Java: see LICENSE-DNS.txt.
+ - The Legion Of The Bouncy Castle: see LICENSE-BOUNCYCASTLE.txt.
 
 
 News:
 -----
-
+- MSRP over TLS for Wi-Fi access 
 
 Bugs fixed:
 -----------
@@ -19,9 +20,10 @@ See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/i
 V2.5.16
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant
 - Issue 207		Stack: Bad SDP response in case of S&F callflow
-- Issue 208     Stack: Remove superfluous Byte-Range header in MSRP response
-- Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
+- Issue 208		Stack: Remove superfluous Byte-Range header in MSRP response
+- Issue 209		Stack: Built-in certificates provided by the OS are not used for SIP over TLS
 - Issue 210		Stack: FTHTTP-GC wrong sender in notification
+- Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456

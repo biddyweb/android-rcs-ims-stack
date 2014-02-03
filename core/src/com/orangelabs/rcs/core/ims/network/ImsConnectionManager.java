@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.network;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.ims.ImsModule;
+import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface.DnsResolvedFields;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.network.NetworkFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -94,6 +95,11 @@ public class ImsConnectionManager implements Runnable {
 	 */
 	private String apn;
 
+	/**
+	 * DNS resolved fields
+	 */
+	private DnsResolvedFields mDnsResolvedFields = null;
+	
     /**
      * Battery level state
      */
@@ -312,10 +318,7 @@ public class ImsConnectionManager implements Runnable {
 		}
 		
 		// Get the current local IP address
-		String localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(networkInfo.getType());
-		if (logger.isActivated()) {
-			logger.debug("Local IP address for interface " + networkInfo.getTypeName() + " is " + localIpAddr);
-		}   				
+		String localIpAddr = null;
 
 		// Check if the network access type has changed 
 		if (networkInfo.getType() != currentNetworkInterface.getType()) {
@@ -346,22 +349,69 @@ public class ImsConnectionManager implements Runnable {
 
 			// Load the user profile for the new network interface
 			loadUserProfile();
+			
+			// update DNS entry
+						try {
+							mDnsResolvedFields = currentNetworkInterface.getDnsResolvedFields();
+						} catch (Exception e) {
+							if (logger.isActivated()) {
+								logger.error(
+									"Resolving remote IP address to figure out initial local IP address failed!", e);
+							}
+						}
+						
+						// get latest local IP address
+						localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields);
+
 		} else {
 			// Check if the IP address has changed
-			if ((localIpAddr != null) &&
-					!localIpAddr.equals(currentNetworkInterface.getNetworkAccess().getIpAddress())) {
-				// Disconnect from current IMS network interface
-				if (logger.isActivated()) {
-					logger.debug("Disconnect from IMS: IP address has changed");
+			try {
+				if (mDnsResolvedFields == null) {
+					mDnsResolvedFields = currentNetworkInterface.getDnsResolvedFields();
 				}
-				disconnectFromIms();
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+					logger.error("Resolving remote IP address to figure out initial local IP address failed!", e);
+				}
+			}
+			localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields);
+			
+			if (localIpAddr != null) {
+			    String lastIpAddr = currentNetworkInterface.getNetworkAccess().getIpAddress();
+				if (!localIpAddr.equals(lastIpAddr)) {
+		            // Changed by Deutsche Telekom
+				    if (lastIpAddr != null) {
+    					// Disconnect from current IMS network interface
+    					if (logger.isActivated()) {
+    						logger.debug("Disconnect from IMS: IP address has changed");
+    					}
+    					disconnectFromIms();
+				    } else {
+                        if (logger.isActivated()) {
+                            logger.debug("IP address available (again)");
+                        }				            
+				    }
+				} else {
+					// Changed by Deutsche Telekom
+					if (logger.isActivated()) {
+						logger.debug("Neither interface nor IP address has changed; nothing to do.");
+					}
+					return;
+				}
 			}
 		}
 		
 		// Check if there is an IP connectivity
 		if (networkInfo.isConnected() && (localIpAddr != null)) {
+			String remoteAddress;
+			if (mDnsResolvedFields != null) {
+				remoteAddress = mDnsResolvedFields.ipAddress;
+			} else {
+				remoteAddress = new String("unresolved");
+			}
+
 			if (logger.isActivated()) {
-				logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName());
+				logger.info("Data connection state: CONNECTED to " + networkInfo.getTypeName() + " with local IP " + localIpAddr + " valid for " + remoteAddress);
 			}
 
 			// Test network access type
@@ -544,7 +594,7 @@ public class ImsConnectionManager implements Runnable {
     				}
 
     				// Try to register to IMS
-    	    		if (currentNetworkInterface.register()) {
+    	    		if (currentNetworkInterface.register(mDnsResolvedFields)) {
                         // InterruptedException thrown by stopImsConnection() may be caught by one
                         // of the methods used in currentNetworkInterface.register() above
                         if (imsPollingThreadID != Thread.currentThread().getId()) {
@@ -569,6 +619,9 @@ public class ImsConnectionManager implements Runnable {
     	            	
     	            	// Increment number of failures
     	            	nbFailures++;
+    	            	
+    	            	// Force to perform a new DNS lookup 
+    	            	mDnsResolvedFields = null;
     	    		}
     			} else {
                     if (imsModule.isReady()) {
@@ -594,6 +647,8 @@ public class ImsConnectionManager implements Runnable {
 				if (logger.isActivated()) {
 		    		logger.error("Internal exception", e);
 		    	}
+    	        // Force to perform a new DNS lookup 
+    	        mDnsResolvedFields = null;
 			}
 
             // InterruptedException thrown by stopImsConnection() may be caught by one

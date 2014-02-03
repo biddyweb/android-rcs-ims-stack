@@ -25,6 +25,7 @@ import javax2.sip.header.ExtensionHeader;
 import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession.TypeMsrpChunk;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
@@ -63,7 +64,7 @@ public abstract class GroupChatSession extends ChatSession {
      * The logger
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
-    
+
     /**
 	 * Constructor for originating side
 	 * 
@@ -212,7 +213,7 @@ public abstract class GroupChatSession extends ChatSession {
 		}		
 		
 		// Send data
-		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE, TypeMsrpChunk.TextMessage);
 
         // Use IMDN MessageID as reference if existing
         if (useImdn) {
@@ -260,7 +261,7 @@ public abstract class GroupChatSession extends ChatSession {
 		}
 		
 		// Send data
-		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);
+		boolean result = sendDataChunks(msgId, content, CpimMessage.MIME_TYPE, TypeMsrpChunk.GeoLocation);
 
         // Use IMDN MessageID as reference if existing
         if (useImdn) {
@@ -294,7 +295,7 @@ public abstract class GroupChatSession extends ChatSession {
 		String to = ChatUtils.ANOMYNOUS_URI;
 		String msgId = ChatUtils.generateMessageId();
 		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
-		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE);	
+		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE, TypeMsrpChunk.IsComposing);	
 	}
 
     /**
@@ -309,23 +310,11 @@ public abstract class GroupChatSession extends ChatSession {
         if (RcsSettingsData.VALUE_GSMA_REL_ALBATROS.equals(""+RcsSettings.getInstance().getGsmaRelease())) {
             return;
         }
-
-        // Send status in CPIM + IMDN headers
-        String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
-        String to = contact;
-        String imdn = ChatUtils.buildDeliveryReport(msgId, status);
-        String content = ChatUtils.buildCpimDeliveryReport(from, to, imdn);
-        
-        // Send data
-        boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE);
-        if (result) {
-			if (logger.isActivated()) {
-				logger.info("New delivery status for message " + msgId + ", status " + status + " contact " + contact);
-			}
-        	contact = PhoneUtils.formatNumberToInternational(contact);
-            // Update rich messaging history
-            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status, contact);
-        }
+      
+        // Changed by Deutsche Telekom
+        final String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
+        final String to = contact;
+        sendMsrpMessageDeliveryStatus(contact, from, to, msgId, status);
     }
 
 	/**
