@@ -209,6 +209,18 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    		}
 				    	}
 
+                        /*
+                         * Manage "pending-out" and "pending-in" status like "pending" status.
+                         * See RFC 4575
+                         * dialing-in: Endpoint is dialing into the conference, not yet in the roster
+                         * (probably being authenticated).
+                         * dialing-out: Focus has dialed out to connect the endpoint to the conference,
+                         * but the endpoint is not yet in the roster (probably being authenticated).
+                         */
+                        if ( (state.equalsIgnoreCase("dialing-out")) || (state.equalsIgnoreCase("dialing-in"))) {
+                            state = User.STATE_PENDING;
+                        }
+
 			    		// Update the participants list
 			    		if (User.isConnected(state)) {
 			    			// A participant has joined the session
