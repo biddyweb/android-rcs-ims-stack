@@ -418,7 +418,7 @@ public class MsrpSession {
 	/**
 	 * Send MSRP SEND request
 	 * 
-	 * @param transactionId Transaction ID
+	 * @param txId Transaction ID
 	 * @param to To header
 	 * @param from From header
 	 * @param msgId Message ID header
@@ -519,7 +519,7 @@ public class MsrpSession {
 	/**
 	 * Send an empty MSRP SEND request
 	 * 
-	 * @param transactionId Transaction ID
+	 * @param txId Transaction ID
 	 * @param to To header
 	 * @param from From header
 	 * @param msgId Message ID header
