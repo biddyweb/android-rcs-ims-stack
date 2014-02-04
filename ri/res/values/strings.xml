@@ -163,6 +163,7 @@
 <string name="menu_group_transfer_file">Send file to group</string>
 <string name="menu_wizz">Wizz</string>
 <string name="label_send_im_failed">Send IM has failed</string>
+<string name="label_send_imdn_failed">Send IMDN has failed</string>
 <string name="label_chat_failed">Chat session has failed</string>
 <string name="label_contacts">Contacts:</string>
 <string name="label_contact_is_composing">is typing...</string>
