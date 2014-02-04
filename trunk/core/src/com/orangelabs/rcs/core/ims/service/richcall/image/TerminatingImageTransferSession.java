@@ -141,7 +141,7 @@ public class TerminatingImageTransferSession extends ImageTransferSession implem
             }			
 
 			// Auto reject if file too big or if storage capacity is too small
-			ContentSharingError error = isImageCapacityAcceptable(getContent().getSize());
+			ContentSharingError error = ImageTransferSession.isImageCapacityAcceptable(getContent().getSize());
 			if (error != null) {
 				if (logger.isActivated()) {
 					logger.debug("Auto reject image sharing invitation");

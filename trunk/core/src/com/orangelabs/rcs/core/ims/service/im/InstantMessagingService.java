@@ -51,6 +51,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.TerminatingStoreAndForwardMsgSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
@@ -1055,8 +1056,17 @@ public class InstantMessagingService extends ImsService {
             sendErrorResponse(invite, Response.DECLINE);
             return;
         }
-
-		// Create and start a chat session
+        
+        // Reject if file is too big or size exceeds device storage capacity. This control should be done
+        // on UI. It is done after end user accepts invitation to enable prior handling by the application.
+        FileSharingError error = FileSharingSession.isFileCapacityAcceptable(ftinfo.getFileSize());
+        if (error != null) {
+            // Send a 603 Decline response
+            sendErrorResponse(invite, 603);
+            return;
+        }
+        
+        // Create and start a chat session
         TerminatingOne2OneChatSession one2oneChatSession = new TerminatingOne2OneChatSession(this, invite);
         one2oneChatSession.startSession();
         
