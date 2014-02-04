@@ -48,7 +48,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	/**
      * The logger
      */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static Logger logger = Logger.getLogger(FileSharingSession.class.getName());
 
     /**
 	 * Constructor
@@ -200,7 +200,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 * @param fileSize File size in bytes
 	 * @return Error or null if file capacity is acceptable
 	 */
-	protected FileSharingError isFileCapacityAcceptable(long fileSize) {
+	public static FileSharingError isFileCapacityAcceptable(long fileSize) {
 		boolean fileIsToBig = (FileSharingSession.getMaxFileSharingSize() > 0) ? fileSize > FileSharingSession.getMaxFileSharingSize() : false;
 		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
 		if (fileIsToBig) {
