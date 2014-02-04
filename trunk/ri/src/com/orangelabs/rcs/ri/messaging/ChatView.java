@@ -210,6 +210,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         	try {
         		chatSession.removeSessionListener(chatSessionListener);
         	} catch(Exception e) {
+        		if (logger.isActivated()) {
+					logger.error("Exception occurred" ,e);
+				}
         	}
         }
 
@@ -217,6 +220,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     	try {
     		messagingApi.removeMessageDeliveryListener(deliveryListener);
     	} catch(Exception e) {
+    		if (logger.isActivated()) {
+				logger.error("Exception occurred" ,e);
+			}
     	}
 
         // Disconnect messaging API
@@ -360,17 +366,20 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * 
      * @param msg Message
      */
-    public void sendMessage(final String msg) {
-        try {
-			// Send the text to remote
-	    	chatSession.sendMessage(msg);
-	    	
-	        // Warn the composing manager that the message was sent
-			composingManager.messageWasSent();
-	    } catch(Exception e) {
-	    	Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
-	    }
-    }    
+	public void sendMessage(final String msg) {
+		new Thread() {
+			public void run() {
+				try {
+					// Send the text to remote
+					chatSession.sendMessage(msg);
+					// Warn the composing manager that the message was sent
+					composingManager.messageWasSent();
+				} catch (Exception e) {
+					Utils.showMessage(ChatView.this, getString(R.string.label_send_im_failed));
+				}
+			}
+		}.start();
+	}
     
     /**
      * Send a text and display it
@@ -453,15 +462,19 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * 
      * @param msg Message
      */
-    private void markMessageAsDisplayed(InstantMessage msg){
-        if (RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
-            try {
-                chatSession.setMessageDeliveryStatus(msg.getMessageId(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
-            } catch(RemoteException e) {
-                // Nothing to do
-            }
-        }
-    }
+	private void markMessageAsDisplayed(final InstantMessage msg) {
+		new Thread() {
+			public void run() {
+				if (RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
+					try {
+						chatSession.setMessageDeliveryStatus(msg.getMessageId(), ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+					} catch (RemoteException e) {
+						Utils.showMessage(ChatView.this, getString(R.string.label_send_imdn_failed));
+					}
+				}
+			}
+		}.start();
+	}
 
     /**
      * Mark a message as "read"
@@ -832,6 +845,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 						}
                     }
             	} catch(Exception e) {
+            		if (logger.isActivated()) {
+						logger.error("Exception occurred" ,e);
+					}
             	}
             	chatSession = null;
         	}
@@ -1011,7 +1027,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 					contacts.remove(c);
 				}
 			}
-		} catch(Exception e) {}
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Exception occurred" ,e);
+			}
+		}
 		
 		// Display contacts
 		final CharSequence[] items = new CharSequence[contacts.size()];
@@ -1150,14 +1170,20 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * 
      * @param isTyping Is compoing status
      */
-	public void setTypingStatus(boolean isTyping){
-		try {
-			if ((chatSession != null) && (chatSession.getSessionState() == SessionState.ESTABLISHED)) {
-				chatSession.setIsComposingStatus(isTyping);
+	public void setTypingStatus(final boolean isTyping) {
+		new Thread() {
+			public void run() {
+				try {
+					if ((chatSession != null) && (chatSession.getSessionState() == SessionState.ESTABLISHED)) {
+						chatSession.setIsComposingStatus(isTyping);
+					}
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Exception occurred" ,e);
+					}
+				}
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		}.start();
 	}
 	
     /**

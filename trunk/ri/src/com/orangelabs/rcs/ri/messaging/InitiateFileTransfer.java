@@ -521,7 +521,7 @@ public class InitiateFileTransfer extends Activity {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-
+					updateProgressBar(filesize, filesize);
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transfered");

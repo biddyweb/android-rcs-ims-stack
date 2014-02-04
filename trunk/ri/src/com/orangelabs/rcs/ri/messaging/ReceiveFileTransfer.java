@@ -138,6 +138,10 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 		thumbnail = getIntent().getByteArrayExtra("thumbnail");
 		autoAccept = getIntent().getBooleanExtra("autoAccept", false);
 		
+		if (logger.isActivated()) {
+			logger.info("onCreate (sessionId=" + sessionId + ") (remoteContact=" + remoteContact + ") (fileSize=" + fileSize
+					+ ") (fileType=" + fileType + ") (autoAccept=" + autoAccept + ")");
+		}
 		// Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
         
