@@ -15,28 +15,25 @@ import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.media.MediaCodec;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 public class VideoSdpTest extends AndroidTestCase {
-
     private static int RTP_PORT = 12345;
     private static String videoSdp = 
             "v=tester" + SipUtils.CRLF +
             "m=video 12345 RTP/AVP 99 98 97 96" + SipUtils.CRLF +
+            "a=framerate:15" + SipUtils.CRLF +
             "a=rtpmap:99 H264/90000" + SipUtils.CRLF +
             "a=framesize:99 352-288" + SipUtils.CRLF +
-            "a=framerate:99 15" + SipUtils.CRLF +
             "a=fmtp:99 profile-level-id=42800c;packetization-mode=1" + SipUtils.CRLF +
             "a=rtpmap:98 H264/90000" + SipUtils.CRLF +
             "a=framesize:98 352-288" + SipUtils.CRLF +
-            "a=framerate:98 12" + SipUtils.CRLF +
             "a=fmtp:98 profile-level-id=42800c;packetization-mode=1" + SipUtils.CRLF +
             "a=rtpmap:97 H264/90000" + SipUtils.CRLF +
             "a=framesize:97 320-240" + SipUtils.CRLF +
-            "a=framerate:97 12" + SipUtils.CRLF +
             "a=fmtp:97 profile-level-id=42800c;packetization-mode=1" + SipUtils.CRLF +
             "a=rtpmap:96 H264/90000" + SipUtils.CRLF +
             "a=framesize:96 176-144" + SipUtils.CRLF +
-            "a=framerate:96 10" + SipUtils.CRLF +
             "a=fmtp:96 profile-level-id=42900b;packetization-mode=1" + SipUtils.CRLF;
     private static String videoSdp2 = 
             "v=tester" + SipUtils.CRLF +
@@ -111,7 +108,7 @@ public class VideoSdpTest extends AndroidTestCase {
     public void testCreateSdp() {
         // Create SDP
         String createdSdp = "v=tester" + SipUtils.CRLF + 
-                VideoSdpBuilder.buildSdpWithoutOrientation(codecs, RTP_PORT);
+        		 VideoSdpBuilder.buildSdpOfferWithoutOrientation(codecs, RTP_PORT);
         // TEST SDP
         assertEquals(createdSdp, videoSdp);
     }
