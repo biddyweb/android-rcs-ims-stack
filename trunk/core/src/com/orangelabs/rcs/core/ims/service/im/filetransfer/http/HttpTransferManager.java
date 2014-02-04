@@ -74,7 +74,7 @@ public abstract class HttpTransferManager {
 	/**
      * HTTP server address
      */
-    private static String serverAddr = RcsSettings.getInstance().getFtHttpServer();
+    private String serverAddr = RcsSettings.getInstance().getFtHttpServer();
 
 	/**
      * HTTP server login
@@ -128,7 +128,9 @@ public abstract class HttpTransferManager {
      * @param listener HTTP event listener
      */
     public HttpTransferManager(HttpTransferEventListener listener) {
-        this(listener, serverAddr);
+        this.listener = listener;
+
+        initServerAddress(serverAddr);
     }
 
     /**
