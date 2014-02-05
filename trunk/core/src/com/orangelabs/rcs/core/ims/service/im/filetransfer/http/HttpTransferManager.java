@@ -151,7 +151,7 @@ public abstract class HttpTransferManager {
      *
      * @param address server address
      */
-    public void initServerAddress(String address) {
+    private void initServerAddress(String address) {
         try {
             // Extract protocol and port
             URL url = new URL(address);
