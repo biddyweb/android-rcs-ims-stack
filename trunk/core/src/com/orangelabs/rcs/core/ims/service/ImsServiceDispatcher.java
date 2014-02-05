@@ -302,7 +302,6 @@ public class ImsServiceDispatcher extends Thread {
                     FileTransferHttpInfoDocument ftHttpInfo = ChatUtils.getHttpFTInfo(request);
                     if (ftHttpInfo != null) {
                         // HTTP file transfer invitation
-                    	ftHttpInfo.setContact(ChatUtils.getReferredIdentity(request));
                         if (SipUtils.getReferredByHeader(request) != null) {
                             if (logger.isActivated()) {
                                 logger.debug("Single S&F file transfer over HTTP invitation");

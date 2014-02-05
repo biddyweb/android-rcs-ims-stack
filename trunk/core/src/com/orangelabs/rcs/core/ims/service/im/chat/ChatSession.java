@@ -510,8 +510,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 						FileTransferHttpInfoDocument fileInfo = ChatUtils.parseFileTransferHttpDocument(cpimMsg.getMessageContent()
 								.getBytes());
 						if (fileInfo != null) {
-							fileInfo.setContact(from);
-							receiveHttpFileTransfer(fileInfo, cpimMsgId);
+							receiveHttpFileTransfer(from, fileInfo, cpimMsgId);
 						} else {
 							// TODO : else return error to Originating side
 						}
@@ -738,14 +737,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Receive HTTP file transfer event
 	 * 
+	 * @param contact Contact
 	 * @param fileTransferInfo Information of on file to transfer over HTTP
 	 * @param msgId Message ID
 	 */
-	private void receiveHttpFileTransfer(FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
+	private void receiveHttpFileTransfer(String contact, FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
 		// Test if the contact is blocked
-		if (ContactsManager.getInstance().isFtBlockedForContact(fileTransferInfo.getContact())) {
+		if (ContactsManager.getInstance().isFtBlockedForContact(contact)) {
 			if (logger.isActivated()) {
-				logger.debug("Contact " + fileTransferInfo.getContact() + " is blocked, automatically reject the HTTP File transfer");
+				logger.debug("Contact " + contact + " is blocked, automatically reject the HTTP File transfer");
 			}
 			// TODO : reject (SIP MESSAGE ?)
 			return;
