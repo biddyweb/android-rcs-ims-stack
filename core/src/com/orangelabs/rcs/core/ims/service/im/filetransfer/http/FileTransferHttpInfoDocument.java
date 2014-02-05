@@ -58,11 +58,6 @@ public class FileTransferHttpInfoDocument {
 	 * Filename
 	 */
 	private String filename; 
-	
-	/**
-	 * The remote contact
-	 */
-	private String contact;
 
 	/**
 	 * Constructor
@@ -176,22 +171,5 @@ public class FileTransferHttpInfoDocument {
 	 */
 	public String getFilename() {
 		return filename;
-	}
-
-	/**
-	 * Return the remote contact
-	 * 
-	 * @return the remote contact
-	 */
-	public String getContact() {
-		return this.contact;
-	}
-
-	/**
-	 * Set the remote contact
-	 * @param contact
-	 */
-	public void setContact(String contact) {
-		this.contact = contact;
 	}
 }
