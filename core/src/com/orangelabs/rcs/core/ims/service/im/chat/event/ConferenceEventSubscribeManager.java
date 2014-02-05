@@ -209,15 +209,13 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    		}
 				    	}
 
-                        /*
-                         * Manage "pending-out" and "pending-in" status like "pending" status.
-                         * See RFC 4575
-                         * dialing-in: Endpoint is dialing into the conference, not yet in the roster
-                         * (probably being authenticated).
-                         * dialing-out: Focus has dialed out to connect the endpoint to the conference,
-                         * but the endpoint is not yet in the roster (probably being authenticated).
-                         */
-                        if ( (state.equalsIgnoreCase("dialing-out")) || (state.equalsIgnoreCase("dialing-in"))) {
+                        // Manage "pending-out" and "pending-in" status like "pending" status.
+                        // See RFC 4575
+                        // dialing-in: Endpoint is dialing into the conference, not yet in the roster
+                        // (probably being authenticated).
+                        // dialing-out: Focus has dialed out to connect the endpoint to the conference,
+                        // but the endpoint is not yet in the roster (probably being authenticated).
+                        if ((state.equalsIgnoreCase("dialing-out")) || (state.equalsIgnoreCase("dialing-in"))) {
                             state = User.STATE_PENDING;
                         }
 
@@ -232,12 +230,10 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    			disconnectedParticipants.addParticipant(entity);
 			    		}
 			    		
-						/*
-						 * There are some states that we do not want to notify to listeners. These are all the states that have not
-						 * changed since last notification. It is important to bypass them, else they will produce noise in the
-						 * notification behavior (for example we will see "participant has departed" once again, even if he departed
-						 * during the last session and was not reinvited this time).
-						 */
+						// There are some states that we do not want to notify to listeners. These are all the states that have not
+						// changed since last notification. It is important to bypass them, else they will produce noise in the
+						// notification behavior (for example we will see "participant has departed" once again, even if he departed
+						// during the last session and was not reinvited this time).
 						if (!RichMessaging.getInstance().hasLastKnownStateForParticipantChanged(session.getContributionID(),
 								entity, state)) {
 							if (logger.isActivated()) {
@@ -260,10 +256,8 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    		// Update the list of participants of the terminating group chat session
 			    		UpdateSessionParticipantList(connectedParticipants, disconnectedParticipants, ((GroupChatSession)session).getParticipants());
 						if (session instanceof TerminatingAdhocGroupChatSession && conference.getState().equals(ConferenceInfoDocument.STATE_FULL)) {
-							/*
-							 * Check if the list of connected participants of the terminating group chat session differs from the
-							 * provider's provisioning in order to invite missing participants if any.
-							 */
+							// Check if the list of connected participants of the terminating group chat session differs from the
+							// provider's provisioning in order to invite missing participants if any.
 							((TerminatingAdhocGroupChatSession) session).inviteMissingParticipants();
 						}
 					}
