@@ -25,6 +25,7 @@ V2.5.16
 - Issue 209		Stack: Built-in certificates provided by the OS are not used for SIP over TLS
 - Issue 210		Stack: FTHTTP-GC wrong sender in notification
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
+- Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
