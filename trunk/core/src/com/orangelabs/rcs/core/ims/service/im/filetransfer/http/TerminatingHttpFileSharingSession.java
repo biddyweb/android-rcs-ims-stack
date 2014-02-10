@@ -59,19 +59,25 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
      */
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
-    /**
-     * Constructor
-     * 
-     * @param parent IMS service
-     * @param chatSession chat session
-     * @param fileTransferInfo File transfer info
-     * @param msgId Message ID
-     */
+	/**
+	 * Constructor
+	 * 
+	 * @param parent
+	 *            IMS service
+	 * @param chatSession
+	 *            the chat session
+	 * @param fileTransferInfo
+	 *            the File transfer info document
+	 * @param msgId
+	 *            the Message ID
+	 * @param contact
+	 *            the remote contact
+	 */
     public TerminatingHttpFileSharingSession(ImsService parent, ChatSession chatSession,
-            FileTransferHttpInfoDocument fileTransferInfo, String msgId) {
+            FileTransferHttpInfoDocument fileTransferInfo, String msgId, String contact ) {
         super(parent, ContentManager.createMmContentFromFilename(fileTransferInfo.getFilename(),
                 fileTransferInfo.getFileUrl(), fileTransferInfo.getFileSize()),
-                chatSession.getRemoteContact(), null, chatSession.getSessionID(),
+                contact, null, chatSession.getSessionID(),
                 chatSession.getContributionID());
 
         setRemoteDisplayName(chatSession.getRemoteDisplayName());

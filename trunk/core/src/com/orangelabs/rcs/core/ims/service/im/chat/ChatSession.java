@@ -774,7 +774,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 		}
 
 		// Create a new session
-		FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo, msgId);
+		FileSharingSession session = new TerminatingHttpFileSharingSession(getImsService(), this, fileTransferInfo, msgId, contact);
 
 		// Start the session
 		session.startSession();
