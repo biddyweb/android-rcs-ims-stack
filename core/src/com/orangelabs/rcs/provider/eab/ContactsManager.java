@@ -2658,11 +2658,11 @@ public final class ContactsManager {
                  .withValue(Data.DATA1, info.getContact())
                  .build());
         
-        // Insert phone number, so it appears in case the contact is unlinked
+        // Insert name, so it appears in case the contact is unlinked
         ops.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
                 .withValueBackReference(Data.RAW_CONTACT_ID, rawContactRefIms)
-                .withValue(Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-                .withValue(Data.DATA1, info.getContact())
+                .withValue(Data.MIMETYPE, StructuredName.CONTENT_ITEM_TYPE)
+                .withValue(StructuredName.DISPLAY_NAME, info.getContact())
                 .build());
         
         // Create RCS status row
