@@ -18,10 +18,20 @@
 
 package com.orangelabs.rcs.provisioning.local;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,6 +46,8 @@ import android.widget.Toast;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.provisioning.ProvisioningParser;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * End user profile parameters provisioning
@@ -63,6 +75,10 @@ public class ProfileProvisioning extends Activity {
     private static final String[] GSMA_RELEASE = {
     	"Albatros", "Blackbird", "Crane"
     };
+    
+    private static Logger logger = Logger.getLogger(ProfileProvisioning.class.getSimpleName());
+    private static final int FILE_SELECT_CODE = 0;
+    private String mInputedUserPhoneNumber = null;
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,10 +98,16 @@ public class ProfileProvisioning extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-
+		updateProfileProvisioningUI();
+	}
+	
+	/**
+	 * Update Profile Provisioning UI
+	 */
+	private void updateProfileProvisioningUI() {
 		// Display parameters
 		Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, MOBILE_IMS_AUTHENT);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, MOBILE_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 		if (RcsSettings.getInstance().getImsAuhtenticationProcedureForMobile().equals(MOBILE_IMS_AUTHENT[0])) {
@@ -95,72 +117,72 @@ public class ProfileProvisioning extends Activity {
 		}
 
 		spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
-		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, WIFI_IMS_AUTHENT);
+		adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, WIFI_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 		spinner.setSelection(0);
 
-		EditText txt = (EditText)this.findViewById(R.id.ImsUsername);
+		EditText txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsUsername);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME));
 
-		txt = (EditText)this.findViewById(R.id.ImsDisplayName);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsDisplayName);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME));
 
-		txt = (EditText)this.findViewById(R.id.ImsHomeDomain);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN));
 
-		txt = (EditText)this.findViewById(R.id.ImsPrivateId);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPrivateId);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID));
 
-		txt = (EditText)this.findViewById(R.id.ImsPassword);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPassword);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_PASSWORD));
 
-		txt = (EditText)this.findViewById(R.id.ImsRealm);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsRealm);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_REALM));
 
-        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
+        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_ADDR_MOBILE));
 
-        txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForMobile);
+        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForMobile);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_PORT_MOBILE));
 
-		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_ADDR_WIFI));
 
-		txt = (EditText)this.findViewById(R.id.ImsOutboundProxyPortForWifi);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForWifi);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IMS_PROXY_PORT_WIFI));
 
-        txt = (EditText)this.findViewById(R.id.XdmServerAddr);
+        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_SERVER));
 
-		txt = (EditText)this.findViewById(R.id.XdmServerLogin);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_LOGIN));
 
-		txt = (EditText)this.findViewById(R.id.XdmServerPassword);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerPassword);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.XDM_PASSWORD));
         
-        txt = (EditText)this.findViewById(R.id.FtHttpServerAddr);
+        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerAddr);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_SERVER));
 
-		txt = (EditText)this.findViewById(R.id.FtHttpServerLogin);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerLogin);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_LOGIN));
 
-		txt = (EditText)this.findViewById(R.id.FtHttpServerPassword);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerPassword);
         txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.FT_HTTP_PASSWORD));
         
-		txt = (EditText)this.findViewById(R.id.ImConferenceUri);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImConferenceUri);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.IM_CONF_URI));
 
-        txt = (EditText)this.findViewById(R.id.EndUserConfReqUri);
+        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.EndUserConfReqUri);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.ENDUSER_CONFIRMATION_URI));
 
-		txt = (EditText)this.findViewById(R.id.RcsApn);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.RcsApn);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.RCS_APN));
 
-		txt = (EditText)this.findViewById(R.id.CountryCode);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.CountryCode);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.COUNTRY_CODE));
 
-		txt = (EditText)this.findViewById(R.id.CountryAreaCode);
+		txt = (EditText)ProfileProvisioning.this.findViewById(R.id.CountryAreaCode);
 		txt.setText(RcsSettings.getInstance().readParameter(RcsSettingsData.COUNTRY_AREA_CODE));
 
 		CheckBox box = (CheckBox)findViewById(R.id.image_sharing);
@@ -212,7 +234,7 @@ public class ProfileProvisioning extends Activity {
         box.setChecked(Boolean.parseBoolean(RcsSettings.getInstance().readParameter(RcsSettingsData.CAPABILITY_SIP_AUTOMATA)));
         
 		spinner = (Spinner)findViewById(R.id.GsmaRelease);
-		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, GSMA_RELEASE);
+		adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, GSMA_RELEASE);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 		spinner.setSelection(RcsSettings.getInstance().getGsmaRelease());	
@@ -229,7 +251,7 @@ public class ProfileProvisioning extends Activity {
     };
     
     /**
-     * Save parameters
+     * Save parameters into RCS Settings provider
      */
     private void save() {
 		Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
@@ -362,271 +384,198 @@ public class ProfileProvisioning extends Activity {
      */
     private OnClickListener genBtnListener = new OnClickListener() {
         public void onClick(View v) {
-	        // Save parameters
-        	genProfile();
+	        // Load the user profile
+        	loadProfile();
         }
     };
     
-    /**
-     * Generate the user profile
-     */
-    private void genProfile() {    
+	/**
+	 * Load the user profile
+	 */
+	private void loadProfile() {
 		LayoutInflater factory = LayoutInflater.from(this);
-        final View view = factory.inflate(R.layout.rcs_provisioning_generate_profile, null);
-		EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
-        textEdit.setText(RcsSettings.getInstance().getCountryCode());
+		final View view = factory.inflate(R.layout.rcs_provisioning_generate_profile, null);
+		EditText textEdit = (EditText) view.findViewById(R.id.msisdn);
+		textEdit.setText(RcsSettings.getInstance().getCountryCode());
 
-        final String[] platforms = {
-                "NSN Brune", "NSN Lannion", "Margaux (albatros)", "Margaux (blackbird)", "VCOM1", "VCOM2",
-                "RCS", "Kamailio1", "MargauxIPv6", "Huawei", "Capgemini", "JibeNet", "JibeOrange"
-        };
-        Spinner spinner = (Spinner)view.findViewById(R.id.ims);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, platforms);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
-        spinner.setAdapter(adapter);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle(R.string.label_generate_profile).setView(view)
+				.setNegativeButton(R.string.label_cancel, null)
+				.setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						EditText textEdit = (EditText) view.findViewById(R.id.msisdn);
+						mInputedUserPhoneNumber = textEdit.getText().toString();
+						showFileChooser();
+					}
+				});
+		AlertDialog dialog = builder.create();
+		dialog.setCanceledOnTouchOutside(false);
+		dialog.show();
+	}
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-            .setTitle(R.string.label_generate_profile)
-            .setView(view)
-            .setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-        	        // Generate default settings
-        			EditText textEdit = (EditText)view.findViewById(R.id.msisdn);
-        			String number = textEdit.getText().toString();
-    	            Spinner spinner = (Spinner)view.findViewById(R.id.ims);
-    	            int index = spinner.getSelectedItemPosition();
+	/**
+	 * Select a text file for the provisioning
+	 */
+	private void showFileChooser() {
+		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+		intent.setType("text/plain");
+		intent.addCategory(Intent.CATEGORY_OPENABLE);
+		try {
+			Toast.makeText(ProfileProvisioning.this, getString(R.string.label_choose_xml), Toast.LENGTH_LONG).show();
+			startActivityForResult(Intent.createChooser(intent, "Select provisioning XML"), FILE_SELECT_CODE);
+		} catch (android.content.ActivityNotFoundException ex) {
+		}
+	}
 
-        			String sipUri = "";
-        			String homeDomain = "";
-                    String privateSipUri = "";
-        			String imsPwd = "";
-        			String imsRealm = "";
-        			String imsAddrForMobile = "";
-        			int imsPortForMobile = 5060;
-                    String imsAddrForWifi = "";
-                    int imsPortForWifi = 5060;
-        			String xdms = "";
-        			String xdmsPwd = "";
-        			String xdmsLogin = "";
-					String ftHttpServerAddr = "";
-					String ftHttpServerLogin = "";
-					String ftHttpServerPwd = "";
-        			String confUri = "";
-        			String enduserConfirmUri = "";
-                    switch(index) {
-                    	case 0: // NSN Brune
-	            			homeDomain = "rcs.brune.com";
-            				sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-	            			imsPwd = "nsnims2008";
-	            			imsRealm = "rcs.brune.com";
-	            			imsAddrForMobile = "80.12.197.74";
-	            			imsPortForMobile = 5060;
-	            			imsAddrForWifi = "80.12.197.74";
-	            			imsPortForWifi = 5060;
-	            			confUri = "sip:Conference-Factory@" + homeDomain;
-	            			break;
-                    	case 1: // NSN Lannion
-	            			homeDomain = "rcs.lannion.com";
-	            			sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-	            			imsPwd = "alu2012";
-	            			imsRealm = "rcs.lannion.com";
-	            			imsAddrForMobile = "80.12.197.184";
-	            			imsPortForMobile = 5080;
-	            			imsAddrForWifi = "80.12.197.184";
-	            			imsPortForWifi = 5080;
-	            			confUri = "sip:Conference-Factory@" + homeDomain;
-	            			break;
-                        case 2: // Margaux (albatros)
-                            homeDomain = "sip.mobistar.com";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-	            			imsRealm = "sip.mobistar.com";
-	            			imsAddrForMobile = "172.20.84.114";
-	            			imsPortForMobile = 5080;
-	            			imsAddrForWifi = "172.20.84.114";
-	            			imsPortForWifi = 5080;
-	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-	            			ftHttpServerAddr = "https://ftcontentserver.rcs.mnc001.mcc208.pub.3gppnetwork.org/rcse-hcs/upload";
-	            			ftHttpServerLogin = sipUri;
-	            			ftHttpServerPwd = "imt30imt30";
-                            break;
-                        case 3: // Margaux (blackbird)
-                            homeDomain = "rcs.lannion-e.com";
-                            sipUri = number + "@" + homeDomain;
-                            privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-                            imsRealm = "sip.mobistar.com";
-                            imsAddrForMobile = "172.20.84.114";
-                            imsPortForMobile = 5080;
-                            imsAddrForWifi = "172.20.84.114";
-                            imsPortForWifi = 5080;
-                            confUri  = "sip:Conference-Factory@" + homeDomain;
-                            ftHttpServerAddr = "https://ftcontentserver.rcs.mnc001.mcc208.pub.3gppnetwork.org/rcse-hcs/upload";
-                            ftHttpServerLogin = sipUri;
-                            ftHttpServerPwd = "imt30imt30";
-                            break;
-                        case 4: // VCO1
-                            homeDomain = "sip.france.fr";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-	            			imsRealm = "sip.france.fr";
-	            			imsAddrForMobile = "asbc.sip.france.fr";
-	            			imsPortForMobile = 5080;
-	            			imsAddrForWifi = "asbc.sip.france.fr";
-	            			imsPortForWifi = 5080;
-	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 5: // VCO2
-                            homeDomain = "sip.france.fr";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-	            			imsRealm = "sip.france.fr";
-	            			imsAddrForMobile = "172.20.114.42";
-	            			imsPortForMobile = 5060;
-	            			imsAddrForWifi = "172.20.114.42";
-	            			imsPortForWifi = 5060;
-	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 6: // RCS
-                            homeDomain = "sip.france.fr";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-	            			imsRealm = "sip.france.fr";
-	            			imsAddrForMobile = "172.20.84.114";
-	            			imsPortForMobile = 5060;
-	            			imsAddrForWifi = "172.20.84.114";
-	            			imsPortForWifi = 5060;
-	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 7: // Kamailio1
-                            homeDomain = "rcs.kamailio1.com";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "password";
-	            			imsRealm = "rcs.kamailio1.com";
-	            			imsAddrForMobile = "172.20.14.43";
-	            			imsPortForMobile = 5060;
-	            			imsAddrForWifi = "172.20.14.43";
-	            			imsPortForWifi = 5060;
-	            			confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 8: // Margaux IPv6
-                            homeDomain = "sip.mobistar.com";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "imt30imt30";
-	            			imsRealm = "sip.mobistar.com";
-                            imsAddrForMobile = "2a01:cf00:74:410f::14";
-                            imsPortForMobile = 5060;
-                            imsAddrForWifi = "2a01:cf00:74:410f::14";
-                            imsPortForWifi = 5060;
-                            confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 9: // Huawei
-                            homeDomain = "sip.osk.com";
-                            sipUri = number + "@" + homeDomain;
-                            if (sipUri.startsWith("+")) {
-                            	privateSipUri = sipUri.substring(1);
-                            } else {
-                            	privateSipUri = sipUri;
-                            }
-                            imsPwd = "huawei";
-	            			imsRealm = "sip.osk.com";
-                            imsAddrForMobile = "172.20.114.0";
-                            imsPortForMobile = 5060;
-                            imsAddrForWifi = "172.20.114.0";
-                            imsPortForWifi = 5060;
-                            confUri  = "sip:Conference-Factory@" + homeDomain;
-                            break;
-                        case 10: // Capgemini
-                            homeDomain = "sims2.net";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "1234";
-	            			imsRealm = "sims2.net";
-                            imsAddrForMobile = "10.67.102.151";
-                            imsPortForMobile = 5060;
-                            imsAddrForWifi = "10.67.102.151";
-                            imsPortForWifi = 5060;
-                            confUri  = "sip:Conference-Factory@" + homeDomain;
-                            ftHttpServerAddr = "https://10.67.102.138/rcse-hcs/upload";
-                            ftHttpServerLogin = number;
-                            ftHttpServerPwd = imsPwd;
-                            break;
-                        case 11: // JibeNet
-                            homeDomain = "jibemobile.com";
-                            sipUri = number + "@" + homeDomain;
-            				privateSipUri = sipUri;
-                            imsPwd = "5555";
-	            			imsRealm = "jibemobile.com";
-                            imsAddrForMobile = "goose.jibemobile.com";
-                            imsPortForMobile = 5671;
-                            imsAddrForWifi = "goose.jibemobile.com";
-                            imsPortForWifi = 5671;
-                            confUri  = "sip:conference@" + homeDomain;
-                            break;
-                        case 12: // JibeOrange
-                            homeDomain = "orange.jibemobile.com";
-                            sipUri = number;
-                            privateSipUri = sipUri;
-                            imsPwd = "0000";
-                            imsRealm = "orange.jibemobile.com";
-                            imsAddrForMobile = "46.16.77.146";
-                            imsPortForMobile = 5671;
-                            imsAddrForWifi = "46.16.77.146";
-                            imsPortForWifi = 5671;
-                            confUri  = "sip:conference@jibemobile.com";
-                            break;
-                    }
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case FILE_SELECT_CODE:
+			if (resultCode == Activity.RESULT_OK) {
+				String filePath = getFilePath(this, data.getData());
+				String mXMLFileContent = getFileContent(filePath);
+				if (mXMLFileContent != null) {
+					if (logger.isActivated()) {
+						logger.debug("Selection of provisioning file: "+filePath);
+					}
+					ProvisionTask mProvisionTask = new ProvisionTask();
+					mProvisionTask.execute(mXMLFileContent, mInputedUserPhoneNumber);
+				} else {
+					Toast.makeText(ProfileProvisioning.this, getString(R.string.label_load_failed), Toast.LENGTH_LONG).show();
+				}
+			}
+			break;
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 
-        			// Update UI
-    				EditText txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsUsername);
-    				txt.setText(number);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsDisplayName);
-    				txt.setText(number);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsHomeDomain);
-    		        txt.setText(homeDomain);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPrivateId);
-                    txt.setText(privateSipUri);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsPassword);
-    		        txt.setText(imsPwd);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsRealm);
-    		        txt.setText(imsRealm);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForMobile);
-                    txt.setText(imsAddrForMobile);
-			        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForMobile);
-		            txt.setText(""+imsPortForMobile);
-                    txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyAddrForWifi);
-                    txt.setText(imsAddrForWifi);
-                    txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImsOutboundProxyPortForWifi);
-                    txt.setText(""+imsPortForWifi);
-    				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerAddr);
-    				txt.setText(xdms);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerLogin);
-    		        txt.setText(xdmsLogin);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.XdmServerPassword);
-    		        txt.setText(xdmsPwd);
-    				txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerAddr);
-    				txt.setText(ftHttpServerAddr);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerLogin);
-    		        txt.setText(ftHttpServerLogin);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.FtHttpServerPassword);
-    		        txt.setText(ftHttpServerPwd);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.ImConferenceUri);
-    		        txt.setText(confUri);
-    		        txt = (EditText)ProfileProvisioning.this.findViewById(R.id.EndUserConfReqUri);
-    		        txt.setText(enduserConfirmUri);
-    	        }
-            }).setNegativeButton(R.string.label_cancel, null);
-        
-        AlertDialog alert = builder.create();
-    	alert.show();
-    }
+	/**
+	 * Read a text file and convert it into a string
+	 * 
+	 * @param filePath
+	 *            the file path
+	 * @return the result string
+	 */
+	private String getFileContent(String filePath) {
+		if (filePath == null)
+			return null;
+		// Get the text file
+		File file = new File(filePath);
+
+		// Read text from file
+		StringBuilder text = new StringBuilder();
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(file));
+			String line;
+
+			while ((line = br.readLine()) != null) {
+				text.append(line);
+				text.append('\n');
+			}
+			return text.toString();
+
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Error reading file content: " + e.getClass().getName() + " " + e.getMessage(), e);
+			}
+		} finally {
+			if (br != null)
+				try {
+					br.close();
+				} catch (IOException e) {
+				}
+		}
+		return null;
+	}
+
+	/**
+	 * Get the file path from URI
+	 * 
+	 * @param context
+	 *            the context
+	 * @param uri
+	 *            the URI
+	 * @return the File path
+	 */
+	private String getFilePath(Context context, Uri uri) {
+		if ("content".equalsIgnoreCase(uri.getScheme())) {
+			String[] projection = { "_data" };
+			Cursor cursor = null;
+
+			try {
+				cursor = context.getContentResolver().query(uri, projection, null, null, null);
+				int column_index = cursor.getColumnIndexOrThrow("_data");
+				if (cursor.moveToFirst()) {
+					return cursor.getString(column_index);
+				}
+			} catch (Exception e) {
+			} finally {
+				if (cursor != null)
+					cursor.close();
+			}
+		} else if ("file".equalsIgnoreCase(uri.getScheme())) {
+			return uri.getPath();
+		}
+
+		return null;
+	}
+	
+	/**
+	 * Asynchronous Tasks that loads the provisioning file.
+	 */
+	private class ProvisionTask extends AsyncTask<String, Void, Boolean> {
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Boolean doInBackground(String... params) {
+			String UserPhoneNumber = params[1];
+			String mXMLFileContent = params[0];
+			return createProvisioning(mXMLFileContent, UserPhoneNumber);
+		}
+
+		/**
+		 * Parse the provisioning data then save it into RCS settings provider
+		 * 
+		 * @param mXMLFileContent
+		 *            the XML file containing provisioning data
+		 * @param userPhoneNumber
+		 *            the user phone number
+		 * @return true if loading the provisioning is successful
+		 */
+		private Boolean createProvisioning(String mXMLFileContent, String userPhoneNumber) {
+			ProvisioningParser parser = new ProvisioningParser(mXMLFileContent);
+			// Save GSMA release set into the provider
+			int gsmaRelease = RcsSettings.getInstance().getGsmaRelease();
+			if (parser.parse(gsmaRelease)) {
+				// Customize provisioning data with user phone number
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME, userPhoneNumber);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_DISPLAY_NAME, userPhoneNumber);
+				String homeDomain = RcsSettings.getInstance().readParameter(RcsSettingsData.USERPROFILE_IMS_HOME_DOMAIN);
+				String sipUri = userPhoneNumber + "@" + homeDomain;
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_PRIVATE_ID, sipUri);
+				RcsSettings.getInstance().writeParameter(RcsSettingsData.FT_HTTP_LOGIN, sipUri);
+				return true;
+			} else {
+				if (logger.isActivated()) {
+					logger.error("Can't parse provisioning document");
+				}
+				// Restore GSMA release saved before parsing of the provisioning
+				RcsSettings.getInstance().setGsmaRelease("" + gsmaRelease);
+				return false;
+			}
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			super.onPostExecute(result);
+			updateProfileProvisioningUI();
+			if (result)
+				Toast.makeText(ProfileProvisioning.this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
+			else
+				Toast.makeText(ProfileProvisioning.this, getString(R.string.label_parse_failed), Toast.LENGTH_LONG).show();
+		}
+	}
 }

@@ -9,7 +9,8 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 News:
 -----
-- MSRP over TLS for Wi-Fi access 
+- MSRP over TLS for Wi-Fi access
+- Local provisioning is based on XML file loaded from SD card
 
 Bugs fixed:
 -----------
