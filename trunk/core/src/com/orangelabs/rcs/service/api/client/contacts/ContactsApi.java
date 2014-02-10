@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.ClientApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * Contacts API
@@ -143,7 +144,7 @@ public class ContactsApi {
      * @return true if the number is valid, false otherwise
      */
     public boolean isRcsValidNumber(String phoneNumber){
-        return ContactsManager.getInstance().isRcsValidNumber(phoneNumber);
+        return PhoneUtils.isGlobalPhoneNumber(phoneNumber);
     }
     
 	/**

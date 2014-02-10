@@ -189,7 +189,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 		contact = PhoneUtils.extractNumberFromUri(contact);
 
         // Check if if it is a valid RCS number
-        if (!ContactsManager.getInstance().isRcsValidNumber(contact)) {
+        if (!PhoneUtils.isGlobalPhoneNumber(contact)) {
             if (logger.isActivated()) {
                 logger.debug(contact + " is not a valid joyn number");
             }
@@ -295,7 +295,7 @@ public class CapabilityService extends ImsService implements AddressBookEventLis
 			String phoneNumber = PhoneUtils.formatNumberToInternational(phonesCursor.getString(1));
 			if (!alreadyInEabOrInvalidNumbers.contains(phoneNumber)) {
 				// If this number is not considered RCS valid or has already an entry with RCS, skip it
-                if (ContactsManager.getInstance().isRcsValidNumber(phoneNumber)
+                if (PhoneUtils.isGlobalPhoneNumber(phoneNumber)
 						&& !ContactsManager.getInstance().isRcsAssociated(phoneNumber)
 						&& ( !ContactsManager.getInstance().isOnlySimAssociated(phoneNumber) || (Build.VERSION.SDK_INT > 10))) {
 					// This entry is valid and not already has a RCS raw contact, it can be treated

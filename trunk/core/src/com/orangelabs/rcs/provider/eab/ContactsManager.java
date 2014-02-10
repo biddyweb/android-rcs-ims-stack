@@ -992,7 +992,7 @@ public final class ContactsManager {
 		// May be called from outside the core, so be sure the number format is international before doing the queries 
 		contact= PhoneUtils.extractNumberFromUri(contact);
 		
-		if (!isRcsValidNumber(contact)){
+		if (!PhoneUtils.isGlobalPhoneNumber(contact)){
 			if (logger.isActivated()){
 				logger.debug(contact +" is not a RCS valid number");
 			}
@@ -1646,19 +1646,6 @@ public final class ContactsManager {
 			return false;
 		}
 	}
-	
-	/**
-	 * Check if number provided is a valid number for RCS
-	 * <br>It is not valid if :
-	 * <li>well formatted (not digits only or '+')
-	 * <li>minimum length
-	 * 
-	 * @param phoneNumber
-	 * @return true if it is a RCS valid number
-	 */
-    public boolean isRcsValidNumber(String phoneNumber){
-        return android.telephony.PhoneNumberUtils.isGlobalPhoneNumber(phoneNumber) && (phoneNumber.length()>3);
-    }
 	
 	/**
 	 * Modify the contact type for the contact
