@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.Vector;
 
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
-import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpEventListener;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.protocol.sdp.MediaAttribute;
@@ -48,10 +47,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author jexa7410
  */
 public class TerminatingAdhocGroupChatSession extends GroupChatSession implements MsrpEventListener {
-    /**
-     * Invite missing participants upon reception of 1rst conference event notification
-     */
-    private boolean inviteMissingParticipants = false;
 
     /**
      * The logger
@@ -90,9 +85,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 			if (logger.isActivated()) {
 	    		logger.info("Invite to rejoin or restart a group chat");
 	    	}
-        	// Set inviteMissingParticipants so that missing participants will be invited upon
-			// reception of the first conference event notification
-        	inviteMissingParticipants = true;
 		}
 	}
 
@@ -279,9 +271,12 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     	    		getListeners().get(i).handleSessionStarted();
     	        }
 
+				// Invite missing participant
+				inviteMissingParticipants(getParticipants());
+				
     	    	// Subscribe to event package
             	getConferenceEventSubscriber().subscribe();
-            	
+
             	// Start session timer
             	if (getSessionTimerManager().isSessionTimerActivated(resp)) {        	
             		getSessionTimerManager().start(SessionTimerManager.UAS_ROLE, getDialogPath().getSessionExpireTime());
@@ -308,23 +303,22 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 	 * Invite missing participants.
 	 * <p>
 	 * This method is executed once upon reception of the first conference event notification after invite.
+	 * 
+	 * @param invitedParticipants
+	 *            the list of invited participants contained in the notify with full state
 	 */
-	public void inviteMissingParticipants() {
-		// Check if it is first conference event notification after invite
-		if (!inviteMissingParticipants)
-			return;
-		inviteMissingParticipants = false;
-		Thread t = new Thread() {
+	private void inviteMissingParticipants(final ListOfParticipant invitedParticipants) {
+		new Thread() {
 			public void run() {
 				try {
 					if (logger.isActivated()) {
 						logger.debug("Check if participants are missing in the conference");
 					}
-					Set<String> connectedProvider = new HashSet<String>(RichMessaging.getInstance().getGroupChatConnectedParticipants(
-							getContributionID()));
-					Set<String> connectedNotify = new HashSet<String>(getConnectedParticipants().getList());
-					// Only keep participants who are not seen as connected by the AS
-					connectedProvider.removeAll(connectedNotify);
+					Set<String> connectedProvider = new HashSet<String>(RichMessaging.getInstance()
+							.getGroupChatConnectedParticipants(getContributionID()));
+					Set<String> invitedSet = new HashSet<String>(invitedParticipants.getList());
+					// Only keep participants who are not invited by the AS
+					connectedProvider.removeAll(invitedSet);
 					if (!connectedProvider.isEmpty()) {
 						if (logger.isActivated())
 							logger.debug("Add " + connectedProvider.size() + " missing participants in the conference");
@@ -336,8 +330,6 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
 					}
 				}
 			}
-
-		};
-		t.start();
+		}.start();
 	}
 }
