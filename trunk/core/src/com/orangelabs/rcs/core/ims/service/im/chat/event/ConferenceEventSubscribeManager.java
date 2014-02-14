@@ -39,7 +39,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSessionListener;
 import com.orangelabs.rcs.core.ims.service.im.chat.GroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
-import com.orangelabs.rcs.core.ims.service.im.chat.TerminatingAdhocGroupChatSession;
 import com.orangelabs.rcs.platform.registry.RegistryFactory;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -170,7 +169,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    	}
                         session.setMaxParticipants(maxParticipants);
                     }
-                    ListOfParticipant disconnectedParticipants = new ListOfParticipant();	
+                    ListOfParticipant disconnectedParticipants = new ListOfParticipant();
 			    	Vector<User> users = conference.getUsers();
 			    	for(int i=0; i < users.size(); i++) {
 			    		User user = (User)users.elementAt(i);
@@ -209,16 +208,13 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    		}
 				    	}
 
-                        // Manage "pending-out" and "pending-in" status like "pending" status.
-                        // See RFC 4575
-                        // dialing-in: Endpoint is dialing into the conference, not yet in the roster
-                        // (probably being authenticated).
-                        // dialing-out: Focus has dialed out to connect the endpoint to the conference,
-                        // but the endpoint is not yet in the roster (probably being authenticated).
+						// Manage "pending-out" and "pending-in" status like "pending" status. See RFC 4575 dialing-in: Endpoint is
+						// dialing into the conference, not yet in the roster (probably being authenticated). dialing-out: Focus has
+						// dialed out to connect the endpoint to the conference, but the endpoint is not yet in the roster (probably
+						// being authenticated).
                         if ((state.equalsIgnoreCase("dialing-out")) || (state.equalsIgnoreCase("dialing-in"))) {
                             state = User.STATE_PENDING;
                         }
-
 			    		// Update the participants list
 			    		if (User.isConnected(state)) {
 			    			// A participant has joined the session
@@ -255,11 +251,6 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 			    	if (session instanceof GroupChatSession) {
 			    		// Update the list of participants of the terminating group chat session
 			    		UpdateSessionParticipantList(connectedParticipants, disconnectedParticipants, ((GroupChatSession)session).getParticipants());
-						if (session instanceof TerminatingAdhocGroupChatSession && conference.getState().equals(ConferenceInfoDocument.STATE_FULL)) {
-							// Check if the list of connected participants of the terminating group chat session differs from the
-							// provider's provisioning in order to invite missing participants if any.
-							((TerminatingAdhocGroupChatSession) session).inviteMissingParticipants();
-						}
 					}
 		    	}
 	    	} catch(Exception e) {
@@ -289,7 +280,8 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 	 * @param sessionUsers
 	 *            the list of participants of the group chat session
 	 */
-	private void UpdateSessionParticipantList(ListOfParticipant connectedUsers, ListOfParticipant disconnectedUsers, ListOfParticipant sessionUsers) {
+	private static void UpdateSessionParticipantList(final ListOfParticipant connectedUsers,
+			final ListOfParticipant disconnectedUsers, ListOfParticipant sessionUsers) {
 		for (String user : connectedUsers.getList()) {
 			sessionUsers.addParticipant(user);
 		}
