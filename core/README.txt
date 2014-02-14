@@ -19,15 +19,16 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.16
-- Issue 211		Stack: Provisioning : some parameters are not reloaded on Service restart but on Application Kill/Start
+- Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant
+- Issue 206		Stack: Adding missing group chat participants is based on NOTIFY rather than INVITE
 - Issue 207		Stack: Bad SDP response in case of S&F callflow
 - Issue 208		Stack: Remove superfluous Byte-Range header in MSRP response
 - Issue 209		Stack: Built-in certificates provided by the OS are not used for SIP over TLS
 - Issue 210		Stack: FTHTTP-GC wrong sender in notification
+- Issue 211		Stack: Provisioning : some parameters are not reloaded on Service restart but on Application Kill/Start
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 - Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
-- Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
