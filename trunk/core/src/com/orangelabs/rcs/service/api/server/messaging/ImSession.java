@@ -33,6 +33,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingAdhocGroupChatSess
 import com.orangelabs.rcs.core.ims.service.im.chat.OriginatingOne2OneChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.RejoinGroupChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.RestartGroupChatSession;
+import com.orangelabs.rcs.core.ims.service.im.chat.event.User;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.platform.file.FileDescription;
@@ -483,7 +484,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 			} else {
 				RichMessaging.getInstance().addChatSessionTermination(session);
 			}
-			
+            setAllParticipantsDisconnected();
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -513,7 +515,8 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	
 			// Update rich messaging history
 			RichMessaging.getInstance().addChatSessionTerminationByRemote(session);
-			
+            setAllParticipantsDisconnected();
+
 	  		// Notify event listeners
 			final int N = listeners.beginBroadcast();
 	        for (int i=0; i < N; i++) {
@@ -531,7 +534,16 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
 	        MessagingApiService.removeChatSession(session.getSessionID());
 	    }
     }
-    
+
+    /**
+     * Set all participants disconnected
+     */
+    private void setAllParticipantsDisconnected() {
+        for (String contact : getParticipants()) {
+            RichMessaging.getInstance().addConferenceEvent(session, contact, User.STATE_DISCONNECTED);
+        }
+    }
+
 	/**
 	 * New text message received
 	 * 
