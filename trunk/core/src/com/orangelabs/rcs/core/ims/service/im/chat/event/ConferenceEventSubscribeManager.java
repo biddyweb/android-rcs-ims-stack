@@ -390,59 +390,55 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
     /**
      * Subscribe
      * 
-     * @return Boolean
      */
-    public synchronized boolean subscribe() {
-    	if (logger.isActivated()) {
-    		logger.info("Subscribe to " + getPresentity());
-    	}
+	public synchronized void subscribe() {
+		new Thread() {
+			public void run() {
+				if (logger.isActivated()) {
+					logger.info("Subscribe to " + getPresentity());
+				}
 
-    	try {
-            // Create a dialog path if necessary
-            if (dialogPath == null) {
-	            // Set Call-Id
-	        	String callId = imsModule.getSipManager().getSipStack().generateCallId();
-	
-	        	// Set target
-	        	String target = getPresentity();
-	
-	            // Set local party
-	        	String localParty = ImsModule.IMS_USER_PROFILE.getPublicUri();
-	
-	            // Set remote party
-	        	String remoteParty = getPresentity();
-	
-	        	// Set the route path
-	        	Vector<String> route = imsModule.getSipManager().getSipStack().getServiceRoutePath();
-	
-	        	// Create a dialog path
-	            dialogPath = new SipDialogPath(
-	            		imsModule.getSipManager().getSipStack(),
-	            		callId,
-	            		1,
-	            		target,
-	            		localParty,
-	            		remoteParty,
-	            		route);
-            } else {
-    	    	// Increment the Cseq number of the dialog path
-    	        dialogPath.incrementCseq();
-            }
-            
-            // Create a SUBSCRIBE request
-	        SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
-	        
-            // Send SUBSCRIBE request
-	        sendSubscribe(subscribe);
-	        
-        } catch (Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Subscribe has failed", e);
-        	}
-        	handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
-        }        
-        return subscribed;
-    }
+				try {
+					// Create a dialog path if necessary
+					if (dialogPath == null) {
+						// Set Call-Id
+						String callId = imsModule.getSipManager().getSipStack().generateCallId();
+
+						// Set target
+						String target = getPresentity();
+
+						// Set local party
+						String localParty = ImsModule.IMS_USER_PROFILE.getPublicUri();
+
+						// Set remote party
+						String remoteParty = getPresentity();
+
+						// Set the route path
+						Vector<String> route = imsModule.getSipManager().getSipStack().getServiceRoutePath();
+
+						// Create a dialog path
+						dialogPath = new SipDialogPath(imsModule.getSipManager().getSipStack(), callId, 1, target, localParty,
+								remoteParty, route);
+					} else {
+						// Increment the Cseq number of the dialog path
+						dialogPath.incrementCseq();
+					}
+
+					// Create a SUBSCRIBE request
+					SipRequest subscribe = createSubscribe(dialogPath, expirePeriod);
+
+					// Send SUBSCRIBE request
+					sendSubscribe(subscribe);
+
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Subscribe has failed", e);
+					}
+					handleError(new ChatError(ChatError.UNEXPECTED_EXCEPTION, e.getMessage()));
+				}
+			}
+		}.start();
+	}
 
 	/**
      * Unsubscribe
