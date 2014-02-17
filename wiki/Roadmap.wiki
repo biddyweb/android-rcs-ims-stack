@@ -6,11 +6,6 @@ RCS-e open source stack roadmap
 
 = Roadmap 2014 =
 
- * Next sprints:
-  * SRTP.
-  * LTE support.
-  * Pause/resume of File Transfer in case of disconnection / reconnection.
-*
  * February 24: Sprint 17, v2.5.16
   * MSRP over TLS.
   * Wakelock mechanism.
