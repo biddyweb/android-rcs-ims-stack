@@ -27,17 +27,15 @@ import static com.orangelabs.rcs.provisioning.local.Provisioning.setSpinnerParam
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -81,8 +79,14 @@ public class ProfileProvisioning extends Activity {
     };
     
     private static Logger logger = Logger.getLogger(ProfileProvisioning.class.getSimpleName());
-    private static final int FILE_SELECT_CODE = 0;
-    private String mInputedUserPhoneNumber = null;
+
+	private static final String PROVISIONING_EXTENSION = ".xml";
+	private String mInputedUserPhoneNumber = null;
+	private String mSelectedProvisioningFile = null;
+	 /**
+     * Folder path for provisioning file
+     */
+    private static final String PROVISIONING_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -264,57 +268,43 @@ public class ProfileProvisioning extends Activity {
 	private void loadProfile() {
 		LayoutInflater factory = LayoutInflater.from(this);
 		final View view = factory.inflate(R.layout.rcs_provisioning_generate_profile, null);
-		EditText textEdit = (EditText) view.findViewById(R.id.msisdn);
+		final EditText textEdit = (EditText) view.findViewById(R.id.msisdn);
 		textEdit.setText(RcsSettings.getInstance().getUserProfileImsUserName());
+
+		String[] xmlFiles = getProvisioningFiles();
+		final Spinner spinner = (Spinner) view.findViewById(R.id.XmlProvisioningFile);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, xmlFiles);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner.setAdapter(adapter);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle(R.string.label_generate_profile).setView(view)
 				.setNegativeButton(R.string.label_cancel, null)
 				.setPositiveButton(R.string.label_ok, new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int whichButton) {
-						EditText textEdit = (EditText) view.findViewById(R.id.msisdn);
 						mInputedUserPhoneNumber = textEdit.getText().toString();
-						showFileChooser();
+						mSelectedProvisioningFile = (String) spinner.getSelectedItem();
+						if (mSelectedProvisioningFile != null
+								&& !mSelectedProvisioningFile.equals(getString(R.string.label_no_xml_file))) {
+							String filePath = PROVISIONING_FOLDER_PATH + File.separator + mSelectedProvisioningFile;
+							if (logger.isActivated()) {
+								logger.debug("Selection of provisioning file: " + mSelectedProvisioningFile);
+							}
+							String mXMLFileContent = getFileContent(filePath);
+							if (mXMLFileContent != null) {
+								if (logger.isActivated()) {
+									logger.debug("Selection of provisioning file: " + filePath);
+								}
+								ProvisionTask mProvisionTask = new ProvisionTask();
+								mProvisionTask.execute(mXMLFileContent, mInputedUserPhoneNumber);
+								return;
+							}
+						}
+						Toast.makeText(ProfileProvisioning.this, getString(R.string.label_load_failed), Toast.LENGTH_LONG).show();
 					}
 				});
 		AlertDialog dialog = builder.create();
 		dialog.setCanceledOnTouchOutside(false);
 		dialog.show();
-	}
-
-	/**
-	 * Select a text file for the provisioning
-	 */
-	private void showFileChooser() {
-		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-		intent.setType("text/plain");
-		intent.addCategory(Intent.CATEGORY_OPENABLE);
-		try {
-			Toast.makeText(ProfileProvisioning.this, getString(R.string.label_choose_xml), Toast.LENGTH_LONG).show();
-			startActivityForResult(Intent.createChooser(intent, "Select provisioning XML"), FILE_SELECT_CODE);
-		} catch (android.content.ActivityNotFoundException ex) {
-		}
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case FILE_SELECT_CODE:
-			if (resultCode == Activity.RESULT_OK) {
-				String filePath = getFilePath(this, data.getData());
-				String mXMLFileContent = getFileContent(filePath);
-				if (mXMLFileContent != null) {
-					if (logger.isActivated()) {
-						logger.debug("Selection of provisioning file: "+filePath);
-					}
-					ProvisionTask mProvisionTask = new ProvisionTask();
-					mProvisionTask.execute(mXMLFileContent, mInputedUserPhoneNumber);
-				} else {
-					Toast.makeText(ProfileProvisioning.this, getString(R.string.label_load_failed), Toast.LENGTH_LONG).show();
-				}
-			}
-			break;
-		}
-		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 	/**
@@ -354,38 +344,6 @@ public class ProfileProvisioning extends Activity {
 				} catch (IOException e) {
 				}
 		}
-		return null;
-	}
-
-	/**
-	 * Get the file path from URI
-	 * 
-	 * @param context
-	 *            the context
-	 * @param uri
-	 *            the URI
-	 * @return the File path
-	 */
-	private String getFilePath(Context context, Uri uri) {
-		if ("content".equalsIgnoreCase(uri.getScheme())) {
-			String[] projection = { "_data" };
-			Cursor cursor = null;
-
-			try {
-				cursor = context.getContentResolver().query(uri, projection, null, null, null);
-				int column_index = cursor.getColumnIndexOrThrow("_data");
-				if (cursor.moveToFirst()) {
-					return cursor.getString(column_index);
-				}
-			} catch (Exception e) {
-			} finally {
-				if (cursor != null)
-					cursor.close();
-			}
-		} else if ("file".equalsIgnoreCase(uri.getScheme())) {
-			return uri.getPath();
-		}
-
 		return null;
 	}
 	
@@ -445,6 +403,40 @@ public class ProfileProvisioning extends Activity {
 				Toast.makeText(ProfileProvisioning.this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 			else
 				Toast.makeText(ProfileProvisioning.this, getString(R.string.label_parse_failed), Toast.LENGTH_LONG).show();
+		}
+	}
+
+	/**
+	 * Load a list of provisioning files from the SDCARD
+	 * 
+	 * @return List of XML provisioning files
+	 */
+	private String[] getProvisioningFiles() {
+		String[] files = null;
+		File folder = new File(PROVISIONING_FOLDER_PATH);
+		try {
+			folder.mkdirs();
+			if (folder.exists()) {
+				// filter
+				FilenameFilter filter = new FilenameFilter() {
+					public boolean accept(File dir, String filename) {
+						return filename.endsWith(PROVISIONING_EXTENSION);
+					}
+				};
+				files = folder.list(filter);
+			}
+		} catch (SecurityException e) {
+			// intentionally blank
+		}
+		if (files == null) {
+			// No provisioning file
+			return new String[] { getString(R.string.label_no_xml_file) };
+		} else {
+			if (files.length == 0) {
+				// No provisioning file
+				return new String[] { getString(R.string.label_no_xml_file) };
+			}
+			return files;
 		}
 	}
 }
