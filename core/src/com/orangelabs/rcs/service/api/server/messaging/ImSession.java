@@ -540,7 +540,7 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      */
     private void setAllParticipantsDisconnected() {
         for (String contact : getParticipants()) {
-            RichMessaging.getInstance().addConferenceEvent(session, contact, User.STATE_DISCONNECTED);
+            RichMessaging.getInstance().addConferenceEvent(session, contact, User.STATE_BOOTED);
         }
     }
 
