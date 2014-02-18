@@ -587,7 +587,7 @@ public class RcsCoreService extends Service implements CoreListener {
 
 		try {
 			// Check if its a notification for a contact or for the end user
-			String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
+			String me = ImsModule.IMS_USER_PROFILE.getUsername();
 			if (PhoneUtils.compareNumbers(me, contact)) {
 				// End user notification
 				if (logger.isActivated()) {
@@ -633,7 +633,7 @@ public class RcsCoreService extends Service implements CoreListener {
 			}
 
 			// Check if its a notification for a contact or for me
-			String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
+			String me = ImsModule.IMS_USER_PROFILE.getUsername();
 			if (PhoneUtils.compareNumbers(me, contact)) {
 				// Notification for me
 				presenceInfoNotificationForMe(presence);
