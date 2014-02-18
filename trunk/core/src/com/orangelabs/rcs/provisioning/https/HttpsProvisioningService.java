@@ -201,14 +201,16 @@ public class HttpsProvisioningService extends Service {
     
     @Override
     public void onDestroy() {
-		// Unregister network state listener
-        httpsProvisioningMng.unregisterNetworkStateListener();
+		if (httpsProvisioningMng != null) {
+			// Unregister network state listener
+			httpsProvisioningMng.unregisterNetworkStateListener();
 
-        // Unregister wifi disabling listener
-        httpsProvisioningMng.unregisterWifiDisablingListener();
-        
-        // Unregister SMS provisioning receiver
-        httpsProvisioningMng.unregisterSmsProvisioningReceiver();
+			// Unregister wifi disabling listener
+			httpsProvisioningMng.unregisterWifiDisablingListener();
+
+			// Unregister SMS provisioning receiver
+			httpsProvisioningMng.unregisterSmsProvisioningReceiver();
+		}
 
 		cancelRetryAlarm(this, retryIntent);
         // Unregister retry receiver
