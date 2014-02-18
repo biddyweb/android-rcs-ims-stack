@@ -183,7 +183,7 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    		logger.debug("Conference info notification for " + entity);
 				    	}
 				    	
-				    	String me = ImsModule.IMS_USER_PROFILE.getPublicUri();
+				    	String me = ImsModule.IMS_USER_PROFILE.getUsername();
 				    	if (user.isMe() || PhoneUtils.compareNumbers(entity, me)) {
 			    			// By-pass me
 			    			continue;

@@ -76,8 +76,8 @@ public class ListOfParticipant {
 				Vector<String> entries = resList.getEntries();
 				for (int i = 0; i < entries.size(); i++) {
 					String entry = entries.elementAt(i);
-					if (!PhoneUtils.compareNumbers(entry, ImsModule.IMS_USER_PROFILE.getPublicUri())) {
-						String number = PhoneUtils.extractNumberFromUri(entry);
+					String number = PhoneUtils.extractNumberFromUri(entry);
+					if (!PhoneUtils.compareNumbers(number, ImsModule.IMS_USER_PROFILE.getUsername())) {
 						if ((!StringUtils.isEmpty(number)) && (!list.contains(number)) && PhoneUtils.isGlobalPhoneNumber(number)) {
 							if (logger.isActivated()) {
 								logger.debug("Add participant " + number + " to the list");
