@@ -81,12 +81,12 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
         // Set the video renderer
         setVideoRenderer(videoRenderer);
 
-        // Set the audio renderer
-        setAudioRenderer(audioRenderer);
-        
         // Set the audio player
         setAudioPlayer(audioPlayer);
-     
+        
+        // Set the audio renderer
+        setAudioRenderer(audioRenderer);
+
     }
     
     /**
@@ -103,12 +103,12 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
                 handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE, "Audio codec not supported"));
                 return;
             }
-            if ((getAudioPlayer() == null) || (getAudioPlayer().getAudioCodec() == null)) {
+            if ((getAudioPlayer() == null) || (getAudioPlayer().getSupportedAudioCodecs().length<1)) {
                 handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE,
                 		"Audio codec not selected"));
                 return;
             }
-            if ((getAudioRenderer() == null) || (getAudioRenderer().getAudioCodec() == null)) {
+            if ((getAudioRenderer() == null) || (getAudioRenderer().getSupportedAudioCodecs().length<1 )) {
                 handleError(new IPCallError(IPCallError.UNSUPPORTED_AUDIO_TYPE,
                 		"Audio codec not selected"));
                 return;
@@ -171,8 +171,6 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 			
 			String audioSdp = AudioSdpBuilder.buildSdpOffer(getAudioPlayer().getSupportedAudioCodecs(), 
 					getAudioRenderer().getLocalRtpPort());
-
-
 			
 			String videoSdp = "";
 	        if ((getVideoContent()!= null)&&(getVideoPlayer()!= null)&&(getVideoRenderer()!= null)) {	        	
@@ -319,7 +317,6 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
 			}
 		}
 		
-//
 //		// Open the audio renderer
 //		getAudioRenderer().open(remoteHost, audioRemotePort);
 //		
