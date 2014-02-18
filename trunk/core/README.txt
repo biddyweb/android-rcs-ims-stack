@@ -29,6 +29,7 @@ V2.5.16
 - Issue 211		Stack: Provisioning : some parameters are not reloaded on Service restart but on Application Kill/Start
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 - Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
+- Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled 
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
