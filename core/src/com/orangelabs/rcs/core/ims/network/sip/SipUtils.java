@@ -320,12 +320,32 @@ public class SipUtils {
 	 * @return SIP URI
 	 */
 	public static String getAssertedIdentity(SipRequest request) {
-		ExtensionHeader assertedHeader = (ExtensionHeader)request.getHeader(SipUtils.HEADER_P_ASSERTED_IDENTITY);
-		if (assertedHeader != null) {
-			return assertedHeader.getValue();
-		} else {
-			return request.getFromUri();
+		ListIterator<Header> list = request
+				.getHeaders(SipUtils.HEADER_P_ASSERTED_IDENTITY);
+		if (list != null) {
+			// There is at most 2 P-Asserted-Identity headers, one with tel uri and one with sip uri
+			// We give preference to the tel uri if both are present, if not we return the first one
+			String assertedHeader1 = null;
+			if (list.hasNext()) {
+				// Get value of the first header
+				assertedHeader1 = ((ExtensionHeader) list.next()).getValue();
+				if (assertedHeader1.contains("tel:")) {
+					return assertedHeader1;
+				}
+				if (list.hasNext()) {
+					// Get value of the second header (it may not be present)
+					String assertedHeader2 = ((ExtensionHeader) list.next())
+							.getValue();
+					if (assertedHeader2.contains("tel:")) {
+						return assertedHeader2;
+					}
+				}
+				// In case there is no tel uri, return the value of the first header
+				return assertedHeader1;
+			}
 		}
+		// No P-AssertedIdentity header, we take the value in the FROM uri
+		return request.getFromUri();
 	}
 	
     /**
