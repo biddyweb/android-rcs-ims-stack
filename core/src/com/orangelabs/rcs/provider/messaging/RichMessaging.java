@@ -700,18 +700,6 @@ public class RichMessaging {
 	}
 
     /**
-     * Mark first message as failed
-     * 
-     * @param sessionId Session ID
-     */
-	public void markFirstMessageFailed(String sessionId) {
-		ContentValues values = new ContentValues();
-		values.put(RichMessagingData.KEY_STATUS, EventsLogApi.STATUS_FAILED);
-		cr.update(databaseUri, values, RichMessagingData.KEY_CHAT_SESSION_ID + " = \"" + sessionId + "\"" + " AND " + RichMessagingData.KEY_TYPE
-				+ " = " + EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE, null);
-	}
-
-    /**
      * Mark a chat message as failed
      * 
      * @param msgId Message ID

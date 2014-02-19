@@ -578,48 +578,51 @@ public class ImSession extends IChatSession.Stub implements ChatSessionListener 
      * 
      * @param error Error
      */
-    public void handleImError(ChatError error) {
-    	synchronized(lock) {
+	public void handleImError(ChatError error) {
+		synchronized (lock) {
 			if (logger.isActivated()) {
 				logger.info("IM error " + error.getErrorCode());
 			}
-			
+
 			// Update rich messaging history
-	    	switch(error.getErrorCode()){
-	    		case ChatError.SESSION_NOT_FOUND:
-	    		case ChatError.SESSION_RESTART_FAILED:
-	    			// These errors are not logged
-	    			break;
-		    	case ChatError.SESSION_INITIATION_DECLINED:
-					RichMessaging.getInstance().addChatSessionTermination(session);
-		    		break;
-		    	case ChatError.SESSION_INITIATION_FAILED:
-		    	case ChatError.SESSION_INITIATION_CANCELLED:
-					RichMessaging.getInstance().addChatSessionTermination(session);
-					RichMessaging.getInstance().markFirstMessageFailed(session.getSessionID());
-		    		break;
-		    	default:
-					RichMessaging.getInstance().addChatSessionError(session);
-		    		break;
-	    	}
-	    	
-	  		// Notify event listeners
+			switch (error.getErrorCode()) {
+			case ChatError.SESSION_NOT_FOUND:
+			case ChatError.SESSION_RESTART_FAILED:
+				// These errors are not logged
+				break;
+			case ChatError.SESSION_INITIATION_DECLINED:
+				RichMessaging.getInstance().addChatSessionTermination(session);
+				break;
+			case ChatError.SESSION_INITIATION_FAILED:
+			case ChatError.SESSION_INITIATION_CANCELLED:
+				RichMessaging.getInstance().addChatSessionTermination(session);
+				if (session.getFirstMessage() != null) {
+					updateStatus(session.getFirstMessage().getMessageId(), ImdnDocument.DELIVERY_STATUS_FAILED, session
+							.getFirstMessage().getRemote());
+				}
+				break;
+			default:
+				RichMessaging.getInstance().addChatSessionError(session);
+				break;
+			}
+
+			// Notify event listeners
 			final int N = listeners.beginBroadcast();
-	        for (int i=0; i < N; i++) {
-	            try {
-	            	listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
-	            } catch(Exception e) {
-	            	if (logger.isActivated()) {
-	            		logger.error("Can't notify listener", e);
-	            	}
-	            }
-	        }
-	        listeners.finishBroadcast();
-	        
-	        // Remove session from the list
-	        MessagingApiService.removeChatSession(session.getSessionID());
-	    }
-    }
+			for (int i = 0; i < N; i++) {
+				try {
+					listeners.getBroadcastItem(i).handleImError(error.getErrorCode());
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Can't notify listener", e);
+					}
+				}
+			}
+			listeners.finishBroadcast();
+
+			// Remove session from the list
+			MessagingApiService.removeChatSession(session.getSessionID());
+		}
+	}
     
     /**
 	 * Is composing event
