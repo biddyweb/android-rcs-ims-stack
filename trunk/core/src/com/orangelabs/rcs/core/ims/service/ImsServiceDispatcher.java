@@ -233,8 +233,6 @@ public class ImsServiceDispatcher extends Thread {
 			if (session != null) {
 				// Subsequent request received
 				if (session instanceof IPCallStreamingSession) {
-					// Extract the SDP part
-					String sdp = request.getSdpContent();
 					if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
 							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)
 							&& (!SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))) {
@@ -247,7 +245,7 @@ public class ImsServiceDispatcher extends Thread {
 					} else if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
 							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)
 							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
-						// IP video call
+						// case IP video call
 						if (RcsSettings.getInstance().isIPVideoCallSupported()) {
 							session.receiveReInvite(request);
 						} else {
