@@ -75,8 +75,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	 */
     public TerminatingHttpFileSharingSession(ImsService parent, ChatSession chatSession,
             FileTransferHttpInfoDocument fileTransferInfo, String msgId, String contact ) {
-        super(parent, ContentManager.createMmContentFromFilename(fileTransferInfo.getFilename(),
-                fileTransferInfo.getFileUrl(), fileTransferInfo.getFileSize()),
+        super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFilename(),
+                fileTransferInfo.getFileUrl(), fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()),
                 contact, null, chatSession.getSessionID(),
                 chatSession.getContributionID());
 
