@@ -30,7 +30,8 @@ V2.5.16
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 - Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
 - Issue 224		Stack: Failed message from the INVITE will silently marked as failed w/o updating the UI/API
-- Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled 
+- Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled
+- Issue 228     Stack: FToHTTP file content type is based on extension rather than MIME type
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
