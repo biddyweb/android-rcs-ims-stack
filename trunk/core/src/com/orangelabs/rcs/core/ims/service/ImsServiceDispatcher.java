@@ -230,30 +230,34 @@ public class ImsServiceDispatcher extends Thread {
 	    } else		
 	    if (request.getMethod().equals(Request.INVITE)) {
 	    	// INVITE received
+	    	
 			if (session != null) {
 				// Subsequent request received
 				if (session instanceof IPCallStreamingSession) {
+					// case IPCall session
 					if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
-							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)
-							&& (!SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))) {
-						// case IP voice call
-						if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
-							session.receiveReInvite(request);
+							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)) {
+						if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
+							// case IP video call
+							if (RcsSettings.getInstance().isIPVideoCallSupported()) {
+								session.receiveReInvite(request);
+							} else {
+								session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
+							}
 						} else {
-							session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
+							// case IP voice call
+							if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
+								session.receiveReInvite(request);
+							} else {
+								session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
+							}
 						}
-					} else if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
-							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)
-							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
-						// case IP video call
-						if (RcsSettings.getInstance().isIPVideoCallSupported()) {
-							session.receiveReInvite(request);
-						} else {
-							session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
-						}
+					} else {
+						// no voice call feature tags in request
+						session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
 					}
-
 				} else {
+					// case other session
 					session.receiveReInvite(request);
 				}
 				return;
