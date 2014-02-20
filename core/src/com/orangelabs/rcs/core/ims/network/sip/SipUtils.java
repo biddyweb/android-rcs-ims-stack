@@ -485,10 +485,10 @@ public class SipUtils {
      * @param value header's value
      * @throws Exception
      */
-//    public static void setPPreferredService(SipMessage message, String value) throws Exception {
-//    	ExtensionHeader header =  (ExtensionHeader) SipUtils.HEADER_FACTORY.createHeader(PPreferredServiceHeader.NAME, value);
-//		message.getStackMessage().addHeader(header);
-//    }
+    public static void setPPreferredService(SipMessage message, String value) throws Exception {
+    	ExtensionHeader header =  (ExtensionHeader) SipUtils.HEADER_FACTORY.createHeader(PPreferredServiceHeader.NAME, value);
+		message.getStackMessage().addHeader(header);
+    }
     
     /**
      * Get the P-Preferred-Service header 
@@ -496,14 +496,14 @@ public class SipUtils {
      * @param message SIP stack message
      * @return header's value or null if not exist
      */
-//    public static String getPPreferredService(SipMessage message)  {   	
-//    	String pPreferredService = null;
-//    	ExtensionHeader header =  (ExtensionHeader) message.getHeader(PPreferredServiceHeader.NAME);
-//		if (header != null) {
-//			pPreferredService = header.getValue();
-//		}
-//		return pPreferredService;
-//    }
+    public static String getPPreferredService(SipMessage message)  {   	
+    	String pPreferredService = null;
+    	ExtensionHeader header =  (ExtensionHeader) message.getHeader(PPreferredServiceHeader.NAME);
+		if (header != null) {
+			pPreferredService = header.getValue();
+		}
+		return pPreferredService;
+    }
     
     /**
      * Is P-Preferred-Service header set with right value or not in SIP message
@@ -512,14 +512,14 @@ public class SipUtils {
      * @param value  P-Preferred-Service header's value to be checked
      * @return Boolean
      */
-//    public static boolean isPPReferredServicePresent(SipMessage message, String value){
-//    	boolean result = false;
-//    	if (getPPreferredService(message) != null) {
-//    		result = getPPreferredService(message).equals(value);		
-//    	}
-//    	
-//    	return result;
-//    }
+    public static boolean isPPReferredServicePresent(SipMessage message, String value){
+    	boolean result = false;
+    	if (getPPreferredService(message) != null) {
+    		result = getPPreferredService(message).equals(value);		
+    	}
+    	
+    	return result;
+    }
 
     /**
      * Get the Referred-By header
