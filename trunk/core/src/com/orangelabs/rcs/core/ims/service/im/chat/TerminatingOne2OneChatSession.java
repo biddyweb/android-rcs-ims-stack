@@ -187,7 +187,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	    	}            
             
 			// Build SDP part
-	    	String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
+	    	//String ntpTime = SipUtils.constructNTPtime(System.currentTimeMillis());
 	    	String ipAddress = getDialogPath().getSipStack().getLocalIpAddress();
 	    	String sdp = SdpUtils.buildChatSDP(ipAddress, localMsrpPort, getMsrpMgr().getLocalSocketProtocol(),
                     getAcceptTypes(), getWrappedTypes(), localSetup, getMsrpMgr().getLocalMsrpPath(), getDirection());
@@ -217,9 +217,9 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 							// Open the MSRP session
 							getMsrpMgr().openMsrpSession();
 							
-							// Changed by Deutsche Telekom
-							//***###*** no need to send an empty chunk if we are passive
-			            	//sendEmptyDataChunk();
+							// Even if local setup is passive, an empty chunk must be sent to open the NAT
+							// and so enable the active endpoint to initiate a MSRP connection.
+			            	sendEmptyDataChunk();
 						} catch (IOException e) {
 							if (logger.isActivated()) {
 				        		logger.error("Can't create the MSRP server session", e);
