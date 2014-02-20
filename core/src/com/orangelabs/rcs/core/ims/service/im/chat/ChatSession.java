@@ -484,8 +484,9 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String pseudo = PhoneUtils.extractDisplayNameFromHeader(from);
 			    	from = PhoneUtils.extractNumberFromUri(from);
 					if (!PhoneUtils.isGlobalPhoneNumber(from)) {
-						from = getRemoteContact();
+						from = PhoneUtils.extractNumberFromUri(getRemoteContact());
 					}
+					
 			    	
 			    	// Check if the message needs a delivery report
 	    			boolean imdnDisplayedRequested = false;
