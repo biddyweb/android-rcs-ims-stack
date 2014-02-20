@@ -43,7 +43,12 @@ public class IPCallService extends ImsService {
      */
     public final static String[] FEATURE_TAGS_IP_VIDEO_CALL = { FeatureTags.FEATURE_3GPP_IP_VOICE_CALL, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL , FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL};
     
-	/**
+    /**
+     * P_Preferred_Service header 
+     */
+//    public final static String P_PREFERRED_SERVICE_HEADER = "urn:urn-7:3gpp-service.ims.icsi.mmtel.gsma.ipcall";
+	
+    /**
 	 * Max sessions
 	 */
 	private int maxSessions;

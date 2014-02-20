@@ -21,6 +21,7 @@ package com.orangelabs.rcs.core.ims.network.sip;
 import gov2.nist.core.NameValue;
 import gov2.nist.javax2.sip.Utils;
 import gov2.nist.javax2.sip.header.Subject;
+import gov2.nist.javax2.sip.header.ims.PPreferredServiceHeader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -593,6 +594,31 @@ public class SipMessageFactory {
 			throw new SipException("Can't create SIP INVITE message");
 		}
     }
+    
+    /**
+     * Create a SIP INVITE request with P-Preferred-Service header
+     * 
+     * @param dialog SIP dialog path
+     * @param featureTags Feature tags
+     * @param sdp SDP part
+     * @param prefServiceHeaderVal P-Preferred-Service header's value
+	 * @return SIP request
+     * @throws SipException
+     */
+//    public static SipRequest createInvite(SipDialogPath dialog,	String[] featureTags, String sdp, String prefServiceHeaderVal) throws SipException {
+//		try {
+//			SipRequest request = createInvite(dialog, featureTags, sdp);
+//			
+//			// set the P-Preferred-Service header
+//			SipUtils.setPPreferredService(request, prefServiceHeaderVal);
+//			return request ;
+//		} catch(Exception e) {
+//			if (logger.isActivated()) {
+//				logger.error("Can't create SIP message", e);
+//			}
+//			throw new SipException("Can't create SIP INVITE message");
+//		}
+//    }
     
     /**
 	 * Create a 200 OK response for INVITE request
