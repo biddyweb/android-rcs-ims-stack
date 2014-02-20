@@ -605,20 +605,20 @@ public class SipMessageFactory {
 	 * @return SIP request
      * @throws SipException
      */
-//    public static SipRequest createInvite(SipDialogPath dialog,	String[] featureTags, String sdp, String prefServiceHeaderVal) throws SipException {
-//		try {
-//			SipRequest request = createInvite(dialog, featureTags, sdp);
-//			
-//			// set the P-Preferred-Service header
-//			SipUtils.setPPreferredService(request, prefServiceHeaderVal);
-//			return request ;
-//		} catch(Exception e) {
-//			if (logger.isActivated()) {
-//				logger.error("Can't create SIP message", e);
-//			}
-//			throw new SipException("Can't create SIP INVITE message");
-//		}
-//    }
+    public static SipRequest createInvite(SipDialogPath dialog,	String[] featureTags, String sdp, String prefServiceHeaderVal) throws SipException {
+		try {
+			SipRequest request = createInvite(dialog, featureTags, sdp);
+			
+			// set the P-Preferred-Service header
+			SipUtils.setPPreferredService(request, prefServiceHeaderVal);
+			return request ;
+		} catch(Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't create SIP message", e);
+			}
+			throw new SipException("Can't create SIP INVITE message");
+		}
+    }
     
     /**
 	 * Create a 200 OK response for INVITE request

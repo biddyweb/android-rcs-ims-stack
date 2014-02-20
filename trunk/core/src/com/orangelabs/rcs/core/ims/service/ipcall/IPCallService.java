@@ -46,7 +46,7 @@ public class IPCallService extends ImsService {
     /**
      * P_Preferred_Service header 
      */
-//    public final static String P_PREFERRED_SERVICE_HEADER = "urn:urn-7:3gpp-service.ims.icsi.mmtel.gsma.ipcall";
+    public final static String P_PREFERRED_SERVICE_HEADER = "urn:urn-7:3gpp-service.ims.icsi.mmtel.gsma.ipcall";
 	
     /**
 	 * Max sessions
