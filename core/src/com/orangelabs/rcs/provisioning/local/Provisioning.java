@@ -34,12 +34,13 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
  * 
  * @author jexa7410
  */
+@SuppressWarnings("deprecation")
 public class Provisioning extends TabActivity {
 	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Instanciate the settings manager
+        // Instantiate the settings manager
         RcsSettings.createInstance(getApplicationContext());
 
         // Set tabs
@@ -120,7 +121,7 @@ public class Provisioning extends TabActivity {
 	 * @param selection
 	 *            table of string representing choice selection
 	 */
-	public static void setSpinnerParameter(final Spinner spinner, String rcsSettingsKey, final Bundle bundle,
+	public static int setSpinnerParameter(final Spinner spinner, String rcsSettingsKey, final Bundle bundle,
 			final String[] selection) {
 		Integer parameter = null;
 		if (bundle != null && bundle.containsKey(rcsSettingsKey)) {
@@ -130,6 +131,7 @@ public class Provisioning extends TabActivity {
 			parameter = java.util.Arrays.asList(selection).indexOf(selected);
 		}
 		spinner.setSelection(parameter);
+		return parameter;
 	}
 	
 	/**

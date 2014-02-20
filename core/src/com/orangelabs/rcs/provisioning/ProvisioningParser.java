@@ -87,6 +87,11 @@ public class ProvisioningParser {
 	 *            The GSMA release (Albatros, Blackbird, Crane...) before parsing
 	 * 
 	 * @return Boolean result
+	 * 
+	 *         <p>
+	 *         <b>Be Careful:</b><br />
+	 *         GSMA release is set to blackbird if SERVICES node is present, otherwise release is unchanged
+	 *         </p>
 	 */
 	public boolean parse(int gsmaRelease) {
         try {

@@ -166,7 +166,13 @@ public class ProfileProvisioning extends Activity {
 		adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, GSMA_RELEASE);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
-		setSpinnerParameter(spinner, RcsSettingsData.KEY_GSMA_RELEASE, bundle, GSMA_RELEASE);
+		int release = 0;
+		if (bundle != null && bundle.containsKey(RcsSettingsData.KEY_GSMA_RELEASE)) {
+			release = bundle.getInt(RcsSettingsData.KEY_GSMA_RELEASE);
+		} else {
+			release = RcsSettings.getInstance().getGsmaRelease();
+		}
+		spinner.setSelection(release);
 	}
 
     /**
@@ -376,6 +382,8 @@ public class ProfileProvisioning extends Activity {
 			ProvisioningParser parser = new ProvisioningParser(mXMLFileContent);
 			// Save GSMA release set into the provider
 			int gsmaRelease = RcsSettings.getInstance().getGsmaRelease();
+			// Before parsing the provisioning, the GSMA release is set to Albatros
+			RcsSettings.getInstance().setGsmaRelease(RcsSettingsData.VALUE_GSMA_REL_ALBATROS);
 			if (parser.parse(gsmaRelease)) {
 				// Customize provisioning data with user phone number
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.USERPROFILE_IMS_USERNAME, userPhoneNumber);
