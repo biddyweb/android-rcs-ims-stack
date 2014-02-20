@@ -82,8 +82,9 @@ public abstract class AddVideoManager {
 	 * 
 	 * @param videoPlayer video player instance
 	 * @param videoRenderer video renderer instance
+	 * @throws Exception
 	 */
-	public abstract void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer);
+	public abstract void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws Exception ;
 	
 	
 	/**
@@ -96,8 +97,10 @@ public abstract class AddVideoManager {
 	
 	/**
 	 * remove Video from session (case local AddVideoManager)
+	 * 
+	 * @throws Exception
 	 */
-	public abstract void removeVideo();
+	public abstract void removeVideo()throws Exception;
 	
 	
 	/**

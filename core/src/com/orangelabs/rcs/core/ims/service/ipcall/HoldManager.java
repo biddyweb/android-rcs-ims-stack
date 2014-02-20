@@ -71,8 +71,9 @@ public abstract class  HoldManager {
 	 * set call on Hold/onResume (case local HoldManager)
 	 * 
 	 * @param calHoldAction hold action (true: call hold/false: call resume)
+	 * @throws Exception
 	 */
-	public abstract void setCallHold(boolean callHoldAction);
+	public abstract void setCallHold(boolean callHoldAction) throws Exception ;
 	
 	/**
 	 * set call on Hold/onResume (case remote HoldManager)

@@ -4,12 +4,14 @@ import android.os.RemoteException;
 import com.orangelabs.rcs.core.content.LiveAudioContent;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipMessageFactory;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
+import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
 import com.orangelabs.rcs.service.api.client.media.IAudioEventListener;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
@@ -236,15 +238,13 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 * @throws SipException
 	 */
 	public SipRequest createInvite() throws SipException {
-		//return SipMessageFactory.createInvite(getDialogPath(), null,
-				//getDialogPath().getLocalContent());
 		
 		if (getVideoContent() == null) {
-        	// Voice call
-        	return SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VOICE_CALL, getDialogPath().getLocalContent());
+        	// Voice call	
+			return SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VOICE_CALL, getDialogPath().getLocalContent(), IPCallService.P_PREFERRED_SERVICE_HEADER);
         } else {
         	// Video call
-        	return SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, getDialogPath().getLocalContent());
+        	return SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, getDialogPath().getLocalContent(), IPCallService.P_PREFERRED_SERVICE_HEADER);
         } 
 	}
 	
@@ -380,8 +380,9 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 * 
 	 * @param videoPlayer Video player
 	 * @param videoRenderer Video renderer
+	 * @throws Exception 
 	 */
-	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) {
+	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer)  {
 		if (logger.isActivated()) {
 			logger.info("Add video");
 		}
@@ -390,7 +391,20 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			addVideoMgr = new LocalAddVideo(this);
 
 			// launch addVideo
-			addVideoMgr.addVideo(videoPlayer, videoRenderer);
+			try {
+				addVideoMgr.addVideo(videoPlayer, videoRenderer);
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+	                logger.error("Add Video has failed", e);
+	            }
+	            
+				if (!isInterrupted()) {
+					for (int i = 0; i < getListeners().size(); i++) {
+						((IPCallStreamingSessionListener) getListeners().get(i))
+								.handleAddVideoAborted(IPCallError.UNEXPECTED_EXCEPTION);
+					}
+				}
+	        }
 		} else {
 			if (!isInterrupted()) {
 				for (int i = 0; i < getListeners().size(); i++) {
@@ -416,7 +430,20 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			addVideoMgr = new LocalAddVideo(this);
 
 			// launch removeVideo
-			addVideoMgr.removeVideo();
+			try {
+				addVideoMgr.removeVideo();
+			} catch (Exception e) {
+				if (logger.isActivated()) {
+	                logger.error("Remove Video has failed", e);
+	            }
+	            
+				if (!isInterrupted()) {
+					for (int i = 0; i < getListeners().size(); i++) {
+						((IPCallStreamingSessionListener) getListeners().get(i))
+								.handleAddVideoAborted(IPCallError.UNEXPECTED_EXCEPTION);
+					}
+				}
+			}
 		}
 		else {
 			if (!isInterrupted()) {
@@ -445,7 +472,22 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			holdMgr = new LocalHoldInactive(this);
 			
 			// launch callHold/callResume (depending on boolean value)
-			holdMgr.setCallHold(callHoldAction);	
+			try {
+				holdMgr.setCallHold(callHoldAction);
+			} catch (Exception e) {
+				if (!isInterrupted()) {
+					for (int i = 0; i < getListeners().size(); i++) {
+						if (callHoldAction){
+							((IPCallStreamingSessionListener) getListeners().get(i))
+							.handleCallHoldAborted(IPCallError.UNEXPECTED_EXCEPTION);
+						}
+						else {
+							((IPCallStreamingSessionListener) getListeners().get(i))
+							.handleCallResumeAborted(IPCallError.UNEXPECTED_EXCEPTION);
+						}					
+					}
+				}
+			}	
 		}
 		else {
 			if (!isInterrupted()) {
@@ -767,24 +809,31 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 
 		// Update the authentication agent
 		getAuthenticationAgent().readProxyAuthenticateHeader(response);
+		
+		//create reInvite
+		SipRequest reInvite = null;		
+		if (getVideoContent() == null) {
+        	// Voice call
+			reInvite = getUpdateSessionManager().createReInvite(
+					IPCallService.FEATURE_TAGS_IP_VOICE_CALL, getDialogPath().getLocalContent());
+        } else {
+        	// Video call
+        	reInvite = getUpdateSessionManager().createReInvite(
+					IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, getDialogPath().getLocalContent());
+        } 
 
-		// get sdp content
-		String content = getDialogPath().getLocalContent();
-
-		SipRequest reInvite = null;
-		// create reInvite request
-		if (requestType == IPCallStreamingSession.ADD_VIDEO) {
-			reInvite = getUpdateSessionManager().createReInvite(
-					IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, content);
-		} else if (requestType == IPCallStreamingSession.REMOVE_VIDEO) {
-			reInvite = getUpdateSessionManager().createReInvite(
-					IPCallService.FEATURE_TAGS_IP_VOICE_CALL, content);
-		} else {
-			// TODO for set On Hold
-			reInvite = getUpdateSessionManager().createReInvite(
-					IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, content);
+		// set "P-Preferred-service" header on reInvite request
+		try {
+			SipUtils.setPPreferredService(reInvite, IPCallService.P_PREFERRED_SERVICE_HEADER);
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Send ReInvite has failed", e);
+			}
+			handleError(new ImsSessionBasedServiceError(
+					ImsSessionBasedServiceError.UNEXPECTED_EXCEPTION, e
+							.getMessage()));
 		}
-
+		
 		// send reInvite request
 		getUpdateSessionManager().sendReInvite(reInvite, requestType);
 	}

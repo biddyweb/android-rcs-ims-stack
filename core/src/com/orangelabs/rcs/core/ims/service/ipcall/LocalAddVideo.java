@@ -35,8 +35,9 @@ public class LocalAddVideo extends AddVideoManager {
 	 *  
 	 * @param videoPlayer video player instance
 	 * @param videoRenderer video renderer instance
+	 * @throws Exception 
 	 */
-	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) {
+	public void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws Exception  {
 		if (logger.isActivated()) {
 			logger.info("addVideo() - LocalAddVideo");
 		}
@@ -64,6 +65,10 @@ public class LocalAddVideo extends AddVideoManager {
 						.createReInvite(IPCallService.FEATURE_TAGS_IP_VIDEO_CALL,
 								sdp);
 
+				// set "P-Preferred-service" header on reInvite request
+				SipUtils.setPPreferredService(reInvite, IPCallService.P_PREFERRED_SERVICE_HEADER);
+
+				
 				// Send re-INVITE
 				session.getUpdateSessionManager().sendReInvite(reInvite,
 						IPCallStreamingSession.ADD_VIDEO);
@@ -75,8 +80,9 @@ public class LocalAddVideo extends AddVideoManager {
 	
 	/**
 	 * Remove video from the current call
+	 * @throws Exception 
 	 */
-	public void removeVideo() {
+	public void removeVideo() throws Exception {
 		if (logger.isActivated()) {
 			logger.info("removeVideo() - LocalAddVideo");
 			logger.info("video status =" + session.getVideoContent());
@@ -96,6 +102,9 @@ public class LocalAddVideo extends AddVideoManager {
 				SipRequest reInvite = session.getUpdateSessionManager()
 						.createReInvite(IPCallService.FEATURE_TAGS_IP_VOICE_CALL,
 								sdp);
+				
+				// set "P-Preferred-service" header on reInvite request
+				SipUtils.setPPreferredService(reInvite, IPCallService.P_PREFERRED_SERVICE_HEADER);
 
 				// Send re-INVITE
 				session.getUpdateSessionManager().sendReInvite(reInvite,
