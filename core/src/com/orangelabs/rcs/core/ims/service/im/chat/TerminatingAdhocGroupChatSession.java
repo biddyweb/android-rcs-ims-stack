@@ -217,7 +217,8 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
     						// Open the MSRP session
     						getMsrpMgr().openMsrpSession();
     						
-    		    	        // Send an empty packet
+    						// Even if local setup is passive, an empty packet must be sent to open the NAT
+							// and so enable the active endpoint to initiate a MSRP connection.
     		            	sendEmptyDataChunk();    						
 						} catch (IOException e) {
 							if (logger.isActivated()) {
