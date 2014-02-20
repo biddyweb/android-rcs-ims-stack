@@ -22,8 +22,9 @@ public class LocalHoldInactive extends HoldManager {
 	 * Set Call Hold
 	 * 
 	 * @param callHoldAction  call hold action (true : call hold - false: call resume)
+	 * @throws Exception 
 	 */
-	public void setCallHold(boolean callHoldAction) {
+	public void setCallHold(boolean callHoldAction) throws Exception {
 		synchronized(this){
 				//set HoldManager state
 				HoldManager.state = (callHoldAction) ? HoldManager.HOLD_INPROGRESS : HoldManager.UNHOLD_INPROGRESS;
@@ -45,6 +46,9 @@ public class LocalHoldInactive extends HoldManager {
 				// Create re-INVITE
 				SipRequest reInvite = session.getUpdateSessionManager().createReInvite(
 						featureTags, sdp);
+				
+				// set "P-Preferred-service" header on reInvite request
+				SipUtils.setPPreferredService(reInvite, IPCallService.P_PREFERRED_SERVICE_HEADER);
 
 				// Send re-INVITE
 				int requestType = (callHoldAction) ? IPCallStreamingSession.SET_ON_HOLD

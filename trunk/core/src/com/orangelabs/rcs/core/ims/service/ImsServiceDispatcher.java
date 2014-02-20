@@ -38,6 +38,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.standfw.StoreAndForwardManager;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallService;
 import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.terms.TermsConditionsService;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -231,12 +232,14 @@ public class ImsServiceDispatcher extends Thread {
 	    if (request.getMethod().equals(Request.INVITE)) {
 	    	// INVITE received
 	    	
-			if (session != null) {
+	    	
+			if (session != null) {	
 				// Subsequent request received
 				if (session instanceof IPCallStreamingSession) {
 					// case IPCall session
 					if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
-							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)) {
+							&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL) 
+							&& SipUtils.isPPReferredServicePresent(request, IPCallService.P_PREFERRED_SERVICE_HEADER)) {
 						if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
 							// case IP video call
 							if (RcsSettings.getInstance().isIPVideoCallSupported()) {
@@ -253,7 +256,7 @@ public class ImsServiceDispatcher extends Thread {
 							}
 						}
 					} else {
-						// no voice call feature tags in request
+						// no voice call feature tags or no P-Preferred-Service in request 
 						session.sendErrorResponse(request, session.getDialogPath().getLocalTag(), 603);
 					}
 				} else {
@@ -413,30 +416,25 @@ public class ImsServiceDispatcher extends Thread {
 					sendFinalResponse(request, 603);
 	    		}		
 		    } else 
-			if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL)&&(!SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)))	{
-	    		// IP voice call
-	    		if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
-	    			imsModule.getIPCallService().receiveIPCallInvitation(request, true, false);
-	    		} else {
-					// Service not supported: reject the invitation with a 603 Decline
-					sendFinalResponse(request, 603);
-	    		}	    	
-	    	} else 
-	    	if (SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VOICE_CALL) &&
-	    			SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_3GPP_IP_VOICE_CALL) &&
-	    				SipUtils.isFeatureTagPresent(request, FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL))	{
-		    		// IP video call
-		    		if (RcsSettings.getInstance().isIPVideoCallSupported()) {
-		    			imsModule.getIPCallService().receiveIPCallInvitation(request, true, true);
-		    		} else {
-						// Service not supported: reject the invitation with a 603 Decline
-						if (logger.isActivated()) {
-							logger.debug("IP video call service not supported: automatically reject");
-						}
+		    	if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VOICE_CALL)
+					&& SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_3GPP_IP_VOICE_CALL) 
+					&& SipUtils.isPPReferredServicePresent(request, IPCallService.P_PREFERRED_SERVICE_HEADER)) {
+				if (SipUtils.isFeatureTagPresent(request,FeatureTags.FEATURE_RCSE_IP_VIDEO_CALL)) {
+					// case IP video call
+					if (RcsSettings.getInstance().isIPVideoCallSupported()) {
+						imsModule.getIPCallService().receiveIPCallInvitation(request, true, true);
+					} else {
 						sendFinalResponse(request, 603);
-		    		}	    		    		
-    		} else {
+					}
+				} else {
+					// case IP voice call
+					if (RcsSettings.getInstance().isIPVoiceCallSupported()) {
+						imsModule.getIPCallService().receiveIPCallInvitation(request, true, false);
+					} else {
+						sendFinalResponse(request, 603);
+					}
+				}
+			} else {
     			Intent intent = intentMgr.isSipRequestResolved(request);
 	    		if (intent != null) {
 	    			// Generic SIP session

@@ -127,10 +127,10 @@ public class OriginatingIPCallStreamingSession extends IPCallStreamingSession {
             SipRequest invite;  
             if (getVideoContent() == null) {
             	// Voice call
-            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp);
+            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp, IPCallService.P_PREFERRED_SERVICE_HEADER);
             } else {
             	// Video call
-            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp);
+            	invite = SipMessageFactory.createInvite(getDialogPath(), IPCallService.FEATURE_TAGS_IP_VIDEO_CALL, sdp, IPCallService.P_PREFERRED_SERVICE_HEADER);
             } 
 
 	        // Set the Authorization header
