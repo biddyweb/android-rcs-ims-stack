@@ -6,15 +6,17 @@ RCS-e open source stack roadmap
 
 = Roadmap 2014 =
 
- * *February 24: Sprint 17, v2.5.16
-  * MSRP over TLS.
-  * Wakelock mechanism.
-  * Retrigger auto-configuration if registration fails.
-  * Flexible local provisioning.
+ * *March 24: Sprint 18, v2.5.17
   * Code Review.
   * Refactoring.
   * Bug fixes.
 *
+ * February 24: Sprint 17, v2.5.16
+  * MSRP over TLS.
+  * Local provisioning based on XML file from SD card.
+  * TCP fallback according to RFC3261.
+  * Code review.
+  * Bug fixes.
  * January 23: Sprint 16, v2.5.15
   * Code Review.
   * Refactoring.
