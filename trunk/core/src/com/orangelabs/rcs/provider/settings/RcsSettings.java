@@ -2859,5 +2859,18 @@ public class RcsSettings {
 			writeParameter(RcsSettingsData.KEY_GSMA_RELEASE, gsmaRelease);
 		}
 	}
+	
+    /**
+     * Is TCP fallback enabled according to RFC3261 chapter 18.1.1
+     * 
+     * @return Boolean
+     */
+    public boolean isTcpFallback() {
+        boolean result = false;
+        if (instance != null) {
+            result = Boolean.parseBoolean(readParameter(RcsSettingsData.KEY_TCP_FALLBACK));
+        }
+        return result;
+    }
 
 }

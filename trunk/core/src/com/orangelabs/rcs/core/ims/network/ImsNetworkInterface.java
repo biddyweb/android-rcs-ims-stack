@@ -138,7 +138,13 @@ public abstract class ImsNetworkInterface {
 	/**
 	 * NAT public UDP port
 	 */
-	private int natPublicPort = -1;	
+	private int natPublicPort = -1;
+	
+	
+	/**
+	 * TCP fallback according to RFC3261 chapter 18.1.1
+	 */
+	private boolean tcpFallback = false;
 
 	/**
      * The logger
@@ -165,6 +171,8 @@ public abstract class ImsNetworkInterface {
         this.imsProxyPort = proxyPort;
         this.imsProxyProtocol = proxyProtocol;
 		this.imsAuthentMode = authentMode;
+		if (proxyProtocol.equalsIgnoreCase(ListeningPoint.UDP))
+			this.tcpFallback = RcsSettings.getInstance().isTcpFallback();
 		
         // Instantiates the SIP manager
         sip = new SipManager(this);
@@ -581,7 +589,7 @@ public abstract class ImsNetworkInterface {
 			
 			// Initialize the SIP stack
 			// Changed by Deutsche Telekom
-            sip.initStack(access.getIpAddress(), dnsResolvedFields.ipAddress, dnsResolvedFields.port, imsProxyProtocol, getType());
+            sip.initStack(access.getIpAddress(), dnsResolvedFields.ipAddress, dnsResolvedFields.port, imsProxyProtocol, tcpFallback, getType());
 	    	sip.getSipStack().addSipEventListener(imsModule);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
