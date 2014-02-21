@@ -874,4 +874,9 @@ public class RcsSettingsData {
      *  parameter to control whether "end-to-end ip call" button is presented to user (case false) or breakout button (case true)
      */
 	public static final String IPCALL_E2E_VOICECAPABILITYHANDLING = "e2eVoiceCapabilityHandling";
+	
+	/**
+     * Key to enable TCP fallback according to RFC3261 chapter 18.1.1
+    */
+    public static final String KEY_TCP_FALLBACK = "TcpFallback";
 }

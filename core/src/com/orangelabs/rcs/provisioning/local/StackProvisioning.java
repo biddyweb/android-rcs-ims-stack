@@ -163,6 +163,8 @@ public class StackProvisioning extends Activity {
 			spinner.setSelection(2);
 		}
 
+		setCheckBoxParameter(this, R.id.TcpFallback, RcsSettingsData.KEY_TCP_FALLBACK, bundle);
+
 		String[] certificates = loadCertificatesList();
 		spinner = (Spinner) findViewById(R.id.TlsCertificateRoot);
 		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, certificates);
@@ -293,6 +295,8 @@ public class StackProvisioning extends Activity {
 					(String) spinner.getSelectedItem());
 		}
 
+		saveCheckBoxParameter(this, R.id.TcpFallback, RcsSettingsData.KEY_TCP_FALLBACK, bundle);
+		
         spinner = (Spinner) findViewById(R.id.TlsCertificateRoot);
         if (spinner.getSelectedItemPosition() == 0) {
         	if (bundle != null) {
