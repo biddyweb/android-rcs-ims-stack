@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.16
+Release 2.5.17
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,16 +8,14 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 
 News:
------
-- MSRP over TLS for Wi-Fi access
-- Local provisioning based on XML file loaded from SD card
-- TCP fallback according to RFC3261
 
 Bugs fixed:
 -----------
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+V2.5.17
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
