@@ -16,7 +16,6 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.17
-- Issue 232		Stack: Application Not Responding for StartService
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
@@ -30,8 +29,10 @@ V2.5.16
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 - Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
 - Issue 224		Stack: Failed message from the INVITE will silently marked as failed w/o updating the UI/API
+- Issue 226		Stack: Missing "P-Preferred-Service" header in IP Voice call INVITE SIP request
 - Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled
 - Issue 228     Stack: FToHTTP file content type is based on extension rather than MIME type
+- Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
