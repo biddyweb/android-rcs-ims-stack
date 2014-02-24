@@ -16,6 +16,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.17
+- Issue 232		Stack: Application Not Responding for StartService
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
