@@ -83,6 +83,16 @@ public class StartService extends Service {
     private String currentUserAccount = null;
 
     /**
+     * Launch boot flag
+     */
+	boolean boot = false;
+	
+	 /**
+     * Launch user flag
+     */
+	boolean user = false;
+	
+    /**
      * The logger
      */
     private static Logger logger = Logger.getLogger(StartService.class.getSimpleName());
@@ -90,35 +100,18 @@ public class StartService extends Service {
     private static final String INTENT_KEY_BOOT = "boot";
     private static final String INTENT_KEY_USER = "user";
 
+
     @Override
     public void onCreate() {
         // Instantiate RcsSettings
         RcsSettings.createInstance(getApplicationContext());
-
-        // Use a network listener to start RCS core when the data will be ON 
-        if (RcsSettings.getInstance().getAutoConfigMode() == RcsSettingsData.NO_AUTO_CONFIG) {
-            // Get connectivity manager
-            if (connMgr == null) {
-                connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            }
-            
-            // Instantiate the network listener
-	        networkStateListener = new BroadcastReceiver() {
-	            @Override
-	            public void onReceive(Context context, final Intent intent) {
-	                Thread t = new Thread() {
-	                    public void run() {
-	                        connectionEvent(intent.getAction());
-	                    }
-	                };
-	                t.start();
-	            }
-	        };
-	
-	        // Register network state listener
-	        IntentFilter intentFilter = new IntentFilter();
-	        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-	        registerReceiver(networkStateListener, intentFilter);
+        int autoConfigMode = RcsSettings.getInstance().getAutoConfigMode();
+    	if (logger.isActivated()) {
+            logger.debug("onCreate AutoConfigMode="+autoConfigMode);
+        }
+        // In manual configuration, use a network listener to start RCS core when the data will be ON 
+        if (autoConfigMode == RcsSettingsData.NO_AUTO_CONFIG) {
+        	registerNetworkStateListener();
         }
     }
 
@@ -140,39 +133,66 @@ public class StartService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (logger.isActivated()) {
-            logger.debug("Start RCS service");
-        }
-		// Launch boot flag
-		boolean boot = false;
-		boolean user = false;
-		// Check boot
-		if (intent != null) {
-			boot = intent.getBooleanExtra(INTENT_KEY_BOOT, false);
-			user = intent.getBooleanExtra(INTENT_KEY_USER, false);
+	public int onStartCommand(final Intent intent, final int flags, final int startId) {
+		if (logger.isActivated()) {
+			logger.debug("Start RCS service");
 		}
+		new Thread() {
+			@Override
+			public void run() {
+				// Check boot
+				if (intent != null) {
+					boot = intent.getBooleanExtra(INTENT_KEY_BOOT, false);
+					user = intent.getBooleanExtra(INTENT_KEY_USER, false);
+				}
+				if (checkAccount()) {
+					launchRcsService(boot, user);
+				} else {
+					// User account can't be initialized (no radio to read IMSI, .etc)
+					if (logger.isActivated()) {
+						logger.error("Can't create the user account");
+					}
 
-		if (checkAccount()) {
-			launchRcsService(boot, user);
-        } else {
-            // User account can't be initialized (no radio to read IMSI, .etc)
-            if (logger.isActivated()) {
-                logger.error("Can't create the user account");
-            }
+					// Send service intent
+					Intent stopIntent = new Intent(ClientApiIntents.SERVICE_STATUS);
+					stopIntent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STOPPED);
+					sendBroadcast(stopIntent);
 
-            // Send service intent 
-            Intent stopIntent = new Intent(ClientApiIntents.SERVICE_STATUS);
-            stopIntent.putExtra("status", ClientApiIntents.SERVICE_STATUS_STOPPED);
-            sendBroadcast(stopIntent);
+					// Exit service
+					stopSelf();
+				}
+			}
+		}.start();
 
-            // Exit service
-            stopSelf();
+		// We want this service to continue running until it is explicitly
+		// stopped, so return sticky.
+		return START_STICKY;
+	}
+
+    /**
+     * Register a broadcast receiver for network state changes
+     */
+    private void registerNetworkStateListener() {
+        // Get connectivity manager
+        if (connMgr == null) {
+            connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         }
 
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        return START_STICKY;
+        // Instantiate the network listener
+        networkStateListener = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, final Intent intent) {
+                new Thread() {
+                    public void run() {
+                        connectionEvent(intent.getAction());
+                    }
+                }.start();
+            }
+        };
+        // Register network state listener
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkStateListener, intentFilter);
     }
 
     /**
