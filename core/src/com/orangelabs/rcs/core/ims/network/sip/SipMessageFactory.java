@@ -1250,9 +1250,13 @@ public class SipMessageFactory {
             // Set Allow header
             SipUtils.buildAllowHeader(reInvite);
 
-            // Set the Route header
-            if (reInvite.getHeader(RouteHeader.NAME) == null && firstInvite.getHeader(RouteHeader.NAME) != null) {
-                reInvite.addHeader(firstInvite.getHeader(RouteHeader.NAME));
+            // Set the Route header           
+            if (reInvite.getHeader(RouteHeader.NAME) == null) {
+            	Vector<String> route = dialog.getRoute();
+    	        for(int i=0; i < route.size(); i++) {
+    	        	Header routeHeader = SipUtils.HEADER_FACTORY.createHeader(RouteHeader.NAME, route.elementAt(i));   	
+    	        	reInvite.addHeader(routeHeader);
+    	        }
             }
 
             // Set the P-Preferred-Identity header
