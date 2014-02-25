@@ -4312,12 +4312,11 @@ public final class ContactsManager {
 	                        selectionArg);
 	            }
 	        }
+	        cursor.close();
 	    } catch (Exception e) {
 	        if (logger.isActivated()) {
 	            logger.error("Clean entries has failed", e);
 	        }
-	    } finally {
-	    	CloseableUtils.close(cursor);
 	    }
     }
 

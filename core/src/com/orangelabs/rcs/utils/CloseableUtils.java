@@ -23,11 +23,16 @@ import java.io.IOException;
 public class CloseableUtils {
 	
 	/**
-	 * Closes properly objects implementing Closeable (Cursor, stream,...)
+	 * Closes properly objects implementing Closeable (input stream, output stream...)
 	 * 
 	 * @param c
 	 *            object to close or null
 	 * @return IOException or null
+	 * 
+	 *         <p>
+	 *         <b>Be Careful:</b><br />
+	 *         In Android SDK 15 and earlier Cursor does not implement Closeable. So do not use with cursor.
+	 *         </p>
 	 */
 	public static IOException close(Closeable c) {
 		if (c != null) {
