@@ -65,6 +65,7 @@ import com.orangelabs.rcs.service.api.client.presence.FavoriteLink;
 import com.orangelabs.rcs.service.api.client.presence.Geoloc;
 import com.orangelabs.rcs.service.api.client.presence.PhotoIcon;
 import com.orangelabs.rcs.service.api.client.presence.PresenceInfo;
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -472,10 +473,13 @@ public final class ContactsManager {
         try {
             String where = RichAddressBookData.KEY_CONTACT_NUMBER + " = " + "\"" + number + "\"";
             Cursor cur = ctx.getContentResolver().query(RichAddressBookData.CONTENT_URI, null, where, null, null);
-            if (cur.moveToFirst()) {
-                rowId = cur.getInt(cur.getColumnIndex(RichAddressBookData.KEY_ID));
-            }
-            cur.close();
+			// Changed by Deutsche Telekom
+			if (cur != null) {
+				if (cur.moveToFirst()) {
+					rowId = cur.getInt(cur.getColumnIndex(RichAddressBookData.KEY_ID));
+				}
+				cur.close();
+			}
         } catch (Exception e) {
             if (logger.isActivated()) {
                 logger.error("Internal exception", e);
@@ -506,10 +510,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_CONTACT_NUMBER +"=?",
 				new String[]{contact},
 				null);
-		if (cur!=null && cur.moveToFirst()) {
-			hasEntryInRichAddressBook = true;
-		}
-		cur.close();
+        // Changed by Deutsche Telekom
+        if (cur != null) {
+            if (cur.moveToFirst()) {
+                hasEntryInRichAddressBook = true;
+            }
+            cur.close();
+        }
 		ContentValues values = new ContentValues();
 		values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
 
@@ -608,11 +615,11 @@ public final class ContactsManager {
             if (photoContent != null) {
                 int rowId = getProfileRowId(contact);
                 Uri photoUri = ContentUris.withAppendedId(RichAddressBookData.CONTENT_URI, rowId);
+                OutputStream outstream = null;
                 try {
-                    OutputStream outstream = ctx.getContentResolver().openOutputStream(photoUri);
+                    outstream = ctx.getContentResolver().openOutputStream(photoUri);
                     outstream.write(photoContent);
                     outstream.flush();
-                    outstream.close();
                 } catch (FileNotFoundException e) {
                     if (logger.isActivated()){
                         logger.error("Photo can't be saved",e);
@@ -621,7 +628,9 @@ public final class ContactsManager {
                     if (logger.isActivated()){
                         logger.error("Photo can't be saved",e);
                     }
-                }
+				} finally {
+					CloseableUtils.close(outstream);
+				}
             }
         }
 
@@ -1198,10 +1207,13 @@ public final class ContactsManager {
 					RichAddressBookData.KEY_CONTACT_NUMBER + "=?", 
 					new String[]{contact},
 					null);
-			if (cursor.moveToFirst()){
-				result = cursor.getInt(0);
-			}
-			cursor.close();
+            // Changed by Deutsche Telekom
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    result = cursor.getInt(0);
+                }
+                cursor.close();
+            }
 			
 	        if (logger.isActivated()) {
 				logger.debug("Sharing status is " + result);
@@ -1335,10 +1347,13 @@ public final class ContactsManager {
 				new String[]{contact}, 
 				null);
 		long contactRowID = INVALID_ID;
-		if (cursor.moveToFirst()){
-			contactRowID = cursor.getLong(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				contactRowID = cursor.getLong(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
 
 		ContentValues values = new ContentValues();
 		values.put(RichAddressBookData.KEY_CONTACT_NUMBER, contact);
@@ -1377,10 +1392,13 @@ public final class ContactsManager {
 				selection, 
 				selectionArgs, 
 				null);
-		while (c.moveToNext()) {
-			rcsNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				rcsNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return rcsNumbers;
 	}
 
@@ -1406,13 +1424,16 @@ public final class ContactsManager {
                 selection, 
                 selectionArgs, 
                 null);
-        while (cur.moveToNext()) {
-            String number = cur.getString(0);
-            if (!rcsNumbers.contains(number)){
-                rcsNumbers.add(number);
-            }
-        }
-        cur.close();
+		// Changed by Deutsche Telekom
+		if (cur != null) {
+			while (cur.moveToNext()) {
+				String number = cur.getString(0);
+				if (!rcsNumbers.contains(number)) {
+					rcsNumbers.add(number);
+				}
+			}
+			cur.close();
+		}
 		return rcsNumbers;
 	}
 
@@ -1433,13 +1454,16 @@ public final class ContactsManager {
         		null, 
         		null);
 		
-		while (cur.moveToNext()) {
-			String number = cur.getString(0);
-			if (!numbers.contains(number)){
-				numbers.add(number);
+		// Changed by Deutsche Telekom
+		if (cur != null) {
+			while (cur.moveToNext()) {
+				String number = cur.getString(0);
+				if (!numbers.contains(number)) {
+					numbers.add(number);
+				}
 			}
+			cur.close();
 		}
-		cur.close();
 		return numbers;
 	}
 
@@ -1455,10 +1479,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + "=\""+PresenceInfo.RCS_BLOCKED+"\"", 
 				null, 
 				null);
-		while (c.moveToNext()) {
-			rcsNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				rcsNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return rcsNumbers;
 	}
 	
@@ -1474,10 +1501,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + "=\""+PresenceInfo.RCS_PENDING_OUT+"\"", 
 				null, 
 				null);
-		while (c.moveToNext()) {
-			rcsNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				rcsNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return rcsNumbers;
 	}
 	
@@ -1493,10 +1523,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + "=\""+PresenceInfo.RCS_PENDING+"\"", 
 				null, 
 				null);
-		while (c.moveToNext()) {
-			rcsNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				rcsNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return rcsNumbers;
 	}
 	
@@ -1512,10 +1545,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_PRESENCE_SHARING_STATUS + "=\""+PresenceInfo.RCS_CANCELLED+"\"", 
 				null, 
 				null);
-		while (c.moveToNext()) {
-			rcsNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				rcsNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return rcsNumbers;
 	}
 	
@@ -1561,10 +1597,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_CONTACT_NUMBER + "=?", 
 				new String[]{number},
 				null);
-		if (cursor.moveToFirst()){
-			status = cursor.getInt(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				status = cursor.getInt(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
 		if (status==ContactInfo.RCS_ACTIVE){
 			return true;
 		}else{
@@ -1586,10 +1625,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_CONTACT_NUMBER + "=?", 
 				new String[]{number},
 				null);
-		if (cursor.moveToFirst()){
-			status = cursor.getInt(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				status = cursor.getInt(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
 		if (status==ContactInfo.RCS_PENDING){
 			return true;
 		}else{
@@ -1611,10 +1653,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_CONTACT_NUMBER + "=?", 
 				new String[]{number},
 				null);
-		if (cursor.moveToFirst()){
-			status = cursor.getInt(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				status = cursor.getInt(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
 		if (status==ContactInfo.RCS_PENDING_OUT){
 			return true;
 		}else{
@@ -1636,10 +1681,13 @@ public final class ContactsManager {
 				RichAddressBookData.KEY_CONTACT_NUMBER + "=?", 
 				new String[]{number},
 				null);
-		if (cursor.moveToFirst()){
-			status = cursor.getInt(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				status = cursor.getInt(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
 		if (status==ContactInfo.RCS_CANCELLED){
 			return true;
 		}else{
@@ -1862,12 +1910,13 @@ public final class ContactsManager {
 					selection, 
 					selectionArgs, 
 					null);
-			if (!cur.moveToNext()) {
-				dataId = INVALID_ID;
-			}else{
-				dataId = cur.getLong(0);
+			// Changed by Deutsche Telekom
+			if (cur != null) {
+				if (cur.moveToNext()) {
+					dataId = cur.getLong(0);
+				}
+				cur.close();
 			}
-			cur.close();
 
 			ops.add(ContentProviderOperation.newInsert(StatusUpdates.CONTENT_URI)
 					.withValue(StatusUpdates.DATA_ID, dataId)
@@ -2001,10 +2050,13 @@ public final class ContactsManager {
     	    			Data.RAW_CONTACT_ID + "=? AND " + Data.MIMETYPE + "=? AND " + Website.TYPE + "=?", 
     	    			new String[]{ Long.toString(rawContactId), MIMETYPE_WEBLINK, String.valueOf(Website.TYPE_HOMEPAGE) },
     	    			null);
-    	    	if (cur.moveToNext()) {
-    				currentNativeWebLinkDataId = cur.getLong(0);
-    	    	}
-    	    	cur.close();
+				// Changed by Deutsche Telekom
+				if (cur != null) {
+					if (cur.moveToNext()) {
+						currentNativeWebLinkDataId = cur.getLong(0);
+					}
+					cur.close();
+				}
    				
     			if (oldPresenceInfo.getFavoriteLinkUrl()==null){
     				// There was no weblink, insert
@@ -2121,10 +2173,13 @@ public final class ContactsManager {
 	    			Data.RAW_CONTACT_ID + "=? AND " + Data.MIMETYPE + "=? AND " + Website.TYPE + "=?", 
 	    			new String[]{ Long.toString(rawContactId), MIMETYPE_WEBLINK, String.valueOf(Website.TYPE_HOMEPAGE) },
 	    			null);
-	    	if (cur.moveToNext()) {
-				currentNativeWebLinkDataId = cur.getLong(0);
-	    	}
-	    	cur.close();
+			// Changed by Deutsche Telekom
+			if (cur != null) {
+				if (cur.moveToNext()) {
+					currentNativeWebLinkDataId = cur.getLong(0);
+				}
+				cur.close();
+			}
 				
 			if (oldPresenceInfo.getFavoriteLinkUrl()==null){
 				// There was no weblink, insert
@@ -2198,10 +2253,13 @@ public final class ContactsManager {
 	    			Data.RAW_CONTACT_ID + "=? AND " + Data.MIMETYPE + "=? AND " + Website.TYPE + "=?", 
 	    			new String[]{ Long.toString(rawContactId), MIMETYPE_WEBLINK, String.valueOf(Website.TYPE_HOMEPAGE) },
 	    			null);
-	    	if (cur.moveToNext()) {
-				currentNativeWebLinkDataId = cur.getLong(0);
-	    	}
-	    	cur.close();
+			// Changed by Deutsche Telekom
+			if (cur != null) {
+				if (cur.moveToNext()) {
+					currentNativeWebLinkDataId = cur.getLong(0);
+				}
+				cur.close();
+			}
 				
 			ops.add(ContentProviderOperation.newDelete(Data.CONTENT_URI)
     					.withSelection(Data._ID + "=?", new String[]{String.valueOf(currentNativeWebLinkDataId)})
@@ -2297,13 +2355,16 @@ public final class ContactsManager {
         		selectionArgsImCapOff, 
         		null);
 		
-		while (c.moveToNext()) {
-			String imCapableNumber = c.getString(0);
-			if (!IMCapableNumbers.contains(imCapableNumber)){
-				IMCapableNumbers.add(imCapableNumber);
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				String imCapableNumber = c.getString(0);
+				if (!IMCapableNumbers.contains(imCapableNumber)) {
+					IMCapableNumbers.add(imCapableNumber);
+				}
 			}
+			c.close();
 		}
-		c.close();
 		return IMCapableNumbers;
 	}
 	
@@ -2327,13 +2388,16 @@ public final class ContactsManager {
         		selectionArgs, 
         		null);
 		
-		while (c.moveToNext()) {
-			String richcallCapableNumber = c.getString(0);
-			if (!richcallCapableNumbers.contains(richcallCapableNumber)){
-				richcallCapableNumbers.add(richcallCapableNumber);
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				String richcallCapableNumber = c.getString(0);
+				if (!richcallCapableNumbers.contains(richcallCapableNumber)) {
+					richcallCapableNumbers.add(richcallCapableNumber);
+				}
 			}
+			c.close();
 		}
-		c.close();
 		
 		return richcallCapableNumbers;
 	}
@@ -2356,15 +2420,15 @@ public final class ContactsManager {
         		selection, 
         		selectionArgs, 
         		null);
-		
-		while (c.moveToNext()) {
-			String ipVoiceCallCapableNumber = c.getString(0);
-			if (!ipVoiceCallCapableNumbers.contains(ipVoiceCallCapableNumber)){
-				ipVoiceCallCapableNumbers.add(ipVoiceCallCapableNumber);
+		if (c != null) {
+			while (c.moveToNext()) {
+				String ipVoiceCallCapableNumber = c.getString(0);
+				if (!ipVoiceCallCapableNumbers.contains(ipVoiceCallCapableNumber)) {
+					ipVoiceCallCapableNumbers.add(ipVoiceCallCapableNumber);
+				}
 			}
-		}
-		c.close();
-		
+			c.close();
+		}	
 		return ipVoiceCallCapableNumbers;
 	}
 	
@@ -2386,15 +2450,15 @@ public final class ContactsManager {
         		selection, 
         		selectionArgs, 
         		null);
-		
-		while (c.moveToNext()) {
-			String ipVideoCallCapableNumber = c.getString(0);
-			if (!ipVideoCallCapableNumbers.contains(ipVideoCallCapableNumber)){
-				ipVideoCallCapableNumbers.add(ipVideoCallCapableNumber);
+		if (c != null) {
+			while (c.moveToNext()) {
+				String ipVideoCallCapableNumber = c.getString(0);
+				if (!ipVideoCallCapableNumbers.contains(ipVideoCallCapableNumber)) {
+					ipVideoCallCapableNumbers.add(ipVideoCallCapableNumber);
+				}
 			}
-		}
-		c.close();
-		
+			c.close();
+		}		
 		return ipVideoCallCapableNumbers;
 	}
 	
@@ -2415,15 +2479,18 @@ public final class ContactsManager {
         		selection, 
         		selectionArgs, 
         		null);
-		while (c.moveToNext()) {
-			String availableNumber = c.getString(0);
-			int registrationState = c.getInt(1);
-			if (registrationState==ContactInfo.REGISTRATION_STATUS_ONLINE && !availableNumbers.contains(availableNumber)){
-				// If the registration status is online, add the number to the list
-				availableNumbers.add(availableNumber);
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				String availableNumber = c.getString(0);
+				int registrationState = c.getInt(1);
+				if (registrationState == ContactInfo.REGISTRATION_STATUS_ONLINE && !availableNumbers.contains(availableNumber)) {
+					// If the registration status is online, add the number to the list
+					availableNumbers.add(availableNumber);
+				}
 			}
+			c.close();
 		}
-		c.close();
 		
 		return availableNumbers;
 	}
@@ -2905,24 +2972,19 @@ public final class ContactsManager {
         byte[] iconData = null;
         int size = bitmap.getRowBytes() * bitmap.getHeight();
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream(size);
+        ByteArrayOutputStream out = null;
         try {
+        	out = new ByteArrayOutputStream(size);
             if (bitmap.compress(Bitmap.CompressFormat.PNG, 0 /* quality ignored for PNG */, out)) {
-                out.close();
                 iconData = out.toByteArray();
             } else {
-                out.close();
                 if (logger.isActivated()){
                 	logger.debug("Unable to convert bitmap, compression failed");
                 }
             }
-        } catch (IOException e) {
-        	if (logger.isActivated()){
-        		logger.error("Unable to convert bitmap", e);
-        	}
-            iconData = null;
-        }
-
+        } finally {
+        	CloseableUtils.close(out);
+		}
         return iconData;
     }
     
@@ -3188,10 +3250,13 @@ public final class ContactsManager {
 				AggregationData.KEY_RCS_NUMBER + "=?" + " AND "+ AggregationData.KEY_RAW_CONTACT_ID + "=?", 
 				new String[]{rcsNumber, String.valueOf(rawContactId)},
 				null);
-		if (cursor.moveToFirst()){
-			result = cursor.getLong(0);
+		// Changed by Deutsche Telekom
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				result = cursor.getLong(0);
+			}
+			cursor.close();
 		}
-		cursor.close();
     	return result;
     }
     
@@ -3467,6 +3532,10 @@ public final class ContactsManager {
     					selection2,
     					selectionArgs2, 
     					null);
+				// Changed by Deutsche Telekom
+				if (cur2 == null) {
+					return ops;
+				}
     			if (cur2.moveToNext()){
     				dataId = cur2.getLong(0);
     				// We already had an etag, update it
@@ -3517,10 +3586,13 @@ public final class ContactsManager {
         		selection,
                 selectionArgs, 
                 null);
-         if (cur.moveToNext()){
-        	 etag = cur.getString(0);
-        }
-        cur.close();
+		// Changed by Deutsche Telekom
+		if (cur != null) {
+			if (cur.moveToNext()) {
+				etag = cur.getString(0);
+			}
+			cur.close();
+		}
         
         return etag;
     }
@@ -3644,11 +3716,14 @@ public final class ContactsManager {
         		selection, 
         		selectionArgs, 
         		null);
-		if (c.getCount()>0){
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			if (c.getCount() > 0) {
+				c.close();
+				return true;
+			}
 			c.close();
-			return true;
 		}
-		c.close();
     	return false;
     }
     
@@ -3671,10 +3746,13 @@ public final class ContactsManager {
         		selectionArgs, 
         		null);
 		
-		while (c.moveToNext()) {
-			imBlockedNumbers.add(c.getString(0));
+		// Changed by Deutsche Telekom
+		if (c != null) {
+			while (c.moveToNext()) {
+				imBlockedNumbers.add(c.getString(0));
+			}
+			c.close();
 		}
-		c.close();
 		return imBlockedNumbers;
 	}
     
@@ -3759,11 +3837,13 @@ public final class ContactsManager {
         		selection, 
         		selectionArgs, 
         		null);
-		if (c.getCount()>0){
+		if (c != null) {
+			if (c.getCount() > 0) {
+				c.close();
+				return true;
+			}
 			c.close();
-			return true;
 		}
-		c.close();
     	return false;
     }
     
@@ -3784,10 +3864,13 @@ public final class ContactsManager {
         		selectionArgs, 
         		null);
 		
-		while (c.moveToNext()) {
-			imBlockedNumbers.add(c.getString(0));
-		}
-		c.close();
+        // Changed by Deutsche Telekom
+        if (c != null) {
+            while (c.moveToNext()) {
+                imBlockedNumbers.add(c.getString(0));
+            }
+            c.close();
+        }
 		return imBlockedNumbers;
 	}
 	
@@ -4163,6 +4246,10 @@ public final class ContactsManager {
 
         // Delete RCS Entry where number is not in the address book anymore
         ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+		// Changed by Deutsche Telekom
+		if (cursor == null) {
+			return;
+		}
     	while (cursor.moveToNext()) {
     		long rawContactId = cursor.getLong(0);
     		String phoneNumber = cursor.getString(1);
@@ -4209,6 +4296,10 @@ public final class ContactsManager {
 	                null,
 	                null,
 	                null);
+			// Changed by Deutsche Telekom
+			if (cursor == null) {
+				return;
+			}
 
 	        // Delete EAB Entry where number is not in the address book anymore
 	        while (cursor.moveToNext()) {
@@ -4226,9 +4317,7 @@ public final class ContactsManager {
 	            logger.error("Clean entries has failed", e);
 	        }
 	    } finally {
-	        if (cursor != null) {
-	            cursor.close();
-	        }
+	    	CloseableUtils.close(cursor);
 	    }
     }
 
@@ -4291,16 +4380,24 @@ public final class ContactsManager {
      */
     public String getVisitCard(Uri uri) {
     	String fileName = null;
-    	
-		Cursor cursor = ctx.getContentResolver().query(uri, null, null, null, null);   			
+
+		Cursor cursor = ctx.getContentResolver().query(uri, null, null, null, null);
+		// Changed by Deutsche Telekom
+        if (cursor == null) {
+            return null;
+        }
     	while(cursor.moveToNext()) {
     		String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
     		String lookupKey = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
     		Uri vCardUri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
     		AssetFileDescriptor fd;
+    		// Changed by Deutsche Telekom
+            FileInputStream fis = null;
+            FileOutputStream mFileOutputStream = null;
     		try {
     			fd = ctx.getContentResolver().openAssetFileDescriptor(vCardUri, "r");
-    			FileInputStream fis = fd.createInputStream();
+    			// Changed by Deutsche Telekom
+    			fis = fd.createInputStream();
     			byte[] buf = new byte[(int) fd.getDeclaredLength()];
     			fis.read(buf);
     			String Vcard = new String(buf);
@@ -4309,19 +4406,22 @@ public final class ContactsManager {
     			
     			File vCardFile = new File(fileName);
 
-    			if (vCardFile.exists()) 
+    			if (vCardFile.exists())
     				vCardFile.delete();
 
-    			FileOutputStream mFileOutputStream = new FileOutputStream(vCardFile, true);
+    			mFileOutputStream = new FileOutputStream(vCardFile, true);
     			mFileOutputStream.write(Vcard.toString().getBytes());
-    			mFileOutputStream.close();
     		} catch (Exception e) {
 				if (logger.isActivated()){
 					logger.error("Something went wrong when during creation of vcard",e);
 				}				
+    		} finally {
+    			CloseableUtils.close(fis);
+    			CloseableUtils.close(mFileOutputStream);
     		}
     	}
     	cursor.close();
     	return fileName;
     }
+
 }

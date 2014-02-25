@@ -59,6 +59,7 @@ import com.orangelabs.rcs.core.ims.ImsModule;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 import com.telekom.bouncycastle.wrapper.SimpleContentSignerBuilder;
 
@@ -611,12 +612,7 @@ public class KeyStoreManager {
 	        }
 			return null;
 		} finally {
-			try {
-				if (fis != null)
-					fis.close();
-			} catch (IOException e) {
-				// Intentionally blank
-			}
+			CloseableUtils.close(fis);
 		}
 		return ks;
     }
@@ -645,12 +641,7 @@ public class KeyStoreManager {
                         + " failed: ", ex);
 			}
 		} finally {
-			try {
-				if (fos != null)
-					fos.close();
-			} catch (IOException e) {
-				// Intentionally blank
-			}
+			CloseableUtils.close(fos);
 		}
     }
 }

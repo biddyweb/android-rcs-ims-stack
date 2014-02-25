@@ -56,6 +56,7 @@ import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
 import com.orangelabs.rcs.utils.Base64;
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.DateUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
@@ -888,9 +889,10 @@ public class ChatUtils {
 	 */
 	public static byte[] createFileThumbnail(String filename) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		InputStream in = null;
 		try {
 			File file = new File(filename);
-			InputStream in = new FileInputStream(file);
+			in = new FileInputStream(file);
 			Bitmap bitmap = BitmapFactory.decodeStream(in);
 			int width = bitmap.getWidth();
 			int height = bitmap.getHeight();
@@ -918,6 +920,8 @@ public class ChatUtils {
 			}
 		} catch (Exception e) {
 			return null;
+		} finally {
+			CloseableUtils.close(in);
 		}
 		return out.toByteArray();
 	}

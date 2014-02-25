@@ -28,6 +28,7 @@ import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -543,15 +544,7 @@ public class MsrpSession {
 			}
 			throw new MsrpException(e.getMessage());
 		} finally {
-            // Changed by Deutsche Telekom
-            try {
-                if (inputStream != null){
-                    inputStream.close();
-                }
-            } catch (IOException e) {
-                // Intentionally blank
-            }
-
+			CloseableUtils.close(inputStream);
             // Changed by Deutsche Telekom
 	        //CpuManager.releaseTempLock();
 		}
