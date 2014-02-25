@@ -129,6 +129,17 @@ public class ListOfParticipant {
 	}
 	
 	/**
+     * Remove all participant from the list
+     * 
+     */
+    public void removeAllParticipant() {
+        if (logger.isActivated()) {
+            logger.debug("Remove all participant from the list");
+        }   
+        list.clear();
+    }
+    
+	/**
 	 * Get list of participants
 	 * 
 	 * @return Array list
