@@ -169,6 +169,11 @@ public class ConferenceEventSubscribeManager extends PeriodicRefresher {
 				    	}
                         session.setMaxParticipants(maxParticipants);
                     }
+                    // Changed by Deutsche Telekom
+			    	// reset list of participants if conference event state is full
+					if (ConferenceInfoDocument.STATE_FULL.equalsIgnoreCase(conference.getState())) {
+						connectedParticipants.removeAllParticipant();
+					}
                     ListOfParticipant disconnectedParticipants = new ListOfParticipant();
 			    	Vector<User> users = conference.getUsers();
 			    	for(int i=0; i < users.size(); i++) {
