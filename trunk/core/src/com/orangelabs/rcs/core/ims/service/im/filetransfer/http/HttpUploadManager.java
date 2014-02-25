@@ -35,6 +35,7 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.protocol.http.HttpAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -505,11 +506,7 @@ public class HttpUploadManager extends HttpTransferManager {
         } catch (IOException e) {
             // Nothing to do
         } finally {
-            try {
-                is.close();
-            } catch (IOException e) {
-                // Nothing to do
-            }
+        	CloseableUtils.close(is);
         }
         return sb.toString().getBytes();
     }

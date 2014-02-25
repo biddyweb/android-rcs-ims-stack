@@ -17,6 +17,7 @@ import javax.net.ssl.KeyManager;
 import com.orangelabs.rcs.core.ims.security.cert.KeyStoreManager;
 import com.orangelabs.rcs.core.ims.security.cert.X509KeyManagerWrapper;
 import com.orangelabs.rcs.provisioning.https.EasyX509TrustManager;
+import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -250,22 +251,11 @@ public class AndroidSecureSocketConnection extends AndroidSocketConnection {
 			} catch(Exception e) {
 				throw new IOException("Certificate exception: " + e.getMessage());
 			} finally {
-                // Changed by Deutsche Telekom
-			    closeFileStream(ksFileInputStream);
-			    closeFileStream(tsFileInputStream);
+			    CloseableUtils.close(ksFileInputStream);
+			    CloseableUtils.close(tsFileInputStream);
 			}
 		}
 		return mSslSocketFactory;
 	}
 
-    // Changed by Deutsche Telekom
-    private void closeFileStream(FileInputStream stream) {
-        try {
-            if (stream != null) {
-                stream.close();
-            }
-        } catch (IOException e) {
-            // Intentionally blank
-        }
-    }
 }
