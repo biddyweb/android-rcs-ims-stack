@@ -7,7 +7,8 @@ RCS-e open source stack roadmap
 = Roadmap 2014 =
 
  * *March 24: Sprint 18, v2.5.17
-  * Pause & resume automatic restart after service reconnection.
+  * Pause & resume automatic management after service reconnection.
+  * Backup & restore for history logs.
   * Code Review.
   * Refactoring.
   * Bug fixes.
