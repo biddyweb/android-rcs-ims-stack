@@ -1,4 +1,4 @@
-package com.orangelabs.rcs.core.ims.service.ipcall;
+package com.orangelabs.rcs.core.ims.service.ipcall.hold;
 
 import android.os.RemoteException;
 
@@ -7,20 +7,66 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.core.ims.service.ipcall.AudioSdpBuilder;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallService;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 
-
-
-public class RemoteHoldInactive extends HoldManager {
+/**
+ * Hold Inactive implementation class 
+ * 
+ * @author O. Magnon
+ */
+public class HoldInactiveImpl extends HoldImpl  {
+		
 	/**
 	 * Constructor
 	 */
-	public RemoteHoldInactive(IPCallStreamingSession session) {
-		super(session);
+	public HoldInactiveImpl(IPCallStreamingSession session, HoldManager holdMngr){
+		super(session, holdMngr);
+	}	
+	
+	/**
+	 * Set Call Hold for Local
+	 * 
+	 * @param callHoldAction  call hold action (true : call hold - false: call resume)
+	 * @throws Exception 
+	 */
+	public void setCallHold(boolean callHoldAction) throws Exception {
+		if (logger.isActivated()) {
+			logger.info("setCallHold - Local");
+		}
+		
+		synchronized(this){
+				// Build SDP
+				String sdp = buildCallHoldSdpProposal(callHoldAction);
+
+				// Set SDP proposal as the local SDP part in the dialog path
+				session.getDialogPath().setLocalContent(sdp);
+
+				// get feature tags
+				String[] featureTags = null;
+				if (session.isTagPresent(sdp, "m=video")) { // audio+ video
+					featureTags = IPCallService.FEATURE_TAGS_IP_VIDEO_CALL;
+				} else { // audio only
+					featureTags = IPCallService.FEATURE_TAGS_IP_VOICE_CALL;
+				}
+
+				// Create re-INVITE
+				SipRequest reInvite = session.getUpdateSessionManager().createReInvite(
+						featureTags, sdp);
+				
+				// set "P-Preferred-service" header on reInvite request
+				SipUtils.setPPreferredService(reInvite, IPCallService.P_PREFERRED_SERVICE_HEADER);
+
+				// Send re-INVITE
+				session.getUpdateSessionManager().sendReInvite(reInvite, holdMngr);			
+		}		
 	}
 
 	/**
-	 * Set Call Hold
+	 * Set Call Hold for Remote
 	 * 
 	 * @param callHoldAction
 	 *            call hold action (true : call hold - false: call resume)
@@ -29,13 +75,10 @@ public class RemoteHoldInactive extends HoldManager {
 	 */
 	public void setCallHold(boolean callHoldAction, SipRequest reInvite) {
 		if (logger.isActivated()) {
-			logger.info("setCallHold - Inactive");
+			logger.info("setCallHold - Remote");
 		}
 
 		synchronized (this) {
-			HoldManager.state = (callHoldAction) ? HoldManager.REMOTE_HOLD_INPROGRESS
-					: HoldManager.REMOTE_UNHOLD_INPROGRESS;
-
 			// build sdp response
 			String sdp = buildCallHoldSdpResponse(callHoldAction);
 			
@@ -45,25 +88,77 @@ public class RemoteHoldInactive extends HoldManager {
 
 				// get feature tags
 				String[] featureTags = null;
-				if (session.isTagPresent(reInvite.getContent(), "m=video")) { // audio+
-																				// video
+				if (session.isTagPresent(reInvite.getContent(), "m=video")) { 
+					// audio+video
 					featureTags = IPCallService.FEATURE_TAGS_IP_VIDEO_CALL;
-				} else { // audio only
+				} else { 
+					// audio only
 					featureTags = IPCallService.FEATURE_TAGS_IP_VOICE_CALL;
 				}
 
-				int requestType = (callHoldAction) ? IPCallStreamingSession.SET_ON_HOLD
-						: IPCallStreamingSession.SET_ON_RESUME;
-
 				// process user Answer and SIP response
 				session.getUpdateSessionManager().send200OkReInviteResp(reInvite,
-						featureTags, sdp, requestType);
-			}
-	
+						featureTags, sdp, holdMngr);
+			}	
 		}
+	}
+	
+	
+	/**
+	 * Build Call Hold SDP proposal
+	 * 
+	 * @param callHoldAction  call hold action (true : call hold - false: call resume)
+	 * @return	String sdp or null if error
+	 */
+	private String buildCallHoldSdpProposal(boolean action) {
+		if (logger.isActivated()) {
+			logger.info ("setCallHold - Inactive");
+		}
+		try {
+			// Build SDP part
+			String ntpTime = SipUtils.constructNTPtime(System
+					.currentTimeMillis());
+			String ipAddress = session.getDialogPath().getSipStack()
+					.getLocalIpAddress();
+			
+			String aVar = (action) ? "a=inactive" : "a=sendrcv";
 
+			String audioSdp = AudioSdpBuilder.buildSdpOffer(session
+					.getAudioPlayer().getSupportedAudioCodecs(), session
+					.getAudioPlayer().getLocalRtpPort())
+					+ aVar + SipUtils.CRLF;
+
+			String videoSdp = "";
+			if ((session.getVideoContent() != null)
+					&& (session.getVideoPlayer() != null)
+					&& (session.getVideoRenderer() != null)) {
+				videoSdp = VideoSdpBuilder.buildSdpOfferWithOrientation(session
+						.getVideoPlayer().getSupportedVideoCodecs(), session
+						.getVideoRenderer().getLocalRtpPort())
+						+ aVar + SipUtils.CRLF;
+			}
+
+			String sdp = "v=0" + SipUtils.CRLF + "o=- " + ntpTime + " "
+					+ ntpTime + " " + SdpUtils.formatAddressType(ipAddress)
+					+ SipUtils.CRLF + "s=-" + SipUtils.CRLF + "c="
+					+ SdpUtils.formatAddressType(ipAddress) + SipUtils.CRLF
+					+ "t=0 0" + SipUtils.CRLF + audioSdp + videoSdp;
+
+			return sdp;
+
+		} catch (RemoteException e) {
+			if (logger.isActivated()) {
+				logger.error("build CallHold SdpProposal has failed", e);
+			}
+
+			// Unexpected error
+			session.handleError(new IPCallError(
+					IPCallError.UNEXPECTED_EXCEPTION, e.getMessage()));
+			return null;
+		}
 	}
 
+	
 	/**
 	 * Build Call Hold SDP response
 	 * 
@@ -114,7 +209,7 @@ public class RemoteHoldInactive extends HoldManager {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * Start Media session when call is Resumed
 	 */
@@ -133,7 +228,6 @@ public class RemoteHoldInactive extends HoldManager {
 
 		// Extract the video port
 		MediaDescription mediaVideo = remoteParser.getMediaDescription("video");
-		// int videoRemotePort = mediaVideo.port;
 		int videoRemotePort = -1;
 		if (mediaVideo != null) {
 			videoRemotePort = mediaVideo.port;
@@ -144,21 +238,20 @@ public class RemoteHoldInactive extends HoldManager {
 		}
 
 		// Open the audio renderer
-		// getAudioRenderer().open(remoteHost, audioRemotePort);
-		// if (logger.isActivated()) {
-		// logger.debug("Open audio renderer with remoteHost (" + remoteHost
-		// + ") and remotePort (" + audioRemotePort + ")");
-		// }
-		//
-		// // Open the audio player
-		// getAudioPlayer().open(remoteHost, audioRemotePort);
-		// if (logger.isActivated()) {
-		// logger.debug("Open audio player on renderer RTP stream");
-		// }
+//		getAudioRenderer().open(remoteHost, audioRemotePort);
+//		if (logger.isActivated()) {
+//			logger.debug("Open audio renderer with remoteHost (" + remoteHost
+//					+ ") and remotePort (" + audioRemotePort + ")");
+//		}
+//
+//		// Open the audio player
+//		getAudioPlayer().open(remoteHost, audioRemotePort);
+//		if (logger.isActivated()) {
+//			logger.debug("Open audio player on renderer RTP stream");
+//		}
 
 		// Open the Video Renderer and Player
-		// always open the player after the renderer when the RTP stream is
-		// shared
+		// always open the player after the renderer when the RTP stream is shared
 		if ((session.getVideoRenderer() != null)
 				&& (session.getVideoPlayer() != null)) {
 			try {
@@ -181,12 +274,13 @@ public class RemoteHoldInactive extends HoldManager {
 						IPCallError.UNEXPECTED_EXCEPTION, e.getMessage()));
 			}
 		}
-
-		// Start Audio Player/Renderer
+		
+		//Start Audio Player/Renderer
 		// getAudioPlayer().start();
 		// getAudioRenderer().start();
 
-		// Start Video Player/Renderer
+		
+		//Start Video Player/Renderer
 		if ((session.getVideoPlayer() != null)
 				&& (session.getVideoRenderer() != null)) {
 			try {
@@ -202,11 +296,10 @@ public class RemoteHoldInactive extends HoldManager {
 				// Unexpected error
 				session.handleError(new IPCallError(
 						IPCallError.UNEXPECTED_EXCEPTION, e.getMessage()));
-			}
-		}
-
-		HoldManager.state = HoldManager.IDLE;
+			}		
+		} 
 	}
+
 
 	/**
 	 * Close Media session when call is set On Hold
@@ -270,12 +363,10 @@ public class RemoteHoldInactive extends HoldManager {
 			}
 		}
 
-		HoldManager.state = HoldManager.REMOTE_HOLD;
+	
 	}
 
-	public void setCallHold(boolean callHoldAction) {
-		// not used in IPCall-RemoteHoldInactive class
-	}
+	
+	
 
 }
- 

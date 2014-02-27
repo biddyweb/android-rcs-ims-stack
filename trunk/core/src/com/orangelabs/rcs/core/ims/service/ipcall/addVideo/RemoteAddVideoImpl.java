@@ -1,4 +1,4 @@
-package com.orangelabs.rcs.core.ims.service.ipcall;
+package com.orangelabs.rcs.core.ims.service.ipcall.addVideo;
 
 import java.util.Vector;
 
@@ -11,8 +11,10 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession.VideoPlayerEventListener;
+import com.orangelabs.rcs.core.ims.service.ipcall.AudioSdpBuilder;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallService;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.SdpOrientationExtension;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
@@ -21,15 +23,17 @@ import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.CodecsUtils;
 
-public class RemoteAddVideo extends AddVideoManager {
+public class RemoteAddVideoImpl extends AddVideoImpl {
 
 	/**
 	 * Constructor
 	 */
-	public RemoteAddVideo(IPCallStreamingSession session) {
-		super(session);
+	public RemoteAddVideoImpl(IPCallStreamingSession session, AddVideoManager addVideoMngr) {
+		super(session, addVideoMngr);
+		logger.debug("RemoteAddVideo()");
 	}
 
+	
 	/**
 	 * Add Video
 	 * 
@@ -38,12 +42,9 @@ public class RemoteAddVideo extends AddVideoManager {
 	 */
 	public LiveVideoContent addVideo(SipRequest reInvite) {
 		if (logger.isActivated()) {
-			logger.info("addVideo() - RemoteAddVideo");
+			logger.info("addVideo()");
 		}
 		synchronized (this) {
-			// set AddVideoManager state
-			state = AddVideoManager.ADD_VIDEO_INPROGRESS;
-
 			// create Video Content and set it on session
 			LiveVideoContent videocontent = ContentManager
 					.createLiveVideoContentFromSdp(reInvite.getContentBytes());
@@ -52,7 +53,7 @@ public class RemoteAddVideo extends AddVideoManager {
 			// processes user Answer and SIP response
 			session.getUpdateSessionManager().waitUserAckAndSendReInviteResp(
 					reInvite, IPCallService.FEATURE_TAGS_IP_VIDEO_CALL,
-					IPCallStreamingSession.ADD_VIDEO);
+					addVideoMngr);
 
 			return videocontent;
 		}
@@ -65,12 +66,9 @@ public class RemoteAddVideo extends AddVideoManager {
 	 */
 	public void removeVideo(SipRequest reInvite) {
 		if (logger.isActivated()) {
-			logger.info("removeVideo() - RemoteAddVideo");
+			logger.info("removeVideo()");
 		}
 		synchronized (this) {
-			// set AddVideoManager state
-			state = AddVideoManager.REMOVE_VIDEO_INPROGRESS;
-
 			// build sdp response
 			String sdp = buildRemoveVideoSdpResponse();
 			
@@ -81,9 +79,8 @@ public class RemoteAddVideo extends AddVideoManager {
 				// process user Answer and SIP response
 				session.getUpdateSessionManager().send200OkReInviteResp(reInvite,
 						IPCallService.FEATURE_TAGS_IP_VOICE_CALL, sdp,
-						IPCallStreamingSession.REMOVE_VIDEO);
+						addVideoMngr);
 			}
-
 		}
 	}
 

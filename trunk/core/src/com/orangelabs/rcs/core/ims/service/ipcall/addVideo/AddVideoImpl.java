@@ -1,4 +1,4 @@
-package com.orangelabs.rcs.core.ims.service.ipcall;
+package com.orangelabs.rcs.core.ims.service.ipcall.addVideo;
 
 import java.util.Vector;
 
@@ -10,8 +10,9 @@ import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
-import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession.VideoPlayerEventListener;
+import com.orangelabs.rcs.core.ims.service.UpdateSessionManagerListener;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.SdpOrientationExtension;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
 import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
@@ -19,30 +20,22 @@ import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
 import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
 import com.orangelabs.rcs.utils.logger.Logger;
 
-
 /**
- * Super class for IP Call Add Video Manager 
+ * Interface for AddVideo implementation class 
  * 
  * @author O. Magnon
  */
-public abstract class AddVideoManager {
+public abstract class AddVideoImpl {
 
 	/**
-	 * Constant values for IPCall Hold states
+	 * session handled by LocalAddVideoImpl
 	 */
-	public static final int IDLE = 0; 
-	public static final int ADD_VIDEO_INPROGRESS = 1;
-	public static final int REMOVE_VIDEO_INPROGRESS = 2;
+	protected IPCallStreamingSession session ; 	
 	
 	/**
-	 * Add Video state
+	 * Add Video manager
 	 */
-	protected static int state  ;
-	
-	/**
-	 * session handled by AddVideoManager
-	 */
-	IPCallStreamingSession session ; 	
+	protected UpdateSessionManagerListener addVideoMngr;
 	
 	/**
 	 * The logger
@@ -52,30 +45,14 @@ public abstract class AddVideoManager {
 	/**
 	 * constructor
 	 */
-	public AddVideoManager(IPCallStreamingSession session){
-		if (logger.isActivated()){
-			logger.info("AddVideoManager()");
-		}
-		this.state = AddVideoManager.IDLE;
+	public AddVideoImpl(IPCallStreamingSession session, AddVideoManager addVideoMngr){
+//		if (logger.isActivated()){
+//			logger.info("AddVideoImpl()");
+//		}
+
 		this.session = session;
+		this.addVideoMngr = addVideoMngr;
 	}	
-	
-	/**
-	 * get AddVideoManager state
-	 * 
-	 * @return int state
-	 */
-	public static int getState(){
-		return state;
-	}	
-	
-	/**
-	 * set AddVideoManager state
-	 */
-	public static void setState(int val){
-		state = val;
-	}
-	
 	
 	/**
 	 * add Video to session (case local AddVideoManager)
@@ -84,8 +61,7 @@ public abstract class AddVideoManager {
 	 * @param videoRenderer video renderer instance
 	 * @throws Exception
 	 */
-	public abstract void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws Exception ;
-	
+	public  abstract void addVideo(IVideoPlayer videoPlayer, IVideoRenderer videoRenderer) throws Exception ; 
 	
 	/**
 	 * add Video to session (case remote AddVideoManager)
@@ -94,22 +70,27 @@ public abstract class AddVideoManager {
 	 */
 	public abstract LiveVideoContent addVideo(SipRequest reInvite);
 	
-	
 	/**
 	 * remove Video from session (case local AddVideoManager)
 	 * 
 	 * @throws Exception
 	 */
-	public abstract void removeVideo()throws Exception;
-	
+	public abstract void removeVideo()throws Exception ;
 	
 	/**
 	 * remove Video from session (case remote AddVideoManager)
 	 * 
 	 * @param reInvite reInvite SIP request received
 	 */
-	public abstract void removeVideo(SipRequest reInvite);
-		
+	public abstract void removeVideo(SipRequest reInvite) ;
+	
+	/**
+	 * Build sdp response for addVideo
+	 * 
+	 * @param reInvite	reInvite SIP Request received
+	 * @return String (sdp content)
+	 */
+	public abstract String buildAddVideoSdpResponse(SipRequest reInvite);
 	
 	/**
 	 * Prepare video session (set codec, get remote Host and port ...) 
@@ -209,9 +190,6 @@ public abstract class AddVideoManager {
 			session.handleError(new IPCallError(
 					IPCallError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
-		// set AddVideoManager state
-		AddVideoManager.state = AddVideoManager.IDLE ;
-
 	}
 	
 	
@@ -257,9 +235,8 @@ public abstract class AddVideoManager {
 		session.setVideoRenderer(null);
 		session.setVideoContent(null);
 
-		// set AddVideoManager state
-		AddVideoManager.state = AddVideoManager.IDLE;
 	}
 	
-	
+
+
 }
