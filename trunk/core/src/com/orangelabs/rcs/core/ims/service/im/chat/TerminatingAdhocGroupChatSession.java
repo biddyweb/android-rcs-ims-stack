@@ -235,7 +235,7 @@ public class TerminatingAdhocGroupChatSession extends GroupChatSession implement
         		logger.info("Send 200 OK");
         	}
             SipResponse resp = SipMessageFactory.create200OkInviteResponse(getDialogPath(),
-            		getFeatureTags(), sdp);
+            		getFeatureTags(), getAcceptContactTags(), sdp);
 
             // The signalisation is established
             getDialogPath().sigEstablished();

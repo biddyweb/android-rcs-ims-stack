@@ -59,7 +59,7 @@ public class CapabilityUtils {
 	 * @param ipcall IP call supported
 	 * @return List of tags
 	 */
-	public static List<String> getSupportedFeatureTags(boolean richcall, boolean ipcall) {
+ 	public static String[] getSupportedFeatureTags(boolean richcall, boolean ipcall) {
 		List<String> tags = new ArrayList<String>();
 
 		// Video share support
@@ -144,7 +144,7 @@ public class CapabilityUtils {
 			tags.add(FeatureTags.FEATURE_RCSE + "=\"" + TextUtils.join(",", supportedTagList) + "\"");
 		}
 
-		return tags;
+ 		return tags.toArray(new String[tags.size()]);
 	}
 
     /**

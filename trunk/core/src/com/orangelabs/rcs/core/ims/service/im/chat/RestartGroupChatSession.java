@@ -158,6 +158,7 @@ public class RestartGroupChatSession extends GroupChatSession {
 	private SipRequest createInviteRequest(String content) throws SipException {
         SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(),
         		getFeatureTags(),
+                getAcceptContactTags(),
         		content, BOUNDARY_TAG);
 
     	// Test if there is a subject

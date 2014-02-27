@@ -78,6 +78,9 @@ public abstract class GroupChatSession extends ChatSession {
 		// Set feature tags
         setFeatureTags(ChatUtils.getSupportedFeatureTagsForGroupChat());
 		
+        // Set Accept-Contact header
+        setAcceptContactTags(ChatUtils.getAcceptContactTagsForGroupChat());
+
 		// Set accept-types
 		String acceptTypes = CpimMessage.MIME_TYPE;	
         setAcceptTypes(acceptTypes);

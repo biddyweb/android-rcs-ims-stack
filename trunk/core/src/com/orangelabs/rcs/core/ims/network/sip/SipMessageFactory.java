@@ -84,7 +84,7 @@ public class SipMessageFactory {
 	 * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createRegister(SipDialogPath dialog, List<String> featureTags, int expirePeriod, String instanceId) throws SipException {
+    public static SipRequest createRegister(SipDialogPath dialog, String[] featureTags, int expirePeriod, String instanceId) throws SipException {
 		try {
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -444,12 +444,26 @@ public class SipMessageFactory {
      * @throws SipException
      */
     public static SipRequest createInvite(SipDialogPath dialog,	String[] featureTags, String sdp) throws SipException {
+        return createInvite(dialog, featureTags, featureTags, sdp);
+    }
+
+    /**
+     * Create a SIP INVITE request
+     *
+     * @param dialog SIP dialog path
+     * @param featureTags Feature tags
+     * @param acceptTags Feature tags
+     * @param sdp SDP part
+	 * @return SIP request
+     * @throws SipException
+     */
+    public static SipRequest createInvite(SipDialogPath dialog,	String[] featureTags, String[] acceptTags, String sdp) throws SipException {
 		try {
 			// Create the content type
 			ContentTypeHeader contentType = SipUtils.HEADER_FACTORY.createContentTypeHeader("application", "sdp");
 			
 	        // Create the request
-			return createInvite(dialog, featureTags, sdp, contentType);
+			return createInvite(dialog, featureTags, acceptTags, sdp, contentType);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -464,12 +478,32 @@ public class SipMessageFactory {
      * @param dialog SIP dialog path
      * @param featureTags Feature tags
      * @param multipart Multipart
-     * @param boudary Boundary tag
+     * @param boundary Boundary tag
 	 * @return SIP request
      * @throws SipException
      */
     public static SipRequest createMultipartInvite(SipDialogPath dialog,
     		String[] featureTags,
+			String multipart,
+			String boundary)
+            throws SipException {
+        return createMultipartInvite(dialog, featureTags, featureTags, multipart, boundary);
+    }
+
+    /**
+     * Create a SIP INVITE request
+     *
+     * @param dialog SIP dialog path
+     * @param featureTags Feature tags
+     * @param acceptTags Feature tags
+     * @param multipart Multipart
+     * @param boundary Boundary tag
+	 * @return SIP request
+     * @throws SipException
+     */
+    public static SipRequest createMultipartInvite(SipDialogPath dialog,
+    		String[] featureTags,
+            String[] acceptTags,
 			String multipart,
 			String boundary)
             throws SipException {
@@ -479,7 +513,7 @@ public class SipMessageFactory {
 			contentType.setParameter("boundary", boundary);
 			
 	        // Create the request
-			return createInvite(dialog, featureTags, multipart, contentType);
+			return createInvite(dialog, featureTags, acceptTags, multipart, contentType);
 		} catch(Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message", e);
@@ -500,6 +534,26 @@ public class SipMessageFactory {
      */
     public static SipRequest createInvite(SipDialogPath dialog,
     		String[] featureTags,
+			String content,
+			ContentTypeHeader contentType)
+            throws SipException {
+        return createInvite(dialog, featureTags, featureTags, content, contentType);
+    }
+
+    /**
+     * Create a SIP INVITE request
+     *
+     * @param dialog SIP dialog path
+     * @param featureTags Feature tags
+     * @param acceptTags Feature tags
+     * @param content Content
+     * @param contentType Content type
+	 * @return SIP request
+     * @throws SipException
+     */
+    public static SipRequest createInvite(SipDialogPath dialog,
+    		String[] featureTags,
+            String[] acceptTags,
 			String content,
 			ContentTypeHeader contentType)
             throws SipException {
@@ -542,7 +596,7 @@ public class SipMessageFactory {
 	        invite.addHeader(dialog.getSipStack().getContact());
 	
 	        // Set feature tags
-	        SipUtils.setFeatureTags(invite, featureTags);
+	        SipUtils.setFeatureTags(invite, featureTags, acceptTags);
 	     
             // Set Allow header
 	        SipUtils.buildAllowHeader(invite);
@@ -619,17 +673,31 @@ public class SipMessageFactory {
 			throw new SipException("Can't create SIP INVITE message");
 		}
     }
-    
+
+    /**
+     * Create a 200 OK response for INVITE request
+     *
+     * @param dialog SIP dialog path
+     * @param featureTags Feature tags
+     * @param sdp SDP part
+     * @return SIP response
+     * @throws SipException
+     */
+    public static SipResponse create200OkInviteResponse(SipDialogPath dialog, String[] featureTags, String sdp) throws SipException {
+        return create200OkInviteResponse(dialog, featureTags, featureTags, sdp);
+    }
+
     /**
 	 * Create a 200 OK response for INVITE request
 	 * 
      * @param dialog SIP dialog path
      * @param featureTags Feature tags
+     * @param acceptContactTags Feature tags
 	 * @param sdp SDP part
 	 * @return SIP response
 	 * @throws SipException
 	 */
-	public static SipResponse create200OkInviteResponse(SipDialogPath dialog, String[] featureTags, String sdp) throws SipException {
+	public static SipResponse create200OkInviteResponse(SipDialogPath dialog, String[] featureTags, String[] acceptContactTags, String sdp) throws SipException {
 		try {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)dialog.getInvite().getStackMessage());
@@ -642,7 +710,7 @@ public class SipMessageFactory {
 	        response.addHeader(dialog.getSipStack().getContact());
 	
 	        // Set feature tags
-	        SipUtils.setFeatureTags(response, featureTags);
+ 	        SipUtils.setFeatureTags(response, featureTags, acceptContactTags);
 
             // Set Allow header
 	        SipUtils.buildAllowHeader(response);
@@ -881,7 +949,7 @@ public class SipMessageFactory {
      * @return SIP request
 	 * @throws SipException
 	 */
-    public static SipRequest createOptions(SipDialogPath dialog, List<String> featureTags) throws SipException {
+    public static SipRequest createOptions(SipDialogPath dialog, String[] featureTags) throws SipException {
 		try {
 	        // Set request line header
 	        URI requestURI = SipUtils.ADDR_FACTORY.createURI(dialog.getTarget());
@@ -962,7 +1030,7 @@ public class SipMessageFactory {
 	 * @return SIP response
 	 * @throws SipException
 	 */
-	public static SipResponse create200OkOptionsResponse(SipRequest options, ContactHeader contact, List<String> featureTags, String sdp) throws SipException {
+	public static SipResponse create200OkOptionsResponse(SipRequest options, ContactHeader contact, String[] featureTags, String sdp) throws SipException {
 		try {
 			// Create the response
 			Response response = SipUtils.MSG_FACTORY.createResponse(200, (Request)options.getStackMessage());
