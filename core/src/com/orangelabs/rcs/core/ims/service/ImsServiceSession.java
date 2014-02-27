@@ -1138,35 +1138,7 @@ public abstract class ImsServiceSession extends Thread {
      *
      * @param error ImsServiceError
      */
-    public abstract void handleError(ImsServiceError error);
-    
-    /**
-     * Handle ReInvite Sip Response
-     *
-     * @param response Sip response to reInvite
-     * @param int code response code
-     * @param reInvite reInvite SIP request
-     */
-    public void handleReInviteResponse(int  code, SipResponse response, int requestType) {   	
-    }
-    
-    /**
-     * Handle User Answer in Response to Session Update notification 
-     *
-     * @param int code response code
-     * @param reInvite reInvite SIP request
-     */
-    public void handleReInviteUserAnswer(int  code, int requestType) {   	
-    }
-    
-    /**
-     * Handle ACK sent in Response to 200Ok ReInvite 
-     *
-     * @param int code response code
-     * @param reInvite reInvite SIP request
-     */
-    public void handleReInviteAck(int  code, int requestType) {   	
-    }
+    public abstract void handleError(ImsServiceError error);    
     
     /**
      * Handle 407 Proxy Authent error ReInvite Response
@@ -1174,12 +1146,7 @@ public abstract class ImsServiceSession extends Thread {
      * @param response reInvite SIP response
      * @param int requestType  service context of reInvite 
      */
-    public void handleReInvite407ProxyAuthent(SipResponse response, int serviceContext){	
+    public void handleReInvite407ProxyAuthent(SipResponse response, UpdateSessionManagerListener sessionManagerObj){	
     }
- 
-    
-    public String buildReInviteSdpResponse(SipRequest ReInvite, int serviceContext){
-    	return null;
-    }
-    
+  
 }

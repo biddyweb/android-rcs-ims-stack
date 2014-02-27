@@ -12,6 +12,9 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.ImsSessionBasedServiceError;
+import com.orangelabs.rcs.core.ims.service.UpdateSessionManagerListener;
+import com.orangelabs.rcs.core.ims.service.ipcall.addVideo.AddVideoManager;
+import com.orangelabs.rcs.core.ims.service.ipcall.hold.HoldManager;
 import com.orangelabs.rcs.service.api.client.media.IAudioEventListener;
 import com.orangelabs.rcs.service.api.client.media.IAudioPlayer;
 import com.orangelabs.rcs.service.api.client.media.IAudioRenderer;
@@ -28,14 +31,6 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * @author opob7414
  */
 public abstract class IPCallStreamingSession extends ImsServiceSession {
-
-	/**
-	 * Constant values for session update request type
-	 */
-	public final static int ADD_VIDEO = 0;
-	public final static int REMOVE_VIDEO = 1;
-	public final static int SET_ON_HOLD = 2;
-	public final static int SET_ON_RESUME = 3;
 
 	/**
 	 * Live video content to be shared
@@ -75,18 +70,18 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	/**
 	 * Add Video Manager
 	 */
-	private AddVideoManager addVideoMgr;
+	public AddVideoManager addVideoMgr;
 	
 	/**
 	 * Selected Audio Codec
 	 */
-	protected AudioCodec selectedAudioCodec = null;
+	public AudioCodec selectedAudioCodec = null;
 	
 	
 	/**
 	 * Selected Video Codec
 	 */
-	protected VideoCodec selectedVideoCodec = null;
+	public VideoCodec selectedVideoCodec = null;
 
 	/**
 	 * The logger
@@ -106,8 +101,9 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 
 		this.videoContent = videoContent;
 		this.audioContent = audioContent;
-		HoldManager.setState(HoldManager.IDLE) ;
-		AddVideoManager.setState(AddVideoManager.IDLE);
+		this.holdMgr = new HoldManager(this) ;
+		this.addVideoMgr = new AddVideoManager(this);
+
 	}
 
 	/**
@@ -268,24 +264,21 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			int requestType = -1;
 			
 			// Analyze sdp to dispatch according to sdp content
-			if (isTagPresent(content, "a=sendonly")){ // Set On Hold "SendOnly"
-					if ((AddVideoManager.getState()==AddVideoManager.IDLE)&&(HoldManager.getState()==HoldManager.IDLE)) {
-						requestType = 3;
-					}	
-			} else if (isTagPresent(content, "a=inactive")) {// Set On Hold "Inactive"
-					if ((AddVideoManager.getState()==AddVideoManager.IDLE)&&(HoldManager.getState()==HoldManager.IDLE)) {
-						requestType = 2;
-					}
-			} else if  (isTagPresent(content, "a=sendrcv")&&(getVideoContent()==null)&&(isTagPresent(content, "m=video"))){
-				if ((AddVideoManager.getState()==AddVideoManager.IDLE)&&(HoldManager.getState()==HoldManager.IDLE)) {
+			if (isTagPresent(content, "a=inactive")) {// Set On Hold "Inactive"
+				if ((addVideoMgr.getState() == AddVideoManager.stateValue.IDLE)
+						&& (holdMgr.getState() == HoldManager.stateValue.IDLE)) {
+					requestType = 2;
+				}
+			} else if (isTagPresent(content, "a=sendrcv")&&(getVideoContent()==null)&&(isTagPresent(content, "m=video"))){
+				if ((addVideoMgr.getState()==AddVideoManager.stateValue.IDLE)&&(holdMgr.getState()==HoldManager.stateValue.IDLE)) {
 					requestType = 0; // Add Video	
 				} 
 			} else if  (isTagPresent(content, "a=sendrcv")&&(getVideoContent()!=null)&&(!isTagPresent(content, "m=video"))){
-				 if ((AddVideoManager.getState()==AddVideoManager.IDLE)&&((HoldManager.getState()==HoldManager.IDLE)||(HoldManager.getState()==HoldManager.HOLD)||(HoldManager.getState()==HoldManager.REMOTE_HOLD))) {
+				 if ((addVideoMgr.getState()==AddVideoManager.stateValue.IDLE)&&((holdMgr.getState()==HoldManager.stateValue.IDLE)||(holdMgr.getState()==HoldManager.stateValue.HOLD)||(holdMgr.getState()==HoldManager.stateValue.REMOTE_HOLD))) {
 					requestType = 1;// Remove Video
 				}
 			} else if (isTagPresent(content, "a=sendrcv")) {				
-				if ((AddVideoManager.getState()==AddVideoManager.IDLE)&&(HoldManager.getState() == HoldManager.REMOTE_HOLD)){
+				if ((addVideoMgr.getState()==AddVideoManager.stateValue.IDLE)&&(holdMgr.getState() == HoldManager.stateValue.REMOTE_HOLD)){
 					requestType = 5;// Set on Resume
 				}			
 			} else {
@@ -300,10 +293,14 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 					
 
 			switch (requestType) {
+			case (-1): {// unable to process request -  send error to remote client
+				sendErrorResponse(reInvite, getDialogPath().getLocalTag(), 603);
+			}
+			
 			case (0): { // Case Add Video
 
 				// instantiate Manager and requests addVideo
-				addVideoMgr = new RemoteAddVideo(this);
+//				addVideoMgr = new RemoteAddVideo(this);
 				LiveVideoContent videocontent = addVideoMgr.addVideo(reInvite);
 
 				// get video Encoding , video Width and video Height
@@ -326,7 +323,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 				break;
 			case (1): { // Case Remove Video
 				// instantiate Manager and requests removeVideo
-				addVideoMgr = new RemoteAddVideo(this);				
+//				addVideoMgr = new RemoteAddVideo(this);				
 				addVideoMgr.removeVideo(reInvite);
 
 				// Notify listeners
@@ -340,9 +337,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			}
 				break;
 			case (2): { // Case Set "Inactive" On Hold
-				// instantiate Hold Manager
-				holdMgr = new RemoteHoldInactive(this);
-
 				// launch callHold
 				holdMgr.setCallHold(true, reInvite);
 
@@ -356,9 +350,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			}
 				break;
 			case (5): { // Case Set On Resume
-				// instantiate Hold Manager
-				holdMgr = new RemoteHoldInactive(this);
-
 				// launch callHold
 				holdMgr.setCallHold(false, reInvite);
 
@@ -387,8 +378,8 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			logger.info("Add video");
 		}
 
-		if ((getVideoContent()== null)&&(AddVideoManager.getState() == AddVideoManager.IDLE)&&(HoldManager.getState() == HoldManager.IDLE)) {			
-			addVideoMgr = new LocalAddVideo(this);
+		if ((getVideoContent()== null)&&(addVideoMgr.getState() == AddVideoManager.stateValue.IDLE)&&(holdMgr.getState() == HoldManager.stateValue.IDLE)) {			
+//			addVideoMgr = new LocalAddVideo(this);
 
 			// launch addVideo
 			try {
@@ -423,11 +414,16 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	public void removeVideo() {
 		if (logger.isActivated()) {
 			logger.info("Remove video");
+			logger.info("addVideoMgr.getState() ="+addVideoMgr.getState());
+			logger.info("getVideoContent() ="+getVideoContent());
 		}
 		
-		if ((getVideoContent()!= null)&&(AddVideoManager.getState()== AddVideoManager.IDLE)&&((HoldManager.getState() == HoldManager.IDLE)||(HoldManager.getState() == HoldManager.HOLD)||(HoldManager.getState() == HoldManager.REMOTE_HOLD))){
+		if ((getVideoContent()!= null)
+				&&(addVideoMgr.getState()== AddVideoManager.stateValue.IDLE)
+				&&((holdMgr.getState() == HoldManager.stateValue.IDLE)||(holdMgr.getState() == HoldManager.stateValue.HOLD)
+				||(holdMgr.getState() == HoldManager.stateValue.REMOTE_HOLD))){
 			// instantiate Add Video Manager and requests add video
-			addVideoMgr = new LocalAddVideo(this);
+//			addVideoMgr = new LocalAddVideo(this);
 
 			// launch removeVideo
 			try {
@@ -440,7 +436,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 				if (!isInterrupted()) {
 					for (int i = 0; i < getListeners().size(); i++) {
 						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleAddVideoAborted(IPCallError.UNEXPECTED_EXCEPTION);
+								.handleRemoveVideoAborted(IPCallError.UNEXPECTED_EXCEPTION);
 					}
 				}
 			}
@@ -466,10 +462,9 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			logger.info("setOnHold");
 		}
 		
-		if (((callHoldAction)&&(AddVideoManager.getState()==AddVideoManager.IDLE)&&(HoldManager.getState()==HoldManager.IDLE))
-				||((!callHoldAction)&& (AddVideoManager.getState() == AddVideoManager.IDLE)&&(HoldManager.getState() == HoldManager.HOLD))){
-			// instanciate Hold Manager
-			holdMgr = new LocalHoldInactive(this);
+		if ((addVideoMgr.getState()==AddVideoManager.stateValue.IDLE) 
+				&& (((callHoldAction)&&(holdMgr.getState()==HoldManager.stateValue.IDLE))
+				||((!callHoldAction)&&(holdMgr.getState() == HoldManager.stateValue.HOLD)))){
 			
 			// launch callHold/callResume (depending on boolean value)
 			try {
@@ -502,263 +497,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 					}					
 				}
 			}
-		}
-	}
-	
-	
-	/**
-	 * Handle Sip Response to ReInvite / originating side 
-	 * 
-	 * @param int code response code
-	 * @param response
-	 *            Sip response to sent ReInvite
-	 * @param requestType
-	 *            Type type of request (addVideo/RemoveVideo/Set on Hold/Set on
-	 *            Resume)
-	 */
-	public void handleReInviteResponse(int code, SipResponse response,
-			int requestType) {
-		if (logger.isActivated()) {
-			logger.info("handleReInviteResponse: " + code);
-		}
-
-		// case Add video
-		if (requestType == IPCallStreamingSession.ADD_VIDEO) {
-			if (code == 200) { // 200 OK response
-				//prepare video session
-				addVideoMgr.prepareVideoSession();
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleAddVideoAccepted();
-					}
-				}
-				//start video session
-				addVideoMgr.startVideoSession();
-				
-			} else if ((code == ImsServiceSession.INVITATION_REJECTED)
-					|| (code == ImsServiceSession.TERMINATION_BY_TIMEOUT)) {	
-
-				//reset add video manager - set video content to null
-				AddVideoManager.setState(AddVideoManager.IDLE);
-				setVideoContent(null);	
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleAddVideoAborted(code);
-					}
-				}	
-			}
-			
-			// release add video manager
-			addVideoMgr = null;
-			
-		// case Remove Video
-		} else if (requestType == IPCallStreamingSession.REMOVE_VIDEO) {
-			if (code == 200) { // 200 OK response
-				// close video media session
-				addVideoMgr.closeVideoSession();				
-
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleRemoveVideoAccepted();
-					}
-				}
-			} else if (code == ImsServiceSession.TERMINATION_BY_TIMEOUT) { // No answer or 
-																		//408 TimeOut response
-				//reset add video manager state to "idle"
-				AddVideoManager.setState(AddVideoManager.IDLE);
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleRemoveVideoAborted(code);
-					}
-				}
-			}
-			// release add video manager
-			addVideoMgr = null;
-			
-		// case Set On Hold
-		} else if (requestType == IPCallStreamingSession.SET_ON_HOLD) {
-			if (code == 200) { // 200 OK response
-				// prepare media session
-				holdMgr.holdMediaSession();
-
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleCallHoldAccepted();
-					}
-				}
-			} else if (code == ImsServiceSession.TERMINATION_BY_TIMEOUT) { //No answer or
-																		//408 TimeOut response
-				//reset hold manager state to "idle"
-				HoldManager.setState(HoldManager.IDLE);
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleCallHoldAborted(code);
-					}
-				}
-				
-			}
-			// release hold manager
-			holdMgr = null;
-			
-		//case Set On Resume
-		} else if (requestType == IPCallStreamingSession.SET_ON_RESUME) {
-			if (code == 200) { // 200 OK response
-				// prepare media session
-				holdMgr.resumeMediaSession();
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleCallResumeAccepted();
-					}
-				}
-			} else if (code == ImsServiceSession.TERMINATION_BY_TIMEOUT) { // No answer or
-																		//408 TimeOut response
-				//reset hold manager state to "Hold"
-				HoldManager.setState(HoldManager.HOLD);
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleCallResumeAborted(code);
-					}
-				}
-			}
-			
-			// release hold manager
-			holdMgr = null;
-		}
-	}
-	
-
-	/**
-	 * Handle User Response to ReInvite/ terminating side
-	 * 
-	 * @param int code response code
-	 * @param requestType
-	 *            Type type of request (addVideo/RemoveVideo/Set on Hold/Set on
-	 *            Resume)
-	 */
-	public void handleReInviteUserAnswer(int code, int requestType) {
-		if (logger.isActivated()) {
-			logger.info("handleReInviteUserAnswer: " + code);
-		}
-
-		// case Add video
-		if (requestType == IPCallStreamingSession.ADD_VIDEO) {// Invitation accepted			
-			if (code == ImsServiceSession.INVITATION_ACCEPTED) {
-				// prepare Video media session
-				addVideoMgr.prepareVideoSession();
-	
-			} else if ((code == ImsServiceSession.INVITATION_NOT_ANSWERED)||(code == ImsServiceSession.INVITATION_REJECTED)) {// Invitation declined or not answered
-				//reset add video manager - set video content to null
-				AddVideoManager.setState(AddVideoManager.IDLE);
-				setVideoContent(null);				
-				
-				// Notify listeners
-				if (!isInterrupted()) {
-					for (int i = 0; i < getListeners().size(); i++) {
-						((IPCallStreamingSessionListener) getListeners().get(i))
-								.handleAddVideoAborted(code);
-					}
-				}
-			}
-		}
-	}
-	
-	
-	/**
-	 * Handle Sip Response to ReInvite ACK / terminating side
-	 * 
-	 * @param int code response code
-	 * @param requestType
-	 *            Type type of request (addVideo/RemoveVideo/Set on Hold/Set on
-	 *            Resume)
-	 */
-	public void handleReInviteAck(int code, int requestType) {
-		if (logger.isActivated()) {
-			logger.info("handleReInviteAckResponse: " + code);
-		}
-
-		// case Add video
-		if ((requestType == IPCallStreamingSession.ADD_VIDEO) && (code == 200)) {
-			// start Video media session
-			addVideoMgr.startVideoSession();
-
-			// Notify listeners
-			if (!isInterrupted()) {
-				for (int i = 0; i < getListeners().size(); i++) {
-					((IPCallStreamingSessionListener) getListeners().get(i))
-							.handleAddVideoAccepted();
-				}
-			}
-			// release add video manager
-			addVideoMgr  = null;
-						
-		// case Remove Video	
-		} else if ((requestType == IPCallStreamingSession.REMOVE_VIDEO)&& (code == 200)) {						
-			// close video media session
-			addVideoMgr.closeVideoSession();
-
-			// Notify listeners
-			if (!isInterrupted()) {
-				for (int i = 0; i < getListeners().size(); i++) {
-					((IPCallStreamingSessionListener) getListeners().get(i))
-							.handleRemoveVideoAccepted();
-				}
-			}
-			// release add video manager
-			addVideoMgr  = null;
-			
-		// case Set On Hold
-		} else if ((requestType == IPCallStreamingSession.SET_ON_HOLD)&& (code == 200)) {						
-			//prepare media session
-			holdMgr.holdMediaSession();
-			
-			// Notify listeners
-			if (!isInterrupted()) {
-				for (int i = 0; i < getListeners().size(); i++) {
-					((IPCallStreamingSessionListener) getListeners().get(i))
-							.handleCallHoldAccepted();
-				}
-			}
-			// release hold manager
-			holdMgr = null;
-			
-		// case Set On Resume	
-		} else if ((requestType == IPCallStreamingSession.SET_ON_RESUME)
-				&& (code == 200)) {// case On Resume
-			// prepare media session
-			holdMgr.resumeMediaSession();
-			
-			// Notify listeners
-			if (!isInterrupted()) {
-				for (int i = 0; i < getListeners().size(); i++) {
-					((IPCallStreamingSessionListener) getListeners().get(i))
-							.handleCallResumeAccepted();
-				}
-			}
-			
-			// release hold manager
-			holdMgr = null;
 		}
 	}
 	
@@ -801,10 +539,8 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	 * @param requestType type of request (addVideo/RemoveVideo/Set on Hold/Set on
 	 *            Resume)            
 	 */
-	public void handleReInvite407ProxyAuthent(SipResponse response,
-			int requestType) {
-
-		// // Set the remote tag
+	public void handleReInvite407ProxyAuthent(SipResponse response,	UpdateSessionManagerListener sessionManagerObj) {
+		// Set the remote tag
 		getDialogPath().setRemoteTag(response.getToTag());
 
 		// Update the authentication agent
@@ -834,8 +570,8 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 							.getMessage()));
 		}
 		
-		// send reInvite request
-		getUpdateSessionManager().sendReInvite(reInvite, requestType);
+		// retry to send reInvite request
+		getUpdateSessionManager().sendReInvite(reInvite, sessionManagerObj);
 	}
 
 	
@@ -883,27 +619,6 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 			return false;
 		}
 	}
-	
-	
-	/**
-	 * select sdp builder method (to build sdp response) according to serviceContext - build and return sdp
-	 * 
-	 * @param reInvite
-	 *            reInvite received request
-	 * @param serviceContext
-	 *            context of service (Add Video, Remove Video ...)
-	 * @return sdp 
-	 */
-	public String buildReInviteSdpResponse(SipRequest reInvite, int serviceContext) {
-		String localSdp = "";
-		if (serviceContext == IPCallStreamingSession.ADD_VIDEO) {
-				localSdp = ((RemoteAddVideo) addVideoMgr).buildAddVideoSdpResponse(reInvite);
-		}
-
-		return localSdp;
-	}
-
-	
 	
 	//******************************************************************************
 	//******************************************************************************
@@ -992,7 +707,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
 	/**
 	 * Audio player event listener
 	 */
-	protected class AudioPlayerEventListener extends IAudioEventListener.Stub {
+	public class AudioPlayerEventListener extends IAudioEventListener.Stub {
 		/**
 		 * Streaming session
 		 */
@@ -1086,7 +801,7 @@ public abstract class IPCallStreamingSession extends ImsServiceSession {
     /**
      * Video player event listener
      */
-    protected class VideoPlayerEventListener extends IVideoEventListener.Stub {
+    public class VideoPlayerEventListener extends IVideoEventListener.Stub {
         /**
          * Streaming session
          */

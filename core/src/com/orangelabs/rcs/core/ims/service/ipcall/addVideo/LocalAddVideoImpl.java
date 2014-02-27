@@ -1,32 +1,29 @@
-package com.orangelabs.rcs.core.ims.service.ipcall;
+package com.orangelabs.rcs.core.ims.service.ipcall.addVideo;
 
-import java.util.Vector;
 
 import android.os.RemoteException;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.LiveVideoContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
-import com.orangelabs.rcs.core.ims.protocol.sdp.MediaDescription;
-import com.orangelabs.rcs.core.ims.protocol.sdp.SdpParser;
 import com.orangelabs.rcs.core.ims.protocol.sdp.SdpUtils;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
-import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.richcall.video.SdpOrientationExtension;
-import com.orangelabs.rcs.core.ims.service.richcall.video.VideoCodecManager;
+import com.orangelabs.rcs.core.ims.service.ipcall.AudioSdpBuilder;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallError;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallService;
+import com.orangelabs.rcs.core.ims.service.ipcall.IPCallStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoSdpBuilder;
 import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.media.IVideoRenderer;
-import com.orangelabs.rcs.service.api.client.media.video.VideoCodec;
-import com.orangelabs.rcs.utils.logger.Logger;
 
-public class LocalAddVideo extends AddVideoManager {
+public class LocalAddVideoImpl extends AddVideoImpl {
 
 	/**
 	 * Constructor
 	 */
-	public LocalAddVideo(IPCallStreamingSession session) {
-		super(session);
+	public LocalAddVideoImpl(IPCallStreamingSession session, AddVideoManager addVideoMngr) {
+		super(session, addVideoMngr);
+		logger.debug("LocalAddVideo() - addVideoMngr ="+addVideoMngr);
 	}
 	
 	
@@ -42,7 +39,7 @@ public class LocalAddVideo extends AddVideoManager {
 			logger.info("addVideo() - LocalAddVideo");
 		}
 		synchronized (this) {
-			state = AddVideoManager.ADD_VIDEO_INPROGRESS;
+//			AddVideoManager.state = AddVideoManager.ADD_VIDEO_INPROGRESS;
 
 			// Set video player/render
 			session.setVideoRenderer(videoRenderer);
@@ -71,7 +68,7 @@ public class LocalAddVideo extends AddVideoManager {
 				
 				// Send re-INVITE
 				session.getUpdateSessionManager().sendReInvite(reInvite,
-						IPCallStreamingSession.ADD_VIDEO);
+						addVideoMngr);
 			}
 
 			
@@ -89,7 +86,7 @@ public class LocalAddVideo extends AddVideoManager {
 		}
 
 		synchronized (this) {
-			state = AddVideoManager.REMOVE_VIDEO_INPROGRESS;
+//			state = AddVideoManager.REMOVE_VIDEO_INPROGRESS;
 
 			// Build SDP
 			String sdp = buildRemoveVideoSdpProposal();
@@ -108,9 +105,8 @@ public class LocalAddVideo extends AddVideoManager {
 
 				// Send re-INVITE
 				session.getUpdateSessionManager().sendReInvite(reInvite,
-						IPCallStreamingSession.REMOVE_VIDEO);
-			}
-			
+						addVideoMngr);
+			}			
 		}
 	}
 	
@@ -205,14 +201,19 @@ public class LocalAddVideo extends AddVideoManager {
 	public LiveVideoContent addVideo(SipRequest reInvite) {
 		return null;
 		// Not used in Local Add Video Manager
-
 	}
 
 
 	@Override
 	public void removeVideo(SipRequest reInvite) {
-		// Not used in Local Add Video Manager
-		
+		// Not used in Local Add Video Manager		
+	}
+
+
+	@Override
+	public String buildAddVideoSdpResponse(SipRequest reInvite) {
+		// Not used in Local Add Video Manager		
+		return null;
 	}
 }
 		
