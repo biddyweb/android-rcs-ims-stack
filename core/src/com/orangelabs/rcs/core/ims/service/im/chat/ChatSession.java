@@ -111,6 +111,11 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
     private List<String> featureTags = new ArrayList<String>();
     
     /**
+     * Feature tags
+     */
+    private List<String> acceptContactTags = new ArrayList<String>();
+
+    /**
      * Accept types
      */
     private String acceptTypes;
@@ -163,10 +168,19 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @return Feature tags
 	 */
 	public String[] getFeatureTags() {
-		return featureTags.toArray(new String[0]);
+		return featureTags.toArray(new String[featureTags.size()]);
 	}
 
 	/**
+     * Get Accept-Contact tags
+     *
+     * @return Feature tags
+     */
+    public String[] getAcceptContactTags() {
+        return acceptContactTags.toArray(new String[acceptContactTags.size()]);
+    }
+
+    /**
 	 * Set feature tags
 	 * 
 	 * @param tags Feature tags
@@ -176,6 +190,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	}
 
 	/**
+     * Set Accept-Contact tags
+     *
+     * @param tags Feature tags
+     */
+    public void setAcceptContactTags(List<String> tags) {
+        this.acceptContactTags = tags;
+    }
+
+    /**
 	 * Get accept types
 	 * 
 	 * @return Accept types
@@ -333,7 +356,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Set geolocation supported by remote
 	 * 
-	 * @param suppported Supported
+	 * @param supported Supported
 	 */
 	public void setGeolocSupportedByRemote(boolean supported) {
 		this.geolocSupportedByRemote = supported;
@@ -351,7 +374,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	/**
 	 * Set file transfer supported by remote
 	 * 
-	 * @param suppported Supported
+	 * @param supported Supported
 	 */
 	public void setFileTransferSupportedByRemote(boolean supported) {
 		this.ftSupportedByRemote = supported;
@@ -666,7 +689,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param contact Contact
 	 * @param txt Text message
 	 * @param msgId Message Id
-	 * @param flag indicating that an IMDN "displayed" is requested for this message
+	 * @param imdnDisplayedRequested indicating that an IMDN "displayed" is requested for this message
 	 * @param date Date of the message
 	 * @param displayName the display name
 	 */
@@ -711,7 +734,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	 * @param contact Contact
 	 * @param geolocDoc Geoloc document
 	 * @param msgId Message Id
-	 * @param flag Flag indicating that an IMDN "displayed" is requested for this message
+	 * @param imdnDisplayedRequested Flag indicating that an IMDN "displayed" is requested for this message
 	 * @param date Date of the message
 	 * @param pseudo the display name
 	 */

@@ -156,6 +156,7 @@ public class OriginatingAdhocGroupChatSession extends GroupChatSession {
 	private SipRequest createInviteRequest(String content) throws SipException {
 		SipRequest invite = SipMessageFactory.createMultipartInvite(getDialogPath(), 
                 getFeatureTags(), 
+                getAcceptContactTags(),
                 content,
                 BOUNDARY_TAG);
 

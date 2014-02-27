@@ -51,7 +51,7 @@ public class OptionsRequestTask implements Runnable {
     /**
      * Feature tags
      */
-    private List<String> featureTags;
+    private String[] featureTags;
     
     /**
      * Dialog path
@@ -75,7 +75,7 @@ public class OptionsRequestTask implements Runnable {
    	 * @param contact Remote contact
    	 * @param featureTags Feature tags
 	 */
-	public OptionsRequestTask(ImsModule parent, String contact, List<String> featureTags) {
+	public OptionsRequestTask(ImsModule parent, String contact, String[] featureTags) {
         this.imsModule = parent;
         this.contact = contact;
         this.featureTags = featureTags;

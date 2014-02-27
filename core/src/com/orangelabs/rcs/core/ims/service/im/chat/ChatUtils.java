@@ -35,6 +35,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.text.TextUtils;
 
 import com.orangelabs.rcs.core.ims.network.sip.FeatureTags;
 import com.orangelabs.rcs.core.ims.network.sip.Multipart;
@@ -91,27 +92,35 @@ public class ChatUtils {
 	public static List<String> getSupportedFeatureTagsForGroupChat() {
 		List<String> tags = new ArrayList<String>(); 
 		tags.add(FeatureTags.FEATURE_OMA_IM);
-		
-		String additionalRcseTags = "";
+
+        List<String> additionalRcseTags = new ArrayList<String>();
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH);
         }
         if (RcsSettings.getInstance().isFileTransferSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT);
         }
         if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT_HTTP);
         }
         if (RcsSettings.getInstance().isFileTransferStoreForwardSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_SF;
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT_SF);
         }
-        if (additionalRcseTags.length() > 0) {
-        	if (additionalRcseTags.endsWith(",")) {
-        		additionalRcseTags = additionalRcseTags.substring(0, additionalRcseTags.length()-1);
-        	}
-        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + additionalRcseTags + "\"");
+        if (!additionalRcseTags.isEmpty()) {
+            tags.add(FeatureTags.FEATURE_RCSE + "=\"" + TextUtils.join(",", additionalRcseTags) + "\"");
         }
-        
+
+        return tags;
+    }
+
+    /**
+     * Get Accept-Contact tags for a group chat
+     *
+     * @return List of tags
+     */
+    public static List<String> getAcceptContactTagsForGroupChat() {
+        List<String> tags = new ArrayList<String>();
+        tags.add(FeatureTags.FEATURE_OMA_IM);
         return tags;
 	}	
 	
@@ -123,25 +132,22 @@ public class ChatUtils {
 	public static List<String> getSupportedFeatureTagsForChat() {
 		List<String> tags = new ArrayList<String>(); 
 		tags.add(FeatureTags.FEATURE_OMA_IM);
-		
-		String additionalRcseTags = "";
+
+        List<String> additionalRcseTags = new ArrayList<String>();
 		if (RcsSettings.getInstance().isGeoLocationPushSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_GEOLOCATION_PUSH);
         }
         if (RcsSettings.getInstance().isFileTransferSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT);
         }
         if (RcsSettings.getInstance().isFileTransferHttpSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_HTTP + ",";
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT_HTTP);
         }
         if (RcsSettings.getInstance().isFileTransferStoreForwardSupported()) {
-        	additionalRcseTags += FeatureTags.FEATURE_RCSE_FT_SF;
+        	additionalRcseTags.add(FeatureTags.FEATURE_RCSE_FT_SF);
         }
-        if (additionalRcseTags.length() > 0) {
-        	if (additionalRcseTags.endsWith(",")) {
-        		additionalRcseTags = additionalRcseTags.substring(0, additionalRcseTags.length()-1);
-        	}
-        	tags.add(FeatureTags.FEATURE_RCSE + "=\"" + additionalRcseTags + "\"");
+        if (!additionalRcseTags.isEmpty()) {
+            tags.add(FeatureTags.FEATURE_RCSE + "=\"" + TextUtils.join(",", additionalRcseTags) + "\"");
         }
 		
 	    return tags;
@@ -728,7 +734,7 @@ public class ChatUtils {
 	 * Create a first message
 	 * 
 	 * @param remote Remote contact
-	 * @param txt Text message
+	 * @param msg Text message
 	 * @param imdn IMDN flag
 	 * @return First message
 	 */

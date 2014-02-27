@@ -131,6 +131,7 @@ public class RejoinGroupChatSession extends GroupChatSession {
 	private SipRequest createInviteRequest(String content) throws SipException {
         SipRequest invite = SipMessageFactory.createInvite(getDialogPath(),
                 getFeatureTags(),
+                getAcceptContactTags(),
         		content);
 
         // Add a contribution ID header

@@ -65,8 +65,12 @@ public abstract class OneOneChatSession extends ChatSession {
 		super(parent, contact, OneOneChatSession.generateOneOneParticipants(contact));
 		
 		// Set feature tags
-        setFeatureTags(ChatUtils.getSupportedFeatureTagsForChat());
+        List<String> featureTags = ChatUtils.getSupportedFeatureTagsForChat();
+        setFeatureTags(featureTags);
 		
+        // Set Accept-Contact header
+        setAcceptContactTags(featureTags);
+
 		// Set accept-types
 		String acceptTypes = CpimMessage.MIME_TYPE + " " + IsComposingInfo.MIME_TYPE;
         setAcceptTypes(acceptTypes);

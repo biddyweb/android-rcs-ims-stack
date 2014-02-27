@@ -193,7 +193,6 @@ public class SipUtils {
     /**
      * Build User-Agent header
      * 
-     * @param Header
      * @throws Exception
      */
 	public static Header buildUserAgentHeader() throws Exception {
@@ -357,7 +356,6 @@ public class SipUtils {
 	 * @param msg SIP message
 	 * @param invert Invert or not the route list
 	 * @return List of route headers as string
-	 * @throws Exception
 	 */
 	public static Vector<String> routeProcessing(SipMessage msg, boolean invert) {
 		Vector<String> result = new Vector<String>(); 
@@ -418,20 +416,20 @@ public class SipUtils {
      * @throws Exception
      */
     public static void setFeatureTags(Message message, String[] tags) throws Exception {
-    	List<String> list = Arrays.asList(tags);  
-    	setFeatureTags(message, list);
+    	setFeatureTags(message, tags, tags);
     }
     
     /**
      * Set feature tags to a message
      * 
      * @param message SIP stack message
-     * @param tags List of tags
+     * @param contactTags List of tags for Contact header
+     * @param acceptContactTags List of tags for Accept-Contact header
      * @throws Exception
      */
-    public static void setFeatureTags(Message message, List<String> tags) throws Exception {
-    	setContactFeatureTags(message, tags);
-    	setAcceptContactFeatureTags(message, tags);
+    public static void setFeatureTags(Message message, String[] contactTags, String[] acceptContactTags) throws Exception {
+        setContactFeatureTags(message, contactTags);
+        setAcceptContactFeatureTags(message, acceptContactTags);
     }
     
     /**
@@ -441,15 +439,15 @@ public class SipUtils {
      * @param tags List of tags
      * @throws Exception
      */
-    public static void setAcceptContactFeatureTags(Message message, List<String> tags) throws Exception {
-    	if ((tags == null) || (tags.size() == 0)) {
+    public static void setAcceptContactFeatureTags(Message message, String[] tags) throws Exception {
+    	if ((tags == null) || (tags.length == 0)) {
     		return;
     	}
     	
     	// Update Contact header
-    	StringBuffer acceptTags = new StringBuffer("*");
-    	for(int i=0; i < tags.size(); i++) {
-    		acceptTags.append(";" + tags.get(i));
+    	StringBuilder acceptTags = new StringBuilder("*");
+    	for(int i=0; i < tags.length; i++) {
+            acceptTags.append(";" + tags[i]);
     	}
     	
     	// Update Accept-Contact header
@@ -464,16 +462,16 @@ public class SipUtils {
      * @param tags List of tags
      * @throws Exception
      */
-    public static void setContactFeatureTags(Message message, List<String> tags) throws Exception {
-        if ((tags == null) || (tags.size() == 0)) {
+    public static void setContactFeatureTags(Message message, String[] tags) throws Exception {
+        if ((tags == null) || (tags.length == 0)) {
             return;
         }
         
         // Update Contact header
         ContactHeader contact = (ContactHeader)message.getHeader(ContactHeader.NAME);
-        for(int i=0; i < tags.size(); i++) {
+        for(int i=0; i < tags.length; i++) {
             if (contact != null) {
-                contact.setParameter(tags.get(i), null);
+                contact.setParameter(tags[i], null);
             }
         }
     }
@@ -508,7 +506,7 @@ public class SipUtils {
     /**
      * Is P-Preferred-Service header set with right value or not in SIP message
      * 
-     * @param msg SIP message
+     * @param message SIP message
      * @param value  P-Preferred-Service header's value to be checked
      * @return Boolean
      */
@@ -576,7 +574,7 @@ public class SipUtils {
     /**
      * Get SIP instance ID of an incoming message
      * 
-	 * @param request SIP message
+	 * @param message SIP message
      * @return ID or null
      */
     public static String getInstanceID(SipMessage message) {
@@ -604,7 +602,7 @@ public class SipUtils {
     /**
      * Get public GRUU
      * 
-	 * @param request SIP message
+	 * @param message SIP message
      * @return GRUU or null
      */
     public static String getPublicGruu(SipMessage message) {
