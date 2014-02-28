@@ -102,6 +102,9 @@ public class GroupChatView extends ChatView {
      */
     public void loadHistory(IChatSession session) {
     	try {
+    		if (logger.isActivated()) {
+    			logger.info( "loadHistory ChatID="+session.getChatID());
+    		}
 	    	EventsLogApi log = new EventsLogApi(this);
 	    	Uri uri = log.getGroupChatLogContentProviderUri();
 	    	Cursor cursor = getContentResolver().query(uri, 

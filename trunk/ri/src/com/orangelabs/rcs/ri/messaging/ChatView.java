@@ -338,28 +338,36 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * 
      * @param cursor Cursor
      */
-    protected void updateView(Cursor cursor) {
+	protected void updateView(Cursor cursor) {
 		int type = cursor.getInt(EventsLogApi.TYPE_COLUMN);
 		String contact = cursor.getString(EventsLogApi.CONTACT_COLUMN);
 		String text = cursor.getString(EventsLogApi.DATA_COLUMN);
-		
-		if ((type == EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE) ||
-			(type == EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE)) {
-			addMessageHistory(MessageItem.OUT, getString(R.string.label_me), text);
-		}  else
-		if ((type == EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE) ||
-				(type == EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE)) {
-			addMessageHistory(MessageItem.IN, contact, text);
-		} else
-		if (type == EventsLogApi.TYPE_OUTGOING_GEOLOC ) {
-			GeolocPush geoloc = GeolocPush.formatStrToGeoloc(text); 
-			addGeolocHistory(MessageItem.OUT, getString(R.string.label_me), geoloc);
-		} else
-		if (type == EventsLogApi.TYPE_INCOMING_GEOLOC) {
-			GeolocPush geoloc = GeolocPush.formatStrToGeoloc(text); 
-			addGeolocHistory(MessageItem.IN, contact, geoloc);
+		if (logger.isActivated()) {
+			logger.debug("updateView text=" + text + " type=" + type);
 		}
-	}    
+		switch (type) {
+		case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
+		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
+			addMessageHistory(MessageItem.OUT, getString(R.string.label_me), text);
+			break;
+		case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
+		case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
+			addMessageHistory(MessageItem.IN, contact, text);
+			break;
+		case EventsLogApi.TYPE_OUTGOING_GEOLOC:
+		case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
+			addGeolocHistory(MessageItem.OUT, getString(R.string.label_me), GeolocPush.formatStrToGeoloc(text));
+			break;
+		case EventsLogApi.TYPE_INCOMING_GEOLOC:
+		case EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC:
+			addGeolocHistory(MessageItem.IN, contact, GeolocPush.formatStrToGeoloc(text));
+			break;
+		default:
+			if (logger.isActivated()) {
+				logger.error("Cannot update view : unknown type=" + type);
+			}
+		}
+	}   
     
     /**
      * Send message
@@ -802,6 +810,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		
 		// New geoloc message received
 		public void handleReceiveGeoloc(final GeolocMessage geoloc) {
+			if (logger.isActivated()) {
+				logger.debug( "handleReceiveGeoloc: "+geoloc.getGeoloc().toString());
+			}
 			if (geoloc.isImdnDisplayedRequested()) {
 				if (!isInBackground) {
 					// We received the message, mark it as displayed if the view is not in background
