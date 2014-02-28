@@ -172,6 +172,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
             		// Accept the invitation
         			transferSession.acceptSession();
             	} catch(Exception e) {
+            		logger.error( "Exception occurred",e);
         			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
             	}
         	}
@@ -190,6 +191,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
             		transferSession.removeSessionListener(fileTransferSessionListener);
         			transferSession.rejectSession();
             	} catch(Exception e) {
+            		logger.error( "Exception occurred",e);
             	}
         	}
         };

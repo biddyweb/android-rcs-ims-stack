@@ -32,11 +32,15 @@ import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.IChatSession;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * 1-1 chat view
  */
 public class OneToOneChatView extends ChatView {
+	
+	private static Logger logger = Logger.getLogger(OneToOneChatView.class.getSimpleName());
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +68,9 @@ public class OneToOneChatView extends ChatView {
      */
     public void loadHistory(IChatSession session) {
     	try {
+			if (logger.isActivated()) {
+				logger.info( "loadHistory sessionID="+session.getSessionID());
+			}
 	    	EventsLogApi log = new EventsLogApi(this);
 	    	Uri uri = log.getOneToOneChatLogContentProviderUri();
 	    	Cursor cursor = getContentResolver().query(uri, 
