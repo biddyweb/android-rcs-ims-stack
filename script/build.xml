@@ -152,6 +152,9 @@
             <fileset
                 dir="${stack.root}"
                 includes="README.txt" />
+			<fileset
+                dir="${stack.root}"
+                includes="template-ota_config-generic.xml" />
             <zipfileset
                 dir="${stack.root}"
                 includes="rcs_api.jar"
