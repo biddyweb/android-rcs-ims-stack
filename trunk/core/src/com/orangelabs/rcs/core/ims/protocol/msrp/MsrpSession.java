@@ -462,7 +462,7 @@ public class MsrpSession {
             // Message-ID.  The value MUST be highly unlikely to be repeated by
             // another endpoint instance, or by the same instance in the future.
             // Message-ID value follows the definition in RFC4975, section 9
-    		String msrpMsgId = "MID-" + IdGenerator.getIdentifier();
+    		String msrpMsgId = IdGenerator.generateMessageID();
 
             // Send data chunk by chunk
 			for (int i = inputStream.read(data); (!cancelTransfer) & (i>-1); i=inputStream.read(data)) {

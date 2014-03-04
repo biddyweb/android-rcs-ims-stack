@@ -53,6 +53,7 @@ import com.orangelabs.rcs.service.api.client.richcall.IVideoSharingSession;
 import com.orangelabs.rcs.service.api.client.richcall.RichCallApiIntents;
 import com.orangelabs.rcs.service.api.server.ServerApiException;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -494,7 +495,7 @@ public class RichCallApiService extends IRichCallApi.Stub {
 
 		try {
 			// Create a geoloc content
-			String msgId = ChatUtils.generateMessageId();
+			String msgId = IdGenerator.generateMessageID();
 			String geolocDoc = ChatUtils.buildGeolocDocument(geoloc, ImsModule.IMS_USER_PROFILE.getPublicUri(), msgId);
 			MmContent content = new GeolocContent("geoloc.xml", geolocDoc.getBytes().length, geolocDoc.getBytes());
 

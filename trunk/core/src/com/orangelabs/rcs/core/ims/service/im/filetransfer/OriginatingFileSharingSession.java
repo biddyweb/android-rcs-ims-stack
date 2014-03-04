@@ -37,12 +37,12 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ContributionIdGenerator;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.Base64;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -235,7 +235,7 @@ public class OriginatingFileSharingSession extends ImsFileSharingSession impleme
                         // Load data from memory
                         stream = new ByteArrayInputStream(data);
                     }
-                    msrpMgr.sendChunks(stream, ChatUtils.generateMessageId(), getContent().getEncoding(), getContent().getSize(), TypeMsrpChunk.FileSharing);
+                    msrpMgr.sendChunks(stream, IdGenerator.generateMessageID(), getContent().getEncoding(), getContent().getSize(), TypeMsrpChunk.FileSharing);
                 } catch(Exception e) {
                     // Unexpected error
                     if (logger.isActivated()) {

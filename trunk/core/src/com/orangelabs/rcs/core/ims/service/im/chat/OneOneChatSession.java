@@ -135,7 +135,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public String sendTextMessage(String txt) {
         boolean useImdn = getImdnManager().isImdnActivated();
-        String msgId = ChatUtils.generateMessageId();
+        String msgId = IdGenerator.generateMessageID();
         String imdnMsgId = null;
         String mime = CpimMessage.MIME_TYPE;
 		String from = ChatUtils.ANOMYNOUS_URI;
@@ -144,7 +144,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
             // Send message in CPIM + IMDN
-            imdnMsgId = IdGenerator.getIdentifier();
+            imdnMsgId = IdGenerator.generateMessageID();
 			content = ChatUtils.buildCpimMessageWithImdn(from, to, imdnMsgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		} else {
 			// Send message in CPIM
@@ -184,7 +184,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
-        String msgId = ChatUtils.generateMessageId();
+        String msgId = IdGenerator.generateMessageID();
         String imdnMsgId = null;
 		String mime = CpimMessage.MIME_TYPE;
 		String from = ChatUtils.ANOMYNOUS_URI;
@@ -194,7 +194,7 @@ public abstract class OneOneChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN
-            imdnMsgId = IdGenerator.getIdentifier();
+            imdnMsgId = IdGenerator.generateMessageID();
 			content = ChatUtils.buildCpimMessageWithImdn(from, to, imdnMsgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
 		} else {
 			// Send message in CPIM
@@ -233,7 +233,7 @@ public abstract class OneOneChatSession extends ChatSession {
 	 */
 	public void sendIsComposingStatus(boolean status) {
 		String content = IsComposingInfo.buildIsComposingInfo(status);
-		String msgId = ChatUtils.generateMessageId();
+		String msgId = IdGenerator.generateMessageID();
 		sendDataChunks(msgId, content, IsComposingInfo.MIME_TYPE, MsrpSession.TypeMsrpChunk.IsComposing);
 	}
 	
