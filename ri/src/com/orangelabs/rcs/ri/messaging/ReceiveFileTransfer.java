@@ -172,7 +172,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
             		// Accept the invitation
         			transferSession.acceptSession();
             	} catch(Exception e) {
-            		logger.error( "Exception occurred",e);
+            		if (logger.isActivated()) {
+            			logger.error( "Exception occurred",e);
+            		}
         			Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
             	}
         	}
@@ -191,7 +193,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
             		transferSession.removeSessionListener(fileTransferSessionListener);
         			transferSession.rejectSession();
             	} catch(Exception e) {
-            		logger.error( "Exception occurred",e);
+            		if (logger.isActivated()) {
+            			logger.error( "Exception occurred",e);
+            		}
             	}
         	}
         };
@@ -601,8 +605,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         	try {
 				transferSession.pauseSession();
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (logger.isActivated()) {
+        			logger.error( "Exception occurred",e);
+        		}
 				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 			}
 		}
@@ -623,8 +628,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         	try {
 				transferSession.resumeSession();
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (logger.isActivated()) {
+        			logger.error( "Exception occurred",e);
+        		}
 				Utils.ShowDialogAndFinish(ReceiveFileTransfer.this, getString(R.string.label_invitation_failed));
 			}
 		}
