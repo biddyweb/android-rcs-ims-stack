@@ -54,6 +54,7 @@ import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocMessage;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.messaging.InstantMessage;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.NetworkRessourceManager;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.StringUtils;
@@ -931,7 +932,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 	        }
 	        
 	        // Send data
-	        boolean result = sendDataChunks(ChatUtils.generateMessageId(), content, CpimMessage.MIME_TYPE, typeMsrpChunk);
+	        boolean result = sendDataChunks(IdGenerator.generateMessageID(), content, CpimMessage.MIME_TYPE, typeMsrpChunk);
 	        if (result) {
 	            // Update rich messaging history
 	            RichMessaging.getInstance().setChatMessageDeliveryStatus(msgId, status,contact);

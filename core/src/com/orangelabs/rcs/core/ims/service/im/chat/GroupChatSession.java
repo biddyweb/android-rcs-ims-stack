@@ -200,7 +200,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 */ 
 	public String sendTextMessage(String txt) {
 		boolean useImdn = getImdnManager().isImdnActivated();
-        String msgId = ChatUtils.generateMessageId();
+        String msgId = IdGenerator.generateMessageID();
         String imdnMsgId = null;
        
 		String from = ImsModule.IMS_USER_PROFILE.getPublicAddress();
@@ -208,7 +208,7 @@ public abstract class GroupChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN delivered
-            imdnMsgId = IdGenerator.getIdentifier();
+            imdnMsgId = IdGenerator.generateMessageID();
 			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, imdnMsgId, StringUtils.encodeUTF8(txt), InstantMessage.MIME_TYPE);
 		} else {
 			// Send message in CPIM
@@ -247,7 +247,7 @@ public abstract class GroupChatSession extends ChatSession {
 	 */ 
 	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
-        String msgId = ChatUtils.generateMessageId();
+        String msgId = IdGenerator.generateMessageID();
         String imdnMsgId = null;
 		String from = ImsModule.IMS_USER_PROFILE.getPublicAddress();
 		String to = ChatUtils.ANOMYNOUS_URI;
@@ -256,7 +256,7 @@ public abstract class GroupChatSession extends ChatSession {
 		String content;
 		if (useImdn) {
 			// Send message in CPIM + IMDN delivered
-            imdnMsgId = IdGenerator.getIdentifier();
+            imdnMsgId = IdGenerator.generateMessageID();
 			content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, imdnMsgId, geoDoc, GeolocInfoDocument.MIME_TYPE);
 		} else {
 			// Send message in CPIM
@@ -296,7 +296,7 @@ public abstract class GroupChatSession extends ChatSession {
 	public void sendIsComposingStatus(boolean status) {
 		String from = ImsModule.IMS_USER_PROFILE.getPublicUri();
 		String to = ChatUtils.ANOMYNOUS_URI;
-		String msgId = ChatUtils.generateMessageId();
+		String msgId = IdGenerator.generateMessageID();
 		String content = ChatUtils.buildCpimMessage(from, to, IsComposingInfo.buildIsComposingInfo(status), IsComposingInfo.MIME_TYPE);
 		sendDataChunks(msgId, content, CpimMessage.MIME_TYPE, TypeMsrpChunk.IsComposing);	
 	}

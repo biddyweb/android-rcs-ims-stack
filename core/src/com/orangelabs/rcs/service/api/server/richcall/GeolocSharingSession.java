@@ -21,7 +21,6 @@ package com.orangelabs.rcs.service.api.server.richcall;
 import android.os.RemoteCallbackList;
 
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
-import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.geoloc.GeolocTransferSessionListener;
@@ -36,6 +35,7 @@ import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.service.api.client.richcall.IGeolocSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IGeolocSharingSession;
 import com.orangelabs.rcs.service.api.server.ServerApiUtils;
+import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -330,7 +330,7 @@ public class GeolocSharingSession extends IGeolocSharingSession.Stub implements 
 			RichCall.getInstance().setStatus(session.getSessionID(), RichCallData.STATUS_TERMINATED); 
 			
 			// Update rich messaging history
-			String msgId = ChatUtils.generateMessageId();
+			String msgId = IdGenerator.generateMessageID();
 			GeolocMessage geolocMsg = new GeolocMessage(msgId, session.getRemoteContact(), geoloc, false, null);
 			RichMessaging.getInstance().addIncomingGeoloc(geolocMsg);
 			

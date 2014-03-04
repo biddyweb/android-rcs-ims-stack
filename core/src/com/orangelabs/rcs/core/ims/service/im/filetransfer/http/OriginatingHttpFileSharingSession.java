@@ -125,13 +125,13 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 				String mime = CpimMessage.MIME_TYPE;
 				String from = ChatUtils.ANOMYNOUS_URI;
 				String to = ChatUtils.ANOMYNOUS_URI;
-				String msgId = IdGenerator.getIdentifier();
+				String msgId = IdGenerator.generateMessageID();
 
 				// Send file info in CPIM message
 				String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 				
 				// Send content
-				chatSession.sendDataChunks(ChatUtils.generateMessageId(), content, mime, MsrpSession.TypeMsrpChunk.HttpFileSharing);
+				chatSession.sendDataChunks(IdGenerator.generateMessageID(), content, mime, MsrpSession.TypeMsrpChunk.HttpFileSharing);
                 RichMessaging.getInstance().updateFileTransferChatId(getSessionID(), chatSession.getContributionID(), msgId);
 			} else {
 				// A chat session should be initiated

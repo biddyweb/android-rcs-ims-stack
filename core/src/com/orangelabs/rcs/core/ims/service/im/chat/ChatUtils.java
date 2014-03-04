@@ -283,15 +283,6 @@ public class ChatUtils {
     		return false;
     	}
     }
-    
-    /**
-     * Generate a unique message ID
-     * 
-     * @return Message ID
-     */
-    public static String generateMessageId() {
-    	return "Msg" + IdGenerator.getIdentifier().replace('_', '-');
-    }
 
     /**
      * Generate resource-list for a chat session
@@ -553,7 +544,7 @@ public class ChatUtils {
 			CpimMessage.HEADER_FROM + ": " + ChatUtils.formatCpimSipUri(from) + CRLF + 
 			CpimMessage.HEADER_TO + ": " + ChatUtils.formatCpimSipUri(to) + CRLF + 
 			CpimMessage.HEADER_NS + ": " + ImdnDocument.IMDN_NAMESPACE + CRLF +
-			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + IdGenerator.getIdentifier() + CRLF +
+			ImdnUtils.HEADER_IMDN_MSG_ID + ": " + IdGenerator.generateMessageID() + CRLF +
 			CpimMessage.HEADER_DATETIME + ": " + DateUtils.encodeDate(System.currentTimeMillis()) + CRLF + 
 			CpimMessage.HEADER_CONTENT_DISPOSITION + ": " + ImdnDocument.NOTIFICATION + CRLF +
 			CRLF +  
@@ -740,7 +731,7 @@ public class ChatUtils {
 	 */
 	public static InstantMessage createFirstMessage(String remote, String msg, boolean imdn) {
 		if ((msg != null) && (msg.length() > 0)) {
-			String msgId = ChatUtils.generateMessageId();
+			String msgId = IdGenerator.generateMessageID();
 			return new InstantMessage(msgId,
 					remote,
 					StringUtils.encodeUTF8(msg),
@@ -815,7 +806,7 @@ public class ChatUtils {
 		if ((subject != null) && (subject.length() > 0)) {
 			String remote = ChatUtils.getReferredIdentity(invite);
 			if ((remote != null) && (subject != null)) {
-				return new InstantMessage(ChatUtils.generateMessageId(),
+				return new InstantMessage(IdGenerator.generateMessageID(),
 						remote,
 						StringUtils.decodeUTF8(subject),
 						ChatUtils.isImdnDisplayedRequested(invite),
