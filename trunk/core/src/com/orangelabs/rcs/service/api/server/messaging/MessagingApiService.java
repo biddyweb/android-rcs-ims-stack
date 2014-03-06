@@ -84,7 +84,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	/**
 	 * The logger
 	 */
-	private static Logger logger = Logger.getLogger(MessagingApiService.class.getName());
+	private final static Logger logger = Logger.getLogger(MessagingApiService.class.getSimpleName());
 
 	/**
 	 * Constructor
@@ -447,7 +447,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		// Extract number from contact 
 		String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
+		
 		// Update rich messaging history
 		RichMessaging.getInstance().addIncomingChatSession(session);
 
@@ -457,13 +457,17 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
 		// Broadcast intent related to the received invitation
     	Intent intent = new Intent(MessagingApiIntents.CHAT_INVITATION);
-    	intent.putExtra("contact", number);
+    	// Check if if it is a valid RCS number
+        if (PhoneUtils.isGlobalPhoneNumber(number)) {
+        	intent.putExtra("contact", number);
+        }
     	intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
     	intent.putExtra("sessionId", session.getSessionID());
     	intent.putExtra("isGroupChat", true);
     	intent.putExtra("replacedSessionId", session.getReplacedSessionId());
     	intent.putExtra("subject", session.getSubject());
     	intent.putExtra("autoAccept", RcsSettings.getInstance().isGroupChatAutoAccepted());
+    	intent.putExtra("chatId", session.getContributionID());
     	AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 
