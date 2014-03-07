@@ -21,7 +21,6 @@ package com.orangelabs.rcs.ri.messaging;
 import java.util.ArrayList;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
@@ -84,11 +83,7 @@ public class InitiateGroupChat extends Activity implements OnItemClickListener {
         	String subject = subjectTxt.getText().toString();
         	
         	// Display chat view
-        	Intent intent = new Intent(InitiateGroupChat.this, GroupChatView.class);
-        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        	intent.putStringArrayListExtra("participants", participants);
-        	intent.putExtra("subject", subject);
-        	startActivity(intent);
+        	GroupChatView.startGroupChatView(InitiateGroupChat.this, subject, null, null, participants);
         	
         	// Exit activity
         	finish();

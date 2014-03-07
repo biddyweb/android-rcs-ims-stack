@@ -61,6 +61,11 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 	private String sessionId;
 	
 	/**
+	 * Chat ID
+	 */
+	private String chatId;
+	
+	/**
 	 * Contact
 	 */
 	private String remoteContact;
@@ -86,31 +91,34 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
     private IChatSession chatSession = null;
     
     /** The logger */
-    private static Logger logger = Logger.getLogger(ReceiveChat.class.getSimpleName());
+    private final static Logger logger = Logger.getLogger(ReceiveChat.class.getSimpleName());
 	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-		if (logger.isActivated())
-			logger.debug("onCreate");
+
         // Set title
         setTitle(R.string.title_recv_chat);
-        
-		// Get invitation info
+        // Get invitation info
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		firstMessage = getIntent().getParcelableExtra("firstMessage");
 		subject = getIntent().getStringExtra("subject");
         autoAccept = getIntent().getBooleanExtra("autoAccept", false);
+        chatId = getIntent().getStringExtra("chatId");
 
 		// Remove the notification
 		ReceiveChat.removeChatNotification(this, sessionId);
 
-		// Instanciate messaging API
+		// Instantiate messaging API
 		messagingApi = new MessagingApi(getApplicationContext());
 		messagingApi.addApiEventListener(this);
         messagingApi.addImsEventListener(this);
 		messagingApi.connectApi();
+		if (logger.isActivated()) {
+			logger.debug("onCreate contact=" + remoteContact + " autoAccept= " + autoAccept + " chatId=" + chatId + " sessionId="
+					+ sessionId);
+		}
     }
 
 	@Override
@@ -140,7 +148,10 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
      * API connected
      */
     public void handleApiConnected() {
-		try{
+		try {
+			if (logger.isActivated()) {
+				logger.debug("handleApiConnected");
+			}
 			// Get the chat session
 			chatSession = messagingApi.getChatSession(sessionId);
 			if (chatSession == null) {
@@ -242,6 +253,9 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 		// Session is started
 		public void handleSessionStarted() {
 			try {
+				if (logger.isActivated()) {
+					logger.debug("handleSessionStarted");
+				}
 				// Update delivery status of the first message
 				InstantMessage firstMessage = chatSession.getFirstMessage();
 				if ((firstMessage != null) && (RcsSettings.getInstance().isImDisplayedNotificationActivated())) {
@@ -250,18 +264,12 @@ public class ReceiveChat extends Activity implements ClientApiListener, ImsEvent
 				}
 
 				// Display chat view
-				Intent intent;
 				if (chatSession.isGroupChat()) {
-		        	intent = new Intent(ReceiveChat.this, GroupChatView.class);
-		        	intent.putExtra("subject", subject);
+		        	GroupChatView.startGroupChatView(ReceiveChat.this, subject, sessionId, chatId, null);
 				} else {
-		        	intent = new Intent(ReceiveChat.this, OneToOneChatView.class);
-		        	intent.putExtra("contact", remoteContact);
-		        	intent.putExtra("firstmessage", firstMessage);
+		        	OneToOneChatView.startOneToOneChatView(ReceiveChat.this, remoteContact, sessionId, firstMessage);
 				}
-	        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	        	intent.putExtra("sessionId", sessionId);
-	        	startActivity(intent);
+
 	        	// Exit activity
 	        	finish();
 			} catch(Exception e) {

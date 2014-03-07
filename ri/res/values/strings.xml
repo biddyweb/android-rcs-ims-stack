@@ -14,6 +14,7 @@
 
 <!-- Commons -->
 <string name="menu_close_session">Quit</string>
+<string name="label_file_name">File: %1$s</string>
 <string name="label_file_size">Size: %1$s%2$s</string>
 <string name="label_file_size_unknown">Size: unknown</string>
 <string name="label_command_in_progress">Command in progress...</string>
@@ -146,7 +147,8 @@
 <string name="label_contact_blocked">%s has been blocked</string>
 <string name="label_contact_unblocked">%s has been unblocked</string>
 <string name="title_recv_file_transfer">New file transfer invitation</string>
-<string name="label_file">Selected file:</string>
+<string name="label_file">File:</string>
+<string name="label_size">Size:</string>
 <string name="title_recv_chat">New chat invitation</string>
 <string name="label_msg">Message:</string>
 <string name="label_hint_first_message">Enter first message</string>
@@ -204,7 +206,9 @@
 <string name="label_me">Me</string>
 <string name="label_geoloc_prefix">Geoloc</string>
 <string name="label_ft_thumb">File thumbnail</string>
- <string name="label_groupchat_terminated_by_remote">Group Chat session terminated by remote.\nLeave session definitively ?</string>
+<string name="label_groupchat_terminated_by_remote">Group Chat session terminated by remote.\nLeave session definitively ?</string>
+<string name="label_ft_choose_toast">Select a text file to transfer</string>
+<string name="label_ft_choose">Select a text file</string>
  
 <!--  IP call menu -->
 <string name="menu_ipcall">IP call</string>

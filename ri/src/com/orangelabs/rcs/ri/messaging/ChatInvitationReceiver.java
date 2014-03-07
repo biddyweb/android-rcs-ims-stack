@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,9 +30,17 @@ import android.content.Intent;
  * @author jexa7410
  */
 public class ChatInvitationReceiver extends BroadcastReceiver {
+	/**
+	 * The logger
+	 */
+	private final static Logger logger = Logger.getLogger(ChatInvitationReceiver.class.getSimpleName());
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
         boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
+        if (logger.isActivated()) {
+        	logger.debug("onReceive autoAccept="+autoAccept);
+        }
         if (autoAccept) {
             // Display chat
             Intent progress = new Intent(intent);

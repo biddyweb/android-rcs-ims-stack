@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -25,13 +27,11 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
-import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -45,8 +45,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
-import com.orangelabs.rcs.platform.file.FileDescription;
-import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -66,11 +64,8 @@ public class SendFileInSession extends Activity {
 	 * Activity result constants
 	 */
 	private final static int SELECT_IMAGE = 0;
-	
-	/**
-	 * Activity result constants
-	 */
 	private final static int SELECT_CONTACTS = 1;
+	private final static int SELECT_TEXT_FILE = 2;
 
 	/**
 	 * Activity result constants
@@ -242,31 +237,37 @@ public class SendFileInSession extends Activity {
     /**
      * Display a alert dialog to select the kind of file to transfer
      */
-    private void startDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.label_select_file);
-        builder.setCancelable(true);
-        builder.setItems(R.array.select_filetotransfer, new DialogInterface.OnClickListener() {
-			
+	private void startDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.label_select_file);
+		builder.setCancelable(true);
+		builder.setItems(R.array.select_filetotransfer, new DialogInterface.OnClickListener() {
+
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				switch(which) {
-					case 0:
-						Intent pictureShareIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
-						pictureShareIntent.setType("image/*");
-						startActivityForResult(pictureShareIntent, SELECT_IMAGE);
-						break;
-					case 1:
-						Intent contactsShareIntent = new Intent(Intent.ACTION_GET_CONTENT);
-						contactsShareIntent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
-						startActivityForResult(contactsShareIntent, SELECT_CONTACTS);
-						break;
+				switch (which) {
+				case 0:
+					Intent pictureShareIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
+					pictureShareIntent.setType("image/*");
+					startActivityForResult(pictureShareIntent, SELECT_IMAGE);
+					break;
+				case 1:
+					Intent contactsShareIntent = new Intent(Intent.ACTION_GET_CONTENT);
+					contactsShareIntent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+					startActivityForResult(contactsShareIntent, SELECT_CONTACTS);
+					break;
+				case 2:
+					Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
+					fileIntent.setType("text/plain");
+					fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+					startActivityForResult(fileIntent, SELECT_TEXT_FILE);
+					break;
 				}
 			}
 		});
-        AlertDialog alert = builder.create();
-    	alert.show();
-    }
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
     
     /**
      * On activity result
@@ -275,62 +276,45 @@ public class SendFileInSession extends Activity {
      * @param resultCode Result code
      * @param data Data
      */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	if (resultCode != RESULT_OK) {
-    		return;
-    	}
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode != RESULT_OK || (data == null) || (data.getData() == null)) {
+			return;
+		}
+		// Get selected URI
+		Uri uri = data.getData();
+		Button inviteBtn = (Button) findViewById(R.id.invite_btn);
+		TextView uriEdit = (TextView) findViewById(R.id.uri);
+		TextView sizeEdit = (TextView) findViewById(R.id.size);
+		switch (requestCode) {
+		case SELECT_CONTACTS:
+			// Get vCard filename
+			filename = contactsApi.getVisitCard(uri);
+			// Display the selected filename attribute
+			uriEdit.setText(filename);
+			// Show invite button
+			inviteBtn.setEnabled(true);
+			break;
 
-    	switch(requestCode) {
-	    	case SELECT_CONTACTS: {
-	    		if ((data != null) && (data.getData() != null)) {
-	    			// Get selected visit card URI
-	    			Uri uri = data.getData();
-	    			
-	    			// Get vCard filename
-	    			filename = contactsApi.getVisitCard(uri);
-	
-	    			// Display the selected filename attribute
-	    			TextView uriEdit = (TextView)findViewById(R.id.uri);
-	    			uriEdit.setText(filename);
-	
-	    			// Show invite button
-	    			Button inviteBtn = (Button)findViewById(R.id.invite_btn);
-	    			inviteBtn.setEnabled(true);
-	    		}
-	    	}	
-	    	break;
-
-	    	case SELECT_IMAGE: {
-	    		if ((data != null) && (data.getData() != null)) {
-	
-	    			// Get selected photo URI
-	    			Uri uri = data.getData();
-	
-	    			// Get image filename
-	    			Cursor cursor = getContentResolver().query(uri, new String[] {MediaStore.Images.ImageColumns.DATA}, null, null, null); 
-	    			cursor.moveToFirst();
-	    			filename = cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
-	    			cursor.close();     	    		
-	    			
-	    			// Display the selected filename attribute
-	    			TextView uriEdit = (TextView)findViewById(R.id.uri);
-	    			try {
-	    				FileDescription desc = FileFactory.getFactory().getFileDescription(filename);                    
-	    				filesize = desc.getSize()/1024;
-	    				uriEdit.setText(filesize + " KB");
-	    			} catch(Exception e) {
-	    				filesize = -1;
-	    				uriEdit.setText(filename);
-	    			}
-	
-	    			// Show invite button
-	    			Button inviteBtn = (Button)findViewById(R.id.invite_btn);
-	    			inviteBtn.setEnabled(true);
-	    		}
-	    	}             
-	    	break;
-    	}
-    }
+		case SELECT_IMAGE:
+		case SELECT_TEXT_FILE:
+			// Get filename
+			filename = InitiateFileTransfer.getFilePath(this, uri);
+			// Display the selected filename attribute
+			try {
+				File file = new File(filename);
+				filesize = file.length() / 1024;
+				sizeEdit.setText(filesize + " KB");
+				uriEdit.setText( file.getName());
+			} catch (Exception e) {
+				filesize = -1;
+				sizeEdit.setText(R.string.label_file_size_unknown);
+				uriEdit.setText(filename);
+			}
+			// Show invite button
+			inviteBtn.setEnabled(true);
+			break;
+		}
+	}
 
 	/**
 	 * Hide progress dialog
@@ -422,7 +406,7 @@ public class SendFileInSession extends Activity {
 			});
 		}
 	
-		// File has been transfered
+		// File has been transferred
 		public void handleFileTransfered(String filename) {
 			handler.post(new Runnable() { 
 				public void run() {
@@ -431,7 +415,7 @@ public class SendFileInSession extends Activity {
 
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("transfered");
+					statusView.setText("transferred");
 				}
 			});
 		}
@@ -468,8 +452,8 @@ public class SendFileInSession extends Activity {
     /**
      * Show the transfer progress
      * 
-     * @param currentSize Current size transfered
-     * @param totalSize Total size to be transfered
+     * @param currentSize Current size transferred
+     * @param totalSize Total size to be transferred
      */
     private void updateProgressBar(long currentSize, long totalSize) {
     	TextView statusView = (TextView)findViewById(R.id.progress_status);

@@ -56,6 +56,7 @@ import com.orangelabs.rcs.service.api.client.ImsEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
 import com.orangelabs.rcs.service.api.client.messaging.MessagingApi;
+import com.orangelabs.rcs.utils.MimeManager;
 import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -66,9 +67,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class ReceiveFileTransfer extends Activity implements ClientApiListener, ImsEventListener {
     /** The logger */
-    private static Logger logger = Logger.getLogger(ReceiveFileTransfer.class.getSimpleName());
+    private final static Logger logger = Logger.getLogger(ReceiveFileTransfer.class.getSimpleName());
 
-    
     /**
      * UI handler
      */
@@ -93,6 +93,11 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
      * File size
      */
     private long fileSize;
+    
+    /**
+     * File name
+     */
+    private String filename;
     
     /**
      * File type
@@ -134,13 +139,14 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
         sessionId = getIntent().getStringExtra("sessionId");
 		remoteContact = getIntent().getStringExtra("contact");
 		fileSize = getIntent().getLongExtra("filesize", -1);
+		filename = getIntent().getStringExtra("filename");
 		fileType = getIntent().getStringExtra("filetype");
 		thumbnail = getIntent().getByteArrayExtra("thumbnail");
 		autoAccept = getIntent().getBooleanExtra("autoAccept", false);
 		
 		if (logger.isActivated()) {
-			logger.info("onCreate (sessionId=" + sessionId + ") (remoteContact=" + remoteContact + ") (fileSize=" + fileSize
-					+ ") (fileType=" + fileType + ") (autoAccept=" + autoAccept + ")");
+			logger.info("onCreate (sessionId=" + sessionId + ") (remoteContact=" + remoteContact + ") (filename=" + filename
+					+ ") (fileSize=" + fileSize + ") (fileType=" + fileType + ") (autoAccept=" + autoAccept + ")");
 		}
 		// Remove the notification
         ReceiveFileTransfer.removeFileTransferNotification(this, sessionId);
@@ -292,6 +298,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	        from.setText(getString(R.string.label_from) + " " + remoteContact);
 	    	TextView sizeTxt = (TextView)findViewById(R.id.image_size);
 	    	sizeTxt.setText(size);
+	    	TextView filenameTxt = (TextView)findViewById(R.id.filename);
+	    	filenameTxt.setText(getString(R.string.label_file_name,filename));
 	    	    	
 	    	if (autoAccept) {
 	    		// Auto accept. Check capacity
@@ -420,27 +428,29 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			}
 		}
 
-		// File has been transfered
+		// File has been transferred
 		public void handleFileTransfered(final String filename) {
 			handler.post(new Runnable() { 
 				public void run() {
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("transfered");
+					statusView.setText("transferred");
 					
 					// Make sure progress bar is at the end
 			        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progress_bar);
 			        progressBar.setProgress(progressBar.getMax());
 
-			        if (fileType.equals("text/vcard")) {
-			        	// Show the transfered vCard
+			        if  (MimeManager.isVCardType(fileType)) {
+			        	// Show the transferred vCard
 			        	File file = new File(filename);
 			    		Uri uri = Uri.fromFile(file);
 			    		Intent intent = new Intent(Intent.ACTION_VIEW);
 			    		intent.setDataAndType(uri, "text/x-vcard");   		
 			    		startActivity(intent);
 			        } else {
-				        // Show the transfered image
-				        Utils.showPictureAndExit(ReceiveFileTransfer.this, filename);
+			        	if (MimeManager.isImageType(fileType)) {
+			        		// Show the transferred image
+			        		Utils.showPictureAndExit(ReceiveFileTransfer.this, filename);
+			        	}
 			        }
 				}
 			});
@@ -462,8 +472,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
     /**
      * Show the transfer progress
      * 
-     * @param currentSize Current size transfered
-     * @param totalSize Total size to be transfered
+     * @param currentSize Current size transferred
+     * @param totalSize Total size to be transferred
      */
     private void updateProgressBar(long currentSize, long totalSize) {
     	TextView statusView = (TextView)findViewById(R.id.progress_status);

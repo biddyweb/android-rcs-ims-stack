@@ -98,10 +98,7 @@ public class InitiateChat extends Activity {
             String remoteContact = cursor.getString(1);
             
             // Display chat view
-        	Intent intent = new Intent(InitiateChat.this, OneToOneChatView.class);
-        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        	intent.putExtra("contact", remoteContact);
-        	startActivity(intent);
+        	OneToOneChatView.startOneToOneChatView(InitiateChat.this, remoteContact, null, null);
         	
         	// Exit activity
         	finish();
