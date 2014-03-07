@@ -24,12 +24,10 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -49,6 +47,7 @@ import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.ipcall.IPCallView;
+import com.orangelabs.rcs.ri.messaging.InitiateFileTransfer;
 import com.orangelabs.rcs.ri.utils.Utils;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingEventListener;
 import com.orangelabs.rcs.service.api.client.richcall.IImageSharingSession;
@@ -263,40 +262,30 @@ public class InitiateImageSharing extends Activity {
      * @param resultCode Result code
      * @param data Data
      */
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	if (resultCode != RESULT_OK) {
-    		return;
-    	}
-    	
-        switch(requestCode) {
-            case SELECT_IMAGE: {
-            	if ((data != null) && (data.getData() != null)) {
-            		// Get selected photo URI
-            		Uri uri = data.getData();
-            		
-                    // Get image filename
-                    Cursor cursor = getContentResolver().query(uri, new String[] {MediaStore.Images.ImageColumns.DATA}, null, null, null); 
-                    cursor.moveToFirst();
-                    filename = cursor.getString(cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
-                    cursor.close();     
-                    
-                    // Display the selected filename attribute
-                    TextView uriEdit = (TextView)findViewById(R.id.uri);
-                    try {
-                    	FileDescription desc = FileFactory.getFactory().getFileDescription(filename);                    
-	                    uriEdit.setText((desc.getSize()/1024) + " KB");
-                    } catch(Exception e) {
-	                    uriEdit.setText(filename);
-                    }
-
-                    // Enable invite button
-                    Button inviteBtn = (Button)findViewById(R.id.invite_btn);
-                	inviteBtn.setEnabled(true);            
-            	}
-	    	}             
-            break;
-        }
-    }
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode != RESULT_OK || (data == null) || (data.getData() == null)) {
+			return;
+		}
+		switch (requestCode) {
+		case SELECT_IMAGE:
+			// Get selected photo URI
+			Uri uri = data.getData();
+			// Get image filename
+			filename = InitiateFileTransfer.getFilePath(this, uri);
+			// Display the selected filename attribute
+			TextView sizeEdit = (TextView) findViewById(R.id.size);
+			try {
+				FileDescription desc = FileFactory.getFactory().getFileDescription(filename);
+				sizeEdit.setText((desc.getSize() / 1024) + " KB");
+			} catch (Exception e) {
+				sizeEdit.setText(filename);
+			}
+			// Enable invite button
+			Button inviteBtn = (Button) findViewById(R.id.invite_btn);
+			inviteBtn.setEnabled(true);
+			break;
+		}
+	}
     
 	/**
 	 * Hide progress dialog
@@ -381,7 +370,7 @@ public class InitiateImageSharing extends Activity {
 			});
 		}
 	
-		// Image has been transfered
+		// Image has been transferred
 		public void handleImageTransfered(String filename) {
 			handler.post(new Runnable() { 
 				public void run() {
@@ -390,7 +379,7 @@ public class InitiateImageSharing extends Activity {
 
 					// Display session status
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
-					statusView.setText("transfered");
+					statusView.setText("transferred");
 				}
 			});
 		}
@@ -399,8 +388,8 @@ public class InitiateImageSharing extends Activity {
     /**
      * Show the transfer progress
      * 
-     * @param currentSize Current size transfered
-     * @param totalSize Total size to be transfered
+     * @param currentSize Current size transferred
+     * @param totalSize Total size to be transferred
      */
     private void updateProgressBar(long currentSize, long totalSize) {
     	TextView statusView = (TextView)findViewById(R.id.progress_status);

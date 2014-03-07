@@ -157,11 +157,19 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	 */
 	private List<InstantMessage> imReceivedInBackgroundToBeRead = new ArrayList<InstantMessage>();
 
-	private static Logger logger = Logger.getLogger(ChatView.class.getSimpleName());
+	private final static Logger logger = Logger.getLogger(ChatView.class.getSimpleName());
 	
+	/**
+	 * history flag set to true if chat view is launched from history view
+	 */
+	protected boolean history = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (logger.isActivated()) {
+			logger.debug("onCreate");
+		}
         
         // Set layout
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -204,6 +212,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     @Override
     public void onDestroy() {
     	super.onDestroy();
+    	if (logger.isActivated()) {
+			logger.debug("onDestroy");
+		}
 
         // Remove session listener
         if (chatSession != null) {
@@ -234,6 +245,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     @Override
     protected void onPause() {
     	super.onPause();
+    	if (logger.isActivated()) {
+			logger.debug("onPause");
+		}
     	
     	// Update background flag
     	isInBackground = true;
@@ -242,6 +256,9 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     @Override
     protected void onResume() {
     	super.onResume();
+    	if (logger.isActivated()) {
+			logger.debug("onResume");
+		}
     	
     	// Update background flag
     	isInBackground = false;
@@ -342,9 +359,6 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		int type = cursor.getInt(EventsLogApi.TYPE_COLUMN);
 		String contact = cursor.getString(EventsLogApi.CONTACT_COLUMN);
 		String text = cursor.getString(EventsLogApi.DATA_COLUMN);
-		if (logger.isActivated()) {
-			logger.debug("updateView text=" + text + " type=" + type);
-		}
 		switch (type) {
 		case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
 		case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
@@ -532,11 +546,15 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		handler.post(new Runnable() { 
 			public void run() {
 	    		try {
+					// Load history
+	    			if (history)
+	    				loadHistory();
 	    			// Add delivery listener 
 	    			messagingApi.addMessageDeliveryListener(deliveryListener);
 	    			
 	    			// Test if there is an existing session
 	    	        String sessionId = getIntent().getStringExtra("sessionId");
+
 	    			if (sessionId != null) {
 	    				// Existing session
 	    				
@@ -549,8 +567,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			    			return;
 						}
 
-						// Load history
-		    			loadHistory(chatSession);
+
 		    			
 		    			// Add session listener event
 						chatSession.addSessionListener(chatSessionListener);
@@ -561,12 +578,10 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    				// New session
 	    				
 		    			// Set list of participants
-		    	        participants = getIntent().getStringArrayListExtra("participants");
 		    	        if (participants == null) {
 		    	            participants = new ArrayList<String>();
 		    	        	participants.add(getIntent().getStringExtra("contact"));
 		    	        }
-		    	        
 		    	        // Init session
 		    			initSession();
 	    			}
@@ -585,9 +600,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     /**
      * Load history
      * 
-     * @param session Chat session
      */
-    public abstract void loadHistory(IChatSession session);
+    public abstract void loadHistory();
 
     /**
      * API disconnected

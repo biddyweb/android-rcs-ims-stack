@@ -23,7 +23,6 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -337,14 +336,11 @@ public class ChatList extends Activity implements ClientApiListener {
 				// Group chat
 				IChatSession session = isGroupChatActive(cache.chatId);
 				if (session != null) {
-					// Session already active on the device: just reload it in the UI
 					try {
-						Intent intent = new Intent(ChatList.this, GroupChatView.class);
-			        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		            	intent.putExtra("subject", session.getSubject());
-			    		intent.putExtra("sessionId", session.getSessionID());
-			    		startActivity(intent);				
-					} catch(Exception e) {
+						// Session already active on the device: just reload it in the UI
+						GroupChatView.startGroupChatView(ChatList.this, session.getSubject(), session.getSessionID(),
+								session.getChatID(), null);
+					} catch (Exception e) {
 						Utils.showMessage(ChatList.this, getString(R.string.label_api_failed));
 					}
 				} else {
@@ -368,20 +364,13 @@ public class ChatList extends Activity implements ClientApiListener {
 				if (session != null) {
 					// Session already active on the device: just reload it in the UI
 					try {
-			    		Intent intent = new Intent(ChatList.this, OneToOneChatView.class);
-			        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		            	intent.putExtra("contact", session.getRemoteContact());
-			    		intent.putExtra("sessionId", session.getSessionID());
-			    		startActivity(intent);
+			    		OneToOneChatView.startOneToOneChatView( ChatList.this,session.getRemoteContact(),session.getSessionID(), session.getFirstMessage());
 					} catch(Exception e) {
 						Utils.showMessage(ChatList.this, getString(R.string.label_api_failed));
 					}
 				} else {
 					// Session terminated on the device: create a new one on the first message
-		    		Intent intent = new Intent(ChatList.this, OneToOneChatView.class);
-		        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	            	intent.putExtra("contact", cache.contact);
-		    		startActivity(intent);
+					OneToOneChatView.startOneToOneChatView(ChatList.this, cache.contact, null, null);
 				}
 			}
 		}

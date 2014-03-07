@@ -22,7 +22,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
-import android.content.Intent;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.widget.Toast;
@@ -79,7 +78,7 @@ public class RejoinChat {
 	/**
 	 * The logger
 	 */
-	private static Logger logger = Logger.getLogger(RejoinChat.class.getSimpleName());
+	private final static Logger logger = Logger.getLogger(RejoinChat.class.getSimpleName());
 	
 	/**
      * Constructor
@@ -101,9 +100,11 @@ public class RejoinChat {
     	if (chatSession != null) {
     		return;
     	}
-    	
+    	if (logger.isActivated()) {
+			logger.info("Start rejoin (chatId="+chatId+")");
+		}
     	// Initiate the session in background
-        Thread thread = new Thread() {
+       new Thread() {
         	public void run() {
             	try {
             		chatSession = messagingApi.rejoinGroupChatSession(chatId);
@@ -120,8 +121,7 @@ public class RejoinChat {
             		});
             	}
         	}
-        };
-        thread.start();
+        }.start();
         
         // Display a progress dialog
         progressDialog = Utils.showProgressDialog(activity, activity.getString(R.string.label_command_in_progress));
@@ -177,27 +177,25 @@ public class RejoinChat {
     /**
      * Chat session event listener
      */
-    private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
+	private IChatEventListener chatSessionListener = new IChatEventListener.Stub() {
 		// Session is started
 		public void handleSessionStarted() {
-			handler.post(new Runnable() { 
+			handler.post(new Runnable() {
 				public void run() {
 					try {
-	                    // Hide progress dialog
+						// Hide progress dialog
 						hideProgressDialog();
+						String chatId = chatSession.getChatID();
+						String sessionId = chatSession.getSessionID();
 						if (logger.isActivated()) {
-							logger.debug("handleSessionStarted: sessionID="+chatSession.getSessionID());
+							logger.debug("handleSessionStarted sessionID=" + sessionId + " chatId=" + chatId);
 						}
 						// Remove listener now
-                		chatSession.removeSessionListener(chatSessionListener);
+						chatSession.removeSessionListener(chatSessionListener);
 
-						// Display chat view
-						Intent intent = new Intent(activity, GroupChatView.class);
-			        	intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		            	intent.putExtra("subject", chatSession.getSubject());
-			    		intent.putExtra("sessionId", chatSession.getSessionID());
-			    		activity.startActivity(intent);				
-					} catch(Exception e) {
+						// Display GC chat view
+						GroupChatView.startGroupChatView(activity, chatSession.getSubject(), sessionId, chatId, null);
+					} catch (Exception e) {
 						Utils.showMessage(activity, activity.getString(R.string.label_api_failed));
 					}
 				}
@@ -206,14 +204,17 @@ public class RejoinChat {
 	
 		// Chat error
 		public void handleImError(final int error) {
+			if (logger.isActivated()) {
+				logger.warn("handleImError: error="+error);
+			}
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					if (logger.isActivated()) {
-						logger.debug("handleImError: error="+error);
-					}
 					if (error == ChatError.SESSION_NOT_FOUND) {
+						if (logger.isActivated()) {
+							logger.info("handleImError: session not found for chatId="+chatId);
+						}
 						// Propose to restart the session
 						restartChat = new RestartChat(activity, messagingApi, chatId);
 						restartChat.start();
@@ -227,26 +228,27 @@ public class RejoinChat {
 		
 		// Session has been aborted
 		public void handleSessionAborted(final int reason) {
+			if (logger.isActivated()) {
+				logger.warn("handleSessionAborted: reason="+reason);
+			}
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					if (logger.isActivated()) {
-						logger.debug("handleSessionAborted: reason="+reason);
-					}
 				}
 			});
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
+			if (logger.isActivated()) {
+				logger.info("handleSessionTerminatedByRemote");
+			}
 			handler.post(new Runnable() {
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					if (logger.isActivated()) {
-						logger.debug("handleSessionTerminatedByRemote");
-					}
+
 					// Display error
 					Utils.showMessage(activity, activity.getString(R.string.label_rejoin_chat_terminated_by_remote));
 					
