@@ -41,15 +41,16 @@ import com.orangelabs.rcs.core.ims.service.richcall.image.ImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.OriginatingImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.image.TerminatingImageTransferSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingLiveVideoStreamingSession;
+import com.orangelabs.rcs.core.ims.service.richcall.video.OriginatingVideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.TerminatingVideoStreamingSession;
 import com.orangelabs.rcs.core.ims.service.richcall.video.VideoStreamingSession;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
 import com.orangelabs.rcs.service.api.client.contacts.ContactInfo;
-import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 import com.orangelabs.rcs.service.api.client.messaging.GeolocPush;
 import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+import com.orangelabs.rcs.service.api.client.media.IVideoPlayer;
 
 /**
  * Rich call service offers image sharing and video sharing on top of a CS call
@@ -191,7 +192,7 @@ public class RichcallService extends ImsService {
         } else
         if (currentSessions.size() == 1) {
         	ContentSharingSession currentSession = currentSessions.elementAt(0);
-        	if (!(currentSession instanceof TerminatingImageTransferSession)) {
+        	if (isSessionOriginating(currentSession)){
         		// Originating session already used
 				if (logger.isActivated()) {
 				    logger.debug("Max originating sessions reached");
@@ -263,7 +264,7 @@ public class RichcallService extends ImsService {
         } else
         if (currentSessions.size() == 1) {
         	ContentSharingSession currentSession = currentSessions.elementAt(0);
-        	if (currentSession instanceof TerminatingImageTransferSession) {
+        	if (isSessionTerminating(currentSession)) {
         		// Terminating session already used
 				if (logger.isActivated()) {
 				    logger.debug("Max terminating sessions reached");
@@ -330,7 +331,7 @@ public class RichcallService extends ImsService {
         } else
         if (currentSessions.size() == 1) {
         	ContentSharingSession currentSession = currentSessions.elementAt(0);
-        	if (!(currentSession instanceof TerminatingVideoStreamingSession)) {
+        	if (isSessionOriginating(currentSession)) {
         		// Originating session already used
 				if (logger.isActivated()) {
 				    logger.debug("Max originating sessions reached");
@@ -392,7 +393,7 @@ public class RichcallService extends ImsService {
         } else
         if (currentSessions.size() == 1) {
         	ContentSharingSession currentSession = currentSessions.elementAt(0);
-			if (currentSession instanceof TerminatingVideoStreamingSession) {
+			if (isSessionTerminating(currentSession)) {
         		// Terminating session already used
 				if (logger.isActivated()) {
 				    logger.debug("Max terminating sessions reached");
@@ -543,4 +544,26 @@ public class RichcallService extends ImsService {
 			session.abortSession(ImsServiceSession.TERMINATION_BY_SYSTEM);
 		}
     }
+	
+	/**
+	 * Is the current session an originating one
+	 * 
+	 * @param session
+	 * @return true if session is an originating content sharing session (image or video)
+	 */
+	private boolean isSessionOriginating(ContentSharingSession session){
+		return (session instanceof OriginatingImageTransferSession 
+				|| session instanceof OriginatingVideoStreamingSession);
+	}
+	
+	/**
+	 * Is the current session a terminating one
+	 * 
+	 * @param session
+	 * @return true if session is an terminating content sharing session (image or video)
+	 */
+	private boolean isSessionTerminating(ContentSharingSession session){
+		return (session instanceof TerminatingImageTransferSession 
+				|| session instanceof TerminatingVideoStreamingSession);
+	}
 }
