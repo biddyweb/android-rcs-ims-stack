@@ -43,13 +43,18 @@ public class OneToOneChatView extends ChatView {
 	
 	private final static Logger logger = Logger.getLogger(OneToOneChatView.class.getSimpleName());
 	
-	private String contact = null;
+	private String contact;
+	
+	private InstantMessage firstmessage;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         contact = getIntent().getStringExtra("contact");
         history = getIntent().getBooleanExtra("history", false);
+        firstmessage = getIntent().getParcelableExtra("firstmessage");
+        if (firstmessage != null)
+			displayReceivedMessage(firstmessage);
         // Set title
 		setTitle(getString(R.string.title_chat_view_oneone) + " " +contact);	
 
@@ -58,7 +63,7 @@ public class OneToOneChatView extends ChatView {
 		filterArray[0] = new InputFilter.LengthFilter(RcsSettings.getInstance().getMaxChatMessageLength());
 		composeText.setFilters(filterArray);
 		if (logger.isActivated()) {
-			logger.info("onCreate (contact=" + contact + ") (history=" + history + ")");
+			logger.info("onCreate (contact=" + contact + ") (history=" + history + ") (firsmessage="+firstmessage+")");
 		}
     }
 
@@ -72,40 +77,37 @@ public class OneToOneChatView extends ChatView {
     /**
      * Load history
      */
-    public void loadHistory() {
-    	try {
+	public void loadHistory() {
+		try {
 			if (logger.isActivated()) {
-				logger.info("loadHistory (contact=" + contact + ") (history=" + history + ")");
+				logger.info("loadHistory (contact=" + contact + ")");
 			}
-	    	EventsLogApi log = new EventsLogApi(this);
-	    	Uri uri = log.getOneToOneChatLogContentProviderUri();
-	    	Cursor cursor = getContentResolver().query(uri, 
-	    			new String[] {
-	    				RichMessagingData.KEY_CONTACT,
-	    				RichMessagingData.KEY_DATA,
-	    				RichMessagingData.KEY_TIMESTAMP,
-	    				RichMessagingData.KEY_STATUS,
-	    				RichMessagingData.KEY_TYPE
-	    				},
-	    			RichMessagingData.KEY_CONTACT + "='" + contact + "'", 
-	    			null, 
-	    			RichMessagingData.KEY_TIMESTAMP + " DESC");
-	    	
-	    	// The system message are not loaded
-	    	while(cursor.moveToNext()) {
-				int messageMessageType = cursor.getInt(EventsLogApi.TYPE_COLUMN);
-				switch (messageMessageType) {
+			EventsLogApi log = new EventsLogApi(this);
+			Uri uri = log.getOneToOneChatLogContentProviderUri();
+			Cursor cursor = getContentResolver().query(
+					uri,
+					new String[] { RichMessagingData.KEY_CONTACT, RichMessagingData.KEY_DATA, RichMessagingData.KEY_TIMESTAMP,
+							RichMessagingData.KEY_STATUS, RichMessagingData.KEY_TYPE },
+					RichMessagingData.KEY_CONTACT + "='" + contact + "'", null, RichMessagingData.KEY_TIMESTAMP + " ASC");
+
+			// The system message are not loaded
+			if (cursor != null) {
+				while (cursor.moveToNext()) {
+					int messageMessageType = cursor.getInt(EventsLogApi.TYPE_COLUMN);
+					switch (messageMessageType) {
 					case EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE:
 					case EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE:
 					case EventsLogApi.TYPE_OUTGOING_GEOLOC:
 					case EventsLogApi.TYPE_INCOMING_GEOLOC:
 						updateView(cursor);
 						break;
+					}
 				}
-	    	}
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
+				cursor.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }    
     
     /***
