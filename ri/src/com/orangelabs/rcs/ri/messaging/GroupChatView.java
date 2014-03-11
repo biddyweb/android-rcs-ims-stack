@@ -118,43 +118,40 @@ public class GroupChatView extends ChatView {
      * 
      * @param session Chat session
      */
-    public void loadHistory() {
-    	if (chatId == null)
-    		return;
-    	try {
-    		if (logger.isActivated()) {
-    			logger.info( "loadHistory ChatID="+chatId);
-    		}
-	    	EventsLogApi log = new EventsLogApi(this);
-	    	Uri uri = log.getGroupChatLogContentProviderUri();
-	    	Cursor cursor = getContentResolver().query(uri, 
-	    			new String[] {
-	    				RichMessagingData.KEY_CONTACT,
-	    				RichMessagingData.KEY_DATA,
-	    				RichMessagingData.KEY_TIMESTAMP,
-	    				RichMessagingData.KEY_STATUS,
-	    				RichMessagingData.KEY_TYPE
-	    				},
-	    			RichMessagingData.KEY_CHAT_ID + "='" + chatId + "'", 
-	    			null, 
-	    			RichMessagingData.KEY_TIMESTAMP + " DESC");
-	    	
-	    	// The system message are not loaded
-	    	while(cursor.moveToNext()) {
-				int messageMessageType = cursor.getInt(EventsLogApi.TYPE_COLUMN);
-				switch (messageMessageType) {
+	public void loadHistory() {
+		if (chatId == null)
+			return;
+		try {
+			if (logger.isActivated()) {
+				logger.info("loadHistory ChatID=" + chatId);
+			}
+			EventsLogApi log = new EventsLogApi(this);
+			Uri uri = log.getGroupChatLogContentProviderUri();
+			Cursor cursor = getContentResolver().query(
+					uri,
+					new String[] { RichMessagingData.KEY_CONTACT, RichMessagingData.KEY_DATA, RichMessagingData.KEY_TIMESTAMP,
+							RichMessagingData.KEY_STATUS, RichMessagingData.KEY_TYPE },
+					RichMessagingData.KEY_CHAT_ID + "='" + chatId + "'", null, RichMessagingData.KEY_TIMESTAMP + " ASC");
+			if (cursor != null) {
+				// The system message are not loaded
+				while (cursor.moveToNext()) {
+					int messageMessageType = cursor.getInt(EventsLogApi.TYPE_COLUMN);
+					switch (messageMessageType) {
 					case EventsLogApi.TYPE_OUTGOING_GROUP_CHAT_MESSAGE:
 					case EventsLogApi.TYPE_INCOMING_GROUP_CHAT_MESSAGE:
 					case EventsLogApi.TYPE_OUTGOING_GROUP_GEOLOC:
 					case EventsLogApi.TYPE_INCOMING_GROUP_GEOLOC:
 						updateView(cursor);
 						break;
+					}
 				}
-	    	}
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
-    }
+				cursor.close();
+			}
+			;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
     
 	/**
 	 * Send an intent to start GC view activity

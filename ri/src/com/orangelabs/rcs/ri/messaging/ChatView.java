@@ -511,7 +511,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	 * 
 	 * @param msg Instant message
 	 */
-    private void displayReceivedMessage(InstantMessage msg) {
+    protected void displayReceivedMessage(InstantMessage msg) {
 		String contact = PhoneUtils.extractNumberFromUri(msg.getRemote());
     	if (msg.getDisplayName() != null) {
     		contact = msg.getDisplayName();
@@ -566,8 +566,6 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			    			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_session_has_expired));
 			    			return;
 						}
-
-
 		    			
 		    			// Add session listener event
 						chatSession.addSessionListener(chatSessionListener);
@@ -1345,7 +1343,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	/**
 	 * Message item
 	 */
-	private abstract class MessageItem {
+	protected abstract class MessageItem {
 		public final static int IN = 0;
 		public final static int OUT = 1;
 		public final static int NA = 2;
