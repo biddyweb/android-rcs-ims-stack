@@ -26,6 +26,25 @@
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent">
 
+	    <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" >
+                <TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dip"
+                    android:text="GSMA release:" />
+                <TextView
+                    android:id="@+id/release"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dip"
+                    android:layout_marginRight="5dip"
+                    android:singleLine="true"
+                    android:textStyle="bold" />
+        </LinearLayout>
+        
        	<TextView android:text="IMS authentication procedure for Mobile access:"
 	    android:paddingTop="5dip"
 	    android:layout_width="fill_parent"
@@ -395,20 +414,6 @@
         android:textStyle="bold"
 		android:enabled="true"
         android:text="SIP automata" />
-		
-		<TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="5dip"
-        android:text="GSMA release:" />
-
-        <Spinner
-        android:id="@+id/GsmaRelease"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dip"
-        android:layout_marginRight="5dip"
-        android:drawSelectorOnTop="true" />
 
 	</LinearLayout>
 	</ScrollView>

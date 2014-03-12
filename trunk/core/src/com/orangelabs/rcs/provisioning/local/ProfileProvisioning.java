@@ -43,6 +43,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.orangelabs.rcs.R;
@@ -161,18 +162,8 @@ public class ProfileProvisioning extends Activity {
 		setCheckBoxParameter(this, R.id.file_transfer_sf, RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF, bundle);
 		setCheckBoxParameter(this, R.id.group_chat_sf, RcsSettingsData.CAPABILITY_GROUP_CHAT_SF, bundle);
 		setCheckBoxParameter(this, R.id.sip_automata, RcsSettingsData.CAPABILITY_SIP_AUTOMATA, bundle);
-        
-		spinner = (Spinner)findViewById(R.id.GsmaRelease);
-		adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, GSMA_RELEASE);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner.setAdapter(adapter);
-		int release = 0;
-		if (bundle != null && bundle.containsKey(RcsSettingsData.KEY_GSMA_RELEASE)) {
-			release = bundle.getInt(RcsSettingsData.KEY_GSMA_RELEASE);
-		} else {
-			release = RcsSettings.getInstance().getGsmaRelease();
-		}
-		spinner.setSelection(release);
+		TextView txt = (TextView) findViewById(R.id.release);
+		txt.setText(GSMA_RELEASE[RcsSettings.getInstance().getGsmaRelease() % GSMA_RELEASE.length]);
 	}
 
     /**
@@ -250,12 +241,12 @@ public class ProfileProvisioning extends Activity {
 		saveCheckBoxParameter(this, R.id.group_chat_sf, RcsSettingsData.CAPABILITY_GROUP_CHAT_SF, bundle);
         saveCheckBoxParameter(this,R.id.sip_automata, RcsSettingsData.CAPABILITY_SIP_AUTOMATA, bundle);
         
-		spinner = (Spinner)findViewById(R.id.GsmaRelease);
-		if (bundle != null) {
-			bundle.putInt(RcsSettingsData.KEY_GSMA_RELEASE ,spinner.getSelectedItemPosition() );
-		} else {
-			RcsSettings.getInstance().setGsmaRelease(""+spinner.getSelectedItemPosition() );
-		}
+//		spinner = (Spinner)findViewById(R.id.GsmaRelease);
+//		if (bundle != null) {
+//			bundle.putInt(RcsSettingsData.KEY_GSMA_RELEASE ,spinner.getSelectedItemPosition() );
+//		} else {
+//			RcsSettings.getInstance().setGsmaRelease(""+spinner.getSelectedItemPosition() );
+//		}
     }
     
     /**
