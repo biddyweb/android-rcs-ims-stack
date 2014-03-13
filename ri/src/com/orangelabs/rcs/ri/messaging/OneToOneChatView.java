@@ -52,7 +52,7 @@ public class OneToOneChatView extends ChatView {
         super.onCreate(savedInstanceState);
         contact = getIntent().getStringExtra("contact");
         history = getIntent().getBooleanExtra("history", false);
-        firstmessage = getIntent().getParcelableExtra("firstmessage");
+        firstmessage = getIntent().getParcelableExtra("firstMessage");
         if (firstmessage != null)
 			displayReceivedMessage(firstmessage);
         // Set title
@@ -171,7 +171,7 @@ public class OneToOneChatView extends ChatView {
 			intent.putExtra("sessionId", sessionId);
 		intent.putExtra("contact", contact);
 		if (firstMsg != null)
-			intent.putExtra("firstmessage", firstMsg);
+			intent.putExtra("firstMessage", firstMsg);
 		if (activity instanceof ChatList)
 			history = true;
 		intent.putExtra("history", history);

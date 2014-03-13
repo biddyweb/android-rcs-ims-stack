@@ -21,6 +21,7 @@ package com.orangelabs.rcs.ri.messaging;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -180,13 +181,13 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         setListAdapter(msgListAdapter);
         getListView().setOnItemClickListener(clickItemListener);
         
-        // Instanciate settings
+        // Instantiate settings
 		RcsSettings.createInstance(getApplicationContext());
         
         // Smiley resources
 		smileyResources = new Smileys(this);
 
-		// Instanciate the composing manager
+		// Instantiate the composing manager
 		composingManager = new IsComposingManager();
         
         // Set message composer callbacks
@@ -199,13 +200,13 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         Button btn = (Button)findViewById(R.id.send_button);
         btn.setOnClickListener(this);
                
-		// Instanciate messaging API
+		// Instantiate messaging API
         messagingApi = new MessagingApi(getApplicationContext());
         messagingApi.addApiEventListener(this);
         messagingApi.addImsEventListener(this);
         messagingApi.connectApi();
         
-        // Instanciate contacts API
+        // Instantiate contacts API
         contactsApi = new ContactsApi(getApplicationContext());
     }
 
@@ -240,6 +241,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         messagingApi.removeApiEventListener(this);
         messagingApi.removeImsEventListener(this);
         messagingApi.disconnectApi();
+        
+        hideProgressDialog();
     }
     
     @Override
@@ -309,12 +312,29 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	/**
 	 * Hide progress dialog
 	 */
-    public void hideProgressDialog() {
+    public synchronized void hideProgressDialog() {
     	if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 			progressDialog = null;
 		}
-    }        
+    }
+    
+	/**
+	 * Close the progress dialog on the UI thread
+	 */
+	public synchronized void hideProgressDialog(final Activity activity) {
+		if (progressDialog != null && progressDialog.isShowing()) {
+			final Dialog dialogSave = progressDialog;
+			progressDialog = null;
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					dialogSave.dismiss();
+				}
+			};
+			activity.runOnUiThread(runnable);
+		}
+	}
     
     /**
      * Add a message in the message history
@@ -670,6 +690,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
+			hideProgressDialog(ChatView.this);
 			// Session aborted
 			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_aborted));
 		}
@@ -678,6 +699,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		public void handleSessionTerminatedByRemote() {
 			handler.post(new Runnable() {
 				public void run() {
+					hideProgressDialog();
 					if (ChatView.this instanceof GroupChatView) {
 						AlertDialog.Builder builder = new AlertDialog.Builder(ChatView.this);
 						builder.setMessage(R.string.label_groupchat_terminated_by_remote);
@@ -744,6 +766,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			
 			handler.post(new Runnable() { 
 				public void run() {
+					hideProgressDialog();
 					displayReceivedMessage(msg);
 				}
 			});
@@ -751,6 +774,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				
 		// Chat error
 		public void handleImError(final int error) {
+			hideProgressDialog(ChatView.this);
 			// Display error
 			if (error == ChatError.SESSION_INITIATION_DECLINED) {
 				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_invitation_declined));
@@ -764,6 +788,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			final String number = PhoneUtils.extractNumberFromUri(contact);
 			handler.post(new Runnable() {
 				public void run(){
+					hideProgressDialog();
 					TextView view = (TextView)findViewById(R.id.isComposingText);
 					if (isComposing) {
 						view.setText(number	+ " " + getString(R.string.label_contact_is_composing));
@@ -779,6 +804,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    public void handleConferenceEvent(final String contact, final String contactDisplayname, final String state) {
 			handler.post(new Runnable() {
 				public void run(){
+					hideProgressDialog();
 					String number = PhoneUtils.extractNumberFromUri(contact);
 					addNotifHistory(number + " is " + state);
 				}
@@ -790,6 +816,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		public void handleMessageDeliveryStatus(final String msgId, final String status, final String contact ) throws RemoteException {
 			handler.post(new Runnable(){
 				public void run(){
+					hideProgressDialog();
 					if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FAILED) || status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_ERROR)
 							|| status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_FORBIDDEN)) {
 						addNotifHistory(getString(R.string.label_receive_delivery_status_failed));
@@ -806,6 +833,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		public void handleAddParticipantSuccessful() {
 			handler.post(new Runnable() {
 				public void run(){
+					hideProgressDialog();
 					addNotifHistory(getString(R.string.label_add_participant_success));
 				}
 			});
@@ -815,6 +843,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		public void handleAddParticipantFailed(String reason) {
 			handler.post(new Runnable() {
 				public void run(){
+					hideProgressDialog();
 					addNotifHistory(getString(R.string.label_add_participant_failed));
 				}
 			});
@@ -845,6 +874,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 			
 			handler.post(new Runnable() { 
 				public void run() {
+					hideProgressDialog();
 					displayReceivedMessage(geoloc);
 				}
 			});			
