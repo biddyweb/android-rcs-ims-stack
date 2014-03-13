@@ -29,6 +29,8 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -171,7 +173,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             for (int j = 0; j < getListeners().size(); j++) {
                 getListeners().get(j).handleSessionStarted();
             }
-
+            // Create download entry in fthttp table
+			FtHttpResumeDownload download = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), getThumbnail());
+			FtHttpResumeDaoImpl.getInstance().insert(download);
             // Download file from the HTTP server
 			if (downloadManager.downloadFile()) {
 				if (logger.isActivated()){
@@ -179,7 +183,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 				}
 
                 // Set filename
-                getContent().setUrl(downloadManager.getFilename());
+                getContent().setUrl(downloadManager.getLocalUrl());
 
                 // File transfered
                 handleFileTransfered();
@@ -248,7 +252,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 					}
 
 	                // Set filename
-	                getContent().setUrl(downloadManager.getFilename());
+	                getContent().setUrl(downloadManager.getLocalUrl());
 
 	                // File transfered
 	                handleFileTransfered();

@@ -27,6 +27,9 @@ import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
+import com.orangelabs.rcs.provider.fthttp.Status;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -87,9 +90,11 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new HTTP group file transfer session as originating");
 	    	}
-
+	    	// Create upload entry in fthttp table
+	    	FtHttpResumeUpload upload = new FtHttpResumeUpload(OriginatingHttpGroupFileSharingSession.this, uploadManager.getTid(),getThumbnail());
+	    	FtHttpResumeDaoImpl.getInstance().insert(upload,Status.CREATED);
 	    	// Upload the file to the HTTP server 
-            byte[] result = uploadManager.uploadFile();
+            byte[] result = uploadManager.uploadFile(upload);
             sendResultToContact(result);
 		} catch(Exception e) {
         	if (logger.isActivated()) {
@@ -185,15 +190,19 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	@Override
 	public void resumeFileTransfer() {
 		new Thread(new Runnable() {
-		    public void run() {
+			public void run() {
 				try {
-					byte[] result = uploadManager.resumeUpload();
-					sendResultToContact(result);
+					FtHttpResumeUpload upload = FtHttpResumeDaoImpl.getInstance().queryUpload(uploadManager.getTid());
+					if (upload != null) {
+						sendResultToContact(uploadManager.resumeUpload(upload));
+					} else {
+						sendResultToContact(null);
+					}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-		    }
-		  }).start();
+			}
+		}).start();
 	}
 }
