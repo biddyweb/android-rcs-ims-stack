@@ -634,7 +634,7 @@ public class ChatUtils {
 	*/
 	public static String buildGeolocDocument(GeolocPush geoloc, String contact, String msgId) {		
 		String document= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + CRLF +
-				"<rcsenveloppe xmlns=\"urn:gsma:params:xml:ns:rcs:rcs:geolocation\"" +
+				"<rcsenvelope xmlns=\"urn:gsma:params:xml:ns:rcs:rcs:geolocation\"" +
 				" xmlns:rpid=\"urn:ietf:params:xml:ns:pidf:rpid\"" +
 				" xmlns:gp=\"urn:ietf:params:xml:ns:pidf:geopriv10\"" +
 				" xmlns:gml=\"http://www.opengis.net/gml\"" +
@@ -648,7 +648,7 @@ public class ChatUtils {
 				"<gp:geopriv>" + CRLF + 
 				"<gp:location-info>" + CRLF +
 				"<gs:Circle srsName=\"urn:ogc:def:crs:EPSG::4326\">" + CRLF +
-				"<gml:pos>"+ geoloc.getLatitude()+" "+geoloc.getLongitude()+" "+geoloc.getAltitude() +"</gml:pos>" + CRLF +
+				"<gml:pos>"+ geoloc.getLatitude()+" "+geoloc.getLongitude() +"</gml:pos>" + CRLF +
 				"<gs:radius uom=\"urn:ogc:def:uom:EPSG::9001\">" + geoloc.getAccuracy() + "</gs:radius>" + CRLF +
 				"</gs:Circle>" + CRLF +
 				"</gp:location-info>" + CRLF + 
@@ -658,7 +658,7 @@ public class ChatUtils {
 				"</gp:geopriv>" + CRLF + 
 				"<timestamp>"+ DateUtils.encodeDate(System.currentTimeMillis()) +"</timestamp>" + CRLF + 
 				"</rcspushlocation>" + CRLF;
-		document += "</rcsenveloppe>" + CRLF;
+		document += "</rcsenvelope>" + CRLF;
 		return document;
 	}
 	
@@ -677,7 +677,7 @@ public class ChatUtils {
 			    GeolocPush geoloc = new GeolocPush(geolocDocument.getLabel(),
 			    		geolocDocument.getLatitude(),
 			    		geolocDocument.getLongitude(),
-			    		geolocDocument.getAltitude(),
+			    		0,
 			    		geolocDocument.getExpiration(),
 			    		geolocDocument.getRadius());
 			    return geoloc;
