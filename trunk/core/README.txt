@@ -20,7 +20,9 @@ V2.5.17
 - Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
 - Issue 232		Stack: Application Not Responding for StartService
 - Issue 235		Stack: Input Streams not closed
-- Issue 239		MSRP Message-ID not compliant with RFC4975
+- Issue 239		Stack: MSRP Message-ID not compliant with RFC4975
+- Issue 241		Stack: Wrong GeoLocation xml structure
+- Issue 243		Stack: Simultaneous image share & video share failing
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
@@ -33,6 +35,7 @@ V2.5.16
 - Issue 211		Stack: Provisioning : some parameters are not reloaded on Service restart but on Application Kill/Start
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
 - Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
+- Issue 223		Stack: OPTIONS are not checked by receiver, when sender non-gracefully terminate the video share
 - Issue 224		Stack: Failed message from the INVITE will silently marked as failed w/o updating the UI/API
 - Issue 226		Stack: Missing "P-Preferred-Service" header in IP Voice call INVITE SIP request
 - Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled
