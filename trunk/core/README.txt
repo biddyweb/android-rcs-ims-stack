@@ -23,7 +23,8 @@ V2.5.17
 - Issue 239		Stack: MSRP Message-ID not compliant with RFC4975
 - Issue 241		Stack: Wrong GeoLocation xml structure
 - Issue 243		Stack: Simultaneous image share & video share failing
-
+- Issue 244		Stack: FT HTTP: wrong saving of downloaded files
+ 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant

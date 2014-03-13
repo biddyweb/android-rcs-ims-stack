@@ -18,24 +18,33 @@
 
 package com.orangelabs.rcs.provider;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import com.orangelabs.rcs.provider.fthttp.FthttpColumns;
 import com.orangelabs.rcs.provider.ipcall.IPCallData;
 import com.orangelabs.rcs.provider.ipcall.IPCallProvider;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.messaging.RichMessagingProvider;
 import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.provider.sharing.RichCallProvider;
-
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-
-import android.database.sqlite.SQLiteOpenHelper;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 12;
-
+	private static final int DATABASE_VERSION = 13;
+	/**
+	 * The logger
+	 */
+	final private static Logger logger = Logger.getLogger(RichProviderHelper.class.getSimpleName());
+	
 	@Override
 	public void onCreate(SQLiteDatabase db){
+		if (logger.isActivated()) {
+			logger.debug("onCreate");
+		}
+		// @formatter:off
 		db.execSQL("create table " + RichMessagingProvider.TABLE + " ("
 				// Fields for chat
 				+ RichMessagingData.KEY_ID + " integer primary key, "
@@ -92,6 +101,26 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				+ IPCallData.KEY_STATUS + " integer,"
 				+ IPCallData.KEY_SESSION_ID+ " TEXT);"
 				);
+				
+		db.execSQL("CREATE TABLE IF NOT EXISTS "
+            + FthttpColumns.TABLE + " ( "
+	            + FthttpColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+	            + FthttpColumns.OU_TID + " TEXT, "
+	            + FthttpColumns.IN_URL + " TEXT, "
+	            + FthttpColumns.IN_SIZE + " INTEGER, "
+	            + FthttpColumns.IN_TYPE + " TEXT, "
+	            + FthttpColumns.CONTACT + " TEXT, "
+	            + FthttpColumns.CHATID + " TEXT, "
+	            + FthttpColumns.FILENAME + " TEXT NOT NULL, "
+	            + FthttpColumns.DIRECTION + " INTEGER NOT NULL, "
+	            + FthttpColumns.STATUS + " INTEGER NOT NULL, "
+	            + FthttpColumns.DATE + " INTEGER NOT NULL,"
+	            + FthttpColumns.PARTICIPANTS + " TEXT,"
+	            + FthttpColumns.DISPLAY_NAME + " TEXT, "
+	            + FthttpColumns.SESSION_ID + " TEXT, "
+	            + FthttpColumns.THUMBNAIL + " BLOB);"
+	            );
+	    // @formatter:on
 	}
 	
 	@Override
@@ -99,9 +128,9 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 		db.execSQL("DROP TABLE IF EXISTS " + RichMessagingProvider.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS " + RichCallProvider.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS " + IPCallProvider.TABLE);
+		db.execSQL("DROP TABLE IF EXISTS " + FthttpColumns.TABLE);
 		onCreate(db);
 	}
-	
 	
 	/**
 	 * To manage an unique instance.

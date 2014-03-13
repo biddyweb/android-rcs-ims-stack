@@ -120,7 +120,7 @@ public abstract class HttpTransferManager {
     /**
      * The logger
      */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static final Logger logger = Logger.getLogger(HttpTransferManager.class.getSimpleName());
 
     /**
      * Constructor

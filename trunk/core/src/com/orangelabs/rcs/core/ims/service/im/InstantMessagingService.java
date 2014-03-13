@@ -56,6 +56,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.OriginatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.TerminatingFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FileTransferHttpInfoDocument;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.FtHttpResumeManager;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.OriginatingHttpGroupFileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.TerminatingHttpFileSharingSession;
@@ -108,10 +109,12 @@ public class InstantMessagingService extends ImsService {
 	 */
 	private ImdnManager imdnMgr = null;	
 	
+	private FtHttpResumeManager resumeManager = null;
 	/**
 	 * Store & Forward manager
 	 */
 	private StoreAndForwardManager storeAndFwdMgr = new StoreAndForwardManager(this);
+	
 
 	/**
      * The logger
@@ -145,6 +148,12 @@ public class InstantMessagingService extends ImsService {
 		// Start IMDN manager
         imdnMgr = new ImdnManager(this);
 		imdnMgr.start();
+		
+//		new Thread() { TODO
+//			public void run() {
+//				resumeManager = new FtHttpResumeManager(InstantMessagingService.this);
+//			}
+//		}.start();
 	}
 
     /**
@@ -160,6 +169,8 @@ public class InstantMessagingService extends ImsService {
 		// Stop IMDN manager
 		imdnMgr.terminate();
         imdnMgr.interrupt();
+        if (resumeManager != null)
+        	resumeManager.terminate();
 	}
 
 	/**

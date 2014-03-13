@@ -168,6 +168,11 @@
 			android:writePermission="com.orangelabs.rcs.permission.RCS"
 			android:readPermission="com.orangelabs.rcs.permission.RCS"
 			android:name="com.orangelabs.rcs.provider.eventlogs.EventLogProvider"/>
+		
+		<provider android:authorities="com.orangelabs.rcs.fthttp"
+			android:writePermission="com.orangelabs.rcs.permission.RCS"
+			android:readPermission="com.orangelabs.rcs.permission.RCS"
+			android:name="com.orangelabs.rcs.provider.fthttp.FtHttpProvider"/>
 	
 		<!-- Device events receiver -->	
 

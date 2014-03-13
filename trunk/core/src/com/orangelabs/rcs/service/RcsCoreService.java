@@ -56,6 +56,7 @@ import com.orangelabs.rcs.core.ims.service.sip.GenericSipSession;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.file.FileFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.ipcall.IPCall;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
@@ -264,6 +265,9 @@ public class RcsCoreService extends Service implements CoreListener {
             // Instantiate the IP call history
             IPCall.createInstance(getApplicationContext());
 
+            // Instantiate the FT HTTP DAO interface
+            FtHttpResumeDaoImpl.createInstance(getApplicationContext());
+            
             // Create the core
 			Core.createCore(this);
 
