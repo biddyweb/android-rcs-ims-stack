@@ -98,6 +98,25 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
+	public List<FtHttpResume> queryAll(Status status) {
+		FthttpSelection where = new FthttpSelection();
+		where.status(status);
+		ArrayList<FtHttpResume> result = new ArrayList<FtHttpResume>();
+		FthttpCursor cursor = where.query(cr);
+		if (cursor != null) {
+			while (cursor.moveToNext()) {
+				if (cursor.getDirection() == Direction.INCOMING) {
+					result.add(new FtHttpResumeDownload(cursor));
+				} else {
+					result.add(new FtHttpResumeUpload(cursor));
+				}
+			}
+			cursor.close();
+		}
+		return result;
+	}
+	
+	@Override
 	public FtHttpResume queryOldest(Status status) {
 		FthttpSelection where = new FthttpSelection();
 		FtHttpResume result = null;
@@ -256,12 +275,12 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
-	public int deleteFinished() {
+	public int clean() {
 		if (logger.isActivated()) {
 			logger.debug("deleteFinished");
 		}
 		FthttpSelection where = new FthttpSelection();
-		where.status(Status.SUCCESS,Status.FAILURE);
+		where.statusNot(Status.STARTED);
 		return where.delete(cr);
 	}
 

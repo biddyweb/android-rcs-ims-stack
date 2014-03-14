@@ -55,7 +55,7 @@ public class FtHttpResumeManager implements HttpTransferEventListener {
 		}
 		try {
 			// delete entries in FT HTTP which are no more useful
-			dao.deleteFinished();
+			dao.clean();
 			do {
 				ftHttpResume = dao.queryOldest(Status.STARTED);
 				if (ftHttpResume != null) {

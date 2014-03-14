@@ -30,12 +30,21 @@ import android.net.Uri;
 public interface FtHttpResumeDao {
 
 	/**
-	 * Query all entries
+	 * Query all entries sorted in _ID ascending order
 	 * 
 	 * @return the list of entries
 	 */
 	public List<FtHttpResume> queryAll();
 
+	/**
+	 * Query entries with status sorted in _ID ascending order
+	 * 
+	 * @param status
+	 *            the {@code status} value.
+	 * @return the list of entries
+	 */
+	public List<FtHttpResume> queryAll(Status status);
+	
 	/**
 	 * Query the oldest entry
 	 * 
@@ -91,11 +100,11 @@ public interface FtHttpResumeDao {
 	public int delete(FtHttpResume ftHttpResume);
 
 	/**
-	 * Delete entries in fthttp table for finished sessions
+	 * Clean fthttp table for non started sessions
 	 * 
 	 * @return number of rows deleted
 	 */
-	public int deleteFinished();
+	public int clean();
 
 	/**
 	 * Update the status of an entry in the fthttp table

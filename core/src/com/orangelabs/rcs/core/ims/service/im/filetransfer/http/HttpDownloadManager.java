@@ -334,21 +334,19 @@ public class HttpDownloadManager extends HttpTransferManager {
 					retryCount++;
 					return downloadFile();
 				} else {
-					if (logger.isActivated()) {
-						if (isPaused()) {
+					if (isPaused()) {
+						if (logger.isActivated()) {
+							logger.debug("Download file paused");
+						}
+					} else {
+						dao.setStatus(download, Status.FAILURE);
+						if (isCancelled()) {
 							if (logger.isActivated()) {
-								logger.debug("Download file paused");
+								logger.debug("Download file cancelled");
 							}
 						} else {
-							dao.setStatus(download, Status.FAILURE);
-							if (isCancelled()) {
-								if (logger.isActivated()) {
-									logger.debug("Download file cancelled");
-								}
-							} else {
-								if (logger.isActivated()) {
-									logger.debug("Failed to download file");
-								}
+							if (logger.isActivated()) {
+								logger.debug("Failed to download file");
 							}
 						}
 					}
