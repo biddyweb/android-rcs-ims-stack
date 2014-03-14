@@ -184,8 +184,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
             for (int j = 0; j < getListeners().size(); j++) {
                 getListeners().get(j).handleSessionStarted();
             }
-            // Create download entry in fthttp table
-			FtHttpResumeDownload download = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), getThumbnail());
+			// Create download entry in fthttp table
+			FtHttpResumeDownload download = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), msgId, getThumbnail());
 			FtHttpResumeDaoImpl.getInstance().insert(download);
             // Download file from the HTTP server
 			if (downloadManager.downloadFile()) {

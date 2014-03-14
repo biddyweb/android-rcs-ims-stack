@@ -33,7 +33,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 13;
+	private static final int DATABASE_VERSION = 14;
 	/**
 	 * The logger
 	 */
@@ -47,29 +47,29 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 		// @formatter:off
 		db.execSQL("create table " + RichMessagingProvider.TABLE + " ("
 				// Fields for chat
-				+ RichMessagingData.KEY_ID + " integer primary key, "
-				+ RichMessagingData.KEY_TYPE + " integer, "
-				+ RichMessagingData.KEY_CHAT_SESSION_ID + " TEXT, "
-				+ RichMessagingData.KEY_TIMESTAMP + " long, "
-				+ RichMessagingData.KEY_CONTACT + " TEXT, "
-				+ RichMessagingData.KEY_STATUS + " integer, "
-				+ RichMessagingData.KEY_DATA + " TEXT, "
-				+ RichMessagingData.KEY_MESSAGE_ID + " TEXT, "
-				+ RichMessagingData.KEY_IS_SPAM + " integer, "
-				+ RichMessagingData.KEY_CHAT_ID + " TEXT, "
-				+ RichMessagingData.KEY_CHAT_REJOIN_ID + " TEXT, "
+				+ RichMessagingData.KEY_ID + " integer primary key,"
+				+ RichMessagingData.KEY_TYPE + " integer,"
+				+ RichMessagingData.KEY_CHAT_SESSION_ID + " TEXT,"
+				+ RichMessagingData.KEY_TIMESTAMP + " long,"
+				+ RichMessagingData.KEY_CONTACT + " TEXT,"
+				+ RichMessagingData.KEY_STATUS + " integer,"
+				+ RichMessagingData.KEY_DATA + " TEXT,"
+				+ RichMessagingData.KEY_MESSAGE_ID + " TEXT,"
+				+ RichMessagingData.KEY_IS_SPAM + " integer,"
+				+ RichMessagingData.KEY_CHAT_ID + " TEXT,"
+				+ RichMessagingData.KEY_CHAT_REJOIN_ID + " TEXT,"
 				
 				// Fields for file transfer
-				+ RichMessagingData.KEY_MIME_TYPE + " TEXT, "
-				+ RichMessagingData.KEY_NAME + " TEXT, "
-				+ RichMessagingData.KEY_SIZE + " long, "
-				+ RichMessagingData.KEY_TOTAL_SIZE + " long, "
+				+ RichMessagingData.KEY_MIME_TYPE + " TEXT,"
+				+ RichMessagingData.KEY_NAME + " TEXT,"
+				+ RichMessagingData.KEY_SIZE + " long,"
+				+ RichMessagingData.KEY_TOTAL_SIZE + " long,"
 				
 				+ RichMessagingData.KEY_NUMBER_MESSAGES+ " integer,"
 				
 				// fields for IMDN in chat or FT group
-				+ RichMessagingData.KEY_IMDN_DELIVERED_LIST + " TEXT, "
-				+ RichMessagingData.KEY_IMDN_DISPLAYED_LIST + " TEXT, "
+				+ RichMessagingData.KEY_IMDN_DELIVERED_LIST + " TEXT,"
+				+ RichMessagingData.KEY_IMDN_DISPLAYED_LIST + " TEXT,"
 				+ RichMessagingData.KEY_DISPLAY_NAME + " TEXT,"
 				
 				// Field for Group Chat: accept_invite (boolean)
@@ -77,13 +77,13 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				);
 		
 		db.execSQL("create table " + RichCallProvider.TABLE + " ("
-				+ RichCallData.KEY_ID + " integer primary key, "
-				+ RichCallData.KEY_CONTACT + " TEXT, "
-				+ RichCallData.KEY_DESTINATION + " integer, "
-				+ RichCallData.KEY_MIME_TYPE + " TEXT, "
-				+ RichCallData.KEY_NAME + " TEXT, "
-				+ RichCallData.KEY_SIZE + " long, "
-				+ RichCallData.KEY_DATA + " TEXT, "
+				+ RichCallData.KEY_ID + " integer primary key,"
+				+ RichCallData.KEY_CONTACT + " TEXT,"
+				+ RichCallData.KEY_DESTINATION + " integer,"
+				+ RichCallData.KEY_MIME_TYPE + " TEXT,"
+				+ RichCallData.KEY_NAME + " TEXT,"
+				+ RichCallData.KEY_SIZE + " long,"
+				+ RichCallData.KEY_DATA + " TEXT,"
 				+ RichCallData.KEY_TIMESTAMP + " long,"
 				+ RichCallData.KEY_NUMBER_MESSAGES + " integer,"
 				+ RichCallData.KEY_STATUS + " integer,"
@@ -91,11 +91,11 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				);
 		
 		db.execSQL("create table " + IPCallProvider.TABLE + " ("
-				+ IPCallData.KEY_ID + " integer primary key, "
-				+ IPCallData.KEY_CONTACT + " TEXT, "
-				+ IPCallData.KEY_EVENT_TYPE + " integer, "
-				+ IPCallData.KEY_AUDIO_MIME_TYPE + " TEXT, "
-				+ IPCallData.KEY_VIDEO_MIME_TYPE + " TEXT, "
+				+ IPCallData.KEY_ID + " integer primary key,"
+				+ IPCallData.KEY_CONTACT + " TEXT,"
+				+ IPCallData.KEY_EVENT_TYPE + " integer,"
+				+ IPCallData.KEY_AUDIO_MIME_TYPE + " TEXT,"
+				+ IPCallData.KEY_VIDEO_MIME_TYPE + " TEXT,"
 				+ IPCallData.KEY_TIMESTAMP + " long,"
 				+ IPCallData.KEY_NUMBER_MESSAGES + " integer,"
 				+ IPCallData.KEY_STATUS + " integer,"
@@ -104,21 +104,22 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				
 		db.execSQL("CREATE TABLE IF NOT EXISTS "
             + FtHttpColumns.TABLE + " ( "
-	            + FtHttpColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-	            + FtHttpColumns.OU_TID + " TEXT, "
-	            + FtHttpColumns.IN_URL + " TEXT, "
-	            + FtHttpColumns.IN_SIZE + " INTEGER, "
-	            + FtHttpColumns.IN_TYPE + " TEXT, "
-	            + FtHttpColumns.CONTACT + " TEXT, "
-	            + FtHttpColumns.CHATID + " TEXT, "
-	            + FtHttpColumns.FILENAME + " TEXT NOT NULL, "
-	            + FtHttpColumns.DIRECTION + " INTEGER NOT NULL, "
-	            + FtHttpColumns.STATUS + " INTEGER NOT NULL, "
+	            + FtHttpColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+	            + FtHttpColumns.OU_TID + " TEXT,"
+	            + FtHttpColumns.IN_URL + " TEXT,"
+	            + FtHttpColumns.IN_SIZE + " INTEGER,"
+	            + FtHttpColumns.IN_TYPE + " TEXT,"
+	            + FtHttpColumns.CONTACT + " TEXT,"
+	            + FtHttpColumns.CHATID + " TEXT,"
+	            + FtHttpColumns.FILENAME + " TEXT NOT NULL,"
+	            + FtHttpColumns.DIRECTION + " INTEGER NOT NULL,"
+	            + FtHttpColumns.STATUS + " INTEGER NOT NULL,"
 	            + FtHttpColumns.DATE + " INTEGER NOT NULL,"
 	            + FtHttpColumns.PARTICIPANTS + " TEXT,"
-	            + FtHttpColumns.DISPLAY_NAME + " TEXT, "
-	            + FtHttpColumns.SESSION_ID + " TEXT, "
-	            + FtHttpColumns.THUMBNAIL + " BLOB);"
+	            + FtHttpColumns.DISPLAY_NAME + " TEXT,"
+	            + FtHttpColumns.SESSION_ID + " TEXT,"
+	            + FtHttpColumns.THUMBNAIL + " BLOB,"
+	            + FtHttpColumns.MESSAGE_ID + " TEXT);"
 	            );
 	    // @formatter:on
 	}

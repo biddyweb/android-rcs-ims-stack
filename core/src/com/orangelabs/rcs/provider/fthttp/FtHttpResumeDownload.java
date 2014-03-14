@@ -42,18 +42,25 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	final Long size;
 
 	/**
+	 * the message Id
+	 */
+	final private String messageId;
+	
+	/**
 	 * Creates a FT HTTP resume download data object (immutable)
 	 * 
 	 * @param session
 	 *            the {@code session} instance.
 	 * @param filename
 	 *            the {@code filename} value.
+	 * @param messageId
+	 *            the {@code messageId} value.
 	 * @param thumbnail
 	 *            the {@code thumbnail} value.
 	 */
-	public FtHttpResumeDownload(FileSharingSession session, String filename, byte[] thumbnail) {
-		this(filename, thumbnail, session.getContent(), session.getRemoteContact(), session.getRemoteDisplayName(), session
-				.getContributionID(), session.getSessionID(), session.getParticipants().toString());
+	public FtHttpResumeDownload(FileSharingSession session, String filename, String messageId, byte[] thumbnail) {
+		this(filename, thumbnail, session.getContent(), messageId, session.getRemoteContact(), session.getRemoteDisplayName(),
+				session.getContributionID(), session.getSessionID(), session.getParticipants().toString());
 	}
 
 	/**
@@ -65,6 +72,8 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 *            the {@code thumbnail} value.
 	 * @param content
 	 *            the {@code url} content.
+	 * @param messageId
+	 *            the {@code messageId} value.
 	 * @param contact
 	 *            the {@code contact} value.
 	 * @param displayName
@@ -76,15 +85,16 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 * @param participants
 	 *            the list of {@code participants}.
 	 */
-	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String contact, String displayName,
-			String chatId, String sessionId, String participants) {
+	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String messageId, String contact,
+			String displayName, String chatId, String sessionId, String participants) {
 		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
 		if (content == null)
 			throw new IllegalArgumentException("Null argument");
 		this.url = content.getUrl();
 		this.mimeType = content.getEncoding();
 		this.size = content.getSize();
-		if (size <= 0 || url == null || mimeType == null)
+		this.messageId = messageId;
+		if (size <= 0 || url == null || mimeType == null || messageId == null)
 			throw new IllegalArgumentException("Invalid argument");
 	}
 
@@ -99,7 +109,8 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 		this.url = cursor.getInUrl();
 		this.mimeType = cursor.getInType();
 		this.size = cursor.getInSize();
-		if (this.size <= 0 || this.url == null || this.mimeType == null)
+		this.messageId = cursor.getMessageId();
+		if (this.size <= 0 || this.url == null || this.mimeType == null || messageId == null)
 			throw new IllegalArgumentException("Null argument");
 	}
 
@@ -115,9 +126,13 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 		return size;
 	}
 
+	public String getMessageId() {
+		return messageId;
+	}
+
 	@Override
 	public String toString() {
-		return "FtHttpResumeDownload [url=" + url + ", mimeType=" + mimeType + ", size=" + size + "]";
+		return "FtHttpResumeDownload [url=" + url + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId + "]";
 	}
 
 }

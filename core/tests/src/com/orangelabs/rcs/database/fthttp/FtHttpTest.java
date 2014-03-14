@@ -21,6 +21,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 public class FtHttpTest extends InstrumentationTestCase {
 
 	static final private Logger logger = Logger.getLogger(FtHttpTest.class.getSimpleName());
+	private String messageId = "messageId";
 	private String contact = "contact";
 	private String file = "filename";
 	private String displayName = "displayName";
@@ -53,8 +54,8 @@ public class FtHttpTest extends InstrumentationTestCase {
 		fthttp.deleteAll();
 		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, tid, contact, displayName, chatId, sessionId,
 				participants);
-		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, contact, displayName, chatId, sessionId,
-				participants);
+		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, messageId, contact, displayName, chatId,
+				sessionId, participants);
 		Uri uri = null;
 		try {
 			uri = fthttp.insert(upload, FtHttpStatus.CREATED);

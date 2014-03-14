@@ -42,6 +42,7 @@ public interface FtHttpColumns extends BaseColumns {
     String DISPLAY_NAME = "display_name";
     String SESSION_ID = "session_id";
     String THUMBNAIL = "thumbnail";
+    String MESSAGE_ID = "message_id";
     
     String DEFAULT_ORDER = _ID;
 

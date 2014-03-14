@@ -160,6 +160,7 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 			values.putInUrl(download.getUrl());
 			values.putInType(download.getMimeType());
 			values.putInSize(download.getSize());
+			values.putMessageId(download.getMessageId());
 			if (logger.isActivated()) {
 				logger.debug("insert " + download + ")");
 			}
