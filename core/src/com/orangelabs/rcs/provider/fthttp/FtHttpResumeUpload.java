@@ -70,7 +70,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 */
 	public FtHttpResumeUpload(String file, byte[] thumbnail, String tid, String contact, String displayName, String chatId,
 			String sessionId, String participants) {
-		super(Direction.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
+		super(FtHttpDirection.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
 		if (tid == null)
 			throw new IllegalArgumentException("Null tid");
 		this.tid = tid;
@@ -82,7 +82,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 * @param cursor
 	 *            the {@code cursor} value.
 	 */
-	public FtHttpResumeUpload(FthttpCursor cursor) {
+	public FtHttpResumeUpload(FtHttpCursor cursor) {
 		super(cursor);
 		this.tid = cursor.getOuTid();
 		if (this.tid == null)

@@ -22,7 +22,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.orangelabs.rcs.provider.fthttp.FthttpColumns;
+import com.orangelabs.rcs.provider.fthttp.FtHttpColumns;
 import com.orangelabs.rcs.provider.ipcall.IPCallData;
 import com.orangelabs.rcs.provider.ipcall.IPCallProvider;
 import com.orangelabs.rcs.provider.messaging.RichMessagingData;
@@ -103,22 +103,22 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 				);
 				
 		db.execSQL("CREATE TABLE IF NOT EXISTS "
-            + FthttpColumns.TABLE + " ( "
-	            + FthttpColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-	            + FthttpColumns.OU_TID + " TEXT, "
-	            + FthttpColumns.IN_URL + " TEXT, "
-	            + FthttpColumns.IN_SIZE + " INTEGER, "
-	            + FthttpColumns.IN_TYPE + " TEXT, "
-	            + FthttpColumns.CONTACT + " TEXT, "
-	            + FthttpColumns.CHATID + " TEXT, "
-	            + FthttpColumns.FILENAME + " TEXT NOT NULL, "
-	            + FthttpColumns.DIRECTION + " INTEGER NOT NULL, "
-	            + FthttpColumns.STATUS + " INTEGER NOT NULL, "
-	            + FthttpColumns.DATE + " INTEGER NOT NULL,"
-	            + FthttpColumns.PARTICIPANTS + " TEXT,"
-	            + FthttpColumns.DISPLAY_NAME + " TEXT, "
-	            + FthttpColumns.SESSION_ID + " TEXT, "
-	            + FthttpColumns.THUMBNAIL + " BLOB);"
+            + FtHttpColumns.TABLE + " ( "
+	            + FtHttpColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+	            + FtHttpColumns.OU_TID + " TEXT, "
+	            + FtHttpColumns.IN_URL + " TEXT, "
+	            + FtHttpColumns.IN_SIZE + " INTEGER, "
+	            + FtHttpColumns.IN_TYPE + " TEXT, "
+	            + FtHttpColumns.CONTACT + " TEXT, "
+	            + FtHttpColumns.CHATID + " TEXT, "
+	            + FtHttpColumns.FILENAME + " TEXT NOT NULL, "
+	            + FtHttpColumns.DIRECTION + " INTEGER NOT NULL, "
+	            + FtHttpColumns.STATUS + " INTEGER NOT NULL, "
+	            + FtHttpColumns.DATE + " INTEGER NOT NULL,"
+	            + FtHttpColumns.PARTICIPANTS + " TEXT,"
+	            + FtHttpColumns.DISPLAY_NAME + " TEXT, "
+	            + FtHttpColumns.SESSION_ID + " TEXT, "
+	            + FtHttpColumns.THUMBNAIL + " BLOB);"
 	            );
 	    // @formatter:on
 	}
@@ -128,7 +128,7 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 		db.execSQL("DROP TABLE IF EXISTS " + RichMessagingProvider.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS " + RichCallProvider.TABLE);
 		db.execSQL("DROP TABLE IF EXISTS " + IPCallProvider.TABLE);
-		db.execSQL("DROP TABLE IF EXISTS " + FthttpColumns.TABLE);
+		db.execSQL("DROP TABLE IF EXISTS " + FtHttpColumns.TABLE);
 		onCreate(db);
 	}
 	

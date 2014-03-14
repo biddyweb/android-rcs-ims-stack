@@ -14,8 +14,8 @@ import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDao;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FthttpColumns;
-import com.orangelabs.rcs.provider.fthttp.Status;
+import com.orangelabs.rcs.provider.fthttp.FtHttpColumns;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 public class FtHttpTest extends InstrumentationTestCase {
@@ -23,11 +23,11 @@ public class FtHttpTest extends InstrumentationTestCase {
 	static final private Logger logger = Logger.getLogger(FtHttpTest.class.getSimpleName());
 	private String contact = "contact";
 	private String file = "filename";
-	private String displayName="displayName";
+	private String displayName = "displayName";
 	private String tid = "tid";
-	private String chatId="chatId";
-	private String sessionId="sessionId";
-	private String participants="participant1;participant2";
+	private String chatId = "chatId";
+	private String sessionId = "sessionId";
+	private String participants = "participant1;participant2";
 	private FtHttpResumeDao fthttp;
 	private ContentResolver mContentResolver;
 	private ContentProviderClient mProvider;
@@ -37,11 +37,11 @@ public class FtHttpTest extends InstrumentationTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		mContentResolver = getInstrumentation().getTargetContext().getContentResolver();
-		mProvider = mContentResolver.acquireContentProviderClient(FthttpColumns.CONTENT_URI);
+		mProvider = mContentResolver.acquireContentProviderClient(FtHttpColumns.CONTENT_URI);
 		fthttp = FtHttpResumeDaoImpl.createInstance(getInstrumentation().getTargetContext());
 		content = ContentManager.createMmContentFromFilename("filename", "url", 1023);
 		if (logger.isActivated()) {
-			logger.debug("SetUp mProvider = " + mProvider + " " + FthttpColumns.CONTENT_URI);
+			logger.debug("SetUp mProvider = " + mProvider + " " + FtHttpColumns.CONTENT_URI);
 		}
 	}
 
@@ -51,11 +51,13 @@ public class FtHttpTest extends InstrumentationTestCase {
 
 	public void testFtHttpProvider() {
 		fthttp.deleteAll();
-		FtHttpResumeUpload upload = new FtHttpResumeUpload(file,thumbnail,tid,contact,displayName,chatId,sessionId, participants);
-		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, contact, displayName, chatId, sessionId, participants);
+		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, tid, contact, displayName, chatId, sessionId,
+				participants);
+		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, contact, displayName, chatId, sessionId,
+				participants);
 		Uri uri = null;
 		try {
-			uri = fthttp.insert(upload, Status.CREATED);
+			uri = fthttp.insert(upload, FtHttpStatus.CREATED);
 			if (logger.isActivated()) {
 				logger.debug("addUploadForContact result URI = " + uri);
 			}
@@ -71,21 +73,21 @@ public class FtHttpTest extends InstrumentationTestCase {
 		}
 		assertNotNull("insert failed", uri);
 
-		Status status = fthttp.getStatus(upload);
-		assertEquals("getStatus failed", Status.CREATED, status);
+		FtHttpStatus status = fthttp.getStatus(upload);
+		assertEquals("getStatus failed", FtHttpStatus.CREATED, status);
 
 		status = fthttp.getStatus(download);
-		assertEquals("getStatus failed", Status.STARTED, status);
+		assertEquals("getStatus failed", FtHttpStatus.STARTED, status);
 
-		fthttp.setStatus(upload, Status.FAILURE);
+		fthttp.setStatus(upload, FtHttpStatus.FAILURE);
 		status = fthttp.getStatus(upload);
-		assertEquals("getStatus failed", Status.FAILURE, status);
+		assertEquals("getStatus FtHttpStatus", FtHttpStatus.FAILURE, status);
 
-		fthttp.setStatus(download, Status.FAILURE);
+		fthttp.setStatus(download, FtHttpStatus.FAILURE);
 		status = fthttp.getStatus(download);
-		assertEquals("getStatus failed", Status.FAILURE, status);
+		assertEquals("getStaFtHttpStatusiled", FtHttpStatus.FAILURE, status);
 
-		FtHttpResume ftHttpResume = fthttp.queryOldest(Status.FAILURE);
+		FtHttpResume ftHttpResume = fthttp.queryOldest(FtHttpStatus.FAILURE);
 		assertTrue("queryOldest failed", ftHttpResume instanceof FtHttpResumeUpload
 				& ((FtHttpResumeUpload) ftHttpResume).getTid().equals("tid"));
 

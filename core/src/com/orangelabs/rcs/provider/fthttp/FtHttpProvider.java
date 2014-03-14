@@ -55,8 +55,8 @@ public class FtHttpProvider extends ContentProvider {
 	private static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
 	static {
-		URI_MATCHER.addURI(AUTHORITY, FthttpColumns.TABLE, URI_TYPE_FTHTTP);
-		URI_MATCHER.addURI(AUTHORITY, FthttpColumns.TABLE + "/#", URI_TYPE_FTHTTP_ID);
+		URI_MATCHER.addURI(AUTHORITY, FtHttpColumns.TABLE, URI_TYPE_FTHTTP);
+		URI_MATCHER.addURI(AUTHORITY, FtHttpColumns.TABLE + "/#", URI_TYPE_FTHTTP_ID);
 	}
 
 	private RichProviderHelper mRichProviderHelper;
@@ -75,9 +75,9 @@ public class FtHttpProvider extends ContentProvider {
 		final int match = URI_MATCHER.match(uri);
 		switch (match) {
 		case URI_TYPE_FTHTTP:
-			return TYPE_CURSOR_DIR + FthttpColumns.TABLE;
+			return TYPE_CURSOR_DIR + FtHttpColumns.TABLE;
 		case URI_TYPE_FTHTTP_ID:
-			return TYPE_CURSOR_ITEM + FthttpColumns.TABLE;
+			return TYPE_CURSOR_ITEM + FtHttpColumns.TABLE;
 
 		}
 		return null;
@@ -154,8 +154,8 @@ public class FtHttpProvider extends ContentProvider {
 		switch (matchedId) {
 		case URI_TYPE_FTHTTP:
 		case URI_TYPE_FTHTTP_ID:
-			res.table = FthttpColumns.TABLE;
-			res.orderBy = FthttpColumns.DEFAULT_ORDER;
+			res.table = FtHttpColumns.TABLE;
+			res.orderBy = FtHttpColumns.DEFAULT_ORDER;
 			break;
 
 		default:

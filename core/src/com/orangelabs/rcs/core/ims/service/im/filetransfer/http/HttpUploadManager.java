@@ -35,7 +35,7 @@ import com.orangelabs.rcs.core.ims.protocol.http.HttpAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.Status;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -349,7 +349,7 @@ public class HttpUploadManager extends HttpTransferManager {
 					if (HTTP_TRACE_ENABLED) {
 						System.out.println("\n" + new String(result));
 					}
-					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, Status.SUCCESS);
+					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.SUCCESS);
 					break;
 				case 503:
 					// INTERNAL ERROR
@@ -389,7 +389,7 @@ public class HttpUploadManager extends HttpTransferManager {
 				} else if (retry) {
 					return sendMultipartPost(resp, httpResumeUpload);
 				} else {
-					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, Status.FAILURE);
+					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.FAILURE);
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
@@ -484,7 +484,7 @@ public class HttpUploadManager extends HttpTransferManager {
 		int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 		int progress = 0;
 
-		FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, Status.STARTED);
+		FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.STARTED);
 		
 		while (bytesRead > 0 && !isCancelled()) {
 			progress += bytesRead;
@@ -688,7 +688,7 @@ public class HttpUploadManager extends HttpTransferManager {
 					if (HTTP_TRACE_ENABLED) {
 						System.out.println("\n" + new String(result));
 					}
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, Status.SUCCESS);
+					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, FtHttpStatus.SUCCESS);
 					break;
 				default:
 					break; // no success, no retry
@@ -704,7 +704,7 @@ public class HttpUploadManager extends HttpTransferManager {
 				} else if (retry) {
 					return sendPutForResumingUpload(resumeInfo, resumeDoInDb);
 				} else {
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, Status.FAILURE);
+					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, FtHttpStatus.FAILURE);
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {

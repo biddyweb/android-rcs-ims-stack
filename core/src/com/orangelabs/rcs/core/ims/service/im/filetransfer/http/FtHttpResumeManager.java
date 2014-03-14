@@ -17,24 +17,24 @@
  ******************************************************************************/
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
-import com.orangelabs.rcs.core.content.ContentManager;
-import com.orangelabs.rcs.core.content.MmContent;
+import java.util.List;
+
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
-import com.orangelabs.rcs.provider.fthttp.Status;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * File Transfer HTTP resume manager
  */
-public class FtHttpResumeManager implements HttpTransferEventListener {
-	private FtHttpResume ftHttpResume;
+public class FtHttpResumeManager {
 	private FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
 	private boolean terminate = false;
-	private HttpDownloadManager downloadManager;
-
+	private InstantMessagingService imsService;
+	private List<FtHttpResume> ftHttp2Resume;
+	FileSharingSessionListener listener;
 	/**
 	 * The logger
 	 */
@@ -53,71 +53,51 @@ public class FtHttpResumeManager implements HttpTransferEventListener {
 			}
 			return;
 		}
+		imsService = instantMessagingService;
 		try {
 			// delete entries in FT HTTP which are no more useful
 			dao.clean();
-			do {
-				ftHttpResume = dao.queryOldest(Status.STARTED);
-				if (ftHttpResume != null) {
-					switch (ftHttpResume.getDirection()) {
-					case INCOMING:
-						FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-						MmContent content = ContentManager.createMmContentFromUrl(download.getUrl(), download.getSize());
-						downloadManager = new HttpDownloadManager(content, this, download.getFilename());
-						if (downloadManager.streamForFile != null && downloadManager.resumeDownload()) {
-							if (logger.isActivated()) {
-								logger.error("Resume success for " + download);
-							}
-						} else {
-							dao.setStatus(download, Status.FAILURE);
-						}
-						downloadManager = null;
-						break;
-					case OUTGOING:
-						break;
-					}
-				}
-			} while (ftHttpResume != null || terminate);
+			ftHttp2Resume = dao.queryAll(FtHttpStatus.STARTED);
+			processNext();
 		} catch (Exception e) {
 			// handle exception
 			if (logger.isActivated()) {
-				logger.error("Exception occurred",e);
+				logger.error("Exception occurred", e);
 			}
 		}
 
 	}
 
-	@Override
-	public void httpTransferStarted() {
-		if (logger.isActivated()) {
-			logger.info("FT " + this.ftHttpResume + " is started");
-		}
-	}
-
-	@Override
-	public void httpTransferPaused() {
-		if (logger.isActivated()) {
-			logger.info("FT " + this.ftHttpResume + " is paused");
-		}
-	}
-
-	@Override
-	public void httpTransferResumed() {
-		if (logger.isActivated()) {
-			logger.info("FT " + this.ftHttpResume + " is resumed");
-		}
-	}
-
-	@Override
-	public void httpTransferProgress(long currentSize, long totalSize) {
-		if (logger.isActivated()) {
-			logger.info("FT " + this.ftHttpResume + " progress current size=" + currentSize);
-		}
+	private void processNext() {
+		// if (ftHttp2Resume.isEmpty())
+		// return;
+		// FtHttpResume ftHttpResume = ftHttp2Resume.ftHttp2Resume
+		// if (ftHttpResume != null) {
+		// switch (ftHttpResume.getDirection()) {
+		// case INCOMING:
+		// FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
+		// MmContent content = ContentManager.createMmContentFromMime(download.getFilename(), download.getUrl(),
+		// download.getMimeType(), download.getSize());
+		// final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,
+		// ftHttpResume.getContact(), ftHttpResume.getThumbnail(), ftHttpResume.getSessionId(),
+		// ftHttpResume.getChatId(), download);
+		// // resumeDownload.addListener(this);
+		// new Thread() {
+		// public void run() {
+		// resumeDownload.start();
+		// }
+		// }.start();
+		// break;
+		// case OUTGOING:
+		// // TODO
+		// break;
+		// }
+		// }
 	}
 
 	public void terminate() {
 		this.terminate = true;
-		if (downloadManager != null)
-			downloadManager.interrupt();
+
 	}
+
 }

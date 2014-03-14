@@ -148,12 +148,8 @@ public class InstantMessagingService extends ImsService {
 		// Start IMDN manager
         imdnMgr = new ImdnManager(this);
 		imdnMgr.start();
-		
-//		new Thread() { TODO
-//			public void run() {
-//				resumeManager = new FtHttpResumeManager(InstantMessagingService.this);
-//			}
-//		}.start();
+		// Start resuming FT HTTP
+		resumeManager = new FtHttpResumeManager(this);
 	}
 
     /**

@@ -17,14 +17,32 @@
  ******************************************************************************/
 package com.orangelabs.rcs.provider.fthttp;
 
+import android.net.Uri;
+import android.provider.BaseColumns;
+
 /**
- * Possible values for the {@code status} column of the {@code fthttp} table.
+ * Columns for the {@code fthttp} table.
  */
-public enum Status {
-	// @formatter:off
-	CREATED,
-    STARTED,
-    SUCCESS,
-    FAILURE,
-    // @formatter:on
+public interface FtHttpColumns extends BaseColumns {
+	String TABLE = "fthttp";
+	Uri CONTENT_URI = Uri.parse(FtHttpProvider.CONTENT_URI_BASE + "/" + TABLE);
+
+	String _ID = BaseColumns._ID;
+	String OU_TID = "ou_tid";
+    String IN_URL = "in_url";
+    String IN_SIZE = "in_size";
+    String IN_TYPE = "in_type";
+    String CONTACT = "contact";
+    String CHATID = "chatid";
+    String FILENAME = "filename";
+    String DIRECTION = "direction";
+    String STATUS = "status";
+    String DATE = "date";
+    String PARTICIPANTS = "participants";
+    String DISPLAY_NAME = "display_name";
+    String SESSION_ID = "session_id";
+    String THUMBNAIL = "thumbnail";
+    
+    String DEFAULT_ORDER = _ID;
+
 }

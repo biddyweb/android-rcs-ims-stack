@@ -22,6 +22,7 @@ import javax2.sip.header.ContactHeader;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
+import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
@@ -44,7 +45,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
     /**
      * HTTP download manager
      */
-    private HttpDownloadManager downloadManager;
+    protected HttpDownloadManager downloadManager;
 
     /**
      * ID of the incoming transfer message 
@@ -99,7 +100,17 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		}
     }
     
-    /**
+	/**
+	 * Constructor Works just like HttpFileTransferSession(ImsService , MmContent , String , byte[] , String , String )
+	 * 
+	 * @see #HttpFileTransferSession(ImsService , MmContent , String , byte[] , String , String )
+	 */
+	public TerminatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail,
+			String sessionId, String chatId) {
+		super(parent, content, contact, thumbnail, sessionId, chatId);
+	}
+
+	/**
      * Posts an interrupt request to this Thread
      */
     @Override
@@ -286,4 +297,5 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		downloadManager.pauseTransfer();
 		downloadManager.getListener().httpTransferPaused();
     }
+
 }

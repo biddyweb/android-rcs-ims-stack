@@ -78,7 +78,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 */
 	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String contact, String displayName,
 			String chatId, String sessionId, String participants) {
-		super(Direction.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
+		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
 		if (content == null)
 			throw new IllegalArgumentException("Null argument");
 		this.url = content.getUrl();
@@ -94,7 +94,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 * @param cursor
 	 *            the {@code cursor} value.
 	 */
-	public FtHttpResumeDownload(FthttpCursor cursor) {
+	public FtHttpResumeDownload(FtHttpCursor cursor) {
 		super(cursor);
 		this.url = cursor.getInUrl();
 		this.mimeType = cursor.getInType();
