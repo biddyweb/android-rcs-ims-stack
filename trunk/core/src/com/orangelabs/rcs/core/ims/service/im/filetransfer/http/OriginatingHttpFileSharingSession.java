@@ -193,7 +193,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	}
 
     /**
-	 * Pausing the tranfer
+	 * Pausing the transfer
 	 */
 	@Override
 	public void pauseFileTransfer() {

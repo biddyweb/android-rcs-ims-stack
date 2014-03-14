@@ -220,4 +220,15 @@ public class FtHttpContentValues extends AbstractContentValues {
 		return this;
 	}
 
+	/**
+	 * Adds message ID to the set of content values.
+	 * 
+	 * @param value
+	 *            The added {@code value}.
+	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
+	 */
+	public FtHttpContentValues putMessageId(String value) {
+		mContentValues.put(FtHttpColumns.MESSAGE_ID, value);
+		return this;
+	}
 }

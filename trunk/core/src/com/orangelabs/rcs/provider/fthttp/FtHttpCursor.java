@@ -145,4 +145,11 @@ public class FtHttpCursor extends AbstractCursor {
 		return getBlob(index);
 	}
 
+	/**
+	 * Get the {@code message_id} value. Can be {@code null}.
+	 */
+	public String getMessageId() {
+		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.MESSAGE_ID);
+		return getString(index);
+	}
 }
