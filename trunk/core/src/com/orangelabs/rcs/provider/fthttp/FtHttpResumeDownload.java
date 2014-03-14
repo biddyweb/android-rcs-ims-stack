@@ -52,9 +52,35 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 *            the {@code thumbnail} value.
 	 */
 	public FtHttpResumeDownload(FileSharingSession session, String filename, byte[] thumbnail) {
-		super(Direction.INCOMING, filename, thumbnail, session.getRemoteContact(), session.getRemoteDisplayName(), session
+		this(filename, thumbnail, session.getContent(), session.getRemoteContact(), session.getRemoteDisplayName(), session
 				.getContributionID(), session.getSessionID(), session.getParticipants().toString());
-		MmContent content = session.getContent();
+	}
+
+	/**
+	 * Creates a FT HTTP resume download data object
+	 * 
+	 * @param file
+	 *            the {@code file} value.
+	 * @param thumbnail
+	 *            the {@code thumbnail} value.
+	 * @param content
+	 *            the {@code url} content.
+	 * @param contact
+	 *            the {@code contact} value.
+	 * @param displayName
+	 *            the {@code displayName} value.
+	 * @param chatId
+	 *            the {@code chatId} value.
+	 * @param sessionId
+	 *            the {@code sessionId} value.
+	 * @param participants
+	 *            the list of {@code participants}.
+	 */
+	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String contact, String displayName,
+			String chatId, String sessionId, String participants) {
+		super(Direction.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
+		if (content == null)
+			throw new IllegalArgumentException("Null argument");
 		this.url = content.getUrl();
 		this.mimeType = content.getEncoding();
 		this.size = content.getSize();

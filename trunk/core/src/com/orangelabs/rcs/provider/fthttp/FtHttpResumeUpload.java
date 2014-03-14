@@ -44,8 +44,33 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 *            the {@code thumbnail} value.
 	 */
 	public FtHttpResumeUpload(FileSharingSession session, String tid, byte[] thumbnail) {
-		super(Direction.OUTGOING, session.getContent().getName(), thumbnail, session.getRemoteContact(), session
-				.getRemoteDisplayName(), session.getContributionID(), session.getSessionID(), session.getParticipants().toString());
+		this(session.getContent().getName(), thumbnail, tid, session.getRemoteContact(), session.getRemoteDisplayName(), session
+				.getContributionID(), session.getSessionID(), session.getParticipants().toString());
+	}
+
+	/**
+	 * Creates a FT HTTP resume upload data object
+	 * 
+	 * @param file
+	 *            the {@code file} value.
+	 * @param thumbnail
+	 *            the {@code thumbnail} value.
+	 * @param tid
+	 *            the {@code tid} value.
+	 * @param contact
+	 *            the {@code contact} value.
+	 * @param displayName
+	 *            the {@code displayName} value.
+	 * @param chatId
+	 *            the {@code chatId} value.
+	 * @param sessionId
+	 *            the {@code sessionId} value.
+	 * @param participants
+	 *            the list of {@code participants}.
+	 */
+	public FtHttpResumeUpload(String file, byte[] thumbnail, String tid, String contact, String displayName, String chatId,
+			String sessionId, String participants) {
+		super(Direction.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
 		if (tid == null)
 			throw new IllegalArgumentException("Null tid");
 		this.tid = tid;

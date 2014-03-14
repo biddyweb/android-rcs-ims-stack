@@ -113,6 +113,18 @@ public class FthttpSelection extends AbstractSelection<FthttpSelection> {
 		return this;
 	}
 
+	/**
+	 * Define selection based on status not equal
+	 * 
+	 * @param value
+	 *            the list of status {@code values}
+	 * @return A {@code FthttpSelection} selection instance to query the table
+	 */
+    public FthttpSelection statusNot(Status... value) {
+        addNotEquals(FthttpColumns.STATUS, value);
+        return this;
+    }
+    
 	public FthttpSelection sessionId(String... value) {
 		addEquals(FthttpColumns.SESSION_ID, value);
 		return this;
