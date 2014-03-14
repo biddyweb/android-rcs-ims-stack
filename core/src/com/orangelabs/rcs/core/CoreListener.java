@@ -153,6 +153,22 @@ public interface CoreListener {
 	public void handleGroupFileTransferInvitation(FileSharingSession session, TerminatingAdhocGroupChatSession chatSession);
 
     /**
+     * An incoming file transfer has been resumed
+     * 
+     * @param session File transfer session
+     * @param isGroup is group file transfer
+     */
+    public void handleIncomingFileTransferResuming(FileSharingSession session, boolean isGroup);
+
+    /**
+     * An outgoing file transfer has been resumed
+     * 
+     * @param session File transfer session
+     * @param isGroup is group file transfer
+     */
+    public void handleOutgoingFileTransferResuming(FileSharingSession session, boolean isGroup);
+
+    /**
      * New one-to-one chat session invitation
      * 
      * @param session Chat session
