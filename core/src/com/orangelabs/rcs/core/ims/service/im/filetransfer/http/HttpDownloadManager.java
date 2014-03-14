@@ -82,7 +82,10 @@ public class HttpDownloadManager extends HttpTransferManager {
 		// Init file
 		file = new File(localUrl);
 		try {
-			streamForFile = new BufferedOutputStream(new FileOutputStream(file));
+			if (logger.isActivated()) {
+				logger.debug("HttpDownloadManager file=" + filename + " length=" + file.length());
+			}
+			streamForFile = new BufferedOutputStream(new FileOutputStream(file, true));
 		} catch (FileNotFoundException e) {
 			if (logger.isActivated()) {
 				logger.error("Could not create stream, file does not exists.");
@@ -309,7 +312,7 @@ public class HttpDownloadManager extends HttpTransferManager {
 		resetParamForResume();
 		try {
 			FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
-			FtHttpResumeDownload download = dao.queryDownload( content.getUrl());
+			FtHttpResumeDownload download = dao.queryDownload(content.getUrl());
 			if (logger.isActivated()) {
 				logger.debug("Resume Download file " + content.getUrl() + " from byte " + file.length());
 			}
