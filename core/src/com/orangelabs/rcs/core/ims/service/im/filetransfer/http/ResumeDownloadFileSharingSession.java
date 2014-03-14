@@ -38,21 +38,19 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 	private final static Logger logger = Logger.getLogger(ResumeDownloadFileSharingSession.class.getSimpleName());
 
 	/**
-	 * Constructor
+	 * Constructor create instance of session object to resume download
 	 * 
 	 * @param parent
+	 *            IMS service
 	 * @param content
-	 * @param contact
-	 * @param thumbnail
-	 * @param chatSessionID
-	 * @param chatContributionId
+	 *            the content (url, mime-type and size)
 	 * @param download
+	 *            the data object in DB
 	 */
-	public ResumeDownloadFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail,
-			String chatSessionID, String chatContributionId, FtHttpResumeDownload download) {
-		super(parent, content, contact, thumbnail, download.getSessionId(), download.getChatId());
+	public ResumeDownloadFileSharingSession(ImsService parent, MmContent content, FtHttpResumeDownload download) {
+		super(parent, content, download.getContact(), download.getThumbnail(), download.getSessionId(), download.getChatId());
 		setRemoteDisplayName(download.getDisplayName());
-		// this.msgId = msgId; TODO
+		this.msgId = download.getMessageId();
 		this.resumeDownload = download;
 	}
 

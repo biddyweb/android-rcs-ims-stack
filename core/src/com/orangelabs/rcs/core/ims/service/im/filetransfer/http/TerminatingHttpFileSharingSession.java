@@ -50,7 +50,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
     /**
      * ID of the incoming transfer message 
      */
-    private String msgId;
+    protected String msgId;
 
     /**
      * Remote instance Id
@@ -92,8 +92,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
         this.msgId = msgId;
 
 		// Instantiate the download manager
-		downloadManager = new HttpDownloadManager(getContent(), this, fileTransferInfo.getFilename());
-		
+		downloadManager = new HttpDownloadManager(getContent(), this, ContentManager.generateUrlForReceivedContent(getContent()
+				.getName(), getContent().getEncoding()));
+
 		// Download thumbnail
 		if (fileTransferInfo.getFileThumbnail() != null) {
 			setThumbnail(downloadManager.downloadThumbnail(fileTransferInfo.getFileThumbnail()));

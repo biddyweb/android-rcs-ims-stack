@@ -98,9 +98,7 @@ public class FtHttpResumeManager {
 			MmContent content = ContentManager.createMmContentFromMime(download.getFilename(), download.getUrl(),
 					download.getMimeType(), download.getSize());
 			// Creates the Resume Download session object
-			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,
-					ftHttpResume.getContact(), ftHttpResume.getThumbnail(), ftHttpResume.getSessionId(), ftHttpResume.getChatId(),
-					download);
+			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,download);
 			listener = getFileSharingSessionListener();
 			resumeDownload.addListener(listener);
 			new Thread() {

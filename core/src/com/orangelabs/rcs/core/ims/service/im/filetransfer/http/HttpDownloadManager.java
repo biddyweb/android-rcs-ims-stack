@@ -11,7 +11,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
-import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
@@ -78,10 +77,8 @@ public class HttpDownloadManager extends HttpTransferManager {
 	 */
 	public HttpDownloadManager(MmContent content, HttpTransferEventListener listener, String filename) {
 		super(listener, content.getUrl());
-
 		this.content = content;
-		localUrl = ContentManager.generateUrlForReceivedContent(content.getName(), content.getEncoding());
-
+		this.localUrl = filename;
 		// Init file
 		file = new File(localUrl);
 		try {
