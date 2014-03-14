@@ -197,6 +197,7 @@ public class MessagingApiService extends IMessagingApi.Stub {
 	 * Receive a new HTTP file transfer invitation outside of an existing chat session
 	 *
 	 * @param session File transfer session
+	 * @param chatSession associated chat session
 	 */
 	public void receiveFileTransferInvitation(FileSharingSession session, ChatSession chatSession) {
 		// Display invitation
@@ -209,6 +210,77 @@ public class MessagingApiService extends IMessagingApi.Stub {
 		ImSession sessionApi = new ImSession(chatSession);
 		MessagingApiService.addChatSession(sessionApi);
 	}
+
+    /**
+     * Resume an incoming HTTP file transfer
+     *
+     * @param session File transfer session
+     * @param isGroup is group file transfer
+     */
+    public void resumeIncomingFileTransfer(FileSharingSession session, boolean isGroup) {
+        if (logger.isActivated()) {
+            logger.info("Resume incoming file transfer from " + session.getRemoteContact());
+        }
+
+        // Extract number from contact 
+        String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+
+        // TODO Update rich messaging history
+        // RichMessaging.getInstance().resumeFileTransfer(number, session.getContributionID(), session.getSessionID(), session.getContent());
+
+        // Add session in the list
+        FileTransferSession sessionApi = new FileTransferSession(session);
+        MessagingApiService.addFileTransferSession(sessionApi);
+
+        // Broadcast intent, we reuse the File tansfer invitation intent
+        Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
+        intent.putExtra("contact", number);
+        intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
+        intent.putExtra("sessionId", session.getSessionID());
+        intent.putExtra("chatSessionId", "");
+        if (isGroup) {
+            intent.putExtra("chatId", "");
+        }
+        intent.putExtra("isGroupTransfer", isGroup);
+        intent.putExtra("filename", session.getContent().getName());
+        intent.putExtra("filesize", session.getContent().getSize());
+        intent.putExtra("filetype", session.getContent().getEncoding());
+        intent.putExtra("thumbnail", session.getThumbnail());
+        intent.putExtra("autoAccept", true);
+        AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
+
+    /**
+     * Resume an outgoing HTTP file transfer
+     *
+     * @param session File transfer session
+     * @param isGroup is group file transfer
+     */
+    public void resumeOutgoingFileTransfer(FileSharingSession session, boolean isGroup) {
+        if (logger.isActivated()) {
+            logger.info("Resume outgoing file transfer from " + session.getRemoteContact());
+        }
+
+        // Extract number from contact 
+        String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
+
+        // TODO Update rich messaging history
+        // RichMessaging.getInstance().resumeFileTransfer(number, session.getContributionID(), session.getSessionID(), session.getContent());
+
+        // Add session in the list
+        FileTransferSession sessionApi = new FileTransferSession(session);
+        MessagingApiService.addFileTransferSession(sessionApi);
+
+        // Broadcast intent related to the received invitation
+        Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_OUTGOING_RESUMING);
+        intent.putExtra("contact", number);
+        intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
+        intent.putExtra("sessionId", session.getSessionID());
+        if (session instanceof HttpFileTransferSession) {
+            intent.putExtra("isGroupTransfer", isGroup);
+        }
+        AndroidFactory.getApplicationContext().sendBroadcast(intent);
+    }
 
 	/**
      * Transfer a file
