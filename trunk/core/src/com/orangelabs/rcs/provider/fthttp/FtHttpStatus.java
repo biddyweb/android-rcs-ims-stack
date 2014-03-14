@@ -18,11 +18,13 @@
 package com.orangelabs.rcs.provider.fthttp;
 
 /**
- * Possible values for the {@code direction} column of the {@code fthttp} table.
+ * Possible values for the {@code status} column of the {@code fthttp} table.
  */
-public enum Direction {
+public enum FtHttpStatus {
 	// @formatter:off
-    INCOMING,
-    OUTGOING,
+	CREATED,
+    STARTED,
+    SUCCESS,
+    FAILURE,
     // @formatter:on
 }

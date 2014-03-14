@@ -39,20 +39,20 @@ public interface FtHttpResumeDao {
 	/**
 	 * Query entries with status sorted in _ID ascending order
 	 * 
-	 * @param status
+	 * @param ftHttpStatus
 	 *            the {@code status} value.
 	 * @return the list of entries
 	 */
-	public List<FtHttpResume> queryAll(Status status);
+	public List<FtHttpResume> queryAll(FtHttpStatus ftHttpStatus);
 	
 	/**
 	 * Query the oldest entry
 	 * 
-	 * @param status
+	 * @param ftHttpStatus
 	 *            the {@code status} value.
 	 * @return the entry (Can be {@code null}).
 	 */
-	public FtHttpResume queryOldest(Status status);
+	public FtHttpResume queryOldest(FtHttpStatus ftHttpStatus);
 
 	/**
 	 * Query the upload entry with TID
@@ -77,16 +77,16 @@ public interface FtHttpResumeDao {
 	 * 
 	 * @param ftHttpResume
 	 *            the {@code ftHttpResume} value.
-	 * @param status
+	 * @param ftHttpStatus
 	 *            the {@code status} value.
 	 * @return the URI or null if add operation failed
 	 */
-	public Uri insert(FtHttpResume ftHttpResume, Status status);
+	public Uri insert(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus);
 
 	/**
 	 * Works just like insert(FtHttpResume, Status) except the status is always STARTED
 	 * 
-	 * @see #insert(FtHttpResume, Status)
+	 * @see #insert(FtHttpResume, FtHttpStatus)
 	 */
 	public Uri insert(FtHttpResume ftHttpResume);
 
@@ -111,10 +111,10 @@ public interface FtHttpResumeDao {
 	 * 
 	 * @param ftHttpResume
 	 *            the {@code ftHttpResume} value.
-	 * @param status
+	 * @param ftHttpStatus
 	 *            the New {@code status} value.
 	 */
-	public void setStatus(FtHttpResume ftHttpResume, Status status);
+	public void setStatus(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus);
 
 	/**
 	 * Get the status entry in the fthttp table
@@ -125,7 +125,7 @@ public interface FtHttpResumeDao {
 	 * 
 	 * @return the status (Can be {@code null}).
 	 */
-	public Status getStatus(FtHttpResume ftHttpResume);
+	public FtHttpStatus getStatus(FtHttpResume ftHttpResume);
 
 	/**
 	 * Delete all entries in fthttp table

@@ -35,7 +35,7 @@ public abstract class FtHttpResume {
 	/**
 	 * The direction
 	 */
-	final protected Direction direction;
+	final protected FtHttpDirection ftHttpDirection;
 	/**
 	 * The filename
 	 */
@@ -73,17 +73,17 @@ public abstract class FtHttpResume {
 	/**
 	 * Works just like FtHttpResume(Direction,String,byte[],String,String,String,String,List,Date) except the date is always null
 	 * 
-	 * @see #FtHttpResume(Direction,String,byte[],String,String,String,String,List,Date)
+	 * @see #FtHttpResume(FtHttpDirection,String,byte[],String,String,String,String,List,Date)
 	 */
-	public FtHttpResume(Direction direction, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
 			String sessionId, String participants) {
-		this(direction, filename, thumbnail, contact, displayName, chatId, sessionId, participants, null);
+		this(ftHttpDirection, filename, thumbnail, contact, displayName, chatId, sessionId, participants, null);
 	}
 
 	/**
 	 * Creates an instance of FtHttpResume Data Object
 	 * 
-	 * @param direction
+	 * @param ftHttpDirection
 	 *            the {@code direction} value.
 	 * @param file
 	 *            the {@code file} value.
@@ -102,12 +102,12 @@ public abstract class FtHttpResume {
 	 * @param date
 	 *            the {@code date} value.
 	 */
-	public FtHttpResume(Direction direction, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
 			String sessionId, String participants, Date date) {
-		if (direction == null || filename == null)
+		if (ftHttpDirection == null || filename == null)
 			throw new IllegalArgumentException("Null argument");
 		this.date = date;
-		this.direction = direction;
+		this.ftHttpDirection = ftHttpDirection;
 		this.filename = filename;
 		this.thumbnail = thumbnail;
 		this.contact = contact;
@@ -123,11 +123,11 @@ public abstract class FtHttpResume {
 	 * @param cursor
 	 *            the {@code cursor} value.
 	 */
-	public FtHttpResume(FthttpCursor cursor) {
+	public FtHttpResume(FtHttpCursor cursor) {
 		if (cursor.getDirection() == null || cursor.getFilename() == null)
 			throw new IllegalArgumentException("Null argument");
 		this.date = cursor.getDate();
-		this.direction = cursor.getDirection();
+		this.ftHttpDirection = cursor.getDirection();
 		this.filename = cursor.getFilename();
 		this.thumbnail = cursor.getThumbnail();
 		this.contact = cursor.getContact();
@@ -141,8 +141,8 @@ public abstract class FtHttpResume {
 		return date;
 	}
 
-	public Direction getDirection() {
-		return direction;
+	public FtHttpDirection getDirection() {
+		return ftHttpDirection;
 	}
 
 	public String getFilename() {
@@ -192,7 +192,7 @@ public abstract class FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResume [date=" + date + ", dir=" + direction + ", file=" + filename + "]";
+		return "FtHttpResume [date=" + date + ", dir=" + ftHttpDirection + ", file=" + filename + "]";
 	}
 
 }

@@ -29,7 +29,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.Status;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -92,7 +92,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	    	}
 	    	// Create upload entry in fthttp table
 	    	FtHttpResumeUpload upload = new FtHttpResumeUpload(OriginatingHttpGroupFileSharingSession.this, uploadManager.getTid(),getThumbnail());
-	    	FtHttpResumeDaoImpl.getInstance().insert(upload,Status.CREATED);
+	    	FtHttpResumeDaoImpl.getInstance().insert(upload,FtHttpStatus.CREATED);
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile(upload);
             sendResultToContact(result);

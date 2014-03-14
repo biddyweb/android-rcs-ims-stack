@@ -81,12 +81,12 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 
 	@Override
 	public List<FtHttpResume> queryAll() {
-		FthttpSelection where = new FthttpSelection();
+		FtHttpSelection where = new FtHttpSelection();
 		ArrayList<FtHttpResume> result = new ArrayList<FtHttpResume>();
-		FthttpCursor cursor = where.query(cr);
+		FtHttpCursor cursor = where.query(cr);
 		if (cursor != null) {
 			while (cursor.moveToNext()) {
-				if (cursor.getDirection() == Direction.INCOMING) {
+				if (cursor.getDirection() == FtHttpDirection.INCOMING) {
 					result.add(new FtHttpResumeDownload(cursor));
 				} else {
 					result.add(new FtHttpResumeUpload(cursor));
@@ -98,14 +98,14 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
-	public List<FtHttpResume> queryAll(Status status) {
-		FthttpSelection where = new FthttpSelection();
-		where.status(status);
+	public List<FtHttpResume> queryAll(FtHttpStatus ftHttpStatus) {
+		FtHttpSelection where = new FtHttpSelection();
+		where.status(ftHttpStatus);
 		ArrayList<FtHttpResume> result = new ArrayList<FtHttpResume>();
-		FthttpCursor cursor = where.query(cr);
+		FtHttpCursor cursor = where.query(cr);
 		if (cursor != null) {
 			while (cursor.moveToNext()) {
-				if (cursor.getDirection() == Direction.INCOMING) {
+				if (cursor.getDirection() == FtHttpDirection.INCOMING) {
 					result.add(new FtHttpResumeDownload(cursor));
 				} else {
 					result.add(new FtHttpResumeUpload(cursor));
@@ -117,14 +117,14 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 	
 	@Override
-	public FtHttpResume queryOldest(Status status) {
-		FthttpSelection where = new FthttpSelection();
+	public FtHttpResume queryOldest(FtHttpStatus ftHttpStatus) {
+		FtHttpSelection where = new FtHttpSelection();
 		FtHttpResume result = null;
-		where.status(status);
-		FthttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
+		where.status(ftHttpStatus);
+		FtHttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
 		if (cursor != null) {
 			if (cursor.moveToNext()) {
-				if (cursor.getDirection() == Direction.INCOMING) {
+				if (cursor.getDirection() == FtHttpDirection.INCOMING) {
 					result = new FtHttpResumeDownload(cursor);
 				} else {
 					result = new FtHttpResumeUpload(cursor);
@@ -137,14 +137,14 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 
 	@Override
 	public Uri insert(FtHttpResume ftHttpResume) {
-		return insert( ftHttpResume, Status.STARTED);
+		return insert( ftHttpResume, FtHttpStatus.STARTED);
 	}
 	
 	@Override
-	public Uri insert(FtHttpResume ftHttpResume, Status status) {
-		FthttpContentValues values = new FthttpContentValues();
+	public Uri insert(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus) {
+		FtHttpContentValues values = new FtHttpContentValues();
 		values.putDate(new Date(System.currentTimeMillis()));
-		values.putStatus(status);
+		values.putStatus(ftHttpStatus);
 		values.putDirection(ftHttpResume.getDirection());
 		values.putFilename(ftHttpResume.getFilename());
 		values.putThumbnail(ftHttpResume.getThumbnail());
@@ -172,12 +172,12 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 				return null;
 			}
 		}
-		return cr.insert(FthttpColumns.CONTENT_URI, values.values());
+		return cr.insert(FtHttpColumns.CONTENT_URI, values.values());
 	}
 
 	@Override
 	public int deleteAll() {
-		return cr.delete(FthttpColumns.CONTENT_URI, null, null);
+		return cr.delete(FtHttpColumns.CONTENT_URI, null, null);
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		if (logger.isActivated()) {
 			logger.debug("delete " + ftHttpResume);
 		}
-		FthttpSelection where = new FthttpSelection();
+		FtHttpSelection where = new FtHttpSelection();
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
 			where.inUrl(download.getUrl());
@@ -200,41 +200,41 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
-	public void setStatus(FtHttpResume ftHttpResume, Status status) {
+	public void setStatus(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus) {
 		if (logger.isActivated()) {
-			logger.debug("setStatus (ftHttpResume=" + ftHttpResume + ") (status=" + status + ")");
+			logger.debug("setStatus (ftHttpResume=" + ftHttpResume + ") (status=" + ftHttpStatus + ")");
 		}
-		FthttpContentValues values = new FthttpContentValues();
-		values.putStatus(status);
-		FthttpSelection where = new FthttpSelection();
+		FtHttpContentValues values = new FtHttpContentValues();
+		values.putStatus(ftHttpStatus);
+		FtHttpSelection where = new FtHttpSelection();
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			where.inUrl(download.getUrl()).and().direction(Direction.INCOMING);
+			where.inUrl(download.getUrl()).and().direction(FtHttpDirection.INCOMING);
 		} else {
 			if (ftHttpResume instanceof FtHttpResumeUpload) {
 				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				where.ouTid(upload.getTid()).and().direction(Direction.OUTGOING);
+				where.ouTid(upload.getTid()).and().direction(FtHttpDirection.OUTGOING);
 			} else
 				return;
 		}
-		cr.update(FthttpColumns.CONTENT_URI, values.values(), where.sel(), where.args());
+		cr.update(FtHttpColumns.CONTENT_URI, values.values(), where.sel(), where.args());
 	}
 
 	@Override
-	public Status getStatus(FtHttpResume ftHttpResume) {
-		FthttpSelection where = new FthttpSelection();
+	public FtHttpStatus getStatus(FtHttpResume ftHttpResume) {
+		FtHttpSelection where = new FtHttpSelection();
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			where.inUrl(download.getUrl()).and().direction(Direction.INCOMING);
+			where.inUrl(download.getUrl()).and().direction(FtHttpDirection.INCOMING);
 		} else {
 			if (ftHttpResume instanceof FtHttpResumeUpload) {
 				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				where.ouTid(upload.getTid()).and().direction(Direction.OUTGOING);
+				where.ouTid(upload.getTid()).and().direction(FtHttpDirection.OUTGOING);
 			} else
 				return null;
 		}
-		Status result = null;
-		FthttpCursor cursor = where.query(cr, new String[] { FthttpColumns.STATUS }, "_ID LIMIT 1");
+		FtHttpStatus result = null;
+		FtHttpCursor cursor = where.query(cr, new String[] { FtHttpColumns.STATUS }, "_ID LIMIT 1");
 		if (cursor != null) {
 			if (cursor.moveToNext()) {
 				result = cursor.getStatus();
@@ -246,10 +246,10 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 
 	@Override
 	public FtHttpResumeUpload queryUpload(String tid) {
-		FthttpSelection where = new FthttpSelection();
+		FtHttpSelection where = new FtHttpSelection();
 		FtHttpResumeUpload result = null;
-		where.ouTid(tid).and().direction(Direction.OUTGOING);
-		FthttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
+		where.ouTid(tid).and().direction(FtHttpDirection.OUTGOING);
+		FtHttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
 		if (cursor != null) {
 			if (cursor.moveToNext()) {
 				result = new FtHttpResumeUpload(cursor);
@@ -261,10 +261,10 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 
 	@Override
 	public FtHttpResumeDownload queryDownload(String url) {
-		FthttpSelection where = new FthttpSelection();
+		FtHttpSelection where = new FtHttpSelection();
 		FtHttpResumeDownload result = null;
-		where.inUrl(url).and().direction(Direction.INCOMING);
-		FthttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
+		where.inUrl(url).and().direction(FtHttpDirection.INCOMING);
+		FtHttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
 		if (cursor != null) {
 			if (cursor.moveToNext()) {
 				result = new FtHttpResumeDownload(cursor);
@@ -279,8 +279,8 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		if (logger.isActivated()) {
 			logger.debug("deleteFinished");
 		}
-		FthttpSelection where = new FthttpSelection();
-		where.statusNot(Status.STARTED);
+		FtHttpSelection where = new FtHttpSelection();
+		where.statusNot(FtHttpStatus.STARTED);
 		return where.delete(cr);
 	}
 
