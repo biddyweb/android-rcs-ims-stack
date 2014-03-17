@@ -227,14 +227,11 @@ public class MessagingApiService extends IMessagingApi.Stub {
         // Extract number from contact 
         String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
 
-        // TODO Update rich messaging history
-        // RichMessaging.getInstance().resumeFileTransfer(number, session.getContributionID(), session.getSessionID(), session.getContent());
-
         // Add session in the list
         FileTransferSession sessionApi = new FileTransferSession(session);
         MessagingApiService.addFileTransferSession(sessionApi);
 
-        // Broadcast intent, we reuse the File tansfer invitation intent
+        // Broadcast intent, we reuse the File transfer invitation intent
         Intent intent = new Intent(MessagingApiIntents.FILE_TRANSFER_INVITATION);
         intent.putExtra("contact", number);
         intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
@@ -265,9 +262,6 @@ public class MessagingApiService extends IMessagingApi.Stub {
 
         // Extract number from contact 
         String number = PhoneUtils.extractNumberFromUri(session.getRemoteContact());
-
-        // TODO Update rich messaging history
-        // RichMessaging.getInstance().resumeFileTransfer(number, session.getContributionID(), session.getSessionID(), session.getContent());
 
         // Add session in the list
         FileTransferSession sessionApi = new FileTransferSession(session);
