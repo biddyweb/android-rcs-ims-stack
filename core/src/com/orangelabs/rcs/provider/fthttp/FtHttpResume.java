@@ -71,13 +71,25 @@ public abstract class FtHttpResume {
 	final private String sessionId;
 
 	/**
-	 * Works just like FtHttpResume(Direction,String,byte[],String,String,String,String,List,Date) except the date is always null
-	 * 
-	 * @see #FtHttpResume(FtHttpDirection,String,byte[],String,String,String,String,List,Date)
+	 * the Chat session Id
 	 */
-	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
-			String sessionId, String participants) {
-		this(ftHttpDirection, filename, thumbnail, contact, displayName, chatId, sessionId, participants, null);
+	final private String chatSessionId;
+
+	/**
+	 * Is FT initiated from Group Chat
+	 */
+	final private boolean isGroup;
+
+	/**
+	 * Works just like FtHttpResume(Direction,String,byte[],String,String,String,String,String,String,boolean,Date) except the date
+	 * is always null
+	 * 
+	 * @see #FtHttpResume(FtHttpDirection,String,byte[],String,String,String,String,String,String,boolean,Date)
+	 */
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName,
+			String chatId, String sessionId, String participants, String chatSessionId, boolean isGroup) {
+		this(ftHttpDirection, filename, thumbnail, contact, displayName, chatId, sessionId, participants, chatSessionId, isGroup,
+				null);
 	}
 
 	/**
@@ -99,11 +111,15 @@ public abstract class FtHttpResume {
 	 *            the {@code sessionId} value.
 	 * @param participants
 	 *            the list of {@code participants}.
+	 * @param chatSessionId
+	 *            the {@code chatSessionId} value.
+	 * @param isGroup
+	 *            the {@code isGroup} value.
 	 * @param date
 	 *            the {@code date} value.
 	 */
-	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName, String chatId,
-			String sessionId, String participants, Date date) {
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName,
+			String chatId, String sessionId, String participants, String chatSessionId, boolean isGroup, Date date) {
 		if (ftHttpDirection == null || filename == null)
 			throw new IllegalArgumentException("Null argument");
 		this.date = date;
@@ -115,6 +131,8 @@ public abstract class FtHttpResume {
 		this.chatId = chatId;
 		this.sessionId = sessionId;
 		this.participants = participants;
+		this.chatSessionId = chatSessionId;
+		this.isGroup = isGroup;
 	}
 
 	/**
@@ -135,6 +153,8 @@ public abstract class FtHttpResume {
 		this.chatId = cursor.getChatid();
 		this.sessionId = cursor.getSessionId();
 		this.participants = cursor.getParticipants();
+		this.chatSessionId = cursor.getChatSessionId();
+		this.isGroup = cursor.isGroup();
 	}
 
 	public Date getDate() {
@@ -188,6 +208,14 @@ public abstract class FtHttpResume {
 			}
 		}
 		return null;
+	}
+
+	public String getChatSessionId() {
+		return chatSessionId;
+	}
+
+	public boolean isGroup() {
+		return isGroup;
 	}
 
 	@Override

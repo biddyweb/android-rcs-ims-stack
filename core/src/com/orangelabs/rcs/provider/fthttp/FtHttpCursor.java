@@ -27,6 +27,7 @@ import com.orangelabs.rcs.provider.base.AbstractCursor;
  * Cursor wrapper for the {@code fthttp} table.
  */
 public class FtHttpCursor extends AbstractCursor {
+
 	public FtHttpCursor(Cursor cursor) {
 		super(cursor);
 	}
@@ -150,6 +151,18 @@ public class FtHttpCursor extends AbstractCursor {
 	 */
 	public String getMessageId() {
 		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.MESSAGE_ID);
+		return getString(index);
+	}
+
+	public boolean isGroup() {
+		return getBoolean(FtHttpColumns.IS_GROUP);
+	}
+	
+	/**
+	 * Get the {@code chat_session_id} value. Can be {@code null}.
+	 */
+	public String getChatSessionId() {
+		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.CHAT_SESSION_ID);
 		return getString(index);
 	}
 }

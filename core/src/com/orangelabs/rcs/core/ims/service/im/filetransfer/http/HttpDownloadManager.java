@@ -12,9 +12,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -122,16 +119,12 @@ public class HttpDownloadManager extends HttpTransferManager {
 				trace += "\n" + request.getMethod() + " " + request.getRequestLine().getUri();
 				System.out.println(trace);
 			}
-			FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
-			FtHttpResumeDownload download = dao.queryDownload( content.getUrl());
 			// Execute request with retry procedure
 			if (!getFile(request)) {
 				if (retryCount < RETRY_MAX && !isCancelled()) {
 					retryCount++;
 					return downloadFile();
 				} else {
-					if (!isPaused())
-						dao.setStatus(download, FtHttpStatus.FAILURE);
 					if (logger.isActivated()) {
 						if (isCancelled()) {
 							if (logger.isActivated()) {
@@ -146,7 +139,6 @@ public class HttpDownloadManager extends HttpTransferManager {
 					return false;
 				}
 			}
-			dao.setStatus(download, FtHttpStatus.SUCCESS);
 			return true;
 		} catch (Exception e) {
 			if (logger.isActivated()) {
@@ -311,8 +303,6 @@ public class HttpDownloadManager extends HttpTransferManager {
 		}
 		resetParamForResume();
 		try {
-			FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
-			FtHttpResumeDownload download = dao.queryDownload(content.getUrl());
 			if (logger.isActivated()) {
 				logger.debug("Resume Download file " + content.getUrl() + " from byte " + file.length());
 			}
@@ -339,7 +329,6 @@ public class HttpDownloadManager extends HttpTransferManager {
 							logger.debug("Download file paused");
 						}
 					} else {
-						dao.setStatus(download, FtHttpStatus.FAILURE);
 						if (isCancelled()) {
 							if (logger.isActivated()) {
 								logger.debug("Download file cancelled");
@@ -353,7 +342,6 @@ public class HttpDownloadManager extends HttpTransferManager {
 					return false;
 				}
 			}
-			dao.setStatus(download, FtHttpStatus.SUCCESS);
 			return true;
 		} catch (Exception e) {
 			if (logger.isActivated()) {

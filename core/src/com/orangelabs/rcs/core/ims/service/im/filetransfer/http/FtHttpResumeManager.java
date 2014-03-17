@@ -19,6 +19,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
@@ -35,18 +36,27 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * File Transfer HTTP resume manager
  */
 public class FtHttpResumeManager {
-	private FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
-	private boolean terminate = false;
-	private InstantMessagingService imsService;
 	/**
-	 * List of pending sessions to resume 
+	 * Interface to get access to the FtHttp table
+	 */
+	private FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
+
+	/**
+	 * IMS service
+	 */
+	private InstantMessagingService imsService;
+
+	/**
+	 * List of pending sessions to resume
 	 */
 	private LinkedList<FtHttpResume> ftHttp2Resume;
-	FileSharingSessionListener listener;
+
 	/**
 	 * The logger
 	 */
 	private static final Logger logger = Logger.getLogger(FtHttpResumeManager.class.getSimpleName());
+	
+	private boolean terminate = false; // TODO
 
 	/**
 	 * Constructor
@@ -64,7 +74,7 @@ public class FtHttpResumeManager {
 		imsService = instantMessagingService;
 		try {
 			// delete entries in FT HTTP which are no more useful
-			dao.clean();
+			// dao.clean(); TODO
 			// Retrieve all pending sessions
 			List<FtHttpResume> listFile2resume = dao.queryAll(FtHttpStatus.STARTED);
 			if (listFile2resume.isEmpty() == false) {
@@ -83,14 +93,13 @@ public class FtHttpResumeManager {
 	/**
 	 * resume next pending session
 	 */
-	synchronized private void processNext() {
-		listener = null;
+	private void processNext() {
 		if (ftHttp2Resume.isEmpty())
 			return;
 		// Remove the oldest session from the list
 		FtHttpResume ftHttpResume = ftHttp2Resume.poll();
 		if (logger.isActivated()) {
-			logger.debug("Resume FT HTTP "+ftHttpResume);
+			logger.debug("Resume FT HTTP " + ftHttpResume);
 		}
 		switch (ftHttpResume.getDirection()) {
 		case INCOMING:
@@ -98,14 +107,22 @@ public class FtHttpResumeManager {
 			MmContent content = ContentManager.createMmContentFromMime(download.getFilename(), download.getUrl(),
 					download.getMimeType(), download.getSize());
 			// Creates the Resume Download session object
-			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,download);
-			listener = getFileSharingSessionListener();
-			resumeDownload.addListener(listener);
+			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,
+					download);
+			resumeDownload.addListener(getFileSharingSessionListener());
+			// Start the download HTTP FT session object
 			new Thread() {
 				public void run() {
 					resumeDownload.start();
 				}
 			}.start();
+			// Notify the UI and update rich messaging
+			imsService
+					.getImsModule()
+					.getCore()
+					.getListener()
+					.handleIncomingFileTransferResuming(resumeDownload, resumeDownload.isGroup, resumeDownload.getChatSessionID(),
+							resumeDownload.getContributionID());
 			break;
 		case OUTGOING:
 			// TODO
@@ -114,13 +131,20 @@ public class FtHttpResumeManager {
 
 	}
 
+	/**
+	 * Create an event listener to handle end of session
+	 * 
+	 * @return the File sharing event listener
+	 */
 	private FileSharingSessionListener getFileSharingSessionListener() {
 		return new FileSharingSessionListener() {
+			AtomicBoolean fired = new AtomicBoolean(false);
 
 			@Override
 			public void handleSessionTerminatedByRemote() {
-				if (listener != null)
+				if (fired.compareAndSet(false, true)) {
 					processNext();
+				}
 			}
 
 			@Override
@@ -129,8 +153,9 @@ public class FtHttpResumeManager {
 
 			@Override
 			public void handleSessionAborted(int reason) {
-				if (listener != null)
+				if (fired.compareAndSet(false, true)) {
 					processNext();
+				}
 			}
 
 			@Override
@@ -139,14 +164,16 @@ public class FtHttpResumeManager {
 
 			@Override
 			public void handleTransferError(FileSharingError error) {
-				if (listener != null)
+				if (fired.compareAndSet(false, true)) {
 					processNext();
+				}
 			}
 
 			@Override
 			public void handleFileTransfered(String filename) {
-				if (listener != null)
+				if (fired.compareAndSet(false, true)) {
 					processNext();
+				}
 			}
 
 			@Override
@@ -161,7 +188,6 @@ public class FtHttpResumeManager {
 
 	public void terminate() {
 		this.terminate = true;
-
 	}
 
 }

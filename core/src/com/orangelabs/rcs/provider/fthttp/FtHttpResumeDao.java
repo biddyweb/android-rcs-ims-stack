@@ -46,15 +46,6 @@ public interface FtHttpResumeDao {
 	public List<FtHttpResume> queryAll(FtHttpStatus ftHttpStatus);
 	
 	/**
-	 * Query the oldest entry
-	 * 
-	 * @param ftHttpStatus
-	 *            the {@code status} value.
-	 * @return the entry (Can be {@code null}).
-	 */
-	public FtHttpResume queryOldest(FtHttpStatus ftHttpStatus);
-
-	/**
 	 * Query the upload entry with TID
 	 * 
 	 * @param tid

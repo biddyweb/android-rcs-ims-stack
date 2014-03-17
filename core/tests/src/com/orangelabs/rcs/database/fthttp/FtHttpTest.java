@@ -9,12 +9,12 @@ import android.test.InstrumentationTestCase;
 
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.provider.fthttp.FtHttpColumns;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDao;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpColumns;
 import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -28,6 +28,7 @@ public class FtHttpTest extends InstrumentationTestCase {
 	private String tid = "tid";
 	private String chatId = "chatId";
 	private String sessionId = "sessionId";
+	private String chatSessionId = "chatSessionId";
 	private String participants = "participant1;participant2";
 	private FtHttpResumeDao fthttp;
 	private ContentResolver mContentResolver;
@@ -51,11 +52,18 @@ public class FtHttpTest extends InstrumentationTestCase {
 	}
 
 	public void testFtHttpProvider() {
+//		List<FtHttpResume> list = fthttp.queryAll(FtHttpStatus.SUCCESS);
+//		if (list != null && list.isEmpty() == false) {
+//			for (FtHttpResume ftHttpResume : list) {
+//				fthttp.setStatus(ftHttpResume, FtHttpStatus.STARTED);
+//			}
+//		}
+		
 		fthttp.deleteAll();
 		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, tid, contact, displayName, chatId, sessionId,
-				participants);
+				participants, chatSessionId, true);
 		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, messageId, contact, displayName, chatId,
-				sessionId, participants);
+				sessionId, participants, chatSessionId, false);
 		Uri uri = null;
 		try {
 			uri = fthttp.insert(upload, FtHttpStatus.CREATED);
@@ -88,11 +96,10 @@ public class FtHttpTest extends InstrumentationTestCase {
 		status = fthttp.getStatus(download);
 		assertEquals("getStaFtHttpStatusiled", FtHttpStatus.FAILURE, status);
 
-		FtHttpResume ftHttpResume = fthttp.queryOldest(FtHttpStatus.FAILURE);
-		assertTrue("queryOldest failed", ftHttpResume instanceof FtHttpResumeUpload
-				& ((FtHttpResumeUpload) ftHttpResume).getTid().equals("tid"));
+		List<FtHttpResume> list = fthttp.queryAll(FtHttpStatus.SUCCESS);
+		assertTrue("queryAll(...) failed", list != null && list.isEmpty());
 
-		List<FtHttpResume> list = fthttp.queryAll();
+		list = fthttp.queryAll();
 		assertTrue("queryAll failed", list != null && !list.isEmpty());
 		if (logger.isActivated()) {
 			for (FtHttpResume item : list) {

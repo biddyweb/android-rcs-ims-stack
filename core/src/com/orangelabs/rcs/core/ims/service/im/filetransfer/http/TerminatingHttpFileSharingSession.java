@@ -18,6 +18,8 @@ w * Software Name : RCS IMS Stack
 
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax2.sip.header.ContactHeader;
 
 import com.orangelabs.rcs.core.Core;
@@ -25,6 +27,7 @@ import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
@@ -32,6 +35,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -42,25 +46,35 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class TerminatingHttpFileSharingSession extends HttpFileTransferSession implements HttpTransferEventListener {
 
-    /**
-     * HTTP download manager
-     */
-    protected HttpDownloadManager downloadManager;
+	/**
+	 * HTTP download manager
+	 */
+	protected HttpDownloadManager downloadManager;
 
-    /**
-     * ID of the incoming transfer message 
-     */
-    protected String msgId;
+	/**
+	 * ID of the incoming transfer message
+	 */
+	protected String msgId;
 
-    /**
-     * Remote instance Id
-     */
-    private String remoteInstanceId = null;
+	/**
+	 * Remote instance Id
+	 */
+	private String remoteInstanceId = null;
 
-    /**
-     * The logger
-     */
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+	/**
+	 * The logger
+	 */
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+
+	/**
+	 * Is File Transfer initiated from a GC
+	 */
+	boolean isGroup = false;
+	String chatSessionId;
+	
+	FtHttpResumeDownload resumeDownload;
+	
+	AtomicBoolean fired = new AtomicBoolean(false);
 
 	/**
 	 * Constructor
@@ -76,21 +90,21 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	 * @param contact
 	 *            the remote contact
 	 */
-    public TerminatingHttpFileSharingSession(ImsService parent, ChatSession chatSession,
-            FileTransferHttpInfoDocument fileTransferInfo, String msgId, String contact ) {
-        super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFilename(),
-                fileTransferInfo.getFileUrl(), fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()),
-                contact, null, chatSession.getSessionID(),
-                chatSession.getContributionID());
+	public TerminatingHttpFileSharingSession(ImsService parent, ChatSession chatSession,
+			FileTransferHttpInfoDocument fileTransferInfo, String msgId, String contact) {
+		super(parent, ContentManager.createMmContentFromMime(fileTransferInfo.getFilename(), fileTransferInfo.getFileUrl(),
+				fileTransferInfo.getFileType(), fileTransferInfo.getFileSize()), contact, null, chatSession.getSessionID(),
+				chatSession.getContributionID());
 
-        setRemoteDisplayName(chatSession.getRemoteDisplayName());
-        this.setDialogPath(chatSession.getDialogPath());
-        ContactHeader inviteContactHeader = (ContactHeader)chatSession.getDialogPath().getInvite().getHeader(ContactHeader.NAME);
-        if (inviteContactHeader != null) {
-            this.remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
-        }
-        this.msgId = msgId;
-
+		setRemoteDisplayName(chatSession.getRemoteDisplayName());
+		this.setDialogPath(chatSession.getDialogPath());
+		ContactHeader inviteContactHeader = (ContactHeader) chatSession.getDialogPath().getInvite().getHeader(ContactHeader.NAME);
+		if (inviteContactHeader != null) {
+			this.remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
+		}
+		this.msgId = msgId;
+		isGroup = chatSession.isGroupChat();
+		
 		// Instantiate the download manager
 		downloadManager = new HttpDownloadManager(getContent(), this, ContentManager.generateUrlForReceivedContent(getContent()
 				.getName(), getContent().getEncoding()));
@@ -99,8 +113,8 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		if (fileTransferInfo.getFileThumbnail() != null) {
 			setThumbnail(downloadManager.downloadThumbnail(fileTransferInfo.getFileThumbnail()));
 		}
-    }
-    
+	}
+
 	/**
 	 * Constructor Works just like HttpFileTransferSession(ImsService , MmContent , String , byte[] , String , String )
 	 * 
@@ -112,191 +126,208 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	}
 
 	/**
-     * Posts an interrupt request to this Thread
-     */
-    @Override
-    public void interrupt(){
-    	super.interrupt();
-    	
-    	// Interrupt the download
-    	downloadManager.interrupt();
-    }
-    
+	 * Posts an interrupt request to this Thread
+	 */
+	@Override
+	public void interrupt() {
+		super.interrupt();
 
-    /**
-     * Background processing
-     */
-    public void run() {
-        try {
-            if (logger.isActivated()) {
-                logger.info("Initiate a new HTTP file transfer session as terminating");
-            }
-            
-            if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
+		// Interrupt the download
+		downloadManager.interrupt();
+	}
+
+	/**
+	 * Background processing
+	 */
+	public void run() {
+		try {
+			if (logger.isActivated()) {
+				logger.info("Initiate a new HTTP file transfer session as terminating");
+			}
+
+			if (RcsSettings.getInstance().isFileTransferAutoAccepted()) {
 				if (logger.isActivated()) {
 					logger.debug("Auto accept file transfer invitation");
 				}
-            } else {
-                if (logger.isActivated()) {
-                    logger.debug("Accept manually file transfer invitation");
-                }
+			} else {
+				if (logger.isActivated()) {
+					logger.debug("Accept manually file transfer invitation");
+				}
 
-                // Wait invitation answer
-                int answer = waitInvitationAnswer();
-                if (answer == ImsServiceSession.INVITATION_REJECTED) {
-                    if (logger.isActivated()) {
-                        logger.debug("Transfer has been rejected by user");
-                    }
+				// Wait invitation answer
+				int answer = waitInvitationAnswer();
+				if (answer == ImsServiceSession.INVITATION_REJECTED) {
+					if (logger.isActivated()) {
+						logger.debug("Transfer has been rejected by user");
+					}
 
-                    // Remove the current session
-                    getImsService().removeSession(this);
+					// Remove the current session
+					getImsService().removeSession(this);
 
-                    // Notify listeners
-                    for (int i = 0; i < getListeners().size(); i++) {
-                        getListeners().get(i).handleSessionAborted(
-                                ImsServiceSession.TERMINATION_BY_USER);
-                    }
-                    return;
-                } else
-                if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
-                    if (logger.isActivated()) {
-                        logger.debug("Transfer has been rejected on timeout");
-                    }
+					// Notify listeners
+					for (int i = 0; i < getListeners().size(); i++) {
+						getListeners().get(i).handleSessionAborted(ImsServiceSession.TERMINATION_BY_USER);
+					}
+					return;
+				} else if (answer == ImsServiceSession.INVITATION_NOT_ANSWERED) {
+					if (logger.isActivated()) {
+						logger.debug("Transfer has been rejected on timeout");
+					}
 
-                    // Remove the current session
-                    getImsService().removeSession(this);
+					// Remove the current session
+					getImsService().removeSession(this);
 
-                    // Notify listeners
-                    for (int j = 0; j < getListeners().size(); j++) {
-                        getListeners().get(j).handleSessionAborted(
-                                ImsServiceSession.TERMINATION_BY_TIMEOUT);
-                    }
-                    return;
-                } else
-                if (answer == ImsServiceSession.INVITATION_CANCELED) {
-                    if (logger.isActivated()) {
-                        logger.debug("Transfer has been canceled");
-                    }
-                    return;
-                }
-            }
+					// Notify listeners
+					for (int j = 0; j < getListeners().size(); j++) {
+						getListeners().get(j).handleSessionAborted(ImsServiceSession.TERMINATION_BY_TIMEOUT);
+					}
+					return;
+				} else if (answer == ImsServiceSession.INVITATION_CANCELED) {
+					if (logger.isActivated()) {
+						logger.debug("Transfer has been canceled");
+					}
+					return;
+				}
+			}
 
-            // Notify listeners
-            for (int j = 0; j < getListeners().size(); j++) {
-                getListeners().get(j).handleSessionStarted();
-            }
+			// Notify listeners
+			for (int j = 0; j < getListeners().size(); j++) {
+				getListeners().get(j).handleSessionStarted();
+			}
 			// Create download entry in fthttp table
-			FtHttpResumeDownload download = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), msgId, getThumbnail());
-			FtHttpResumeDaoImpl.getInstance().insert(download);
-            // Download file from the HTTP server
+			resumeDownload = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), msgId, getThumbnail(),
+					isGroup);
+			FtHttpResumeDaoImpl.getInstance().insert(resumeDownload);
+			// Download file from the HTTP server
 			if (downloadManager.downloadFile()) {
-				if (logger.isActivated()){
+				if (logger.isActivated()) {
 					logger.debug("Download file with success");
 				}
 
-                // Set filename
-                getContent().setUrl(downloadManager.getLocalUrl());
+				// Set filename
+				getContent().setUrl(downloadManager.getLocalUrl());
 
-                // File transfered
-                handleFileTransfered();
+				// File transfered
+				handleFileTransfered();
 
-                // Send delivery report "displayed"
-                sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+				// Send delivery report "displayed"
+				sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 			} else {
 				if (downloadManager.isCancelled()) {
 					return;
 				}
 
-				if (logger.isActivated()){
+				if (logger.isActivated()) {
 					logger.info("Download file has failed");
 				}
 
-                // Upload error
-    			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
+				// Upload error
+				handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 			}
-        } catch(Exception e) {
-        	if (logger.isActivated()) {
-        		logger.error("Transfer has failed", e);
-        	}
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Transfer has failed", e);
+			}
 
-        	// Unexpected error
+			// Unexpected error
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
-    
-    /**
-     * Send delivery report
-     * 
-     * @param status Report status
-     */
-    private void sendDeliveryReport(String status) {
+
+	@Override
+	public void handleError(ImsServiceError error) {
+		super.handleError(error);
+		if (fired.compareAndSet(false, true)) {
+			if (resumeDownload != null) {
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
+			}
+		}
+	}
+
+	@Override
+	public void handleFileTransfered() {
+		super.handleFileTransfered();
+		if (fired.compareAndSet(false, true)) {
+			if (resumeDownload != null) {
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.SUCCESS);
+			}
+		}
+	}
+
+	/**
+	 * Send delivery report
+	 * 
+	 * @param status
+	 *            Report status
+	 */
+	private void sendDeliveryReport(String status) {
 		if (msgId != null) {
-			if (logger.isActivated()){
+			if (logger.isActivated()) {
 				logger.debug("Send delivery report " + status);
 			}
 
-			ChatSession chatSession = (ChatSession)Core.getInstance().getImService().getSession(getChatSessionID());
+			ChatSession chatSession = (ChatSession) Core.getInstance().getImService().getSession(getChatSessionID());
 			if (chatSession != null && chatSession.getDialogPath().isSessionEstablished()) {
-	            // Send message delivery status via a MSRP
+				// Send message delivery status via a MSRP
 				chatSession.sendMsrpMessageDeliveryStatus(getRemoteContact(), msgId, status);
 			} else {
-	            // Send message delivery status via a SIP MESSAGE
-	            ((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
-	                    getRemoteContact(), msgId, status, remoteInstanceId);
+				// Send message delivery status via a SIP MESSAGE
+				((InstantMessagingService) getImsService()).getImdnManager().sendMessageDeliveryStatusImmediately(
+						getRemoteContact(), msgId, status, remoteInstanceId);
 			}
 		}
-    }
-    
-    /**
-     * Resume File Transfer
-     */
-    @Override
-    public void resumeFileTransfer() {
-    	fileTransferResumed();
+	}
+
+	/**
+	 * Resume File Transfer
+	 */
+	@Override
+	public void resumeFileTransfer() {
+		fileTransferResumed();
 		downloadManager.getListener().httpTransferResumed();
-		
-    	new Thread(new Runnable() {
-		    public void run() {
-	            // Download file from the HTTP server
+
+		new Thread(new Runnable() {
+			public void run() {
+				// Download file from the HTTP server
 				if (downloadManager.resumeDownload()) {
-					if (logger.isActivated()){
+					if (logger.isActivated()) {
 						logger.debug("Download file with success");
 					}
 
-	                // Set filename
-	                getContent().setUrl(downloadManager.getLocalUrl());
+					// Set filename
+					getContent().setUrl(downloadManager.getLocalUrl());
 
-	                // File transfered
-	                handleFileTransfered();
+					// File transfered
+					handleFileTransfered();
 
-	                // Send delivery report "displayed"
-	                sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+					// Send delivery report "displayed"
+					sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 				} else {
 					if (downloadManager.isCancelled()) {
 						return;
 					}
 
-					if (logger.isActivated()){
+					if (logger.isActivated()) {
 						logger.info("Download file has failed");
 					}
 
-	                // Upload error
-	    			handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
+					// Upload error
+					handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 				}
-		    }
-		  }).start();
-    }
-    
-    /**
-     * Pause File Transfer
-     */
-    @Override
-    public void pauseFileTransfer() {
-    	fileTransferPaused();
-    	interruptSession();
-    	
+			}
+		}).start();
+	}
+
+	/**
+	 * Pause File Transfer
+	 */
+	@Override
+	public void pauseFileTransfer() {
+		fileTransferPaused();
+		interruptSession();
+
 		downloadManager.pauseTransfer();
 		downloadManager.getListener().httpTransferPaused();
-    }
+	}
 
 }

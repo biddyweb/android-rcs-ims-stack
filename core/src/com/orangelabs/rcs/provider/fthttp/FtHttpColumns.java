@@ -43,7 +43,9 @@ public interface FtHttpColumns extends BaseColumns {
     String SESSION_ID = "session_id";
     String THUMBNAIL = "thumbnail";
     String MESSAGE_ID = "message_id";
-    
+	String IS_GROUP = "is_group";
+	String CHAT_SESSION_ID = "chat_session_id";
+	
     String DEFAULT_ORDER = _ID;
 
 }
