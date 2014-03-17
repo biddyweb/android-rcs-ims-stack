@@ -49,13 +49,18 @@ public class FtHttpResumeManager {
 	/**
 	 * List of pending sessions to resume
 	 */
-	private LinkedList<FtHttpResume> ftHttp2Resume;
+	private LinkedList<FtHttpResume> listOfFtHttpResume;
+
+	/**
+	 * FT HTTP session being resumed
+	 */
+	private FtHttpResume ftHttpResume;
 
 	/**
 	 * The logger
 	 */
 	private static final Logger logger = Logger.getLogger(FtHttpResumeManager.class.getSimpleName());
-	
+
 	private boolean terminate = false; // TODO
 
 	/**
@@ -78,7 +83,7 @@ public class FtHttpResumeManager {
 			// Retrieve all pending sessions
 			List<FtHttpResume> listFile2resume = dao.queryAll(FtHttpStatus.STARTED);
 			if (listFile2resume.isEmpty() == false) {
-				ftHttp2Resume = new LinkedList<FtHttpResume>(listFile2resume);
+				listOfFtHttpResume = new LinkedList<FtHttpResume>(listFile2resume);
 				processNext();
 			}
 		} catch (Exception e) {
@@ -94,10 +99,10 @@ public class FtHttpResumeManager {
 	 * resume next pending session
 	 */
 	private void processNext() {
-		if (ftHttp2Resume.isEmpty())
+		if (listOfFtHttpResume.isEmpty())
 			return;
 		// Remove the oldest session from the list
-		FtHttpResume ftHttpResume = ftHttp2Resume.poll();
+		ftHttpResume = listOfFtHttpResume.poll();
 		if (logger.isActivated()) {
 			logger.debug("Resume FT HTTP " + ftHttpResume);
 		}
@@ -143,6 +148,9 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleSessionTerminatedByRemote() {
 				if (fired.compareAndSet(false, true)) {
+					if (ftHttpResume != null) {
+						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
+					}
 					processNext();
 				}
 			}
@@ -154,6 +162,9 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleSessionAborted(int reason) {
 				if (fired.compareAndSet(false, true)) {
+					if (ftHttpResume != null) {
+						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
+					}
 					processNext();
 				}
 			}
@@ -165,6 +176,9 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleTransferError(FileSharingError error) {
 				if (fired.compareAndSet(false, true)) {
+					if (ftHttpResume != null) {
+						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
+					}
 					processNext();
 				}
 			}
@@ -172,6 +186,9 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleFileTransfered(String filename) {
 				if (fired.compareAndSet(false, true)) {
+					if (ftHttpResume != null) {
+						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.SUCCESS);
+					}
 					processNext();
 				}
 			}
