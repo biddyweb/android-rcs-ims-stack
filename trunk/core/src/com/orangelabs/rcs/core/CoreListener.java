@@ -157,8 +157,10 @@ public interface CoreListener {
      * 
      * @param session File transfer session
      * @param isGroup is group file transfer
+     * @param chatSessionId corresponding chatSessionId
+     * @param chatId corresponding chatId
      */
-    public void handleIncomingFileTransferResuming(FileSharingSession session, boolean isGroup);
+    public void handleIncomingFileTransferResuming(FileSharingSession session, boolean isGroup, String chatSessionId, String chatId);
 
     /**
      * An outgoing file transfer has been resumed

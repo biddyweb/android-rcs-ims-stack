@@ -1114,14 +1114,16 @@ public class RcsCoreService extends Service implements CoreListener {
      *
      * @param session File transfer session
      * @param isGroup is group file transfer
+     * @param chatSessionId corresponding chatSessionId
+     * @param chatId corresponding chatId
      */
-    public void handleIncomingFileTransferResuming(FileSharingSession session, boolean isGroup) {
+    public void handleIncomingFileTransferResuming(FileSharingSession session, boolean isGroup, String chatSessionId, String chatId) {
         if (logger.isActivated()) {
             logger.debug("Handle event incoming file transfer resuming");
         }
 
         // Broadcast the invitation
-        messagingApi.resumeIncomingFileTransfer(session, isGroup);
+        messagingApi.resumeIncomingFileTransfer(session, isGroup, chatSessionId, chatId);
     }
 
     /**
