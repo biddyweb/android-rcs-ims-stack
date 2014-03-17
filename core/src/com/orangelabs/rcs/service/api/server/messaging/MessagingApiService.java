@@ -216,8 +216,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
      *
      * @param session File transfer session
      * @param isGroup is group file transfer
+     * @param chatSessionId corresponding chatSessionId
+     * @param chatId corresponding chatId
      */
-    public void resumeIncomingFileTransfer(FileSharingSession session, boolean isGroup) {
+    public void resumeIncomingFileTransfer(FileSharingSession session, boolean isGroup, String chatSessionId, String chatId) {
         if (logger.isActivated()) {
             logger.info("Resume incoming file transfer from " + session.getRemoteContact());
         }
@@ -237,9 +239,9 @@ public class MessagingApiService extends IMessagingApi.Stub {
         intent.putExtra("contact", number);
         intent.putExtra("contactDisplayname", session.getRemoteDisplayName());
         intent.putExtra("sessionId", session.getSessionID());
-        intent.putExtra("chatSessionId", "");
+        intent.putExtra("chatSessionId", chatSessionId);
         if (isGroup) {
-            intent.putExtra("chatId", "");
+            intent.putExtra("chatId", chatId);
         }
         intent.putExtra("isGroupTransfer", isGroup);
         intent.putExtra("filename", session.getContent().getName());
