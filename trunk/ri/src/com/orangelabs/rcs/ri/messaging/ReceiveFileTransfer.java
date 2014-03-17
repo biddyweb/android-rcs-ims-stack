@@ -434,7 +434,8 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				public void run() {
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transferred");
-					
+					TextView filenameTxt = (TextView)findViewById(R.id.filename);
+			    	filenameTxt.setText(getString(R.string.label_file_name,filename));
 					// Make sure progress bar is at the end
 			        ProgressBar progressBar = (ProgressBar)findViewById(R.id.progress_bar);
 			        progressBar.setProgress(progressBar.getMax());
