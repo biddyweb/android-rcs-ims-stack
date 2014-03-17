@@ -19,12 +19,14 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import java.util.NoSuchElementException;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.protocol.msrp.MsrpSession;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
@@ -43,7 +45,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  *
  * @author vfml3370
  */
-public class OriginatingHttpFileSharingSession extends HttpFileTransferSession implements HttpTransferEventListener {
+public class OriginatingHttpFileSharingSession extends HttpFileTransferSession implements HttpUploadTransferEventListener {
 
     /**
      * HTTP upload manager
@@ -54,6 +56,13 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
      * The logger
      */
     private final static Logger logger = Logger.getLogger(OriginatingHttpFileSharingSession.class.getSimpleName());
+
+    /**
+     * Data object to access the resume upload instance in DB
+     */
+    FtHttpResumeUpload resumeUpload;
+    
+	AtomicBoolean fired = new AtomicBoolean(false);
 
 	/**
 	 * Constructor
@@ -84,10 +93,10 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    		logger.info("Initiate a new HTTP file transfer session as originating");
 	    	}
 	    	// Create upload entry in fthttp table
-	    	FtHttpResumeUpload upload = new FtHttpResumeUpload(OriginatingHttpFileSharingSession.this, uploadManager.getTid(),getThumbnail());
-	    	FtHttpResumeDaoImpl.getInstance().insert(upload,FtHttpStatus.CREATED);
+	    	resumeUpload = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
+	    	FtHttpResumeDaoImpl.getInstance().insert(resumeUpload,FtHttpStatus.CREATED);
 	    	// Upload the file to the HTTP server 
-            byte[] result = uploadManager.uploadFile(upload);
+            byte[] result = uploadManager.uploadFile();
             sendResultToContact(result);
         } catch(Exception e) {
 	    	if (logger.isActivated()) {
@@ -181,6 +190,27 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 	}
 	
+	@Override
+	public void handleError(ImsServiceError error) {
+		super.handleError(error);
+		if (fired.compareAndSet(false, true)) {
+			if (resumeUpload != null) {
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
+			}
+		}
+	}
+	
+	@Override
+	public void handleFileTransfered() {
+		super.handleFileTransfered();
+		if (fired.compareAndSet(false, true)) {
+			if (resumeUpload != null) {
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.SUCCESS);
+			}
+		}
+	}
+
+	
 	/**
      * Posts an interrupt request to this Thread
      */
@@ -213,7 +243,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 				try {
 					FtHttpResumeUpload upload = FtHttpResumeDaoImpl.getInstance().queryUpload(uploadManager.getTid());
 					if (upload != null) {
-						sendResultToContact(uploadManager.resumeUpload(upload));
+						sendResultToContact(uploadManager.resumeUpload());
 					} else {
 						sendResultToContact(null);
 					}
@@ -223,5 +253,13 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 				}
 			}
 		}).start();
+	}
+
+
+	@Override
+	public void uploadStarted() {
+		if (resumeUpload != null) {
+			FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.STARTED);
+		}
 	}
 }

@@ -115,31 +115,12 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		}
 		return result;
 	}
-	
-	@Override
-	public FtHttpResume queryOldest(FtHttpStatus ftHttpStatus) {
-		FtHttpSelection where = new FtHttpSelection();
-		FtHttpResume result = null;
-		where.status(ftHttpStatus);
-		FtHttpCursor cursor = where.query(cr, null, "_ID LIMIT 1");
-		if (cursor != null) {
-			if (cursor.moveToNext()) {
-				if (cursor.getDirection() == FtHttpDirection.INCOMING) {
-					result = new FtHttpResumeDownload(cursor);
-				} else {
-					result = new FtHttpResumeUpload(cursor);
-				}
-			}
-			cursor.close();
-		}
-		return result;
-	}
 
 	@Override
 	public Uri insert(FtHttpResume ftHttpResume) {
-		return insert( ftHttpResume, FtHttpStatus.STARTED);
+		return insert(ftHttpResume, FtHttpStatus.STARTED);
 	}
-	
+
 	@Override
 	public Uri insert(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus) {
 		FtHttpContentValues values = new FtHttpContentValues();
@@ -148,10 +129,15 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		values.putDirection(ftHttpResume.getDirection());
 		values.putFilename(ftHttpResume.getFilename());
 		values.putThumbnail(ftHttpResume.getThumbnail());
-		values.putContact(PhoneUtils.extractNumberFromUri(ftHttpResume.getContact()));
+		String number = PhoneUtils.extractNumberFromUri(ftHttpResume.getContact());
+		if (PhoneUtils.isGlobalPhoneNumber(number)) {
+			values.putContact(number);
+		}
 		values.putDisplayName(ftHttpResume.getDisplayName());
 		values.putChatid(ftHttpResume.getChatId());
 		values.putSessionId(ftHttpResume.getSessionId());
+		values.putChatSessionId(ftHttpResume.getChatSessionId());
+		values.putIsGroup(ftHttpResume.isGroup());
 		List<String> participants = ftHttpResume.getParticipants();
 		if (participants != null && !participants.isEmpty())
 			values.putParticipants(TextUtils.join(";", participants));

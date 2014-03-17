@@ -125,11 +125,14 @@ public class RichMessaging {
 		StringBuffer result = new StringBuffer();
 		boolean firstiteration = true;
 		for (String contact : participants) {
-			if (!firstiteration) {
-				result.append(";");
+			String number = PhoneUtils.extractNumberFromUri(contact);
+			if (PhoneUtils.isGlobalPhoneNumber(number)) {
+				if (!firstiteration) {
+					result.append(";");
+				}
+				result.append(number);
+				firstiteration = false;
 			}
-			result.append(PhoneUtils.extractNumberFromUri(contact));
-			firstiteration = false;
 		}
 		if (result.length() == 0)
 			return null;

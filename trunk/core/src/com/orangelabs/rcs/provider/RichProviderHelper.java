@@ -33,7 +33,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 public class RichProviderHelper extends SQLiteOpenHelper{
 	private static final String DATABASE_NAME = "eventlog.db";
-	private static final int DATABASE_VERSION = 14;
+	private static final int DATABASE_VERSION = 15;
 	/**
 	 * The logger
 	 */
@@ -119,7 +119,10 @@ public class RichProviderHelper extends SQLiteOpenHelper{
 	            + FtHttpColumns.DISPLAY_NAME + " TEXT,"
 	            + FtHttpColumns.SESSION_ID + " TEXT,"
 	            + FtHttpColumns.THUMBNAIL + " BLOB,"
-	            + FtHttpColumns.MESSAGE_ID + " TEXT);"
+	            + FtHttpColumns.MESSAGE_ID + " TEXT,"
+	            + FtHttpColumns.IS_GROUP + " INTEGER,"
+	            + FtHttpColumns.CHAT_SESSION_ID + " TEXT"
+	            +");"
 	            );
 	    // @formatter:on
 	}

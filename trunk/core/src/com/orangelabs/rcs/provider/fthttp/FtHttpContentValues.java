@@ -231,4 +231,28 @@ public class FtHttpContentValues extends AbstractContentValues {
 		mContentValues.put(FtHttpColumns.MESSAGE_ID, value);
 		return this;
 	}
+	
+	/**
+	 * Adds isGroup to the set of content values.
+	 * 
+	 * @param value
+	 *            The added {@code value}.
+	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
+	 */
+    public FtHttpContentValues putIsGroup(Boolean value) {
+        mContentValues.put(FtHttpColumns.IS_GROUP, value);
+        return this;
+    }
+    
+	/**
+	 * Adds Chat session ID to the set of content values.
+	 * 
+	 * @param value
+	 *            The added {@code value}.
+	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
+	 */
+	public FtHttpContentValues putChatSessionId(String value) {
+		mContentValues.put(FtHttpColumns.CHAT_SESSION_ID, value);
+		return this;
+	}
 }

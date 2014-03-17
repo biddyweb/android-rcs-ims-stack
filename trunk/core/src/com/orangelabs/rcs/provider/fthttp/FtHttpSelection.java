@@ -124,10 +124,4 @@ public class FtHttpSelection extends AbstractSelection<FtHttpSelection> {
         addNotEquals(FtHttpColumns.STATUS, value);
         return this;
     }
-    
-	public FtHttpSelection sessionId(String... value) {
-		addEquals(FtHttpColumns.SESSION_ID, value);
-		return this;
-	}
-
 }

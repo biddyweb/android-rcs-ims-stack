@@ -18,7 +18,7 @@
 package com.orangelabs.rcs.provider.fthttp;
 
 import com.orangelabs.rcs.core.content.MmContent;
-import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
+import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 
 /**
  * @author YPLO6403
@@ -45,7 +45,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 * the message Id
 	 */
 	final private String messageId;
-	
+
 	/**
 	 * Creates a FT HTTP resume download data object (immutable)
 	 * 
@@ -57,10 +57,14 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 *            the {@code messageId} value.
 	 * @param thumbnail
 	 *            the {@code thumbnail} value.
+	 * @param isGroup
+	 *            the {@code isGroup} value.
 	 */
-	public FtHttpResumeDownload(FileSharingSession session, String filename, String messageId, byte[] thumbnail) {
+	public FtHttpResumeDownload(HttpFileTransferSession session, String filename, String messageId, byte[] thumbnail,
+			boolean isGroup) {
 		this(filename, thumbnail, session.getContent(), messageId, session.getRemoteContact(), session.getRemoteDisplayName(),
-				session.getContributionID(), session.getSessionID(), session.getParticipants().toString());
+				session.getContributionID(), session.getSessionID(), session.getParticipants().toString(), session
+						.getChatSessionID(), isGroup);
 	}
 
 	/**
@@ -84,10 +88,15 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 *            the {@code sessionId} value.
 	 * @param participants
 	 *            the list of {@code participants}.
+	 * @param chatSessionId
+	 *            the {@code chatSessionId} value.
+	 * @param isGroup
+	 *            the {@code isGroup} value.
 	 */
 	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String messageId, String contact,
-			String displayName, String chatId, String sessionId, String participants) {
-		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants);
+			String displayName, String chatId, String sessionId, String participants, String chatSessionId, boolean isGroup) {
+		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants, chatSessionId,
+				isGroup);
 		if (content == null)
 			throw new IllegalArgumentException("Null argument");
 		this.url = content.getUrl();

@@ -33,9 +33,6 @@ import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.protocol.http.HttpAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.CloseableUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -130,7 +127,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * @param listener
 	 *            HTTP transfer event listener
 	 */
-	public HttpUploadManager(MmContent content, byte[] thumbnail, HttpTransferEventListener listener) {
+	public HttpUploadManager(MmContent content, byte[] thumbnail, HttpUploadTransferEventListener listener) {
 		super(listener);
 
 		this.content = content;
@@ -143,7 +140,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * 
 	 * @return XML result or null if fails
 	 */
-	public byte[] uploadFile(FtHttpResumeUpload httpResumeUpload) {
+	public byte[] uploadFile() {
 		try {
 			if (logger.isActivated()) {
 				logger.debug("Upload file " + content.getUrl());
@@ -190,7 +187,7 @@ public class HttpUploadManager extends HttpTransferManager {
 				// Retry procedure
 				if (retryCount < RETRY_MAX) {
 					retryCount++;
-					return uploadFile(httpResumeUpload);
+					return uploadFile();
 				} else {
 					return null;
 				}
@@ -200,7 +197,7 @@ public class HttpUploadManager extends HttpTransferManager {
 			getListener().httpTransferStarted();
 
 			// Send a second POST request
-			return sendMultipartPost(resp,httpResumeUpload);
+			return sendMultipartPost(resp);
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Upload file has failed", e);
@@ -245,7 +242,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * @throws IOException
 	 * @throws Exception
 	 */
-	private byte[] sendMultipartPost(HttpResponse resp,FtHttpResumeUpload httpResumeUpload) throws CoreException, IOException, Exception {
+	private byte[] sendMultipartPost(HttpResponse resp) throws CoreException, IOException, Exception {
 		DataOutputStream outputStream = null;
 		String filepath = content.getUrl();
 
@@ -317,10 +314,11 @@ public class HttpUploadManager extends HttpTransferManager {
 		if (thumbnail != null) {
 			writeThumbnailMultipart(outputStream, filepath);
 		}
-
+		// From this point, resuming is possible
+		((HttpUploadTransferEventListener)getListener()).uploadStarted();
 		try {
 			// Add File
-			writeFileMultipart(outputStream, filepath,httpResumeUpload);
+			writeFileMultipart(outputStream, filepath);
 			if (!isCancelled()) {
 				outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the
 																					// last boundary to get bad request
@@ -349,7 +347,6 @@ public class HttpUploadManager extends HttpTransferManager {
 					if (HTTP_TRACE_ENABLED) {
 						System.out.println("\n" + new String(result));
 					}
-					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.SUCCESS);
 					break;
 				case 503:
 					// INTERNAL ERROR
@@ -387,9 +384,8 @@ public class HttpUploadManager extends HttpTransferManager {
 				if (success) {
 					return result;
 				} else if (retry) {
-					return sendMultipartPost(resp, httpResumeUpload);
+					return sendMultipartPost(resp);
 				} else {
-					FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.FAILURE);
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
@@ -460,7 +456,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 *            the {@code httpResumeUpload} value.
 	 * @throws IOException
 	 */
-	private void writeFileMultipart(DataOutputStream outputStream, String filepath, FtHttpResumeUpload httpResumeUpload)
+	private void writeFileMultipart(DataOutputStream outputStream, String filepath)
 			throws IOException {
 		// Check file path
 		String[] splittedPath = content.getUrl().split("/");
@@ -483,8 +479,6 @@ public class HttpUploadManager extends HttpTransferManager {
 		byte[] buffer = new byte[bufferSize];
 		int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 		int progress = 0;
-
-		FtHttpResumeDaoImpl.getInstance().setStatus(httpResumeUpload, FtHttpStatus.STARTED);
 		
 		while (bytesRead > 0 && !isCancelled()) {
 			progress += bytesRead;
@@ -548,7 +542,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * @throws ParseException
 	 *             , IOException
 	 */
-	public byte[] resumeUpload(FtHttpResumeUpload httpResumeUpload) throws ParseException, IOException {
+	public byte[] resumeUpload() throws ParseException, IOException {
 		// Try to get upload info
 		HttpResponse resp;
 		try {
@@ -566,7 +560,7 @@ public class HttpUploadManager extends HttpTransferManager {
 			if (logger.isActivated()) {
 				logger.debug("Unexpected Server response, will restart upload from begining");
 			}
-			return uploadFile(httpResumeUpload);
+			return uploadFile();
 		} else {
 
 			String content = EntityUtils.toString(resp.getEntity());
@@ -574,13 +568,13 @@ public class HttpUploadManager extends HttpTransferManager {
 
 			FileTransferHttpResumeInfo ftResumeInfo = ChatUtils.parseFileTransferHttpResumeInfo(bytes);
 			if (ftResumeInfo == null) {
-				return uploadFile(httpResumeUpload);
+				return uploadFile();
 			} else if ((ftResumeInfo.getEnd() - ftResumeInfo.getStart()) >= this.content.getSize()) {
 				return null; // Nothing to do, the file has already been uploaded completely
 			}
 
 			try {
-				sendPutForResumingUpload(ftResumeInfo, httpResumeUpload);
+				sendPutForResumingUpload(ftResumeInfo);
 				return getDownloadInfo();
 			} catch (Exception e) {
 				return null;
@@ -598,7 +592,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * @return byte[] containing the server's response
 	 * @throws Exception
 	 */
-	private byte[] sendPutForResumingUpload(FileTransferHttpResumeInfo resumeInfo, FtHttpResumeUpload resumeDoInDb) throws Exception {
+	private byte[] sendPutForResumingUpload(FileTransferHttpResumeInfo resumeInfo) throws Exception {
 		DataOutputStream outputStream = null;
 		String filepath = content.getUrl();
 
@@ -688,7 +682,6 @@ public class HttpUploadManager extends HttpTransferManager {
 					if (HTTP_TRACE_ENABLED) {
 						System.out.println("\n" + new String(result));
 					}
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, FtHttpStatus.SUCCESS);
 					break;
 				default:
 					break; // no success, no retry
@@ -702,9 +695,8 @@ public class HttpUploadManager extends HttpTransferManager {
 				if (success) {
 					return result;
 				} else if (retry) {
-					return sendPutForResumingUpload(resumeInfo, resumeDoInDb);
+					return sendPutForResumingUpload(resumeInfo);
 				} else {
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDoInDb, FtHttpStatus.FAILURE);
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
