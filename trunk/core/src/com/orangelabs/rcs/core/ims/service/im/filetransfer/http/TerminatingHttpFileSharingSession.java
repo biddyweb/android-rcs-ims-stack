@@ -54,7 +54,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	/**
 	 * ID of the incoming transfer message
 	 */
-	protected String msgId;
+	private String msgId;
 
 	/**
 	 * Remote instance Id
@@ -64,17 +64,23 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	/**
 	 * The logger
 	 */
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private final static Logger logger = Logger.getLogger(TerminatingHttpFileSharingSession.class.getSimpleName());
 
 	/**
 	 * Is File Transfer initiated from a GC
 	 */
-	boolean isGroup = false;
-	String chatSessionId;
+	protected boolean isGroup = false;
+		
+	/**
+	 * the instance of Download resume (Reflects the content of the DB)
+	 */
+	protected FtHttpResumeDownload resumeDownload;
 	
-	FtHttpResumeDownload resumeDownload;
-	
-	AtomicBoolean fired = new AtomicBoolean(false);
+	/**
+	 * fired a boolean value updated atomically to notify only once
+	 * 
+	 */
+	private AtomicBoolean fired = new AtomicBoolean(false);
 
 	/**
 	 * Constructor
@@ -116,13 +122,25 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	}
 
 	/**
-	 * Constructor Works just like HttpFileTransferSession(ImsService , MmContent , String , byte[] , String , String )
+	 * Constructor
 	 * 
-	 * @see #HttpFileTransferSession(ImsService , MmContent , String , byte[] , String , String )
+	 * @param parent
+	 *            IMS service
+	 * @param content
+	 *            the content to be transferred
+	 * @param resume
+	 *            the Data Object to access FT HTTP table in DB
 	 */
-	public TerminatingHttpFileSharingSession(ImsService parent, MmContent content, String contact, byte[] thumbnail,
-			String sessionId, String chatId) {
-		super(parent, content, contact, thumbnail, sessionId, chatId);
+	public TerminatingHttpFileSharingSession(ImsService parent, MmContent content, FtHttpResumeDownload resume) {
+		super(parent, content, resume.getContact(), resume.getThumbnail(), resume.getChatSessionId(), resume.getChatId());
+		setRemoteDisplayName(resume.getDisplayName());
+		this.isGroup = resume.isGroup();
+		this.msgId = resume.getMessageId();
+		this.resumeDownload = resume;
+		// Session ID must be equal to the FT HTTP initial one
+		setSessionID(resume.getSessionId());
+		// Instantiate the download manager
+		downloadManager = new HttpDownloadManager(getContent(), this, resumeDownload.getFilename());
 	}
 
 	/**
@@ -260,7 +278,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	 * @param status
 	 *            Report status
 	 */
-	private void sendDeliveryReport(String status) {
+	protected void sendDeliveryReport(String status) {
 		if (msgId != null) {
 			if (logger.isActivated()) {
 				logger.debug("Send delivery report " + status);

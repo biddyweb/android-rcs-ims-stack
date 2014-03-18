@@ -92,7 +92,6 @@ public class FtHttpResumeManager {
 				logger.error("Exception occurred", e);
 			}
 		}
-
 	}
 
 	/**
@@ -148,9 +147,6 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleSessionTerminatedByRemote() {
 				if (fired.compareAndSet(false, true)) {
-					if (ftHttpResume != null) {
-						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
-					}
 					processNext();
 				}
 			}
@@ -162,9 +158,6 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleSessionAborted(int reason) {
 				if (fired.compareAndSet(false, true)) {
-					if (ftHttpResume != null) {
-						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
-					}
 					processNext();
 				}
 			}
@@ -176,9 +169,6 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleTransferError(FileSharingError error) {
 				if (fired.compareAndSet(false, true)) {
-					if (ftHttpResume != null) {
-						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.FAILURE);
-					}
 					processNext();
 				}
 			}
@@ -186,9 +176,6 @@ public class FtHttpResumeManager {
 			@Override
 			public void handleFileTransfered(String filename) {
 				if (fired.compareAndSet(false, true)) {
-					if (ftHttpResume != null) {
-						FtHttpResumeDaoImpl.getInstance().setStatus(ftHttpResume, FtHttpStatus.SUCCESS);
-					}
 					processNext();
 				}
 			}
