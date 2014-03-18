@@ -19,6 +19,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
+import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
@@ -26,11 +27,6 @@ import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharingSession {
-
-	/**
-	 * the instance of Download resume (Reflects the content of the DB)
-	 */
-	private FtHttpResumeDownload resumeDownload;
 
 	/**
 	 * The logger
@@ -44,14 +40,11 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 	 *            IMS service
 	 * @param content
 	 *            the content (url, mime-type and size)
-	 * @param download
+	 * @param resumeDownload
 	 *            the data object in DB
 	 */
-	public ResumeDownloadFileSharingSession(ImsService parent, MmContent content, FtHttpResumeDownload download) {
-		super(parent, content, download.getContact(), download.getThumbnail(), download.getSessionId(), download.getChatId());
-		setRemoteDisplayName(download.getDisplayName());
-		this.msgId = download.getMessageId();
-		this.resumeDownload = download;
+	public ResumeDownloadFileSharingSession(ImsService parent, MmContent content, FtHttpResumeDownload resumeDownload) {
+		super(parent, content, resumeDownload);
 	}
 
 	/**
@@ -66,8 +59,7 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 			for (int j = 0; j < getListeners().size(); j++) {
 				getListeners().get(j).handleSessionStarted();
 			}
-			// Instantiate the download manager
-			downloadManager = new HttpDownloadManager(getContent(), this, resumeDownload.getFilename());
+			
 			// Resume download file from the HTTP server
 			if (downloadManager.streamForFile != null && downloadManager.resumeDownload()) {
 				if (logger.isActivated()) {
@@ -78,7 +70,7 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 				// File transfered
 				handleFileTransfered();
 				// Send delivery report "displayed"
-				// sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
+				sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 			} else {
 				if (downloadManager.isCancelled()) {
 					return;

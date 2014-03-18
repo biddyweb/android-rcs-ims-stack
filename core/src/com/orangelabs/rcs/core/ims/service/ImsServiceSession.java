@@ -303,6 +303,19 @@ public abstract class ImsServiceSession extends Thread {
 	}
 
 	/**
+	 * Set the session ID
+	 * 
+	 * @param sessionId
+	 *            <p>
+	 *            <b>Be Careful:</b><br />
+	 *            Should only be called to resume session (like for FT HTTP).
+	 *            </p>
+	 */
+	public void setSessionID(String sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	/**
 	 * Returns the remote contact
 	 * 
 	 * @return String
