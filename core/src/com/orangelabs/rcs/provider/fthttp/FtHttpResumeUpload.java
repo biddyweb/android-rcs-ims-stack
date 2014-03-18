@@ -47,7 +47,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 */
 	public FtHttpResumeUpload(HttpFileTransferSession session, String tid, byte[] thumbnail, boolean isGroup) {
 		this(session.getContent().getName(), thumbnail, tid, session.getRemoteContact(), session.getRemoteDisplayName(), session
-				.getContributionID(), session.getSessionID(), session.getParticipants().toString(), session.getChatSessionID(), isGroup);
+				.getContributionID(), session.getSessionID(), session.getChatSessionID(), isGroup);
 	}
 
 	/**
@@ -67,16 +67,14 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 *            the {@code chatId} value.
 	 * @param sessionId
 	 *            the {@code sessionId} value.
-	 * @param participants
-	 *            the list of {@code participants}.
 	 * @param chatSessionId
 	 *            the {@code chatSessionId} value.
 	 * @param isGroup
 	 *            the {@code isGroup} value.
 	 */
 	public FtHttpResumeUpload(String file, byte[] thumbnail, String tid, String contact, String displayName, String chatId,
-			String sessionId, String participants, String chatSessionId, boolean isGroup) {
-		super(FtHttpDirection.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, participants, chatSessionId,
+			String sessionId, String chatSessionId, boolean isGroup) {
+		super(FtHttpDirection.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, chatSessionId,
 				isGroup);
 		if (tid == null)
 			throw new IllegalArgumentException("Null tid");

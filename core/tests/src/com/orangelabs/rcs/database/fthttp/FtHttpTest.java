@@ -29,7 +29,6 @@ public class FtHttpTest extends InstrumentationTestCase {
 	private String chatId = "chatId";
 	private String sessionId = "sessionId";
 	private String chatSessionId = "chatSessionId";
-	private String participants = "participant1;participant2";
 	private FtHttpResumeDao fthttp;
 	private ContentResolver mContentResolver;
 	private ContentProviderClient mProvider;
@@ -58,12 +57,12 @@ public class FtHttpTest extends InstrumentationTestCase {
 //				fthttp.setStatus(ftHttpResume, FtHttpStatus.STARTED);
 //			}
 //		}
-		
+
 		fthttp.deleteAll();
 		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, tid, contact, displayName, chatId, sessionId,
-				participants, chatSessionId, true);
+				chatSessionId, true);
 		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, messageId, contact, displayName, chatId,
-				sessionId, participants, chatSessionId, false);
+				sessionId, chatSessionId, false);
 		Uri uri = null;
 		try {
 			uri = fthttp.insert(upload, FtHttpStatus.CREATED);

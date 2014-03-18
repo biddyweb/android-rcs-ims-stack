@@ -115,14 +115,6 @@ public class FtHttpCursor extends AbstractCursor {
 	}
 
 	/**
-	 * Get the {@code participants} value. Can be {@code null}.
-	 */
-	public String getParticipants() {
-		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.PARTICIPANTS);
-		return getString(index);
-	}
-
-	/**
 	 * Get the {@code display_name} value. Can be {@code null}.
 	 */
 	public String getDisplayName() {

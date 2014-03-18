@@ -173,18 +173,6 @@ public class FtHttpContentValues extends AbstractContentValues {
 	}
 
 	/**
-	 * Adds participants to the set of content values.
-	 * 
-	 * @param value
-	 *            The added {@code value}.
-	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
-	 */
-	public FtHttpContentValues putParticipants(String value) {
-		mContentValues.put(FtHttpColumns.PARTICIPANTS, value);
-		return this;
-	}
-
-	/**
 	 * Adds display name to the set of content values.
 	 * 
 	 * @param value
