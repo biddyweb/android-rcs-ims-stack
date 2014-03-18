@@ -23,6 +23,7 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
+import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
@@ -97,6 +98,31 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     public SipRequest createInvite() throws SipException {
     	// Not used here
     	return null;
+    }
+
+    @Override
+    public void abortSession(int reason) {
+        if (reason != ImsServiceSession.TERMINATION_BY_SYSTEM) {
+            super.abortSession(reason);
+        } else {
+            if (logger.isActivated()) {
+                logger.info("Abort the session " + reason);
+            }
+            
+            // Interrupt the session
+            interruptSession();
+
+            // Terminate session
+            terminateSession(reason);
+
+            // Remove the current session
+            getImsService().removeSession(this);
+
+            // Notify listeners
+            for(int i=0; i < getListeners().size(); i++) {
+                ((FileSharingSessionListener)getListeners().get(i)).handleFileTransferPaused();
+            }
+        }
     }
 
     /**
