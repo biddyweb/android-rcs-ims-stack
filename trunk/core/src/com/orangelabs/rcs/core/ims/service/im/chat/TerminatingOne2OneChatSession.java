@@ -59,7 +59,7 @@ public class TerminatingOne2OneChatSession extends OneOneChatSession implements 
 	 * @param invite Initial INVITE request
 	 */
 	public TerminatingOne2OneChatSession(ImsService parent, SipRequest invite) {
-		super(parent, PhoneUtils.extractNumberFromUri(SipUtils.getAssertedIdentity(invite)));
+		super(parent, SipUtils.getAssertedIdentity(invite));
 
 		// Set first message
 		InstantMessage firstMsg = ChatUtils.getFirstMessage(invite);

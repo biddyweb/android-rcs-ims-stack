@@ -26,7 +26,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -129,10 +128,7 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		values.putDirection(ftHttpResume.getDirection());
 		values.putFilename(ftHttpResume.getFilename());
 		values.putThumbnail(ftHttpResume.getThumbnail());
-		String number = PhoneUtils.extractNumberFromUri(ftHttpResume.getContact());
-		if (PhoneUtils.isGlobalPhoneNumber(number)) {
-			values.putContact(number);
-		}
+		values.putContact(ftHttpResume.getContact());
 		values.putDisplayName(ftHttpResume.getDisplayName());
 		values.putChatid(ftHttpResume.getChatId());
 		values.putSessionId(ftHttpResume.getSessionId());

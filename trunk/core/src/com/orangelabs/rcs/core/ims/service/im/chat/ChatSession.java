@@ -505,12 +505,7 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	String contentType = cpimMsg.getContentType();
 			    	
 			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
-			    	String pseudo = PhoneUtils.extractDisplayNameFromHeader(from);
-			    	from = PhoneUtils.extractNumberFromUri(from);
-					if (!PhoneUtils.isGlobalPhoneNumber(from)) {
-						from = PhoneUtils.extractNumberFromUri(getRemoteContact());
-					}
-					
+			    	String pseudo = PhoneUtils.extractDisplayNameFromHeader(from);					
 			    	
 			    	// Check if the message needs a delivery report
 	    			boolean imdnDisplayedRequested = false;
@@ -535,7 +530,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 						FileTransferHttpInfoDocument fileInfo = ChatUtils.parseFileTransferHttpDocument(cpimMsg.getMessageContent()
 								.getBytes());
 						if (fileInfo != null) {
-							receiveHttpFileTransfer(from, fileInfo, cpimMsgId);
+							if (isGroupChat()) {
+								// In GC, the MSRP 'from' header of the SEND message is set to the remote URI
+								receiveHttpFileTransfer(from, fileInfo, cpimMsgId);
+							} else {
+								// In One to One chat, the MSRP 'from' header is '<sip:anonymous@anonymous.invalid>'
+								// So the contact URI is set from the chat session.
+								receiveHttpFileTransfer(getRemoteContact(), fileInfo, cpimMsgId);
+							}
 						} else {
 							// TODO : else return error to Originating side
 						}
