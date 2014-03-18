@@ -30,6 +30,8 @@ import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
+import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -83,6 +85,13 @@ public class FtHttpResumeManager {
 			// Retrieve all pending sessions
 			List<FtHttpResume> listFile2resume = dao.queryAll(FtHttpStatus.STARTED);
 			if (listFile2resume.isEmpty() == false) {
+                // Rich Messaging - set all "in progress" File transfer to "paused".
+                // This is necessary in case of the application can't update the
+                // status before device switch off.
+                for (FtHttpResume ftHttpResume : listFile2resume) {
+                    RichMessaging.getInstance().updateFileTransferStatus(
+                            ftHttpResume.getSessionId(), EventsLogApi.STATUS_PAUSED, null);
+                }
 				listOfFtHttpResume = new LinkedList<FtHttpResume>(listFile2resume);
 				processNext();
 			}
