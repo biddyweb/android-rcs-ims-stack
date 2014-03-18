@@ -176,9 +176,9 @@ public class ImdnManager extends Thread {
         			imsService.getImsModule().getSipManager().getSipStack(),
         			imsService.getImsModule().getSipManager().getSipStack().generateCallId(),
     				1,
-    				PhoneUtils.formatNumberToSipUri(deliveryStatus.getContact()),
+    				deliveryStatus.getContact(),
     				ImsModule.IMS_USER_PROFILE.getPublicUri(),
-    				PhoneUtils.formatNumberToSipUri(deliveryStatus.getContact()),
+    				deliveryStatus.getContact(),
     				imsService.getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
             dialogPath.setRemoteSipInstance(remoteInstanceId);
 

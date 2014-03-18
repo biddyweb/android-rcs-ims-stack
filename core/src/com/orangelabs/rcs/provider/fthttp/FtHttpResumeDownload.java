@@ -141,7 +141,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResumeDownload [url=" + url + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId + "]";
+		return "FtHttpResumeDownload [file=" + filename + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId + "]";
 	}
 
 }

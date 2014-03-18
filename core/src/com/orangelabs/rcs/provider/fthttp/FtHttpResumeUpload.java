@@ -102,7 +102,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResumeUpload [tid=" + tid + "]";
+		return "FtHttpResumeUpload [tid=" + tid + " file="+filename+"]";
 	}
 
 }
