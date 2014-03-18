@@ -30,6 +30,7 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.FifoBuffer;
+import com.orangelabs.rcs.utils.PhoneUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -175,9 +176,9 @@ public class ImdnManager extends Thread {
         			imsService.getImsModule().getSipManager().getSipStack(),
         			imsService.getImsModule().getSipManager().getSipStack().generateCallId(),
     				1,
-    				deliveryStatus.getContact(),
+    				PhoneUtils.formatNumberToSipUri(deliveryStatus.getContact()),
     				ImsModule.IMS_USER_PROFILE.getPublicUri(),
-    				deliveryStatus.getContact(),
+    				PhoneUtils.formatNumberToSipUri(deliveryStatus.getContact()),
     				imsService.getImsModule().getSipManager().getSipStack().getServiceRoutePath());        	
             dialogPath.setRemoteSipInstance(remoteInstanceId);
 
