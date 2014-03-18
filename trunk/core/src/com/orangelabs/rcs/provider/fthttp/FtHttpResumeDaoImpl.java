@@ -24,7 +24,6 @@ import java.util.List;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
-import android.text.TextUtils;
 
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -134,9 +133,6 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		values.putSessionId(ftHttpResume.getSessionId());
 		values.putChatSessionId(ftHttpResume.getChatSessionId());
 		values.putIsGroup(ftHttpResume.isGroup());
-		List<String> participants = ftHttpResume.getParticipants();
-		if (participants != null && !participants.isEmpty())
-			values.putParticipants(TextUtils.join(";", participants));
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
 			values.putInUrl(download.getUrl());

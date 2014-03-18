@@ -63,8 +63,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	public FtHttpResumeDownload(HttpFileTransferSession session, String filename, String messageId, byte[] thumbnail,
 			boolean isGroup) {
 		this(filename, thumbnail, session.getContent(), messageId, session.getRemoteContact(), session.getRemoteDisplayName(),
-				session.getContributionID(), session.getSessionID(), session.getParticipants().toString(), session
-						.getChatSessionID(), isGroup);
+				session.getContributionID(), session.getSessionID(), session.getChatSessionID(), isGroup);
 	}
 
 	/**
@@ -86,17 +85,14 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 *            the {@code chatId} value.
 	 * @param sessionId
 	 *            the {@code sessionId} value.
-	 * @param participants
-	 *            the list of {@code participants}.
 	 * @param chatSessionId
 	 *            the {@code chatSessionId} value.
 	 * @param isGroup
 	 *            the {@code isGroup} value.
 	 */
 	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String messageId, String contact,
-			String displayName, String chatId, String sessionId, String participants, String chatSessionId, boolean isGroup) {
-		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, participants, chatSessionId,
-				isGroup);
+			String displayName, String chatId, String sessionId, String chatSessionId, boolean isGroup) {
+		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, chatSessionId, isGroup);
 		if (content == null)
 			throw new IllegalArgumentException("Null argument");
 		this.url = content.getUrl();
@@ -141,7 +137,8 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResumeDownload [file=" + filename + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId + "]";
+		return "FtHttpResumeDownload [file=" + filename + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId
+				+ "]";
 	}
 
 }

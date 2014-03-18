@@ -38,7 +38,6 @@ public interface FtHttpColumns extends BaseColumns {
     String DIRECTION = "direction";
     String STATUS = "status";
     String DATE = "date";
-    String PARTICIPANTS = "participants";
     String DISPLAY_NAME = "display_name";
     String SESSION_ID = "session_id";
     String THUMBNAIL = "thumbnail";
