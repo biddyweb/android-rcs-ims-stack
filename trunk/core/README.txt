@@ -16,6 +16,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.17
+- Issue 188:	Stack: FT HTTP capabilities of remote not reflected correctly
 - Issue 229     Stack: BB Impl Guideline ID_4_8 not reflected
 - Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
 - Issue 232		Stack: Application Not Responding for StartService
