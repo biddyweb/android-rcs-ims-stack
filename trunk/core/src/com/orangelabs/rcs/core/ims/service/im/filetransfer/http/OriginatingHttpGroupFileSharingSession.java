@@ -204,16 +204,18 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
 		}
 	}
-	
+
 	/**
 	 * Pausing the transfer
 	 */
 	@Override
 	public void pauseFileTransfer() {
+        fileTransferPaused();
 		interruptSession();
+
 		uploadManager.getListener().httpTransferPaused();
 	}
-	
+
 	/**
 	 * Resuming the transfer
 	 */
