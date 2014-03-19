@@ -81,4 +81,11 @@ public class ImsServiceError extends Error {
 	public int getErrorCode() {
 		return code; 
 	}
+
+	@Override
+	public String toString() {
+		return "ImsServiceError [code=" + code + ", message=" + getMessage() + "]";
+	}
+	
+	
 }

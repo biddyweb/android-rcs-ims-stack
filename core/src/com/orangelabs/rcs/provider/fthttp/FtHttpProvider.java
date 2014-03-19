@@ -130,13 +130,13 @@ public class FtHttpProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		final String groupBy = uri.getQueryParameter(QUERY_GROUP_BY);
-		if (logger.isActivated()) {
-			logger.debug("query uri=" + uri + " selection=" + selection + " selectionArgs=" + Arrays.toString(selectionArgs)
-					+ " sortOrder=" + sortOrder + " groupBy=" + groupBy);
-		}
 		final QueryParams queryParams = getQueryParams(uri, selection);
 		final Cursor res = mRichProviderHelper.getReadableDatabase().query(queryParams.table, projection, queryParams.selection,
 				selectionArgs, groupBy, null, sortOrder == null ? queryParams.orderBy : sortOrder);
+		if (logger.isActivated()) {
+			logger.debug("query uri=" + uri + " selection=" + selection + " selectionArgs=" + Arrays.toString(selectionArgs)
+					+ " sortOrder=" + (sortOrder == null ? queryParams.orderBy : sortOrder) + " groupBy=" + groupBy);
+		}
 		res.setNotificationUri(getContext().getContentResolver(), uri);
 		return res;
 	}
