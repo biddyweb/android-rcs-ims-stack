@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.ri.messaging;
 
+import com.orangelabs.rcs.utils.logger.Logger;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -28,14 +30,23 @@ import android.content.Intent;
  * @author jexa7410
  */
 public class FileTransferInvitationReceiver extends BroadcastReceiver {
+    
+    /** The logger */
+    private final static Logger logger = Logger.getLogger(FileTransferInvitationReceiver.class.getSimpleName());
+    
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
+		if (logger.isActivated()) {
+        	logger.debug("onReceive autoAccept="+autoAccept );
+        }
 		if (autoAccept) {
 			// Display progress
 			Intent progress = new Intent(intent);
 			progress.setClass(context, ReceiveFileTransfer.class);
-			progress.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			progress.addFlags(Intent.FLAG_FROM_BACKGROUND);
+			progress.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+			progress.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); 
 			context.startActivity(progress);
 		} else {
 			// Display invitation notification
