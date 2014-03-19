@@ -21,6 +21,9 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax2.sip.header.ContactHeader;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
@@ -33,6 +36,7 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
@@ -257,7 +261,17 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
 			if (resumeDownload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
+				boolean connected = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().isConnected();
+				if (logger.isActivated()) {
+					logger.warn("handleError error="+error+" connected="+connected);
+				}
+				if (connected) {
+					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
+				} else {
+					if (logger.isActivated()) {
+						logger.info("Network connection lost! Transfer will be resumed upon reconnection");
+					}
+				}
 			}
 		}
 	}
