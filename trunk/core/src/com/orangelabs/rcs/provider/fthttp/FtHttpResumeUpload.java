@@ -46,7 +46,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 *            the {@code isGroup} value.
 	 */
 	public FtHttpResumeUpload(HttpFileTransferSession session, String tid, byte[] thumbnail, boolean isGroup) {
-		this(session.getContent().getName(), thumbnail, tid, session.getRemoteContact(), session.getRemoteDisplayName(), session
+		this(session.getContent().getUrl(), thumbnail, tid, session.getRemoteContact(), session.getRemoteDisplayName(), session
 				.getContributionID(), session.getSessionID(), session.getChatSessionID(), isGroup);
 	}
 
