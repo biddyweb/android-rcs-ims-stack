@@ -44,22 +44,32 @@ public class LoggerProvisioning extends Activity {
 	/**
 	 * Trace level
 	 */
-    private static final String[] TRACE_LEVEL = {
-        "DEBUG", "INFO", "WARN", "ERROR", "FATAL" 
-    };
-	
+	private static final String[] TRACE_LEVEL = { "DEBUG", "INFO", "WARN", "ERROR", "FATAL" };
+
 	@Override
-    public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        
-        // Set layout
-        setContentView(R.layout.rcs_provisioning_logger);
-        
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		// Set layout
+		setContentView(R.layout.rcs_provisioning_logger);
 		// Set buttons callback
-        Button btn = (Button)findViewById(R.id.save_btn);
-        btn.setOnClickListener(saveBtnListener);    
-        
-        // Display parameters
+		Button btn = (Button) findViewById(R.id.save_btn);
+		btn.setOnClickListener(saveBtnListener);
+		updateView(bundle);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// Update UI (from DB)
+		updateView(null);
+	}
+	
+	/**
+	 * Update view
+	 * @param bundle
+	 */
+	private void updateView(Bundle bundle) {
+		// Display parameters
 		setCheckBoxParameter(this, R.id.TraceActivated, RcsSettingsData.TRACE_ACTIVATED, bundle);
 		setCheckBoxParameter(this, R.id.SipTraceActivated, RcsSettingsData.SIP_TRACE_ACTIVATED, bundle);
 		setCheckBoxParameter(this, R.id.MediaTraceActivated, RcsSettingsData.MEDIA_TRACE_ACTIVATED, bundle);
@@ -78,26 +88,26 @@ public class LoggerProvisioning extends Activity {
 		spinner.setSelection(parameter);
 	}
 
-    /**
-     * Save button listener
-     */
-    private OnClickListener saveBtnListener = new OnClickListener() {
-        public void onClick(View v) {
-	        // Save parameters
-        	save();
-        }
-    };
-    
-    @Override
+	/**
+	 * Save button listener
+	 */
+	private OnClickListener saveBtnListener = new OnClickListener() {
+		public void onClick(View v) {
+			// Save parameters
+			save();
+		}
+	};
+
+	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		saveInstanceState(outState);
 	}
-    
+
 	/**
 	 * Save parameters either in bundle or in RCS settings
 	 */
-    private void saveInstanceState( Bundle bundle) {
+	private void saveInstanceState(Bundle bundle) {
 		saveCheckBoxParameter(this, R.id.TraceActivated, RcsSettingsData.TRACE_ACTIVATED, bundle);
 		saveCheckBoxParameter(this, R.id.SipTraceActivated, RcsSettingsData.SIP_TRACE_ACTIVATED, bundle);
 		saveCheckBoxParameter(this, R.id.MediaTraceActivated, RcsSettingsData.MEDIA_TRACE_ACTIVATED, bundle);
@@ -110,12 +120,12 @@ public class LoggerProvisioning extends Activity {
 			RcsSettings.getInstance().writeParameter(RcsSettingsData.TRACE_LEVEL, value.toString());
 		}
 	}
-    
-    /**
-     * Save parameters
-     */
-    private void save() {	
-    	saveInstanceState(null);
-		Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();				
+
+	/**
+	 * Save parameters
+	 */
+	private void save() {
+		saveInstanceState(null);
+		Toast.makeText(this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 	}
 }

@@ -43,21 +43,32 @@ public class ServiceProvisioning extends Activity {
 	/**
 	 * IM session start modes
 	 */
-    private static final String[] IM_SESSION_START_MODES = {
-    	"1", "2"
-    };
-	
+	private static final String[] IM_SESSION_START_MODES = { "1", "2" };
+
 	@Override
-    public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        
-        // Set layout
-        setContentView(R.layout.rcs_provisioning_service);
-        
+	public void onCreate(Bundle bundle) {
+		super.onCreate(bundle);
+		// Set layout
+		setContentView(R.layout.rcs_provisioning_service);
+
 		// Set buttons callback
-        Button btn = (Button)findViewById(R.id.save_btn);
-        btn.setOnClickListener(saveBtnListener);
-       
+		Button btn = (Button) findViewById(R.id.save_btn);
+		btn.setOnClickListener(saveBtnListener);
+		updateView(bundle);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// Update UI (from DB)
+		updateView(null);
+	}
+
+	/**
+	 * Update view
+	 * @param bundle
+	 */
+	private void updateView(Bundle bundle) {
 		// Display UI parameters
 		setEditTextParameter(this, R.id.MaxPhotoIconSize, RcsSettingsData.MAX_PHOTO_ICON_SIZE, bundle);
 		setEditTextParameter(this, R.id.MaxFreetextLength, RcsSettingsData.MAX_FREETXT_LENGTH, bundle);
@@ -80,7 +91,7 @@ public class ServiceProvisioning extends Activity {
 		setEditTextParameter(this, R.id.DirectoryPathFiles, RcsSettingsData.DIRECTORY_PATH_FILES, bundle);
 		setEditTextParameter(this, R.id.MaxGeolocLabelLength, RcsSettingsData.MAX_GEOLOC_LABEL_LENGTH, bundle);
 		setEditTextParameter(this, R.id.GeolocExpirationTime, RcsSettingsData.GEOLOC_EXPIRATION_TIME, bundle);
-        
+
 		Spinner spinner = (Spinner) findViewById(R.id.ImSessionStart);
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -104,16 +115,16 @@ public class ServiceProvisioning extends Activity {
 		setCheckBoxParameter(this, R.id.AutoAcceptGroupChat, RcsSettingsData.AUTO_ACCEPT_GROUP_CHAT, bundle);
 	}
 
-	 @Override
-	   	protected void onSaveInstanceState(Bundle bundle) {
-	   		super.onSaveInstanceState(bundle);
-	   		saveInstanceState(bundle);
-	 }
-	
+	@Override
+	protected void onSaveInstanceState(Bundle bundle) {
+		super.onSaveInstanceState(bundle);
+		saveInstanceState(bundle);
+	}
+
 	/**
 	 * Save parameters either in bundle or in RCS settings
 	 */
-    private void saveInstanceState(Bundle bundle) {
+	private void saveInstanceState(Bundle bundle) {
 		saveEditTextParameter(this, R.id.MaxPhotoIconSize, RcsSettingsData.MAX_PHOTO_ICON_SIZE, bundle);
 		saveEditTextParameter(this, R.id.MaxFreetextLength, RcsSettingsData.MAX_FREETXT_LENGTH, bundle);
 		saveEditTextParameter(this, R.id.MaxChatParticipants, RcsSettingsData.MAX_CHAT_PARTICIPANTS, bundle);
@@ -150,7 +161,7 @@ public class ServiceProvisioning extends Activity {
 				RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "2");
 			}
 		}
-		
+
 		saveCheckBoxParameter(this, R.id.SmsFallbackService, RcsSettingsData.SMS_FALLBACK_SERVICE, bundle);
 		saveCheckBoxParameter(this, R.id.StoreForwardServiceWarning, RcsSettingsData.WARN_SF_SERVICE, bundle);
 		saveCheckBoxParameter(this, R.id.AutoAcceptFileTransfer, RcsSettingsData.AUTO_ACCEPT_FILE_TRANSFER, bundle);
@@ -159,12 +170,12 @@ public class ServiceProvisioning extends Activity {
 	}
 
 	/**
-     * Save button listener
-     */
-    private OnClickListener saveBtnListener = new OnClickListener() {
-        public void onClick(View v) {
-	        // Save parameters
-        	saveInstanceState(null);
-        }
-    };
+	 * Save button listener
+	 */
+	private OnClickListener saveBtnListener = new OnClickListener() {
+		public void onClick(View v) {
+			// Save parameters
+			saveInstanceState(null);
+		}
+	};
 }
