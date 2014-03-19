@@ -54,71 +54,74 @@ import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * End user profile parameters provisioning
- *
+ * 
  * @author jexa7410
  */
 public class ProfileProvisioning extends Activity {
 	/**
 	 * IMS authentication for mobile access
 	 */
-    private static final String[] MOBILE_IMS_AUTHENT = {
-    	RcsSettingsData.GIBA_AUTHENT, RcsSettingsData.DIGEST_AUTHENT
-    };
+	private static final String[] MOBILE_IMS_AUTHENT = { RcsSettingsData.GIBA_AUTHENT, RcsSettingsData.DIGEST_AUTHENT };
 
 	/**
 	 * IMS authentication for Wi-Fi access
 	 */
-    private static final String[] WIFI_IMS_AUTHENT = {
-    	RcsSettingsData.DIGEST_AUTHENT
-    };
-    
+	private static final String[] WIFI_IMS_AUTHENT = { RcsSettingsData.DIGEST_AUTHENT };
+
 	/**
 	 * IMS authentication for Wi-Fi access
 	 */
-    private static final String[] GSMA_RELEASE = {
-    	"Albatros", "Blackbird", "Crane"
-    };
-    
-    private static Logger logger = Logger.getLogger(ProfileProvisioning.class.getSimpleName());
+	private static final String[] GSMA_RELEASE = { "Albatros", "Blackbird", "Crane" };
+
+	private static Logger logger = Logger.getLogger(ProfileProvisioning.class.getSimpleName());
 
 	private static final String PROVISIONING_EXTENSION = ".xml";
 	private String mInputedUserPhoneNumber = null;
 	private String mSelectedProvisioningFile = null;
-	 /**
-     * Folder path for provisioning file
-     */
-    private static final String PROVISIONING_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
+	/**
+	 * Folder path for provisioning file
+	 */
+	private static final String PROVISIONING_FOLDER_PATH = Environment.getExternalStorageDirectory().getPath();
 
 	@Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        // Set layout
-        setContentView(R.layout.rcs_provisioning_profile);
-        
+		// Set layout
+		setContentView(R.layout.rcs_provisioning_profile);
+
 		// Set buttons callback
-        Button btn = (Button)findViewById(R.id.save_btn);
-        btn.setOnClickListener(saveBtnListener);
-        btn = (Button)findViewById(R.id.gen_btn);
-        btn.setOnClickListener(genBtnListener);
-        
-       	updateProfileProvisioningUI(savedInstanceState);
+		Button btn = (Button) findViewById(R.id.save_btn);
+		btn.setOnClickListener(saveBtnListener);
+		btn = (Button) findViewById(R.id.gen_btn);
+		btn.setOnClickListener(genBtnListener);
+
+		updateProfileProvisioningUI(savedInstanceState);
 	}
-	
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// Update UI (from DB)
+		updateProfileProvisioningUI(null);
+	}
+
 	/**
 	 * Update Profile Provisioning UI
 	 * 
-	 * @param bundle	bundle to save parameters
+	 * @param bundle
+	 *            bundle to save parameters
 	 */
 	private void updateProfileProvisioningUI(Bundle bundle) {
 		// Display parameters
-		Spinner spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForMobile);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, MOBILE_IMS_AUTHENT);
+		Spinner spinner = (Spinner) findViewById(R.id.ImsAuhtenticationProcedureForMobile);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item,
+				MOBILE_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
 		setSpinnerParameter(spinner, RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, bundle, MOBILE_IMS_AUTHENT);
-		
-		spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
+
+		spinner = (Spinner) findViewById(R.id.ImsAuhtenticationProcedureForWifi);
 		adapter = new ArrayAdapter<String>(ProfileProvisioning.this, android.R.layout.simple_spinner_item, WIFI_IMS_AUTHENT);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
@@ -166,39 +169,41 @@ public class ProfileProvisioning extends Activity {
 		txt.setText(GSMA_RELEASE[RcsSettings.getInstance().getGsmaRelease() % GSMA_RELEASE.length]);
 	}
 
-    /**
-     * Save button listener
-     */
-    private OnClickListener saveBtnListener = new OnClickListener() {
-        public void onClick(View v) {
-	        // Save parameters
-        	saveInstanceState(null);
-            Toast.makeText(ProfileProvisioning.this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();    	
-        }
-    };
-    	
-    @Override
+	/**
+	 * Save button listener
+	 */
+	private OnClickListener saveBtnListener = new OnClickListener() {
+		public void onClick(View v) {
+			// Save parameters
+			saveInstanceState(null);
+			Toast.makeText(ProfileProvisioning.this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
+		}
+	};
+
+	@Override
 	protected void onSaveInstanceState(Bundle bundle) {
 		super.onSaveInstanceState(bundle);
-		saveInstanceState( bundle );
+		saveInstanceState(bundle);
 	}
-    
+
 	/**
 	 * Save parameters either in bundle or in RCS settings
 	 */
-    private void saveInstanceState(Bundle bundle) {
-    	Spinner spinner = (Spinner) findViewById(R.id.ImsAuhtenticationProcedureForMobile);
-    	if (bundle != null) {
-    		bundle.putInt(RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, spinner.getSelectedItemPosition());
-    	} else {
-    		RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, (String)spinner.getSelectedItem());
-    	}
+	private void saveInstanceState(Bundle bundle) {
+		Spinner spinner = (Spinner) findViewById(R.id.ImsAuhtenticationProcedureForMobile);
+		if (bundle != null) {
+			bundle.putInt(RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE, spinner.getSelectedItemPosition());
+		} else {
+			RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_MOBILE,
+					(String) spinner.getSelectedItem());
+		}
 
-		spinner = (Spinner)findViewById(R.id.ImsAuhtenticationProcedureForWifi);
+		spinner = (Spinner) findViewById(R.id.ImsAuhtenticationProcedureForWifi);
 		if (bundle != null) {
 			bundle.putInt(RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, spinner.getSelectedItemPosition());
 		} else {
-			RcsSettings.getInstance().writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, (String)spinner.getSelectedItem());
+			RcsSettings.getInstance()
+					.writeParameter(RcsSettingsData.IMS_AUTHENT_PROCEDURE_WIFI, (String) spinner.getSelectedItem());
 		}
 
 		saveEditTextParameter(this, R.id.ImsUsername, RcsSettingsData.USERPROFILE_IMS_USERNAME, bundle);
@@ -223,7 +228,7 @@ public class ProfileProvisioning extends Activity {
 		saveEditTextParameter(this, R.id.CountryCode, RcsSettingsData.COUNTRY_CODE, bundle);
 		saveEditTextParameter(this, R.id.CountryAreaCode, RcsSettingsData.COUNTRY_AREA_CODE, bundle);
 
-        // Save capabilities
+		// Save capabilities
 		saveCheckBoxParameter(this, R.id.image_sharing, RcsSettingsData.CAPABILITY_IMAGE_SHARING, bundle);
 		saveCheckBoxParameter(this, R.id.video_sharing, RcsSettingsData.CAPABILITY_VIDEO_SHARING, bundle);
 		saveCheckBoxParameter(this, R.id.file_transfer, RcsSettingsData.CAPABILITY_FILE_TRANSFER, bundle);
@@ -239,26 +244,19 @@ public class ProfileProvisioning extends Activity {
 		saveCheckBoxParameter(this, R.id.file_transfer_thumbnail, RcsSettingsData.CAPABILITY_FILE_TRANSFER_THUMBNAIL, bundle);
 		saveCheckBoxParameter(this, R.id.file_transfer_sf, RcsSettingsData.CAPABILITY_FILE_TRANSFER_SF, bundle);
 		saveCheckBoxParameter(this, R.id.group_chat_sf, RcsSettingsData.CAPABILITY_GROUP_CHAT_SF, bundle);
-        saveCheckBoxParameter(this,R.id.sip_automata, RcsSettingsData.CAPABILITY_SIP_AUTOMATA, bundle);
-        
-//		spinner = (Spinner)findViewById(R.id.GsmaRelease);
-//		if (bundle != null) {
-//			bundle.putInt(RcsSettingsData.KEY_GSMA_RELEASE ,spinner.getSelectedItemPosition() );
-//		} else {
-//			RcsSettings.getInstance().setGsmaRelease(""+spinner.getSelectedItemPosition() );
-//		}
-    }
-    
-    /**
-     * Generate profile button listener
-     */
-    private OnClickListener genBtnListener = new OnClickListener() {
-        public void onClick(View v) {
-	        // Load the user profile
-        	loadProfile();
-        }
-    };
-    
+		saveCheckBoxParameter(this, R.id.sip_automata, RcsSettingsData.CAPABILITY_SIP_AUTOMATA, bundle);
+	}
+
+	/**
+	 * Generate profile button listener
+	 */
+	private OnClickListener genBtnListener = new OnClickListener() {
+		public void onClick(View v) {
+			// Load the user profile
+			loadProfile();
+		}
+	};
+
 	/**
 	 * Load the user profile
 	 */
@@ -343,7 +341,7 @@ public class ProfileProvisioning extends Activity {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Asynchronous Tasks that loads the provisioning file.
 	 */
@@ -398,6 +396,8 @@ public class ProfileProvisioning extends Activity {
 		protected void onPostExecute(Boolean result) {
 			super.onPostExecute(result);
 			updateProfileProvisioningUI(null);
+			// set configuration mode to manual
+			RcsSettings.getInstance().writeParameter(RcsSettingsData.AUTO_CONFIG_MODE, "" + RcsSettingsData.NO_AUTO_CONFIG);
 			if (result)
 				Toast.makeText(ProfileProvisioning.this, getString(R.string.label_reboot_service), Toast.LENGTH_LONG).show();
 			else
