@@ -396,8 +396,9 @@ public class RichMessaging {
 		if (msg.isImdnDisplayedRequested() && RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(),
-				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage()
+		String number = PhoneUtils.extractNumberFromUri(msg.getRemote());
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), number,
+				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, number, msg.getTextMessage()
 						.getBytes().length, msg.getDate(), status);
 	}
 
@@ -415,8 +416,9 @@ public class RichMessaging {
 		} else {
 			type = EventsLogApi.TYPE_OUTGOING_CHAT_MESSAGE;
 		}
-		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), msg.getRemote(),
-				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage()
+		String number = PhoneUtils.extractNumberFromUri(msg.getRemote());
+		addEntry(type, session.getSessionID(), session.getContributionID(), msg.getMessageId(), number,
+				msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, number, msg.getTextMessage()
 						.getBytes().length, msg.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
@@ -439,8 +441,9 @@ public class RichMessaging {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(),
-				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(),
+		String number =  PhoneUtils.extractNumberFromUri(geoloc.getRemote());
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), number,
+				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, number, geolocData.length(),
 				geoloc.getDate(), status);
 	}
 
@@ -454,8 +457,9 @@ public class RichMessaging {
 		int type = EventsLogApi.TYPE_INCOMING_GEOLOC;
 		int status = EventsLogApi.STATUS_RECEIVED;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(), geolocData,
-				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), status);
+		String number =  PhoneUtils.extractNumberFromUri(geoloc.getRemote());
+		addEntry(type, null, null, geoloc.getMessageId(), number, geoloc.getDisplayName(), geolocData,
+				GeolocMessage.MIME_TYPE, number, geolocData.length(), geoloc.getDate(), status);
 	}
 
     /**
@@ -473,8 +477,9 @@ public class RichMessaging {
 			type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		}
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), geoloc.getRemote(),
-				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(),
+		String number =  PhoneUtils.extractNumberFromUri(geoloc.getRemote());
+		addEntry(type, session.getSessionID(), session.getContributionID(), geoloc.getMessageId(), number,
+				geoloc.getDisplayName(), geolocData, GeolocMessage.MIME_TYPE, number, geolocData.length(),
 				geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
@@ -487,8 +492,9 @@ public class RichMessaging {
 		// Add session entry
 		int type = EventsLogApi.TYPE_OUTGOING_GEOLOC;
 		String geolocData = GeolocPush.formatGeolocToStr(geoloc.getGeoloc());
-		addEntry(type, null, null, geoloc.getMessageId(), geoloc.getRemote(), geoloc.getDisplayName(), geolocData,
-				GeolocMessage.MIME_TYPE, geoloc.getRemote(), geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
+		String number =  PhoneUtils.extractNumberFromUri(geoloc.getRemote());
+		addEntry(type, null, null, geoloc.getMessageId(), number, geoloc.getDisplayName(), geolocData,
+				GeolocMessage.MIME_TYPE, number, geolocData.length(), geoloc.getDate(), EventsLogApi.STATUS_SENT);
 	}
 
     /**
@@ -498,8 +504,8 @@ public class RichMessaging {
      * @param status Status
      * @param contact contact who notified status
      */
-	// TODO
 	public void setChatMessageDeliveryStatus(String msgId, String status, String contact) {
+		contact = PhoneUtils.extractNumberFromUri(contact);
 		if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DISPLAYED)) {
 			setChatMessageDeliveryStatus(msgId, EventsLogApi.STATUS_DISPLAYED, contact);
 		} else if (status.equalsIgnoreCase(ImdnDocument.DELIVERY_STATUS_DELIVERED)) {
@@ -737,8 +743,9 @@ public class RichMessaging {
 	public void addSpamMessage(InstantMessage msg) {
 		// TODO: 2 queries may be avoided
 		String id = SessionIdGenerator.getNewId();
-		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, id, id, msg.getMessageId(), msg.getRemote(), msg.getDisplayName(),
-				msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg.getTextMessage().getBytes().length,
+		String number =  PhoneUtils.extractNumberFromUri(msg.getRemote());
+		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, id, id, msg.getMessageId(), number, msg.getDisplayName(),
+				msg.getTextMessage(), InstantMessage.MIME_TYPE, number, msg.getTextMessage().getBytes().length,
 				msg.getDate(), EventsLogApi.STATUS_RECEIVED);
 		markChatMessageAsSpam(msg.getMessageId(), true);
 	}
@@ -754,8 +761,9 @@ public class RichMessaging {
 		if (msg.isImdnDisplayedRequested() && RcsSettings.getInstance().isImDisplayedNotificationActivated()) {
 			status = EventsLogApi.STATUS_REPORT_REQUESTED;
 		}
+		String number =  PhoneUtils.extractNumberFromUri(msg.getRemote());
 		addEntry(EventsLogApi.TYPE_INCOMING_CHAT_MESSAGE, SessionIdGenerator.getNewId(), chatId, msg.getMessageId(),
-				msg.getRemote(), msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg
+				number, msg.getDisplayName(), msg.getTextMessage(), InstantMessage.MIME_TYPE, msg.getRemote(), msg
 						.getTextMessage().getBytes().length, msg.getDate(), status);
 	}
 
