@@ -78,6 +78,8 @@ public class ProfileProvisioning extends Activity {
 	private static final String PROVISIONING_EXTENSION = ".xml";
 	private String mInputedUserPhoneNumber = null;
 	private String mSelectedProvisioningFile = null;
+
+	private boolean isInFront;
 	/**
 	 * Folder path for provisioning file
 	 */
@@ -97,15 +99,25 @@ public class ProfileProvisioning extends Activity {
 		btn.setOnClickListener(genBtnListener);
 
 		updateProfileProvisioningUI(savedInstanceState);
+		isInFront = true;
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		// Update UI (from DB)
-		updateProfileProvisioningUI(null);
+		if (isInFront == false) {
+			isInFront = true;
+			// Update UI (from DB)
+			updateProfileProvisioningUI(null);
+		}
 	}
 
+	@Override
+	protected void onPause() {
+		super.onPause();
+		isInFront = false;
+	}
+	
 	/**
 	 * Update Profile Provisioning UI
 	 * 
