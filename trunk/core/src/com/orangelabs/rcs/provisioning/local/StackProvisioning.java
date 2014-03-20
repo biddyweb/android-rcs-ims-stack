@@ -39,6 +39,7 @@ import android.widget.Toast;
 import com.orangelabs.rcs.R;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.provider.settings.RcsSettingsData;
+import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
  * Stack parameters provisioning File
@@ -71,6 +72,8 @@ public class StackProvisioning extends Activity {
 	 */
 	private static final String[] FT_PROTOCOL = { RcsSettingsData.FT_PROTOCOL_HTTP, RcsSettingsData.FT_PROTOCOL_MSRP };
 
+	private boolean isInFront;
+
 	@Override
 	public void onCreate(Bundle bundle) {
 		super.onCreate(bundle);
@@ -80,20 +83,29 @@ public class StackProvisioning extends Activity {
 		Button btn = (Button) findViewById(R.id.save_btn);
 		btn.setOnClickListener(saveBtnListener);
 		updateView(bundle);
+		isInFront = true;
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle bundle) {
 		super.onSaveInstanceState(bundle);
-		// Update UI
 		saveInstanceState(bundle);
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		// Update UI (from DB)
-		updateView(null);
+		if (isInFront == false) {
+			isInFront = true;
+			// Update UI (from DB)
+			updateView(null);
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		isInFront = false;
 	}
 
 	/**
@@ -229,6 +241,7 @@ public class StackProvisioning extends Activity {
 
 	/**
 	 * Update UI (upon creation, rotation, tab switch...)
+	 * 
 	 * @param bundle
 	 */
 	private void updateView(Bundle bundle) {

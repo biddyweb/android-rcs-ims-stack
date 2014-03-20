@@ -44,6 +44,8 @@ public class ServiceProvisioning extends Activity {
 	 * IM session start modes
 	 */
 	private static final String[] IM_SESSION_START_MODES = { "1", "2" };
+	
+	private boolean isInFront;
 
 	@Override
 	public void onCreate(Bundle bundle) {
@@ -55,13 +57,23 @@ public class ServiceProvisioning extends Activity {
 		Button btn = (Button) findViewById(R.id.save_btn);
 		btn.setOnClickListener(saveBtnListener);
 		updateView(bundle);
+		isInFront = true;
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		// Update UI (from DB)
-		updateView(null);
+		if (isInFront == false) {
+			isInFront = true;
+			// Update UI (from DB)
+			updateView(null);
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		isInFront = false;
 	}
 
 	/**
