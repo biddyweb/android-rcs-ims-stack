@@ -119,21 +119,25 @@ public class OneToOneChatView extends ChatView {
         // Test if the session has been created or not
 		if (chatSession == null) {
 			// Initiate the chat session in background
-	        Thread thread = new Thread() {
-	        	public void run() {
-	            	try {
-            			chatSession = messagingApi.initiateOne2OneChatSession(participants.get(0), msg);
-	            		chatSession.addSessionListener(chatSessionListener);
-	            	} catch(Exception e) {
-	            		handler.post(new Runnable(){
-	            			public void run(){
-	            				Utils.showMessageAndExit(OneToOneChatView.this, getString(R.string.label_invitation_failed));		
-	            			}
-	            		});
-	            	}
-	        	}
-	        };
-	        thread.start();
+			new Thread() {
+				public void run() {
+					try {
+						chatSession = messagingApi.initiateOne2OneChatSession(participants.get(0), msg);
+						chatSession.addSessionListener(chatSessionListener);
+					} catch (Exception e) {
+						if (logger.isActivated()) {
+							logger.error("Exception occurred", e);
+						}
+						handler.post(new Runnable() {
+							public void run() {
+								if (!isInBackground) {
+									Utils.showMessageAndExit(OneToOneChatView.this, getString(R.string.label_invitation_failed));
+								}
+							}
+						});
+					}
+				}
+			}.start();
 
 	        // Display a progress dialog
 	        progressDialog = Utils.showProgressDialog(OneToOneChatView.this, getString(R.string.label_command_in_progress));

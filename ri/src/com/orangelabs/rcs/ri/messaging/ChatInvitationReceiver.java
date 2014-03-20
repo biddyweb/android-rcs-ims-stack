@@ -34,33 +34,32 @@ public class ChatInvitationReceiver extends BroadcastReceiver {
 	 * The logger
 	 */
 	private final static Logger logger = Logger.getLogger(ChatInvitationReceiver.class.getSimpleName());
-	
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
-        boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
-        boolean isGroupChat = intent.getBooleanExtra("isGroupChat",false);
-        if (logger.isActivated()) {
-        	logger.debug("onReceive autoAccept="+autoAccept+" isGroupChat="+isGroupChat);
-        }
-        if (autoAccept) {
-        	if (isGroupChat) {
-        		// Display GroupChatView
-                Intent intentGC = new Intent(intent);
-                intentGC.setClass(context, GroupChatView.class);
-                intentGC.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intentGC.setAction(intent.getStringExtra("sessionId"));
-                context.startActivity(intentGC);
-        	} else {
-        		// Display OneToOneChatView
-                Intent intentOneToOne = new Intent(intent);
-                intentOneToOne.setClass(context, OneToOneChatView.class);
-                intentOneToOne.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intentOneToOne.setAction(intent.getStringExtra("sessionId"));
-                context.startActivity(intentOneToOne);
-        	}
-        } else {
-            // Display invitation notification
-            ReceiveChat.addChatInvitationNotification(context, intent);
-        }
-    }
+		boolean autoAccept = intent.getBooleanExtra("autoAccept", false);
+		boolean isGroupChat = intent.getBooleanExtra("isGroupChat", false);
+		if (logger.isActivated()) {
+			logger.debug("onReceive autoAccept=" + autoAccept + " isGroupChat=" + isGroupChat);
+		}
+		if (autoAccept) {
+			Intent intentChat = new Intent(intent);
+			if (isGroupChat) {
+				// Display GroupChatView
+				intentChat.setClass(context, GroupChatView.class);
+			} else {
+				// Display OneToOneChatView
+				intentChat.setClass(context, OneToOneChatView.class);
+			}
+			intentChat.addFlags(Intent.FLAG_FROM_BACKGROUND);
+			intentChat.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+			intentChat.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			intentChat.setAction(intent.getStringExtra("sessionId"));
+			context.startActivity(intentChat);
+
+		} else {
+			// Display invitation notification
+			ReceiveChat.addChatInvitationNotification(context, intent);
+		}
+	}
 }

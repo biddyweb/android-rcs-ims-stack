@@ -88,17 +88,21 @@ public class GroupChatView extends ChatView {
      */
     public void initSession() {
 		// Initiate the chat session in background
-        Thread thread = new Thread() {
-        	public void run() {
-            	try {
-        			chatSession = messagingApi.initiateAdhocGroupChatSession(participants, subject);
-            		chatSession.addSessionListener(chatSessionListener);
-            	} catch(Exception e) {
-            		Utils.ShowDialogAndFinish(GroupChatView.this, getString(R.string.label_invitation_failed));		
-            	}
-        	}
-        };
-        thread.start();
+		new Thread() {
+			public void run() {
+				try {
+					chatSession = messagingApi.initiateAdhocGroupChatSession(participants, subject);
+					chatSession.addSessionListener(chatSessionListener);
+				} catch (Exception e) {
+					if (logger.isActivated()) {
+						logger.error("Exception occurred",e);
+					}
+					if (!isInBackground) {
+						Utils.ShowDialogAndFinish(GroupChatView.this, getString(R.string.label_invitation_failed));
+					}
+				}
+			}
+		}.start();
 
         // Display a progress dialog
         progressDialog = Utils.showProgressDialog(GroupChatView.this, getString(R.string.label_command_in_progress));
