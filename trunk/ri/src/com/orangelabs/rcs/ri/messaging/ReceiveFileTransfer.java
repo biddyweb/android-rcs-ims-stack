@@ -129,7 +129,9 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 			logger.info("onCreate");
 		}
 		super.onCreate(savedInstanceState);
-
+		// Instantiate settings
+		RcsSettings.createInstance(this);
+		
 		// Set layout
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setContentView(R.layout.messaging_receive_filetransfer);
