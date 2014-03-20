@@ -3,7 +3,6 @@ package com.orangelabs.rcs.utils;
 import android.test.AndroidTestCase;
 
 import com.orangelabs.rcs.provider.settings.RcsSettings;
-import com.orangelabs.rcs.utils.PhoneUtils;
 
 public class PhoneUtilsTest extends AndroidTestCase {
 
@@ -40,5 +39,13 @@ public class PhoneUtilsTest extends AndroidTestCase {
 		assertEquals(PhoneUtils.formatNumberToInternational("+34121345678"), "+34121345678");
 		assertEquals(PhoneUtils.formatNumberToInternational("34121345678"),	"+3434121345678");
 		assertEquals(PhoneUtils.formatNumberToInternational("123"), "+34123");
+	}
+	
+	public void testCleanUriHeadingTrailingChar() {
+		assertEquals( PhoneUtils.cleanUriHeadingTrailingChar("<sip:22444032@phonesystem.3cx.com>"), "sip:22444032@phonesystem.3cx.com");
+		assertEquals( PhoneUtils.cleanUriHeadingTrailingChar("<sip:22444032@phonesystem.3cx.com"), "sip:22444032@phonesystem.3cx.com");
+		assertEquals( PhoneUtils.cleanUriHeadingTrailingChar("sip:22444032@phonesystem.3cx.com>"), "sip:22444032@phonesystem.3cx.com");
+		assertEquals( PhoneUtils.cleanUriHeadingTrailingChar("sip:22444032@phonesystem.3cx.com"), "sip:22444032@phonesystem.3cx.com");
+		assertEquals( PhoneUtils.cleanUriHeadingTrailingChar(null), null);
 	}
 }
