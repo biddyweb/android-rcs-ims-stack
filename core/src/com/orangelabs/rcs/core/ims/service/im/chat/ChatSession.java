@@ -34,6 +34,7 @@ import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
+import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimIdentity;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimParser;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
@@ -502,21 +503,39 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
                         cpimMsgId = msgId;
                     }
 
-			    	String contentType = cpimMsg.getContentType();
-			    	
-			    	String from = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
-			    	String pseudo = PhoneUtils.extractDisplayNameFromHeader(from);					
+					String contentType = cpimMsg.getContentType();
+					
+					// In One to One chat, the MSRP 'from' header is '<sip:anonymous@anonymous.invalid>'
+					// So the contact URI is set from the chat session.
+					String remoteUri = getRemoteContact();
+					if (isGroupChat()) {
+						// In GC, the MSRP 'from' header of the SEND message is set to the remote URI
+						remoteUri = cpimMsg.getHeader(CpimMessage.HEADER_FROM);
+					}
+					String pseudo = null;
+					// Extract URI and optional display name
+					try {
+						CpimIdentity cpimIdentity = new CpimIdentity(remoteUri);
+						pseudo = cpimIdentity.getDisplayName();
+						remoteUri = cpimIdentity.getUri();
+						if (logger.isActivated()) {
+							logger.info("Cpim Identity: " + cpimIdentity);
+						}
+					} catch (IllegalArgumentException e) {
+						// Intentionally blank
+					}
+			    	String number = PhoneUtils.extractNumberFromUri(remoteUri);
 			    	
 			    	// Check if the message needs a delivery report
 	    			boolean imdnDisplayedRequested = false;
 			    	String dispositionNotification = cpimMsg.getHeader(ImdnUtils.HEADER_IMDN_DISPO_NOTIF);
                     boolean isFToHTTP = ChatUtils.isFileTransferHttpType(contentType);
                     if (isFToHTTP) {
-                        sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+                        sendMsrpMessageDeliveryStatus(remoteUri, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
                     } else if (dispositionNotification != null) {
 			    		if (dispositionNotification.contains(ImdnDocument.POSITIVE_DELIVERY)) {
 			    			// Positive delivery requested, send MSRP message with status "delivered" 
-			    			sendMsrpMessageDeliveryStatus(from, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
+			    			sendMsrpMessageDeliveryStatus(remoteUri, cpimMsgId, ImdnDocument.DELIVERY_STATUS_DELIVERED);
 			    		}
 			    		if (dispositionNotification.contains(ImdnDocument.DISPLAY)) {
 			    			imdnDisplayedRequested = true;
@@ -530,21 +549,14 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 						FileTransferHttpInfoDocument fileInfo = ChatUtils.parseFileTransferHttpDocument(cpimMsg.getMessageContent()
 								.getBytes());
 						if (fileInfo != null) {
-							if (isGroupChat()) {
-								// In GC, the MSRP 'from' header of the SEND message is set to the remote URI
-								receiveHttpFileTransfer(from, fileInfo, cpimMsgId);
-							} else {
-								// In One to One chat, the MSRP 'from' header is '<sip:anonymous@anonymous.invalid>'
-								// So the contact URI is set from the chat session.
-								receiveHttpFileTransfer(getRemoteContact(), fileInfo, cpimMsgId);
-							}
+							receiveHttpFileTransfer(remoteUri, fileInfo, cpimMsgId);
 						} else {
 							// TODO : else return error to Originating side
 						}
                     } else
 	                if (ChatUtils.isTextPlainType(contentType)) {
 				    	// Text message
-		    			receiveText(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date, pseudo);
+		    			receiveText(number, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date, pseudo);
 		    			
 		    			// Mark the message as waiting a displayed report if needed 
 		    			if (imdnDisplayedRequested) {
@@ -555,15 +567,15 @@ public abstract class ChatSession extends ImsServiceSession implements MsrpEvent
 			    	} else
 		    		if (ChatUtils.isApplicationIsComposingType(contentType)) {
 					    // Is composing event
-		    			receiveIsComposing(from, cpimMsg.getMessageContent().getBytes());
+		    			receiveIsComposing(number, cpimMsg.getMessageContent().getBytes());
 			    	} else
 			    	if (ChatUtils.isMessageImdnType(contentType)) {
 						// Delivery report
-						receiveMessageDeliveryStatus(from,cpimMsg.getMessageContent());
+						receiveMessageDeliveryStatus(number,cpimMsg.getMessageContent());
 			    	} else	
 			    	if (ChatUtils.isGeolocType(contentType)) {
 						// Geoloc message
-						receiveGeoloc(from, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date,pseudo);
+						receiveGeoloc(number, StringUtils.decodeUTF8(cpimMsg.getMessageContent()), cpimMsgId, imdnDisplayedRequested, date,pseudo);
 			    	} 
 				}
 	    	} catch(Exception e) {

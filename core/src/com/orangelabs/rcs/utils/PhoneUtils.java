@@ -18,9 +18,6 @@
 
 package com.orangelabs.rcs.utils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import android.content.Context;
 import android.telephony.PhoneNumberUtils;
 
@@ -48,20 +45,6 @@ public class PhoneUtils {
 	 */
 	private static String COUNTRY_AREA_CODE = "0";
 	
-	/**
-	 * Regular expression of the CPIM 'From' header
-	 * <p>
-	 * Extract of RFC3862 <b>Common Presence and Instant Messaging (CPIM): Message Format</b> <br>
-	 * From-header = "From" ": " [ Formal-name ] "<" URI ">" ; "From" is case-sensitive
-	 * 
-	 */
-	private final static String REGEXP_FROM_DISPLAY_NAME = "^\\s*?\"?([^\"<]*)\"?\\s*?<.*>$";
-	
-	/**
-	 * Pattern to extract display name from CPIM 'From' header
-	 */
-	private final static Pattern PATTERN_FROM_DISPLAY_NAME = Pattern.compile(REGEXP_FROM_DISPLAY_NAME);
-
 	/**
 	 * Set the country code
 	 * 
@@ -192,26 +175,6 @@ public class PhoneUtils {
 			return null;
 		}
 	}
-	
-	/**
-	 * Extract the Display Name from CPIM 'From:' header
-	 * 
-	 * @param from
-	 *            the content of the 'From:' header
-	 * @return the Display Name or null if does not exist
-	 */
-	public static String extractDisplayNameFromHeader(String from) {
-		if (from == null)
-			return null;
-		Matcher matcher = PATTERN_FROM_DISPLAY_NAME.matcher(from);
-		if (matcher.find()) {
-			if (matcher.groupCount() == 1) {
-				String result = matcher.group(1).trim();
-				return (result.length() == 0) ? null : result;
-			}
-		}
-		return null;
-	}
 
 	/**
 	 * Compare phone number between two contacts
@@ -253,5 +216,18 @@ public class PhoneUtils {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Clean URI from '<' heading character or '>' trailing character
+	 * 
+	 * @param uri
+	 *            the identity
+	 * @return the cleaned Uri
+	 */
+	public static String cleanUriHeadingTrailingChar(String uri) {
+		if (uri == null)
+			return uri;
+		return uri.replaceAll("^<|>$", "");
 	}
 }

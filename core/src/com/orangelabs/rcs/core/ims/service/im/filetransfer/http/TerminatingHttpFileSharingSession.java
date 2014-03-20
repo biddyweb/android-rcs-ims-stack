@@ -21,9 +21,6 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax2.sip.header.ContactHeader;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
@@ -36,7 +33,6 @@ import com.orangelabs.rcs.core.ims.service.im.InstantMessagingService;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
-import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;

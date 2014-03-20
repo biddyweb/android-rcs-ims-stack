@@ -21,8 +21,6 @@ package com.orangelabs.rcs.core.ims.network.sip;
 import gov2.nist.javax2.sip.header.ims.PPreferredServiceHeader;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -45,6 +43,7 @@ import javax2.sip.message.Request;
 import com.orangelabs.rcs.core.TerminalInfo;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipMessage;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
+import com.orangelabs.rcs.utils.PhoneUtils;
 
 /**
  * SIP utility functions
@@ -331,22 +330,22 @@ public class SipUtils {
 				// Get value of the first header
 				assertedHeader1 = ((ExtensionHeader) list.next()).getValue();
 				if (assertedHeader1.contains("tel:")) {
-					return assertedHeader1;
+					return PhoneUtils.cleanUriHeadingTrailingChar(assertedHeader1);
 				}
 				if (list.hasNext()) {
 					// Get value of the second header (it may not be present)
 					String assertedHeader2 = ((ExtensionHeader) list.next())
 							.getValue();
 					if (assertedHeader2.contains("tel:")) {
-						return assertedHeader2;
+						return PhoneUtils.cleanUriHeadingTrailingChar(assertedHeader2);
 					}
 				}
 				// In case there is no tel uri, return the value of the first header
-				return assertedHeader1;
+				return PhoneUtils.cleanUriHeadingTrailingChar(assertedHeader1);
 			}
 		}
 		// No P-AssertedIdentity header, we take the value in the FROM uri
-		return request.getFromUri();
+		return PhoneUtils.cleanUriHeadingTrailingChar(request.getFromUri());
 	}
 	
     /**
