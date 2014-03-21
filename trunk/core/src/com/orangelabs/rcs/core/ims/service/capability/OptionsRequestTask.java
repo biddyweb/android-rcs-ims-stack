@@ -167,7 +167,7 @@ public class OptionsRequestTask implements Runnable {
             } else {
             	// Other error response
     			handleError(new CapabilityError(CapabilityError.OPTIONS_FAILED,
-    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));    					
+    					ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
             }
         } else {
     		if (logger.isActivated()) {
@@ -175,7 +175,8 @@ public class OptionsRequestTask implements Runnable {
         	}
 
     		// No response received: timeout
-        	handleUserNotRegistered(ctx);
+            handleError(new CapabilityError(CapabilityError.OPTIONS_FAILED,
+                    ctx.getStatusCode() + " " + ctx.getReasonPhrase()));
         }
 	}       
     
