@@ -402,8 +402,8 @@ public class HttpUploadManager extends HttpTransferManager {
 			if (logger.isActivated()) {
 				logger.warn("File Upload aborted due to " + e.getLocalizedMessage() + " now in state pause, waiting for resume...");
 			}
-			getListener().httpTransferPaused();
-			throw e;
+			pauseTransfer();
+			return null;
 		}
 	}
 
@@ -714,8 +714,7 @@ public class HttpUploadManager extends HttpTransferManager {
 				logger.warn("File Upload aborted due to " + e.getLocalizedMessage() + " now in state pause, waiting for resume...");
 			}
 			pauseTransfer();
-			getListener().httpTransferPaused();
-			throw e;
+			return null;
 		}
 	}
 
