@@ -329,10 +329,17 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 				isCapacityOk(ReceiveFileTransfer.this, fileSize);
 				// Do not reject: already done by the stack
 			} else {
-				if (isCapacityOk(ReceiveFileTransfer.this, fileSize) == false) {
-					rejectInvitation();
-					return;
-				}
+				// @formatter:off
+
+// The following code is intentionally commented to test the CORE.
+// UI should check the file size to cancel if it is too big.
+//				if (isCapacityOk(ReceiveFileTransfer.this, fileSize) == false) {
+//					rejectInvitation();
+//					return;
+//				}
+				
+				// @formatter:on
+
 				// Manual accept
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 				builder.setTitle(R.string.title_recv_file_transfer);
