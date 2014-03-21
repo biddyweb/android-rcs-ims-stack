@@ -170,7 +170,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
         String msgId = IdGenerator.generateMessageID();
 
         // Send file info in CPIM message
-        String content = ChatUtils.buildCpimMessageWithImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
+        String content = ChatUtils.buildCpimMessageWithDeliveredImdn(from, to, msgId, fileInfo, FileTransferHttpInfoDocument.MIME_TYPE);
 
         // Send content
         chatSession.sendDataChunks(IdGenerator.generateMessageID(), content, mime, TypeMsrpChunk.FileSharing);
