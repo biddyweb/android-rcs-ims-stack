@@ -18,6 +18,8 @@
 
 package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 
+import java.util.List;
+
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipException;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
@@ -27,6 +29,9 @@ import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
+import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -103,24 +108,48 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
     @Override
     public void abortSession(int reason) {
         if (reason != ImsServiceSession.TERMINATION_BY_SYSTEM) {
+            // Abort the session
             super.abortSession(reason);
         } else {
-            if (logger.isActivated()) {
-                logger.info("Abort the session " + reason);
-            }
-            
-            // Interrupt the session
-            interruptSession();
+            // Check if the session is not in created status. In this status,
+            // the thumbnail is not yet sent and the resume is not possible.
+            FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
+            if (dao == null) {
+                // Abort the session
+                super.abortSession(reason);
+            } else {
+                boolean found = false;
+                List<FtHttpResume> createdFileTransfers = dao.queryAll(FtHttpStatus.CREATED);
+                for (FtHttpResume ftHttpResume : createdFileTransfers) {
+                    if (ftHttpResume.getSessionId().equals(getSessionID())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    // Abort the session
+                    super.abortSession(reason);
+                } else {
+                    // If the session has been terminated by system and already started, then
+                    // Pause the session
+                    if (logger.isActivated()) {
+                        logger.info("Pause the session (session terminated, but can be resumed)");
+                    }
 
-            // Terminate session
-            terminateSession(reason);
+                    // Interrupt the session
+                    interruptSession();
 
-            // Remove the current session
-            getImsService().removeSession(this);
+                    // Terminate session
+                    terminateSession(reason);
 
-            // Notify listeners
-            for(int i=0; i < getListeners().size(); i++) {
-                ((FileSharingSessionListener)getListeners().get(i)).handleFileTransferPaused();
+                    // Remove the current session
+                    getImsService().removeSession(this);
+
+                    // Notify listeners
+                    for(int i=0; i < getListeners().size(); i++) {
+                        ((FileSharingSessionListener)getListeners().get(i)).handleFileTransferPaused();
+                    }
+                }
             }
         }
     }
