@@ -72,15 +72,16 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 				// Send delivery report "displayed"
 				sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 			} else {
-				if (downloadManager.isCancelled()) {
-					return;
-				}
-				if (logger.isActivated()) {
-					logger.warn("Resume download has failed");
-				}
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
-				// Upload error
-				handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
+                // Don't call handleError in case of Pause or Cancel
+                if (downloadManager.isCancelled() || downloadManager.isPaused()) {
+                    return;
+                }
+
+                // Upload error
+                if (logger.isActivated()) {
+                    logger.info("Resume Download file has failed");
+                }
+                handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 			}
 		} catch (Exception e) {
 			if (logger.isActivated()) {

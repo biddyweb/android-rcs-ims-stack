@@ -121,21 +121,19 @@ public class HttpDownloadManager extends HttpTransferManager {
 			}
 			// Execute request with retry procedure
 			if (!getFile(request)) {
-				if (retryCount < RETRY_MAX && !isCancelled()) {
+				if (retryCount < RETRY_MAX && !isCancelled() && !isPaused()) {
 					retryCount++;
 					return downloadFile();
 				} else {
-					if (logger.isActivated()) {
-						if (isCancelled()) {
-							if (logger.isActivated()) {
-								logger.debug("Download file cancelled");
-							}
-						} else {
-							if (logger.isActivated()) {
-								logger.debug("Failed to download file");
-							}
-						}
-					}
+                    if (logger.isActivated()) {
+                        if (isPaused()) {
+                            logger.debug("Download file paused");
+                        } else if (isCancelled()) {
+                            logger.debug("Download file cancelled");
+                        } else {
+                            logger.debug("Failed to download file");
+                        }
+                    }
 					return false;
 				}
 			}
@@ -156,9 +154,10 @@ public class HttpDownloadManager extends HttpTransferManager {
 	 * @return Returns true if successful
 	 */
 	private boolean getFile(HttpGet request) {
+        HttpResponse response = null;
 		try {
 			// Execute HTTP request
-			HttpResponse response = getHttpClient().execute(request);
+			response = getHttpClient().execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (HTTP_TRACE_ENABLED) {
 				String trace = "<<< Resceive HTTP response:";
@@ -174,18 +173,34 @@ public class HttpDownloadManager extends HttpTransferManager {
 			} else {
 				return false;
 			}
+        } catch (Exception e) {
+                if (logger.isActivated()) {
+                    logger.error("Download file exception", e);
+                }
+                return false;
+        }
 
+        try {
+            // Read content
 			byte[] buffer = new byte[CHUNK_MAX_SIZE];
 			HttpEntity entity = response.getEntity();
 			InputStream input = entity.getContent();
 			int num;
-			while ((num = input.read(buffer)) != -1 && !isCancelled()) {
+			while ((num = input.read(buffer)) != -1 && !isCancelled() && !isPaused()) {
 				calclength += num;
 				getListener().httpTransferProgress(calclength, content.getSize());
 				streamForFile.write(buffer, 0, num);
 			}
+        } catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("Download file exception. Set in paused", e);
+            }
+            pauseTransfer();
+            return false;
+        }
 
-			streamForFile.flush();
+        try {
+            streamForFile.flush();
 
 			if (isPaused()) {
 				return false;
@@ -203,7 +218,6 @@ public class HttpDownloadManager extends HttpTransferManager {
 			if (logger.isActivated()) {
 				logger.error("Download file exception", e);
 			}
-			pauseTransfer();
 			return false;
 		}
 	}
@@ -319,35 +333,29 @@ public class HttpDownloadManager extends HttpTransferManager {
 			}
 
 			// Execute request with retry procedure
-			if (!getFile(request)) {
-				if (retryCount < RETRY_MAX && !isCancelled()) {
-					retryCount++;
-					return downloadFile();
-				} else {
-					if (isPaused()) {
-						if (logger.isActivated()) {
-							logger.debug("Download file paused");
-						}
-					} else {
-						if (isCancelled()) {
-							if (logger.isActivated()) {
-								logger.debug("Download file cancelled");
-							}
-						} else {
-							if (logger.isActivated()) {
-								logger.debug("Failed to download file");
-							}
-						}
-					}
-					return false;
-				}
-			}
+            if (!getFile(request)) {
+                if (retryCount < RETRY_MAX && !isCancelled() && !isPaused()) {
+                    retryCount++;
+                    return downloadFile();
+                } else {
+                    if (logger.isActivated()) {
+                        if (isPaused()) {
+                            logger.debug("Download file paused");
+                        } else if (isCancelled()) {
+                            logger.debug("Download file cancelled");
+                        } else {
+                            logger.debug("Failed to download file");
+                        }
+                    }
+                    return false;
+                }
+            }
+
 			return true;
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Download file exception", e);
 			}
-			pauseTransfer();
 			return false;
 		}
 	}
