@@ -293,6 +293,7 @@ public abstract class HttpTransferManager {
     		logger.error("Pausing transfer");
     	}
 		isPaused = true;
+		getListener().httpTransferPaused();
 	}
 	
 	/**
