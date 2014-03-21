@@ -16,9 +16,8 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.17
-- Issue 249:    Stack: HTTP based FT in GC requests display notification
-- Issue 188:	Stack: FT HTTP capabilities of remote not reflected correctly
-- Issue 229     Stack: BB Impl Guideline ID_4_8 not reflected
+- Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
+- Issue 229		Stack: BB Impl Guideline ID_4_8 not reflected
 - Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
 - Issue 232		Stack: Application Not Responding for StartService
 - Issue 235		Stack: Input Streams not closed
@@ -26,7 +25,9 @@ V2.5.17
 - Issue 241		Stack: Wrong GeoLocation xml structure
 - Issue 243		Stack: Simultaneous image share & video share failing
 - Issue 244		Stack: FT HTTP: wrong saving of downloaded files
- 
+- Issue 249		Stack: HTTP based FT in GC requests display notification
+- Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
+
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
 - Issue 204		Stack: INVITE RESTART is not blackbird compliant
