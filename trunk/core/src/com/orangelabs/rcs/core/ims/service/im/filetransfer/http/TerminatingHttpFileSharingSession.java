@@ -231,15 +231,15 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 				// Send delivery report "displayed"
 				sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 			} else {
-				if (downloadManager.isCancelled()) {
+                // Don't call handleError in case of Pause or Cancel
+				if (downloadManager.isCancelled() || downloadManager.isPaused()) {
 					return;
 				}
 
+                // Upload error
 				if (logger.isActivated()) {
 					logger.info("Download file has failed");
 				}
-
-				// Upload error
 				handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 			}
 		} catch (Exception e) {
@@ -257,17 +257,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
 			if (resumeDownload != null) {
-				boolean connected = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().isConnected();
-				if (logger.isActivated()) {
-					logger.warn("handleError error="+error+" connected="+connected);
-				}
-				if (connected) {
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
-				} else {
-					if (logger.isActivated()) {
-						logger.info("Network connection lost! Transfer will be resumed upon reconnection");
-					}
-				}
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
 			}
 		}
 	}
@@ -331,16 +321,16 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 					// Send delivery report "displayed"
 					sendDeliveryReport(ImdnDocument.DELIVERY_STATUS_DISPLAYED);
 				} else {
-					if (downloadManager.isCancelled()) {
-						return;
-					}
+                    // Don't call handleError in case of Pause or Cancel
+                    if (downloadManager.isCancelled() || downloadManager.isPaused()) {
+                        return;
+                    }
 
-					if (logger.isActivated()) {
-						logger.info("Download file has failed");
-					}
-
-					// Upload error
-					handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
+                    // Upload error
+                    if (logger.isActivated()) {
+                        logger.info("Download file has failed");
+                    }
+                    handleError(new FileSharingError(FileSharingError.MEDIA_DOWNLOAD_FAILED));
 				}
 			}
 		}).start();
