@@ -275,6 +275,10 @@ public class MessagingApiService extends IMessagingApi.Stub {
         if (session instanceof HttpFileTransferSession) {
             intent.putExtra("isGroupTransfer", isGroup);
         }
+        intent.putExtra("filename", session.getContent().getName());
+        intent.putExtra("filesize", session.getContent().getSize());
+        intent.putExtra("filetype", session.getContent().getEncoding());
+        intent.putExtra("thumbnail", session.getThumbnail());
         AndroidFactory.getApplicationContext().sendBroadcast(intent);
     }
 
