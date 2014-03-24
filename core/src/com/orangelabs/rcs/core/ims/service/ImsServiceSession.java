@@ -732,6 +732,31 @@ public abstract class ImsServiceSession extends Thread {
 		}
 	}
 	
+	/**
+	 * Send a 403 "Forbidden" to the remote party
+	 * 
+	 * @param request
+	 *            SIP request
+	 * @param localTag
+	 *            Local tag
+	 * @param warning
+	 *            the warning message
+	 */
+	public void send403Forbidden(SipRequest request, String localTag, String warning) {
+		try {
+			// Send a 403 Forbidden
+			if (logger.isActivated()) {
+				logger.info("Send 403 Forbidden (warning=" + warning + ")");
+			}
+			SipResponse resp = SipMessageFactory.createResponse(request, localTag, 403, warning);
+			getImsService().getImsModule().getSipManager().sendSipResponse(resp);
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Can't send 403 Forbidden response", e);
+			}
+		}
+	}
+	
     /**
      * Send a 486 "Busy" to the remote party
      * 

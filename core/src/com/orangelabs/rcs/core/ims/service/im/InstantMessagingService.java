@@ -1064,8 +1064,8 @@ public class InstantMessagingService extends ImsService {
             return;
         }
         
-        // Reject if file is too big or size exceeds device storage capacity. This control should be done
-        // on UI. It is done after end user accepts invitation to enable prior handling by the application.
+        // For HTTP FT, there is no way to decline in the TerminatingHttpFileSharingSession class.
+        // Decline must be performed at signaling level.
         FileSharingError error = FileSharingSession.isFileCapacityAcceptable(ftinfo.getFileSize());
         if (error != null) {
             // Send a 603 Decline response

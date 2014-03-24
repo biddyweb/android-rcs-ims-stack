@@ -21,7 +21,6 @@ package com.orangelabs.rcs.core.ims.network.sip;
 import gov2.nist.core.NameValue;
 import gov2.nist.javax2.sip.Utils;
 import gov2.nist.javax2.sip.header.Subject;
-import gov2.nist.javax2.sip.header.ims.PPreferredServiceHeader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +49,7 @@ import javax2.sip.header.SupportedHeader;
 import javax2.sip.header.ToHeader;
 import javax2.sip.header.UserAgentHeader;
 import javax2.sip.header.ViaHeader;
+import javax2.sip.header.WarningHeader;
 import javax2.sip.message.Request;
 import javax2.sip.message.Response;
 
@@ -62,7 +62,7 @@ import com.orangelabs.rcs.core.ims.service.SessionTimerManager;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
-
+import javax2.sip.header.WarningHeader;
 /**
  * SIP message factory
  * 
@@ -845,28 +845,44 @@ public class SipMessageFactory {
 	}    
 
 	/**
-	 * Create a SIP response with a specific local tag
+	 * Works just like SipResponse createResponse(SipRequest request, String localTag, int code, String warning) except the warning
+	 * is always null
 	 * 
-	 * @param request SIP request
-	 * @param localTag Local tag
-	 * @param code Response code
-	 * @return SIP response
+	 * @see #SipResponse createResponse(SipRequest request, String localTag, int code, String warning)
 	 */
 	public static SipResponse createResponse(SipRequest request, String localTag, int code) throws SipException {
+		return createResponse(request, localTag, code, null);
+	}
+	
+	/**
+	 * Create a SIP response with a specific local tag and warning
+	 * 
+	 * @param request
+	 *            the SIP request
+	 * @param localTag
+	 *            the Local tag
+	 * @param warning
+	 *            the warning message
+	 * @return the SIP response
+	 */
+	public static SipResponse createResponse(SipRequest request, String localTag, int code, String warning) throws SipException {
 		try {
 			// Create the response
-			Response response = SipUtils.MSG_FACTORY.createResponse(code, (Request)request.getStackMessage());
-	
+			Response response = SipUtils.MSG_FACTORY.createResponse(code, (Request) request.getStackMessage());
+
 			// Set the local tag
 			if (localTag != null) {
-				ToHeader to = (ToHeader)response.getHeader(ToHeader.NAME);
+				ToHeader to = (ToHeader) response.getHeader(ToHeader.NAME);
 				to.setTag(localTag);
 			}
-			
+			if (warning != null) {
+				WarningHeader warningHeader = SipUtils.HEADER_FACTORY.createWarningHeader("SIP", 403, warning);
+				response.addHeader(warningHeader);
+			}
 			SipResponse resp = new SipResponse(response);
 			resp.setStackTransaction(request.getStackTransaction());
 			return resp;
-		} catch(Exception e) {
+		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.error("Can't create SIP message: ", e);
 			}
@@ -905,7 +921,7 @@ public class SipMessageFactory {
 			}
 			throw new SipException("Can't create SIP BYE message");
 		}
-	}	
+	}
 
 	/**
 	 * Create a SIP CANCEL request
