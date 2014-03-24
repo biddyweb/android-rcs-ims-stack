@@ -215,9 +215,6 @@
 		
 		<!-- SMS for Provisioning -->	
         <receiver android:name="com.orangelabs.rcs.provisioning.https.HttpsProvisioningSMS">
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_RECEIVED"></action>
-            </intent-filter>
         </receiver>
         
 		<!-- HTTPS provisioning service -->
