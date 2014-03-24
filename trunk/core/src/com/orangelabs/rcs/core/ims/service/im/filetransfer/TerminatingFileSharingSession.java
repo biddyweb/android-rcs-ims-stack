@@ -137,13 +137,18 @@ public class TerminatingFileSharingSession extends ImsFileSharingSession impleme
 				}
 			}
             
-            // Reject if file is too big or size exceeds device storage capacity. This control should be done
-            // on UI. It is done after end user accepts invitation to enable prior handling by the application.
+            // FT should be rejected by user if file is too big or size exceeds device storage capacity.
+            // This control should be done at UI level. However if user accepts invitation, the stack replies 403 Forbidden.
             FileSharingError error = FileSharingSession.isFileCapacityAcceptable(getContent().getSize());
             if (error != null) {
-                // Send a 603 Decline response
-                sendErrorResponse(getDialogPath().getInvite(), getDialogPath().getLocalTag(), 603);
-
+            	// Extract of GSMA specification:
+				// If the file is bigger than FT MAX SIZE, a warning message is displayed when trying to
+				// send or receive a file larger than the mentioned limit and the transfer will be cancelled
+				// (that is at protocol level, the SIP INVITE request will never be sent or an automatic
+				// rejection response SIP 403 Forbidden with a Warning header set to “133 Size
+				// exceeded” will be sent by the entity that detects that the file size is too big to the other
+				// end depending on the scenario).
+                send403Forbidden(getDialogPath().getInvite(), getDialogPath().getLocalTag(),"133 Size exceeded");
                 // Close session
                 handleError(error);
                 return;
