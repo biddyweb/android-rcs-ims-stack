@@ -25,7 +25,6 @@ V2.5.17
 - Issue 241		Stack: Wrong GeoLocation xml structure
 - Issue 243		Stack: Simultaneous image share & video share failing
 - Issue 244		Stack: FT HTTP: wrong saving of downloaded files
-- Issue 249		Stack: HTTP based FT in GC requests display notification
 - Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 
 V2.5.16
