@@ -99,7 +99,7 @@ public class TermsApi extends ClientApi {
      * @throws ClientApiException
      */
     public boolean acceptTerms(String id, String pin) throws ClientApiException {
-    	if (TextUtils.isEmpty(id) || TextUtils.isEmpty(pin)) {
+    	if (TextUtils.isEmpty(id)) {
     		throw new IllegalArgumentException();
     	}
     	if (coreApi != null) {
@@ -122,7 +122,7 @@ public class TermsApi extends ClientApi {
      * @throws ClientApiException
      */
     public boolean rejectTerms(String id, String pin) throws ClientApiException {
-    	if (TextUtils.isEmpty(id) || TextUtils.isEmpty(pin)) {
+    	if (TextUtils.isEmpty(id)) {
     		throw new IllegalArgumentException();
     	}
     	if (coreApi != null) {
