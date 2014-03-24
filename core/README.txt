@@ -26,6 +26,7 @@ V2.5.17
 - Issue 241		Stack: Wrong GeoLocation xml structure
 - Issue 243		Stack: Simultaneous image share & video share failing
 - Issue 244		Stack: FT HTTP: wrong saving of downloaded files
+- Issue 247		Stack: Core crash upon SMS reception
 - Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 - Issue 251		Stack: FT MAX SIZE - Receiver sends 603 DECLINE instead of 403 FORBIDDEN
 
