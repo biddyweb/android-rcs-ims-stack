@@ -59,7 +59,7 @@ public class FtHttpTest extends InstrumentationTestCase {
 //		}
 
 		fthttp.deleteAll();
-		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, tid, contact, displayName, chatId, sessionId,
+		FtHttpResumeUpload upload = new FtHttpResumeUpload(file, thumbnail, content, tid, contact, displayName, chatId, sessionId,
 				chatSessionId, true);
 		FtHttpResumeDownload download = new FtHttpResumeDownload(file, thumbnail, content, messageId, contact, displayName, chatId,
 				sessionId, chatSessionId, false);
