@@ -136,7 +136,7 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
 			values.putInUrl(download.getUrl());
-			values.putInType(download.getMimeType());
+			values.putInType(download.getMimetype());
 			values.putInSize(download.getSize());
 			values.putMessageId(download.getMessageId());
 			if (logger.isActivated()) {

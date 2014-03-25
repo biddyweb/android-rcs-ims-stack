@@ -17,6 +17,7 @@
  ******************************************************************************/
 package com.orangelabs.rcs.provider.fthttp;
 
+import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.http.HttpFileTransferSession;
 
 /**
@@ -30,7 +31,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	/**
 	 * The FT HTTP Transfer Id
 	 */
-	final protected String tid;
+	final private String tid;
 
 	/**
 	 * Creates a FT HTTP resume upload data object
@@ -46,7 +47,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 *            the {@code isGroup} value.
 	 */
 	public FtHttpResumeUpload(HttpFileTransferSession session, String tid, byte[] thumbnail, boolean isGroup) {
-		this(session.getContent().getUrl(), thumbnail, tid, (isGroup) ? null : session.getRemoteContact(), session.getRemoteDisplayName(), session
+		this(session.getContent().getUrl(), thumbnail, session.getContent(), tid, (isGroup) ? null : session.getRemoteContact(), session.getRemoteDisplayName(), session
 				.getContributionID(), session.getSessionID(), session.getChatSessionID(), isGroup);
 	}
 
@@ -57,6 +58,8 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 *            the {@code file} value.
 	 * @param thumbnail
 	 *            the {@code thumbnail} value.
+	 * @param content
+     *            the {@code content} content.
 	 * @param tid
 	 *            the {@code tid} value.
 	 * @param contact
@@ -72,10 +75,10 @@ public class FtHttpResumeUpload extends FtHttpResume {
 	 * @param isGroup
 	 *            the {@code isGroup} value.
 	 */
-	public FtHttpResumeUpload(String file, byte[] thumbnail, String tid, String contact, String displayName, String chatId,
-			String sessionId, String chatSessionId, boolean isGroup) {
-		super(FtHttpDirection.OUTGOING, file, thumbnail, contact, displayName, chatId, sessionId, chatSessionId,
-				isGroup);
+	public FtHttpResumeUpload(String file, byte[] thumbnail, MmContent content, String tid, String contact,
+            String displayName, String chatId, String sessionId, String chatSessionId, boolean isGroup) {
+        super(FtHttpDirection.OUTGOING, file, content.getEncoding(), content.getSize(), thumbnail, contact,
+               displayName, chatId, sessionId, chatSessionId, isGroup);
 		if (tid == null)
 			throw new IllegalArgumentException("Null tid");
 		this.tid = tid;
@@ -100,7 +103,7 @@ public class FtHttpResumeUpload extends FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResumeUpload [tid=" + tid + " file="+filename+"]";
+		return "FtHttpResumeUpload [tid=" + tid + " file="+ getFilename() + "]";
 	}
 
 }

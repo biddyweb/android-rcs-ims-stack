@@ -49,17 +49,17 @@ public class FtHttpCursor extends AbstractCursor {
 	}
 
 	/**
-	 * Get the {@code in_size} value. Can be {@code null}.
+	 * Get the {@code size} value. Can be {@code null}.
 	 */
-	public Long getInSize() {
-		return getLongOrNull(FtHttpColumns.IN_SIZE);
+	public Long getSize() {
+		return getLongOrNull(FtHttpColumns.SIZE);
 	}
 
 	/**
-	 * Get the {@code in_type} value. Can be {@code null}.
+	 * Get the {@code type} value. Can be {@code null}.
 	 */
-	public String getInType() {
-		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.IN_TYPE);
+	public String getType() {
+		Integer index = getCachedColumnIndexOrThrow(FtHttpColumns.TYPE);
 		return getString(index);
 	}
 

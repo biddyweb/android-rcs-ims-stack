@@ -17,9 +17,7 @@
  ******************************************************************************/
 package com.orangelabs.rcs.provider.fthttp;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author YPLO6403
@@ -31,25 +29,38 @@ public abstract class FtHttpResume {
 	/**
 	 * The date of creation
 	 */
-	final protected Date date;
+	final private Date date;
+
 	/**
 	 * The direction
 	 */
-	final protected FtHttpDirection ftHttpDirection;
+	final private FtHttpDirection ftHttpDirection;
+
 	/**
 	 * The filename
 	 */
-	final protected String filename;
+	final private String filename;
+
+    /**
+     * The mime type of the file to download
+     */
+    final private String mimeType;
+ 
+    /**
+     * The size of the file to download
+     */
+    final private Long size;
 
 	/**
 	 * The thumbnail
 	 */
-	final protected byte[] thumbnail;
+	final private byte[] thumbnail;
 
 	/**
 	 * The remote contact number
 	 */
 	final private String contact;
+
 	/**
 	 * the display name
 	 */
@@ -79,12 +90,13 @@ public abstract class FtHttpResume {
 	 * Works just like FtHttpResume(Direction,String,byte[],String,String,String,String,String,boolean,Date) except the date
 	 * is always null
 	 * 
-	 * @see #FtHttpResume(FtHttpDirection,String,byte[],String,String,String,String,String,boolean,Date)
+	 * @see #FtHttpResume(FtHttpDirection,String,String,Long,byte[],String,String,String,String,String,boolean,Date)
 	 */
-	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName,
-			String chatId, String sessionId, String chatSessionId, boolean isGroup) {
-		this(ftHttpDirection, filename, thumbnail, contact, displayName, chatId, sessionId, chatSessionId, isGroup,
-				null);
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, String mimeType, Long size,
+            byte[] thumbnail, String contact, String displayName, String chatId, String sessionId,
+            String chatSessionId, boolean isGroup) {
+        this(ftHttpDirection, filename, mimeType, size, thumbnail, contact, displayName, chatId,
+                sessionId, chatSessionId, isGroup, null);
 	}
 
 	/**
@@ -92,8 +104,12 @@ public abstract class FtHttpResume {
 	 * 
 	 * @param ftHttpDirection
 	 *            the {@code direction} value.
-	 * @param file
-	 *            the {@code file} value.
+	 * @param filename
+	 *            the {@code filename} value.
+     * @param mimeType
+     *            the {@code mimeType} value.
+     * @param size
+     *            the {@code size} value.
 	 * @param thumbnail
 	 *            the {@code thumbnail} byte array.
 	 * @param contact
@@ -111,13 +127,16 @@ public abstract class FtHttpResume {
 	 * @param date
 	 *            the {@code date} value.
 	 */
-	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, byte[] thumbnail, String contact, String displayName,
-			String chatId, String sessionId, String chatSessionId, boolean isGroup, Date date) {
-		if (ftHttpDirection == null || filename == null)
+	public FtHttpResume(FtHttpDirection ftHttpDirection, String filename, String mimeType, Long size,
+	        byte[] thumbnail, String contact, String displayName, String chatId, String sessionId,
+	        String chatSessionId, boolean isGroup, Date date) {
+		if (size <= 0 || ftHttpDirection == null || mimeType == null || filename == null)
 			throw new IllegalArgumentException("Null argument");
 		this.date = date;
 		this.ftHttpDirection = ftHttpDirection;
 		this.filename = filename;
+        this.mimeType = mimeType;
+        this.size = size;
 		this.thumbnail = thumbnail;
 		this.contact = contact;
 		this.displayName = displayName;
@@ -134,11 +153,13 @@ public abstract class FtHttpResume {
 	 *            the {@code cursor} value.
 	 */
 	public FtHttpResume(FtHttpCursor cursor) {
-		if (cursor.getDirection() == null || cursor.getFilename() == null)
+		if (cursor.getSize() <= 0 || cursor.getDirection() == null || cursor.getFilename() == null || cursor.getType() == null)
 			throw new IllegalArgumentException("Null argument");
 		this.date = cursor.getDate();
 		this.ftHttpDirection = cursor.getDirection();
 		this.filename = cursor.getFilename();
+        this.mimeType = cursor.getType();
+        this.size = cursor.getSize();
 		this.thumbnail = cursor.getThumbnail();
 		this.contact = cursor.getContact();
 		this.displayName = cursor.getDisplayName();
@@ -159,6 +180,14 @@ public abstract class FtHttpResume {
 	public String getFilename() {
 		return filename;
 	}
+
+    public String getMimetype() {
+        return mimeType;
+    }
+
+    public Long getSize() {
+        return size;
+    }
 
 	public byte[] getThumbnail() {
 		return thumbnail;
