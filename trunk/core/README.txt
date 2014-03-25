@@ -30,6 +30,7 @@ V2.5.17
 - Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 - Issue 251		Stack: FT MAX SIZE - Receiver sends 603 DECLINE instead of 403 FORBIDDEN
 - Issue 254		Stack: FT HTTP - Receiver sends 603 DECLINE after 200OK
+- Issue 250     Stack: GC rejoin INVITE lacks of	subject header
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
