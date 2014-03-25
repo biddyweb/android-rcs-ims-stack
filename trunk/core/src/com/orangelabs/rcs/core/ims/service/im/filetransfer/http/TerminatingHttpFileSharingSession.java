@@ -263,6 +263,23 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		}
 	}
 
+	// If session is rejected by user, session cannot be rejected at SIP level (already accepted 200OK).
+	@Override
+	public void rejectSession(int code) {
+		if (logger.isActivated()) {
+			logger.debug("Session invitation has been rejected");
+		}
+		invitationStatus = INVITATION_REJECTED;
+
+		// Unblock semaphore
+		synchronized(waitUserAnswer) {
+			waitUserAnswer.notifyAll();
+		}
+			
+		// Remove the session in the session manager
+		getImsService().removeSession(this);
+	}
+
 	@Override
 	public void handleError(ImsServiceError error) {
 		super.handleError(error);
