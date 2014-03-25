@@ -50,7 +50,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
     /**
      * HTTP upload manager
      */
-    private HttpUploadManager uploadManager;
+    protected HttpUploadManager uploadManager;
 
 	/**
      * The logger
@@ -83,7 +83,6 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 		uploadManager = new HttpUploadManager(getContent(), getThumbnail(), this);
 	}
 
-
 	/**
 	 * Background processing
 	 */
@@ -106,8 +105,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 			handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
 		}
 	}
-	
-	private void sendResultToContact(byte[] result){
+
+    protected void sendResultToContact(byte[] result){
 		// Check if upload has been cancelled
         if (uploadManager.isCancelled()) {
         	return;
@@ -180,38 +179,25 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
             // File transfered
             handleFileTransfered();
 		} else {
+            // Don't call handleError in case of Pause
+            if (uploadManager.isPaused()) {
+                return;
+            }
+
             if (logger.isActivated()) {
                 logger.debug("Upload has failed");
             }
             // Upload error
-			handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
+            handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
 		}
-
 	}
-	
+
 	@Override
 	public void handleError(ImsServiceError error) {
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
 			if (resumeUpload != null) {
-				FtHttpStatus status = FtHttpResumeDaoImpl.getInstance().getStatus(resumeUpload);
-				// Get the network connection
-				boolean connected = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().isConnected();
-				if (logger.isActivated()) {
-					logger.warn("handleError error="+error+" connected="+connected);
-				}
-				if (connected) {
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
-				} else {
-					if (status==FtHttpStatus.CREATED) {
-						// Upload resume is only possible if already started
-						FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
-					} else {
-						if (logger.isActivated()) {
-							logger.info("Network connection lost! Transfer will be resumed upon reconnection");
-						}
-					}
-				}
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
 			}
 		}
 	}
@@ -264,8 +250,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 						sendResultToContact(null);
 					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+                    handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
 				}
 			}
 		}).start();

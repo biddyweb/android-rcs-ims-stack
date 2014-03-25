@@ -139,13 +139,30 @@ public class FtHttpResumeManager {
 							resumeDownload.getContributionID());
 			break;
 		case OUTGOING:
+		    // TODO : only managed for 1-1 FToHTTP
             FtHttpResumeUpload uploadInfo = (FtHttpResumeUpload) ftHttpResume;
-            MmContent uploadContent = ContentManager.createMmContentFromMime(uploadInfo.getFilename(),
-                    uploadInfo.getMimetype(), uploadInfo.getSize());
-            // Creates the Resume Upload session object
-//            final ResumeUploadFileSharingSession resumeUpload = new ResumeUploadFileSharingSession(imsService, uploadContent,
-//                    uploadInfo);
-//			break;
+            if (!ftHttpResume.isGroup()) {
+                // Get upload content
+                MmContent uploadContent = ContentManager.createMmContentFromMime(uploadInfo.getFilename(),
+                        uploadInfo.getMimetype(), uploadInfo.getSize());
+
+                // Create Resume Upload session 
+                final ResumeUploadFileSharingSession resumeUpload = new ResumeUploadFileSharingSession(imsService, uploadContent,
+                        uploadInfo);
+                resumeUpload.addListener(getFileSharingSessionListener());
+
+                // Start Resume Upload session
+                new Thread() {
+                    public void run() {
+                        resumeUpload.startSession();
+                    }
+                }.start();
+
+                // Notify the UI and update rich messaging
+                imsService.getImsModule().getCore().getListener()
+                        .handleOutgoingFileTransferResuming(resumeUpload, false);
+            }
+            break;
 		}
 
 	}
