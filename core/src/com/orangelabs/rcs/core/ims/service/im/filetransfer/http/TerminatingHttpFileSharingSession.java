@@ -26,6 +26,7 @@ import com.orangelabs.rcs.core.Core;
 import com.orangelabs.rcs.core.content.ContentManager;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
+import com.orangelabs.rcs.core.ims.protocol.sip.SipDialogPath;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceError;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
@@ -103,7 +104,10 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 				chatSession.getContributionID());
 
 		setRemoteDisplayName(chatSession.getRemoteDisplayName());
-		this.setDialogPath(chatSession.getDialogPath());
+        // Build a new dialogPath with this of chatSession and an empty CallId
+        SipDialogPath dialogPath = chatSession.getDialogPath();
+        dialogPath.setCallId("");
+        setDialogPath(dialogPath);
 		ContactHeader inviteContactHeader = (ContactHeader) chatSession.getDialogPath().getInvite().getHeader(ContactHeader.NAME);
 		if (inviteContactHeader != null) {
 			this.remoteInstanceId = inviteContactHeader.getParameter(SipUtils.SIP_INSTANCE_PARAM);
