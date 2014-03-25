@@ -31,15 +31,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	/**
 	 * The URL to download file
 	 */
-	final String url;
-	/**
-	 * The mime type of the file to download
-	 */
-	final String mimeType;
-	/**
-	 * The size of the file to download
-	 */
-	final Long size;
+	final private String url;
 
 	/**
 	 * the message Id
@@ -74,7 +66,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 * @param thumbnail
 	 *            the {@code thumbnail} value.
 	 * @param content
-	 *            the {@code url} content.
+	 *            the {@code content} content.
 	 * @param messageId
 	 *            the {@code messageId} value.
 	 * @param contact
@@ -92,14 +84,10 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	 */
 	public FtHttpResumeDownload(String file, byte[] thumbnail, MmContent content, String messageId, String contact,
 			String displayName, String chatId, String sessionId, String chatSessionId, boolean isGroup) {
-		super(FtHttpDirection.INCOMING, file, thumbnail, contact, displayName, chatId, sessionId, chatSessionId, isGroup);
-		if (content == null)
-			throw new IllegalArgumentException("Null argument");
+		super(FtHttpDirection.INCOMING, file, content.getEncoding(), content.getSize(), thumbnail, contact, displayName, chatId, sessionId, chatSessionId, isGroup);
 		this.url = content.getUrl();
-		this.mimeType = content.getEncoding();
-		this.size = content.getSize();
 		this.messageId = messageId;
-		if (size <= 0 || url == null || mimeType == null || messageId == null)
+		if (url == null || messageId == null)
 			throw new IllegalArgumentException("Invalid argument");
 	}
 
@@ -112,23 +100,13 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 	public FtHttpResumeDownload(FtHttpCursor cursor) {
 		super(cursor);
 		this.url = cursor.getInUrl();
-		this.mimeType = cursor.getInType();
-		this.size = cursor.getInSize();
 		this.messageId = cursor.getMessageId();
-		if (this.size <= 0 || this.url == null || this.mimeType == null || messageId == null)
+		if (this.url == null || messageId == null)
 			throw new IllegalArgumentException("Null argument");
 	}
 
 	public String getUrl() {
 		return url;
-	}
-
-	public String getMimeType() {
-		return mimeType;
-	}
-
-	public Long getSize() {
-		return size;
 	}
 
 	public String getMessageId() {
@@ -137,7 +115,7 @@ public final class FtHttpResumeDownload extends FtHttpResume {
 
 	@Override
 	public String toString() {
-		return "FtHttpResumeDownload [file=" + filename + ", mimeType=" + mimeType + ", size=" + size + ", messageId=" + messageId
+		return "FtHttpResumeDownload [file=" + getFilename() + ", mimeType=" + getMimetype() + ", size=" + getSize() + ", messageId=" + messageId
 				+ "]";
 	}
 

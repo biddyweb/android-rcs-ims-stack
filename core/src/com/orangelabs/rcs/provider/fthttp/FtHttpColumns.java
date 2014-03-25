@@ -30,8 +30,8 @@ public interface FtHttpColumns extends BaseColumns {
 	String _ID = BaseColumns._ID;
 	String OU_TID = "ou_tid";
     String IN_URL = "in_url";
-    String IN_SIZE = "in_size";
-    String IN_TYPE = "in_type";
+    String SIZE = "size";
+    String TYPE = "type";
     String CONTACT = "contact";
     String CHATID = "chatid";
     String FILENAME = "filename";
