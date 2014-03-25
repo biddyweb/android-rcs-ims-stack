@@ -77,7 +77,7 @@ public class FtHttpContentValues extends AbstractContentValues {
 	 *            The added {@code value}.
 	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
 	 */
-	public FtHttpContentValues putInSize(Long value) {
+	public FtHttpContentValues putSize(Long value) {
 		mContentValues.put(FtHttpColumns.SIZE, value);
 		return this;
 	}
@@ -89,7 +89,7 @@ public class FtHttpContentValues extends AbstractContentValues {
 	 *            The added {@code value}.
 	 * @return Returns the {@code FthttpContentValues} wrapped by this object.
 	 */
-	public FtHttpContentValues putInType(String value) {
+	public FtHttpContentValues putType(String value) {
 		mContentValues.put(FtHttpColumns.TYPE, value);
 		return this;
 	}
