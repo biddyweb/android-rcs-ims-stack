@@ -1659,7 +1659,7 @@ public class RichMessaging {
 		Cursor cursor = cr.query(databaseUri, new String[] { RichMessagingData.KEY_DATA }, "(" + RichMessagingData.KEY_CHAT_ID + "='" + chatId
 				+ "') AND (" + RichMessagingData.KEY_TYPE + "=" + EventsLogApi.TYPE_GROUP_CHAT_SYSTEM_MESSAGE + ") AND ("
 				+ RichMessagingData.KEY_STATUS + "=" + EventsLogApi.EVENT_INITIATED + " OR " + RichMessagingData.KEY_STATUS + "="
-				+ EventsLogApi.EVENT_INVITED + ")", null, RichMessagingData.KEY_TIMESTAMP + " DESC");
+				+ EventsLogApi.EVENT_INVITED + ") AND (" + RichMessagingData.KEY_DATA + "!='')", null, RichMessagingData.KEY_TIMESTAMP + " DESC");
 		if (cursor.moveToFirst()) {
 			result = cursor.getString(0);
 		}

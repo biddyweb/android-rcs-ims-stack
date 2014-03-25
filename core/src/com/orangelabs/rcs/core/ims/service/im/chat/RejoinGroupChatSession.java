@@ -27,7 +27,10 @@ import com.orangelabs.rcs.core.ims.protocol.sip.SipRequest;
 import com.orangelabs.rcs.core.ims.protocol.sip.SipResponse;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
+import com.orangelabs.rcs.utils.StringUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import javax2.sip.header.SubjectHeader;
 
 /**
  * Rejoin a group chat session
@@ -133,6 +136,12 @@ public class RejoinGroupChatSession extends GroupChatSession {
                 getFeatureTags(),
                 getAcceptContactTags(),
         		content);
+
+        // Test if there is a subject
+        if (getSubject() != null) {
+            // Add a subject header
+            invite.addHeader(SubjectHeader.NAME, StringUtils.encodeUTF8(getSubject()));
+        }
 
         // Add a contribution ID header
         invite.addHeader(ChatUtils.HEADER_CONTRIBUTION_ID, getContributionID());
