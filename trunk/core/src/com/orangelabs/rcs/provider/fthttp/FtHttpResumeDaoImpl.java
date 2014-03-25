@@ -126,6 +126,8 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		values.putStatus(ftHttpStatus);
 		values.putDirection(ftHttpResume.getDirection());
 		values.putFilename(ftHttpResume.getFilename());
+        values.putType(ftHttpResume.getMimetype());
+        values.putSize(ftHttpResume.getSize());
 		values.putThumbnail(ftHttpResume.getThumbnail());
 		values.putContact(ftHttpResume.getContact());
 		values.putDisplayName(ftHttpResume.getDisplayName());
@@ -136,20 +138,18 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		if (ftHttpResume instanceof FtHttpResumeDownload) {
 			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
 			values.putInUrl(download.getUrl());
-			values.putInType(download.getMimetype());
-			values.putInSize(download.getSize());
 			values.putMessageId(download.getMessageId());
 			if (logger.isActivated()) {
 				logger.debug("insert " + download + ")");
 			}
-		} else {
-			if (ftHttpResume instanceof FtHttpResumeUpload) {
-				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				values.putOuTid(upload.getTid());
-				logger.debug("insert " + upload + ")");
-			} else {
-				return null;
+		} else if (ftHttpResume instanceof FtHttpResumeUpload) {
+			FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
+			values.putOuTid(upload.getTid());
+			if (logger.isActivated()) {
+			    logger.debug("insert " + upload + ")");
 			}
+		} else {
+			return null;
 		}
 		return cr.insert(FtHttpColumns.CONTENT_URI, values.values());
 	}
