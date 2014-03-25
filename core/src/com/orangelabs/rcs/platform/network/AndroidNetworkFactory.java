@@ -18,10 +18,18 @@
 
 package com.orangelabs.rcs.platform.network;
 
-import java.net.Socket;
+import android.net.ConnectivityManager;
+
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+
+import java.util.Enumeration;
 
 import com.orangelabs.rcs.core.ims.network.ImsNetworkInterface.DnsResolvedFields;
+import com.orangelabs.rcs.utils.IpAddressUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
+
+import org.apache.http.conn.util.InetAddressUtils;
 
 /**
  * Android network factory
@@ -39,25 +47,48 @@ public class AndroidNetworkFactory extends NetworkFactory {
 	 * Returns the local IP address of a given network interface
 	 * 
 	 * @param dnsEntry remote address to find an according local socket address
+     * @param type the type of the network interface, should be either
+     *        {@link android.net.ConnectivityManager#TYPE_WIFI} or {@link android.net.ConnectivityManager#TYPE_MOBILE}
 	 * @return Address
 	 */
 	// Changed by Deutsche Telekom
-	public String getLocalIpAddress(DnsResolvedFields dnsEntry) {
-		String ipAddress = null;
-		try {
-			// The local IP address depends on the remote address to be reached (in a multi IP stack
-			// environment); so let the Android OS set up an appropriate socket for the given
-			// (P-CSCF) remote address and discover the local IP address from that socket.
-			Socket clientSock = new Socket(dnsEntry.ipAddress, dnsEntry.port);
-			ipAddress = clientSock.getLocalAddress().getHostAddress();
-			clientSock.close();
-		} catch(Exception e) {
-			if(logger.isActivated()){
-				logger.error("getLocalIpAddress failed with ", e);
-			}
-		}
-		return ipAddress;
-	}
+    public String getLocalIpAddress(DnsResolvedFields dnsEntry, int type) {
+        String ipAddress = null;
+        try {
+            // What kind of remote address (P-CSCF) are we trying to reach?
+            boolean isIpv4 = InetAddressUtils.isIPv4Address(dnsEntry.ipAddress);
+
+            // check all available interfaces
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); (en != null) && en.hasMoreElements();) {
+                NetworkInterface netIntf = (NetworkInterface) en.nextElement();
+                for (Enumeration<InetAddress> addr = netIntf.getInetAddresses(); addr.hasMoreElements();) {
+                    InetAddress inetAddress = addr.nextElement();
+                    ipAddress = IpAddressUtils.extractHostAddress(inetAddress.getHostAddress());
+                    // if IP address version doesn't match to remote address
+                    // version then skip
+                    if (!inetAddress.isLoopbackAddress()
+                            && !inetAddress.isLinkLocalAddress()
+                            && (InetAddressUtils.isIPv4Address(ipAddress) == isIpv4)) {
+                        String intfName = netIntf.getDisplayName()
+                                .toLowerCase();
+                        // some devices do list several interfaces though only
+                        // one is active
+                        if (((type == ConnectivityManager.TYPE_WIFI) && intfName
+                                .startsWith("wlan"))
+                                || ((type == ConnectivityManager.TYPE_MOBILE) && !intfName
+                                .startsWith("wlan"))) {
+                            return ipAddress;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            if (logger.isActivated()) {
+                logger.error("getLocalIpAddress failed with ", e);
+            }
+        }
+        return ipAddress;
+    }
 
     /**
      * Create a datagram connection

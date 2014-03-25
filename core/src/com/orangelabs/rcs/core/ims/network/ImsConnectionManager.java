@@ -361,7 +361,7 @@ public class ImsConnectionManager implements Runnable {
 						}
 						
 						// get latest local IP address
-						localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields);
+						localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields, networkInfo.getType());
 
 		} else {
 			// Check if the IP address has changed
@@ -374,7 +374,7 @@ public class ImsConnectionManager implements Runnable {
 					logger.error("Resolving remote IP address to figure out initial local IP address failed!", e);
 				}
 			}
-			localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields);
+			localIpAddr = NetworkFactory.getFactory().getLocalIpAddress(mDnsResolvedFields, networkInfo.getType());
 			
 			if (localIpAddr != null) {
 			    String lastIpAddr = currentNetworkInterface.getNetworkAccess().getIpAddress();
