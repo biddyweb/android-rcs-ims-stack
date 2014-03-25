@@ -63,10 +63,12 @@ public abstract class NetworkFactory {
 	 * Returns the local IP address of a given network interface
 	 * 
 	 * @param dnsEntry address to be connected to
+     * @param type the type of the network interface, should be either
+     *        {@link android.net.ConnectivityManager#TYPE_WIFI} or {@link android.net.ConnectivityManager#TYPE_MOBILE}
 	 * @return Address
 	 */
 	// Changed by Deutsche Telekom
-	public abstract String getLocalIpAddress(DnsResolvedFields dnsEntry);
+	public abstract String getLocalIpAddress(DnsResolvedFields dnsEntry, int type);
 	
 	/**
 	 * Create a datagram connection
