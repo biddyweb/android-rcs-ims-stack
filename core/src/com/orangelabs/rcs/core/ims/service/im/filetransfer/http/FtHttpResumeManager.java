@@ -29,6 +29,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionLis
 import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
@@ -116,17 +117,17 @@ public class FtHttpResumeManager {
 		}
 		switch (ftHttpResume.getDirection()) {
 		case INCOMING:
-			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			MmContent content = ContentManager.createMmContentFromMime(download.getFilename(), download.getUrl(),
-					download.getMimeType(), download.getSize());
+			FtHttpResumeDownload downloadInfo = (FtHttpResumeDownload) ftHttpResume;
+			MmContent downloadContent = ContentManager.createMmContentFromMime(downloadInfo.getFilename(),
+                    downloadInfo.getUrl(), downloadInfo.getMimetype(), downloadInfo.getSize());
 			// Creates the Resume Download session object
-			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(imsService, content,
-					download);
+			final ResumeDownloadFileSharingSession resumeDownload = new ResumeDownloadFileSharingSession(
+                    imsService, downloadContent, downloadInfo);
 			resumeDownload.addListener(getFileSharingSessionListener());
 			// Start the download HTTP FT session object
 			new Thread() {
 				public void run() {
-					resumeDownload.start();
+					resumeDownload.startSession();
 				}
 			}.start();
 			// Notify the UI and update rich messaging
@@ -138,8 +139,13 @@ public class FtHttpResumeManager {
 							resumeDownload.getContributionID());
 			break;
 		case OUTGOING:
-			// TODO
-			break;
+            FtHttpResumeUpload uploadInfo = (FtHttpResumeUpload) ftHttpResume;
+            MmContent uploadContent = ContentManager.createMmContentFromMime(uploadInfo.getFilename(),
+                    uploadInfo.getMimetype(), uploadInfo.getSize());
+            // Creates the Resume Upload session object
+//            final ResumeUploadFileSharingSession resumeUpload = new ResumeUploadFileSharingSession(imsService, uploadContent,
+//                    uploadInfo);
+//			break;
 		}
 
 	}
