@@ -17,6 +17,7 @@ See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/i
 
 V2.5.17
 - Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
+- Issue 200		Stack: FToHTTP - Cannot download file in sequential way
 - Issue 229		Stack: BB Impl Guideline ID_4_8 not reflected
 - Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
 - Issue 232		Stack: Application Not Responding for StartService
@@ -27,11 +28,11 @@ V2.5.17
 - Issue 243		Stack: Simultaneous image share & video share failing
 - Issue 244		Stack: FT HTTP: wrong saving of downloaded files
 - Issue 247		Stack: Core crash upon SMS reception
-- Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
+- Issue 250     Stack: GC rejoin INVITE lacks of subject header
 - Issue 251		Stack: FT MAX SIZE - Receiver sends 603 DECLINE instead of 403 FORBIDDEN
+- Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 - Issue 254		Stack: FT HTTP - Receiver sends 603 DECLINE after 200OK
-- Issue 250     Stack: GC rejoin INVITE lacks of	subject header
-- Issue 255     Stack: Optimize determination of own	IP address
+- Issue 255     Stack: Optimize determination of own IP address
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
