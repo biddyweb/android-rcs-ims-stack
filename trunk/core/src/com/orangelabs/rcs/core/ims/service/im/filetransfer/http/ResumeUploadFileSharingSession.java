@@ -46,6 +46,8 @@ public class ResumeUploadFileSharingSession extends OriginatingHttpFileSharingSe
     public ResumeUploadFileSharingSession(ImsService parent, MmContent content,
             FtHttpResumeUpload resumeUpload) {
         super(parent, content, resumeUpload.getContact(), resumeUpload.getThumbnail(), null, null);
+        // Session ID must be equal to the FT HTTP initial one
+     	setSessionID(resumeUpload.getSessionId());
     }
 
     /**
