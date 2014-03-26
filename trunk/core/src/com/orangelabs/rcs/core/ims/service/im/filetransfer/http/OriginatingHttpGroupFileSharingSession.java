@@ -121,24 +121,7 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
 			if (resumeUpload != null) {
-				FtHttpStatus status = FtHttpResumeDaoImpl.getInstance().getStatus(resumeUpload);
-				// Get the network connection
-				boolean connected = getImsService().getImsModule().getCurrentNetworkInterface().getNetworkAccess().isConnected();
-				if (logger.isActivated()) {
-					logger.warn("handleError error="+error+" connected="+connected);
-				}
-				if (connected) {
-					FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
-				} else {
-					if (status==FtHttpStatus.CREATED) {
-						// Upload resume is only possible if already started
-						FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
-					} else {
-						if (logger.isActivated()) {
-							logger.info("Network connection lost! Transfer will be resumed upon reconnection");
-						}
-					}
-				}
+				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
 			}
 		}
 	}
