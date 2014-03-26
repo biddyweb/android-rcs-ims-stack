@@ -18,23 +18,12 @@
 
 package com.orangelabs.rcs.core.access;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-
-import com.orangelabs.rcs.platform.AndroidFactory;
-
-
 /**
  * Abstract network access
  * 
  * @author jexa7410
  */
 public abstract class NetworkAccess {
-	/**
-	 * Connectivity manager
-	 */
-	private ConnectivityManager connectivityManager;
 	
     /**
      * Local IP address given to the network access
@@ -50,8 +39,6 @@ public abstract class NetworkAccess {
 	 * Constructor
 	 */
 	public NetworkAccess() {
-		// Get connection info
-		 connectivityManager = (ConnectivityManager) AndroidFactory.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 	}
 
 	/**
@@ -89,14 +76,4 @@ public abstract class NetworkAccess {
      */
     public abstract void disconnect();
     
-	/**
-	 * Check if network is connected (call is synchronous)
-	 * 
-	 * @return true if connected
-	 */
-    public boolean isConnected() {
-    	// Check received network info
-    	NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-    	return ((networkInfo != null) && networkInfo.isConnected());
-    }
 }
