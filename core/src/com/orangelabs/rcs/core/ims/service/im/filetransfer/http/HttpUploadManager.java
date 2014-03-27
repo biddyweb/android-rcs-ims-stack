@@ -544,15 +544,13 @@ public class HttpUploadManager extends HttpTransferManager {
 	 */
 	public byte[] resumeUpload() throws ParseException, IOException {
 		// Try to get upload info
-		HttpResponse resp;
+		HttpResponse resp = null;
 		try {
 			resp = sendGetUploadInfo();
 		} catch (Exception e) {
 			if (logger.isActivated()) {
 				logger.warn("Could not get upload info due to " + e.getLocalizedMessage());
 			}
-			getListener().httpTransferPaused();
-			return null;
 		}
 		resetParamForResume();
 
@@ -562,7 +560,6 @@ public class HttpUploadManager extends HttpTransferManager {
 			}
 			return uploadFile();
 		} else {
-
 			String content = EntityUtils.toString(resp.getEntity());
 			byte[] bytes = content.getBytes("UTF8");
 
