@@ -96,34 +96,9 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
-	public List<FtHttpResume> queryAll(FtHttpStatus ftHttpStatus) {
-		FtHttpSelection where = new FtHttpSelection();
-		where.status(ftHttpStatus);
-		ArrayList<FtHttpResume> result = new ArrayList<FtHttpResume>();
-		FtHttpCursor cursor = where.query(cr);
-		if (cursor != null) {
-			while (cursor.moveToNext()) {
-				if (cursor.getDirection() == FtHttpDirection.INCOMING) {
-					result.add(new FtHttpResumeDownload(cursor));
-				} else {
-					result.add(new FtHttpResumeUpload(cursor));
-				}
-			}
-			cursor.close();
-		}
-		return result;
-	}
-
-	@Override
 	public Uri insert(FtHttpResume ftHttpResume) {
-		return insert(ftHttpResume, FtHttpStatus.STARTED);
-	}
-
-	@Override
-	public Uri insert(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus) {
 		FtHttpContentValues values = new FtHttpContentValues();
 		values.putDate(new Date(System.currentTimeMillis()));
-		values.putStatus(ftHttpStatus);
 		values.putDirection(ftHttpResume.getDirection());
 		values.putFilename(ftHttpResume.getFilename());
         values.putType(ftHttpResume.getMimetype());
@@ -179,51 +154,6 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 	}
 
 	@Override
-	public void setStatus(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus) {
-		if (logger.isActivated()) {
-			logger.debug("setStatus (ftHttpResume=" + ftHttpResume + ") (status=" + ftHttpStatus + ")");
-		}
-		FtHttpContentValues values = new FtHttpContentValues();
-		values.putStatus(ftHttpStatus);
-		FtHttpSelection where = new FtHttpSelection();
-		if (ftHttpResume instanceof FtHttpResumeDownload) {
-			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			where.inUrl(download.getUrl()).and().direction(FtHttpDirection.INCOMING);
-		} else {
-			if (ftHttpResume instanceof FtHttpResumeUpload) {
-				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				where.ouTid(upload.getTid()).and().direction(FtHttpDirection.OUTGOING);
-			} else
-				return;
-		}
-		cr.update(FtHttpColumns.CONTENT_URI, values.values(), where.sel(), where.args());
-	}
-
-	@Override
-	public FtHttpStatus getStatus(FtHttpResume ftHttpResume) {
-		FtHttpSelection where = new FtHttpSelection();
-		if (ftHttpResume instanceof FtHttpResumeDownload) {
-			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			where.inUrl(download.getUrl()).and().direction(FtHttpDirection.INCOMING);
-		} else {
-			if (ftHttpResume instanceof FtHttpResumeUpload) {
-				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				where.ouTid(upload.getTid()).and().direction(FtHttpDirection.OUTGOING);
-			} else
-				return null;
-		}
-		FtHttpStatus result = null;
-		FtHttpCursor cursor = where.query(cr, new String[] { FtHttpColumns.STATUS }, "_ID LIMIT 1");
-		if (cursor != null) {
-			if (cursor.moveToNext()) {
-				result = cursor.getStatus();
-			}
-			cursor.close();
-		}
-		return result;
-	}
-
-	@Override
 	public FtHttpResumeUpload queryUpload(String tid) {
 		FtHttpSelection where = new FtHttpSelection();
 		FtHttpResumeUpload result = null;
@@ -252,15 +182,4 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 		}
 		return result;
 	}
-
-	@Override
-	public int clean() {
-		if (logger.isActivated()) {
-			logger.debug("deleteFinished");
-		}
-		FtHttpSelection where = new FtHttpSelection();
-		where.statusNot(FtHttpStatus.STARTED);
-		return where.delete(cr);
-	}
-
 }

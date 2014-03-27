@@ -32,7 +32,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
 /**
  * @author YPLO6403
  *
- * Provider for the FT HTTP table
+ * Provider for the resumable FT HTTP table
  */
 public class FtHttpProvider extends ContentProvider {
 	private static final String TYPE_CURSOR_ITEM = "vnd.android.cursor.item/";

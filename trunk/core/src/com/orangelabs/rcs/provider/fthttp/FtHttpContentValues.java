@@ -146,13 +146,6 @@ public class FtHttpContentValues extends AbstractContentValues {
 		return this;
 	}
 
-	public FtHttpContentValues putStatus(FtHttpStatus value) {
-		if (value == null)
-			throw new IllegalArgumentException("value for status must not be null");
-		mContentValues.put(FtHttpColumns.STATUS, value.ordinal());
-		return this;
-	}
-
 	/**
 	 * Adds date to the set of content values.
 	 * 

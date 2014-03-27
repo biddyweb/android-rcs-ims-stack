@@ -98,16 +98,6 @@ public class FtHttpCursor extends AbstractCursor {
 	}
 
 	/**
-	 * Get the {@code status} value. Cannot be {@code null}.
-	 */
-	public FtHttpStatus getStatus() {
-		Integer intValue = getIntegerOrNull(FtHttpColumns.STATUS);
-		if (intValue == null)
-			return null;
-		return FtHttpStatus.values()[intValue];
-	}
-
-	/**
 	 * Get the {@code date} value. Can be {@code null}.
 	 */
 	public Date getDate() {

@@ -32,7 +32,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.utils.IdGenerator;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -60,11 +59,9 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
     private ChatSession chatSession= null;
 
     /**
-     * Data object to access the resume upload instance in DB
+     * fired a boolean value updated atomically to notify only once
      */
-    FtHttpResumeUpload resumeUpload;
-    
-	AtomicBoolean fired = new AtomicBoolean(false);
+	private AtomicBoolean fired = new AtomicBoolean(false);
 	
     /**
      * The logger
@@ -100,9 +97,6 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new HTTP group file transfer session as originating");
 	    	}
-			// Create upload entry in fthttp table
-			resumeUpload = new FtHttpResumeUpload(this, uploadManager.getTid(), getThumbnail(), true);
-			FtHttpResumeDaoImpl.getInstance().insert(resumeUpload, FtHttpStatus.CREATED);
 			// Upload the file to the HTTP server
 			byte[] result = uploadManager.uploadFile();
             sendResultToContact(result);
@@ -120,9 +114,9 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	public void handleError(ImsServiceError error) {
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
-			if (resumeUpload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
-			}
+            if (resumeFT != null) {
+                FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
+            }
 		}
 	}
 
@@ -130,9 +124,9 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 	public void handleFileTransfered() {
 		super.handleFileTransfered();
 		if (fired.compareAndSet(false, true)) {
-			if (resumeUpload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.SUCCESS);
-			}
+            if (resumeFT != null) {
+                FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
+            }
 		}
 	}
 
@@ -240,8 +234,8 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 
 	@Override
 	public void uploadStarted() {
-		if (resumeUpload != null) {
-			FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.STARTED);
-		}
+        // Create upload entry in fthttp table
+        resumeFT = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
+        FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
 	}
 }

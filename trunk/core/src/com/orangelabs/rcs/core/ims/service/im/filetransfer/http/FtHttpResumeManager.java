@@ -30,7 +30,6 @@ import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.client.eventslog.EventsLogApi;
 import com.orangelabs.rcs.utils.logger.Logger;
@@ -81,10 +80,8 @@ public class FtHttpResumeManager {
 		}
 		imsService = instantMessagingService;
 		try {
-			// delete entries in FT HTTP which are no more useful
-			// dao.clean(); TODO
-			// Retrieve all pending sessions
-			List<FtHttpResume> listFile2resume = dao.queryAll(FtHttpStatus.STARTED);
+			// Retrieve all resumable sessions
+			List<FtHttpResume> listFile2resume = dao.queryAll();
 			if (listFile2resume.isEmpty() == false) {
                 // Rich Messaging - set all "in progress" File transfer to "paused".
                 // This is necessary in case of the application can't update the
