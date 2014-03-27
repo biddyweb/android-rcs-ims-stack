@@ -31,7 +31,6 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSession;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingSessionListener;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResume;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -51,6 +50,11 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
      * Session state
      */
     private int sessionState;
+
+    /**
+     * Data object to access the resume FT instance in DB
+     */
+    protected FtHttpResume resumeFT = null;
 
     /**
      * The logger
@@ -107,19 +111,15 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
 
     @Override
     public void abortSession(int reason) {
-        if (reason != ImsServiceSession.TERMINATION_BY_SYSTEM) {
-            // Abort the session
-            super.abortSession(reason);
-        } else {
+        FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
+
+        // If reason is TERMINATION_BY_SYSTEM and session already started, then it's a pause
+        if (reason == ImsServiceSession.TERMINATION_BY_SYSTEM) {
             // Check if the session is not in created status. In this status,
             // the thumbnail is not yet sent and the resume is not possible.
-            FtHttpResumeDaoImpl dao = FtHttpResumeDaoImpl.getInstance();
-            if (dao == null) {
-                // Abort the session
-                super.abortSession(reason);
-            } else {
+            if (dao != null) {
                 boolean found = false;
-                List<FtHttpResume> createdFileTransfers = dao.queryAll(FtHttpStatus.CREATED);
+                List<FtHttpResume> createdFileTransfers = dao.queryAll();
                 for (FtHttpResume ftHttpResume : createdFileTransfers) {
                     if (ftHttpResume.getSessionId().equals(getSessionID())) {
                         found = true;
@@ -127,9 +127,6 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
                     }
                 }
                 if (found) {
-                    // Abort the session
-                    super.abortSession(reason);
-                } else {
                     // If the session has been terminated by system and already started, then
                     // Pause the session
                     if (logger.isActivated()) {
@@ -149,9 +146,16 @@ public abstract class HttpFileTransferSession extends FileSharingSession {
                     for(int i=0; i < getListeners().size(); i++) {
                         ((FileSharingSessionListener)getListeners().get(i)).handleFileTransferPaused();
                     }
+                    return;
                 }
             }
         }
+        
+        // in others case, call the normal abortSession and remove session from resumable sessions
+        if (dao != null) {
+            dao.delete(resumeFT);
+        }
+        super.abortSession(reason);
     }
 
     /**

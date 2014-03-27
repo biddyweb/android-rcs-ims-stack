@@ -33,7 +33,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.cpim.CpimMessage;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.messaging.RichMessaging;
 import com.orangelabs.rcs.service.api.server.messaging.ImSession;
 import com.orangelabs.rcs.service.api.server.messaging.MessagingApiService;
@@ -58,11 +57,9 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
     private final static Logger logger = Logger.getLogger(OriginatingHttpFileSharingSession.class.getSimpleName());
 
     /**
-     * Data object to access the resume upload instance in DB
+     * fired a boolean value updated atomically to notify only once
      */
-    FtHttpResumeUpload resumeUpload;
-    
-	AtomicBoolean fired = new AtomicBoolean(false);
+	private AtomicBoolean fired = new AtomicBoolean(false);
 
 	/**
 	 * Constructor
@@ -91,9 +88,6 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    	if (logger.isActivated()) {
 	    		logger.info("Initiate a new HTTP file transfer session as originating");
 	    	}
-	    	// Create upload entry in fthttp table
-	    	resumeUpload = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
-	    	FtHttpResumeDaoImpl.getInstance().insert(resumeUpload,FtHttpStatus.CREATED);
 	    	// Upload the file to the HTTP server 
             byte[] result = uploadManager.uploadFile();
             sendResultToContact(result);
@@ -161,6 +155,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 					if (logger.isActivated()) {
 	                    logger.debug("Couldn't initiate One to one session :"+e);
 	                }
+                    // Upload error
+                    handleError(new FileSharingError(FileSharingError.MEDIA_UPLOAD_FAILED));
 					return;
 				}
                 setChatSessionID(chatSession.getSessionID());
@@ -179,8 +175,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
             // File transfered
             handleFileTransfered();
 		} else {
-            // Don't call handleError in case of Pause
-            if (uploadManager.isPaused()) {
+            // Don't call handleError in case of Pause or Cancel
+            if (uploadManager.isCancelled() || uploadManager.isPaused()) {
                 return;
             }
 
@@ -196,8 +192,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void handleError(ImsServiceError error) {
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
-			if (resumeUpload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.FAILURE);
+			if (resumeFT != null) {
+				FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
 			}
 		}
 	}
@@ -206,8 +202,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void handleFileTransfered() {
 		super.handleFileTransfered();
 		if (fired.compareAndSet(false, true)) {
-			if (resumeUpload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.SUCCESS);
+			if (resumeFT != null) {
+                FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
 			}
 		}
 	}
@@ -218,7 +214,7 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
     @Override
     public void interrupt(){
 		super.interrupt();
-        
+
 		// Interrupt the upload
 		uploadManager.interrupt();
 	}
@@ -258,8 +254,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 
 	@Override
 	public void uploadStarted() {
-		if (resumeUpload != null) {
-			FtHttpResumeDaoImpl.getInstance().setStatus(resumeUpload, FtHttpStatus.STARTED);
-		}
+        // Create upload entry in fthttp table
+	    resumeFT = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
+        FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
 	}
 }

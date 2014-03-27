@@ -100,28 +100,4 @@ public class FtHttpSelection extends AbstractSelection<FtHttpSelection> {
 		addEquals(FtHttpColumns.DIRECTION, values);
 		return this;
 	}
-
-	/**
-	 * Define selection based on status
-	 * 
-	 * @param value
-	 *            the list of status {@code values}
-	 * @return A {@code FthttpSelection} selection instance to query the table
-	 */
-	public FtHttpSelection status(FtHttpStatus... values) {
-		addEquals(FtHttpColumns.STATUS, values);
-		return this;
-	}
-
-	/**
-	 * Define selection based on status not equal
-	 * 
-	 * @param value
-	 *            the list of status {@code values}
-	 * @return A {@code FthttpSelection} selection instance to query the table
-	 */
-    public FtHttpSelection statusNot(FtHttpStatus... value) {
-        addNotEquals(FtHttpColumns.STATUS, value);
-        return this;
-    }
 }

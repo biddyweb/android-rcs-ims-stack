@@ -61,7 +61,7 @@ public class ResumeDownloadFileSharingSession extends TerminatingHttpFileSharing
 			// Resume download file from the HTTP server
 			if (downloadManager.streamForFile != null && downloadManager.resumeDownload()) {
 				if (logger.isActivated()) {
-					logger.debug("Resume download success for " + resumeDownload);
+					logger.debug("Resume download success for " + resumeFT);
 				}
 				// Set filename
 				getContent().setUrl(downloadManager.getLocalUrl());

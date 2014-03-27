@@ -36,7 +36,6 @@ import com.orangelabs.rcs.core.ims.service.im.chat.imdn.ImdnDocument;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -73,13 +72,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	protected boolean isGroup = false;
 		
 	/**
-	 * the instance of Download resume (Reflects the content of the DB)
-	 */
-	protected FtHttpResumeDownload resumeDownload;
-	
-	/**
 	 * fired a boolean value updated atomically to notify only once
-	 * 
 	 */
 	private AtomicBoolean fired = new AtomicBoolean(false);
 
@@ -140,11 +133,11 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 		setRemoteDisplayName(resume.getDisplayName());
 		this.isGroup = resume.isGroup();
 		this.msgId = resume.getMessageId();
-		this.resumeDownload = resume;
+		this.resumeFT = resume;
 		// Session ID must be equal to the FT HTTP initial one
 		setSessionID(resume.getSessionId());
 		// Instantiate the download manager
-		downloadManager = new HttpDownloadManager(getContent(), this, resumeDownload.getFilename());
+		downloadManager = new HttpDownloadManager(getContent(), this, resumeFT.getFilename());
 	}
 
 	/**
@@ -228,9 +221,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 				getListeners().get(j).handleSessionStarted();
 			}
 			// Create download entry in fthttp table
-			resumeDownload = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), msgId, getThumbnail(),
-					isGroup);
-			FtHttpResumeDaoImpl.getInstance().insert(resumeDownload);
+            resumeFT = new FtHttpResumeDownload(this, downloadManager.getLocalUrl(), msgId,
+                    getThumbnail(), isGroup);
+            FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
 			// Download file from the HTTP server
 			if (downloadManager.downloadFile()) {
 				if (logger.isActivated()) {
@@ -288,9 +281,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void handleError(ImsServiceError error) {
 		super.handleError(error);
 		if (fired.compareAndSet(false, true)) {
-			if (resumeDownload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.FAILURE);
-			}
+            if (resumeFT != null) {
+                FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
+            }
 		}
 	}
 
@@ -298,9 +291,9 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void handleFileTransfered() {
 		super.handleFileTransfered();
 		if (fired.compareAndSet(false, true)) {
-			if (resumeDownload != null) {
-				FtHttpResumeDaoImpl.getInstance().setStatus(resumeDownload, FtHttpStatus.SUCCESS);
-			}
+            if (resumeFT != null) {
+                FtHttpResumeDaoImpl.getInstance().delete(resumeFT);
+            }
 		}
 	}
 

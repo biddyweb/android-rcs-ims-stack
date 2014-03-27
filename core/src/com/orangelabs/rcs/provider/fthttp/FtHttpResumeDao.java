@@ -35,15 +35,6 @@ public interface FtHttpResumeDao {
 	 * @return the list of entries
 	 */
 	public List<FtHttpResume> queryAll();
-
-	/**
-	 * Query entries with status sorted in _ID ascending order
-	 * 
-	 * @param ftHttpStatus
-	 *            the {@code status} value.
-	 * @return the list of entries
-	 */
-	public List<FtHttpResume> queryAll(FtHttpStatus ftHttpStatus);
 	
 	/**
 	 * Query the upload entry with TID
@@ -64,17 +55,6 @@ public interface FtHttpResumeDao {
 	public FtHttpResumeDownload queryDownload(String url);
 
 	/**
-	 * Add entry in the fthttp table
-	 * 
-	 * @param ftHttpResume
-	 *            the {@code ftHttpResume} value.
-	 * @param ftHttpStatus
-	 *            the {@code status} value.
-	 * @return the URI or null if add operation failed
-	 */
-	public Uri insert(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus);
-
-	/**
 	 * Works just like insert(FtHttpResume, Status) except the status is always STARTED
 	 * 
 	 * @see #insert(FtHttpResume, FtHttpStatus)
@@ -89,34 +69,6 @@ public interface FtHttpResumeDao {
 	 * @return number of rows deleted
 	 */
 	public int delete(FtHttpResume ftHttpResume);
-
-	/**
-	 * Clean fthttp table for non started sessions
-	 * 
-	 * @return number of rows deleted
-	 */
-	public int clean();
-
-	/**
-	 * Update the status of an entry in the fthttp table
-	 * 
-	 * @param ftHttpResume
-	 *            the {@code ftHttpResume} value.
-	 * @param ftHttpStatus
-	 *            the New {@code status} value.
-	 */
-	public void setStatus(FtHttpResume ftHttpResume, FtHttpStatus ftHttpStatus);
-
-	/**
-	 * Get the status entry in the fthttp table
-	 * 
-	 * @param ftHttpResume
-	 *            the {@code ftHttpResume} value.
-	 * 
-	 * 
-	 * @return the status (Can be {@code null}).
-	 */
-	public FtHttpStatus getStatus(FtHttpResume ftHttpResume);
 
 	/**
 	 * Delete all entries in fthttp table
