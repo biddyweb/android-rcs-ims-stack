@@ -130,7 +130,7 @@ public class Provisioning extends TabActivity {
 			String selected = RcsSettings.getInstance().readParameter(rcsSettingsKey);
 			parameter = java.util.Arrays.asList(selection).indexOf(selected);
 		}
-		spinner.setSelection(parameter);
+		spinner.setSelection(parameter % selection.length);
 		return parameter;
 	}
 	
