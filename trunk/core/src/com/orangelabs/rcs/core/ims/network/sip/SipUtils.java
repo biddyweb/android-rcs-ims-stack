@@ -195,9 +195,7 @@ public class SipUtils {
      * @throws Exception
      */
 	public static Header buildUserAgentHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductInfo();
-        Header userAgentHeader = HEADER_FACTORY.createHeader(UserAgentHeader.NAME, value);
-	    return userAgentHeader;
+        return HEADER_FACTORY.createHeader(UserAgentHeader.NAME, userAgentString());
     }
 	
 	/**
@@ -207,10 +205,20 @@ public class SipUtils {
      * @throws Exception
      */
 	public static Header buildServerHeader() throws Exception {
-	    String value = "IM-client/OMA1.0 " + TerminalInfo.getProductInfo();
-		return HEADER_FACTORY.createHeader(ServerHeader.NAME, value);
+		return HEADER_FACTORY.createHeader(ServerHeader.NAME, userAgentString());
     }
-    
+
+    /**
+     * Build User Agent value
+     *
+     * @return UA value
+     */
+    public static String userAgentString() {
+        String userAgent = "IM-client/OMA1.0 " + TerminalInfo.getProductInfo();
+
+        return userAgent;
+    }
+
 	/**
 	 * Build Allow header
 	 * 

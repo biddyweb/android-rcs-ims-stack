@@ -31,6 +31,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.orangelabs.rcs.core.CoreException;
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.core.ims.protocol.http.HttpAuthenticationAgent;
 import com.orangelabs.rcs.core.ims.service.im.chat.ChatUtils;
 import com.orangelabs.rcs.utils.CloseableUtils;
@@ -223,6 +224,7 @@ public class HttpUploadManager extends HttpTransferManager {
 
 		// Build POST request
 		HttpPost post = new HttpPost(new URI(protocol + "://" + host + serviceRoot));
+        post.addHeader("User-Agent", SipUtils.userAgentString());
 		if (HTTP_TRACE_ENABLED) {
 			String trace = ">>> Send HTTP request:";
 			trace += "\n" + post.getMethod() + " " + post.getRequestLine().getUri();
@@ -266,7 +268,7 @@ public class HttpUploadManager extends HttpTransferManager {
 		// POST construction
 		connection.setRequestMethod("POST");
 		connection.setRequestProperty("Connection", "Keep-Alive");
-		connection.setRequestProperty("User-Agent", "Joyn");
+		connection.setRequestProperty("User-Agent", SipUtils.userAgentString());
 		connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY_TAG);
 
 		// Construct the Body
@@ -452,8 +454,6 @@ public class HttpUploadManager extends HttpTransferManager {
 	 *            DataOutputStream to write to
 	 * @param filepath
 	 *            File path
-	 * @param httpResumeUpload
-	 *            the {@code httpResumeUpload} value.
 	 * @throws IOException
 	 */
 	private void writeFileMultipart(DataOutputStream outputStream, String filepath)
@@ -585,10 +585,8 @@ public class HttpUploadManager extends HttpTransferManager {
 	/**
 	 * Write a part of the file in a PUT request for resuming upload
 	 * 
-	 * @param FileTransferHttpResumeInfo
+	 * @param resumeInfo
 	 *            infos on already uploaded content
-	 * @param resumeDoInDb
-	 *            resume data object in database
 	 * @return byte[] containing the server's response
 	 * @throws Exception
 	 */
@@ -616,7 +614,7 @@ public class HttpUploadManager extends HttpTransferManager {
 		// POST construction
 		connection.setRequestMethod("PUT");
 		connection.setRequestProperty("Connection", "Keep-Alive");
-		connection.setRequestProperty("User-Agent", "Joyn");
+		connection.setRequestProperty("User-Agent", SipUtils.userAgentString());
 		connection.setRequestProperty("Content-Type", this.content.getEncoding());
 		connection.setRequestProperty("Content-Length", String.valueOf(resumeInfo.getEnd() - resumeInfo.getStart()));
 		connection.setRequestProperty("Content-Range", "bytes " + resumeInfo.getEnd() + "-" + (content.getSize() - 1) + "//"

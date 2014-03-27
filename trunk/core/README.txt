@@ -33,6 +33,7 @@ V2.5.17
 - Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 - Issue 254		Stack: FT HTTP - Receiver sends 603 DECLINE after 200OK
 - Issue 255     Stack: Optimize determination of own IP address
+- Issue 258     Stack: FToHTTP requests should use the same User-Agent header as any other request
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
