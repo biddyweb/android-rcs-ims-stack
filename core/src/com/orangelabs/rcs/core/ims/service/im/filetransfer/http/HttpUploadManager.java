@@ -14,8 +14,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.net.ssl.HostnameVerifier;
@@ -227,7 +227,7 @@ public class HttpUploadManager extends HttpTransferManager {
         post.addHeader("User-Agent", SipUtils.userAgentString());
 		if (HTTP_TRACE_ENABLED) {
 			String trace = ">>> Send HTTP request:";
-			trace += "\n" + post.getMethod() + " " + post.getRequestLine().getUri();
+			trace += "\n " + post.getMethod() + " " + post.getRequestLine().getUri();
 			System.out.println(trace);
 		}
 
@@ -297,12 +297,10 @@ public class HttpUploadManager extends HttpTransferManager {
 		// Trace
 		if (HTTP_TRACE_ENABLED) {
 			String trace = ">>> Send HTTP request:";
-			trace += "\n" + connection.getRequestMethod() + " " + url.toString();
-			Set<String> strs = connection.getRequestProperties().keySet();
-			Iterator<String> itr = strs.iterator();
-			while (itr.hasNext()) {
-				Object element = itr.next();
-				trace += "\n" + element + ": " + connection.getRequestProperty((String) element);
+			trace += "\n " + connection.getRequestMethod() + " " + url.toString();
+			Map<String, List<String>> properties = connection.getRequestProperties();
+			for (String property : properties.keySet()) {
+				trace += "\n " + property + ": " + connection.getRequestProperty((String) property);
 			}
 			trace += "\n" + body;
 			System.out.println(trace);
@@ -583,7 +581,7 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * Write a part of the file in a PUT request for resuming upload
 	 * 
 	 * @param resumeInfo
-	 *            infos on already uploaded content
+	 *            info on already uploaded content
 	 * @return byte[] containing the server's response
 	 * @throws Exception
 	 */
@@ -631,12 +629,10 @@ public class HttpUploadManager extends HttpTransferManager {
 		// Trace
 		if (HTTP_TRACE_ENABLED) {
 			String trace = ">>> Send HTTP request:";
-			trace += "\n" + connection.getRequestMethod() + " " + url.toString();
-			Set<String> strs = connection.getRequestProperties().keySet();
-			Iterator<String> itr = strs.iterator();
-			while (itr.hasNext()) {
-				Object element = itr.next();
-				trace += "\n" + element + ": " + connection.getRequestProperty((String) element);
+			trace += "\n " + connection.getRequestMethod() + " " + url.toString();
+			Map<String, List<String>> properties = connection.getRequestProperties();
+			for (String property : properties.keySet()) {
+				trace += "\n " + property + ": " + connection.getRequestProperty((String) property);
 			}
 			trace += "\n" + body;
 			System.out.println(trace);
@@ -763,23 +759,6 @@ public class HttpUploadManager extends HttpTransferManager {
 		fileInputStream.close();
 	}
 
-	// /**
-	// * Parse a file transfer over HTTP document
-	// *
-	// * @param xml XML document
-	// * @return File transfer document
-	// */
-	// public static FileTransferHttpInfoDocument parseFileTransferHttpDocument(byte[] xml) {
-	// try {
-	// InputSource ftHttpInput = new InputSource(new ByteArrayInputStream(xml));
-	// FileTransferHttpInfoParser ftHttpParser = new FileTransferHttpInfoParser(ftHttpInput);
-	// return ftHttpParser.getFtInfo();
-	// } catch(Exception e) {
-	// return null;
-	// }
-	// }
-	//
-
 	/**
 	 * Send a get for info on the upload
 	 * 
@@ -798,14 +777,19 @@ public class HttpUploadManager extends HttpTransferManager {
 
 		// Build POST request
 		HttpGet get = new HttpGet(new URI(protocol + "://" + host + serviceRoot + "?tid=" + tid + suffix));
-
-		if (authRequired) {
+		get.addHeader("User-Agent", SipUtils.userAgentString());
+		if (authRequired && auth != null) {
 			get.addHeader("Authorization", auth.generateAuthorizationHeaderValue(get.getMethod(), get.getURI().toString(), ""));
 		}
-
+		
+		// Trace
 		if (HTTP_TRACE_ENABLED) {
 			String trace = ">>> Send HTTP request:";
-			trace += "\n" + get.getMethod() + " " + get.getRequestLine().getUri();
+			trace += "\n " + get.getMethod() + " " + get.getRequestLine().getUri();
+			Header headers[] = get.getAllHeaders();
+			for (Header header : headers) {
+				trace += "\n " + header.getName() + ": " + header.getValue();
+			}
 			System.out.println(trace);
 		}
 
