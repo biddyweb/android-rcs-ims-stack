@@ -43,7 +43,7 @@ public class ServiceProvisioning extends Activity {
 	/**
 	 * IM session start modes
 	 */
-	private static final String[] IM_SESSION_START_MODES = { "1", "2" };
+	private static final String[] IM_SESSION_START_MODES = { "0", "1", "2" };
 	
 	private boolean isInFront;
 
@@ -108,17 +108,7 @@ public class ServiceProvisioning extends Activity {
 		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, IM_SESSION_START_MODES);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		spinner.setAdapter(adapter);
-		int mode = 0;
-		if (bundle != null && bundle.containsKey(RcsSettingsData.IM_SESSION_START)) {
-			mode = bundle.getInt(RcsSettingsData.IM_SESSION_START);
-		} else {
-			mode = RcsSettings.getInstance().getImSessionStartMode();
-		}
-		if (mode == 1) {
-			spinner.setSelection(0);
-		} else {
-			spinner.setSelection(1);
-		}
+		Provisioning.setSpinnerParameter(spinner, RcsSettingsData.IM_SESSION_START, bundle, IM_SESSION_START_MODES);
 
 		setCheckBoxParameter(this, R.id.SmsFallbackService, RcsSettingsData.SMS_FALLBACK_SERVICE, bundle);
 		setCheckBoxParameter(this, R.id.StoreForwardServiceWarning, RcsSettingsData.WARN_SF_SERVICE, bundle);
@@ -160,18 +150,10 @@ public class ServiceProvisioning extends Activity {
 		saveEditTextParameter(this, R.id.DirectoryPathFiles, RcsSettingsData.DIRECTORY_PATH_FILES, bundle);
 
 		Spinner spinner = (Spinner) findViewById(R.id.ImSessionStart);
-		if (spinner.getSelectedItemId() == 0) {
-			if (bundle != null) {
-				bundle.putInt(RcsSettingsData.IM_SESSION_START, 1);
-			} else {
-				RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "1");
-			}
+		if (bundle != null) {
+			bundle.putInt(RcsSettingsData.IM_SESSION_START, spinner.getSelectedItemPosition());
 		} else {
-			if (bundle != null) {
-				bundle.putInt(RcsSettingsData.IM_SESSION_START, 2);
-			} else {
-				RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "2");
-			}
+			RcsSettings.getInstance().writeParameter(RcsSettingsData.IM_SESSION_START, "" + spinner.getSelectedItemPosition());
 		}
 
 		saveCheckBoxParameter(this, R.id.SmsFallbackService, RcsSettingsData.SMS_FALLBACK_SERVICE, bundle);

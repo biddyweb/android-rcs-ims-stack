@@ -1384,17 +1384,26 @@ public class RcsSettings {
 	}
 
 	/**
-     * Get IM session start mode
-     *
-     * @return Integer (1: The 200 OK is sent when the receiver starts to type a message back
-     * in the chat window. 2: The 200 OK is sent when the receiver sends a message)
-     */
+	 * Get IM session start mode
+	 * 
+	 * @return the IM session start mode
+	 *         <p>
+	 *         <ul>
+	 *         <li>0 (RCS-e default): The 200 OK is sent when the receiver consumes the notification opening the chat window.
+	 *         <li>1 (RCS default): The 200 OK is sent when the receiver starts to type a message back in the chat window.
+	 *         <li>2: The 200 OK is sent when the receiver presses the button to send a message (that is the message will be
+	 *         buffered in the client until the MSRP session is established). Note: as described in section 3.2, the parameter only
+	 *         affects the behavior for 1-to-1 sessions in case no session between the parties has been established yet.
+	 *         </ul>
+	 * 
+	 */
 	public int getImSessionStartMode() {
 		int result = 1;
 		if (instance != null) {
 			try {
 				result = Integer.parseInt(readParameter(RcsSettingsData.IM_SESSION_START));
-			} catch(Exception e) {}
+			} catch (Exception e) {
+			}
 		}
 		return result;
 	}
