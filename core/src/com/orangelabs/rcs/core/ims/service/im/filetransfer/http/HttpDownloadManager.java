@@ -12,6 +12,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
 import com.orangelabs.rcs.core.content.MmContent;
+import com.orangelabs.rcs.core.ims.network.sip.SipUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -114,6 +115,7 @@ public class HttpDownloadManager extends HttpTransferManager {
 			}
 			// Send GET request
 			HttpGet request = new HttpGet(content.getUrl());
+            request.addHeader("User-Agent", SipUtils.userAgentString());
 			if (HTTP_TRACE_ENABLED) {
 				String trace = ">>> Send HTTP request:";
 				trace += "\n" + request.getMethod() + " " + request.getRequestLine().getUri();
@@ -325,6 +327,7 @@ public class HttpDownloadManager extends HttpTransferManager {
 			HttpGet request = new HttpGet(content.getUrl());
 			long downloadedLength = file.length();
 			long completeSize = content.getSize();
+            request.addHeader("User-Agent", SipUtils.userAgentString());
 			request.addHeader("Range", "bytes=" + downloadedLength + "-" + completeSize);
 			if (HTTP_TRACE_ENABLED) {
 				String trace = ">>> Send HTTP request:";
