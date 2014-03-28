@@ -48,6 +48,7 @@ public class ResumeUploadFileSharingSession extends OriginatingHttpFileSharingSe
         super(parent, content, resumeUpload.getContact(), resumeUpload.getThumbnail(), null, null);
         // Session ID must be equal to the FT HTTP initial one
      	setSessionID(resumeUpload.getSessionId());
+     	getUploadManager().setTid( resumeUpload.getTid() );
     }
 
     /**

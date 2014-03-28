@@ -258,4 +258,8 @@ public class OriginatingHttpFileSharingSession extends HttpFileTransferSession i
 	    resumeFT = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
         FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
 	}
+
+	public HttpUploadManager getUploadManager() {
+		return uploadManager;
+	}
 }
