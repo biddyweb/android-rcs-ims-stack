@@ -884,4 +884,8 @@ public class HttpUploadManager extends HttpTransferManager {
 	public String getTid() {
 		return tid;
 	}
+
+	public void setTid(String tid) {
+		this.tid = tid;
+	}
 }
