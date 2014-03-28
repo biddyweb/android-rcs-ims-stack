@@ -140,16 +140,7 @@ public class FtHttpResumeDaoImpl implements FtHttpResumeDao {
 			logger.debug("delete " + ftHttpResume);
 		}
 		FtHttpSelection where = new FtHttpSelection();
-		if (ftHttpResume instanceof FtHttpResumeDownload) {
-			FtHttpResumeDownload download = (FtHttpResumeDownload) ftHttpResume;
-			where.inUrl(download.getUrl());
-		} else {
-			if (ftHttpResume instanceof FtHttpResumeUpload) {
-				FtHttpResumeUpload upload = (FtHttpResumeUpload) ftHttpResume;
-				where.ouTid(upload.getTid());
-			} else
-				return 0;
-		}
+		where.sessionId(ftHttpResume.getSessionId());
 		return where.delete(cr);
 	}
 
