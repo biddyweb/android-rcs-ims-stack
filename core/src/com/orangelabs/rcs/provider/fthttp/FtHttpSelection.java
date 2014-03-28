@@ -89,6 +89,18 @@ public class FtHttpSelection extends AbstractSelection<FtHttpSelection> {
 		return this;
 	}
 
+    /**
+     * Define selection based on sessionId for FT HTTP
+     * 
+     * @param value
+     *            the list of {@code sessionIds}
+     * @return A {@code FthttpSelection} selection instance to query the table
+     */
+    public FtHttpSelection sessionId(String... sessionIds) {
+        addEquals(FtHttpColumns.SESSION_ID, sessionIds);
+        return this;
+    }
+
 	/**
 	 * Define selection based on direction
 	 * 
