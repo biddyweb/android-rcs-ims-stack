@@ -79,18 +79,30 @@ public class HttpDownloadManager extends HttpTransferManager {
 		this.localUrl = filename;
 		// Init file
 		file = new File(localUrl);
-		try {
-			if (logger.isActivated()) {
-				logger.debug("HttpDownloadManager file=" + filename + " length=" + file.length());
-			}
-			streamForFile = new BufferedOutputStream(new FileOutputStream(file, true));
-		} catch (FileNotFoundException e) {
-			if (logger.isActivated()) {
-				logger.error("Could not create stream, file does not exists.");
-			}
+		if (logger.isActivated()) {
+			logger.debug("HttpDownloadManager file=" + filename + " length=" + file.length());
 		}
+		streamForFile = openStremForFile(file);
 	}
 
+	/**
+	 * Open output stream for download file
+	 * 
+	 * @param file
+	 *            file path
+	 * @return BufferedOutputStream or null
+	 */
+	static BufferedOutputStream openStremForFile(File file) {
+		try {
+			return new BufferedOutputStream(new FileOutputStream(file, true));
+		} catch (FileNotFoundException e) {
+			if (logger.isActivated()) {
+				logger.error("Could not open stream, file does not exists.");
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Returns the local Url
 	 * 
@@ -111,7 +123,9 @@ public class HttpDownloadManager extends HttpTransferManager {
 				logger.debug("Download file " + content.getUrl());
 			}
 			if (streamForFile == null) {
-				return false;
+				streamForFile = openStremForFile(file);
+				if (streamForFile == null)
+					return false;
 			}
 			// Send GET request
 			HttpGet request = new HttpGet(content.getUrl());
@@ -162,7 +176,7 @@ public class HttpDownloadManager extends HttpTransferManager {
 			response = getHttpClient().execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (HTTP_TRACE_ENABLED) {
-				String trace = "<<< Resceive HTTP response:";
+				String trace = "<<< Receive HTTP response:";
 				trace += "\n" + statusCode + " " + response.getStatusLine().getReasonPhrase();
 				System.out.println(trace);
 			}
@@ -203,12 +217,11 @@ public class HttpDownloadManager extends HttpTransferManager {
 
         try {
             streamForFile.flush();
-
 			if (isPaused()) {
 				return false;
 			}
-
 			streamForFile.close();
+			streamForFile = null;
 
 			if (isCancelled()) {
 				file.delete();
@@ -275,7 +288,7 @@ public class HttpDownloadManager extends HttpTransferManager {
 			HttpResponse response = getHttpClient().execute(request);
 			int statusCode = response.getStatusLine().getStatusCode();
 			if (HTTP_TRACE_ENABLED) {
-				String trace = "<<< Resceive HTTP response:";
+				String trace = "<<< Receive HTTP response:";
 				trace += "\n" + statusCode + " " + response.getStatusLine().getReasonPhrase();
 				System.out.println(trace);
 			}
@@ -313,9 +326,15 @@ public class HttpDownloadManager extends HttpTransferManager {
 		}
 	}
 
+	/**
+	 * Resume FToHTTP download
+	 * @return True if successful
+	 */
 	public boolean resumeDownload() {
 		if (streamForFile == null) {
-			return false;
+			streamForFile = openStremForFile(file);
+			if (streamForFile == null)
+				return false;
 		}
 		resetParamForResume();
 		try {

@@ -389,18 +389,24 @@ public class HttpUploadManager extends HttpTransferManager {
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
-				// Sent data are bufferized. Must wait for response to enable sending to server. 
-				int responseCode = connection.getResponseCode();
-				if (logger.isActivated()) {
-					logger.debug("Second POST response " + responseCode+ " " +connection.getResponseMessage());
+				if (isPaused()) {
+					if (logger.isActivated()) {
+						logger.debug("File transfer paused by user");
+					}
+					// Sent data are bufferized. Must wait for response to enable sending to server.
+					int responseCode = connection.getResponseCode();
+					if (logger.isActivated()) {
+						logger.debug("Second POST response " + responseCode + " " + connection.getResponseMessage());
+					}
+				} else {
+					if (logger.isActivated()) {
+						logger.debug("File transfer cancelled by user");
+					}
 				}
 				// Close streams
 				outputStream.flush();
 				outputStream.close();
 				connection.disconnect();
-				if (logger.isActivated()) {
-					logger.debug("File transfer paused by user");
-				}
 				return null;
 			}
 		} catch (Exception e) {
@@ -707,13 +713,24 @@ public class HttpUploadManager extends HttpTransferManager {
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
+				if (isPaused()) {
+					if (logger.isActivated()) {
+						logger.warn("File transfer paused by user");
+					}
+					// Sent data are bufferized. Must wait for response to enable sending to server.
+					int responseCode = connection.getResponseCode();
+					if (logger.isActivated()) {
+						logger.debug("PUT response " + responseCode + " " + connection.getResponseMessage());
+					}
+				} else {
+					if (logger.isActivated()) {
+						logger.warn("File transfer cancelled by user");
+					}
+				}
 				// Close streams
 				outputStream.flush();
 				outputStream.close();
 				connection.disconnect();
-				if (logger.isActivated()) {
-					logger.warn("File transfer paused by user");
-				}
 				return null;
 			}
 		} catch (Exception e) {

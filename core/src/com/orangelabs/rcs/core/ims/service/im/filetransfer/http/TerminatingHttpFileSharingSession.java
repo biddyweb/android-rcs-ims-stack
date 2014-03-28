@@ -368,9 +368,7 @@ public class TerminatingHttpFileSharingSession extends HttpFileTransferSession i
 	public void pauseFileTransfer() {
 		fileTransferPaused();
 		interruptSession();
-
 		downloadManager.pauseTransfer();
-		downloadManager.getListener().httpTransferPaused();
 	}
 
 }
