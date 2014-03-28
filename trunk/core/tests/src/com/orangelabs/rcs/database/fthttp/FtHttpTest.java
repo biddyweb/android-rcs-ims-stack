@@ -15,7 +15,6 @@ import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDao;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDownload;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
-import com.orangelabs.rcs.provider.fthttp.FtHttpStatus;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 public class FtHttpTest extends InstrumentationTestCase {
@@ -65,7 +64,7 @@ public class FtHttpTest extends InstrumentationTestCase {
 				sessionId, chatSessionId, false);
 		Uri uri = null;
 		try {
-			uri = fthttp.insert(upload, FtHttpStatus.CREATED);
+			uri = fthttp.insert(upload);
 			if (logger.isActivated()) {
 				logger.debug("addUploadForContact result URI = " + uri);
 			}
@@ -81,28 +80,11 @@ public class FtHttpTest extends InstrumentationTestCase {
 		}
 		assertNotNull("insert failed", uri);
 
-		FtHttpStatus status = fthttp.getStatus(upload);
-		assertEquals("getStatus failed", FtHttpStatus.CREATED, status);
-
-		status = fthttp.getStatus(download);
-		assertEquals("getStatus failed", FtHttpStatus.STARTED, status);
-
-		fthttp.setStatus(upload, FtHttpStatus.FAILURE);
-		status = fthttp.getStatus(upload);
-		assertEquals("getStatus FtHttpStatus", FtHttpStatus.FAILURE, status);
-
-		fthttp.setStatus(download, FtHttpStatus.FAILURE);
-		status = fthttp.getStatus(download);
-		assertEquals("getStaFtHttpStatusiled", FtHttpStatus.FAILURE, status);
-
-		List<FtHttpResume> list = fthttp.queryAll(FtHttpStatus.SUCCESS);
-		assertTrue("queryAll(...) failed", list != null && list.isEmpty());
-
-		list = fthttp.queryAll();
+		List<FtHttpResume> list = fthttp.queryAll();
 		assertTrue("queryAll failed", list != null && !list.isEmpty());
 		if (logger.isActivated()) {
 			for (FtHttpResume item : list) {
-				logger.debug(item.toString() + " status=" + fthttp.getStatus(item));
+				logger.debug(item.toString());
 			}
 		}
 

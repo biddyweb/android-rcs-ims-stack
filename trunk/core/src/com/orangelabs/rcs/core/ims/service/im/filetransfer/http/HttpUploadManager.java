@@ -42,6 +42,8 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  * @author hhff3235
+ * @author YPLO6403
+ *
  */
 public class HttpUploadManager extends HttpTransferManager {
 	/**
@@ -154,7 +156,7 @@ public class HttpUploadManager extends HttpTransferManager {
 			// Check response status code
 			int statusCode = resp.getStatusLine().getStatusCode();
 			if (logger.isActivated()) {
-				logger.debug("First POST response " + statusCode);
+				logger.debug("First POST response: " + resp.getStatusLine());
 			}
 			switch (statusCode) {
 			case 401:
@@ -320,21 +322,19 @@ public class HttpUploadManager extends HttpTransferManager {
 			// Add File
 			writeFileMultipart(outputStream, filepath);
 			if (!isCancelled()) {
-				outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the
-																					// last boundary to get bad request
-
+				// if the upload is cancelled, we don't send the last boundary to get bad request
+				outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); 
 				// Check response status code
 				int responseCode = connection.getResponseCode();
-
 				if (logger.isActivated()) {
-					logger.debug("Second POST response " + responseCode);
+					logger.debug("Second POST response " + responseCode + " "+connection.getResponseMessage());
 				}
 				byte[] result = null;
 				boolean success = false;
 				boolean retry = false;
 				if (HTTP_TRACE_ENABLED) {
 					String trace = "<<< Receive HTTP response:";
-					trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
+					trace += "\n " + responseCode + " " + connection.getResponseMessage();
 					System.out.println(trace);
 				}
 				switch (responseCode) {
@@ -345,7 +345,7 @@ public class HttpUploadManager extends HttpTransferManager {
 					result = convertStreamToString(inputStream);
 					inputStream.close();
 					if (HTTP_TRACE_ENABLED) {
-						System.out.println("\n" + new String(result));
+						System.out.println("\n " + new String(result));
 					}
 					break;
 				case 503:
@@ -389,12 +389,17 @@ public class HttpUploadManager extends HttpTransferManager {
 					throw new IOException("Received " + responseCode + " from server");
 				}
 			} else {
+				// Sent data are bufferized. Must wait for response to enable sending to server. 
+				int responseCode = connection.getResponseCode();
+				if (logger.isActivated()) {
+					logger.debug("Second POST response " + responseCode+ " " +connection.getResponseMessage());
+				}
 				// Close streams
 				outputStream.flush();
 				outputStream.close();
 				connection.disconnect();
 				if (logger.isActivated()) {
-					logger.debug("File transfer cancelled by user");
+					logger.debug("File transfer paused by user");
 				}
 				return null;
 			}
@@ -487,7 +492,8 @@ public class HttpUploadManager extends HttpTransferManager {
 			buffer = new byte[bufferSize];
 			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 		}
-		outputStream.writeBytes(lineEnd);
+		if (!isCancelled())
+			outputStream.writeBytes(lineEnd);
 		fileInputStream.close();
 	}
 
@@ -560,18 +566,34 @@ public class HttpUploadManager extends HttpTransferManager {
 		} else {
 			String content = EntityUtils.toString(resp.getEntity());
 			byte[] bytes = content.getBytes("UTF8");
-
+			if (HTTP_TRACE_ENABLED) {
+				String trace = "Get Upload Info response:";
+				trace += "\n " + content;
+				System.out.println(trace);
+			}
 			FileTransferHttpResumeInfo ftResumeInfo = ChatUtils.parseFileTransferHttpResumeInfo(bytes);
+
 			if (ftResumeInfo == null) {
+				if (logger.isActivated()) {
+					logger.error( "Cannot parse resume info! restart upload");
+				}
 				return uploadFile();
-			} else if ((ftResumeInfo.getEnd() - ftResumeInfo.getStart()) >= this.content.getSize()) {
+			}
+			if ((ftResumeInfo.getEnd() - ftResumeInfo.getStart()) >= this.content.getSize()) {
+				if (logger.isActivated()) {
+					logger.info( "Nothing to resume: uploaded complete");
+				}
 				return null; // Nothing to do, the file has already been uploaded completely
 			}
-
+			
 			try {
-				sendPutForResumingUpload(ftResumeInfo);
-				return getDownloadInfo();
+				if (sendPutForResumingUpload(ftResumeInfo) != null)
+					return getDownloadInfo();
+				return null;
 			} catch (Exception e) {
+				if (logger.isActivated()) {
+					logger.error( "Exception occurred",e);
+				}
 				return null;
 			}
 		}
@@ -586,6 +608,9 @@ public class HttpUploadManager extends HttpTransferManager {
 	 * @throws Exception
 	 */
 	private byte[] sendPutForResumingUpload(FileTransferHttpResumeInfo resumeInfo) throws Exception {
+		if (logger.isActivated()) {
+			logger.debug("sendPutForResumingUpload. Already sent from "+resumeInfo.getStart()+" to "+resumeInfo.getEnd());
+		}
 		DataOutputStream outputStream = null;
 		String filepath = content.getUrl();
 
@@ -611,8 +636,8 @@ public class HttpUploadManager extends HttpTransferManager {
 		connection.setRequestProperty("Connection", "Keep-Alive");
 		connection.setRequestProperty("User-Agent", SipUtils.userAgentString());
 		connection.setRequestProperty("Content-Type", this.content.getEncoding());
-		connection.setRequestProperty("Content-Length", String.valueOf(resumeInfo.getEnd() - resumeInfo.getStart()));
-		connection.setRequestProperty("Content-Range", "bytes " + resumeInfo.getEnd() + "-" + (content.getSize() - 1) + "//"
+		connection.setRequestProperty("Content-Length", String.valueOf(content.getSize() - (resumeInfo.getEnd()+1)));
+		connection.setRequestProperty("Content-Range", (resumeInfo.getEnd()+1) + "-" + (content.getSize()-1) + "/"
 				+ content.getSize());
 
 		// Construct the Body
@@ -646,23 +671,14 @@ public class HttpUploadManager extends HttpTransferManager {
 			// Add File
 			writeRemainingFileData(outputStream, filepath, resumeInfo.getEnd());
 			if (!isCancelled()) {
-				outputStream.writeBytes(twoHyphens + BOUNDARY_TAG + twoHyphens); // if the upload is cancelled, we don't send the
-																					// last boundary to get bad request
-
 				// Check response status code
 				int responseCode = connection.getResponseCode();
-
 				if (logger.isActivated()) {
-					logger.debug("PUT response " + responseCode);
+					logger.debug("PUT response " + responseCode+" "+connection.getResponseMessage());
 				}
 				byte[] result = null;
 				boolean success = false;
 				boolean retry = false;
-				if (HTTP_TRACE_ENABLED) {
-					String trace = "<<< Receive HTTP response:";
-					trace += "\n" + connection.getResponseCode() + " " + connection.getResponseMessage();
-					System.out.println(trace);
-				}
 				switch (responseCode) {
 				case 200:
 					// 200 OK
@@ -696,7 +712,7 @@ public class HttpUploadManager extends HttpTransferManager {
 				outputStream.close();
 				connection.disconnect();
 				if (logger.isActivated()) {
-					logger.debug("File transfer cancelled by user");
+					logger.warn("File transfer paused by user");
 				}
 				return null;
 			}
@@ -724,28 +740,17 @@ public class HttpUploadManager extends HttpTransferManager {
 		// Write file content
 		File file = new File(filepath);
 		FileInputStream fileInputStream = new FileInputStream(file);
-
-		int bytesAvailable = Long.valueOf(file.length()).intValue() - offset;
+		// Skip bytes already received
+		int bytesRead = (int) fileInputStream.skip(offset+1);
+		int bytesAvailable = fileInputStream.available();
 		int bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
-
 		byte[] buffer = new byte[bufferSize];
-		int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-		int progress = 0;
-
-		while (progress < offset && !isCancelled()) {
-			progress += bytesRead;
-			bytesAvailable = fileInputStream.available();
-			bufferSize = Math.min(Math.min(bytesAvailable, CHUNK_MAX_SIZE), offset - progress);
-			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-		}
-		if (logger.isActivated()) {
-			logger.warn(offset + " bytes already uploaded, resuming upload from byte " + progress);
-		}
-
-		bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
+		int progress = bytesRead;
 		bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
+		if (logger.isActivated()) {
+			logger.debug("Send "+bytesAvailable+" remaining bytes starting from " + progress);
+		}
+		// Send remaining bytes 
 		while (bytesRead > 0 && !isCancelled()) {
 			progress += bytesRead;
 			outputStream.write(buffer, 0, bytesRead);
@@ -754,8 +759,8 @@ public class HttpUploadManager extends HttpTransferManager {
 			bufferSize = Math.min(bytesAvailable, CHUNK_MAX_SIZE);
 			buffer = new byte[bufferSize];
 			bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+			
 		}
-		outputStream.writeBytes(lineEnd);
 		fileInputStream.close();
 	}
 
@@ -798,7 +803,16 @@ public class HttpUploadManager extends HttpTransferManager {
 		// Check response status code
 		int statusCode = resp.getStatusLine().getStatusCode();
 		if (logger.isActivated()) {
-			logger.debug("Get Resume Info Response " + statusCode);
+			logger.debug("Get Info ("+suffix+") Response " + resp.getStatusLine());
+		}
+		if (HTTP_TRACE_ENABLED) {
+			String trace = "<<< Receive HTTP response:";
+			trace += "\n " + resp.getStatusLine().toString();
+			Header[] headers = resp.getAllHeaders();
+			for (Header header : headers) {
+				trace += "\n" + header.getName() + " " + header.getValue();
+			}
+			System.out.println(trace);
 		}
 		switch (statusCode) {
 		case 401:
@@ -815,15 +829,6 @@ public class HttpUploadManager extends HttpTransferManager {
 		case 200:
 			return resp;
 		default:
-			if (HTTP_TRACE_ENABLED) {
-				String trace = "<<< Receive HTTP response:";
-				trace += "\n" + resp.getStatusLine().toString();
-				Header[] headers = resp.getAllHeaders();
-				for (Header header : headers) {
-					trace += "\n" + header.getName() + " " + header.getValue();
-				}
-				System.out.println(trace);
-			}
 			return null;
 		}
 	}
