@@ -280,7 +280,7 @@ public class FileTransferSession extends IFileTransferSession.Stub implements Fi
      */
     public void resumeSession() {
     	if (logger.isActivated()) {
-			logger.info("Resuming session"+isSessionPaused()+" "+isHttpTransfer());
+			logger.info("Resuming session paused="+isSessionPaused()+" http="+isHttpTransfer());
 		}
 		
 		if (isHttpTransfer() && isSessionPaused()) {
