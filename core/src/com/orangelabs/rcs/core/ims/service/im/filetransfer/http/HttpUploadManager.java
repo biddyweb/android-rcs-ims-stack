@@ -585,13 +585,12 @@ public class HttpUploadManager extends HttpTransferManager {
 				}
 				return uploadFile();
 			}
-			if ((ftResumeInfo.getEnd() - ftResumeInfo.getStart()) >= this.content.getSize()) {
+			if ((ftResumeInfo.getEnd() - ftResumeInfo.getStart()) >= (this.content.getSize() - 1)) {
 				if (logger.isActivated()) {
 					logger.info( "Nothing to resume: uploaded complete");
 				}
-				return null; // Nothing to do, the file has already been uploaded completely
+				return getDownloadInfo(); // The file has already been uploaded completely
 			}
-			
 			try {
 				if (sendPutForResumingUpload(ftResumeInfo) != null)
 					return getDownloadInfo();
