@@ -20,7 +20,6 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
-import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -50,6 +49,7 @@ public class ResumeUploadFileSharingSession extends OriginatingHttpFileSharingSe
         // Session ID must be equal to the FT HTTP initial one
      	setSessionID(resumeUpload.getSessionId());
      	getUploadManager().setTid( resumeUpload.getTid() );
+     	this.resumeFT = resumeUpload;
     }
 
     /**
