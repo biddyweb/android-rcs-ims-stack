@@ -20,6 +20,7 @@ package com.orangelabs.rcs.core.ims.service.im.filetransfer.http;
 import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.provider.fthttp.FtHttpResumeDaoImpl;
 import com.orangelabs.rcs.provider.fthttp.FtHttpResumeUpload;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -75,5 +76,10 @@ public class ResumeUploadFileSharingSession extends OriginatingHttpFileSharingSe
             handleError(new FileSharingError(FileSharingError.UNEXPECTED_EXCEPTION, e.getMessage()));
         }
     }
+    
+	@Override
+	public void uploadStarted() {
+        // Upload entry already created in fthttp table
+	}
 
 }

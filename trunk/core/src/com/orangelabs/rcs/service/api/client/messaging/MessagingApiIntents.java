@@ -48,18 +48,22 @@ public interface MessagingApiIntents {
      */
 	public final static String FILE_TRANSFER_INVITATION = "com.orangelabs.rcs.messaging.FILE_TRANSFER_INVITATION";
 
-    /**
-     * Intent broadcasted when an outgoing HTTP file transfer invitation has been resumed
-     * 
-     * <p>The intent will have the following extra values:
-     * <ul>
-     *   <li><em>contact</em> - Contact phone number.</li>
-     *   <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
-     *   <li><em>sessionId</em> - Session ID of the file transfer session.</li>
-     *   <li><em>isGroupTransfer</em> - Boolean indicating if it's a group file transfer.</li>
-     * </ul>
-     * </ul>
-     */
+	/**
+	 * Intent broadcasted when an outgoing HTTP file transfer invitation has been resumed
+	 * 
+	 * <p>
+	 * The intent will have the following extra values:
+	 * <ul>
+	 * <li><em>contact</em> - Contact phone number.</li>
+	 * <li><em>contactDisplayname</em> - Display name associated to the contact.</li>
+	 * <li><em>sessionId</em> - Session ID of the file transfer session.</li>
+	 * <li><em>isGroupTransfer</em> - Boolean indicating if it's a group file transfer.</li>
+	 * <li><em>filename</em> - Name of the file.</li>
+	 * <li><em>filesize</em> - Size of the file in bytes.</li>
+	 * <li><em>filetype</em> - Type of file encoding.</li>
+	 * <li><em>thumbnail</em> - Path for the file thumbnail.</li>
+	 * </ul>
+	 */
     public final static String FILE_TRANSFER_OUTGOING_RESUMING = "com.orangelabs.rcs.messaging.FILE_TRANSFER_OUTGOING_RESUMING";
 
     /**

@@ -841,6 +841,10 @@ public class HttpUploadManager extends HttpTransferManager {
 			if (authHeaders.length == 0) {
 				throw new IOException("headers malformed in 401 response");
 			}
+			if (auth == null) {
+				auth = new HttpAuthenticationAgent(getHttpServerLogin(), getHttpServerPwd());
+				auth.readWwwAuthenticateHeader(authHeaders[0].getValue());
+			}
 			auth.readWwwAuthenticateHeader(authHeaders[0].getValue());
 			return sendGetInfo(suffix, true);
 		case 200:
