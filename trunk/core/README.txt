@@ -556,7 +556,7 @@ Notes:
 -------
 - This release runs from Android 2.x release.
 - TLS runs from Android 2.3 release.
-
+- restriction: HTTP upload resume is not managed for group file transfer
 
 Contact:
 --------

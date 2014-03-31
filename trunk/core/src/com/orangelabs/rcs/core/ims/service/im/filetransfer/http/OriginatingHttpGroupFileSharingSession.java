@@ -233,8 +233,9 @@ public class OriginatingHttpGroupFileSharingSession extends HttpFileTransferSess
 
 	@Override
 	public void uploadStarted() {
-        // Create upload entry in fthttp table
-        resumeFT = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
-        FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
+		// TODO restriction : FT HTTP upload resume is not managed
+//        // Create upload entry in fthttp table
+//        resumeFT = new FtHttpResumeUpload(this, uploadManager.getTid(),getThumbnail(),false);
+//        FtHttpResumeDaoImpl.getInstance().insert(resumeFT);
 	}
 }
