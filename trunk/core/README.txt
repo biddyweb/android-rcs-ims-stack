@@ -17,6 +17,7 @@ See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/i
 
 V2.5.17
 - Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
+- Issue 196		Stack: No HTTP File transfer resume after this one is interrupted
 - Issue 200		Stack: FToHTTP - Cannot download file in sequential way
 - Issue 229		Stack: BB Impl Guideline ID_4_8 not reflected
 - Issue 231		Stack: Wrong value for Route Header in ReInvite request (case IPCall/AddVideo request)
