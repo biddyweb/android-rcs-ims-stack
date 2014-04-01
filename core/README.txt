@@ -1,13 +1,14 @@
 README - RCS Android client
 Release 2.5.17
 
-The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source librairies:
+The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source libraries:
  - NIST SIP: see LICENSE-NIST.txt.
  - DNS Java: see LICENSE-DNS.txt.
  - The Legion Of The Bouncy Castle: see LICENSE-BOUNCYCASTLE.txt.
 
 
 News:
+- FToHTTP Pause & resume automatic management after service reconnection. 
 
 Bugs fixed:
 -----------
@@ -29,12 +30,12 @@ V2.5.17
 - Issue 243		Stack: Simultaneous image share & video share failing
 - Issue 244		Stack: FT HTTP: wrong saving of downloaded files
 - Issue 247		Stack: Core crash upon SMS reception
-- Issue 250     Stack: GC rejoin INVITE lacks of subject header
+- Issue 250		Stack: GC rejoin INVITE lacks of subject header
 - Issue 251		Stack: FT MAX SIZE - Receiver sends 603 DECLINE instead of 403 FORBIDDEN
 - Issue 252		Stack: Error management of OptionsRequestTask sendOptions is not good
 - Issue 254		Stack: FT HTTP - Receiver sends 603 DECLINE after 200OK
-- Issue 255     Stack: Optimize determination of own IP address
-- Issue 258     Stack: FToHTTP requests should use the same User-Agent header as any other request
+- Issue 255		Stack: Optimize determination of own IP address
+- Issue 258		Stack: FToHTTP requests should use the same User-Agent header as any other request
 
 V2.5.16
 - Issue 201		Stack: When rejoining or restarting a group chat, we receive notifications for events already displayed
@@ -46,12 +47,12 @@ V2.5.16
 - Issue 210		Stack: FTHTTP-GC wrong sender in notification
 - Issue 211		Stack: Provisioning : some parameters are not reloaded on Service restart but on Application Kill/Start
 - Issue 213		Stack: Group Chat: Notify with status "dialing-in" & "dialing-out"
-- Issue 219 	Stack: When unlinking RCS contacts in address book, they appear as "unknown"
+- Issue 219		Stack: When unlinking RCS contacts in address book, they appear as "unknown"
 - Issue 223		Stack: OPTIONS are not checked by receiver, when sender non-gracefully terminate the video share
 - Issue 224		Stack: Failed message from the INVITE will silently marked as failed w/o updating the UI/API
 - Issue 226		Stack: Missing "P-Preferred-Service" header in IP Voice call INVITE SIP request
 - Issue 227		Stack: Upgrade to Video of an IP Voice call is accepted even if Video Capability is disabled
-- Issue 228     Stack: FToHTTP file content type is based on extension rather than MIME type
+- Issue 228		Stack: FToHTTP file content type is based on extension rather than MIME type
 
 V2.5.15
 - Issue 182		Stack: Exception in receiving file transfer if header byte-range is in format like 1-*/123456
