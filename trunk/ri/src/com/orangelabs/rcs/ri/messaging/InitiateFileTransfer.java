@@ -19,6 +19,7 @@
 package com.orangelabs.rcs.ri.messaging;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -47,6 +48,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
@@ -58,6 +60,7 @@ import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
+import com.orangelabs.rcs.service.api.client.ClientApiListener;
 import com.orangelabs.rcs.service.api.client.contacts.ContactsApi;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferEventListener;
 import com.orangelabs.rcs.service.api.client.messaging.IFileTransferSession;
@@ -69,7 +72,7 @@ import com.orangelabs.rcs.utils.logger.Logger;
  * 
  * @author jexa7410
  */
-public class InitiateFileTransfer extends Activity {
+public class InitiateFileTransfer extends Activity implements ClientApiListener {
 	/**
 	 * Activity result constants
 	 */
@@ -107,6 +110,27 @@ public class InitiateFileTransfer extends Activity {
      */
     private IFileTransferSession transferSession = null;
     
+    
+    /**
+     * The FT is being resumed
+     */
+    private boolean resuming = false;
+	
+	/**
+	 * Session ID
+	 */
+	private String sessionId;
+	
+	/**
+	 * Remote Contact
+	 */
+	private String remoteContact;
+	
+	/**
+	 * fired a boolean value updated atomically to quit only once
+	 */
+	private AtomicBoolean fired = new AtomicBoolean(false);
+	
     /**
      * Progress dialog
      */
@@ -118,7 +142,17 @@ public class InitiateFileTransfer extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        
+        if (getIntent().getAction() != null) {
+        	resuming = getIntent().getAction().equals("FT_OUTGOING_RESUME");
+        	if (resuming) {
+        		sessionId = getIntent().getStringExtra("sessionId");
+            	remoteContact = getIntent().getStringExtra("contact");
+            	filename = getIntent().getStringExtra("filename");
+            	filesize = getIntent().getLongExtra("filesize", 0L);
+        	}
+        }
+        
         RcsSettings.createInstance(getApplicationContext());
 
         // Set layout
@@ -130,66 +164,104 @@ public class InitiateFileTransfer extends Activity {
         
         // Set contact selector
         Spinner spinner = (Spinner)findViewById(R.id.contact);
-        spinner.setAdapter(Utils.createRcsContactListAdapter(this));
+        if (resuming) {
+        	ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, new String[] {remoteContact});
+        	spinner.setAdapter(adapter);
+        } else {
+        	spinner.setAdapter(Utils.createRcsContactListAdapter(this));
+        }
 
         // Set buttons callback
         Button inviteBtn = (Button)findViewById(R.id.invite_btn);
         inviteBtn.setOnClickListener(btnInviteListener);
     	inviteBtn.setEnabled(false);
+    	if (resuming) {
+        	inviteBtn.setVisibility(View.INVISIBLE);
+    	}
+    	
         Button selectBtn = (Button)findViewById(R.id.select_btn);
         selectBtn.setOnClickListener(btnSelectListener);
+        selectBtn.setEnabled(!resuming);
+    	if (resuming) {
+            selectBtn.setVisibility(View.INVISIBLE);
+    	}
+    	
         Button pauseBtn = (Button)findViewById(R.id.pause_btn);
         pauseBtn.setOnClickListener(btnPauseListener);
         pauseBtn.setEnabled(false);
+        
         Button resumeBtn = (Button)findViewById(R.id.resume_btn);
         resumeBtn.setOnClickListener(btnResumeListener);
         resumeBtn.setEnabled(false);
                
         // Disable button if no contact available
-        if (spinner.getAdapter().getCount() == 0) {
+        if (spinner.getAdapter().getCount() == 0 || resuming) {
         	selectBtn.setEnabled(false);
         }
         	        
-        // Disable thumbnail option if not supported
-        CheckBox ftThumb = (CheckBox)findViewById(R.id.ft_thumb);
-        if (!RcsSettings.getInstance().isFileTransferThumbnailSupported()) {
-        	ftThumb.setEnabled(false);
-        }        	
+		// Disable thumbnail option if not supported
+		CheckBox ftThumb = (CheckBox) findViewById(R.id.ft_thumb);
+		if (resuming) {
+			if (getIntent().getByteArrayExtra("thumbnail") != null)
+				ftThumb.setChecked(true);
+			ftThumb.setEnabled(false);
+		} else {
+			if (!RcsSettings.getInstance().isFileTransferThumbnailSupported()) {
+				ftThumb.setEnabled(false);
+			}
+		}
 
-        // Instanciate messaging API
+        // Instantiate messaging API
         messagingApi = new MessagingApi(getApplicationContext());
+        messagingApi.addApiEventListener(this);
         messagingApi.connectApi();
-        
-        // Instantiate contact API
-        contactsApi = new ContactsApi(getApplicationContext());
-        
-        // Select the corresponding contact from the intent
-        Intent intent = getIntent();
-        Uri contactUri = intent.getData();
-    	if (contactUri != null) {
-	        Cursor cursor = managedQuery(contactUri, null, null, null, null);
-	        if (cursor.moveToNext()) {
-	        	String selectedContact = cursor.getString(cursor.getColumnIndex(Data.DATA1));
-	            if (selectedContact != null) {
-	    	        for (int i=0;i<spinner.getAdapter().getCount();i++) {
-	    	        	MatrixCursor cursor2 = (MatrixCursor)spinner.getAdapter().getItem(i);
-	    	        	if (selectedContact.equalsIgnoreCase(cursor2.getString(1))) {
-	    	        		// Select contact
-	    	                spinner.setSelection(i);
-	    	                spinner.setEnabled(false);
-	    	                break;
-	    	        	}
-	    	        }
-	            }
-	        }
-	        cursor.close();
-        }        
+
+        if (resuming) {
+			TextView uriEdit = (TextView) findViewById(R.id.uri);
+			TextView sizeEdit = (TextView) findViewById(R.id.size);
+			sizeEdit.setText((filesize / 1024) + " KB");
+			uriEdit.setText(filename);
+        } else {
+            // Instantiate contact API
+            contactsApi = new ContactsApi(getApplicationContext());
+        	// Select the corresponding contact from the intent
+        	Intent intent = getIntent();
+        	Uri contactUri = intent.getData();
+			if (contactUri != null) {
+				Cursor cursor = managedQuery(contactUri, null, null, null, null);
+				if (cursor.moveToNext()) {
+					String selectedContact = cursor.getString(cursor.getColumnIndex(Data.DATA1));
+					if (selectedContact != null) {
+						for (int i = 0; i < spinner.getAdapter().getCount(); i++) {
+							MatrixCursor cursor2 = (MatrixCursor) spinner.getAdapter().getItem(i);
+							if (selectedContact.equalsIgnoreCase(cursor2.getString(1))) {
+								// Select contact
+								spinner.setSelection(i);
+								spinner.setEnabled(false);
+								break;
+							}
+						}
+					}
+				}
+				cursor.close();
+			}
+		}
+    	if (logger.isActivated()) {
+    		if (resuming) {
+    			logger.debug( "onCreate (filename="+filename+") (filesize="+filesize+") (remoteContact="+remoteContact+")" );
+    		} else {
+    			logger.debug( "onCreate");
+    		}
+    	}
     }
     
     @Override
     public void onDestroy() {
+    	if (logger.isActivated()) {
+    		logger.debug("onDestroy");
+    	}
+    	hideProgressDialog();
     	super.onDestroy();
-
         // Remove session listener
         if (transferSession != null) {
         	try {
@@ -197,7 +269,7 @@ public class InitiateFileTransfer extends Activity {
         	} catch(Exception e) {
         	}
         }
-
+    	messagingApi.removeApiEventListener(this);
         // Disconnect messaging API
         messagingApi.disconnectApi();
     }
@@ -226,55 +298,43 @@ public class InitiateFileTransfer extends Activity {
             }
     	}
 	};
-	
+
     /**
      * Pause button listener
      */
-    private OnClickListener btnPauseListener = new OnClickListener() {
-        public void onClick(View v) {
-        	Button resumeBtn = (Button)findViewById(R.id.resume_btn);
-        	resumeBtn.setEnabled(true);
-        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
-        	pauseBtn.setEnabled(false);
-        	
-        	try {
+	private OnClickListener btnPauseListener = new OnClickListener() {
+		public void onClick(View v) {
+			Button resumeBtn = (Button) findViewById(R.id.resume_btn);
+			resumeBtn.setEnabled(true);
+			Button pauseBtn = (Button) findViewById(R.id.pause_btn);
+			pauseBtn.setEnabled(false);
+			try {
 				transferSession.pauseSession();
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
-					}
-				});
+				showDialogAndFinish(R.string.label_invitation_failed);
 			}
-    	}
+		}
 	};
-      
-	
+
     /**
      * Resume button listener
      */
-    private OnClickListener btnResumeListener = new OnClickListener() {
-        public void onClick(View v) {
-        	Button resumeBtn = (Button)findViewById(R.id.resume_btn);
-        	resumeBtn.setEnabled(false);
-        	Button pauseBtn = (Button)findViewById(R.id.pause_btn);
-        	pauseBtn.setEnabled(true);
-        	
-        	try {
+	private OnClickListener btnResumeListener = new OnClickListener() {
+		public void onClick(View v) {
+			Button resumeBtn = (Button) findViewById(R.id.resume_btn);
+			resumeBtn.setEnabled(false);
+			Button pauseBtn = (Button) findViewById(R.id.pause_btn);
+			pauseBtn.setEnabled(true);
+			try {
 				transferSession.resumeSession();
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-				handler.post(new Runnable(){
-					public void run(){
-						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
-					}
-				});
+				showDialogAndFinish(R.string.label_invitation_failed);
 			}
-    	}
+		}
 	};
+	
 	/**
 	 * Initiate transfer
 	 */
@@ -289,22 +349,18 @@ public class InitiateFileTransfer extends Activity {
         final boolean thumbnail = ftThumb.isChecked();
 
         // Initiate session in background
-        Thread thread = new Thread() {
+        new Thread() {
         	public void run() {
             	try {
             		// Initiate transfer
             		transferSession = messagingApi.transferFile(remote, filename, thumbnail);
         	        transferSession.addSessionListener(cshSessionListener);
             	} catch(Exception e) {
-					handler.post(new Runnable(){
-						public void run(){
-							Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_failed));
-						}
-					});
+            		e.printStackTrace();
+    				showDialogAndFinish(R.string.label_invitation_failed);
             	}
         	}
-        };
-        thread.start();
+        }.start();
 
         Button pauseBtn = (Button)findViewById(R.id.pause_btn);
         pauseBtn.setEnabled(true);
@@ -316,7 +372,7 @@ public class InitiateFileTransfer extends Activity {
 				Toast.makeText(InitiateFileTransfer.this, getString(R.string.label_ft_initiation_canceled), Toast.LENGTH_SHORT).show();
 				quitSession();
 			}
-		});            
+		});
 
         // Disable UI
         spinner.setEnabled(false);
@@ -560,11 +616,13 @@ public class InitiateFileTransfer extends Activity {
     private IFileTransferEventListener cshSessionListener = new IFileTransferEventListener.Stub() {
 		// Session is started
 		public void handleSessionStarted() {
+			if (logger.isActivated()) {
+	    		logger.debug("handleSessionStarted");
+	    	}
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					
 					// Display session status
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("started");
@@ -574,26 +632,26 @@ public class InitiateFileTransfer extends Activity {
 	
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
-			handler.post(new Runnable() { 
+			if (logger.isActivated()) {
+	    		logger.warn("handleSessionAborted (reason="+reason+")");
+	    	}
+			handler.post(new Runnable() {
 				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-
 					// Display message
-					Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_sharing_aborted));
+					showDialogAndFinish(R.string.label_sharing_aborted);
 				}
 			});
 		}
 	    
 		// Session has been terminated by remote
 		public void handleSessionTerminatedByRemote() {
-			handler.post(new Runnable() { 
+			if (logger.isActivated()) {
+	    		logger.info("handleSessionTerminatedByRemote");
+	    	}
+			handler.post(new Runnable() {
 				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-					
 					// Display session status
-					Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_sharing_terminated_by_remote));
+					showDialogAndFinish(R.string.label_sharing_terminated_by_remote);
 				}
 			});
 		}
@@ -610,32 +668,27 @@ public class InitiateFileTransfer extends Activity {
 	
 		// Transfer error
 		public void handleTransferError(final int error) {
-			handler.post(new Runnable() { 
-				public void run() {
-					// Hide progress dialog
-					hideProgressDialog();
-					
-					// Display error
-					if (error == FileSharingError.MEDIA_TRANSFER_FAILED) {
-						TextView statusView = (TextView)findViewById(R.id.progress_status);
-						statusView.setText("error");
-					} else
-					if (error == FileSharingError.SESSION_INITIATION_DECLINED) {
-						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_invitation_declined));
-					} else
-                    if (error == FileSharingError.MEDIA_SIZE_TOO_BIG) {
-                        Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed_too_big));
-                    }  if (error == FileSharingError.NOT_ENOUGH_STORAGE_SPACE) {
-                        Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed_capacity_too_small));
-                    } else {
-						Utils.showMessageAndExit(InitiateFileTransfer.this, getString(R.string.label_transfer_failed, error));
-					}
-				}
-			});
+			if (logger.isActivated()) {
+				logger.warn("handleTransferError (error=" + error + ")");
+			}
+			// Display error
+			if (error == FileSharingError.SESSION_INITIATION_DECLINED) {
+				showDialogAndFinish(R.string.label_invitation_declined);
+			} else if (error == FileSharingError.MEDIA_SIZE_TOO_BIG) {
+				showDialogAndFinish(R.string.label_transfer_failed_too_big);
+			}
+			if (error == FileSharingError.NOT_ENOUGH_STORAGE_SPACE) {
+				showDialogAndFinish(R.string.label_transfer_failed_capacity_too_small);
+			} else {
+				showDialogAndFinish( getString(R.string.label_transfer_failed, error));
+			}
 		}
 	
 		// File has been transferred
 		public void handleFileTransfered(String filename) {
+			if (logger.isActivated()) {
+	    		logger.debug("handleFileTransfered (filename="+filename+")");
+	    	}
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
@@ -644,17 +697,24 @@ public class InitiateFileTransfer extends Activity {
 					// Display transfer progress
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("transferred");
+					 // Hide buttons Pause and Resume
+			        Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+			        pauseBtn.setVisibility(View.INVISIBLE);
+			        Button resumeBtn = (Button)findViewById(R.id.resume_btn);
+			        resumeBtn.setVisibility(View.INVISIBLE);
 				}
 			});
 		}
 
 
 		public void handleFileTransferPaused() throws RemoteException {
+			if (logger.isActivated()) {
+	    		logger.debug("handleFileTransferPaused");
+	    	}
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					
 					// Display session status
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("paused");
@@ -664,11 +724,13 @@ public class InitiateFileTransfer extends Activity {
 
 		@Override
 		public void handleFileTransferResumed() throws RemoteException {
+			if (logger.isActivated()) {
+	    		logger.debug("handleFileTransferResumed");
+	    	}
 			handler.post(new Runnable() { 
 				public void run() {
 					// Hide progress dialog
 					hideProgressDialog();
-					
 					// Display session status
 					TextView statusView = (TextView)findViewById(R.id.progress_status);
 					statusView.setText("Resumed");
@@ -706,8 +768,11 @@ public class InitiateFileTransfer extends Activity {
      * Quit the session
      */
     private void quitSession() {
+    	if (logger.isActivated()) {
+    		logger.debug("quitSession");
+    	}
 		// Stop session
-        Thread thread = new Thread() {
+        new Thread() {
         	public void run() {
             	try {
                     if (transferSession != null) {
@@ -715,12 +780,12 @@ public class InitiateFileTransfer extends Activity {
                 		transferSession.cancelSession();
                     }
             	} catch(Exception e) {
+            	} finally {
+            		transferSession = null;
             	}
-            	transferSession = null;
         	}
-        };
-        thread.start();
-    	
+        }.start();
+        hideProgressDialog();
         // Exit activity
 		finish();
     }    
@@ -733,7 +798,6 @@ public class InitiateFileTransfer extends Activity {
             	quitSession();
                 return true;
         }
-
         return super.onKeyDown(keyCode, event);
     }    
 
@@ -753,5 +817,58 @@ public class InitiateFileTransfer extends Activity {
 				break;
 		}
 		return true;
+	}
+
+	@Override
+	public void handleApiConnected() {
+		if (logger.isActivated()) {
+			logger.debug("handleApiConnected");
+		}
+		if (!resuming)
+			return;
+		try {
+			// Get the file transfer session
+			transferSession = messagingApi.getFileTransferSession(sessionId);
+			if (transferSession == null) {
+				if (logger.isActivated()) {
+					logger.debug("Session not found or expired");
+				}
+				// Session not found or expired
+				showDialogAndFinish(R.string.label_session_has_expired);
+				return;
+			}
+			transferSession.addSessionListener(cshSessionListener);
+	        Button pauseBtn = (Button)findViewById(R.id.pause_btn);
+	        pauseBtn.setEnabled(true);
+		} catch (Exception e) {
+			if (logger.isActivated()) {
+				logger.error("Exception occurred", e);
+			}
+			showDialogAndFinish(R.string.label_api_failed);
+		}
+	}
+
+	@Override
+	public void handleApiDisabled() {
+		showDialogAndFinish(R.string.label_api_disabled);
+	}
+
+	@Override
+	public void handleApiDisconnected() {
+		if (logger.isActivated()) {
+			logger.warn("handleApiDisconnected");
+		}
+		// Service has been disconnected
+		showDialogAndFinish(R.string.label_api_disconnected);
+	}
+	
+	private void showDialogAndFinish(int msg) {
+		showDialogAndFinish(getString(msg));
+	}
+	
+	private void showDialogAndFinish(String msg) {
+		if (fired.compareAndSet(false, true)) {
+			Utils.ShowDialogAndFinish(InitiateFileTransfer.this, msg);
+		}
 	}
 }

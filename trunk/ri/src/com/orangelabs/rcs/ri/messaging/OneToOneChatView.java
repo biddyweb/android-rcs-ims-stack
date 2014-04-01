@@ -130,9 +130,7 @@ public class OneToOneChatView extends ChatView {
 						}
 						handler.post(new Runnable() {
 							public void run() {
-								if (!isInBackground) {
-									Utils.showMessageAndExit(OneToOneChatView.this, getString(R.string.label_invitation_failed));
-								}
+								Utils.showMessageAndExit(OneToOneChatView.this, getString(R.string.label_invitation_failed));
 							}
 						});
 					}

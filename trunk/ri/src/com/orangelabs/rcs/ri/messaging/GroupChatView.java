@@ -97,9 +97,7 @@ public class GroupChatView extends ChatView {
 					if (logger.isActivated()) {
 						logger.error("Exception occurred",e);
 					}
-					if (!isInBackground) {
-						Utils.ShowDialogAndFinish(GroupChatView.this, getString(R.string.label_invitation_failed));
-					}
+					Utils.ShowDialogAndFinish(GroupChatView.this, getString(R.string.label_invitation_failed));
 				}
 			}
 		}.start();

@@ -216,6 +216,12 @@
 		    	<action android:name="com.orangelabs.rcs.messaging.CHAT_SESSION_REPLACED"/>
             </intent-filter>
         </receiver>
+        
+		<receiver android:name=".messaging.FileTransferResumeReceiver">
+            <intent-filter>
+		    	<action android:name="com.orangelabs.rcs.messaging.FILE_TRANSFER_OUTGOING_RESUMING"/>
+            </intent-filter>
+        </receiver>
 
         <activity android:name=".messaging.ReceiveChat"/>
 

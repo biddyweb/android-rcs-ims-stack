@@ -212,10 +212,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 
     @Override
     public void onDestroy() {
-    	super.onDestroy();
     	if (logger.isActivated()) {
 			logger.debug("onDestroy");
 		}
+        hideProgressDialog();
+    	super.onDestroy();
 
         // Remove session listener
         if (chatSession != null) {
@@ -225,7 +226,6 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
         		// Intentionally blank
         	}
         }
-
         // Remove delivery listener
     	try {
     		messagingApi.removeMessageDeliveryListener(deliveryListener);
@@ -234,13 +234,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 				logger.error("Exception occurred" ,e);
 			}
     	}
-
         // Disconnect messaging API
         messagingApi.removeApiEventListener(this);
         messagingApi.removeImsEventListener(this);
         messagingApi.disconnectApi();
-        
-        hideProgressDialog();
+
     }
     
     @Override
@@ -249,7 +247,6 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     	if (logger.isActivated()) {
 			logger.debug("onPause");
 		}
-    	
     	// Update background flag
     	isInBackground = true;
     }
@@ -260,10 +257,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
     	if (logger.isActivated()) {
 			logger.debug("onResume");
 		}
-    	
     	// Update background flag
     	isInBackground = false;
-    	
     	// Mark all messages that were received while we were in background as "displayed" 
     	for (int i=0;i<imReceivedInBackgroundToBeDisplayed.size();i++){
     		InstantMessage msg = imReceivedInBackgroundToBeDisplayed.get(i);
@@ -554,9 +549,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * API disabled
      */
     public void handleApiDisabled() {
-    	if (!isInBackground) {
-    		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disabled));
-    	}
+    	Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disabled));
     }
     
     /**
@@ -583,9 +576,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 
 		    			// Register to receive session events
 						if (chatSession == null) {
-							if (!isInBackground) {
-								Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_session_has_expired));
-							}
+							Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_session_has_expired));
 			    			return;
 						}
 		    			
@@ -609,9 +600,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 	    			if (logger.isActivated()) {
 	    				logger.error( "Exception occurred",e);
 	    			}
-	    			if (!isInBackground) {
-	    				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_failed));
-	    			}
+	    			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_failed));
 	    		}
 			}
 		});
@@ -632,9 +621,7 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * API disconnected
      */
 	public void handleApiDisconnected() {
-		if (!isInBackground) {
-			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disconnected));
-		}
+		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_api_disconnected));
 	}
     
     /**
@@ -649,10 +636,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
      * @param reason Disconnection reason
      */
 	public void handleImsDisconnected(int reason) {
-		if (!isInBackground) {
-			// IMS has been disconnected
-			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_ims_disconnected));
-		}
+		// IMS has been disconnected
+		Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_ims_disconnected));
 	}
     
     /**
@@ -702,10 +687,8 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		// Session has been aborted
 		public void handleSessionAborted(int reason) {
 			hideProgressDialog(ChatView.this);
-			if (!isInBackground) {
-				// Session aborted
-				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_aborted));
-			}
+			// Session aborted
+			Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_aborted));
 		}
 	    
 		// Session has been terminated by remote
@@ -788,13 +771,11 @@ public abstract class ChatView extends ListActivity implements OnClickListener, 
 		// Chat error
 		public void handleImError(final int error) {
 			hideProgressDialog(ChatView.this);
-			if (!isInBackground) {
-				// Display error
-				if (error == ChatError.SESSION_INITIATION_DECLINED) {
-					Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_invitation_declined));
-				} else {
-					Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_failed, error));
-				}
+			// Display error
+			if (error == ChatError.SESSION_INITIATION_DECLINED) {
+				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_invitation_declined));
+			} else {
+				Utils.ShowDialogAndFinish(ChatView.this, getString(R.string.label_chat_failed, error));
 			}
 		}
 		
