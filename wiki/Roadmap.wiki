@@ -6,11 +6,9 @@ RCS-e open source stack roadmap
 
 = Roadmap 2014 =
 
- * *March 24: Sprint 18, v2.5.17
-  * Pause & resume automatic management after service reconnection.
-  * Backup & restore for history logs.
+ * *April 01: Sprint 18, v2.5.17
+  * FToHTTP Pause & resume automatic management after service reconnection.
   * Code Review.
-  * Refactoring.
   * Bug fixes.
 *
  * February 24: Sprint 17, v2.5.16
