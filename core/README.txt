@@ -16,6 +16,7 @@ See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
 
 V2.5.18
+- Issue 79		Stack: Content-Disposition header position in CPIM messages
 
 V2.5.17
 - Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
