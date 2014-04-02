@@ -1,5 +1,5 @@
 README - RCS Android client
-Release 2.5.17
+Release 2.5.18
 
 The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the following open source libraries:
  - NIST SIP: see LICENSE-NIST.txt.
@@ -8,13 +8,14 @@ The RCS stack is under Apache 2 license (see LICENSE-2.0.txt) and uses the follo
 
 
 News:
-- FToHTTP Pause & resume automatic management after service reconnection. 
 
 Bugs fixed:
 -----------
 
 See Mantis details at http://container.rd.francetelecom.com
 See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/issues/list
+
+V2.5.18
 
 V2.5.17
 - Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
