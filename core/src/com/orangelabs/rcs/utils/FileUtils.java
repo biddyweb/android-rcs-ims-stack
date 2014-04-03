@@ -109,4 +109,54 @@ public class FileUtils {
 			destFile.setLastModified(srcFile.lastModified());
 	}
 
+	/**
+	 * get the oldest file from the list
+	 * 
+	 * @param files
+	 *            list of files
+	 * @return the oldest one or null
+	 */
+	public static File getOldestFile(final File[] files) {
+		if (files == null || files.length == 0) {
+			return null;
+		}
+		File result = null;
+		for (File file : files) {
+			if (result == null) {
+				result = file;
+			} else {
+				if (file.lastModified() < result.lastModified()) {
+					result = file;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Delete a directory recursively
+	 * 
+	 * @param dir
+	 *            the directory
+	 * @throws InvalidArgumentException
+	 */
+	public static void deleteDirectory(File dir) throws InvalidArgumentException {
+		if (dir == null) {
+			throw new InvalidArgumentException("Directory is null");
+		}
+		if (dir.isDirectory()) {
+			String[] children = dir.list();
+			for (String childname : children) {
+				File child = new File(dir, childname);
+				if (child.isDirectory()) {
+					deleteDirectory(child);
+					child.delete();
+				} else {
+					child.delete();
+				}
+			}
+			dir.delete();
+		}
+	}
+
 }
