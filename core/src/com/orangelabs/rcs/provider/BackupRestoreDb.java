@@ -109,7 +109,7 @@ public class BackupRestoreDb {
 	 *            the account
 	 * @return true if save succeeded
 	 */
-	public static boolean saveAccountProviders(final File databasesDir, final String account) {
+	public static boolean saveAccountDatabases(final File databasesDir, final String account) {
 		if (checkBackupRestoreArguments(databasesDir, account) == false) {
 			return false;
 		}
@@ -117,7 +117,9 @@ public class BackupRestoreDb {
 		String[] listOfDbFiles = databasesDir.list(filenameDbFilter);
 		if (listOfDbFiles != null && listOfDbFiles.length > 0) {
 			File dstDir = new File(databasesDir, account);
+			// Iterate over the array of database file names
 			for (String dbFile : listOfDbFiles) {
+				// Create file to be saved
 				File srcFile = new File(databasesDir, dbFile);
 				try {
 					// Copy database file under account directory
@@ -141,7 +143,7 @@ public class BackupRestoreDb {
 	 *            the account
 	 * @return true if restore succeeded
 	 */
-	public static boolean restoreAccountProviders(final File databasesDir, final String account) {
+	public static boolean restoreAccountDatabases(final File databasesDir, final String account) {
 		if (checkBackupRestoreArguments(databasesDir, account) == false) {
 			return false;
 		}
@@ -149,7 +151,9 @@ public class BackupRestoreDb {
 		// Put the names of all files ending with .db in a String array
 		String[] listOfDbFiles = srcDir.list(filenameDbFilter);
 		if (listOfDbFiles != null && listOfDbFiles.length > 0) {
+			// Iterate over the array of database file names
 			for (String dbFile : listOfDbFiles) {
+				// Create file to be restored
 				File srcFile = new File(srcDir, dbFile);
 				try {
 					// Copy database file under database directory
