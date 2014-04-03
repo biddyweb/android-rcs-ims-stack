@@ -386,7 +386,11 @@ public class HttpUploadManager extends HttpTransferManager {
 				} else if (retry) {
 					return sendMultipartPost(resp);
 				} else {
-					throw new IOException("Received " + responseCode + " from server");
+                    if (logger.isActivated()) {
+                        logger.warn("File Upload aborted, Received " + responseCode
+                                + " from server");
+                    }
+                    return null;
 				}
 			} else {
 				if (isPaused()) {
