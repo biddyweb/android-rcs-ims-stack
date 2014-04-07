@@ -74,7 +74,7 @@ public class RcsSettingsProvider extends ContentProvider {
      * Helper class for opening, creating and managing database version control
      */
     private static class DatabaseHelper extends SQLiteOpenHelper {
-        private static final int DATABASE_VERSION = 85;
+        private static final int DATABASE_VERSION = 86;
 
         private Context ctx;
 
@@ -223,9 +223,9 @@ public class RcsSettingsProvider extends ContentProvider {
             addParameter(db, RcsSettingsData.PROVISIONING_TOKEN,				"");
             addParameter(db, RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS,    "");
             addParameter(db, RcsSettingsData.SECONDARY_PROVISIONING_ADDRESS_ONLY,RcsSettingsData.FALSE);
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				Environment.getExternalStorageDirectory() + "/joyn/photos/");
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_VIDEOS,				Environment.getExternalStorageDirectory() + "/joyn/videos/");
-            addParameter(db, RcsSettingsData.DIRECTORY_PATH_FILES,				Environment.getExternalStorageDirectory() + "/joyn/files/");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_PHOTOS,				"/joyn/photos/");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_VIDEOS,				"/joyn/videos/");
+            addParameter(db, RcsSettingsData.DIRECTORY_PATH_FILES,				"/joyn/files/");
             addParameter(db, RcsSettingsData.SECURE_MSRP_OVER_WIFI,	     		RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.SECURE_RTP_OVER_WIFI,				RcsSettingsData.FALSE);
             addParameter(db, RcsSettingsData.CONVERGENT_MESSAGING_UX,			RcsSettingsData.TRUE);
@@ -275,16 +275,24 @@ public class RcsSettingsProvider extends ContentProvider {
         		if (index!=-1) {
         			key = oldDataCursor.getString(index);
         		}
-        		index = oldDataCursor.getColumnIndex(RcsSettingsData.KEY_VALUE);
-        		if (index!=-1) {
-        			value = oldDataCursor.getString(index);
-        		}
-        		if (key!=null && value!=null) {
-	        		ContentValues values = new ContentValues();
-	        		values.put(RcsSettingsData.KEY_KEY, key);
-	        		values.put(RcsSettingsData.KEY_VALUE, value);
-	        		valuesList.add(values);
-        		}
+                if ((oldVersion < 86) && (key.equals(RcsSettingsData.DIRECTORY_PATH_FILES)
+                        || key.equals(RcsSettingsData.DIRECTORY_PATH_PHOTOS)
+                        || key.equals(RcsSettingsData.DIRECTORY_PATH_VIDEOS))) {
+                    // Don't save the previous values of DIRECTORY_PATH
+                    // Nothing to do
+                } else {
+                    // Save all others previous values
+            		index = oldDataCursor.getColumnIndex(RcsSettingsData.KEY_VALUE);
+            		if (index!=-1) {
+            			value = oldDataCursor.getString(index);
+            		}
+            		if (key!=null && value!=null) {
+    	        		ContentValues values = new ContentValues();
+    	        		values.put(RcsSettingsData.KEY_KEY, key);
+    	        		values.put(RcsSettingsData.KEY_VALUE, value);
+    	        		valuesList.add(values);
+            		}
+                }
         	}
             oldDataCursor.close();
 

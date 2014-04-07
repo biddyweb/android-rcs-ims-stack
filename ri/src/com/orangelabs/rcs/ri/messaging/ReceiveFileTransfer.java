@@ -49,6 +49,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -248,8 +249,7 @@ public class ReceiveFileTransfer extends Activity implements ClientApiListener, 
 	 */
 	private static FileSharingError isFileCapacityAcceptable(long fileSize) {
 		boolean fileIsToBig = isFileSizeExceeded(fileSize);
-		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils
-				.getExternalStorageFreeSpace() : false;
+		boolean storageIsTooSmall = fileSize > StorageUtils.getStorageFreeSpace(AndroidFactory.getApplicationContext());
 		if (fileIsToBig) {
 			if (logger.isActivated())
 				logger.warn("File is too big, reject the File Transfer");

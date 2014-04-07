@@ -43,7 +43,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.AggregationExceptions;
@@ -4400,8 +4399,8 @@ public final class ContactsManager {
     			fis.read(buf);
     			String Vcard = new String(buf);
 
-    			fileName = Environment.getExternalStorageDirectory().toString() + File.separator + name + ".vcf";
-    			
+                fileName = RcsSettings.getInstance().getFileRootDirectory() + File.separator + name + ".vcf";
+
     			File vCardFile = new File(fileName);
 
     			if (vCardFile.exists())

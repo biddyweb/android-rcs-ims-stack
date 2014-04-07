@@ -18,6 +18,9 @@
 
 package com.orangelabs.rcs.utils;
 
+import java.io.File;
+
+import android.content.Context;
 import android.os.Environment;
 import android.os.StatFs;
 
@@ -57,5 +60,35 @@ public class StorageUtils {
             freeSpace = blockSize * availableBlocks;
         }
         return freeSpace;
+    }
+
+    /**
+     * Get available space in storage
+     *
+     * @param context application context
+     * @return Available space in bytes
+     */
+    public static long getStorageFreeSpace(Context context) {
+        StatFs stat = new StatFs(getSubpath(context));
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+        return blockSize * availableBlocks;
+    }
+
+    /**
+     * Retrieve the subpath for file
+     *
+     * @param context application context
+     * @return subpath
+     */
+    public static String getSubpath(Context context) {
+        File path = null;
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            path = Environment.getExternalStorageDirectory();
+        }
+        if (path == null) {
+            path = context.getFilesDir();
+        }
+        return path.getPath();
     }
 }

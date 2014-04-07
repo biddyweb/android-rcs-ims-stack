@@ -17,6 +17,7 @@ See Opensource issue details at http://code.google.com/p/android-rcs-ims-stack/i
 
 V2.5.18
 - Issue 79		Stack: Content-Disposition header position in CPIM messages
+- Issue 259		Stack: Folder to save files must not be set to Environment.getExternalStorageDirectory()
 
 V2.5.17
 - Issue 188		Stack: FT HTTP capabilities of remote not reflected correctly
