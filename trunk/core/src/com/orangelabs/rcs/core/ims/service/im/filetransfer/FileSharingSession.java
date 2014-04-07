@@ -4,6 +4,7 @@ import com.orangelabs.rcs.core.content.MmContent;
 import com.orangelabs.rcs.core.ims.service.ImsService;
 import com.orangelabs.rcs.core.ims.service.ImsServiceSession;
 import com.orangelabs.rcs.core.ims.service.im.chat.ListOfParticipant;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.service.api.client.SessionState;
 import com.orangelabs.rcs.utils.StorageUtils;
@@ -202,7 +203,7 @@ public abstract class FileSharingSession extends ImsServiceSession {
 	 */
 	public static FileSharingError isFileCapacityAcceptable(long fileSize) {
 		boolean fileIsToBig = (FileSharingSession.getMaxFileSharingSize() > 0) ? fileSize > FileSharingSession.getMaxFileSharingSize() : false;
-		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? fileSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		boolean storageIsTooSmall = fileSize > StorageUtils.getStorageFreeSpace(AndroidFactory.getApplicationContext());
 		if (fileIsToBig) {
 			if (logger.isActivated()) {
 				logger.warn("File is too big, reject the file transfer");

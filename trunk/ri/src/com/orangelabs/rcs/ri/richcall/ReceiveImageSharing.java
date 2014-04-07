@@ -44,6 +44,7 @@ import android.widget.TextView;
 
 import com.orangelabs.rcs.core.ims.service.im.filetransfer.FileSharingError;
 import com.orangelabs.rcs.core.ims.service.richcall.ContentSharingError;
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
 import com.orangelabs.rcs.ri.R;
 import com.orangelabs.rcs.ri.utils.Utils;
@@ -154,7 +155,7 @@ public class ReceiveImageSharing extends Activity implements ClientApiListener, 
 	 */
 	private static ContentSharingError isImageCapacityAcceptable(long imageSize) {
 		boolean imageIsToBig = isImageSizeExceeded(imageSize);
-		boolean storageIsTooSmall = (StorageUtils.getExternalStorageFreeSpace() > 0) ? imageSize > StorageUtils.getExternalStorageFreeSpace() : false;
+		boolean storageIsTooSmall = imageSize > StorageUtils.getStorageFreeSpace(AndroidFactory.getApplicationContext());
 		if (imageIsToBig) {
 			if (logger.isActivated())
 				logger.warn("Image is too big, reject the image sharing");

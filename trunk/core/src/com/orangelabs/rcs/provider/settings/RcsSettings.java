@@ -32,7 +32,9 @@ import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
 
+import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.service.api.client.capability.Capabilities;
+import com.orangelabs.rcs.utils.StorageUtils;
 import com.orangelabs.rcs.utils.logger.Logger;
 
 /**
@@ -2559,11 +2561,12 @@ public class RcsSettings {
 	 *  @return Directory path
 	 */
 	public String getPhotoRootDirectory() {
-        String result = Environment.getExternalStorageDirectory().toString();
+        String subpath = StorageUtils.getSubpath(AndroidFactory.getApplicationContext());
+        String result = "";
         if (instance != null) {
             result = readParameter(RcsSettingsData.DIRECTORY_PATH_PHOTOS);
         }
-        return result;
+        return subpath + result;
 	}
 
 	/**
@@ -2583,11 +2586,12 @@ public class RcsSettings {
 	 *  @return Directory path
 	 */
 	public String getVideoRootDirectory() {
-        String result = Environment.getExternalStorageDirectory().toString();
+        String subpath = StorageUtils.getSubpath(AndroidFactory.getApplicationContext());
+        String result = "";
         if (instance != null) {
             result = readParameter(RcsSettingsData.DIRECTORY_PATH_VIDEOS);
         }
-        return result;
+        return subpath + result;
 	}
 	
 	/**
@@ -2606,12 +2610,13 @@ public class RcsSettings {
 	 * 
 	 *  @return Directory path
 	 */
-	public String getFileRootDirectory() {	
-        String result = Environment.getExternalStorageDirectory().toString();
+	public String getFileRootDirectory() {
+        String subpath = StorageUtils.getSubpath(AndroidFactory.getApplicationContext());
+        String result = "";
         if (instance != null) {
             result = readParameter(RcsSettingsData.DIRECTORY_PATH_FILES);
         }
-        return result;
+        return subpath + result;
 	}
     
 	/**
