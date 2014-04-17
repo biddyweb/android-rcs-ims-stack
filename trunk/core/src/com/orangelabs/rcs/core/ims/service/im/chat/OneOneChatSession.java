@@ -86,11 +86,11 @@ public abstract class OneOneChatSession extends ChatSession {
         setWrappedTypes(wrappedTypes);
 	}
 	
-	/**
-	 * Is group chat
-	 * 
-	 * @return Boolean
+
+	/* (non-Javadoc)
+	 * @see com.orangelabs.rcs.core.ims.service.im.chat.ChatSession#isGroupChat()
 	 */
+	@Override
 	public boolean isGroupChat() {
 		return false;
 	}
@@ -127,12 +127,10 @@ public abstract class OneOneChatSession extends ChatSession {
         closeMsrpSession();
     }
     
-	/**
-	 * Send a text message
-	 * 
-	 * @param txt Text message
-	 * @return id Message-ID
+	/* (non-Javadoc)
+	 * @see com.orangelabs.rcs.core.ims.service.im.chat.ChatSession#sendTextMessage(java.lang.String)
 	 */
+    @Override
 	public String sendTextMessage(String txt) {
         boolean useImdn = getImdnManager().isImdnActivated();
         String msgId = IdGenerator.generateMessageID();
@@ -176,12 +174,11 @@ public abstract class OneOneChatSession extends ChatSession {
         return msgId;
 	}
 
-	/**
-	 * Send a geoloc message
-	 * 
-	 * @param geoloc Geoloc info
-     * @return id Message-ID
+
+	/* (non-Javadoc)
+	 * @see com.orangelabs.rcs.core.ims.service.im.chat.ChatSession#sendGeolocMessage(com.orangelabs.rcs.service.api.client.messaging.GeolocPush)
 	 */
+    @Override
 	public String sendGeolocMessage(GeolocPush geoloc) {
 		boolean useImdn = getImdnManager().isImdnActivated();
         String msgId = IdGenerator.generateMessageID();
@@ -226,11 +223,11 @@ public abstract class OneOneChatSession extends ChatSession {
         return msgId;
 	}
 	
-	/**
-	 * Send is composing status
-	 * 
-	 * @param status Status
+
+	/* (non-Javadoc)
+	 * @see com.orangelabs.rcs.core.ims.service.im.chat.ChatSession#sendIsComposingStatus(boolean)
 	 */
+	@Override
 	public void sendIsComposingStatus(boolean status) {
 		String content = IsComposingInfo.buildIsComposingInfo(status);
 		String msgId = IdGenerator.generateMessageID();
