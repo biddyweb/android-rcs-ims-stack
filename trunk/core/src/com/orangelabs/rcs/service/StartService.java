@@ -434,7 +434,7 @@ public class StartService extends Service {
 				// (-1) : RCS service is permanently disabled. SIM change is required
 				if (hasChangedAccount()) {
 					// Start provisioning as a first launch
-					HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), true, user);
+					HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), true, user, boot);
 				} else {
 					if (logger.isActivated()) {
 						logger.debug("Provisioning is blocked with this account");
@@ -443,17 +443,17 @@ public class StartService extends Service {
 			} else {
 				if (isFirstLaunch() || hasChangedAccount()) {
 					// First launch: start the auto config service with special tag
-					HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), true, user);
+					HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), true, user, boot);
 				} else {
 					if (ProvisioningInfo.Version.DISABLED_NOQUERY.equals(version)) {
 						// -2 : RCS client and configuration query is disabled
 						if (user) {
 							// Only start query if requested by user action
-							HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), false, user);
+							HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), false, user, boot);
 						}
 					} else {
 						// Start or restart the HTTP provisioning service
-						HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), false, user);
+						HttpsProvisioningService.startHttpsProvisioningService(getApplicationContext(), false, user, boot);
 						if (ProvisioningInfo.Version.DISABLED_DORMANT.equals(version)) {
 							// -3 : RCS client is disabled but configuration query is not
 						} else {
