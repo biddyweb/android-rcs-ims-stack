@@ -54,6 +54,11 @@ public class HttpsProvisioningService extends Service {
     private static final String USER_KEY = "user";
 
     /**
+     * Intent key - Provisioning requested after (re)boot
+     */
+    private static final String BOOT_KEY = "boot";
+
+    /**
      * Retry Intent
      */
     private PendingIntent retryIntent = null;
@@ -91,9 +96,11 @@ public class HttpsProvisioningService extends Service {
 
 		boolean first = false;
 		boolean user = false;
+        boolean boot = false;
 		if (intent != null) {
 			first = intent.getBooleanExtra(FIRST_KEY, false);
 			user = intent.getBooleanExtra(USER_KEY, false);
+            boot = intent.getBooleanExtra(BOOT_KEY, false);
 		}
 		String version = RcsSettings.getInstance().getProvisioningVersion();
 		// It makes no sense to start service if version is 0 (unconfigured)
@@ -110,7 +117,7 @@ public class HttpsProvisioningService extends Service {
 
 		httpsProvisioningMng = new HttpsProvisioningManager(getApplicationContext(), retryIntent, first, user);
 		if (logger.isActivated()) {
-			logger.debug("Provisioning parameter: boot=" + first + ", user=" + user + ", version=" + version);
+            logger.debug("Provisioning parameter: first=" + first + ", user=" + user + ", boot=" + boot + ", version=" + version);
 		}
 
 		boolean requestConfig = false;
@@ -126,28 +133,32 @@ public class HttpsProvisioningService extends Service {
             } else if (ProvisioningInfo.Version.DISABLED_DORMANT.equals(version) && user == true) {
                 requestConfig = true;
             } else { // version > 0
-                Date expiration = LauncherUtils.getProvisioningExpirationDate(this);
-                if (expiration == null) {
+                if (boot) {
                     requestConfig = true;
                 } else {
-                    Date now = new Date();
-                    if (expiration.before(now)) {
-                        if (logger.isActivated())
-                            logger.debug("Configuration validity expired at " + expiration);
+                    Date expiration = LauncherUtils.getProvisioningExpirationDate(this);
+                    if (expiration == null) {
                         requestConfig = true;
                     } else {
-                        long delay = (expiration.getTime() - now.getTime());
-                        if (delay <= 0L) {
+                        Date now = new Date();
+                        if (expiration.before(now)) {
+                            if (logger.isActivated())
+                                logger.debug("Configuration validity expired at " + expiration);
                             requestConfig = true;
                         } else {
-                            Long validity = LauncherUtils.getProvisioningValidity(this) * 1000L;
-                            if (validity != null && delay > validity) {
-                                delay = validity;
+                            long delay = (expiration.getTime() - now.getTime());
+                            if (delay <= 0L) {
+                                requestConfig = true;
+                            } else {
+                                Long validity = LauncherUtils.getProvisioningValidity(this) * 1000L;
+                                if (validity != null && delay > validity) {
+                                    delay = validity;
+                                }
+                                if (logger.isActivated())
+                                    logger.debug("Configuration will expire in " + (delay / 1000)
+                                            + " secs at " + expiration);
+                                startRetryAlarm(this, retryIntent, delay);
                             }
-                            if (logger.isActivated())
-                                logger.debug("Configuration will expire in " + (delay / 1000)
-                                        + " secs at " + expiration);
-                            startRetryAlarm(this, retryIntent, delay);
                         }
                     }
                 }
@@ -249,12 +260,15 @@ public class HttpsProvisioningService extends Service {
 	 *            first launch after (re)boot
 	 * @param userLaunch
 	 *            launch is requested by user action
+     * @param bootLaunch
+     *            launch is requested by boot action
 	 */
-	public static void startHttpsProvisioningService(Context context , boolean firstLaunch, boolean userLaunch) {
+    public static void startHttpsProvisioningService(Context context , boolean firstLaunch, boolean userLaunch, boolean bootLaunch) {
 		// Start Https provisioning service
 		Intent provisioningIntent = new Intent(context, HttpsProvisioningService.class);
 		provisioningIntent.putExtra(FIRST_KEY, firstLaunch);
 		provisioningIntent.putExtra(USER_KEY, userLaunch);
+        provisioningIntent.putExtra(BOOT_KEY, bootLaunch);
 		context.startService(provisioningIntent);
 	}
 }
