@@ -31,7 +31,11 @@ import com.orangelabs.rcs.addressbook.AuthenticationService;
 import com.orangelabs.rcs.platform.AndroidFactory;
 import com.orangelabs.rcs.platform.registry.AndroidRegistryFactory;
 import com.orangelabs.rcs.provider.eab.ContactsManager;
+import com.orangelabs.rcs.provider.fthttp.FtHttpColumns;
+import com.orangelabs.rcs.provider.ipcall.IPCallData;
+import com.orangelabs.rcs.provider.messaging.RichMessagingData;
 import com.orangelabs.rcs.provider.settings.RcsSettings;
+import com.orangelabs.rcs.provider.sharing.RichCallData;
 import com.orangelabs.rcs.provisioning.https.HttpsProvisioningService;
 import com.orangelabs.rcs.utils.logger.Logger;
 
@@ -166,11 +170,10 @@ public class LauncherUtils {
      *
      * @param context Application context
      */
-    public static void resetRcsConfig(Context context) {
-        if (logger.isActivated()) {
-            logger.debug("Reset RCS config");
-        }
-
+	public static void resetRcsConfig(Context context) {
+		if (logger.isActivated()) {
+			logger.debug("Reset RCS config");
+		}
         // Stop the Core service
         context.stopService(new Intent(context, RcsCoreService.class));
 
@@ -178,8 +181,16 @@ public class LauncherUtils {
         RcsSettings.createInstance(context);
         RcsSettings.getInstance().resetUserProfile();
 
-        // Clean the RCS database
-        ContactsManager.createInstance(context);
+        // Clear entries in all tables of eventlog.db
+		context.getContentResolver().delete(FtHttpColumns.CONTENT_URI, null, null);
+		context.getContentResolver().delete(RichMessagingData.CONTENT_URI, null, null);
+		context.getContentResolver().delete(RichCallData.CONTENT_URI, null, null);
+		context.getContentResolver().delete(IPCallData.CONTENT_URI, null, null);
+
+		// Clean the previous account RCS databases : because
+		// they may not be overwritten in the case of a very new account
+		// or if the back-up files of an older one have been destroyed
+		ContactsManager.createInstance(context);
         ContactsManager.getInstance().deleteRCSEntries();
 
         // Remove the RCS account 

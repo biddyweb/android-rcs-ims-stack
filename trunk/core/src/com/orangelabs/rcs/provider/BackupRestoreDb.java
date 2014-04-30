@@ -21,9 +21,10 @@ package com.orangelabs.rcs.provider;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.Date;
 
 import javax2.sip.InvalidArgumentException;
-
+import android.os.Environment;
 import android.text.TextUtils;
 
 import com.orangelabs.rcs.utils.FileUtils;
@@ -37,7 +38,20 @@ import com.orangelabs.rcs.utils.logger.Logger;
  */
 public class BackupRestoreDb {
 
-	private static Logger logger = Logger.getLogger(BackupRestoreDb.class.getSimpleName());
+	/**
+	 * The location of the database
+	 */
+	public static final String DATABASE_LOCATION = "/data/com.orangelabs.rcs/databases/";;
+
+	/**
+	 * The maximum number of saved accounts
+	 */
+	private static final int MAX_SAVED_ACCOUNT = 3;
+
+	/**
+	 * The logger
+	 */
+	private static final Logger logger = Logger.getLogger(BackupRestoreDb.class.getSimpleName());
 
 	/**
 	 * Filter to get database files
@@ -109,8 +123,14 @@ public class BackupRestoreDb {
 	 *            the account
 	 * @return true if save succeeded
 	 */
-	public static boolean saveAccountDatabases(final File databasesDir, final String account) {
+	private static boolean saveAccountDatabases(final File databasesDir, final String account) {
+		if (logger.isActivated()) {
+			logger.info("saveAccountDatabases account=" + account);
+		}
 		if (checkBackupRestoreArguments(databasesDir, account) == false) {
+			if (logger.isActivated()) {
+				logger.error("Cannot save account " + account);
+			}
 			return false;
 		}
 		// Put the names of all files ending with .db in a String array
@@ -124,11 +144,18 @@ public class BackupRestoreDb {
 				try {
 					// Copy database file under account directory
 					FileUtils.copyFileToDirectory(srcFile, dstDir, true);
+					if (logger.isActivated()) {
+						logger.info("Save file" + srcFile + " to " + dstDir);
+					}
 				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
+					if (logger.isActivated()) {
+						logger.error(e.getMessage(), e);
+					}
 					return false;
 				}
 			}
+			// update the saved account db directory date with the backup date
+			dstDir.setLastModified((new Date()).getTime());
 			return true;
 		}
 		return false;
@@ -143,7 +170,7 @@ public class BackupRestoreDb {
 	 *            the account
 	 * @return true if restore succeeded
 	 */
-	public static boolean restoreAccountDatabases(final File databasesDir, final String account) {
+	private static boolean restoreAccountDatabases(final File databasesDir, final String account) {
 		if (checkBackupRestoreArguments(databasesDir, account) == false) {
 			return false;
 		}
@@ -159,11 +186,105 @@ public class BackupRestoreDb {
 					// Copy database file under database directory
 					FileUtils.copyFileToDirectory(srcFile, databasesDir, true);
 				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
+					if (logger.isActivated()) {
+						logger.error(e.getMessage(), e);
+					}
 					return false;
 				}
 			}
 			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Suppress oldest backup if more than MAX_SAVED_ACCOUNT
+	 * 
+	 * @param databasesDir
+	 *            the database directory
+	 * @param currentUserAccount
+	 *            the account
+	 * @throws InvalidArgumentException
+	 */
+	private static void cleanBackups(final File databasesDir, final String currentUserAccount) throws InvalidArgumentException {
+		File[] files = listOfSavedAccounts(databasesDir);
+		if (files != null && files.length > MAX_SAVED_ACCOUNT) {
+
+			File file = FileUtils.getOldestFile(files);
+			if (file.getName().equals(currentUserAccount) == false) {
+				FileUtils.deleteDirectory(file);
+				if (logger.isActivated()) {
+					logger.debug("Clean oldest Backup : account=" + file.getName());
+				}
+			} else {
+				// Do not clean current account
+				File[] _files = new File[files.length - 1];
+				int i = 0;
+				for (File file2 : files) {
+					if (file2.getName().equals(currentUserAccount) == false) {
+						_files[i++] = file2;
+					}
+				}
+				file = FileUtils.getOldestFile(_files);
+				FileUtils.deleteDirectory(file);
+				if (logger.isActivated()) {
+					logger.debug("Clean oldest Backup : account=" + file.getName());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Suppress oldest backup
+	 * 
+	 * @param currentUserAccount
+	 *            the current account must not be cleaned
+	 */
+	public static void cleanBackups(String currentUserAccount) {
+		String accountDBs = Environment.getDataDirectory() + DATABASE_LOCATION;
+		try {
+			File srcdir = new File(accountDBs);
+			cleanBackups(srcdir, currentUserAccount);
+		} catch (Exception e) {
+			if (logger.isActivated())
+				logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Backup account
+	 * 
+	 * @param account
+	 *            the Account to backup
+	 * @return true if backup is successful
+	 */
+	public static boolean backupAccount(String account) {
+		String accountDBs = Environment.getDataDirectory() + DATABASE_LOCATION;
+		try {
+			File fdir = new File(accountDBs);
+			return saveAccountDatabases(fdir, account);
+		} catch (Exception e) {
+			if (logger.isActivated())
+				logger.error(e.getMessage(), e);
+		}
+		return false;
+	}
+
+	/**
+	 * Restore account
+	 * 
+	 * @param account
+	 *            Account
+	 * @return true if restore is successful
+	 */
+	public static boolean restoreAccount(String account) {
+		String accountDBs = Environment.getDataDirectory() + DATABASE_LOCATION;
+		try {
+			File fdir = new File(accountDBs);
+			return restoreAccountDatabases(fdir, account);
+		} catch (Exception e) {
+			if (logger.isActivated())
+				logger.error(e.getMessage(), e);
 		}
 		return false;
 	}
